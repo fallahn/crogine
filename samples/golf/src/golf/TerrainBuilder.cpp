@@ -56,6 +56,7 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 
 #include "../ErrorCheck.hpp"
 
@@ -67,6 +68,8 @@ namespace
 {
 #include "shaders/TerrainShader.inl"
 #include "shaders/CelShader.inl"
+
+    constexpr glm::vec2 ChunkSize(static_cast<float>(MapSize.x) / ChunkVisSystem::ColCount, static_cast<float>(MapSize.y) / ChunkVisSystem::RowCount);
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -814,9 +817,42 @@ void TerrainBuilder::applyTreeQuality()
 //private
 void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunks)
 {
-    //TODO for each visible chunk check transform data exists and add to update list
-    //TODO use update list to update instance tree entities
-    //TODO if visible chunks is zero hide the model entities
+    auto shrubIndex = m_swapIndex % 2;
+
+    //for each instanced model
+    for (auto i = 0u; i < MaxShrubInstances; ++i)
+    {
+        //if this instance exists...
+        if (m_instancedShrubs[shrubIndex][i].isValid())
+        {
+            //grab its cells
+            const auto& treeCells = m_cellData[shrubIndex][i];
+            std::vector<const std::vector<glm::mat4>*> transforms;
+            std::vector<const std::vector<glm::mat3>*> normals;
+
+            //check each visible cell and stash it if not empty
+            for (auto c : visibleChunks)
+            {
+                if (!treeCells[c].transforms.empty())
+                {
+                    transforms.push_back(&treeCells[c].transforms);
+                    normals.push_back(&treeCells[c].normalMats);
+                }
+            }
+
+            //if transforms exist update the model
+            if (!transforms.empty())
+            {
+                m_instancedShrubs[shrubIndex][i].getComponent<cro::Model>().setHidden(false);
+                m_instancedShrubs[shrubIndex][i].getComponent<cro::Model>().updateInstanceTransforms(transforms, normals);
+            }
+            //else hide is as there's no point drawing it.
+            else
+            {
+                m_instancedShrubs[shrubIndex][i].getComponent<cro::Model>().setHidden(true);
+            }
+        }
+    }
 }
 
 void TerrainBuilder::threadFunc()
@@ -879,6 +915,16 @@ void TerrainBuilder::threadFunc()
             for (auto& tx : m_shrubTransforms)
             {
                 tx.clear();
+            }
+
+            auto cellIndex = (m_swapIndex + 1) % 2;
+            for (auto& cellData : m_cellData[cellIndex])
+            {
+                for (auto& cell : cellData)
+                {
+                    cell.normalMats.clear();
+                    cell.transforms.clear();
+                }
             }
 
             //we checked the file validity when the game starts.
@@ -998,6 +1044,18 @@ void TerrainBuilder::threadFunc()
                                     mat4 = glm::translate(mat4, position);
                                     mat4 = glm::rotate(mat4, rotation, cro::Transform::Y_AXIS);
                                     mat4 = glm::scale(mat4, glm::vec3(scale));
+
+                                    //find which chunk this is in based on position and update the 
+                                    //appropriate cell data for culling
+                                    auto norm = glm::inverseTranspose(mat4);
+
+                                    auto xCell = std::floor(x / ChunkSize.x);
+                                    auto yCell = std::floor(y / ChunkSize.y);
+
+                                    auto idx = static_cast<std::int32_t>(yCell * ChunkVisSystem::ColCount + xCell);
+                                    //LogI << idx <<std::endl;
+                                    m_cellData[cellIndex][currIndex][idx].transforms.push_back(mat4);
+                                    m_cellData[cellIndex][currIndex][idx].normalMats.push_back(norm);
                                 }
 
                                 //low quality version - always rendered on flight cam and optionally on LQ settings
