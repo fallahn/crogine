@@ -235,30 +235,26 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("asefsd"))
-            {
-                /*if (m_drone.isValid())
-                {
-                    auto pos = m_drone.getComponent<cro::Transform>().getPosition();
-                    float height = pos.y - m_collisionMesh.getTerrain(pos).height;
-                    ImGui::Text("height %3.3f", height);
-                }*/
-                /*ImGui::Text("Shader ID %d", m_targetShader.shaderID);
-                ImGui::Text("Shader Uniform %d", m_targetShader.vpUniform);
-                ImGui::Text("Position %3.2f, %3.2f, %3.2f", m_targetShader.position.x, m_targetShader.position.y, m_targetShader.position.z);
-                ImGui::Text("Size %3.3f", m_targetShader.size);*/
-                
-                const auto* system = m_gameScene.getSystem<ChunkVisSystem>();
-                ImGui::Text("Visible Chunks %d", system->getIndexList().size());
-
-                /*float height = m_freeCam.getComponent<cro::Transform>().getPosition().y;
-                height -= m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB().getSize().y;
-                ImGui::Text("Cam Height %3.3f", height);*/
-            }
-            ImGui::End();        
-        });
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("asefsd"))
+    //        {
+    //            /*if (m_drone.isValid())
+    //            {
+    //                auto pos = m_drone.getComponent<cro::Transform>().getPosition();
+    //                float height = pos.y - m_collisionMesh.getTerrain(pos).height;
+    //                ImGui::Text("height %3.3f", height);
+    //            }*/
+    //            /*ImGui::Text("Shader ID %d", m_targetShader.shaderID);
+    //            ImGui::Text("Shader Uniform %d", m_targetShader.vpUniform);
+    //            ImGui::Text("Position %3.2f, %3.2f, %3.2f", m_targetShader.position.x, m_targetShader.position.y, m_targetShader.position.z);
+    //            ImGui::Text("Size %3.3f", m_targetShader.size);*/
+    //            
+    //            const auto* system = m_gameScene.getSystem<ChunkVisSystem>();
+    //            ImGui::Text("Visible Chunks %d", system->getIndexList().size());
+    //        }
+    //        ImGui::End();        
+    //    });
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

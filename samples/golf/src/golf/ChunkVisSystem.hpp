@@ -57,8 +57,8 @@ public:
 
     glm::vec2 getChunkSize() const { return m_chunkSize; }
 
-    static constexpr std::int32_t RowCount = 3;
-    static constexpr std::int32_t ColCount = 4;
+    static constexpr std::int32_t RowCount = 4;
+    static constexpr std::int32_t ColCount = 6;
 
 #ifdef CRO_DEBUG_
     //checks all boxes against frustum
