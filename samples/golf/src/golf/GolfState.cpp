@@ -3580,8 +3580,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             data.player = std::clamp(data.player, std::uint8_t(0), ConstVal::MaxPlayers);
             if (!m_sharedData.localConnectionData.playerData[data.player].isCPU)
             {
+                auto active = Achievements::getActive();
+                Achievements::setActive(m_allowAchievements);
                 Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eleven, 0);
                 Achievements::incrementStat(StatStrings[StatID::FlagHits]);
+                Achievements::setActive(active);
             }
         }
         break;

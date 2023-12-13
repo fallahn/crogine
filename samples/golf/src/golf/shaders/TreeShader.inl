@@ -83,7 +83,7 @@ const float MinWindDistance = 50.0;
     void main()
     {
         //int UID = gl_InstanceID << 16 | (gl_VertexID & 0x0000ffff);
-        int UID = gl_InstanceID + gl_VertexID;
+        //int UID = gl_InstanceID + gl_VertexID;
 
     #if defined (INSTANCING)
 #include INSTANCE_MATRICES
@@ -92,7 +92,9 @@ const float MinWindDistance = 50.0;
         mat3 normalMatrix = u_normalMatrix;
     #endif
 
-        float randVal = rand(vec2(UID));
+vec4 translation = worldMatrix[3];
+
+        float randVal = rand(vec2(translation.x + gl_VertexID, translation.z + gl_VertexID));
         float offset = randVal * u_randAmount;
         vec4 position = a_position;
     #if defined(HQ)
