@@ -1701,6 +1701,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 Achievements::awardAchievement(AchievementStrings[CourseIDs.at(m_sharedData.mapDirectory)]);
                 Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
 
+                if (m_sharedData.nightTime)
+                {
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::NightOwl]);
+                }
+
                 if (Achievements::getActive())
                 {
                     m_achievementDebug.awardStatus = "Awarded Course Complete: " + m_sharedData.mapDirectory.toAnsiString();

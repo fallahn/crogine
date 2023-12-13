@@ -135,7 +135,9 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "behold",
     "took_a_show",
     "league_champion",
-    "league_seasonal"
+    "league_seasonal",
+    "night_owl",
+    "rain_or_shine"
 };
 
 //appears on the notification
@@ -229,7 +231,9 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Behold The Impossible",
     "Take In a Show",
     "League Champion",
-    "League Participant"
+    "League Participant",
+    "Night Owl",
+    "Rain or Shine"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -324,6 +328,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Gopher broke.", true),
     std::make_pair("Finish in the top 3 of the Club League", false),
     std::make_pair("Complete a full season in the Club League", false),
+    std::make_pair("Play 18 holes at night", false),
+    std::make_pair("Play 9 holes on each weather type", false),
 };
 
 //assuming trophies load correctly they are:
@@ -448,6 +454,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
 
     TrophyID::GoldFigure,
     TrophyID::BronzeFigure,
+    TrophyID::SilverCup,
+    TrophyID::SilverFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
