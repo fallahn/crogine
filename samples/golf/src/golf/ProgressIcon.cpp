@@ -138,8 +138,8 @@ void ProgressIcon::show(std::int32_t index, std::int32_t progress, std::int32_t 
         m_vertexData[idx - 3].position.x = pos;
         m_background.setVertexData(m_vertexData);
 
-        //update text
-        if (index < 0)
+        //update text - TODO this should be enumerated proper, like
+        if (index == -1)
         {
             m_titleText.setString("CLUB LEAGUE UPDATED");
 
@@ -152,6 +152,12 @@ void ProgressIcon::show(std::int32_t index, std::int32_t progress, std::int32_t 
                 auto str = std::to_string(progress) + "/" + std::to_string(total);
                 m_text.setString("Season Progress " + str);
             }
+        }
+        else if (index == -2)
+        {
+            m_titleText.setString("COME RAIN OR SHINE");
+            auto str = std::to_string(progress) + "/" + std::to_string(total);
+            m_text.setString("Progress " + str);
         }
         else
         {

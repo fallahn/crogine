@@ -2726,7 +2726,7 @@ void GolfState::buildScene()
     case WeatherType::Clear:
         if (auto month = cro::SysTime::now().months(); month == 12)
         {
-            if (cro::Util::Random::value(0, 20) == 0)
+            //if (cro::Util::Random::value(0, 20) == 0)
             {
                 createWeather(WeatherType::Snow);
                 setFog(m_sharedData.nightTime ? 0.45f : 0.3f);

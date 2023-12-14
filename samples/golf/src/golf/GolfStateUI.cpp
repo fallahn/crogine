@@ -1686,6 +1686,34 @@ void GolfState::showCountdown(std::uint8_t seconds)
     if (m_holeData.size() > 8) //only consider it a round if there are at least 9 holes
     {
         Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
+        Achievements::incrementStat(StatStrings[StatID::PlaysInClearWeather + m_sharedData.weatherType]);
+
+        std::int32_t weatherProgress = 0;
+        for (auto i = 0; i < WeatherType::Snow; ++i)
+        {
+            if (Achievements::getStat(StatStrings[StatID::PlaysInClearWeather + i])->value != 0)
+            {
+                weatherProgress++;
+            }
+        }
+
+        //only show the update if this type of weather is new to the stat
+        if (Achievements::getStat(StatStrings[StatID::PlaysInClearWeather + m_sharedData.weatherType])->value == 1)
+        {
+            if (weatherProgress == 4)
+            {
+                Achievements::awardAchievement(AchievementStrings[AchievementID::RainOrShine]);
+            }
+            else
+            {
+                //progress event
+                auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+                msg->type = Social::SocialEvent::MonthlyProgress;
+                msg->challengeID = -2; //TODO enumerate this properly!!
+                msg->level = weatherProgress;
+                msg->reason = 4;
+            }
+        }
 
         if (m_statBoardScores.size() > 3 //this assumes 4 players or more... is this right?
             && m_courseIndex != -1)

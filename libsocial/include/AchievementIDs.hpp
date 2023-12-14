@@ -196,6 +196,12 @@ namespace StatID
         FlagHits,
 
         Course11Complete,
+        Course12Complete,
+
+        PlaysInClearWeather,
+        PlaysInRain,
+        PlaysInShowers,
+        PlaysInFog,
 
         Count
     };
