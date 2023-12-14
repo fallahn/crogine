@@ -1689,7 +1689,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         Achievements::incrementStat(StatStrings[StatID::PlaysInClearWeather + m_sharedData.weatherType]);
 
         std::int32_t weatherProgress = 0;
-        for (auto i = 0; i < WeatherType::Snow; ++i)
+        for (auto i = 0; i < WeatherType::Count; ++i)
         {
             if (Achievements::getStat(StatStrings[StatID::PlaysInClearWeather + i])->value != 0)
             {
@@ -1706,12 +1706,16 @@ void GolfState::showCountdown(std::uint8_t seconds)
             }
             else
             {
-                //progress event
-                auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
-                msg->type = Social::SocialEvent::MonthlyProgress;
-                msg->challengeID = -2; //TODO enumerate this properly!!
-                msg->level = weatherProgress;
-                msg->reason = 4;
+#ifdef USE_GNS
+                Achievements::indicateProgress(AchievementID::RainOrShine, weatherProgress, 4);
+#endif
+
+                //progress event - hm can't use this as updating the league immediately overrules it
+                //auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+                //msg->type = Social::SocialEvent::MonthlyProgress;
+                //msg->challengeID = -2; //TODO enumerate this properly!!
+                //msg->level = weatherProgress;
+                //msg->reason = 4;
             }
         }
 

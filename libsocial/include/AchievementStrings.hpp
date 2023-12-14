@@ -233,7 +233,7 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "League Champion",
     "League Participant",
     "Night Owl",
-    "Rain or Shine"
+    "Come Rain or Shine"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
