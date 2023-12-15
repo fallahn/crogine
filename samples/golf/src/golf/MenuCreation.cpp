@@ -1670,7 +1670,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto bgEnt = entity;
     auto bgBounds = bounds;
 
-#ifdef USE_GNS
+//#ifdef USE_GNS
     //scrolls info about the selected course
     auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
@@ -1713,7 +1713,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyWindowEntities[LobbyEntityID::CourseTicker] = entity;
-#endif
+//#endif
 
     //display the score type
     entity = m_uiScene.createEntity();
@@ -3919,7 +3919,7 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-#ifdef USE_GNS
+//#ifdef USE_GNS
     //update ticker
     if (!m_sharedData.tutorial && //data will be courseData.cend()
         m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
@@ -3939,7 +3939,7 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
             m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         }
     }
-#endif
+//#endif
 }
 
 void MenuState::updateUnlockedItems()
