@@ -295,7 +295,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>USE_RSS;CRO_DEBUG_;_CRT_SECURE_NO_WARNINGS;_MBCS;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\libgns\include;$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\curl\include;$(SolutionDir)libsocial\include;$(SolutionDir)..\libgns\golf_workshop\include;$(SolutionDir)extlibs\sqlite\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\libgns\include;$(SolutionDir)crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\bullet\include;$(SolutionDir)extlibs\curl\include;$(SolutionDir)libsocial\include;$(SolutionDir)..\libgns\golf_workshop\include;$(SolutionDir)extlibs\sqlite\include;$(SolutionDir)extlibs\react\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -303,8 +303,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\curl\debug\lib;$(SolutionDir)..\libgns\golf_workshop\lib;$(SolutionDir)extlibs\sqlite\bin;$(SolutionDir)..\libgns\x64\Debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>libgjs-d.lib;libcurl_debug.lib;crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;libsocial-d.lib;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\curl\debug\lib;$(SolutionDir)..\libgns\golf_workshop\lib;$(SolutionDir)extlibs\sqlite\bin;$(SolutionDir)..\libgns\x64\Debug;$(SolutionDir)extlibs\react\lib\debug</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libgjs-d.lib;libcurl_debug.lib;crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;libsocial-d.lib;sqlite3.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugGNS|x64'">

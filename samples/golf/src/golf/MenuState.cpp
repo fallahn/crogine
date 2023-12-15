@@ -161,6 +161,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_prevMenu              (MenuID::Main),
     m_viewScale             (1.f)
 {
+    Social::getTopFive("course_01", 0);
+
     sd.baseState = StateID::Menu;
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);

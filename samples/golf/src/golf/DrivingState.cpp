@@ -948,9 +948,9 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 #ifdef  CRO_DEBUG_
-    m_gameScene.addSystem<FpsCameraSystem>(mb);
+    //m_gameScene.addSystem<FpsCameraSystem>(mb, m_colli);
 
-    m_gameScene.setSystemActive<FpsCameraSystem>(false);
+    //m_gameScene.setSystemActive<FpsCameraSystem>(false);
 #endif
 
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
