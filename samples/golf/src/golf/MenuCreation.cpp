@@ -2564,14 +2564,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     auto confirmEnt = entity;
 
-    /*spriteSheet.loadFromFile("assets/golf/sprites/bounce.spt", m_resources.textures);
-
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 6.f, 18.f, 0.2f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bounce");
-    entity.addComponent<cro::SpriteAnimation>().play(0);
-    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
 
     //quad to darken the screen
     entity = m_uiScene.createEntity();

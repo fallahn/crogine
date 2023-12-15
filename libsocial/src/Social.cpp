@@ -32,6 +32,8 @@ source distribution.
 #include "AchievementStrings.hpp"
 #include "StoredValue.hpp"
 
+#include <libgjs.hpp>
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -596,4 +598,22 @@ MonthlyChallenge& Social::getMonthlyChallenge()
 std::int32_t Social::getMonth()
 {
     return cro::SysTime::now().months() - 1; //we're using this as an index
+}
+
+
+
+void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score)
+{
+#ifdef USE_GJS
+    GJ::insertScore(course, hole, score);
+#endif
+}
+
+cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount)
+{
+#ifdef USE_GJS
+    return GJ::getTopFive(course, holeCount);
+#else
+    return {};
+#endif
 }
