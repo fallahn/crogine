@@ -38,6 +38,8 @@ source distribution.
 #include <crogine/core/Log.hpp>
 #include <crogine/util/String.hpp>
 
+#include <cstring>
+
 namespace
 {
     std::size_t writeCallback(char* contents, std::size_t size, std::size_t numMem, void* outStr)

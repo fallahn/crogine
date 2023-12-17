@@ -71,7 +71,7 @@ namespace cro
         /*!
         \brief Returns the centre of the box in local coordinates
         */
-        glm::vec3 constexpr getCentre() const;
+        glm::vec3 getCentre() const;
 
         /*!
         \brief Overload allows accessing the min and max values as an array

@@ -32,7 +32,9 @@ source distribution.
 #include "AchievementStrings.hpp"
 #include "StoredValue.hpp"
 
+#ifdef USE_GJS
 #include <libgjs.hpp>
+#endif
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConfigFile.hpp>
