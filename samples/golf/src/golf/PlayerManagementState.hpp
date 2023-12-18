@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -65,6 +66,7 @@ private:
         enum
         {
             Accept, Back,
+            Denied,
 
             Count
         };
@@ -87,6 +89,16 @@ private:
         cro::Entity previewText;
 
     }m_playerList;
+
+    struct ConfirmType final
+    {
+        enum
+        {
+            Poke, Forfeit, Kick
+        };
+    };
+    std::int32_t m_confirmType;
+    cro::Clock m_cooldownTimer;
 
     void buildScene();
     void refreshPlayerList();

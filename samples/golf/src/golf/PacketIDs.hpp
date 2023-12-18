@@ -188,6 +188,8 @@ namespace ServerCommand
         ChangeWind,
         SkipTurn,
         KickClient,
+        PokeClient,
+        ForfeitClient,
 
         //billiards
         SpawnBall,

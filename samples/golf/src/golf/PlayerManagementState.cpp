@@ -83,18 +83,23 @@ namespace
 
     constexpr std::size_t BaseSelectionIndex = 50;
 
-    constexpr std::size_t KickIndex = 100;
-    constexpr std::size_t QuitIndex = 101;
+    constexpr std::size_t PokeIndex    = 100;
+    constexpr std::size_t ForfeitIndex = 101;
+    constexpr std::size_t KickIndex    = 102;
+    constexpr std::size_t QuitIndex    = 103;
 
     constexpr glm::vec2 MenuNodePosition(112.f, -76.f);
     constexpr glm::vec2 MenuHiddenPosition(-10000.f);
+
+    const cro::Time CooldownTime = cro::seconds(10.f);
 }
 
 PlayerManagementState::PlayerManagementState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
-    m_viewScale         (2.f)
+    m_viewScale         (2.f),
+    m_confirmType       (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -216,7 +221,8 @@ void PlayerManagementState::buildScene()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
-
+    m_audioEnts[AudioID::Denied] = m_scene.createEntity();
+    m_audioEnts[AudioID::Denied].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("nope");
 
     struct RootCallbackData final
     {
@@ -476,26 +482,77 @@ void PlayerManagementState::buildScene()
     confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto confirmMessage = entity;
 
+    auto setConfirmMessage = 
+        [&, menuEntity, confirmEntity, confirmMessage](const cro::String& str, std::int32_t confirmType) mutable
+        {
+            confirmMessage.getComponent<cro::Text>().setString(str);
+            centreText(confirmMessage);
+
+            confirmEntity.getComponent<cro::Transform>().setPosition(MenuNodePosition);
+            menuEntity.getComponent<cro::Transform>().setPosition(MenuHiddenPosition);
+
+            m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
+            m_confirmType = confirmType;
+        };
+
+    //poke button
+    entity = createItem(glm::vec2(0.f, 30.f), "Poke Player", menuEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PokeIndex);
+    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, ForfeitIndex);
+    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, QuitIndex);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    if (m_cooldownTimer.elapsed() > CooldownTime)
+                    {
+                        m_cooldownTimer.restart();
+                        setConfirmMessage("Poke " + m_sharedData.connectionData[m_playerList.selectedClient].playerData[m_playerList.selectedPlayer].name + " ?", ConfirmType::Poke);
+                    }
+                    else
+                    {
+                        m_audioEnts[AudioID::Denied].getComponent<cro::AudioEmitter>().play();
+                    }
+                }
+            });
+
+    //forfeit button
+    entity = createItem(glm::vec2(0.f, 18.f), "Forfeit Player", menuEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ForfeitIndex);
+    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, KickIndex);
+    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, PokeIndex);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    if (m_cooldownTimer.elapsed() > CooldownTime)
+                    {
+                        m_cooldownTimer.restart();
+                        setConfirmMessage("Forfeit this players turn?", ConfirmType::Forfeit);
+                    }
+                    else
+                    {
+                        m_audioEnts[AudioID::Denied].getComponent<cro::AudioEmitter>().play();
+                    }
+                }
+            });
 
     //kick button
     entity = createItem(glm::vec2(0.f, 6.f), "Kick Player", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(KickIndex);
     entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, QuitIndex);
-    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, QuitIndex);
+    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, ForfeitIndex);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, menuEntity, confirmEntity, confirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
+        uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
             {
-                if (activated(evt)
-                    /*&& m_playerList.selectedClient != 0*/) //don't kick ourself...
+                if (activated(evt))
                 {
-                    confirmMessage.getComponent<cro::Text>().setString("Kick " + m_sharedData.connectionData[m_playerList.selectedClient].playerData[m_playerList.selectedPlayer].name + " ?");
-                    centreText(confirmMessage);
-
-                    confirmEntity.getComponent<cro::Transform>().setPosition(MenuNodePosition);
-                    menuEntity.getComponent<cro::Transform>().setPosition(MenuHiddenPosition);
-
-                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
+                    setConfirmMessage("Kick " + m_sharedData.connectionData[m_playerList.selectedClient].playerData[m_playerList.selectedPlayer].name + " ?", ConfirmType::Kick);
                 }
             });
 
@@ -525,8 +582,22 @@ void PlayerManagementState::buildScene()
             {
                 if (activated(evt))
                 {
-                    //kick selected player
-                    std::uint16_t data = std::uint16_t(ServerCommand::KickClient) | ((m_playerList.selectedClient) << 8);
+                    std::uint16_t data = 0;
+
+                    switch (m_confirmType)
+                    {
+                    default: return;
+                    case ConfirmType::Forfeit:
+                        data = std::uint16_t(ServerCommand::ForfeitClient) | ((m_playerList.selectedClient) << 8);
+                        break;
+                    case ConfirmType::Poke:
+                        data = std::uint16_t(ServerCommand::PokeClient) | ((m_playerList.selectedClient) << 8);
+                        break;
+                    case ConfirmType::Kick:
+                        data = std::uint16_t(ServerCommand::KickClient) | ((m_playerList.selectedClient) << 8);
+                        break;
+                    }
+
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                     menuEntity.getComponent<cro::Transform>().setPosition(MenuNodePosition);
@@ -628,7 +699,7 @@ void PlayerManagementState::refreshPlayerList()
     else
     {
         auto& ip = m_playerList.buttons[0].getComponent<cro::UIInput>();
-        ip.setNextIndex(KickIndex, KickIndex);
+        ip.setNextIndex(PokeIndex, PokeIndex);
         ip.setPrevIndex(QuitIndex, QuitIndex);
     }
 
