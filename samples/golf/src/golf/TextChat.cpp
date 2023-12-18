@@ -41,6 +41,7 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Easings.hpp>
 
 #include <cstring>
 
@@ -48,7 +49,7 @@ namespace
 {
     const cro::Time ResendTime = cro::seconds(1.5f);
 
-    const std::array<std::string, 13u> ApplaudStrings =
+    const std::array<std::string, 12u> ApplaudStrings =
     {
         "/me applauds",
         "/me nods in appreciation",
@@ -61,12 +62,10 @@ namespace
         "/me feels a bit star-struck",
         "/me ovates (which means applauding.)",
         "/me raises a glass of Fizz",
-        "/me now knows what a true hero looks like",
-
-        "/me was sleighed by that one"
+        "/me now knows what a true hero looks like"
     };
 
-    const std::array<std::string, 18u> HappyStrings =
+    const std::array<std::string, 17u> HappyStrings =
     {
         "/me is ecstatic",
         "/me grins from ear to ear",
@@ -84,12 +83,10 @@ namespace
         "/me is on top of the world",
         "/me pirouettes jubilantly",
         "/me feels like a dog with two tails",
-        "/me lets out a squeak",
-
-        "/me jingles their bells"
+        "/me lets out a squeak"
     };
 
-    const std::array<std::string, 12u> LaughStrings =
+    const std::array<std::string, 11u> LaughStrings =
     {
         "/me laughs like a clogged drain",
         "/me giggles into their sleeve",
@@ -101,11 +98,10 @@ namespace
         "/me can't contain themselves",
         "/me howls with laughter",
         "/me goes into hysterics",
-        "/me cachinnates (which means laughing loudly)",
-        "/me HoHoHos"
+        "/me cachinnates (which means laughing loudly)"
     };
 
-    const std::array<std::string, 18u> AngerStrings =
+    const std::array<std::string, 17u> AngerStrings =
     {
         "/me cow-fudged that one up",
         "/me rages",
@@ -123,19 +119,18 @@ namespace
         "/me blows a fuse",
         "/me blames the dev",
         "/me explodes in a shower of fleshy chunks",
-        "/me should've known better",
-
-        "/me says something that gets them on the Naughty List"
+        "/me should've known better"
     };
 }
 
 TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
-    : m_scene           (s),
-    m_sharedData        (sd),
-    m_visible           (false),
-    m_scrollToEnd       (false),
-    m_focusInput        (false),
-    m_screenChatIndex   (0)
+    : m_scene               (s),
+    m_sharedData            (sd),
+    m_visible               (false),
+    m_scrollToEnd           (false),
+    m_focusInput            (false),
+    m_screenChatIndex       (0),
+    m_screenChatActiveCount (0)
 {
     registerWindow([&]() 
         {
@@ -247,7 +242,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 34.f), 2.f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 18.f), 2.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
@@ -258,10 +253,10 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     entity.getComponent<cro::Callback>().setUserData<float>(12.f);
     
     auto bounds = cro::Text::getLocalBounds(entity);
-    bounds.width += 5.f;
-    bounds.height += 4.f;
+    bounds.width = std::round(bounds.width + 5.f);
+    bounds.height = std::round(bounds.height + 4.f);
 
-    static constexpr float BgAlpha = 0.2f;
+    static constexpr float BgAlpha = 0.4f;
     const cro::Colour c(0.f, 0.f, 0.f, BgAlpha);
 
     auto bgEnt = m_scene.createEntity();
@@ -278,12 +273,13 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     bgEnt.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
     entity.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
     
+    auto currIdx = m_screenChatIndex;
     entity.getComponent<cro::Callback>().function =
-        [&, bgEnt](cro::Entity e, float dt) mutable
+        [&, bgEnt, bounds, currIdx](cro::Entity e, float dt) mutable
     {
         float& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime -= dt;
-        float alpha = std::clamp(currTime, 0.f, 1.f);
+        float alpha = cro::Util::Easing::easeInQuint(std::clamp(currTime * 4.f, 0.f, 1.f));
         auto c = e.getComponent<cro::Text>().getFillColour();
         c.setAlpha(alpha);
         e.getComponent<cro::Text>().setFillColour(c);
@@ -299,23 +295,48 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
             v.colour = c;
         }
 
+        const auto offset = -bounds.height * (1.f - alpha);
+        e.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
+
+        //move the next ent down (so this happens recursivelyand we get a nice stack)
+        auto nextEnt = (currIdx + 1) % m_screenChatBuffer.size();
+        if (m_screenChatBuffer[nextEnt].isValid())
+        {
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            pos.y -= bounds.height;
+            pos.y -= offset;
+            m_screenChatBuffer[nextEnt].getComponent<cro::Transform>().setPosition(pos);
+        }
+
+        //have to keep this active for depth sorting
+        m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = false;
+        m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
         if (currTime < 0)
         {
             e.getComponent<cro::Callback>().active = false;
             m_scene.destroyEntity(e);
+            m_screenChatActiveCount--;
+
+            m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
         }
     };
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_screenChatActiveCount++;
 
-
-    for (auto e : m_screenChatBuffer)
+    //if we do have an influx of messages force the oldest off screen
+    if (m_screenChatActiveCount > m_screenChatBuffer.size() / 2)
     {
-        if (e.isValid())
+        for (auto e : m_screenChatBuffer)
         {
-            e.getComponent<cro::Transform>().move({ 0.f, 16.f });
-            if (e.getComponent<cro::Transform>().getPosition().y > uiSize.y)
+            if (e.isValid())
             {
-                m_scene.destroyEntity(e);
+                e.getComponent<cro::Transform>().move({ 0.f, 16.f });
+                if (e.getComponent<cro::Transform>().getPosition().y > uiSize.y)
+                {
+                    m_scene.destroyEntity(e);
+                    m_screenChatActiveCount--;
+                }
             }
         }
     }
