@@ -155,6 +155,7 @@ private:
             Foot04,
             BadSport,
             Chat,
+            Poke,
             SkinsWin,
 
             CrowdClearThroat,

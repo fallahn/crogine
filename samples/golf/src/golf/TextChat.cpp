@@ -246,6 +246,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
     uiSize /= getViewScale(uiSize);
 
+    cro::Util::String::wordWrap(outStr, 70);
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();

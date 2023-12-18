@@ -1394,7 +1394,7 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
         {
         default: break;
         case ServerCommand::PokeClient:
-            if (target != 0 && target < ConstVal::MaxClients)
+            if (/*target != 0 &&*/ target < ConstVal::MaxClients)
             {
                 m_sharedData.host.sendPacket(m_sharedData.clients[target].peer, PacketID::Poke, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }

@@ -3481,6 +3481,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::Poke:
             showNotification("You have been poked!");
             gamepadNotify(GamepadNotify::NewPlayer);
+            {
+                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::Poke;
+            }
             break;
         case PacketID::Elimination:
         {

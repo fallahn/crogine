@@ -108,6 +108,7 @@ struct SceneEvent
         PlayerBad,
         MinimapUpdated,
         ChatMessage,
+        Poke,
         PlayerEliminated
     }type = TransitionComplete;
 

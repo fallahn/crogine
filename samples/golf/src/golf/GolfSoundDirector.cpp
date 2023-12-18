@@ -171,6 +171,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
 
         "assets/golf/sound/bad.wav",
         "assets/golf/sound/tutorial_appear.wav",
+        "assets/golf/sound/menu/poke.wav",
         "assets/golf/sound/menu/skins.wav",
 
         "assets/golf/sound/ambience/crowd_clear_throat.wav",
@@ -625,6 +626,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             else if (data.type == SceneEvent::PlayerEliminated)
             {
                 playSound(AudioID::NearMiss, glm::vec3(0.f), 1.f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            }
+            else if (data.type == SceneEvent::Poke)
+            {
+                playSound(AudioID::Poke, glm::vec3(0.f), 0.5f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
             }
         }
         break;

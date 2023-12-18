@@ -606,6 +606,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
     }
 
+
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -756,7 +757,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
-        default: break;
+        default: 
+            //cro::Console::show();
+            
+            break;
             //leave the current menu when B is pressed.
         case cro::GameController::ButtonB:
             quitMenu();
@@ -780,12 +784,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonGuide:
             togglePreviousScoreCard();
             break;
-        case SDL_CONTROLLER_BUTTON_PADDLE1: //TODO check this maps to steam deck (should be top right looking from front)
+        /*case cro::GameController::ButtonY:
             if (m_currentMenu == MenuID::Lobby)
             {
                 m_textChat.toggleWindow();
             }
-            break;
+            break;*/
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
