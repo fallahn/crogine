@@ -167,6 +167,7 @@ public:
     static void findLeaderboards(std::int32_t) {}
     static void insertScore(const std::string&, std::uint8_t, std::int32_t);
     static cro::String getTopFive(const std::string& course, std::uint8_t holeCount);
+    static void invalidateTopFive(const std::string& course, std::uint8_t holeCount);
     static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
     static std::int32_t getMonthlyBest(const std::string&, std::uint8_t) { return -1; }
     static void getRandomBest() {}

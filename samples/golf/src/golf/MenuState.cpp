@@ -43,6 +43,7 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "spooky2.hpp"
 #include "Clubs.hpp"
+#include "HoleData.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -1619,6 +1620,49 @@ void MenuState::createScene()
     createBallScene();    
 
     createUI();
+
+#ifndef USE_GNS
+    //creates an ent which triggers pre-loading of score values
+    //whilst hopefully not hammering the connection
+    struct FetchData final
+    {
+        const float StepTime = 3.f;
+        float currTime = StepTime;
+
+        std::int32_t mapIndex = 0;
+        std::uint8_t holeIndex = 0;
+    };
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<FetchData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& [StepTime, currTime, mapIndex, holeIndex] = e.getComponent<cro::Callback>().getUserData<FetchData>();
+            currTime -= dt;
+
+            if (currTime < 0)
+            {
+                currTime += StepTime;
+
+                Social::getTopFive(CourseNames[mapIndex], holeIndex);
+                holeIndex++;
+
+                if (holeIndex == 3)
+                {
+                    holeIndex = 0;
+                    mapIndex++;
+
+                    if (mapIndex == CourseNames.size())
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                    }
+                }
+            }
+        };
+#endif
 }
 
 void MenuState::createClouds()
@@ -1741,6 +1785,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Golf)
             {
+#ifndef USE_GNS
+                //invalidate the score cache for the new game so the
+                //updated results are downloaded once the game ends
+                Social::invalidateTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+#endif
+
                 m_matchMaking.leaveGame(); //doesn't really leave the game, it quits the lobby
                 requestStackClear();
                 requestStackPush(StateID::Golf);

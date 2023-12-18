@@ -644,3 +644,10 @@ cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount
     return {};
 #endif
 }
+
+void Social::invalidateTopFive(const std::string& course, std::uint8_t holeCount)
+{
+#ifdef USE_GJS
+    GJ::invalidateTopFive(course, holeCount);
+#endif
+}
