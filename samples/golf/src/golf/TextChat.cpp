@@ -202,6 +202,13 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
         });
 }
 
+TextChat::~TextChat()
+{
+#ifdef USE_GNS
+    Social::hideChatInput();
+#endif
+}
+
 //public
 void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 {
@@ -348,8 +355,31 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
 void TextChat::toggleWindow()
 {
-    m_visible = (!m_visible && !Social::isSteamdeck());
-    m_focusInput = m_visible;
+#ifdef USE_GNS
+    if (Social::isSteamdeck())
+    {
+        beginChat();
+
+        const auto cb =
+            [&](bool submitted, const char* buffer)
+            {
+                if (submitted)
+                {
+                    m_inputBuffer = buffer;
+                    sendTextChat();
+                }
+                endChat();
+            };
+
+        //this only shows the overlay as Steam takes care of dismissing it
+        Social::showChatInput(cb);
+    }
+    else
+#endif
+    {
+        m_visible = (!m_visible && !Social::isSteamdeck());
+        m_focusInput = m_visible;
+    }
 }
 
 void TextChat::quickEmote(std::int32_t emote)

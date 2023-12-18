@@ -42,6 +42,7 @@ class TextChat final : public cro::GuiClient
 {
 public:
     TextChat(cro::Scene&, SharedStateData&);
+    ~TextChat(); //there's no ownership here it just resets the OSK
 
     void handlePacket(const net::NetEvent::Packet&);
 

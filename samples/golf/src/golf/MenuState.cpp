@@ -779,6 +779,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonGuide:
             togglePreviousScoreCard();
             break;
+        case SDL_CONTROLLER_BUTTON_PADDLE1: //TODO check this maps to steam deck (should be top right looking from front)
+            if (m_currentMenu == MenuID::Lobby)
+            {
+                m_textChat.toggleWindow();
+            }
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
