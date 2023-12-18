@@ -496,7 +496,7 @@ void PlayerManagementState::buildScene()
         };
 
     //poke button
-    entity = createItem(glm::vec2(0.f, 30.f), "Poke Player", menuEntity);
+    entity = createItem(glm::vec2(0.f, 30.f), "Poke Selected Player", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(PokeIndex);
     entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, ForfeitIndex);
@@ -519,7 +519,7 @@ void PlayerManagementState::buildScene()
             });
 
     //forfeit button
-    entity = createItem(glm::vec2(0.f, 18.f), "Forfeit Player", menuEntity);
+    entity = createItem(glm::vec2(0.f, 18.f), "Forfeit Current Player", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ForfeitIndex);
     entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, KickIndex);
@@ -532,7 +532,7 @@ void PlayerManagementState::buildScene()
                     if (m_cooldownTimer.elapsed() > CooldownTime)
                     {
                         m_cooldownTimer.restart();
-                        setConfirmMessage("Forfeit this players turn?", ConfirmType::Forfeit);
+                        setConfirmMessage("Forfeit current player's hole?", ConfirmType::Forfeit);
                     }
                     else
                     {
@@ -542,7 +542,7 @@ void PlayerManagementState::buildScene()
             });
 
     //kick button
-    entity = createItem(glm::vec2(0.f, 6.f), "Kick Player", menuEntity);
+    entity = createItem(glm::vec2(0.f, 6.f), "Kick Selected Player", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(KickIndex);
     entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, QuitIndex);

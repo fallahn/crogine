@@ -135,6 +135,7 @@ namespace PacketID
         FlagHit, //< BullHit struct
         WarnTime, //< uint8 warning time for AFK in seconds
         WeatherChange, //< 0 off 1 on uint8
+        Poke, //< uint8 0 - only sent to specific client
 
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc

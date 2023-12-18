@@ -1393,6 +1393,26 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
         switch (command)
         {
         default: break;
+        case ServerCommand::PokeClient:
+            if (target != 0 && target < ConstVal::MaxClients)
+            {
+                m_sharedData.host.sendPacket(m_sharedData.clients[target].peer, PacketID::Poke, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case ServerCommand::ForfeitClient:
+            //if (target != 0/* && target < ConstVal::MaxClients*/)
+            {
+                if (m_gameStarted
+                    /*&& m_playerInfo[0].client == target*/)
+                {
+                    m_playerInfo[0].holeScore[m_currentHole] = MaxStrokes; //this should be half on putt from tee but meh, it's a penalty
+                    m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+                    m_playerInfo[0].distanceToHole = 0.f;
+                    m_playerInfo[0].terrain = TerrainID::Green;
+                    setNextPlayer();
+                }
+            }
+            break;
         case ServerCommand::KickClient:
             if (target != 0 && target < ConstVal::MaxClients)
             {

@@ -3469,6 +3469,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::Poke:
+            showNotification("You have been poked!");
+            gamepadNotify(GamepadNotify::NewPlayer);
+            break;
         case PacketID::Elimination:
         {
             auto d = evt.packet.as<std::uint16_t>();
