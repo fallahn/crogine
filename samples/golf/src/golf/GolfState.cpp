@@ -238,15 +238,24 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     sd.baseState = StateID::Golf;
 
     std::int32_t humanCount = 0;
+    std::int32_t humanIndex = 0;
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         if (!m_sharedData.localConnectionData.playerData[i].isCPU)
         {
             humanCount++;
+            humanIndex = i;
         }
     }
     m_allowAchievements = (humanCount == 1) && (getCourseIndex(sd.mapDirectory) != -1);
     m_humanCount = humanCount;
+
+#ifndef USE_GNS
+    if (humanCount == 1)
+    {
+        Social::setPlayerName(m_sharedData.localConnectionData.playerData[humanIndex].name);
+    }
+#endif
 
     /*switch (sd.scoreType)
     {

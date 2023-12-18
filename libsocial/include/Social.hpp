@@ -135,10 +135,10 @@ public:
     };
     static cro::Image userIcon;
 
-    static cro::String getPlayerName() { return {}; }
-
+    static cro::String getPlayerName();
+    static void setPlayerName(const cro::String&);
     static bool isGreyscale() { return false; }
-    static bool isValid() { return true; }
+    static bool isValid();
     static bool isValid(const std::string&) { return true; }
     static bool isAvailable() { return false; }
     static bool isSteamdeck() { return false; }

@@ -90,6 +90,31 @@ namespace
 
 cro::Image Social::userIcon;
 
+cro::String Social::getPlayerName()
+{
+#ifdef USE_GJS
+    return GJ::getActiveName();
+#else
+    return {};
+#endif
+}
+
+void Social::setPlayerName(const cro::String& name)
+{
+#ifdef USE_GJS
+    GJ::setActiveName(name);
+#endif
+}
+
+bool Social::isValid()
+{
+#ifdef USE_GJS
+    return GJ::isValid();
+#else
+    return true;
+#endif
+}
+
 void Social::awardXP(std::int32_t amount, std::int32_t reason)
 {
     if (Achievements::getActive())
