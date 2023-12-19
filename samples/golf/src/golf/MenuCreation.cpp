@@ -1666,11 +1666,16 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString("Shift+F8 to Chat");
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        /*entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });*/
         menuTransform.addChild(entity.getComponent<cro::Transform>());
     }
+    else
+    {
+        //detect if controller was moved
+    }
+
 
     //background
     entity = m_uiScene.createEntity();

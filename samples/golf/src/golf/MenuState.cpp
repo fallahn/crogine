@@ -794,6 +794,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonTrackpad:
         case cro::GameController::PaddleR4:
+        case cro::GameController::ButtonY:
             if (m_currentMenu == MenuID::Lobby)
             {
                 m_textChat.toggleWindow();
@@ -2211,6 +2212,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             {
             default:
                 m_sharedData.errorMessage = "Server Error (Unknown)";
+                break;
+            case MessageType::Kicked:
+                m_sharedData.errorMessage = "You Were Kicked By The Host.";
                 break;
             case MessageType::MapNotFound:
                 m_sharedData.errorMessage = "Server Failed To Load Map";
