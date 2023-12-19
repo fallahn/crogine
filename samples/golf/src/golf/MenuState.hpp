@@ -188,6 +188,9 @@ private:
         std::uint32_t unselectHighlight = 0;
         std::uint32_t selectText = 0;
         std::uint32_t unselectText = 0;
+        std::uint32_t selectPM = 0;
+        std::uint32_t unselectPM = 0;
+        std::uint32_t activatePM = 0;
     }m_courseSelectCallbacks;
     std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
 
@@ -337,6 +340,7 @@ private:
     {
         cro::Entity infoLeague;
         cro::Entity lobbyCourseA;
+        cro::Entity lobbyCourseB;
         cro::Entity lobbyInfoA;
         cro::Entity lobbyInfoB;
         cro::Entity lobbyRulesA;

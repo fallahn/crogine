@@ -105,9 +105,9 @@ namespace cro
         \param next The next index to select when pressing right
         \param down The next index to select when pressing down
         */
-        void setNextIndex(std::size_t next, std::size_t down = std::numeric_limits<std::size_t>::max())
+        void setNextIndex(std::size_t right, std::size_t down = std::numeric_limits<std::size_t>::max())
         {
-            m_neighbourIndices[1] = next;
+            m_neighbourIndices[1] = right;
             m_neighbourIndices[3] = down;
         }
 
@@ -116,9 +116,9 @@ namespace cro
         \param prev The next index to select when pressing left
         \param up The next index to select when pressing up
         */
-        void setPrevIndex(std::size_t prev, std::size_t up = std::numeric_limits<std::size_t>::max())
+        void setPrevIndex(std::size_t left, std::size_t up = std::numeric_limits<std::size_t>::max())
         {
-            m_neighbourIndices[0] = prev;
+            m_neighbourIndices[0] = left;
             m_neighbourIndices[2] = up;
         }
 

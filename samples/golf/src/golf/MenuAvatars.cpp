@@ -1515,6 +1515,60 @@ void MenuState::createMenuCallbacks()
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         });
+
+    m_courseSelectCallbacks.selectPM = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e)
+        {
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour = TextHighlightColour;
+            }
+            e.getComponent<cro::AudioEmitter>().play();
+
+            //set prev/next indices based on which sub-menu is active
+            const auto holeScale = m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y;
+            const auto infoScale = m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().getScale().y;
+
+            if (holeScale + infoScale == 0)
+            {
+                //we're on the rules tab
+                e.getComponent<cro::UIInput>().setNextIndex(LobbyCourseA, LobbyQuit);
+                e.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoA, LobbyQuit);
+            }
+            else
+            {
+                if (holeScale == 0)
+                {
+                    //we're on info
+                    e.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyQuit);
+                    e.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesB, LobbyQuit);
+                }
+                else
+                {
+                    //we're on course tab
+                    e.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyQuit);
+                    e.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoB, LobbyQuit);
+                }
+            }
+        });
+    m_courseSelectCallbacks.unselectPM = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour = cro::Colour::Transparent;
+            }
+        });
+    m_courseSelectCallbacks.activatePM = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt)
+                && m_sharedData.hosting)
+            {
+                requestStackPush(StateID::PlayerManagement);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        });
 }
 
 void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTransform, const cro::SpriteSheet& spriteSheet)

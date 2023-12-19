@@ -1653,6 +1653,24 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Callback>().function = TitleTextCallback();
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+    if (cro::GameController::getControllerCount() == 0)
+    {
+        //chat hint if no controllers
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<UIElement>().relativePosition = { 0.f, 1.f };
+        entity.getComponent<UIElement>().depth = 1.6f;
+        entity.getComponent<UIElement>().absolutePosition = { 2.f, -4.f };
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("Shift+F8 to Chat");
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        menuTransform.addChild(entity.getComponent<cro::Transform>());
+    }
+
     //background
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -2350,6 +2368,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = infoButtonEnable;
     infoBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyButtonContext.lobbyCourseB = entity;
 
     //button to show leaderboards
     entity = m_uiScene.createEntity();
@@ -3544,7 +3563,7 @@ void MenuState::addCourseSelectButtons()
     checkboxEnt.addComponent<cro::UIInput>().area = bounds;
     checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseNightTime);
-    checkboxEnt.getComponent<cro::UIInput>().setNextIndex(CoursePrev, Social::isAvailable() ? CourseFriendsOnly : CourseWeather);
+    checkboxEnt.getComponent<cro::UIInput>().setNextIndex(PlayerManagement, Social::isAvailable() ? CourseFriendsOnly : CourseWeather);
     checkboxEnt.getComponent<cro::UIInput>().setPrevIndex(CourseNext, CourseClubLimit);
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
@@ -3694,7 +3713,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CoursePrev);
     buttonEnt.getComponent<cro::UIInput>().setNextIndex(CourseNext, CourseHolePrev);
-    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(CourseNightTime, LobbyQuit);
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(PlayerManagement, LobbyQuit);
 //#ifdef USE_GNS
 //#else
 //#endif
@@ -3800,6 +3819,72 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<UIElement>().depth = 0.1f;
         m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
+
+
+    //selection box to open player management
+    static constexpr float Width = 216.f;
+    static constexpr float Height = 228.f;
+    static constexpr float Thickness = 3.f;
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, 6.f, 0.5f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            //left
+            cro::Vertex2D(glm::vec2(0.f,Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness,0.f), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(Thickness,Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f, Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness,0.f), TextHighlightColour),
+
+            //right
+            cro::Vertex2D(glm::vec2(Width - Thickness,Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness,0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width,0.f), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(Width,Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width,0.f), TextHighlightColour),
+
+
+            //bottom
+            cro::Vertex2D(glm::vec2(Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness, 0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Thickness), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(Width - Thickness, Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness, 0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, 0.f), TextHighlightColour),
+
+            //top
+            cro::Vertex2D(glm::vec2(Thickness, Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness, Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Height), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(Width - Thickness, Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness, Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Height - Thickness), TextHighlightColour),
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    for (auto& v : entity.getComponent<cro::Drawable2D>().getVertexData())
+    {
+        v.colour = cro::Colour::Transparent;
+    }
+
+    entity.addComponent<cro::UIInput>().area = { 0.f, 0.f, Width, Height };
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerManagement);
+    entity.getComponent<cro::UIInput>().setNextIndex(CoursePrev, LobbyQuit);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CourseNightTime, LobbyQuit);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectPM;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectPM;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_courseSelectCallbacks.activatePM;
+
+    m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void MenuState::prevHoleCount()
@@ -4937,17 +5022,19 @@ void MenuState::refreshLobbyButtons()
 {
     if (m_sharedData.hosting)
     {
-        m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoA, LobbyQuit);
-        m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoA, Social::getClubLevel() ? RulesClubset : RulesGimmePrev);
+        m_lobbyButtonContext.lobbyCourseB.getComponent<cro::UIInput>().setPrevIndex(PlayerManagement, InfoLeaderboards);
 
-        m_lobbyButtonContext.lobbyInfoA.getComponent<cro::UIInput>().setNextIndex(LobbyCourseA, LobbyStart);
+        m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoA, LobbyQuit);
+        m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setPrevIndex(PlayerManagement, Social::getClubLevel() ? RulesClubset : RulesGimmePrev);
+
+        m_lobbyButtonContext.lobbyInfoA.getComponent<cro::UIInput>().setNextIndex(PlayerManagement, LobbyStart);
         m_lobbyButtonContext.lobbyInfoA.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseA, Social::getClubLevel() ? RulesClubset : RulesGimmeNext);
 
-        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyStart);
+        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setNextIndex(PlayerManagement, LobbyStart);
         m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, CourseWeather);
 
         m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoB, LobbyQuit);
-        m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoB, CourseNext);
+        m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setPrevIndex(PlayerManagement, CourseNext);
 
         if (m_lobbyButtonContext.rulesClubset.isValid())
         {
@@ -4957,6 +5044,8 @@ void MenuState::refreshLobbyButtons()
     }
     else
     {
+        m_lobbyButtonContext.lobbyCourseB.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesB, InfoLeaderboards);
+
         m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoA, LobbyQuit);
         m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoA, Social::getClubLevel() ? RulesClubset : LobbyStart);
 
@@ -4978,7 +5067,7 @@ void MenuState::refreshLobbyButtons()
 
     if (m_lobbyButtonContext.hasScoreCard)
     {
-        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyStart);
+        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setNextIndex(PlayerManagement, LobbyStart);
         m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, InfoLeague);
 
         m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setNextIndex(InfoScorecard, LobbyRulesB);
@@ -4986,7 +5075,7 @@ void MenuState::refreshLobbyButtons()
     }
     else
     {
-        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyStart);
+        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setNextIndex(PlayerManagement, LobbyStart);
         m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, InfoLeague);
 
         m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setNextIndex(LobbyRulesB, LobbyRulesB);
