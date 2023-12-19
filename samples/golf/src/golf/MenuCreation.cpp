@@ -40,6 +40,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "UnlockItems.hpp"
 #include "MenuEnum.inl"
+#include "TextAnimCallback.hpp"
 #include "../ErrorCheck.hpp"
 #include "server/ServerPacketData.hpp"
 #include "../../buildnumber.h"
@@ -3824,31 +3825,33 @@ void MenuState::addCourseSelectButtons()
     //selection box to open player management
     static constexpr float Width = 216.f;
     static constexpr float Height = 228.f;
-    static constexpr float Thickness = 3.f;
+    static constexpr float Thickness = 1.f;
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 6.f, 0.5f });
+    entity.addComponent<cro::Transform>().setPosition({ 5.f, 7.f, 0.5f });
+    entity.getComponent<cro::Transform>().setOrigin({ Width / 2.f, Height / 2.f });
+    entity.getComponent<cro::Transform>().move({ Width / 2.f, Height / 2.f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
             //left
-            cro::Vertex2D(glm::vec2(0.f,Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Thickness,0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f,Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f, Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness), TextHighlightColour),
 
-            cro::Vertex2D(glm::vec2(Thickness,Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(0.f, Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Thickness,0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness,Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f, Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness), TextHighlightColour),
 
             //right
-            cro::Vertex2D(glm::vec2(Width - Thickness,Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width - Thickness,0.f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness,Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width, Thickness), TextHighlightColour),
 
-            cro::Vertex2D(glm::vec2(Width,Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width - Thickness, Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width,Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width, Thickness), TextHighlightColour),
 
 
             //bottom
@@ -3883,6 +3886,8 @@ void MenuState::addCourseSelectButtons()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectPM;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectPM;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_courseSelectCallbacks.activatePM;
+
+    //entity.addComponent<cro::Callback>().function = MenuTextCallback();
 
     m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }

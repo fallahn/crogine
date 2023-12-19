@@ -1521,9 +1521,10 @@ void MenuState::createMenuCallbacks()
         {
             for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
             {
-                v.colour = TextHighlightColour;
+                v.colour = TextGoldColour;
             }
             e.getComponent<cro::AudioEmitter>().play();
+            //e.getComponent<cro::Callback>().active = true;
 
             //set prev/next indices based on which sub-menu is active
             const auto holeScale = m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y;
