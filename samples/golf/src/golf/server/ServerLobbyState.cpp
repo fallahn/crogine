@@ -80,6 +80,9 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default:break;
+        case PacketID::ServerCommand:
+            doServerCommand(evt);
+            break;
         case PacketID::PlayerInfo:
             insertPlayerInfo(evt);
             break;
@@ -303,4 +306,33 @@ void LobbyState::broadcastRules()
     m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void LobbyState::doServerCommand(const net::NetEvent& evt)
+{
+    if (evt.peer.getID() == m_sharedData.hostID)
+    {
+        const auto data = evt.packet.as<std::uint16_t>();
+        const std::uint8_t command = (data & 0xff);
+        const std::uint8_t target = ((data >> 8) & 0xff);
+
+        switch (command)
+        {
+        default: break;
+        case ServerCommand::PokeClient:
+            if (/*target != 0 &&*/ target < ConstVal::MaxClients)
+            {
+                m_sharedData.host.sendPacket(m_sharedData.clients[target].peer, PacketID::Poke, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case ServerCommand::KickClient:
+            if (target != 0 && target < ConstVal::MaxClients)
+            {
+                auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(MessageID::ConnectionMessage);
+                msg->type = ConnectionEvent::Kicked;
+                msg->clientID = target;
+            }
+            break;
+        }
+    }
 }

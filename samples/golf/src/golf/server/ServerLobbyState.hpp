@@ -54,5 +54,6 @@ namespace sv
 
         void insertPlayerInfo(const net::NetEvent&);
         void broadcastRules();
+        void doServerCommand(const net::NetEvent&);
     };
 }

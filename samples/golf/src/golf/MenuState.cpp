@@ -201,6 +201,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Leaderboard);
         cacheState(StateID::League);
         cacheState(StateID::News);
+        cacheState(StateID::PlayerManagement);
 
         context.mainWindow.setMouseCaptured(false);
 
@@ -717,6 +718,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
         //        m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(SkyNight);
         //    }
         //}
+            break;
+        case SDLK_TAB:
+            if (m_currentMenu == MenuID::Lobby
+                && m_sharedData.hosting)
+            {
+                requestStackPush(StateID::PlayerManagement);
+            }
             break;
         }
     }
@@ -1290,6 +1298,8 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Message].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("message");
     m_audioEnts[AudioID::Nope] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Nope].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("nope");
+    m_audioEnts[AudioID::Poke] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Poke].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("poke");
 }
 
 void MenuState::createScene()
@@ -1747,6 +1757,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::Poke:
+            m_audioEnts[AudioID::Poke].getComponent<cro::AudioEmitter>().play();
+            break;
         case PacketID::ChatMessage:
             m_textChat.handlePacket(evt.packet);
 
@@ -1884,6 +1897,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::LobbyUpdate:
             updateLobbyData(evt);
+            postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
             break;
         case PacketID::ClientDisconnected:
         {
@@ -1891,6 +1905,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             m_sharedData.connectionData[client].playerCount = 0;
             m_readyState[client] = false;
             updateLobbyAvatars();
+
+            postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
         }
             break;
         case PacketID::LobbyReady:

@@ -38,6 +38,8 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/graphics/Image.hpp>
@@ -176,13 +178,27 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
 
 void PlayerManagementState::handleMessage(const cro::Message& msg)
 {
+    const auto updateUI =
+        [&]()
+        {
+            m_scene.getSystem<cro::UISystem>()->selectByIndex(QuitIndex);
+            refreshPlayerList();
+        };
+
     if (msg.id == MessageID::GolfMessage)
     {
         const auto& data = msg.getData<GolfEvent>();
         if (data.type == GolfEvent::ClientDisconnect)
         {
-            m_scene.getSystem<cro::UISystem>()->selectByIndex(QuitIndex);
-            refreshPlayerList();
+            updateUI();
+        }
+    }
+    else if (msg.id == Social::MessageID::SocialMessage)
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::LobbyUpdated)
+        {
+            updateUI();
         }
     }
 
@@ -234,7 +250,7 @@ void PlayerManagementState::buildScene()
     };
 
     auto rootNode = m_scene.createEntity();
-    rootNode.addComponent<cro::Transform>();
+    rootNode.addComponent<cro::Transform>().setOrigin({ 0.f, -10.f, 0.f });
     rootNode.addComponent<cro::Callback>().active = true;
     rootNode.getComponent<cro::Callback>().setUserData<RootCallbackData>();
     rootNode.getComponent<cro::Callback>().function =
@@ -461,7 +477,7 @@ void PlayerManagementState::buildScene()
     entity = createItem(glm::vec2(0.f, -6.f), "Return", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(QuitIndex);
-    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, KickIndex);
+    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, PokeIndex);
     entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, KickIndex);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -495,58 +511,87 @@ void PlayerManagementState::buildScene()
             m_confirmType = confirmType;
         };
 
-    //poke button
-    entity = createItem(glm::vec2(0.f, 30.f), "Poke Selected Player", menuEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(PokeIndex);
-    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, ForfeitIndex);
-    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, QuitIndex);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
-                {
-                    if (m_cooldownTimer.elapsed() > CooldownTime)
-                    {
-                        m_cooldownTimer.restart();
-                        setConfirmMessage("Poke " + m_sharedData.connectionData[m_playerList.selectedClient].playerData[m_playerList.selectedPlayer].name + " ?", ConfirmType::Poke);
-                    }
-                    else
-                    {
-                        m_audioEnts[AudioID::Denied].getComponent<cro::AudioEmitter>().play();
-                    }
-                }
-            });
 
-    //forfeit button
-    entity = createItem(glm::vec2(0.f, 18.f), "Forfeit Current Player", menuEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(ForfeitIndex);
-    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, KickIndex);
-    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, PokeIndex);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
+    if (m_sharedData.baseState != StateID::Menu)
+    {
+        //poke button
+        entity = createItem(glm::vec2(0.f, 30.f), "Poke Selected Player", menuEntity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(PokeIndex);
+        entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, ForfeitIndex);
+        entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, QuitIndex);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
                 {
-                    if (m_cooldownTimer.elapsed() > CooldownTime)
+                    if (activated(evt))
                     {
-                        m_cooldownTimer.restart();
-                        setConfirmMessage("Forfeit current player's hole?", ConfirmType::Forfeit);
+                        if (m_cooldownTimer.elapsed() > CooldownTime)
+                        {
+                            m_cooldownTimer.restart();
+                            setConfirmMessage("Poke " + m_sharedData.connectionData[m_playerList.selectedClient].playerData[m_playerList.selectedPlayer].name + " ?", ConfirmType::Poke);
+                        }
+                        else
+                        {
+                            m_audioEnts[AudioID::Denied].getComponent<cro::AudioEmitter>().play();
+                        }
                     }
-                    else
+                });
+
+        //forfeit button
+        entity = createItem(glm::vec2(0.f, 18.f), "Forfeit Current Player", menuEntity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(ForfeitIndex);
+        entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, KickIndex);
+        entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, PokeIndex);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
+                {
+                    if (activated(evt))
                     {
-                        m_audioEnts[AudioID::Denied].getComponent<cro::AudioEmitter>().play();
+                        if (m_cooldownTimer.elapsed() > CooldownTime)
+                        {
+                            m_cooldownTimer.restart();
+                            setConfirmMessage("Forfeit current player's hole?", ConfirmType::Forfeit);
+                        }
+                        else
+                        {
+                            m_audioEnts[AudioID::Denied].getComponent<cro::AudioEmitter>().play();
+                        }
                     }
-                }
-            });
+                });
+    }
+    else
+    {
+        //poke button
+        entity = createItem(glm::vec2(0.f, 18.f), "Poke Selected Player", menuEntity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(PokeIndex);
+        entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, KickIndex);
+        entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, QuitIndex);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        if (m_cooldownTimer.elapsed() > CooldownTime)
+                        {
+                            m_cooldownTimer.restart();
+                            setConfirmMessage("Poke " + m_sharedData.connectionData[m_playerList.selectedClient].playerData[m_playerList.selectedPlayer].name + " ?", ConfirmType::Poke);
+                        }
+                        else
+                        {
+                            m_audioEnts[AudioID::Denied].getComponent<cro::AudioEmitter>().play();
+                        }
+                    }
+                });
+    }
 
     //kick button
     entity = createItem(glm::vec2(0.f, 6.f), "Kick Selected Player", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(KickIndex);
     entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, QuitIndex);
-    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, ForfeitIndex);
+    entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, m_sharedData.baseState == StateID::Menu ? PokeIndex : ForfeitIndex);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
             {
@@ -662,9 +707,6 @@ void PlayerManagementState::buildScene()
 
 void PlayerManagementState::refreshPlayerList()
 {
-    //m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
-    //m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
-
     std::size_t playerCount = 0;
 
     cro::String str;
