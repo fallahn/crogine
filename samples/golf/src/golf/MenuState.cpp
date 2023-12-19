@@ -784,12 +784,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonGuide:
             togglePreviousScoreCard();
             break;
-        /*case cro::GameController::ButtonY:
+        case cro::GameController::ButtonTrackpad:
+        case cro::GameController::PaddleR4:
             if (m_currentMenu == MenuID::Lobby)
             {
                 m_textChat.toggleWindow();
             }
-            break;*/
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)

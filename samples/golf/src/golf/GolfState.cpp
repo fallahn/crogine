@@ -735,7 +735,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //m_textChat.toggleWindow();
             break;
         case cro::GameController::ButtonTrackpad:
-            showMapOverview();
+        case cro::GameController::PaddleR4:
+            m_textChat.toggleWindow();
+            //showMapOverview();
             break;
         case cro::GameController::ButtonBack:
             showScoreboard(false);
