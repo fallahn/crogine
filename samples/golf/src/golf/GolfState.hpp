@@ -518,6 +518,8 @@ private:
         cro::Entity rootNode;
         std::array<cro::Entity, 8u> buttonNodes = {};
         std::array<cro::Entity, 8u> labelNodes = {};
+        cro::Entity chatNode;
+        cro::Entity chatButtonNode;
 
         std::array<std::array<std::int16_t, 2u>, cro::GameController::MaxControllers> axisPos = {};
 

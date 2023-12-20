@@ -126,7 +126,7 @@ static constexpr std::array<glm::vec3, 8u> EmotePositions =
     glm::vec3(24.f, 24.f, 0.15f),
     glm::vec3(-24.f, 24.f, 0.15f),
     glm::vec3(-24.f, -24.f, 0.15f),
-    glm::vec3(24.f, -24.f, 0.15f),
+    glm::vec3(24.f, -24.f, 0.15f)
 };
 
 static constexpr std::uint32_t LargeTextSize = 64;

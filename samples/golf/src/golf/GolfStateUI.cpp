@@ -4535,7 +4535,7 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
             std::string("rb"),
             std::string("lb"),
             std::string("lt"),
-            std::string("rt"),
+            std::string("rt")
         };
 
         auto& font = sharedData.sharedResources->fonts.get(FontID::UI);
@@ -4611,16 +4611,40 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
             entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
             labelNodes[i] = labelEnt;
         }
-        refreshLabels();
 
+        //background
         entity = uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, 0.13f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-
         rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        auto bgEnt = entity;
+
+        //chat label if using controller
+        entity = uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -4.f, -18.f, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Chat Window");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        chatNode = entity;
+
+        entity = uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -17.f, -11.f, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("chat_button");
+        entity.addComponent<cro::SpriteAnimation>();
+        chatNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        chatButtonNode = entity;
+
+        refreshLabels(); //must do this last!
     }
 }
 
@@ -4768,6 +4792,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                     for (auto i = 4u; i < buttonNodes.size(); ++i)
                     {
                         buttonNodes[i].getComponent<cro::SpriteAnimation>().play(anim);
+                        chatButtonNode.getComponent<cro::SpriteAnimation>().play(anim);
                     }
                 }
 
@@ -4790,6 +4815,9 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             case cro::GameController::ButtonRightShoulder:
             case cro::GameController::ButtonLeftStick:
             case cro::GameController::ButtonRightStick:
+
+            case cro::GameController::ButtonA:
+            case cro::GameController::ButtonX:
                 return true;
             }
         }
@@ -4814,6 +4842,14 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             switch (evt.cbutton.button)
             {
             default: return false;
+            case cro::GameController::ButtonA:
+                //consume this so we don't mess with the swing
+                return true;
+            case cro::GameController::ButtonX:
+                m_textChat.toggleWindow(true);
+                //TODO close emote wheel automatically?
+                targetScale = 0.f;
+                return true;
             case SDL_CONTROLLER_BUTTON_DPAD_UP:
                 sendEmote(Emote::Happy, controllerID);
                 return true;
@@ -4921,13 +4957,13 @@ void GolfState::EmoteWheel::refreshLabels()
         }
     }
 
-    const std::array LabelStr =
+    /*const std::array LabelStr =
     {
         std::string("7"),
         std::string("8"),
         std::string("9"),
         std::string("0"),
-    };
+    };*/
 
     //hide trigger icons if no controller
     for (auto i = InputMap.size(); i < labelNodes.size(); ++i)
@@ -4938,12 +4974,12 @@ void GolfState::EmoteWheel::refreshLabels()
         if (cro::GameController::getControllerCount() == 0)
         {
             buttonNodes[i].getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-            //labelNodes[i].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+            chatNode.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         }
         else
         {
             buttonNodes[i].getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
-            //labelNodes[i].getComponent<cro::Transform>().setScale({ 1.f, 0.f });
+            chatNode.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         }
     }
 }
