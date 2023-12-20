@@ -211,6 +211,22 @@ TextChat::~TextChat()
 }
 
 //public
+void TextChat::handleMessage(const cro::Message& msg)
+{
+    if (msg.id == cl::MessageID::SystemMessage)
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        if (data.type == SystemEvent::SubmitOSK)
+        {
+            sendBufferedString(); //also ends the chat notification
+        }
+        else if (data.type == SystemEvent::CancelOSK)
+        {
+            endChat();
+        }
+    }
+}
+
 void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 {
     const auto msg = pkt.as<TextMessage>();
@@ -220,6 +236,10 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     //we have to manually truncate this else we get a lot of white space
     auto msgText = cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
+
+#ifdef USE_GNS
+    Social::filterString(msgText);
+#endif
 
     cro::Colour chatColour = TextNormalColour;
 
@@ -422,7 +442,6 @@ void TextChat::quickEmote(std::int32_t emote)
 
 void TextChat::sendBufferedString()
 {
-
     if (!m_sharedData.OSKBuffer.empty())
     {
         auto oldString = m_inputBuffer;
@@ -432,6 +451,9 @@ void TextChat::sendBufferedString()
 
         sendTextChat();
         m_inputBuffer = oldString;
+
+        m_sharedData.useOSKBuffer = false;
+        m_sharedData.OSKBuffer.clear();
     }
 }
 

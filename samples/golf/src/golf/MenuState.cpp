@@ -781,7 +781,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             if ((evt.key.keysym.mod & KMOD_SHIFT)
                 && m_currentMenu == MenuID::Lobby)
             {
-                m_textChat.toggleWindow(true);
+                m_textChat.toggleWindow(false);
             }
             break;
         }
@@ -1015,14 +1015,6 @@ void MenuState::handleMessage(const cro::Message& msg)
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
             }*/
         }
-        else if (data.type == SystemEvent::SubmitOSK
-            && m_currentMenu == MenuID::Lobby)
-        {
-            m_textChat.sendBufferedString();
-
-            m_sharedData.useOSKBuffer = false;
-            m_sharedData.OSKBuffer.clear();
-        }
     }
 #ifdef USE_GNS
     else if (msg.id == Social::MessageID::UGCMessage)
@@ -1079,6 +1071,11 @@ void MenuState::handleMessage(const cro::Message& msg)
         }
     }
 #endif
+
+    if (m_currentMenu == MenuID::Lobby)
+    {
+        m_textChat.handleMessage(msg);
+    }
 
     m_backgroundScene.forwardMessage(msg);
     m_avatarScene.forwardMessage(msg);

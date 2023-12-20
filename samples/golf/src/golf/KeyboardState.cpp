@@ -210,8 +210,15 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::SubmitOSK;
             }
-            [[fallthrough]];
+                quitState();
+                break;
+            case cro::GameController::ButtonLeftShoulder:
             case cro::GameController::ButtonBack:
+            {
+                //raises a message to say we want to accept the buffer (if buffered)
+                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                msg->type = SystemEvent::CancelOSK;
+            }
                 quitState();
                 break;
             }
@@ -222,7 +229,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLERAXISMOTION:
             
             return false;
-//#ifdef CRO_DEBUG_
+#ifdef CRO_DEBUG_
         case SDL_KEYDOWN:
             switch (evt.key.keysym.sym)
             {
@@ -269,7 +276,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                 return false;
             }
             break;
-//#endif
+#endif
         }
     }
 

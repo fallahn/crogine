@@ -44,6 +44,8 @@ public:
     TextChat(cro::Scene&, SharedStateData&);
     ~TextChat(); //there's no ownership here it just resets the OSK
 
+    void handleMessage(const cro::Message&);
+
     void handlePacket(const net::NetEvent::Packet&);
 
     void toggleWindow(bool showOSK);

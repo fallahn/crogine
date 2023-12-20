@@ -123,7 +123,9 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
         prevChar = currChar;
 
         //whitespace chars
-        if (currChar == ' ' || currChar == '\t' || currChar == '\n')
+        //might seem wasteful to render an empty glyph for spaces - 
+        //however right aligned text breaks when there's a space at the end
+        if (/*currChar == ' ' ||*/ currChar == '\t' || currChar == '\n')
         {
             minX = std::min(minX, x);
             minY = std::min(minY, y);
@@ -131,9 +133,9 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             switch (currChar)
             {
             default: break;
-            case ' ':
+            /*case ' ':
                 x += xOffset;
-                break;
+                break;*/
             case '\t':
                 x += xOffset * 4.f; //4 spaces for tab suckas
                 break;

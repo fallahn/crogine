@@ -872,13 +872,6 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_terrainBuilder.applyTreeQuality();
             m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::High);
         }
-        else if (data.type == SystemEvent::SubmitOSK)
-        {
-            m_textChat.sendBufferedString();
-
-            m_sharedData.useOSKBuffer = false;
-            m_sharedData.OSKBuffer.clear();
-        }
     }
         break;
     case cro::Message::SkeletalAnimationMessage:
@@ -1593,6 +1586,7 @@ void GolfState::handleMessage(const cro::Message& msg)
     }
 
     m_cpuGolfer.handleMessage(msg);
+    m_textChat.handleMessage(msg);
 
     m_gameScene.forwardMessage(msg);
     m_skyScene.forwardMessage(msg);
