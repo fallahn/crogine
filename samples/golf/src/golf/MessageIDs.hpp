@@ -150,7 +150,9 @@ struct SystemEvent final
         ShadowQualityChanged,
         TreeQualityChanged,
         MenuChanged,
-        RestartActiveMode //currently just driving range, but might apply somewhere else one day :)
+        RestartActiveMode, //currently just driving range, but might apply somewhere else one day :)
+        RequestOSK,
+        SubmitOSK //OSK was closed and there's data in the buffer to be read
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };

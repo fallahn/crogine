@@ -58,9 +58,7 @@ enum MenuIndex
     PlayerDelete,
 
 
-    PlayerManagement = 400,
-
-    Lobby,
+    Lobby = 400,
     LobbyQuit,
     LobbyStart,
     LobbyCourseA,
@@ -69,6 +67,7 @@ enum MenuIndex
     LobbyRulesB,
     LobbyInfoA,
     LobbyInfoB,
+    PlayerManagement,
 
     CoursePrev,
     CourseNext,

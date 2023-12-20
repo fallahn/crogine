@@ -31,6 +31,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
+#include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/ecs/components/Callback.hpp>
@@ -354,7 +355,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
 }
 
-void TextChat::toggleWindow()
+void TextChat::toggleWindow(bool showOSK)
 {
 #ifdef USE_GNS
     if (Social::isSteamdeck())
@@ -378,8 +379,17 @@ void TextChat::toggleWindow()
     else
 #endif
     {
-        m_visible = (!m_visible && !Social::isSteamdeck());
-        m_focusInput = m_visible;
+        if (showOSK)
+        {
+            auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+            msg->type = SystemEvent::RequestOSK;
+            msg->data = 1; //use OSK buffer
+        }
+        else
+        {
+            m_visible = (!m_visible && !Social::isSteamdeck());
+            m_focusInput = m_visible;
+        }
     }
 }
 
@@ -408,6 +418,21 @@ void TextChat::quickEmote(std::int32_t emote)
     sendTextChat();
 
     m_inputBuffer = oldStr;
+}
+
+void TextChat::sendBufferedString()
+{
+
+    if (!m_sharedData.OSKBuffer.empty())
+    {
+        auto oldString = m_inputBuffer;
+
+        auto str = m_sharedData.OSKBuffer.toUtf8();
+        m_inputBuffer = std::string(str.begin(), str.end());
+
+        sendTextChat();
+        m_inputBuffer = oldString;
+    }
 }
 
 

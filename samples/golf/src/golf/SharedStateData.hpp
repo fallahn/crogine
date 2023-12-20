@@ -73,6 +73,9 @@ static constexpr float MaxFOV = 90.f;
 
 struct SharedStateData final
 {
+    bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
+    cro::String OSKBuffer;
+
     struct MinimapData final
     {
         cro::MultiRenderTexture* mrt = nullptr;

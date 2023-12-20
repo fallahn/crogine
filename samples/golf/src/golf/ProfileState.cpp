@@ -1075,7 +1075,9 @@ void ProfileState::buildScene()
 
                         if (evt.type == SDL_CONTROLLERBUTTONUP)
                         {
-                            requestStackPush(StateID::Keyboard);
+                            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                            msg->type = SystemEvent::RequestOSK;
+                            msg->data = 0;
                         }
                     }
                     else

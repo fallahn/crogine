@@ -297,6 +297,21 @@ void GolfGame::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case SystemEvent::RequestOSK:
+            if (m_stateStack.getTopmostState() != StateID::Keyboard)
+            {
+                if (data.data == 1)
+                {
+                    m_sharedData.useOSKBuffer = true;
+                    m_sharedData.OSKBuffer.clear();
+                }
+                else
+                {
+                    m_sharedData.useOSKBuffer = false;
+                }
+                m_stateStack.pushState(StateID::Keyboard);
+            }
+            break;
         case SystemEvent::PostProcessToggled:
             if (m_postShader->getGLHandle() != 0)
             {
@@ -864,6 +879,8 @@ void GolfGame::initFonts()
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
     m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
 
+    m_sharedData.sharedResources->fonts.load(FontID::OSK, "assets/fonts/VeraMono.ttf");
+
     //international fonts - these mappings are those used in DearImGui
     cro::FontAppendmentContext ctx;
     static const std::array FontMappings =
@@ -896,6 +913,8 @@ void GolfGame::initFonts()
         m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(path, ctx);
         m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
         m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
+
+        m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
     }
 
 
@@ -925,6 +944,8 @@ void GolfGame::initFonts()
             m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, ctx);
+
+            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(winPath, ctx);
         }
     }
     else
@@ -936,6 +957,8 @@ void GolfGame::initFonts()
             m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+
+            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
         }
     }
 }

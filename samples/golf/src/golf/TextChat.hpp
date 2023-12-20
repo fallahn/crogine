@@ -46,7 +46,7 @@ public:
 
     void handlePacket(const net::NetEvent::Packet&);
 
-    void toggleWindow();
+    void toggleWindow(bool showOSK);
 
     bool isVisible() const { return m_visible; }
 
@@ -57,6 +57,8 @@ public:
         Angry, Happy, Laughing, Applaud
     };
     void quickEmote(std::int32_t);
+
+    void sendBufferedString();
 
 private:
 

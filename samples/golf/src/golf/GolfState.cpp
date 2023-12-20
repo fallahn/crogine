@@ -339,13 +339,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 case SDLK_ESCAPE:
                     if (m_textChat.isVisible())
                     {
-                        m_textChat.toggleWindow();
+                        m_textChat.toggleWindow(false);
                     }
                     break;
                 case SDLK_F8:
                     if (evt.key.keysym.mod & KMOD_SHIFT)
                     {
-                        m_textChat.toggleWindow();
+                        m_textChat.toggleWindow(false);
                     }
                     break;
                 }                
@@ -470,7 +470,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
             {
-                m_textChat.toggleWindow();
+                m_textChat.toggleWindow(false);
             }
             break;
         case SDLK_F9:
@@ -667,7 +667,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
             if (m_textChat.isVisible())
             {
-                m_textChat.toggleWindow();
+                m_textChat.toggleWindow(false);
                 break;
             }
             [[fallthrough]];
@@ -736,7 +736,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonTrackpad:
         case cro::GameController::PaddleR4:
-            m_textChat.toggleWindow();
+            m_textChat.toggleWindow(true);
             //showMapOverview();
             break;
         case cro::GameController::ButtonBack:
@@ -871,6 +871,13 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             m_terrainBuilder.applyTreeQuality();
             m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::High);
+        }
+        else if (data.type == SystemEvent::SubmitOSK)
+        {
+            m_textChat.sendBufferedString();
+
+            m_sharedData.useOSKBuffer = false;
+            m_sharedData.OSKBuffer.clear();
         }
     }
         break;

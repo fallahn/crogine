@@ -73,6 +73,7 @@ source distribution.
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -522,6 +523,53 @@ MenuState::~MenuState()
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
+    const auto setChatHint =
+        [&](bool controller)
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::ChatHint;
+            if (controller)
+            {
+                cmd.action = 
+                    [&](cro::Entity e, float)
+                {
+                    if (e.hasComponent<cro::Sprite>())
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                        if (cro::GameController::hasPSLayout(0))
+                        {
+                            e.getComponent<cro::SpriteAnimation>().play(1);
+                        }
+                        else
+                        {
+                            e.getComponent<cro::SpriteAnimation>().play(0);
+                        }
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Text>().setString("     to Chat");
+                    }
+                };
+            }
+            else
+            {
+                cmd.action =
+                    [](cro::Entity e, float)
+                {
+                    if (e.hasComponent<cro::Sprite>())
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Text>().setString("Shift+F8 to Chat");
+                    }
+                };
+            }
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        };
+
     const auto quitMenu = 
         [&]()
     {
@@ -591,7 +639,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 case SDLK_ESCAPE:
                     if (m_textChat.isVisible())
                     {
-                        m_textChat.toggleWindow();
+                        m_textChat.toggleWindow(false);
                     }
                     break;
                 /*case SDLK_F8:
@@ -610,6 +658,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
+        setChatHint(false);
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -704,21 +753,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_F6:
             m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
             break;
-        case SDLK_F8:
-        //{
-        //    static bool dayTime = true;
-        //    dayTime = !dayTime;
-
-        //    if (dayTime)
-        //    {
-        //        m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour::White);
-        //    }
-        //    else
-        //    {
-        //        m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(SkyNight);
-        //    }
-        //}
-            break;
         case SDLK_TAB:
             if (m_currentMenu == MenuID::Lobby
                 && m_sharedData.hosting)
@@ -747,7 +781,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             if ((evt.key.keysym.mod & KMOD_SHIFT)
                 && m_currentMenu == MenuID::Lobby)
             {
-                m_textChat.toggleWindow();
+                m_textChat.toggleWindow(true);
             }
             break;
         }
@@ -762,6 +796,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        setChatHint(true);
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
@@ -797,13 +832,14 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonY:
             if (m_currentMenu == MenuID::Lobby)
             {
-                m_textChat.toggleWindow();
+                m_textChat.toggleWindow(true);
             }
             break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
+        setChatHint(false);
         if (m_currentMenu == MenuID::ProfileFlyout)
         {
             auto bounds = m_menuEntities[m_currentMenu].getComponent<cro::Drawable2D>().getLocalBounds();
@@ -842,6 +878,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     {
         if (evt.caxis.value > LeftThumbDeadZone)
         {
+            setChatHint(true);
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
@@ -977,6 +1014,14 @@ void MenuState::handleMessage(const cro::Message& msg)
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = false;
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
             }*/
+        }
+        else if (data.type == SystemEvent::SubmitOSK
+            && m_currentMenu == MenuID::Lobby)
+        {
+            m_textChat.sendBufferedString();
+
+            m_sharedData.useOSKBuffer = false;
+            m_sharedData.OSKBuffer.clear();
         }
     }
 #ifdef USE_GNS

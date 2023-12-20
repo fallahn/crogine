@@ -31,6 +31,7 @@ source distribution.
 #include "MenuCallbacks.hpp"
 #include "SharedStateData.hpp"
 #include "PacketIDs.hpp"
+#include "MessageIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 #include "Utility.hpp"
@@ -996,7 +997,9 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
                         if (evt.type == SDL_CONTROLLERBUTTONUP)
                         {
-                            requestStackPush(StateID::Keyboard);
+                            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                            msg->type = SystemEvent::RequestOSK;
+                            msg->data = 0;
                         }
                     }
                     else
@@ -1654,28 +1657,31 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Callback>().function = TitleTextCallback();
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    if (cro::GameController::getControllerCount() == 0)
-    {
-        //chat hint if no controllers
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<UIElement>().relativePosition = { 0.f, 1.f };
-        entity.getComponent<UIElement>().depth = 1.6f;
-        entity.getComponent<UIElement>().absolutePosition = { 2.f, -4.f };
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString("Shift+F8 to Chat");
-        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
-        /*entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });*/
-        menuTransform.addChild(entity.getComponent<cro::Transform>());
-    }
-    else
-    {
-        //detect if controller was moved
-    }
 
+    //chat hint
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<UIElement>().relativePosition = { 0.f, 1.f };
+    entity.getComponent<UIElement>().depth = 1.6f;
+    entity.getComponent<UIElement>().absolutePosition = { 2.f, -4.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::ChatHint;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("     to Chat");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    cro::SpriteSheet buttonSheet;
+    buttonSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_resources.textures);
+
+    auto hintEnt = entity;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -11.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = buttonSheet.getSprite("button_y");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ChatHint;
+    hintEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //background
     entity = m_uiScene.createEntity();
@@ -3304,6 +3310,81 @@ void MenuState::quitLobby()
 
 void MenuState::addCourseSelectButtons()
 {
+    //selection box to open player management
+    static constexpr float Width = 216.f;
+    static constexpr float Height = 228.f;
+    static constexpr float Thickness = 1.f;
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 5.f, 7.f, 0.5f });
+    entity.getComponent<cro::Transform>().setOrigin({ Width / 2.f, Height / 2.f });
+    entity.getComponent<cro::Transform>().move({ Width / 2.f, Height / 2.f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            //left
+            cro::Vertex2D(glm::vec2(0.f,Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f, Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(Thickness,Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f, Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness), TextHighlightColour),
+
+            //right
+            cro::Vertex2D(glm::vec2(Width - Thickness,Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width, Thickness), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(Width,Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width, Thickness), TextHighlightColour),
+
+
+            //bottom
+            cro::Vertex2D(glm::vec2(Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness, 0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Thickness), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(Width - Thickness, Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness, 0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, 0.f), TextHighlightColour),
+
+            //top
+            cro::Vertex2D(glm::vec2(Thickness, Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness, Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Height), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(Width - Thickness, Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Thickness, Height - Thickness), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width - Thickness, Height - Thickness), TextHighlightColour),
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    for (auto& v : entity.getComponent<cro::Drawable2D>().getVertexData())
+    {
+        v.colour = cro::Colour::Transparent;
+    }
+
+    entity.addComponent<cro::UIInput>().area = { 0.f, 0.f, Width, Height };
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerManagement);
+    entity.getComponent<cro::UIInput>().setNextIndex(CoursePrev, LobbyQuit);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CourseNightTime, LobbyQuit);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectPM;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectPM;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_courseSelectCallbacks.activatePM;
+
+    //entity.addComponent<cro::Callback>().function = MenuTextCallback();
+
+    m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+
+
+
     const auto gameRuleEnable = [&](cro::Entity e, float)
     {
         e.getComponent<cro::UIInput>().enabled =
@@ -3825,76 +3906,6 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<UIElement>().depth = 0.1f;
         m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
-
-
-    //selection box to open player management
-    static constexpr float Width = 216.f;
-    static constexpr float Height = 228.f;
-    static constexpr float Thickness = 1.f;
-
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 5.f, 7.f, 0.5f });
-    entity.getComponent<cro::Transform>().setOrigin({ Width / 2.f, Height / 2.f });
-    entity.getComponent<cro::Transform>().move({ Width / 2.f, Height / 2.f });
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            //left
-            cro::Vertex2D(glm::vec2(0.f,Height - Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(0.f, Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Thickness), TextHighlightColour),
-
-            cro::Vertex2D(glm::vec2(Thickness,Height - Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(0.f, Height - Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Thickness), TextHighlightColour),
-
-            //right
-            cro::Vertex2D(glm::vec2(Width - Thickness,Height - Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width - Thickness, Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width, Thickness), TextHighlightColour),
-
-            cro::Vertex2D(glm::vec2(Width,Height - Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width - Thickness, Height - Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width, Thickness), TextHighlightColour),
-
-
-            //bottom
-            cro::Vertex2D(glm::vec2(Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Thickness, 0.f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width - Thickness, Thickness), TextHighlightColour),
-
-            cro::Vertex2D(glm::vec2(Width - Thickness, Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Thickness, 0.f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width - Thickness, 0.f), TextHighlightColour),
-
-            //top
-            cro::Vertex2D(glm::vec2(Thickness, Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Thickness, Height - Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width - Thickness, Height), TextHighlightColour),
-
-            cro::Vertex2D(glm::vec2(Width - Thickness, Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Thickness, Height - Thickness), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width - Thickness, Height - Thickness), TextHighlightColour),
-        });
-    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    for (auto& v : entity.getComponent<cro::Drawable2D>().getVertexData())
-    {
-        v.colour = cro::Colour::Transparent;
-    }
-
-    entity.addComponent<cro::UIInput>().area = { 0.f, 0.f, Width, Height };
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerManagement);
-    entity.getComponent<cro::UIInput>().setNextIndex(CoursePrev, LobbyQuit);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CourseNightTime, LobbyQuit);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectPM;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectPM;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_courseSelectCallbacks.activatePM;
-
-    //entity.addComponent<cro::Callback>().function = MenuTextCallback();
-
-    m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void MenuState::prevHoleCount()

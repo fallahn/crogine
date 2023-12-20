@@ -30,6 +30,7 @@ source distribution.
 #include "KeyboardState.hpp"
 #include "SharedStateData.hpp"
 #include "GameConsts.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -40,6 +41,7 @@ source distribution.
 
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
@@ -85,6 +87,32 @@ namespace
         const std::array<std::int8_t, 3u> bytes = {};
     };
 
+    struct AppendCodepoint final
+    {
+        cro::String& buffer;
+        std::uint32_t codepoint;
+
+        void operator()()
+        {
+            buffer += codepoint;
+        }
+        AppendCodepoint(cro::String& b, std::uint8_t first, std::uint8_t second, std::uint8_t third = 0)
+            : buffer(b),
+            codepoint(first)
+        {
+            if (second)
+            {
+                codepoint = (codepoint << 8) | second;
+            
+                //only append third if we had a second byte
+                if (third)
+                {
+                    codepoint = (codepoint << 8) | third;
+                }
+            }
+        }
+    };
+
     struct ButtonAnimationCallback final
     {
         void operator() (cro::Entity e, float dt)
@@ -122,7 +150,7 @@ KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, Share
     ctx.mainWindow.setMouseCaptured(false);
 
     buildScene();
-    initCallbacks();
+    //initCallbacks();
 
 #ifdef CRO_DEBUG_
     for (auto& i : m_keyboardLayouts)
@@ -175,7 +203,14 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             case cro::GameController::ButtonY:
                 nextLayout();
                 break;
+            case cro::GameController::ButtonRightShoulder:
             case cro::GameController::ButtonStart:
+            {
+                //raises a message to say we want to accept the buffer (if buffered)
+                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                msg->type = SystemEvent::SubmitOSK;
+            }
+            [[fallthrough]];
             case cro::GameController::ButtonBack:
                 quitState();
                 break;
@@ -187,23 +222,23 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLERAXISMOTION:
             
             return false;
-#ifdef CRO_DEBUG_
+//#ifdef CRO_DEBUG_
         case SDL_KEYDOWN:
             switch (evt.key.keysym.sym)
             {
-            default: break;
+            default: return false;
             case SDLK_LEFT:
                 left();
-                break;
+                return false;
             case SDLK_RIGHT:
                 right();
-                break;
+                return false;
             case SDLK_UP:
                 up();
-                break;
+                return false;
             case SDLK_DOWN:
                 down();
-                break;
+                return false;
             case SDLK_RETURN:
                 activate();
                 return false;
@@ -221,7 +256,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         case SDL_KEYUP:
             switch (evt.key.keysym.sym)
             {
-            default: break;
+            default: return false;
             case SDLK_BACKSPACE:
                 sendBackspace();
                 [[fallthrough]];
@@ -229,9 +264,12 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             case SDLK_SPACE:
             case SDLK_TAB:
                 return false;
+            case SDLK_ESCAPE:
+                quitState();
+                return false;
             }
             break;
-#endif
+//#endif
         }
     }
 
@@ -266,12 +304,14 @@ void KeyboardState::buildScene()
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
+    m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
     //m_scene.setSystemActive<cro::UISystem>(false);
 
+    //keyboard layout
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/osk.spt", m_sharedData.sharedResources->textures);
 
@@ -306,16 +346,28 @@ void KeyboardState::buildScene()
                 m_highlightEntity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
 
                 //m_scene.setSystemActive<cro::UISystem>(true);
+
+                if (m_sharedData.useOSKBuffer)
+                {
+                    initBufferCallbacks();
+                    m_inputBuffer.background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                }
+                else
+                {
+                    initCodepointCallbacks();
+                }
             }
         }
             break;
         case KeyboardCallbackData::Out:
         {
-            auto height = e.getComponent<cro::Sprite>().getTextureBounds().height;
+            auto height = e.getComponent<cro::Sprite>().getTextureBounds().height + 80.f; //80 is msgic number for input buffer
             diff = height - pos.y;
 
             if (diff < 0.5f)
             {
+                m_inputBuffer.background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_inputBuffer.string.getComponent<cro::Text>().setString(" ");
                 data.state = KeyboardCallbackData::In;
                 requestStackPop();
             }
@@ -412,6 +464,30 @@ void KeyboardState::buildScene()
     m_keyboardLayouts[KeyboardLayout::Symbol].bounds = spriteSheet.getSprite("symbols").getTextureRect();
 
 
+    //input buffer
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 398.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("buffer");
+
+    m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_inputBuffer.background = entity;
+
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::OSK);
+    font.setSmooth(true);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 660.f, 60.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ -540.f, -52.f, 560.f, 60.f });
+    entity.addComponent<cro::Text>(font);// .setString("sejsefsegposg gsog esog");
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setCharacterSize(42);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+    m_inputBuffer.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_inputBuffer.string = entity;
+
+
+    //audio
     auto audioID = m_sharedData.sharedResources->audio.load("assets/sound/kb_enter.wav");
 
     entity = m_scene.createEntity();
@@ -439,7 +515,7 @@ void KeyboardState::buildScene()
     m_audioEnts[AudioID::Space] = entity;
 }
 
-void KeyboardState::initCallbacks()
+void KeyboardState::initCodepointCallbacks()
 {
     //each callback starts at bottom left
     //and works across then up
@@ -560,6 +636,127 @@ void KeyboardState::initCallbacks()
     symbolCallbacks[29] = SendCodepoint(0x29, 0);
 }
 
+void KeyboardState::initBufferCallbacks()
+{
+    //each callback starts at bottom left
+    //and works across then up
+
+    auto& lowerCallbacks = m_keyboardLayouts[KeyboardLayout::Lower].callbacks;
+
+    //<zxcvbnm,.
+    lowerCallbacks[0] = AppendCodepoint(m_sharedData.OSKBuffer, 0x3c, 0);
+    lowerCallbacks[1] = AppendCodepoint(m_sharedData.OSKBuffer, 0x7a, 0);
+    lowerCallbacks[2] = AppendCodepoint(m_sharedData.OSKBuffer, 0x78, 0);
+    lowerCallbacks[3] = AppendCodepoint(m_sharedData.OSKBuffer, 0x63, 0);
+    lowerCallbacks[4] = AppendCodepoint(m_sharedData.OSKBuffer, 0x76, 0);
+    lowerCallbacks[5] = AppendCodepoint(m_sharedData.OSKBuffer, 0x62, 0);
+    lowerCallbacks[6] = AppendCodepoint(m_sharedData.OSKBuffer, 0x6e, 0);
+    lowerCallbacks[7] = AppendCodepoint(m_sharedData.OSKBuffer, 0x6d, 0);
+    lowerCallbacks[8] = AppendCodepoint(m_sharedData.OSKBuffer, 0x2c, 0);
+    lowerCallbacks[9] = AppendCodepoint(m_sharedData.OSKBuffer, 0x2e, 0);
+
+
+    //asdfghjkl>
+    lowerCallbacks[10] = AppendCodepoint(m_sharedData.OSKBuffer, 0x61, 0);
+    lowerCallbacks[11] = AppendCodepoint(m_sharedData.OSKBuffer, 0x73, 0);
+    lowerCallbacks[12] = AppendCodepoint(m_sharedData.OSKBuffer, 0x64, 0);
+    lowerCallbacks[13] = AppendCodepoint(m_sharedData.OSKBuffer, 0x66, 0);
+    lowerCallbacks[14] = AppendCodepoint(m_sharedData.OSKBuffer, 0x67, 0);
+    lowerCallbacks[15] = AppendCodepoint(m_sharedData.OSKBuffer, 0x68, 0);
+    lowerCallbacks[16] = AppendCodepoint(m_sharedData.OSKBuffer, 0x6a, 0);
+    lowerCallbacks[17] = AppendCodepoint(m_sharedData.OSKBuffer, 0x6b, 0);
+    lowerCallbacks[18] = AppendCodepoint(m_sharedData.OSKBuffer, 0x6c, 0);
+    lowerCallbacks[19] = AppendCodepoint(m_sharedData.OSKBuffer, 0x3e, 0);
+
+    //qwertyuiop
+    lowerCallbacks[20] = AppendCodepoint(m_sharedData.OSKBuffer, 0x71, 0);
+    lowerCallbacks[21] = AppendCodepoint(m_sharedData.OSKBuffer, 0x77, 0);
+    lowerCallbacks[22] = AppendCodepoint(m_sharedData.OSKBuffer, 0x65, 0);
+    lowerCallbacks[23] = AppendCodepoint(m_sharedData.OSKBuffer, 0x72, 0);
+    lowerCallbacks[24] = AppendCodepoint(m_sharedData.OSKBuffer, 0x74, 0);
+    lowerCallbacks[25] = AppendCodepoint(m_sharedData.OSKBuffer, 0x79, 0);
+    lowerCallbacks[26] = AppendCodepoint(m_sharedData.OSKBuffer, 0x75, 0);
+    lowerCallbacks[27] = AppendCodepoint(m_sharedData.OSKBuffer, 0x69, 0);
+    lowerCallbacks[28] = AppendCodepoint(m_sharedData.OSKBuffer, 0x6f, 0);
+    lowerCallbacks[29] = AppendCodepoint(m_sharedData.OSKBuffer, 0x70, 0);
+
+    auto& upperCallbacks = m_keyboardLayouts[KeyboardLayout::Upper].callbacks;
+
+    //\ZXCVBNM/?
+    upperCallbacks[0] = AppendCodepoint(m_sharedData.OSKBuffer, 0x5c, 0);
+    upperCallbacks[1] = AppendCodepoint(m_sharedData.OSKBuffer, 0x5a, 0);
+    upperCallbacks[2] = AppendCodepoint(m_sharedData.OSKBuffer, 0x58, 0);
+    upperCallbacks[3] = AppendCodepoint(m_sharedData.OSKBuffer, 0x43, 0);
+    upperCallbacks[4] = AppendCodepoint(m_sharedData.OSKBuffer, 0x56, 0);
+    upperCallbacks[5] = AppendCodepoint(m_sharedData.OSKBuffer, 0x42, 0);
+    upperCallbacks[6] = AppendCodepoint(m_sharedData.OSKBuffer, 0x4e, 0);
+    upperCallbacks[7] = AppendCodepoint(m_sharedData.OSKBuffer, 0x4d, 0);
+    upperCallbacks[8] = AppendCodepoint(m_sharedData.OSKBuffer, 0x2f, 0);
+    upperCallbacks[9] = AppendCodepoint(m_sharedData.OSKBuffer, 0x3f, 0);
+
+    //ASDFGHJKL:
+    upperCallbacks[10] = AppendCodepoint(m_sharedData.OSKBuffer, 0x41, 0);
+    upperCallbacks[11] = AppendCodepoint(m_sharedData.OSKBuffer, 0x53, 0);
+    upperCallbacks[12] = AppendCodepoint(m_sharedData.OSKBuffer, 0x44, 0);
+    upperCallbacks[13] = AppendCodepoint(m_sharedData.OSKBuffer, 0x46, 0);
+    upperCallbacks[14] = AppendCodepoint(m_sharedData.OSKBuffer, 0x47, 0);
+    upperCallbacks[15] = AppendCodepoint(m_sharedData.OSKBuffer, 0x48, 0);
+    upperCallbacks[16] = AppendCodepoint(m_sharedData.OSKBuffer, 0x4a, 0);
+    upperCallbacks[17] = AppendCodepoint(m_sharedData.OSKBuffer, 0x4b, 0);
+    upperCallbacks[18] = AppendCodepoint(m_sharedData.OSKBuffer, 0x4c, 0);
+    upperCallbacks[19] = AppendCodepoint(m_sharedData.OSKBuffer, 0x3a, 0);
+
+    //QWERTYUIOP
+    upperCallbacks[20] = AppendCodepoint(m_sharedData.OSKBuffer, 0x51, 0);
+    upperCallbacks[21] = AppendCodepoint(m_sharedData.OSKBuffer, 0x57, 0);
+    upperCallbacks[22] = AppendCodepoint(m_sharedData.OSKBuffer, 0x45, 0);
+    upperCallbacks[23] = AppendCodepoint(m_sharedData.OSKBuffer, 0x52, 0);
+    upperCallbacks[24] = AppendCodepoint(m_sharedData.OSKBuffer, 0x54, 0);
+    upperCallbacks[25] = AppendCodepoint(m_sharedData.OSKBuffer, 0x59, 0);
+    upperCallbacks[26] = AppendCodepoint(m_sharedData.OSKBuffer, 0x55, 0);
+    upperCallbacks[27] = AppendCodepoint(m_sharedData.OSKBuffer, 0x49, 0);
+    upperCallbacks[28] = AppendCodepoint(m_sharedData.OSKBuffer, 0x4f, 0);
+    upperCallbacks[29] = AppendCodepoint(m_sharedData.OSKBuffer, 0x50, 0);
+
+    auto& symbolCallbacks = m_keyboardLayouts[KeyboardLayout::Symbol].callbacks;
+
+    //~_-+=;@# euro.
+    symbolCallbacks[0] = AppendCodepoint(m_sharedData.OSKBuffer, 0x7e, 0);
+    symbolCallbacks[1] = AppendCodepoint(m_sharedData.OSKBuffer, 0x5f, 0);
+    symbolCallbacks[2] = AppendCodepoint(m_sharedData.OSKBuffer, 0x2d, 0);
+    symbolCallbacks[3] = AppendCodepoint(m_sharedData.OSKBuffer, 0x2b, 0);
+    symbolCallbacks[4] = AppendCodepoint(m_sharedData.OSKBuffer, 0x3d, 0);
+    symbolCallbacks[5] = AppendCodepoint(m_sharedData.OSKBuffer, 0x3b, 0);
+    symbolCallbacks[6] = AppendCodepoint(m_sharedData.OSKBuffer, 0x40, 0);
+    symbolCallbacks[7] = AppendCodepoint(m_sharedData.OSKBuffer, 0x23, 0);
+    symbolCallbacks[8] = AppendCodepoint(m_sharedData.OSKBuffer, 0x20, 0xAC);
+    symbolCallbacks[9] = AppendCodepoint(m_sharedData.OSKBuffer, 0x2e, 0);
+
+    //1234567890
+    symbolCallbacks[10] = AppendCodepoint(m_sharedData.OSKBuffer, 0x31, 0);
+    symbolCallbacks[11] = AppendCodepoint(m_sharedData.OSKBuffer, 0x32, 0);
+    symbolCallbacks[12] = AppendCodepoint(m_sharedData.OSKBuffer, 0x33, 0);
+    symbolCallbacks[13] = AppendCodepoint(m_sharedData.OSKBuffer, 0x34, 0);
+    symbolCallbacks[14] = AppendCodepoint(m_sharedData.OSKBuffer, 0x35, 0);
+    symbolCallbacks[15] = AppendCodepoint(m_sharedData.OSKBuffer, 0x36, 0);
+    symbolCallbacks[16] = AppendCodepoint(m_sharedData.OSKBuffer, 0x37, 0);
+    symbolCallbacks[17] = AppendCodepoint(m_sharedData.OSKBuffer, 0x38, 0);
+    symbolCallbacks[18] = AppendCodepoint(m_sharedData.OSKBuffer, 0x39, 0);
+    symbolCallbacks[19] = AppendCodepoint(m_sharedData.OSKBuffer, 0x30, 0);
+
+    //!"£$%^&*()
+    symbolCallbacks[20] = AppendCodepoint(m_sharedData.OSKBuffer, 0x21, 0);
+    symbolCallbacks[21] = AppendCodepoint(m_sharedData.OSKBuffer, 0x22, 0);
+    symbolCallbacks[22] = AppendCodepoint(m_sharedData.OSKBuffer, 0xA3, 0);
+    symbolCallbacks[23] = AppendCodepoint(m_sharedData.OSKBuffer, 0x24, 0);
+    symbolCallbacks[24] = AppendCodepoint(m_sharedData.OSKBuffer, 0x25, 0);
+    symbolCallbacks[25] = AppendCodepoint(m_sharedData.OSKBuffer, 0x5e, 0);
+    symbolCallbacks[26] = AppendCodepoint(m_sharedData.OSKBuffer, 0x26, 0);
+    symbolCallbacks[27] = AppendCodepoint(m_sharedData.OSKBuffer, 0x2a, 0);
+    symbolCallbacks[28] = AppendCodepoint(m_sharedData.OSKBuffer, 0x28, 0);
+    symbolCallbacks[29] = AppendCodepoint(m_sharedData.OSKBuffer, 0x29, 0);
+}
+
 void KeyboardState::quitState()
 {
     m_highlightEntity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -614,6 +811,12 @@ void KeyboardState::activate()
     m_highlightEntity.getComponent<cro::Callback>().active = true;
 
     m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+
+    //refreshes the updated string
+    if (m_sharedData.useOSKBuffer)
+    {
+        m_inputBuffer.string.getComponent<cro::Text>().setString(m_sharedData.OSKBuffer);
+    }
 }
 
 void KeyboardState::nextLayout()
@@ -641,7 +844,17 @@ void KeyboardState::sendKeystroke(std::int32_t key)
 
 void KeyboardState::sendBackspace()
 {
-    sendKeystroke(SDLK_BACKSPACE);
+    if (m_sharedData.useOSKBuffer
+        && !m_sharedData.OSKBuffer.empty())
+    {
+        m_sharedData.OSKBuffer.erase(m_sharedData.OSKBuffer.size() - 1);
+        m_inputBuffer.string.getComponent<cro::Text>().setString(m_sharedData.OSKBuffer);
+    }
+    else
+    {
+        sendKeystroke(SDLK_BACKSPACE);
+    }
+
     m_buttonEnts[ButtonID::Backspace].getComponent<cro::Callback>().active = true;
     m_buttonEnts[ButtonID::Backspace].getComponent<cro::Callback>().setUserData<float>(1.f);
 
@@ -650,10 +863,18 @@ void KeyboardState::sendBackspace()
 
 void KeyboardState::sendSpace()
 {
-    //sendKeystroke(SDLK_SPACE);
+    if (m_sharedData.useOSKBuffer)
+    {
+        m_sharedData.OSKBuffer += " ";
+        m_inputBuffer.string.getComponent<cro::Text>().setString(m_sharedData.OSKBuffer);
+    }
+    else
+    {
+        //sendKeystroke(SDLK_SPACE);
 
-    SendCodepoint space(0x20, 0);
-    space();
+        SendCodepoint space(0x20, 0);
+        space();
+    }
 
     m_buttonEnts[ButtonID::Space].getComponent<cro::Callback>().active = true;
     m_buttonEnts[ButtonID::Space].getComponent<cro::Callback>().setUserData<float>(1.f);

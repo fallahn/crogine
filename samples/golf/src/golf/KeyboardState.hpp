@@ -85,6 +85,12 @@ private:
     std::size_t m_activeLayout;
     std::int32_t m_selectedIndex;
 
+    struct InputBuffer final
+    {
+        cro::Entity background;
+        cro::Entity string;
+    }m_inputBuffer;
+
     struct AudioID final
     {
         enum
@@ -98,7 +104,8 @@ private:
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
     void buildScene();
-    void initCallbacks();
+    void initCodepointCallbacks();
+    void initBufferCallbacks();
     void quitState();
 
     void setCursorPosition();

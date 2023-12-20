@@ -102,7 +102,7 @@ namespace cro
 
         /*!
         \brief Override the default selection index of the next UIInput to be selected
-        \param next The next index to select when pressing right
+        \param right The next index to select when pressing right
         \param down The next index to select when pressing down
         */
         void setNextIndex(std::size_t right, std::size_t down = std::numeric_limits<std::size_t>::max())
@@ -113,7 +113,7 @@ namespace cro
 
         /*!
         \brief Override the default selection index of the next UIInput to be selected
-        \param prev The next index to select when pressing left
+        \param left The next index to select when pressing left
         \param up The next index to select when pressing up
         */
         void setPrevIndex(std::size_t left, std::size_t up = std::numeric_limits<std::size_t>::max())
