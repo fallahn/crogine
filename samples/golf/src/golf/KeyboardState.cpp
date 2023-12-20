@@ -203,6 +203,12 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             case cro::GameController::ButtonY:
                 nextLayout();
                 break;
+            }
+            return false;
+        case SDL_CONTROLLERBUTTONUP:
+            switch (evt.cbutton.button)
+            {
+            default: break;
             case cro::GameController::ButtonRightShoulder:
             case cro::GameController::ButtonStart:
             {
@@ -210,8 +216,8 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::SubmitOSK;
             }
-                quitState();
-                break;
+            quitState();
+            return false;
             case cro::GameController::ButtonLeftShoulder:
             case cro::GameController::ButtonBack:
             {
@@ -219,12 +225,9 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                 auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                 msg->type = SystemEvent::CancelOSK;
             }
-                quitState();
-                break;
-            }
+            quitState();
             return false;
-        case SDL_CONTROLLERBUTTONUP:
-            
+            }
             return false;
         case SDL_CONTROLLERAXISMOTION:
             
@@ -331,7 +334,7 @@ void KeyboardState::buildScene()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<KeyboardCallbackData>();
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, bounds](cro::Entity e, float dt)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<KeyboardCallbackData>();
         auto pos = e.getComponent<cro::Transform>().getOrigin();
@@ -344,6 +347,13 @@ void KeyboardState::buildScene()
         {
             diff = 0.f - pos.y;
 
+            if (m_sharedData.useOSKBuffer)
+            {
+                float scale = 1.f - (pos.y / bounds.height);
+                m_inputBuffer.background.getComponent<cro::Transform>().setScale(glm::vec2(1.f, scale));
+            }
+
+
             if (diff > -0.5f)
             {
                 e.getComponent<cro::Callback>().active = false;
@@ -351,8 +361,6 @@ void KeyboardState::buildScene()
                 pos.y = 0.f;
                 e.getComponent<cro::Transform>().setOrigin(pos);
                 m_highlightEntity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-
-                //m_scene.setSystemActive<cro::UISystem>(true);
 
                 if (m_sharedData.useOSKBuffer)
                 {
@@ -474,6 +482,7 @@ void KeyboardState::buildScene()
     //input buffer
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 398.f, 0.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("buffer");
 
@@ -817,7 +826,15 @@ void KeyboardState::activate()
     m_highlightEntity.getComponent<cro::Sprite>().setTextureRect(rect);
     m_highlightEntity.getComponent<cro::Callback>().active = true;
 
-    m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+    auto& e = m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>();
+    if (e.getState() == cro::AudioEmitter::State::Stopped)
+    {
+        e.play();
+    }
+    else
+    {
+        e.setPlayingOffset(cro::seconds(0.f));
+    }
 
     //refreshes the updated string
     if (m_sharedData.useOSKBuffer)

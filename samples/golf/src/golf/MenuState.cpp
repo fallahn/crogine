@@ -815,6 +815,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
             {
                 nextCourse();
             }
+            else if (m_currentMenu == MenuID::Avatar)
+            {
+                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                i = (i + 1) % m_profileData.playerProfiles.size();
+                setProfileIndex(i);
+            }
             break;
         case cro::GameController::ButtonLeftShoulder:
             if (m_sharedData.hosting
@@ -822,6 +828,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
             {
                 prevCourse();
+            }
+            else if (m_currentMenu == MenuID::Avatar)
+            {
+                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
+                setProfileIndex(i);
             }
             break;
         case cro::GameController::ButtonGuide:
