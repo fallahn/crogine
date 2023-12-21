@@ -1,0 +1,19 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "default",
+            "binaryDir": "build/${presetName}",
+            "cacheVariables": {
+                "BUILD_SAMPLES": true,
+                "CMAKE_INSTALL_PREFIX": "install/${presetName}"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name":"default",
+            "configurePreset": "default"
+        }
+    ]
+}
