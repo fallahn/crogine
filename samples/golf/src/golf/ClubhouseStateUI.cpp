@@ -482,7 +482,15 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
             std::string pluginPath = "plugins/";
             for (const auto& pluginDir : pluginList)
             {
+#ifdef _WIN32
                 if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/croplug.dll"))
+#else
+#ifdef __linux__
+                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/libcroplug.so"))
+#else
+                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/libcroplug.dylib"))
+#endif
+#endif
                 {
                     pluginPath += pluginDir;
                     break;
