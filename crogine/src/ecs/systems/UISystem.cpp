@@ -209,16 +209,16 @@ void UISystem::handleEvent(const Event& evt)
             }
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                //m_controllerMask |= ControllerBits::Up;
+                selectPrev(m_columnCount, UIInput::Index::Up);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                //m_controllerMask |= ControllerBits::Down;
+                selectNext(m_columnCount, UIInput::Index::Down);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-                //m_controllerMask |= ControllerBits::Left;
+                selectPrev(1, UIInput::Index::Left);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-                //m_controllerMask |= ControllerBits::Right;
+                selectNext(1, UIInput::Index::Right);
                 break;
             }
         }
@@ -235,27 +235,6 @@ void UISystem::handleEvent(const Event& evt)
                 buttonEvent.type = evt.type;
                 buttonEvent.cbutton = evt.cbutton;
             }
-                break;
-                //using the same flags as the stick can cause
-                //small stick movements to unset these flags
-                //before they are parsed - if direct control
-                //doesn't work then we need to create a
-                //separate set of flags for the dpad.
-            case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                selectPrev(m_columnCount, UIInput::Index::Up);
-                //m_controllerMask &= ~ControllerBits::Up;
-                break;
-            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                selectNext(m_columnCount, UIInput::Index::Down);
-                //m_controllerMask &= ~ControllerBits::Down;
-                break;
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-                //m_controllerMask &= ~ControllerBits::Left;
-                selectPrev(1, UIInput::Index::Left);
-                break;
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-                selectNext(1, UIInput::Index::Right);
-                //m_controllerMask &= ~ControllerBits::Right;
                 break;
             }
         }
