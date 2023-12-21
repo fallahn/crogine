@@ -403,7 +403,9 @@ void NewsState::buildScene()
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto newsEnt = entity;
 
+#if USE_RSS
     m_feed.fetchAsync(Social::RSSFeed);
+#endif
 
 
     entity = m_scene.createEntity();
@@ -411,6 +413,7 @@ void NewsState::buildScene()
     entity.getComponent<cro::Callback>().function =
         [&, menuEntity, createItem, balls, newsEnt](cro::Entity e, float) mutable
     {
+#if USE_RSS
         if (m_feed.fetchComplete())
         {
             const auto& items = m_feed.getItems();
@@ -515,6 +518,7 @@ void NewsState::buildScene()
             m_scene.destroyEntity(newsEnt);
             m_scene.getSystem<cro::UISystem>()->selectByIndex(TitleButtonIndex);
         }
+#endif
     };
 
 #ifdef USE_GNS
