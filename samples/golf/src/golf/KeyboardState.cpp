@@ -54,6 +54,14 @@ source distribution.
 
 namespace
 {
+    struct  ControllerBits final
+    {
+        enum
+        {
+            Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8
+        };
+    };
+
     struct KeyboardCallbackData final
     {
         enum
@@ -145,7 +153,9 @@ KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_scene         (ctx.appInstance.getMessageBus()),
     m_sharedData    (sd),
     m_activeLayout  (KeyboardLayout::Lower),
-    m_selectedIndex (0)
+    m_selectedIndex (0),
+    m_axisFlags     (0),
+    m_prevAxisFlags (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -230,7 +240,50 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             }
             return false;
         case SDL_CONTROLLERAXISMOTION:
-            
+            //if (evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
+            {
+                static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone;// 15000;
+                switch (evt.caxis.axis)
+                {
+                default: break;
+                case SDL_CONTROLLER_AXIS_LEFTX:
+                    if (evt.caxis.value > Threshold)
+                    {
+                        //right
+                        m_axisFlags |= ControllerBits::Right;
+                        m_axisFlags &= ~ControllerBits::Left;
+                    }
+                    else if (evt.caxis.value < -Threshold)
+                    {
+                        //left
+                        m_axisFlags |= ControllerBits::Left;
+                        m_axisFlags &= ~ControllerBits::Right;
+                    }
+                    else
+                    {
+                        m_axisFlags &= ~(ControllerBits::Left | ControllerBits::Right);
+                    }
+                    break;
+                case SDL_CONTROLLER_AXIS_LEFTY:
+                    if (evt.caxis.value > Threshold)
+                    {
+                        //down
+                        m_axisFlags |= ControllerBits::Down;
+                        m_axisFlags &= ~ControllerBits::Up;
+                    }
+                    else if (evt.caxis.value < -Threshold)
+                    {
+                        //up
+                        m_axisFlags |= ControllerBits::Up;
+                        m_axisFlags &= ~ControllerBits::Down;
+                    }
+                    else
+                    {
+                        m_axisFlags &= ~(ControllerBits::Up | ControllerBits::Down);
+                    }
+                    break;
+                }
+            }
             return false;
 #ifdef CRO_DEBUG_
         case SDL_KEYDOWN:
@@ -299,6 +352,38 @@ void KeyboardState::handleMessage(const cro::Message& msg)
 
 bool KeyboardState::simulate(float dt)
 {
+    auto diff = m_prevAxisFlags ^ m_axisFlags;
+    for (auto i = 0; i < 4; ++i)
+    {
+        auto flag = (1 << i);
+        if (diff & flag)
+        {
+            //something changed
+            if (m_axisFlags & flag)
+            {
+                //axis was pressed
+                switch (flag)
+                {
+                default: break;
+                case ControllerBits::Left:
+                    left();
+                    break;
+                case ControllerBits::Up:
+                    up();
+                    break;
+                case ControllerBits::Right:
+                    right();
+                    break;
+                case ControllerBits::Down:
+                    down();
+                    break;
+                }
+            }
+        }
+    }
+    m_prevAxisFlags = m_axisFlags;
+
+
     m_scene.simulate(dt);
     return true;
 }

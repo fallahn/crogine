@@ -91,6 +91,9 @@ private:
         cro::Entity string;
     }m_inputBuffer;
 
+    std::uint8_t m_axisFlags;
+    std::uint8_t m_prevAxisFlags;
+
     struct AudioID final
     {
         enum

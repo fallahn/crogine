@@ -116,6 +116,11 @@ namespace cro
         static constexpr std::int16_t AxisMax = 32767;
         static constexpr std::int16_t AxisMin = -32768;
 
+        //these are the values in the DX SDK for XInput
+        static constexpr std::int16_t LeftThumbDeadZone = 7849;
+        static constexpr std::int16_t RightThumbDeadZone = 8689;
+        static constexpr std::int16_t TriggerDeadZone = 30;
+
         /*!
         \brief Returns the event ID associated with the controller at the given index
         Events such as SDL_CONTROLLERBUTTONDOWN do not contain the ControllerID in the
