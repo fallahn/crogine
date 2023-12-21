@@ -4847,7 +4847,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 return true;
             case cro::GameController::ButtonX:
                 m_textChat.toggleWindow(true);
-                //TODO close emote wheel automatically?
+                //close emote wheel automatically
                 targetScale = 0.f;
                 return true;
             case SDL_CONTROLLER_BUTTON_DPAD_UP:
@@ -4957,20 +4957,10 @@ void GolfState::EmoteWheel::refreshLabels()
         }
     }
 
-    /*const std::array LabelStr =
-    {
-        std::string("7"),
-        std::string("8"),
-        std::string("9"),
-        std::string("0"),
-    };*/
 
     //hide trigger icons if no controller
     for (auto i = InputMap.size(); i < labelNodes.size(); ++i)
     {
-        /*labelNodes[i].getComponent<cro::Text>().setString(LabelStr[i - 4]);
-        centreText(labelNodes[i]);*/
-
         if (cro::GameController::getControllerCount() == 0)
         {
             buttonNodes[i].getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);

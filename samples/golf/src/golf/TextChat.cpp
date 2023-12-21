@@ -347,7 +347,8 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
             m_scene.destroyEntity(e);
             m_screenChatActiveCount--;
 
-            m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
+            //hmmmmm this only needs to be done on the menu
+            //m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
         }
     };
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

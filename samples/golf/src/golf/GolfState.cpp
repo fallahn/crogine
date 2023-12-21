@@ -308,6 +308,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         createTransition();
         cacheState(StateID::Pause);
         cacheState(StateID::MapOverview);
+        cacheState(StateID::Keyboard);
         });
 
     //glLineWidth(1.5f);
@@ -723,6 +724,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonA:
             toggleQuitReady();
             break;
+        case cro::GameController::ButtonTrackpad:
+        case cro::GameController::PaddleR4:
+            m_textChat.toggleWindow(true);
+            break;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -733,11 +738,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         default: break;
         case SDL_CONTROLLER_BUTTON_MISC1:
             //m_textChat.toggleWindow();
-            break;
-        case cro::GameController::ButtonTrackpad:
-        case cro::GameController::PaddleR4:
-            m_textChat.toggleWindow(true);
-            //showMapOverview();
             break;
         case cro::GameController::ButtonBack:
             showScoreboard(false);

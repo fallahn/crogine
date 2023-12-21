@@ -201,6 +201,11 @@ void RenderSystem2D::process(float)
             drawable.m_croppingWorldArea = drawable.m_croppingArea.transform(tx.getWorldTransform());
         }
     }
+
+    //for (auto& list : m_drawLists)
+    //{
+    //    list.erase(std::remove_if(list.begin(), list.end(), [](cro::Entity e) {return !e.isValid(); }), list.end());
+    //}
 }
 
 void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
@@ -221,6 +226,12 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
         const auto& entities = m_drawLists[camComponent.getDrawListIndex()];
         for (auto entity : entities)
         {
+#ifdef CRO_DEBUG_
+            //these are probably OK to draw as they aren't yet cleared up
+            //(just marked for removal) but it will ASSERT on debug builds
+            if (!entity.isValid()) continue;
+#endif
+
             const auto& drawable = entity.getComponent<Drawable2D>();
             const auto& tx = entity.getComponent<cro::Transform>();
             glm::mat4 worldMat = tx.getWorldTransform();
