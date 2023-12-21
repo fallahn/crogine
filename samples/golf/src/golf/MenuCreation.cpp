@@ -2406,7 +2406,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 #ifdef USE_GNS
                 requestStackPush(StateID::Leaderboard);
 #else
-                cro::Util::String::parseURL("https://steamcommunity.com/stats/2173760/leaderboards/10082641/");
+                cro::Util::String::parseURL("https://gamejolt.com/games/super-video-golf/809390/scores/872059/best");
 #endif
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }

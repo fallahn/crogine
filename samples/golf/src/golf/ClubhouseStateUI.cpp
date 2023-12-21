@@ -2677,20 +2677,21 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
             });
 
     //leaderboards
-#ifdef USE_GNS
     entity = createButton("Leaderboards");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
+#ifdef USE_GNS
                     requestStackPush(StateID::Leaderboard);
+#else
+                    cro::Util::String::parseURL("https://gamejolt.com/games/super-video-golf/809390/scores/872059/best");
+#endif
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
-#else
-    textPos.y -= LineSpacing;
-#endif
+    //textPos.y -= LineSpacing;
     
     //back
     entity = createButton("Back");

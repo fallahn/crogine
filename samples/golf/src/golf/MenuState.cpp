@@ -1714,9 +1714,12 @@ void MenuState::createScene()
 
             if (currTime < 0)
             {
-                currTime += StepTime;
-
-                Social::getTopFive(CourseNames[mapIndex], holeIndex);
+                if (auto s = Social::getTopFive(CourseNames[mapIndex], holeIndex);
+                    s.empty())
+                {
+                    //only reset the time if there was no string cached (and therefore a download was triggered)
+                    currTime += StepTime;
+                }
                 holeIndex++;
 
                 if (holeIndex == 3)
