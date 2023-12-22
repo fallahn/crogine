@@ -104,15 +104,15 @@ static inline void applyImGuiStyle()
     std::vector<ImWchar> rangesA = { 0x1, 0xFFFF, 0 }; //TODO what's the third number? Plane? Terminator?
     fonts->AddFontFromFileTTF("assets/golf/fonts/ProggyClean.ttf", 13.f, &config, rangesA.data());
     
-    fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesCyrillic());
-    fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesGreek());
-    fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesVietnamese());
-    fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansThai-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesThai());
-    fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansKR-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesKorean());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesCyrillic());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesGreek());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesVietnamese());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansThai-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesThai());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansKR-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesKorean());
     //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-ko.ttf", 10.f, &config, fonts->GetGlyphRangesKorean());
-    fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansJP-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesJapanese());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansJP-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesJapanese());
     //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-ja.ttf", 10.f, &config, fonts->GetGlyphRangesJapanese());
-    fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansTC-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesChineseFull());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansTC-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesChineseFull());
     //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-zh_cn.ttf", 10.f, &config, fonts->GetGlyphRangesChineseFull());
     
     std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
@@ -125,7 +125,7 @@ static inline void applyImGuiStyle()
     else
 #endif
     {
-        fonts->AddFontFromFileTTF("assets/golf/fonts/NotoEmoji-Regular.ttf", 13.0f, &config, rangesB.data());
+        //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoEmoji-Regular.ttf", 13.0f, &config, rangesB.data());
     }
 
     fonts->Build();
