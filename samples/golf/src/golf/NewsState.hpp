@@ -36,6 +36,10 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+#if defined USE_GNS || defined USE_RSS
+#define RSS_ENABLED
+#endif
+
 struct SharedStateData;
 
 class NewsState final : public cro::State
@@ -75,7 +79,7 @@ private:
     void buildScene();
     void quitState();
 
-#if USE_RSS
+#if defined RSS_ENABLED
     RSSFeed m_feed;
 #endif
 };
