@@ -35,11 +35,13 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -182,6 +184,18 @@ KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, Share
 //public
 bool KeyboardState::handleEvent(const cro::Event& evt)
 {
+    const auto updateButtonAnim = [&](std::int32_t joyID)
+        {
+            auto id = cro::GameController::controllerID(joyID);
+            auto anim = cro::GameController::hasPSLayout(id) ? 1 : 0;
+
+            for (auto& e : m_buttonEnts)
+            {
+                e.getComponent<cro::SpriteAnimation>().play(anim);
+            }
+            m_inputBuffer.background.getComponent<cro::SpriteAnimation>().play(anim);
+        };
+
     const auto updateTouchpadPosition = [&](glm::vec2 localPos)
     {
         if (TrackpadBounds.contains(localPos))
@@ -215,6 +229,8 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         default: break;
         case SDL_CONTROLLERTOUCHPADDOWN:
         {
+            updateButtonAnim(evt.ctouchpad.which);
+
             auto& tx = m_touchpadContext.pointerEnt.getComponent<cro::Transform>();
             float currScale = tx.getScale().x;
 
@@ -245,7 +261,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         }
             break;
         case SDL_CONTROLLERBUTTONDOWN:
-
+            updateButtonAnim(evt.cbutton.which);
             switch (evt.cbutton.button)
             {
             default: break;
@@ -307,9 +323,14 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLERAXISMOTION:
             //if (evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
             {
-                m_touchpadContext.pointerEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-
                 static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone;// 15000;
+
+                if (std::abs(evt.caxis.value) > Threshold)
+                {
+                    m_touchpadContext.pointerEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    updateButtonAnim(evt.caxis.which);
+                }
+
                 switch (evt.caxis.axis)
                 {
                 default: break;
@@ -465,6 +486,7 @@ void KeyboardState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::CallbackSystem>(mb);
+    m_scene.addSystem<cro::SpriteAnimator>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -610,8 +632,8 @@ void KeyboardState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 78.f, 27.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 0.835f, 0.f));
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_y");
+    entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::Callback>().function = ButtonAnimationCallback();
     entity.getComponent<cro::Callback>().setUserData<float>(1.f);
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -622,8 +644,8 @@ void KeyboardState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 772.f, 27.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 0.f, 0.2f));
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_b");
+    entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::Callback>().function = ButtonAnimationCallback();
     entity.getComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
@@ -633,8 +655,8 @@ void KeyboardState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 539.f, 27.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour(0.f, 0.4667f, 1.f));
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_x");
+    entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::Callback>().function = ButtonAnimationCallback();
     entity.getComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
@@ -652,6 +674,7 @@ void KeyboardState::buildScene()
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("buffer");
+    entity.addComponent<cro::SpriteAnimation>();
 
     m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_inputBuffer.background = entity;
@@ -662,7 +685,7 @@ void KeyboardState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 660.f, 60.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ -540.f, -52.f, 560.f, 60.f });
-    entity.addComponent<cro::Text>(font);// .setString("sejsefsegposg gsog esog");
+    entity.addComponent<cro::Text>(font);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setCharacterSize(42);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
