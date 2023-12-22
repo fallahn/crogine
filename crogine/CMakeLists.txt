@@ -57,11 +57,12 @@ elseif(LINUX)
   find_package(Libunwind REQUIRED)
 endif()
 
-target_include_directories(crogine PRIVATE
-  ${SDL2_INCLUDE_DIR}  
-  ${FREETYPE_INCLUDE_DIRS}
+target_include_directories(crogine 
+  PRIVATE
+    ${FREETYPE_INCLUDE_DIRS}
   PUBLIC
-  ${CMAKE_SOURCE_DIR}/crogine/include)
+    ${SDL2_INCLUDE_DIR}  
+    ${CMAKE_SOURCE_DIR}/crogine/include)
   
 if(MSVC)
   target_include_directories(crogine PRIVATE ${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
