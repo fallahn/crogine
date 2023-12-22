@@ -968,6 +968,15 @@ void GolfGame::convertPreferences() const
     auto srcPath = cro::App::getPreferencePath();
     const auto dstPath = Social::getBaseContentPath();
 
+    if (cro::FileSystem::directoryExists(dstPath))
+    {
+        //assume conversion has already been run at some point
+        //this is just a catch-all if switching between versions
+        //though once 1.15 is released it shouldn't be possible
+        //to run 1.14 outside of the non-steam version
+        return;
+    }
+
     const std::array FileNames =
     {
         std::string("profiles.tar"),
