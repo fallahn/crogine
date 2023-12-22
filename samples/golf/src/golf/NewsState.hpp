@@ -75,5 +75,7 @@ private:
     void buildScene();
     void quitState();
 
+#if USE_RSS
     RSSFeed m_feed;
+#endif
 };

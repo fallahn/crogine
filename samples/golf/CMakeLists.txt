@@ -1,25 +1,4 @@
-cmake_minimum_required(VERSION 3.5.2)
-
-
-#Xcode 10 will default to Mojave (must be done BEFORE project())
-if (APPLE)
- SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
- SET(MACOS_BUNDLE False CACHE BOOL "")
-
-  if(MACOS_BUNDLE)
-    SET(BUNDLE_NAME "Super Video Golf")
-  endif()
-
-endif()
-
-
-project(golf)
-SET(PROJECT_NAME golf)
-
-
-if(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
-endif()
+set(PROJECT_NAME golf)
 
 if(APPLE)
 SET(USE_NEWSFEED False CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
@@ -56,7 +35,6 @@ SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET(OpenGL_GL_PREFERENCE "GLVND")
 
-find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 #TODO specify version 2.83
@@ -66,16 +44,6 @@ find_package(SQLite3 REQUIRED)
 if(USE_NEWSFEED)
 find_package(CURL REQUIRED)
 endif()
-
-if(NOT CROGINE_FOUND)
-  #build it from source
-  add_subdirectory(../../crogine)
-
-  #SET (CROGINE_INCLUDE_DIR ../../crogine/include)
-  #SET (CROGINE_LIBRARIES TODO set lib output dir)
-
-endif()
-
 
 if(USE_GNS)
   if(USE_NEWSFEED)
@@ -98,7 +66,6 @@ endif()
 
 
 include_directories(
-  ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
@@ -124,10 +91,10 @@ include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
 SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${SQLITE_SRC})
-#if(USE_NEWSFEED)
+if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
-#endif()
+endif()
 
 if(USE_GNS)
   #include source of workshop, libgns
@@ -188,7 +155,7 @@ endif()
 
 
 target_link_libraries(${PROJECT_NAME}
-  ${CROGINE_LIBRARIES}
+  crogine
   ${SDL2_LIBRARY}
   ${BULLET_LIBRARIES}
   ${SQLite3_LIBRARIES}  
