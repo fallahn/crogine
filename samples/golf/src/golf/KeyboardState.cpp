@@ -46,6 +46,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
+#include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/core/GameController.hpp>
 
@@ -146,6 +147,9 @@ namespace
     static constexpr std::int32_t GridX = 10;
     static constexpr std::int32_t GridY = 3;
     static constexpr std::int32_t GridSize = GridX * GridY;
+
+    constexpr cro::FloatRect TrackpadBounds(408.f, 288.f, 756.f, 260.f);
+    constexpr glm::vec2 CellSize(TrackpadBounds.width / GridX, TrackpadBounds.height / GridY);
 }
 
 KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -160,8 +164,7 @@ KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, Share
     ctx.mainWindow.setMouseCaptured(false);
 
     buildScene();
-    //initCallbacks();
-
+    
 #ifdef CRO_DEBUG_
     for (auto& i : m_keyboardLayouts)
     {
@@ -179,28 +182,90 @@ KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, Share
 //public
 bool KeyboardState::handleEvent(const cro::Event& evt)
 {
+    const auto updateTouchpadPosition = [&](glm::vec2 localPos)
+    {
+        if (TrackpadBounds.contains(localPos))
+        {
+            m_touchpadContext.pointerEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Green);
+        }
+        else
+        {
+            m_touchpadContext.pointerEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Red);
+        }
+            
+        auto keyPos = localPos - glm::vec2(TrackpadBounds.left, TrackpadBounds.bottom);
+        auto xPos = std::max(0.f, std::min(std::floor(keyPos.x / CellSize.x), static_cast<float>(GridX - 1)));
+        auto yPos = std::max(0.f, std::min(std::floor(keyPos.y / CellSize.y), static_cast<float>(GridY - 1)));
+
+        static std::int32_t prevIndex = 0;
+        prevIndex = m_selectedIndex;
+        m_selectedIndex = static_cast<std::int32_t>((yPos * GridX) + xPos);
+        
+        if (prevIndex != m_selectedIndex)
+        {
+            setCursorPosition();
+        }
+    };
+
     //only handle input if not transitioning
     if (!m_keyboardEntity.getComponent<cro::Callback>().active)
     {
         switch (evt.type)
         {
         default: break;
+        case SDL_CONTROLLERTOUCHPADDOWN:
+        {
+            auto& tx = m_touchpadContext.pointerEnt.getComponent<cro::Transform>();
+            float currScale = tx.getScale().x;
+
+            glm::vec2 normPos = glm::vec2(evt.ctouchpad.x, 1.f - evt.ctouchpad.y);
+            m_touchpadContext.lastPosition = normPos;
+
+            if (currScale == 0)
+            {
+                tx.setScale(glm::vec2(1.f));
+                auto localPos = (m_touchpadContext.targetBounds * normPos) + m_touchpadContext.targetBounds / 2.f;
+
+                m_touchpadContext.pointerEnt.getComponent<cro::Transform>().setPosition(localPos);                
+                updateTouchpadPosition(localPos);
+            }
+        }
+            break;
+        case SDL_CONTROLLERTOUCHPADUP:
+
+            break;
+        case SDL_CONTROLLERTOUCHPADMOTION:
+        {
+            glm::vec2 normPos = glm::vec2(evt.ctouchpad.x, 1.f - evt.ctouchpad.y);
+            glm::vec2 movement = normPos - m_touchpadContext.lastPosition;
+            m_touchpadContext.lastPosition = normPos;
+
+            m_touchpadContext.pointerEnt.getComponent<cro::Transform>().move(movement * m_touchpadContext.targetBounds);
+            updateTouchpadPosition(m_touchpadContext.pointerEnt.getComponent<cro::Transform>().getPosition());
+        }
+            break;
         case SDL_CONTROLLERBUTTONDOWN:
+
             switch (evt.cbutton.button)
             {
             default: break;
             case cro::GameController::DPadDown:
+                m_touchpadContext.pointerEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 down();
                 break;
             case cro::GameController::DPadLeft:
+                m_touchpadContext.pointerEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 left();
                 break;
             case cro::GameController::DPadRight:
+                m_touchpadContext.pointerEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 right();
                 break;
             case cro::GameController::DPadUp:
+                m_touchpadContext.pointerEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 up();
                 break;
+            case cro::GameController::ButtonTrackpad:
             case cro::GameController::ButtonA:
                 activate();
                 break;
@@ -242,6 +307,8 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLERAXISMOTION:
             //if (evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
             {
+                m_touchpadContext.pointerEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
                 static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone;// 15000;
                 switch (evt.caxis.axis)
                 {
@@ -493,6 +560,21 @@ void KeyboardState::buildScene()
         entity.getComponent<cro::Transform>().setPosition({ winSize.x / 2.f, 0.f });
     };
     m_keyboardEntity = entity;
+
+
+    //touchpad pointer
+    m_touchpadContext.targetBounds = { bounds.width, bounds.height };
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Green);
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    m_keyboardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_touchpadContext.pointerEnt = entity;
+
+
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();

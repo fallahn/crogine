@@ -662,6 +662,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
+        case SDLK_PAGEUP:
+        {
+            m_sharedData.useOSKBuffer = true;
+            requestStackPush(StateID::Keyboard);
+        }
+            break;
 #ifdef CRO_DEBUG_
 #ifdef USE_GNS
         case SDLK_PAGEUP:

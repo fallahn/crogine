@@ -34,11 +34,11 @@ source distribution.
 #include <crogine/core/State.hpp>
 
 #include <crogine/ecs/Scene.hpp>
-
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 
 struct SharedStateData;
-class KeyboardState final : public cro::State
+class KeyboardState final : public cro::State, public cro::GuiClient
 {
 public:
     KeyboardState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -94,6 +94,14 @@ private:
     std::uint8_t m_axisFlags;
     std::uint8_t m_prevAxisFlags;
 
+    struct TouchpadContext final
+    {
+        cro::Entity pointerEnt;
+        glm::vec2 targetBounds = glm::vec2(0.f);
+        glm::vec2 lastPosition = glm::vec2(0.f);
+    }m_touchpadContext;
+    
+    
     struct AudioID final
     {
         enum
