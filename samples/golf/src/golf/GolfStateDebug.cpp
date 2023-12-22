@@ -371,7 +371,6 @@ void GolfState::registerDebugCommands()
             cro::Console::print("Done!");
         });
 
-
     registerCommand("noclip", [&](const std::string&)
         {
             toggleFreeCam();
@@ -384,6 +383,53 @@ void GolfState::registerDebugCommands()
                 cro::Console::print("noclip OFF");
             }
         });
+
+
+    registerCommand("cl_shownet", [&](const std::string& param)
+        {
+            if (param == "0" || param == "false")
+            {
+                m_networkDebugContext.showUI = false;
+            }
+            else if (param == "1" || param == "true")
+            {
+                m_networkDebugContext.showUI = true;
+
+                if (!m_networkDebugContext.wasShown)
+                {
+                    registerWindow([&]()
+                    {
+                        if (m_networkDebugContext.showUI)
+                        {
+                            ImGui::SetNextWindowSize({ 300.f, 90.f });
+                            if (ImGui::Begin("Network", &m_networkDebugContext.showUI))
+                            {
+                                float bps = static_cast<float>(m_networkDebugContext.bitrate) / 1024.f;
+                                float BPS = bps / 8.f;
+                                ImGui::Text("Connection Bitrate: %3.2fkbps (%3.2f KB/s)", bps, BPS);
+
+                                auto KB = static_cast<double>(m_networkDebugContext.total) / 1024.;
+                                if (KB > 1024.)
+                                {
+                                    ImGui::Text("Data Transferred: %3.2fMB this session", KB / 1024.);
+                                }
+                                else
+                                {
+                                    ImGui::Text("Data Transferred: %3.2fKB this session", KB);
+                                }
+                            }
+                            ImGui::End();
+                        }
+                    });
+                    m_networkDebugContext.wasShown = true;
+                }
+            }
+            else
+            {
+                cro::Console::print("Usage: cl_shownet <0|1>");
+            }
+        });
+
 
     //nasssssty staticses
     static bool showKickWindow = false;

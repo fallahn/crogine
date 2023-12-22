@@ -133,8 +133,6 @@ namespace
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
     cro::Entity ballEntity;
-    std::size_t bitrate = 0;
-    std::size_t bitrateCounter = 0;
     glm::vec4 topSky;
     glm::vec4 bottomSky;
 
@@ -1648,26 +1646,23 @@ bool GolfState::simulate(float dt)
         net::NetEvent evt;
         while (m_sharedData.clientConnection.netClient.pollEvent(evt))
         {
-#ifdef CRO_DEBUG_
             if (evt.type == cro::NetEvent::PacketReceived)
             {
-                bitrateCounter += evt.packet.getSize() * 8;
+                m_networkDebugContext.bitrateCounter += evt.packet.getSize() * 8;
+                m_networkDebugContext.total += evt.packet.getSize();
             }
-#endif
+
             //handle events
             handleNetEvent(evt);
         }
 
-#ifdef CRO_DEBUG_
-        static float bitrateTimer = 0.f;
-        bitrateTimer += dt;
-        if (bitrateTimer > 1.f)
+        m_networkDebugContext.bitrateTimer += dt;
+        if (m_networkDebugContext.bitrateTimer > 1.f)
         {
-            bitrateTimer -= 1.f;
-            bitrate = bitrateCounter;
-            bitrateCounter = 0;
+            m_networkDebugContext.bitrateTimer -= 1.f;
+            m_networkDebugContext.bitrate = m_networkDebugContext.bitrateCounter;
+            m_networkDebugContext.bitrateCounter = 0;
         }
-#endif
 
         if (m_wantsGameState)
         {

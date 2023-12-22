@@ -627,6 +627,17 @@ private:
     void registerDebugCommands();
     void registerDebugWindows();
 
+    struct NetworkDebugContext final
+    {
+        std::size_t bitrate = 0;
+        std::size_t bitrateCounter = 0;
+        std::size_t total = 0;
+        float bitrateTimer = 0.f;
+
+        bool showUI = false;
+        bool wasShown = false;
+    }m_networkDebugContext;
+
     struct AchievementDebugContext final
     {
         bool wasActivated = false; //true after the first time and window was registered
