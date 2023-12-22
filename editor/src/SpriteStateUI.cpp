@@ -53,9 +53,10 @@ void SpriteState::openSprite(const std::string& path)
     {
         auto* texture = m_spriteSheet.getTexture();
         m_entities[EntityID::Root].getComponent<cro::Sprite>().setTexture(*texture);
+        m_entities[EntityID::Root].getComponent<cro::Drawable2D>().setCullingEnabled(false);
 
-        auto size = texture->getSize();
-        auto position = glm::vec2(cro::App::getWindow().getSize() - size);
+        auto size = glm::vec2(texture->getSize());
+        auto position = glm::vec2(cro::App::getWindow().getSize()) - size;
         position /= 2.f;
         m_entities[EntityID::Root].getComponent<cro::Transform>().setPosition(position);
 
