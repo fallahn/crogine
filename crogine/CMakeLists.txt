@@ -32,11 +32,11 @@ else()
   target_compile_definitions(crogine PRIVATE CRO_BUILD)
 endif()
 
-target_compile_definitions(crogine PRIVATE $<$<CONFIG:Debug>:CRO_DEBUG>)
+target_compile_definitions(crogine PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG>)
 
 set_target_properties(crogine PROPERTIES DEBUG_POSTFIX -d)
 
-target_compile_features(crogine PRIVATE cxx_std_17)
+target_compile_features(crogine PUBLIC cxx_std_17)
 
 set (OpenGL_GL_PREFERENCE "GLVND")
 
@@ -45,58 +45,53 @@ find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
 
 if(USE_OPENAL)
-#use mojo AL on mac
-  if(NOT APPLE)
-    find_package(OpenAL REQUIRED)
-  endif()
+  find_package(OpenAL REQUIRED)
 else()
   find_package(SDL2_mixer REQUIRED)
 endif()
 
-#used in dumping stack traces
+# Used in dumping stack traces
 if(MSVC)
   find_package(DbgHelp REQUIRED)
 elseif(LINUX)
   find_package(Libunwind REQUIRED)
 endif()
 
-include_directories(
+target_include_directories(crogine PRIVATE
   ${SDL2_INCLUDE_DIR}  
-  ${FREETYPE_INCLUDE_DIRS} 
+  ${FREETYPE_INCLUDE_DIRS}
+  PUBLIC
   ${CMAKE_SOURCE_DIR}/crogine/include)
   
 if(MSVC)
-  include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
+  target_include_directories(crogine PRIVATE ${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
 elseif(LINUX)
-  include_directories(${LIBUNWIND_INCLUDE_DIRS})
+  target_include_directories(crogine PRIVATE${LIBUNWIND_INCLUDE_DIRS})
 endif()
 
-SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 
 if(USE_OPENAL)
-  if(NOT APPLE)
-    include_directories(${OPENAL_INCLUDE_DIR})
-  endif()
-  SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_openal})
+  target_include_directories(crogine PRIVATE ${OPENAL_INCLUDE_DIR})
+  set(PROJECT_SRC ${PROJECT_SRC} ${project_src_openal})
 else()
-  include_directories(${SDL2_MIXER_INCLUDE_DIR})
-  SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_sdlmixer})
+  target_include_directories(crogine PRIVATE ${SDL2_MIXER_INCLUDE_DIR})
+  set(PROJECT_SRC ${PROJECT_SRC} ${project_src_sdlmixer})
 endif()
-
 
 #add platform specific source files for enet
 if(WIN32)
-  SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_win32})
+  set(PROJECT_SRC ${PROJECT_SRC} ${project_src_win32})
 else()
-  SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_nix})
+  set(PROJECT_SRC ${PROJECT_SRC} ${project_src_nix})
 endif()
 
 # add the Resourcepath source, mojoal source and GL41 loader for apple, else load GL46
 if (APPLE)
   set(PROJECT_SRC ${PROJECT_SRC} ${project_src_macos})
 else()
-  SET(PROJECT_SRC ${PROJECT_SRC} src/detail/glad.c)
+  set(PROJECT_SRC ${PROJECT_SRC} src/detail/glad.c)
 endif()
 
 target_link_libraries(crogine
@@ -105,9 +100,7 @@ target_link_libraries(crogine
   ${OPENGL_LIBRARIES})
 
 if(USE_OPENAL)
-  if(NOT APPLE)
-    target_link_libraries(crogine ${OPENAL_LIBRARY})
-  endif()
+  target_link_libraries(crogine ${OPENAL_LIBRARY})
 else()
   target_link_libraries(crogine ${SDL2_MIXER_LIBRARY})
 endif()
@@ -119,6 +112,7 @@ elseif(LINUX)
 endif()
 
 target_include_directories(crogine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
 target_sources(crogine PUBLIC FILE_SET HEADERS
   BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include
