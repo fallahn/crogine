@@ -252,9 +252,11 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
             break;
         case SDL_CONTROLLERTOUCHPADMOTION:
         {
+            static constexpr float Sensitivity = 0.1f;
+
             glm::vec2 normPos = glm::vec2(evt.ctouchpad.x, 1.f - evt.ctouchpad.y);
-            glm::vec2 movement = normPos - m_touchpadContext.lastPosition;
-            m_touchpadContext.lastPosition = normPos;
+            glm::vec2 movement = (normPos - m_touchpadContext.lastPosition) * Sensitivity;
+            m_touchpadContext.lastPosition += movement;
 
             m_touchpadContext.pointerEnt.getComponent<cro::Transform>().move(movement * m_touchpadContext.targetBounds);
             updateTouchpadPosition(m_touchpadContext.pointerEnt.getComponent<cro::Transform>().getPosition());

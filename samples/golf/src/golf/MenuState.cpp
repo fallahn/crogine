@@ -524,7 +524,7 @@ MenuState::~MenuState()
 bool MenuState::handleEvent(const cro::Event& evt)
 {
     const auto setChatHint =
-        [&](bool controller)
+        [&](bool controller, std::int32_t joyID)
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::ChatHint;
@@ -537,7 +537,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     {
                         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-                        if (cro::GameController::hasPSLayout(0))
+                        if (cro::GameController::hasPSLayout(/*cro::GameController::controllerID(joyID)*/0))
                         {
                             e.getComponent<cro::SpriteAnimation>().play(1);
                         }
@@ -658,16 +658,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
-        setChatHint(false);
+        setChatHint(false, 0);
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_PAGEUP:
+        /*case SDLK_PAGEUP:
         {
             m_sharedData.useOSKBuffer = true;
             requestStackPush(StateID::Keyboard);
         }
-            break;
+            break;*/
 #ifdef CRO_DEBUG_
 #ifdef USE_GNS
         case SDLK_PAGEUP:
@@ -802,7 +802,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        setChatHint(true);
+        setChatHint(true, evt.cbutton.which);
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
@@ -857,7 +857,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
-        setChatHint(false);
+        setChatHint(false, 0);
         if (m_currentMenu == MenuID::ProfileFlyout)
         {
             auto bounds = m_menuEntities[m_currentMenu].getComponent<cro::Drawable2D>().getLocalBounds();
@@ -896,7 +896,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     {
         if (evt.caxis.value > LeftThumbDeadZone)
         {
-            setChatHint(true);
+            setChatHint(true, evt.caxis.which);
             cro::App::getWindow().setMouseCaptured(true);
         }
     }

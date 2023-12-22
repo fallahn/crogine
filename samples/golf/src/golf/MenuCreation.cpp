@@ -2920,8 +2920,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 #ifndef USE_GNS
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<UIElement>().absolutePosition = { 10.f, 0.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.f, 0.98f };
+    entity.addComponent<UIElement>().absolutePosition = { -160.f, -4.f };
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 1.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::ServerInfo;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("Connected to");
