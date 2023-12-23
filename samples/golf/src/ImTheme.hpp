@@ -1,4 +1,5 @@
 #include <crogine/gui/Gui.hpp>
+#include <crogine/core/FileSystem.hpp>
 
 static inline void applyImGuiStyle()
 {
@@ -102,7 +103,7 @@ static inline void applyImGuiStyle()
 
     //expands the default glyph set - default is 32-255
     std::vector<ImWchar> rangesA = { 0x1, 0xFFFF, 0 }; //TODO what's the third number? Plane? Terminator?
-    fonts->AddFontFromFileTTF("assets/golf/fonts/ProggyClean.ttf", 13.f, &config, rangesA.data());
+    fonts->AddFontFromFileTTF(std::string{cro::FileSystem::getResourcePath() + std::string{"/assets/golf/fonts/ProggyClean.ttf"}}.c_str(), 13.f, &config, rangesA.data());
     
     //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesCyrillic());
     //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesGreek());
