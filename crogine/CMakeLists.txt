@@ -67,7 +67,7 @@ target_include_directories(crogine
 if(MSVC)
   target_include_directories(crogine PRIVATE ${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
 elseif(LINUX)
-  target_include_directories(crogine PRIVATE${LIBUNWIND_INCLUDE_DIRS})
+  target_include_directories(crogine PRIVATE ${LIBUNWIND_INCLUDE_DIRS})
 endif()
 
 set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
