@@ -104,15 +104,14 @@ endif()
 if (APPLE)
   # For each resource file we need to add it as a source file to the project
   file(GLOB_RECURSE RESOURCES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/assets/*)
-  foreach(RESOURCE ${RESOURCES})
-    target_sources(golf PRIVATE ${RESOURCE})
-    # We also need to set the package location so it goes in the correct folder when bundled
-    # and set HEADER_FILE_ONLY so the build system doesn't try to build them (some share extensions with cpp modules)
-    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/${RESOURCE} PROPERTIES MACOSX_PACKAGE_LOCATION ${RESOURCE} HEADER_FILE_ONLY ON)
-  endforeach()
+  target_sources(golf PRIVATE ${RESOURCES})
 
-  #Then finally fix up the bundle first when installing
-  install(CODE "include(BundleUtilities)\nfixup_bundle($<TARGET_BUNDLE_DIR:golf> $<TARGET_FILE:golf> $<TARGET_FILE_DIR:golf>)")
+  # We also need to set the package location so it goes in the correct folder when bundled
+  # and set HEADER_FILE_ONLY so the build system doesn't try to build them (some share extensions with cpp modules)
+  foreach(RESOURCE ${RESOURCES})
+    get_filename_component(FOLDER ${RESOURCE} DIRECTORY)
+    set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/${RESOURCE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/${FOLDER} HEADER_FILE_ONLY ON)
+  endforeach()
 endif()
 
 set_target_properties(golf PROPERTIES 
