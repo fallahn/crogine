@@ -112,6 +112,12 @@ if (APPLE)
     get_filename_component(FOLDER ${RESOURCE} DIRECTORY)
     set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/${RESOURCE} PROPERTIES MACOSX_PACKAGE_LOCATION Resources/${FOLDER} HEADER_FILE_ONLY ON)
   endforeach()
+
+  # And add the icons
+  set(ICON_FILE_NAME icon)
+  set(ICON_PATH ${CMAKE_CURRENT_SOURCE_DIR}/macOS/${ICON_FILE_NAME}.icns)
+  target_sources(golf PRIVATE ${ICON_PATH})
+  set_target_properties(golf PROPERTIES MACOSX_BUNDLE_ICON_FILE ${ICON_FILE_NAME} RESOURCE ${ICON_PATH})
 endif()
 
 set_target_properties(golf PROPERTIES 
