@@ -961,7 +961,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     msg3->type = GolfEvent::PowerShot;
                     msg3->position = m_currentPlayer.position;
 
-                    m_activeAvatar->ballModel.getComponent<cro::ParticleEmitter>().start();
+                    //m_activeAvatar->ballModel.getComponent<cro::ParticleEmitter>().start();
                 }
 
                 //hide the ball briefly to hack around the motion lag

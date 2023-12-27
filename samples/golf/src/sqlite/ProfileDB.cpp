@@ -35,7 +35,7 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 11u> CourseNames =
+    const std::array<std::string, 12u> CourseNames =
     {
         "course_01",
         "course_02",
@@ -48,9 +48,10 @@ namespace
         "course_09",
         "course_10",
         "course_11",
+        "course_12",
     };
     constexpr std::int32_t MinCourse = 0;
-    constexpr std::int32_t MaxCourse = 10;
+    constexpr std::int32_t MaxCourse = 12;
 }
 
 ProfileDB::ProfileDB()
@@ -70,7 +71,7 @@ ProfileDB::~ProfileDB()
     {
         //TODO we should also finalise pending
         //queries - must check how we know if there
-        //are any outstandinf or if it's just ok
+        //are any outstanding or if it's just ok
         //to call finalise regardless.
 
         sqlite3_close(m_connection);

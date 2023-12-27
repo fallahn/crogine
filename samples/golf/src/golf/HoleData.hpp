@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -52,6 +52,7 @@ static const std::array<std::string, 10u> CourseNames =
     "course_09",
     "course_10",
     //"course_11",
+    //"course_12",
 };
 
 static inline std::int32_t getCourseIndex(const std::string& name)
