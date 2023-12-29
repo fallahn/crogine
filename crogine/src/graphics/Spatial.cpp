@@ -27,6 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/core/Log.hpp>
+
 #include <crogine/graphics/Spatial.hpp>
 
 #include <crogine/detail/glm/vec3.hpp>
@@ -39,11 +41,16 @@ Sphere::Sphere()
     : radius(0.f),
     centre  (0.f) {}
 
+Sphere::Sphere(float r, glm::vec3 c)
+    : radius(r),
+    centre  (c) {}
+
 Sphere::Sphere(const Box& box)
 {
     auto rad = (box[1] - box[0]) / 2.f;
     centre = box[0] + rad;
 
+    radius = 0.f;
     for (auto i = 0; i < 3; ++i)
     {
         auto l = std::abs(rad[i]);
@@ -52,6 +59,8 @@ Sphere::Sphere(const Box& box)
             radius = l;
         }
     }
+
+    //LogI << glm::length(rad) / radius << std::endl;
 }
 
 Sphere& Sphere::operator=(const Box& box)
@@ -59,6 +68,7 @@ Sphere& Sphere::operator=(const Box& box)
     auto rad = (box[1] - box[0]) / 2.f;
     centre = box[0] + rad;
 
+    radius = 0.f;
     for (auto i = 0; i < 3; ++i)
     {
         auto l = std::abs(rad[i]);
@@ -67,6 +77,8 @@ Sphere& Sphere::operator=(const Box& box)
             radius = l;
         }
     }
+
+    //LogI << glm::length(rad) / radius << std::endl;
 
     return *this;
 }

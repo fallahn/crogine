@@ -38,6 +38,28 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    //this asserts the min point is always 0 and max is always 1
+    //to prevent spheres being created with incorrect centre points
+    void assertAABB(Box& aabb)
+    {
+        float x = std::min(aabb[0].x, aabb[1].x);
+        float y = std::min(aabb[0].y, aabb[1].y);
+        float z = std::min(aabb[0].z, aabb[1].z);
+
+        glm::vec3 minimum(x,y,z);
+
+        x = std::max(aabb[0].x, aabb[1].x);
+        y = std::max(aabb[0].y, aabb[1].y);
+        z = std::max(aabb[0].z, aabb[1].z);
+        glm::vec3 maximum(x,y,z);
+
+        aabb[0] = minimum;
+        aabb[1] = maximum;
+    }
+}
+
 Model::Model()
     : m_visible     (true),
     m_hidden        (false),
@@ -63,6 +85,10 @@ Model::Model(Mesh::Data data, Material::Data material)
     m_skeleton      (nullptr),
     m_jointCount    (0)
 {
+    assertAABB(m_meshData.boundingBox);
+    assertAABB(m_boundingBox);
+    m_boundingSphere = m_boundingBox;
+
     for (auto& pair : m_vaos)
     {
         std::fill(pair.begin(), pair.end(), 0);
@@ -318,7 +344,13 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
         normalMatrices[i] = glm::inverseTranspose(transforms[i]);
     }
     m_boundingBox = newBB;
-    m_boundingSphere = newBB;
+    
+    assertAABB(m_boundingBox);
+    m_boundingSphere = m_boundingBox;
+
+    /*auto rad = (newBB[1] - newBB[0]) / 2.f;
+    auto centre = newBB[0] + rad;
+    m_boundingSphere = { glm::length(rad), centre };*/
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data(), GL_STATIC_DRAW));
@@ -471,8 +503,11 @@ void Model::updateBounds()
     //unfortunately we need to keep a copy of this as it's the only
     //way of comparing against the mesh data to see if it was updated
     m_meshBox = m_meshData.boundingBox;
+    assertAABB(m_meshBox);
+
     //and yet another copy which may be modified by instancing (and is what's actually returned as the model bounds)
     m_boundingBox = m_meshData.boundingBox;
+    assertAABB(m_boundingBox);
     m_boundingSphere = m_boundingBox;
 }
 

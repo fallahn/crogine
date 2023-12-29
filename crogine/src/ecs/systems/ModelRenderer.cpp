@@ -356,6 +356,10 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
+        //for some reason the tighter fitting Spheres cause incorrect culling
+        //so this is a hack to mitigate it somewhat
+        sphere.radius *= 1.2f;
+
         //for each pass in the list (different passes may use different projections, eg reflections)
         for (auto p = 0; p < passCount; ++p)
         {
@@ -382,7 +386,7 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
             {
                 const auto& frustum = camComponent.getPass(p).getFrustum();
 
-                model.m_visible = true;
+                model.m_visible = true; //TODO this property shouldn't be stored on the model as it's not used and might have different values per pass
                 std::size_t j = 0;
                 while (model.m_visible && j < frustum.size())
                 {
