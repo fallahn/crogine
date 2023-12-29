@@ -164,7 +164,8 @@ void App::loadPlugin(const std::string& path, StateStack& stateStack)
     }
     else
     {
-        LogE << "Unable to open plugin at " << path << std::endl;
+        LogE << "Unable to open plugin at " << fullPath << std::endl;
+        LogE << dlerror() << std::endl;
     }
 }
 
