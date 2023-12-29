@@ -269,7 +269,7 @@ inline const std::string CelFragmentShader = R"(
 
 #if defined (MASK_MAP)
     uniform sampler2D u_maskMap;
-#if !defined(REFLECTION)
+#if !defined(REFLECTIONS)
     uniform samplerCube u_reflectMap;
 #endif
 #endif
@@ -475,21 +475,23 @@ inline const std::string CelFragmentShader = R"(
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt * effectAmount);
 
-//TODO most of these comp shade materials don't need this
-//so would be nice to be able to skip the pointless lookups
-if(u_maskColour.b < 0.95)
-{
-    vec3 blend = vec3(abs(normal.x), abs(normal.y), abs(normal.z));
-    float blendSum = blend.r + blend.g + blend.b;
-    blend /= blendSum;
+#if !defined(HOLE_HEIGHT)
 
-    vec3 xCol = TEXTURE(u_angleTex, v_worldPosition.zy * 0.03).r * colour.rgb;
-    vec3 zCol = TEXTURE(u_angleTex, v_worldPosition.xy * 0.03).r * colour.rgb;
-    vec3 result = vec3((xCol * blend.x) + (colour.rgb * blend.y) + (zCol * blend.z));
-    colour.rgb = mix(colour.rgb, result, 1.0 - u_maskColour.b);
-}
+        //TODO most of these comp shade materials don't need this
+        //so would be nice to be able to skip the pointless lookups
+        if(u_maskColour.b < 0.95)
+        {
+            vec3 blend = vec3(abs(normal.x), abs(normal.y), abs(normal.z));
+            float blendSum = blend.r + blend.g + blend.b;
+            blend /= blendSum;
 
-#if defined(HOLE_HEIGHT)
+            vec3 xCol = TEXTURE(u_angleTex, v_worldPosition.zy * 0.03).r * colour.rgb;
+            vec3 zCol = TEXTURE(u_angleTex, v_worldPosition.xy * 0.03).r * colour.rgb;
+            vec3 result = vec3((xCol * blend.x) + (colour.rgb * blend.y) + (zCol * blend.z));
+            colour.rgb = mix(colour.rgb, result, 1.0 - u_maskColour.b);
+        }
+
+#else
         float minHeight = u_holeHeight - 0.25;
         float maxHeight = u_holeHeight + 0.008;
         float holeHeight = clamp((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 0.0, 1.0);
@@ -608,14 +610,13 @@ if(u_maskColour.b < 0.95)
 
 
 #if defined(HOLE_HEIGHT)
-#if !defined(CONTOUR)
+#if !defined(CONTOUR) //regular green
     vec3 f = fract(v_worldPosition * 0.5);
     vec3 df = fwidth(v_worldPosition * 0.5);
     //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
     vec3 g = step(df * u_pixelScale, f);
 
-    float contourX = 1.0 - (g.y * g.z);
-    float contourZ = 1.0 - (g.y * g.x);
+    float contour = /*round*/(1.0 - (g.x * g.y * g.z));
     vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.8 + (0.4 * holeHeight));
     
 
@@ -625,18 +626,16 @@ if(u_maskColour.b < 0.95)
 
 
     float transparency = 1.0 - pow(1.0 - u_transparency, 4.0);
-    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contourX * holeHeightFade * transparency);
-    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contourZ * holeHeightFade * transparency);
-#else
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contour * holeHeightFade * transparency);
+
+#else //putting green
 
     vec3 f = fract(v_worldPosition * 2.0);
     vec3 df = fwidth(v_worldPosition * 2.0);
     //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
     vec3 g = step(df * u_pixelScale, f);
 
-    float contourX = 1.0 - (g.y * g.z);
-    float contourZ = 1.0 - (g.y * g.x);
-
+    float contour = 1.0 - (g.x * g.y * g.z);
 
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
     //these magic numbers are distance sqr
@@ -646,8 +645,7 @@ if(u_maskColour.b < 0.95)
     contourColour.x += mod(v_worldPosition.y * 3.0, 1.0);
     contourColour = hsv2rgb(contourColour);
 
-    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourX * fade);
-    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourZ * fade);
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contour * fade);
 
     float minHeight = u_holeHeight - 0.025;
     float maxHeight = u_holeHeight + 0.08;
