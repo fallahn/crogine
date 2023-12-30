@@ -16,16 +16,6 @@ if(USE_NEWSFEED)
   find_package(CURL REQUIRED)
 endif()
 
-if(NOT CROGINE_FOUND)
-  #build it from source
-  add_subdirectory(../../crogine)
-
-  #SET (CROGINE_INCLUDE_DIR ../../crogine/include)
-  #SET (CROGINE_LIBRARIES TODO set lib output dir)
-
-endif()
-
-
 if(USE_GNS)
   if(USE_NEWSFEED)
     message(FATAL_ERROR "Can't use newsfeed with GNS builds. Set USE_NEWSFEED to false")
