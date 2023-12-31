@@ -160,7 +160,7 @@ void App::loadPlugin(const std::string& path, StateStack& stateStack)
             }
             else
             {
-                exit(&stateStack);
+                exitPoint(&stateStack);
                 m_pluginSharedData.reset();
                 dlclose(m_pluginHandle);
                 m_pluginHandle = nullptr;
