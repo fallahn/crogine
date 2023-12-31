@@ -553,7 +553,7 @@ std::string FileSystem::getResourcePath()
     auto rpath = resourcePath();
     if (m_resourceDirectory.find(rpath) == std::string::npos)
     {
-        return resourcePath() + m_resourceDirectory;
+        return rpath + m_resourceDirectory;
     }
 
     return m_resourceDirectory;
@@ -580,6 +580,8 @@ void FileSystem::setResourceDirectory(const std::string& path)
             m_resourceDirectory.push_back('/');
         }
     }
+
+    LogI << "Resource directory set to " << m_resourceDirectory << std::endl;
 }
 
 bool FileSystem::showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType, IconType iconType)

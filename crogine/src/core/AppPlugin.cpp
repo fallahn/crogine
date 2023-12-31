@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -152,8 +152,19 @@ void App::loadPlugin(const std::string& path, StateStack& stateStack)
             FileSystem::setResourceDirectory(path);
 
             auto reqState = entryPoint(&stateStack, &m_pluginSharedData);
-            stateStack.clearStates();
-            stateStack.pushState(reqState);
+            
+            if (reqState != std::numeric_limits<std::int32_t>::max())
+            {
+                stateStack.clearStates();
+                stateStack.pushState(reqState);
+            }
+            else
+            {
+                exit(&stateStack);
+                m_pluginSharedData.reset();
+                dlclose(m_pluginHandle);
+                m_pluginHandle = nullptr;
+            }
         }
         else
         {
