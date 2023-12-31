@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2023, 11, 9),
+    "version": (2023, 12, 31),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -189,6 +189,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
         teeWritten = False
         pinWritten = False
         targetWritten = False
+        subtargetWritten = False
 
         for ob in bpy.context.selected_objects:
 
@@ -217,12 +218,21 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                         pinWritten = True
                     else:
                         self.report({'WARNING'}, "Multiple pins selected")
-                elif "target" in modelName.lower():
+                elif "target" == modelName.lower():
                     if targetWritten == False:
                         WriteProperty(file, "target", worldLocation)
                         targetWritten = True
                     else:
                         self.report({'WARNING'}, "Multiple targets selected")
+
+                elif "subtarget" == modelName.lower():
+                    if subtargetWritten == False:
+                        WriteProperty(file, "subtarget", worldLocation)
+                        subtargetWritten = True
+                    else:
+                        self.report({'WARNING'}, "Multiple sub-targets selected")
+
+
                 elif "tee" in modelName.lower():
                     if teeWritten == False:
                         WriteProperty(file, "tee", worldLocation)

@@ -5175,6 +5175,25 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         player.terrain == TerrainID::Green ? rotation / 3.f : rotation);
 
 
+    auto midTarget = m_holeData[m_currentHole].target;
+    //some holes have a sub-target to help the CPU along the course
+    static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f);
+    if (glm::length2(m_holeData[m_currentHole].subtarget) < MaxSubTarget)
+    {
+        //this is (hopefully) a valid value and not the default
+        const auto t = midTarget - player.position;
+        const auto m = m_holeData[m_currentHole].subtarget - player.position;
+
+        const float d = glm::dot(glm::normalize(glm::vec2(t.x, -t.z)), glm::normalize(glm::vec2(m.x, -m.z)));
+        if (glm::length2(t) < (20.f * 20.f)
+            || glm::length2(m) < glm::length2(t)
+            || d < 0.1f)
+        {
+            midTarget = m_holeData[m_currentHole].subtarget;
+        }
+    }
+
+
     //set this separately because target might not necessarily be the pin.
     bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
         && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
@@ -5196,17 +5215,16 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         && isCPU)
     {
         //if the CPU is smart enough always go for the hole if we can
-        if (m_cpuGolfer.getSkillIndex() > 3
-            /*&& !m_holeData[m_currentHole].puttFromTee*/)
+        if (m_cpuGolfer.getSkillIndex() > 3)
         {
             //fallback is used when repeatedly launching the ball into the woods...
-            m_cpuGolfer.activate(/*m_holeData[m_currentHole].pin*/clubTarget, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
+            m_cpuGolfer.activate(clubTarget, midTarget, m_holeData[m_currentHole].puttFromTee);
         }
 
         else
         {
             //if the player can rotate enough prefer the hole as the target
-            auto pin = /*m_holeData[m_currentHole].pin*/clubTarget - player.position;
+            auto pin = clubTarget - player.position;
             auto targetPoint = target - player.position;
 
             auto p = glm::normalize(glm::vec2(pin.x, -pin.z));
@@ -5216,16 +5234,16 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             float det = (p.x * t.y) - (p.y * t.x);
             float targetAngle = std::abs(std::atan2(det, dot));
 
-            if (targetAngle < m_inputParser.getMaxRotation()/*cro::Util::Const::PI / 2.f*/)
+            if (targetAngle < m_inputParser.getMaxRotation())
             {
-                m_cpuGolfer.activate(/*m_holeData[m_currentHole].pin*/clubTarget, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
+                m_cpuGolfer.activate(clubTarget, midTarget, m_holeData[m_currentHole].puttFromTee);
             }
             else
             {
                 //aim for whichever is closer (target or pin)
                 //if (glm::length2(target - player.position) < glm::length2(m_holeData[m_currentHole].pin - player.position))
                 {
-                    m_cpuGolfer.activate(target, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
+                    m_cpuGolfer.activate(target, midTarget, m_holeData[m_currentHole].puttFromTee);
                 }
                 /*else
                 {

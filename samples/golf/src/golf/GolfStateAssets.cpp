@@ -453,6 +453,10 @@ void GolfState::loadMap()
                     propCount++;
                 }
             }
+            else if (name == "subtarget")
+            {
+                holeData.subtarget = holeProp.getValue<glm::vec3>();
+            }
             else if (name == "par")
             {
                 holeData.par = holeProp.getValue<std::int32_t>();
