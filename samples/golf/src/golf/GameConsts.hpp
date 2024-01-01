@@ -346,7 +346,7 @@ static inline const std::array BallTints =
 
 static inline std::int32_t courseOfTheMonth()
 {
-    return cro::SysTime::now().months() % 11;
+    return cro::SysTime::now().months() % 12;
 }
 
 static inline float getWindMultiplier(float ballHeight, float distanceToPin)

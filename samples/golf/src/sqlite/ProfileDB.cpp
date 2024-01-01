@@ -51,7 +51,7 @@ namespace
         "course_12",
     };
     constexpr std::int32_t MinCourse = 0;
-    constexpr std::int32_t MaxCourse = 12;
+    constexpr std::int32_t MaxCourse = 11;
 }
 
 ProfileDB::ProfileDB()
