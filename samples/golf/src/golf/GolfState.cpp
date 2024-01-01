@@ -5174,25 +5174,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : 
         player.terrain == TerrainID::Green ? rotation / 3.f : rotation);
 
-
-    auto midTarget = m_holeData[m_currentHole].target;
-    //some holes have a sub-target to help the CPU along the course
-    static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f);
-    if (glm::length2(m_holeData[m_currentHole].subtarget) < MaxSubTarget)
-    {
-        //this is (hopefully) a valid value and not the default
-        const auto t = midTarget - player.position;
-        const auto m = m_holeData[m_currentHole].subtarget - player.position;
-
-        const float d = glm::dot(glm::normalize(glm::vec2(t.x, -t.z)), glm::normalize(glm::vec2(m.x, -m.z)));
-        if (glm::length2(t) < (20.f * 20.f)
-            || glm::length2(m) < glm::length2(t)
-            || d < 0.1f)
-        {
-            midTarget = m_holeData[m_currentHole].subtarget;
-        }
-    }
-
+    auto midTarget = findTargetPos(player.position);
 
     //set this separately because target might not necessarily be the pin.
     bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
@@ -5840,7 +5822,11 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         targetInfo.targetOffset = CameraStrokeOffset;
     }
 
-    auto targetDir = m_holeData[m_currentHole].target - playerData.position;
+    //if we whave a sub-target see if that should be active
+    auto activeTarget = findTargetPos(playerData.position);
+
+   
+    auto targetDir = activeTarget - playerData.position;
     auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
     targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
     
@@ -5876,7 +5862,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
                 }
                 else
                 {
-                    targetInfo.targetLookAt = m_holeData[m_currentHole].target;
+                    targetInfo.targetLookAt = activeTarget;
                 }
             }
         }

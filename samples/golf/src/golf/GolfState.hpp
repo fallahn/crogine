@@ -482,6 +482,7 @@ private:
     SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();
+    glm::vec3 findTargetPos(glm::vec3 playerPos) const; //decides if we should be using the sub-target (if it exists)
 
     //hack to allow the profile update to be const.
     std::int32_t m_courseIndex; //-1 if not an official course

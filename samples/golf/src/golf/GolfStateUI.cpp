@@ -4300,9 +4300,9 @@ void GolfState::retargetMinimap(bool reset)
         target.end.pan = glm::vec2(player.x, -player.z);
 
         //if we have a tight dogleg, such as on the mini putt
-        //check if the primary target is inbetween and shift
+        //check if the primary target is in between and shift
         //towards it to better centre the hole
-        auto targ = m_holeData[m_currentHole].target;
+        auto targ = findTargetPos(player);
         glm::vec2 targDir(targ.x - player.x, -targ.z + player.z);
         const auto d = glm::dot(glm::normalize(dir), glm::normalize(targDir));
         const auto l2 = glm::length2(targDir);
@@ -4359,6 +4359,39 @@ void GolfState::retargetMinimap(bool reset)
         }
     };
     m_minimapZoom.activeAnimation = entity;
+}
+
+glm::vec3 GolfState::findTargetPos(glm::vec3 playerPos) const
+{
+    if (glm::length2(m_holeData[m_currentHole].subtarget) < MaxSubTarget)
+    {
+        //this is (hopefully) a valid value and not the default
+        const auto t = m_holeData[m_currentHole].target - playerPos;
+        const auto m = m_holeData[m_currentHole].subtarget - playerPos;
+
+        const float d = glm::dot(glm::normalize(glm::vec2(t.x, -t.z)), glm::normalize(glm::vec2(m.x, -m.z)));
+        const float tLen = glm::length2(t);
+        const float mLen = glm::length2(m);
+
+
+        if (d > 0.6f) //both are more or less in front
+        {
+            //go for the sub-target if it is the furthest
+            if (mLen > tLen
+                && std::sqrt(mLen) / 2.f > std::sqrt(tLen)) //and more than twice as far
+            {
+                return m_holeData[m_currentHole].subtarget;
+            }
+        }
+
+        if (tLen < (20.f * 20.f) //current pos < 20m to default target
+            || mLen < tLen //sub-target closer than default target
+            || d < 0.1f) //default target is almost behind us
+        {
+            return m_holeData[m_currentHole].subtarget;
+        }
+    }
+    return m_holeData[m_currentHole].target;
 }
 
 void GolfState::updateProfileDB() const
