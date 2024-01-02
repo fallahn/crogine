@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -39,7 +39,7 @@ source distribution.
 #include <array>
 #include <string>
 
-static const std::array<std::string, 10u> CourseNames =
+static inline const std::array<std::string, 12u> CourseNames =
 {
     "course_01",
     "course_02",
@@ -51,8 +51,8 @@ static const std::array<std::string, 10u> CourseNames =
     "course_08",
     "course_09",
     "course_10",
-    //"course_11",
-    //"course_12",
+    "course_11",
+    "course_12",
 };
 
 static inline std::int32_t getCourseIndex(const std::string& name)

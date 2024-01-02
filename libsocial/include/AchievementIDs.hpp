@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -144,6 +144,11 @@ namespace AchievementID
 
         NightOwl,
         RainOrShine,
+
+        Complete11,
+        Master11,
+        Complete12,
+        Master12,
 
         Count
     };

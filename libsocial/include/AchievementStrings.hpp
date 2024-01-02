@@ -137,7 +137,11 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "league_champion",
     "league_seasonal",
     "night_owl",
-    "rain_or_shine"
+    "rain_or_shine",
+    "course11_complete",
+    "course_11_par",
+    "course12_complete",
+    "course_12_par",
 };
 
 //appears on the notification
@@ -233,7 +237,11 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "League Champion",
     "League Participant",
     "Night Owl",
-    "Come Rain or Shine"
+    "Come Rain or Shine",
+    "Complete Course 11",
+    "Master Course 11",
+    "Complete Course 12",
+    "Master Course 12",
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -330,6 +338,10 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Complete a full season in the Club League", false),
     std::make_pair("Play 18 holes at night", false),
     std::make_pair("Play 9 holes on each weather type", false),
+    std::make_pair("Play a full 18 holes on Nguyen Valley", false),
+    std::make_pair("Complete Nguyen Valley with par or under", false),
+    std::make_pair("Play a full 18 holes on Hertog Regis", false),
+    std::make_pair("Complete Hertog Regis with par or under", false),
 };
 
 //assuming trophies load correctly they are:
@@ -456,6 +468,11 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::BronzeFigure,
     TrophyID::SilverCup,
     TrophyID::SilverFigure,
+
+    TrophyID::BronzeCup,
+    TrophyID::GoldCup,
+    TrophyID::BronzeCup,
+    TrophyID::GoldCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

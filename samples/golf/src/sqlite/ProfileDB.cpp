@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ProfileDB.hpp"
+#include "../golf/HoleData.hpp"
 
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -35,21 +36,6 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 12u> CourseNames =
-    {
-        "course_01",
-        "course_02",
-        "course_03",
-        "course_04",
-        "course_05",
-        "course_06",
-        "course_07",
-        "course_08",
-        "course_09",
-        "course_10",
-        "course_11",
-        "course_12",
-    };
     constexpr std::int32_t MinCourse = 0;
     constexpr std::int32_t MaxCourse = 11;
 }

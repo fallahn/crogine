@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -106,6 +106,8 @@ namespace
         std::make_pair("course_08", AchievementID::Master08),
         std::make_pair("course_09", AchievementID::Master09),
         std::make_pair("course_10", AchievementID::Master10),
+        std::make_pair("course_11", AchievementID::Master11),
+        std::make_pair("course_12", AchievementID::Master12),
     };
 
     const std::unordered_map<std::string, std::int32_t> CourseIDs =
@@ -120,6 +122,8 @@ namespace
         std::make_pair("course_08", AchievementID::Complete08),
         std::make_pair("course_09", AchievementID::Complete09),
         std::make_pair("course_10", AchievementID::Complete10),
+        std::make_pair("course_11", AchievementID::Complete11),
+        std::make_pair("course_12", AchievementID::Complete12),
     };
 
     static constexpr float ColumnWidth = 20.f;
@@ -4398,7 +4402,7 @@ void GolfState::updateProfileDB() const
 {
     if (CourseIDs.count(m_sharedData.mapDirectory.toAnsiString()) != 0)
     {
-        const auto courseID = CourseIDs.at(m_sharedData.mapDirectory.toAnsiString()) - AchievementID::Complete01;
+        const auto courseID = static_cast<std::int32_t>(m_sharedData.courseIndex);// CourseIDs.at(m_sharedData.mapDirectory.toAnsiString()) - AchievementID::Complete01;
         const auto localCount = m_sharedData.localConnectionData.playerCount;
         const auto clientID = m_sharedData.localConnectionData.connectionID;
         const auto& localPlayers = m_sharedData.localConnectionData.playerData;

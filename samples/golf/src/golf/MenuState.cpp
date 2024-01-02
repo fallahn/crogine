@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -111,8 +111,14 @@ namespace
 
     void refreshCourseAchievements()
     {
+        //TODO HMMMMMM the stat IDs aren't in order for non-gns
+#ifdef USE_GNS
+        std::int32_t MaxStat = StatID::Course12Complete;
+#else
+        std::int32_t MaxStat = StatID::Course10Complete;
+#endif
         bool awarded = true;
-        for (std::int32_t i = StatID::Course01Complete; i < StatID::Course10Complete + 1; ++i)
+        for (std::int32_t i = StatID::Course01Complete; i < MaxStat + 1; ++i)
         {
             if (Achievements::getStat(StatStrings[i])->value == 0)
             {
@@ -1213,26 +1219,6 @@ void MenuState::addSystems()
     //grand tour if applicable - this is here for non-gns version
     //gns version may be delayed so is handled via callback
     refreshCourseAchievements();
-    
-
-    //bool awarded = true;
-    //for (std::int32_t i = StatID::Course01Complete; i < StatID::Course10Complete + 1; ++i)
-    //{
-    //    if (Achievements::getStat(StatStrings[i])->value == 0)
-    //    {
-    //        awarded = false;
-    //        //break;
-    //    }
-    //    else
-    //    {
-    //        //used to retroactively award the achievements
-    //        Achievements::awardAchievement(AchievementStrings[AchievementID::Complete01 + (i - StatID::Course01Complete)]);
-    //    }
-    //}
-    //if (awarded)
-    //{
-    //    Achievements::awardAchievement(AchievementStrings[AchievementID::GrandTour]);
-    //}
 }
 
 void MenuState::loadAssets()
