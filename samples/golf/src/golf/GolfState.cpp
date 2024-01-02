@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -4805,7 +4805,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     //update status
     const std::size_t MaxTitleLen = 220;
 
-    cro::String courseTitle = m_courseTitle.substr(0, MaxTitleLen);
+    cro::String courseTitle = m_courseTitle.substr(0, MaxTitleLen) + " ";
     if (m_sharedData.nightTime)
     {
         //moon

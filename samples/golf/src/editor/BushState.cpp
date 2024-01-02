@@ -484,9 +484,9 @@ void BushState::createScene()
 
     //ortho cam for creating thumbnails
     m_thumbnailCamera = m_gameScene.createEntity();
-    m_thumbnailCamera.addComponent<cro::Transform>().setPosition({ 0.f, 20.f, 0.f });
+    m_thumbnailCamera.addComponent<cro::Transform>().setPosition({ 0.f, 40.f, 0.f });
     m_thumbnailCamera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 30.f);
+    m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 50.f);
     m_thumbnailCamera.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
     m_thumbnailCamera.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlagsThumbnail);
 }
