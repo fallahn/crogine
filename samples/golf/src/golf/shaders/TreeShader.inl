@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -223,7 +223,8 @@ if(visibility > MinVisibility){
         const float farFadeDistance = 360.f;
 
         v_data.ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
-        v_data.ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+        //fades far leaves before culling kicks in at 280m
+        v_data.ditherAmount *= 1.0 - clamp((distance - 255.0) / 25.0, 0.0, 1.0);
 
         v_data.darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 
@@ -472,7 +473,8 @@ inline const std::string BranchVertex = R"(
         float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
         v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
-        v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+        //fades far leaves before culling kicks in at 280m
+        v_ditherAmount *= 1.0 - clamp((distance - 255.0) / 25.0, 0.0, 1.0);
 
         v_darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
     })";
