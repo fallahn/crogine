@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -305,6 +305,8 @@ glm::ivec2 Window::getPosition() const
 
 void Window::setIcon(const std::uint8_t* data)
 {
+    //let the bundle set the icon on mac
+#ifndef __APPLE__
     CRO_ASSERT(m_window, "window not created");
     SDL_Surface* surface = SDL_CreateRGBSurfaceFrom((void*)(data), 16, 16, 32, 16 * 4, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
     if (surface)
@@ -316,6 +318,7 @@ void Window::setIcon(const std::uint8_t* data)
     {
         Logger::log("Failed creating icon from pixel data", Logger::Type::Error);
     }
+#endif
 }
 
 const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
