@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -131,13 +131,6 @@ namespace cro
         void setShadowMaterial(std::size_t idx, Material::Data material);
 
         /*!
-        \brief returns whether or not the model is currently inside the
-        frustum of the active camera according the last render pass.
-        This may be out of date by a frame when switching active scene cameras
-        */
-        bool isVisible() const { return m_visible; }
-
-        /*!
         \brief Sets the model hidden or unhidden. If this is true then the
         model won't be drawn.
         */
@@ -262,7 +255,7 @@ namespace cro
 #endif
 
     private:
-        bool m_visible;
+
         bool m_hidden;
         std::uint64_t m_renderFlags;
         std::uint32_t m_facing;

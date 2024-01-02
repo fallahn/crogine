@@ -382,15 +382,15 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
             }
 
 
+            bool visible = true;
             //if (camComponent.isOrthographic())
             {
                 const auto& frustum = camComponent.getPass(p).getFrustum();
 
-                model.m_visible = true; //TODO this property shouldn't be stored on the model as it's not used and might have different values per pass
                 std::size_t j = 0;
-                while (model.m_visible && j < frustum.size())
+                while (visible && j < frustum.size())
                 {
-                    model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+                    visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
                 }
             }
             /*else
@@ -399,7 +399,7 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                 model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
             }*/
 
-            if (model.m_visible)
+            if (visible)
             {
                 auto opaque = std::make_pair(entity, SortData());
                 auto transparent = std::make_pair(entity, SortData());
@@ -490,15 +490,16 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
             }
 
             //frustum test
+            bool visible = true;
             //if (camComponent.isOrthographic())
             {
                 const auto& frustum = camComponent.getPass(p).getFrustum();
 
-                model.m_visible = true;
+                visible = true;
                 std::size_t j = 0;
-                while (model.m_visible && j < frustum.size())
+                while (visible && j < frustum.size())
                 {
-                    model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+                    visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
                 }
             }
             /*else
@@ -507,7 +508,7 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
             }*/
 
             //add visible ents to lists for depth sorting
-            if (model.m_visible)
+            if (visible)
             {
                 auto opaque = std::make_pair(entity, SortData());
                 auto transparent = std::make_pair(entity, SortData());

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -61,8 +61,7 @@ namespace
 }
 
 Model::Model()
-    : m_visible     (true),
-    m_hidden        (false),
+    : m_hidden      (false),
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
     m_facing        (GL_CCW),
     m_skeleton      (nullptr),
@@ -75,8 +74,7 @@ Model::Model()
 }
 
 Model::Model(Mesh::Data data, Material::Data material)
-    : m_visible     (true),
-    m_hidden        (false),
+    : m_hidden      (false),
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
     m_facing        (GL_CCW),
     m_boundingSphere(data.boundingSphere),
@@ -140,7 +138,6 @@ Model::Model(Model&& other) noexcept
     : Model()
 {
     //we can swap because we initialised to nothing
-    std::swap(m_visible, other.m_visible);
     std::swap(m_hidden, other.m_hidden);
     std::swap(m_renderFlags, other.m_renderFlags);
     std::swap(m_facing, other.m_facing);
@@ -172,7 +169,6 @@ Model& Model::operator=(Model&& other) noexcept
 {
     if (&other != this)
     {
-        m_visible = other.m_visible;
         m_hidden = other.m_hidden;
         m_renderFlags = other.m_renderFlags;
         m_facing = other.m_facing;
@@ -347,10 +343,6 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
     
     assertAABB(m_boundingBox);
     m_boundingSphere = m_boundingBox;
-
-    /*auto rad = (newBB[1] - newBB[0]) / 2.f;
-    auto centre = newBB[0] + rad;
-    m_boundingSphere = { glm::length(rad), centre };*/
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data(), GL_STATIC_DRAW));

@@ -188,14 +188,14 @@ void DeferredRenderSystem::updateDrawList(Entity camera)
             const auto& frustum = cam.getPass(Camera::Pass::Final).getFrustum();
             auto forwardVector = cro::Util::Matrix::getForwardVector(cam.getPass(Camera::Pass::Final).viewMatrix);
 
-            model.m_visible = true;
+            bool visible = true;
             std::size_t i = 0;
-            while (model.m_visible && i < frustum.size())
+            while (visible && i < frustum.size())
             {
-                model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
+                visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
             }
 
-            if (model.m_visible)
+            if (visible)
             {
                 auto direction = (sphere.centre - cameraPos);
                 float distance = glm::dot(forwardVector, direction);
