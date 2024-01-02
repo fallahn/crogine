@@ -988,6 +988,7 @@ void GolfState::setNextHole()
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(0.f);
         entity.getComponent<cro::Callback>().function =
             [&, ballSystem](cro::Entity e, float dt)
         {
@@ -1006,32 +1007,40 @@ void GolfState::setNextHole()
             {
                 m_scoreboardTime = 0.f;
 
-                //apparently we have to do this here else the client just ignores it
-                for (auto i = 0u; i < m_playerInfo.size(); ++i)
+                //use a timer so we don't hammer the network with this
+                static constexpr float PingTime = 0.5f;
+                auto& pingTime = e.getComponent<cro::Callback>().getUserData<float>();
+                pingTime += dt;
+
+                if (pingTime > PingTime)
                 {
+                    pingTime -= PingTime;
+                    //apparently we have to do this here else the client just ignores it
+                    for (auto i = 0u; i < m_playerInfo.size(); ++i)
+                    {
+                        auto& player = m_playerInfo[i];
+                        player.position = m_holeData[m_currentHole].tee;
+                        player.distanceToHole = glm::length(player.position - m_holeData[m_currentHole].pin);
+                        player.terrain = ballSystem->getTerrain(player.position).terrain;
 
-                    auto& player = m_playerInfo[i];
-                    player.position = m_holeData[m_currentHole].tee;
-                    player.distanceToHole = glm::length(player.position - m_holeData[m_currentHole].pin);
-                    player.terrain = ballSystem->getTerrain(player.position).terrain;
+                        auto ball = player.ballEntity;
+                        ball.getComponent<Ball>().terrain = player.terrain;
+                        ball.getComponent<Ball>().velocity = glm::vec3(0.f);
+                        ball.getComponent<cro::Transform>().setPosition(player.position);
 
-                    auto ball = player.ballEntity;
-                    ball.getComponent<Ball>().terrain = player.terrain;
-                    ball.getComponent<Ball>().velocity = glm::vec3(0.f);
-                    ball.getComponent<cro::Transform>().setPosition(player.position);
+                        auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
-                    auto timestamp = m_serverTime.elapsed().asMilliseconds();
-
-                    ActorInfo info;
-                    info.serverID = static_cast<std::uint32_t>(ball.getIndex());
-                    info.position = ball.getComponent<cro::Transform>().getPosition();
-                    info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
-                    info.windEffect = ball.getComponent<Ball>().windEffect;
-                    info.timestamp = timestamp;
-                    info.clientID = player.client;
-                    info.playerID = player.player;
-                    info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
-                    m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        ActorInfo info;
+                        info.serverID = static_cast<std::uint32_t>(ball.getIndex());
+                        info.position = ball.getComponent<cro::Transform>().getPosition();
+                        info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
+                        info.windEffect = ball.getComponent<Ball>().windEffect;
+                        info.timestamp = timestamp;
+                        info.clientID = player.client;
+                        info.playerID = player.player;
+                        info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
+                        m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
                 }
             }
 

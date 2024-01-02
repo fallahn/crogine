@@ -417,6 +417,9 @@ void GolfState::registerDebugCommands()
                                 {
                                     ImGui::Text("Data Transferred: %3.2fKB this session", KB);
                                 }
+
+                                /*ImGui::NewLine();
+                                ImGui::Text("Most frequent packet: %d", m_networkDebugContext.lastHighestID);*/
                             }
                             ImGui::End();
                         }

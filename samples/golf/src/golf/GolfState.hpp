@@ -635,6 +635,10 @@ private:
         std::size_t total = 0;
         float bitrateTimer = 0.f;
 
+        std::int32_t highestID = 0;
+        std::int32_t lastHighestID = 0;
+        std::array<std::int32_t, /*PacketID::Poke*/35> packetIDCounts = {};
+
         bool showUI = false;
         bool wasShown = false;
     }m_networkDebugContext;

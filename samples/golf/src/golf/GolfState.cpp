@@ -1650,6 +1650,17 @@ bool GolfState::simulate(float dt)
             {
                 m_networkDebugContext.bitrateCounter += evt.packet.getSize() * 8;
                 m_networkDebugContext.total += evt.packet.getSize();
+
+                /*auto id = evt.packet.getID();
+                if (id < PacketID::Poke)
+                {
+                    m_networkDebugContext.packetIDCounts[id]++;
+                    if (m_networkDebugContext.packetIDCounts[id] >
+                        m_networkDebugContext.packetIDCounts[m_networkDebugContext.highestID])
+                    {
+                        m_networkDebugContext.highestID = id;
+                    }
+                }*/
             }
 
             //handle events
@@ -1662,6 +1673,10 @@ bool GolfState::simulate(float dt)
             m_networkDebugContext.bitrateTimer -= 1.f;
             m_networkDebugContext.bitrate = m_networkDebugContext.bitrateCounter;
             m_networkDebugContext.bitrateCounter = 0;
+
+            m_networkDebugContext.lastHighestID = m_networkDebugContext.highestID;
+            m_networkDebugContext.highestID = 0;
+            std::fill(m_networkDebugContext.packetIDCounts.begin(), m_networkDebugContext.packetIDCounts.end(), 0);
         }
 
         if (m_wantsGameState)
