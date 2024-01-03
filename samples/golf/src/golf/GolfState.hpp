@@ -110,6 +110,7 @@ class GolfState final : public cro::State, public cro::GuiClient, public cro::Co
 {
 public:
     GolfState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
+    ~GolfState();
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -289,6 +290,7 @@ private:
     cro::String m_courseTitle;
 
     std::vector<cro::Entity> m_spectatorModels;
+    std::vector<std::uint64_t> m_modelStats;
 
     /*GolfStateAssets.cpp*/
     void loadAssets();

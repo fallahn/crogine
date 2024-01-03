@@ -320,6 +320,13 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     cro::App::getInstance().resetFrameTime();
 }
 
+GolfState::~GolfState()
+{
+#ifdef USE_GNS
+    Social::endStats();
+#endif
+}
+
 //public
 bool GolfState::handleEvent(const cro::Event& evt)
 {
@@ -3137,6 +3144,14 @@ void GolfState::spawnBall(const ActorInfo& info)
         {
             m_ballModels[ballID]->createModel(entity);
             applyMaterialData(*m_ballModels[ballID], material);
+#ifdef USE_GNS
+            if (ball->workshopID)
+            {
+                std::vector<std::uint64_t> v;
+                v.push_back(ball->workshopID);
+                Social::beginStats(v);
+            }
+#endif
         }
         else
         {

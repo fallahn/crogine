@@ -67,8 +67,6 @@ namespace
                 std::uint64_t id = 0;
                 ss >> id;
 
-                LogI << id << std::endl;
-
                 return id;
             }
         }
