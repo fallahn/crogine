@@ -1,5 +1,5 @@
 {
-    "version": 3,
+    "version": 4,
     "configurePresets": [
         {
             "name": "default",
@@ -8,12 +8,23 @@
                 "BUILD_SAMPLES": true,
                 "CMAKE_INSTALL_PREFIX": "install/${presetName}"
             }
+        },
+        {
+            "name": "xcode",
+            "generator": "Xcode",
+            "inherits": [
+                "default"
+            ]
         }
     ],
     "buildPresets": [
         {
-            "name":"default",
+            "name": "default",
             "configurePreset": "default"
+        },
+        {
+            "name": "xcode",
+            "configurePreset": "xcode"
         }
     ]
 }
