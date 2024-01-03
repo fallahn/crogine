@@ -113,6 +113,7 @@ struct SharedStateData final
         std::string modelPath;
         bool rollAnimation = true;
         bool locked = false;
+        std::uint64_t workshopID = 0;
         BallInfo() {}
         BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
             : tint(c), uid(i), modelPath(str) {}
@@ -126,6 +127,7 @@ struct SharedStateData final
         std::string modelPath;
         std::string texturePath;
         std::string audioscape;
+        std::uint64_t workshopID = 0;
     };
     std::vector<AvatarInfo> avatarInfo;
 
@@ -134,6 +136,7 @@ struct SharedStateData final
     {
         std::uint32_t uid = 0;
         std::string modelPath;
+        std::uint64_t workshopID = 0;
         HairInfo() = default;
         HairInfo(std::uint32_t i, const std::string& str)
             :uid(i), modelPath(str) {}

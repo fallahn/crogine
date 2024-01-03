@@ -363,6 +363,25 @@ namespace cro::Util::String
         return output;
     }
 
+    static inline std::vector<cro::String> tokenize(const cro::String& str, const cro::String& delim)
+    {
+        std::vector<cro::String> retVal;
+        std::size_t begin = 0;
+        std::size_t end = str.find(delim, begin);
+
+        while (end != cro::String::InvalidPos)
+        {
+            if (end > begin)
+            {
+                retVal.push_back(str.substr(begin, end - begin));
+            }
+            begin = end + 1;
+            end = str.find(delim, begin);
+        }
+
+        return retVal;
+    }
+
     /*!
     \brief Attempts to parse the given URL and open it in the
     system's current default editor/viewer. For example a website

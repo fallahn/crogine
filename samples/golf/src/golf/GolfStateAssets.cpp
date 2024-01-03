@@ -1692,7 +1692,7 @@ void GolfState::loadModels()
     m_modelDefs[ModelID::BullsEye]->loadFromFile("assets/golf/models/target.cmt"); //TODO we can only load this if challenge month or game mode requires
 
     //ball models - the menu should never have let us get this far if it found no ball files
-    for (const auto& [colour, uid, path, _1, _2] : m_sharedData.ballInfo)
+    for (const auto& [colour, uid, path, _1, _2, _3] : m_sharedData.ballInfo)
     {
         std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
         m_ballModels.insert(std::make_pair(uid, std::move(def)));

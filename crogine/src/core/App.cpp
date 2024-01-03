@@ -271,6 +271,13 @@ App::App(std::uint32_t styleFlags)
         //places the console window in the top right so it's a bit more visible when debugging
         HWND consoleWindow = GetConsoleWindow();
         SetWindowPos(consoleWindow, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+
+        //https://stackoverflow.com/a/45622802
+        //enables utf8 encoded strings in the console
+        SetConsoleOutputCP(CP_UTF8);
+
+        ////enable buffering to prevent VS from chopping up UTF-8 byte sequences
+        //setvbuf(stdout, nullptr, _IOFBF, 1000);
 #endif
 #endif
     }
