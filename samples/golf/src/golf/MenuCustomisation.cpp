@@ -311,7 +311,12 @@ void MenuState::createBallScene()
         std::string("assets/golf/special/20.spec"),
         std::string("assets/golf/special/30.spec"),
         std::string("assets/golf/special/40.spec"),
-        std::string("assets/golf/special/50.spec")
+        std::string("assets/golf/special/50.spec"),
+        std::string("assets/golf/special/100.spec"),
+    };
+    constexpr std::array SpecialLevels =
+    {
+        10,20,30,40,50,100
     };
     const std::uint32_t level = Social::getLevel();
     std::vector<SharedStateData::BallInfo> delayedEntries;
@@ -330,7 +335,7 @@ void MenuState::createBallScene()
                 cfg.save(SpecialPaths[i]);
             }
 
-            if (level >= (i + 1) * 10)
+            if (level >= SpecialLevels[i])
             {
                 insertInfo(info, m_sharedData.ballInfo, true);
             }

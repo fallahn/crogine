@@ -4109,6 +4109,17 @@ void MenuState::updateUnlockedItems()
         }
     }
 
+    //plus a super special one a level 100
+    if ((level / 100) == 1)
+    {
+        auto flag = (1 << 6);
+        if ((ballFlags & flag) == 0)
+        {
+            ballFlags |= flag;
+            m_sharedData.unlockedItems.push_back(ul::UnlockID::AmbassadorBall);
+        }
+    }
+
     Social::setUnlockStatus(Social::UnlockType::Ball, ballFlags);
 
 
@@ -4116,7 +4127,7 @@ void MenuState::updateUnlockedItems()
     if (level > 0)
     {
         //levels are same interval as balls + 1st level
-        auto levelCount = ballCount + 1;
+        auto levelCount = ballCount + 1; //(note this skips level 100 as it's not sequential)
         auto levelFlags = Social::getUnlockStatus(Social::UnlockType::Level);
 
         for (auto i = 0; i < levelCount; ++i)
@@ -4126,6 +4137,16 @@ void MenuState::updateUnlockedItems()
             {
                 levelFlags |= flag;
                 m_sharedData.unlockedItems.push_back(ul::UnlockID::Level1 + i);
+            }
+        }
+        //centenery is handled separately
+        if ((level / 100) == 1)
+        {
+            auto flag = (1 << levelCount);
+            if ((levelFlags & flag) == 0)
+            {
+                levelFlags |= flag;
+                m_sharedData.unlockedItems.push_back(ul::UnlockID::Level100);
             }
         }
         Social::setUnlockStatus(Social::UnlockType::Level, levelFlags);
@@ -4139,7 +4160,7 @@ void MenuState::updateUnlockedItems()
     if (level > 14)
     {
         //club range is extended at level 15 and 30
-        auto flag = (1 << genericBase);
+        auto flag = (1 << 0);
         if ((genericFlags & flag) == 0)
         {
             genericFlags |= flag;
