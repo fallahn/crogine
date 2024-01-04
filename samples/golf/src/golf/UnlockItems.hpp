@@ -93,7 +93,7 @@ namespace ul
         std::string("assets/golf/models/balls/ball_gold.cmt"),
         std::string("assets/golf/models/balls/ball_platinum.cmt"),
         std::string("assets/golf/models/balls/ball_diamond.cmt"),
-        std::string("assets/golf/models/balls/ball_diamond.cmt"), //update me!!
+        std::string("assets/golf/models/balls/centurion.cmt"),
         std::string("assets/golf/models/trophies/level01.cmt"),
         std::string("assets/golf/models/trophies/level10.cmt"),
         std::string("assets/golf/models/trophies/level20.cmt"),
