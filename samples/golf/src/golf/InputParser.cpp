@@ -363,11 +363,11 @@ void InputParser::handleEvent(const cro::Event& evt)
             }
         }*/
 
-        /*else if (evt.type == SDL_MOUSEWHEEL)
+        else if (evt.type == SDL_MOUSEWHEEL)
         {
             m_mouseWheel += evt.wheel.y;
         }
-        else if (evt.type == SDL_MOUSEMOTION)
+        /*else if (evt.type == SDL_MOUSEMOTION)
         {
             m_mouseMove += evt.motion.xrel;
         }*/
@@ -1228,19 +1228,19 @@ void InputParser::checkMouseInput()
 {
     if (m_mouseWheel > 0)
     {
-        m_inputFlags |= InputFlag::PrevClub;
+        m_inputFlags |= InputFlag::NextClub;
     }
     else if (m_mouseWheel < 0)
     {
-        m_inputFlags |= InputFlag::NextClub;
+        m_inputFlags |= InputFlag::PrevClub;
     }
     else if (m_prevMouseWheel > 0)
     {
-        m_inputFlags &= ~InputFlag::PrevClub;
+        m_inputFlags &= ~InputFlag::NextClub;
     }
     else if (m_prevMouseWheel < 0)
     {
-        m_inputFlags &= ~InputFlag::NextClub;
+        m_inputFlags &= ~InputFlag::PrevClub;
     }
 
     m_prevMouseWheel = m_mouseWheel;

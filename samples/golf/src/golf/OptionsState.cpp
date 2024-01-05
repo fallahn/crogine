@@ -2393,7 +2393,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     auto titleEnt = m_scene.createEntity();
     titleEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, 174.f, TextOffset });
     titleEnt.addComponent<cro::Drawable2D>();
-    titleEnt.addComponent<cro::Text>(uiFont).setString("Controls");
+    titleEnt.addComponent<cro::Text>(uiFont).setString(m_sharedData.baseState == StateID::Clubhouse ? "Controls (Billiards)" : "Controls");
     titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     titleEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
     titleEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -2662,7 +2662,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::PrevClub] + keyString(InputBinding::PrevClub, m_sharedData));
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::PrevClub] + keyString(InputBinding::PrevClub, m_sharedData) + " (Mouse Wheel Down)");
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2679,7 +2679,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::NextClub] + keyString(InputBinding::NextClub, m_sharedData));
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::NextClub] + keyString(InputBinding::NextClub, m_sharedData) + " (Mouse Wheel Up)");
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
