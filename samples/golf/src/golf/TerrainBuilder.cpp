@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -632,7 +632,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
     glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
     glm::vec2 mapSize(MapSize);
-    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -20.f, 20.f);
+    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -40.f, 40.f);
     auto normalViewProj = projMat * viewMat;
 
     //we can set this once so we don't need to store the matrix
