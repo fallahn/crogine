@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1913,8 +1913,8 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     glCheck(glUniform1f(normalShader.getUniformID("u_maxHeight"), holeHeight));
     glCheck(glUniformMatrix4fv(normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
 
-    cro::RenderTexture normalMap;
-    normalMap.create(280, 290, false); //course size + borders
+    cro::MultiRenderTexture normalMap;
+    normalMap.create(280, 290); //course size + borders
 
     //clear the alpha to 0 so unrendered areas have zero height
     static const cro::Colour ClearColour = cro::Colour(0x7f7fff00);
@@ -1929,8 +1929,11 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     glCheck(glBindVertexArray(0));
     glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
 
-    cro::Image normalMapImage;
-    normalMap.getTexture().saveToImage(normalMapImage);
+
+    std::vector<float> normalMapValues(normalMap.getSize().x * normalMap.getSize().y * 4);
+    glBindTexture(GL_TEXTURE_2D, normalMap.getTexture(1).textureID);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, normalMapValues.data());
+
 
 #ifdef CRO_DEBUG_
     m_debugHeightmap.loadFromImage(normalMapImage);
@@ -1938,12 +1941,12 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
 
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y)
     {
-        auto size = normalMapImage.getSize();
+        auto size = normalMap.getSize();
         x = std::min(size.x - 1, std::max(0u, x));
         y = std::min(size.y - 1, std::max(0u, y));
 
-        float height = static_cast<float>(normalMapImage.getPixel(x, y)[3]) / 255.f;
-        return holeBottom + (holeHeight * height);
+        auto idx = 4 * (y * size.x + x);
+        return normalMapValues[idx + 3];
     };
 
     auto createBillboards = [&](cro::Entity dst, std::array<float, 2u> minBounds, std::array<float, 2u> maxBounds, float radius = 0.f, glm::vec2 centre = glm::vec2(0.f))
