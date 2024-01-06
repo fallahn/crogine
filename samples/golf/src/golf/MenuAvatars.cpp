@@ -1650,6 +1650,9 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
     labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 
+    m_sharedData.clubSet = std::min(m_sharedData.clubSet, Social::getClubLevel());
+
+
     labelEnt = m_uiScene.createEntity();
     labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(-xPos * 0.6f), 4.f, 0.1f });
     labelEnt.addComponent<cro::Drawable2D>();

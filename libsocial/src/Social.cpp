@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -632,14 +632,15 @@ std::int32_t Social::getMonth()
 void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score)
 {
 #ifdef USE_GJS
-    GJ::insertScore(course, hole, score);
+    //GJ::insertScore(course, hole, score);
 #endif
 }
 
 cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount)
 {
 #ifdef USE_GJS
-    return GJ::getTopFive(course, holeCount);
+    //return GJ::getTopFive(course, holeCount);
+    return {};
 #else
     return {};
 #endif
@@ -648,6 +649,6 @@ cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount
 void Social::invalidateTopFive(const std::string& course, std::uint8_t holeCount)
 {
 #ifdef USE_GJS
-    GJ::invalidateTopFive(course, holeCount);
+    //GJ::invalidateTopFive(course, holeCount);
 #endif
 }
