@@ -69,7 +69,7 @@ void winAbort(int)
 #include <sstream>
 
 #ifdef CRO_DEBUG_
-#define DEBUG_NO_CONTROLLER
+//#define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
 using namespace cro;
@@ -239,6 +239,7 @@ App::App(std::uint32_t styleFlags)
 #define INIT_FLAGS SDL_INIT_EVERYTHING
 #endif
 
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, "1");
     if (SDL_Init(INIT_FLAGS) < 0)
     {
         const std::string err(SDL_GetError());
