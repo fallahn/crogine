@@ -316,6 +316,7 @@
     <ClCompile Include="src\collision\CollisionState.cpp" />
     <ClCompile Include="src\collision\DebugDraw.cpp" />
     <ClCompile Include="src\collision\RollSystem.cpp" />
+    <ClCompile Include="src\endless\EndlessDrivingState.cpp" />
     <ClCompile Include="src\frustum\FrustumState.cpp" />
     <ClCompile Include="src\gc\GcState.cpp" />
     <ClCompile Include="src\interiormapping\InteriormappingState.cpp" />
@@ -369,6 +370,7 @@
     <ClInclude Include="src\collision\DebugDraw.hpp" />
     <ClInclude Include="src\collision\RollSystem.hpp" />
     <ClInclude Include="src\collision\Utils.hpp" />
+    <ClInclude Include="src\endless\EndlessDrivingState.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\frustum\FrustumState.hpp" />
     <ClInclude Include="src\gc\GcState.hpp" />

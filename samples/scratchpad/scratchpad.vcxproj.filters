@@ -127,6 +127,12 @@
     <Filter Include="Source Files\chunk vis">
       <UniqueIdentifier>{9dcc73e0-0849-4f1e-b21e-d9bc5c985d27}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\endless">
+      <UniqueIdentifier>{4ef7a93b-a87f-430b-861e-f083f3252579}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\endless">
+      <UniqueIdentifier>{78467010-56b5-44ab-ba21-40029ebe776f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -257,6 +263,9 @@
     </ClCompile>
     <ClCompile Include="src\chunkvis\ChunkVisSystem.cpp">
       <Filter>Source Files\chunk vis</Filter>
+    </ClCompile>
+    <ClCompile Include="src\endless\EndlessDrivingState.cpp">
+      <Filter>Source Files\endless</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -421,6 +430,9 @@
     </ClInclude>
     <ClInclude Include="src\chunkvis\ChunkVisSystem.hpp">
       <Filter>Header Files\chunk vis</Filter>
+    </ClInclude>
+    <ClInclude Include="src\endless\EndlessDrivingState.hpp">
+      <Filter>Header Files\endless</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
