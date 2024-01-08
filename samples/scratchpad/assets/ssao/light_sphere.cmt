@@ -1,0 +1,22 @@
+model light_sphere
+{
+    mesh = assets/golf/models/light_sphere.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 0.132743,0.100267,0.049338,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = true
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = add
+
+    }
+}

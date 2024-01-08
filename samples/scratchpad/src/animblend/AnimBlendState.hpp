@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/Texture.hpp>
 
 
 class AnimBlendState final : public cro::State, public cro::GuiClient
@@ -61,6 +62,9 @@ private:
     cro::Entity m_modelEntity;
 
     League m_league;
+
+    cro::Texture m_shellTexture;
+    cro::Texture m_noiseTexture;
 
     void addSystems();
     void loadAssets();

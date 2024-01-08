@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -43,6 +43,7 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "spooky2.hpp"
 #include "Clubs.hpp"
+#include "HoleData.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -72,6 +73,7 @@ source distribution.
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -96,12 +98,11 @@ using namespace cl;
 
 namespace
 {
-#include "CelShader.inl"
-#include "BillboardShader.inl"
-#include "CloudShader.inl"
-#include "ShaderIncludes.inl"
-#include "ShadowMapping.inl"
-#include "FogShader.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/BillboardShader.inl"
+#include "shaders/CloudShader.inl"
+#include "shaders/ShaderIncludes.inl"
+#include "shaders/ShadowMapping.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 
@@ -110,8 +111,14 @@ namespace
 
     void refreshCourseAchievements()
     {
+        //TODO HMMMMMM the stat IDs aren't in order for non-gns
+#ifdef USE_GNS
+        std::int32_t MaxStat = StatID::Course12Complete;
+#else
+        std::int32_t MaxStat = StatID::Course10Complete;
+#endif
         bool awarded = true;
-        for (std::int32_t i = StatID::Course01Complete; i < StatID::Course10Complete + 1; ++i)
+        for (std::int32_t i = StatID::Course01Complete; i < MaxStat + 1; ++i)
         {
             if (Achievements::getStat(StatStrings[i])->value == 0)
             {
@@ -142,22 +149,25 @@ MainMenuContext::MainMenuContext(MenuState* state)
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedProfileData& sp)
-    : cro::State(stack, context),
-    m_sharedData(sd),
-    m_profileData(sp),
-    m_matchMaking(context.appInstance.getMessageBus()),
-    m_cursor(/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
-    m_uiScene(context.appInstance.getMessageBus(), 512),
-    m_backgroundScene(context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene(context.appInstance.getMessageBus(), 640/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer("PixelScale"),
-    m_resolutionBuffer("ScaledResolution"),
-    m_windBuffer("WindValues"),
-    m_lobbyExpansion(0.f),
-    m_avatarCallbacks(std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
-    m_currentMenu(MenuID::Main),
-    m_prevMenu(MenuID::Main),
-    m_viewScale(1.f)
+    : cro::State            (stack, context),
+    m_sharedData            (sd),
+    m_profileData           (sp),
+    m_connectedClientCount  (0),
+    m_connectedPlayerCount  (0),
+    m_textChat              (m_uiScene, sd),
+    m_matchMaking           (context.appInstance.getMessageBus()),
+    m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
+    m_uiScene               (context.appInstance.getMessageBus(), 512),
+    m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene           (context.appInstance.getMessageBus(), 640/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_scaleBuffer           ("PixelScale"),
+    m_resolutionBuffer      ("ScaledResolution"),
+    m_windBuffer            ("WindValues"),
+    m_lobbyExpansion        (0.f),
+    m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
+    m_currentMenu           (MenuID::Main),
+    m_prevMenu              (MenuID::Main),
+    m_viewScale             (1.f)
 {
     sd.baseState = StateID::Menu;
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);
@@ -197,6 +207,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Keyboard);
         cacheState(StateID::Leaderboard);
         cacheState(StateID::League);
+        cacheState(StateID::News);
+        cacheState(StateID::PlayerManagement);
 
         context.mainWindow.setMouseCaptured(false);
 
@@ -517,6 +529,63 @@ MenuState::~MenuState()
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
+    const auto showPlayerManagement = 
+        [&]()
+        {
+            if (m_currentMenu == MenuID::Lobby
+                && m_sharedData.hosting)
+            {
+                requestStackPush(StateID::PlayerManagement);
+            }
+        };
+
+    const auto setChatHint =
+        [&](bool controller, std::int32_t joyID)
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::ChatHint;
+            if (controller)
+            {
+                cmd.action = 
+                    [&](cro::Entity e, float)
+                {
+                    if (e.hasComponent<cro::Sprite>())
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                        if (cro::GameController::hasPSLayout(/*cro::GameController::controllerID(joyID)*/0))
+                        {
+                            e.getComponent<cro::SpriteAnimation>().play(1);
+                        }
+                        else
+                        {
+                            e.getComponent<cro::SpriteAnimation>().play(0);
+                        }
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Text>().setString("     to Chat");
+                    }
+                };
+            }
+            else
+            {
+                cmd.action =
+                    [](cro::Entity e, float)
+                {
+                    if (e.hasComponent<cro::Sprite>())
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Text>().setString("Shift+F8 to Chat");
+                    }
+                };
+            }
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        };
+
     const auto quitMenu = 
         [&]()
     {
@@ -539,6 +608,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
             break;
         case MenuID::Lobby:
+            if (m_textChat.isVisible())
+            {
+                break;
+            }
             //TODO the active menu might be a sub-group of the lobby
             //however m_currentMenu is still set tl Lobby as this is
             //used by the window resize callback (which I can't find
@@ -568,17 +641,49 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
     };
 
-    if(cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (evt.type != SDL_MOUSEMOTION
+        && evt.type != SDL_CONTROLLERBUTTONDOWN
+        && evt.type != SDL_CONTROLLERBUTTONUP)
     {
-        return true;
+        if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+        {
+            if (evt.type == SDL_KEYUP)
+            {
+                switch (evt.key.keysym.sym)
+                {
+                default: break;
+                case SDLK_ESCAPE:
+                    if (m_textChat.isVisible())
+                    {
+                        m_textChat.toggleWindow(false);
+                    }
+                    break;
+                /*case SDLK_F8:
+                    if (evt.key.keysym.mod & KMOD_SHIFT)
+                    {
+                        m_textChat.toggleWindow();
+                    }
+                    break;*/
+                }
+            }
+
+            return true;
+        }
     }
 
 
     if (evt.type == SDL_KEYUP)
     {
+        setChatHint(false, 0);
         switch (evt.key.keysym.sym)
         {
         default: break;
+        /*case SDLK_PAGEUP:
+        {
+            m_sharedData.useOSKBuffer = true;
+            requestStackPush(StateID::Keyboard);
+        }
+            break;*/
 #ifdef CRO_DEBUG_
 #ifdef USE_GNS
         case SDLK_PAGEUP:
@@ -670,8 +775,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_F6:
             m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
             break;
-        case SDLK_F8:
-
+        case SDLK_TAB:
+            if (m_currentMenu == MenuID::Lobby
+                && m_sharedData.hosting)
+            {
+                requestStackPush(StateID::PlayerManagement);
+            }
+            break;
+        case SDLK_p:
+            showPlayerManagement();
             break;
         }
     }
@@ -690,6 +802,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_TAB:
             togglePreviousScoreCard();
             break;
+        case SDLK_F8:
+            if ((evt.key.keysym.mod & KMOD_SHIFT)
+                && m_currentMenu == MenuID::Lobby)
+            {
+                m_textChat.toggleWindow(false);
+            }
+            break;
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
@@ -702,10 +821,17 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        setChatHint(true, evt.cbutton.which);
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
-        default: break;
+        default: 
+            //cro::Console::show();
+            
+            break;
+        case cro::GameController::ButtonStart:
+            showPlayerManagement();
+            break;
             //leave the current menu when B is pressed.
         case cro::GameController::ButtonB:
             quitMenu();
@@ -717,6 +843,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
             {
                 nextCourse();
             }
+            else if (m_currentMenu == MenuID::Avatar)
+            {
+                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                i = (i + 1) % m_profileData.playerProfiles.size();
+                setProfileIndex(i);
+            }
             break;
         case cro::GameController::ButtonLeftShoulder:
             if (m_sharedData.hosting
@@ -725,14 +857,29 @@ bool MenuState::handleEvent(const cro::Event& evt)
             {
                 prevCourse();
             }
+            else if (m_currentMenu == MenuID::Avatar)
+            {
+                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
+                setProfileIndex(i);
+            }
             break;
         case cro::GameController::ButtonGuide:
             togglePreviousScoreCard();
+            break;
+        case cro::GameController::ButtonTrackpad:
+        case cro::GameController::PaddleR4:
+        case cro::GameController::ButtonY:
+            if (m_currentMenu == MenuID::Lobby)
+            {
+                m_textChat.toggleWindow(true);
+            }
             break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
+        setChatHint(false, 0);
         if (m_currentMenu == MenuID::ProfileFlyout)
         {
             auto bounds = m_menuEntities[m_currentMenu].getComponent<cro::Drawable2D>().getLocalBounds();
@@ -771,11 +918,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
     {
         if (evt.caxis.value > LeftThumbDeadZone)
         {
+            setChatHint(true, evt.caxis.which);
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
 
-    m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
+    if (!m_textChat.isVisible())
+    {
+        m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
+    }
 
     m_uiScene.forwardEvent(evt);
     return true;
@@ -961,6 +1112,11 @@ void MenuState::handleMessage(const cro::Message& msg)
     }
 #endif
 
+    if (m_currentMenu == MenuID::Lobby)
+    {
+        m_textChat.handleMessage(msg);
+    }
+
     m_backgroundScene.forwardMessage(msg);
     m_avatarScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
@@ -1079,26 +1235,6 @@ void MenuState::addSystems()
     //grand tour if applicable - this is here for non-gns version
     //gns version may be delayed so is handled via callback
     refreshCourseAchievements();
-    
-
-    //bool awarded = true;
-    //for (std::int32_t i = StatID::Course01Complete; i < StatID::Course10Complete + 1; ++i)
-    //{
-    //    if (Achievements::getStat(StatStrings[i])->value == 0)
-    //    {
-    //        awarded = false;
-    //        //break;
-    //    }
-    //    else
-    //    {
-    //        //used to retroactively award the achievements
-    //        Achievements::awardAchievement(AchievementStrings[AchievementID::Complete01 + (i - StatID::Course01Complete)]);
-    //    }
-    //}
-    //if (awarded)
-    //{
-    //    Achievements::awardAchievement(AchievementStrings[AchievementID::GrandTour]);
-    //}
 }
 
 void MenuState::loadAssets()
@@ -1203,8 +1339,12 @@ void MenuState::loadAssets()
     m_sprites[SpriteID::LobbyCheckboxHighlight] = spriteSheet.getSprite("checkbox_highlight");
     m_sprites[SpriteID::LobbyRuleButton] = spriteSheet.getSprite("button");
     m_sprites[SpriteID::LobbyRuleButtonHighlight] = spriteSheet.getSprite("button_highlight");
-    m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
+    //m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
     m_sprites[SpriteID::LevelBadge] = spriteSheet.getSprite("rank_badge");
+
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu_v2.spt", m_resources.textures);
+    m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("invite_friend");
+    m_sprites[SpriteID::InviteHighlight] = spriteSheet.getSprite("invite_highlight");
 
     //network icon
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
@@ -1217,6 +1357,12 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
     m_audioEnts[AudioID::Start] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Start].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("start_game");
+    m_audioEnts[AudioID::Message] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Message].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("message");
+    m_audioEnts[AudioID::Nope] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Nope].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("nope");
+    m_audioEnts[AudioID::Poke] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Poke].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("poke");
 }
 
 void MenuState::createScene()
@@ -1552,6 +1698,52 @@ void MenuState::createScene()
     createBallScene();    
 
     createUI();
+
+#ifndef USE_GNS
+    //creates an ent which triggers pre-loading of score values
+    //whilst hopefully not hammering the connection
+    struct FetchData final
+    {
+        const float StepTime = 3.f;
+        float currTime = StepTime;
+
+        std::int32_t mapIndex = 0;
+        std::uint8_t holeIndex = 0;
+    };
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<FetchData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& [StepTime, currTime, mapIndex, holeIndex] = e.getComponent<cro::Callback>().getUserData<FetchData>();
+            currTime -= dt;
+
+            if (currTime < 0)
+            {
+                if (auto s = Social::getTopFive(CourseNames[mapIndex], holeIndex);
+                    s.empty())
+                {
+                    //only reset the time if there was no string cached (and therefore a download was triggered)
+                    currTime += StepTime;
+                }
+                holeIndex++;
+
+                if (holeIndex == 3)
+                {
+                    holeIndex = 0;
+                    mapIndex++;
+
+                    if (mapIndex == CourseNames.size())
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                    }
+                }
+            }
+        };
+#endif
 }
 
 void MenuState::createClouds()
@@ -1631,6 +1823,26 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::Poke:
+            m_audioEnts[AudioID::Poke].getComponent<cro::AudioEmitter>().play();
+            break;
+        case PacketID::ChatMessage:
+            m_textChat.handlePacket(evt.packet);
+
+            {
+                float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
+                auto& e = m_audioEnts[AudioID::Message].getComponent<cro::AudioEmitter>();
+                e.setPitch(pitch);
+                if (e.getState() == cro::AudioEmitter::State::Playing)
+                {
+                    e.setPlayingOffset(cro::seconds(0.f));
+                }
+                else
+                {
+                    e.play();
+                }
+            }
+            break;
         case PacketID::ClientPlayerCount:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientPlayerCount, m_sharedData.localConnectionData.playerCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
@@ -1657,6 +1869,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Golf)
             {
+#ifndef USE_GNS
+                //invalidate the score cache for the new game so the
+                //updated results are downloaded once the game ends
+                Social::invalidateTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+#endif
+
                 m_matchMaking.leaveGame(); //doesn't really leave the game, it quits the lobby
                 requestStackClear();
                 requestStackPush(StateID::Golf);
@@ -1745,6 +1963,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::LobbyUpdate:
             updateLobbyData(evt);
+            postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
             break;
         case PacketID::ClientDisconnected:
         {
@@ -1752,6 +1971,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             m_sharedData.connectionData[client].playerCount = 0;
             m_readyState[client] = false;
             updateLobbyAvatars();
+
+            postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
         }
             break;
         case PacketID::LobbyReady:
@@ -1864,6 +2085,15 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         {
                             m_matchMaking.setGameTitle(data->title);
                         }
+
+                        /*if (m_sharedData.courseIndex == courseOfTheMonth())
+                        {
+                            m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+                        }
+                        else
+                        {
+                            m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale({ 0.f, 0.f });
+                        }*/
                     }
                     else
                     {
@@ -1874,7 +2104,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 {
                     setUnavailable();
                 }
-                updateCourseRuleString();
+                updateCourseRuleString(true);
 
                 static constexpr glm::vec2 ThumbnailSize(138.f, 104.f);
 
@@ -1910,6 +2140,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
                     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
                     delayRefresh();
+
+
                 }
                 else if (m_courseThumbs.count(course) != 0)
                 {
@@ -1946,8 +2178,29 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-                updateCourseRuleString();
+                if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                }
+                else
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
+                m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+                updateCourseRuleString(false);
+
+                auto strClientCount = std::to_string(m_connectedClientCount);
+                auto strGameType = std::to_string(ConstVal::MaxClients) + " - " + ScoreTypes[m_sharedData.scoreType];
+
+                Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
             }
+            break;
+        case PacketID::NightTime:
+            m_sharedData.nightTime = evt.packet.as<std::uint8_t>();
+            break;
+        case PacketID::WeatherType:
+            m_sharedData.weatherType = std::clamp(evt.packet.as<std::uint8_t>(), std::uint8_t(0), std::uint8_t(WeatherType::Count - 1));
             break;
         case PacketID::FastCPU:
             m_sharedData.fastCPU = evt.packet.as<std::uint8_t>() != 0;
@@ -1965,7 +2218,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            updateCourseRuleString();
+            updateCourseRuleString(false);
         }
             break;
         case PacketID::HoleCount:
@@ -1995,12 +2248,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 };
             }
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-            updateCourseRuleString();
+            updateCourseRuleString(true);
         }
             break;
         case PacketID::ReverseCourse:
             m_sharedData.reverseCourse = evt.packet.as<std::uint8_t>();
-            updateCourseRuleString();
             break;
         case PacketID::ClubLimit:
             m_sharedData.clubLimit = evt.packet.as<std::uint8_t>();
@@ -2017,6 +2269,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             if (clubSet < m_sharedData.clubSet)
             {
                 m_sharedData.clubSet = clubSet;
+                Club::setClubLevel(clubSet);
             }
         }
             break;
@@ -2025,6 +2278,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             {
             default:
                 m_sharedData.errorMessage = "Server Error (Unknown)";
+                break;
+            case MessageType::Kicked:
+                m_sharedData.errorMessage = "You Were Kicked By The Host.";
                 break;
             case MessageType::MapNotFound:
                 m_sharedData.errorMessage = "Server Failed To Load Map";
@@ -2135,6 +2391,10 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 
         //and game rules
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        //hmmm there must be a reason I omitted this in the first place but it escapes me now
+        //m_sharedData.clientConnection.netClient.sendPacket(PacketID::FastCPU, m_sharedData.fastCPU ? std::uint8_t(0) : std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);

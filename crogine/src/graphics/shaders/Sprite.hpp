@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::Sprite
 {
-    static const std::string Vertex = R"(
+    inline const std::string Vertex = R"(
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewProjectionMatrix;
 
@@ -56,7 +56,7 @@ namespace cro::Shaders::Sprite
         #endif
         })";
 
-    static const std::string Coloured = R"(
+    inline const std::string Coloured = R"(
         VARYING_IN LOW vec4 v_colour;
         OUTPUT
             
@@ -65,7 +65,7 @@ namespace cro::Shaders::Sprite
             FRAG_OUT = v_colour;
         })";
 
-    static const std::string Textured = R"(
+    inline const std::string Textured = R"(
         uniform sampler2D u_texture;
 
         VARYING_IN LOW vec4 v_colour;
@@ -80,7 +80,7 @@ namespace cro::Shaders::Sprite
 
 namespace cro::Shaders::Text
 {
-    static const std::string BitmapFragment = R"(
+    inline const std::string BitmapFragment = R"(
         uniform sampler2D u_texture;
                 
         VARYING_IN LOW vec4 v_colour;
@@ -96,7 +96,7 @@ namespace cro::Shaders::Text
             //FRAG_OUT = v_colour;
         })";
 
-    static const std::string SDFFragment = R"(
+    inline const std::string SDFFragment = R"(
         uniform sampler2D u_texture;
                 
         VARYING_IN LOW vec4 v_colour;

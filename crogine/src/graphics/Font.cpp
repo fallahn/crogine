@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -50,6 +50,8 @@ by Laurent Gomila et al https://github.com/SFML/SFML/blob/master/src/SFML/Graphi
 #include FT_OUTLINE_H
 #include FT_STROKER_H
 
+#include <unordered_map>
+
 using namespace cro;
 
 namespace
@@ -70,17 +72,104 @@ namespace
     {
         return (static_cast<std::uint64_t>(reinterpret<std::uint32_t>(outlineThickness)) << 32) | (static_cast<std::uint64_t>(bold) << 31) | index;
     }
+
+    //if we use the same font as multiple sub-fonts (eg emoji font)
+    //these structs just makes sure each one is only loaded once
+    //TODO we could probably also include the FT face, library and stroker here...
+    struct FontDataBuffer final
+    {
+        const std::uint8_t* buffer = nullptr;
+        FT_Long size = 0;
+    };
+
+    struct FontDataResource final
+    {
+        FT_Library library = nullptr;
+
+        FontDataResource()
+        {
+            //init freetype
+            if (FT_Init_FreeType(&library) != 0)
+            {
+                Logger::log("Failed to init freetype", Logger::Type::Error);
+            }
+        }
+
+        ~FontDataResource()
+        {
+            FT_Done_FreeType(library);
+        }
+
+        std::unordered_map<std::string, std::vector<std::uint8_t>> fontData;
+
+        FontDataBuffer getFontData(const std::string& path)
+        {
+            if (!library)
+            {
+                //we failed for some reason
+                return {};
+            }
+
+            if (fontData.count(path) == 0)
+            {
+                RaiiRWops fontFile;
+                fontFile.file = SDL_RWFromFile(path.c_str(), "r");
+                if (!fontFile.file)
+                {
+                    Logger::log("Failed opening " + path, Logger::Type::Error);
+                    return {};
+                }
+
+                std::vector<std::uint8_t> buffer;
+                buffer.resize(fontFile.file->size(fontFile.file));
+                if (buffer.size() == 0)
+                {
+                    Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
+                    return {};
+                }
+                SDL_RWread(fontFile.file, buffer.data(), buffer.size(), 1);
+
+                fontData.insert(std::make_pair(path, buffer));
+            }
+
+            const auto& data = fontData.at(path);
+            FontDataBuffer retVal;
+            retVal.buffer = data.data();
+            retVal.size = static_cast<FT_Long>(data.size());
+
+            return retVal;
+        }
+
+        std::size_t refCount = 0;
+    };
+    std::unique_ptr<FontDataResource> fontDataResource;
 }
 
 Font::Font()
     : m_useSmoothing(false)
 {
-
+    if (!fontDataResource)
+    {
+        fontDataResource = std::make_unique<FontDataResource>();
+    }
+    fontDataResource->refCount++;
 }
 
 Font::~Font()
 {
+    for (auto o : m_observers)
+    {
+        o->removeFont();
+    }
+
     cleanup();
+
+    fontDataResource->refCount--;
+
+    if (fontDataResource->refCount == 0)
+    {
+        fontDataResource.reset();
+    }
 }
 
 //public
@@ -89,38 +178,28 @@ bool Font::loadFromFile(const std::string& filePath)
     //remove existing loaded font
     cleanup();
 
+    return appendFromFile(filePath, FontAppendmentContext());
+}
+
+bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx)
+{
+    CRO_ASSERT(ctx.codepointRange[0] > 0 && ctx.codepointRange[0] < ctx.codepointRange[1], "invalid codepoint range");
+
     auto path = FileSystem::getResourcePath() + filePath;
+    FontData fd;
+    fd.context = ctx;
 
-    //init freetype
-    FT_Library library;
-    if (FT_Init_FreeType(&library) != 0)
+    //load the face    
+    auto buffer = fontDataResource->getFontData(filePath);
+    if (buffer.buffer == nullptr)
     {
-        Logger::log("Failed to load font " + path + ": Failed to init freetype", Logger::Type::Error);
+        //failed to load the resource
         return false;
     }
-    m_library = std::make_any<FT_Library>(library);
-
-    //load the face
-    RaiiRWops fontFile;
-    fontFile.file = SDL_RWFromFile(path.c_str(), "r");
-    if (!fontFile.file)
-    {
-        Logger::log("Failed opening " + path, Logger::Type::Error);
-        return false;
-    }
-    
-    m_buffer.clear();
-    m_buffer.resize(fontFile.file->size(fontFile.file));
-    if (m_buffer.size() == 0)
-    {
-        Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
-        return false;
-    }
-    SDL_RWread(fontFile.file, m_buffer.data(), m_buffer.size(), 1);
 
 
     FT_Face face = nullptr;
-    if (FT_New_Memory_Face(library, m_buffer.data(), static_cast<FT_Long>(m_buffer.size()), 0, &face) != 0)
+    if (FT_New_Memory_Face(fontDataResource->library, buffer.buffer, buffer.size, 0, &face) != 0)
     {
         Logger::log("Failed to load font " + path + ": Failed creating font face", Logger::Type::Error);
         return false;
@@ -128,8 +207,9 @@ bool Font::loadFromFile(const std::string& filePath)
 
     //stroker used for rendering outlines
     FT_Stroker stroker = nullptr;
-    if (FT_Stroker_New(library, &stroker) != 0)
+    if (FT_Stroker_New(fontDataResource->library, &stroker) != 0)
     {
+        FT_Done_Face(face);
         LogE << "Failed to load font " << path << ": Failed to create stroker" << std::endl;
         return false;
     }
@@ -143,17 +223,39 @@ bool Font::loadFromFile(const std::string& filePath)
         return false;
     }
 
-    m_face = std::make_any<FT_Face>(face);
-    m_stroker = std::make_any<FT_Stroker>(stroker);
+    fd.face = std::make_any<FT_Face>(face);
+    fd.stroker = std::make_any<FT_Stroker>(stroker);
+
+    m_fontData.emplace_back(std::move(fd));
+
+    if (m_fontData.size() > 1)
+    {
+        //sort by start range
+        std::sort(m_fontData.begin(), m_fontData.end(),
+            [](const FontData& a, const FontData& b)
+        {
+            return a.context.codepointRange[0] < b.context.codepointRange[0];
+        });
+
+        //correct range overlap, where start range is priorotised
+        for (auto i = 0u; i < m_fontData.size() - 1; ++i)
+        {
+            if (m_fontData[i].context.codepointRange[1] >= m_fontData[i + 1].context.codepointRange[0])
+            {
+                m_fontData[i].context.codepointRange[1] = m_fontData[i + 1].context.codepointRange[0] - 1;
+            }
+        }
+    }
+
 
     return true;
 }
 
 Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
 {
+    auto& fontData = getFontData(codepoint);
     auto& currentGlyphs = m_pages[charSize].glyphs;
-
-    auto key = combine(outlineThickness, bold, FT_Get_Char_Index(std::any_cast<FT_Face>(m_face), codepoint));
+    auto key = combine(outlineThickness, bold, FT_Get_Char_Index(std::any_cast<FT_Face>(fontData.face), codepoint));
 
     auto result = currentGlyphs.find(key);
     if (result != currentGlyphs.end())
@@ -163,7 +265,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
     else
     {
         //add the glyph to the page
-        auto glyph = loadGlyph(codepoint, charSize, bold, outlineThickness);
+        auto glyph = loadGlyph(codepoint, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
         return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
     }
 
@@ -172,6 +274,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
 
 const Texture& Font::getTexture(std::uint32_t charSize) const
 {
+    //CRO_ASSERT(m_pages.count(charSize) != 0, "Page doesn't exist");
     //TODO this may return an invalid texture if the
     //current charSize is not inserted in the page map
     //and is automatically created
@@ -180,9 +283,12 @@ const Texture& Font::getTexture(std::uint32_t charSize) const
 
 float Font::getLineHeight(std::uint32_t charSize) const
 {
-    if (m_face.has_value())
+    CRO_ASSERT(!m_fontData.empty(), "font not loaded");
+
+    auto& fd = m_fontData[0];
+    if (fd.face.has_value())
     {
-        auto face = std::any_cast<FT_Face>(m_face);
+        auto face = std::any_cast<FT_Face>(fd.face);
         if (face && setCurrentCharacterSize(charSize))
         {
             //there's some magic going on here...
@@ -194,12 +300,12 @@ float Font::getLineHeight(std::uint32_t charSize) const
 
 float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charSize) const
 {
-    if (cpA == 0 || cpB == 0 || !m_face.has_value())
+    if (cpA == 0 || cpB == 0 || m_fontData.empty())
     {
         return 0.f;
     }
 
-    FT_Face face = std::any_cast<FT_Face>(m_face);
+    FT_Face face = std::any_cast<FT_Face>(m_fontData[0].face);
 
     if (face && FT_HAS_KERNING(face) && setCurrentCharacterSize(charSize))
     {
@@ -241,16 +347,32 @@ void Font::setSmooth(bool smooth)
 }
 
 //private
+const Font::FontData& Font::getFontData(std::uint32_t codepoint) const
+{
+    CRO_ASSERT(!m_fontData.empty(), "No fonts are loaded");
+    for (auto& fd : m_fontData)
+    {
+        if (codepoint >= fd.context.codepointRange[0]
+            && codepoint <= fd.context.codepointRange[1])
+        {
+            return fd;
+        }
+    }
+    return m_fontData[0];
+}
+
 Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
 {
     Glyph retVal;
 
-    if (!m_face.has_value())
+    if (m_fontData.empty())
     {
         return retVal;
     }
 
-    auto face = std::any_cast<FT_Face>(m_face);
+    auto& fd = getFontData(codepoint);
+
+    auto face = std::any_cast<FT_Face>(fd.face);
     if (!face)
     {
         return retVal;
@@ -262,7 +384,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     }
 
     //fetch the glyph
-    FT_Int32 flags = FT_LOAD_TARGET_NORMAL | FT_LOAD_FORCE_AUTOHINT;
+    FT_Int32 flags = FT_LOAD_TARGET_NORMAL | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_COLOR;
 
     if (FT_Load_Char(face, codepoint, flags) != 0)
     {
@@ -276,7 +398,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     }
 
     //get the outline
-    FT_Pos weight = (1 << 6);
+    constexpr FT_Pos weight = (1 << 6);
     bool outline = (glyphDesc->format == FT_GLYPH_FORMAT_OUTLINE);
     if (outline)
     {
@@ -288,22 +410,45 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
 
         if (outlineThickness != 0)
         {
-            auto stroker = std::any_cast<FT_Stroker>(m_stroker);
+            auto stroker = std::any_cast<FT_Stroker>(fd.stroker);
             FT_Stroker_Set(stroker, static_cast<FT_Fixed>(outlineThickness * MagicNumber), FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
             FT_Glyph_Stroke(&glyphDesc, stroker, true);
         }
     }
 
-
     //rasterise it
-    FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1);
-    FT_Bitmap& bitmap = reinterpret_cast<FT_BitmapGlyph>(glyphDesc)->bitmap;
+    FT_Bitmap* bitmap = nullptr;
+    //FT_Glyph glyphDouble;
+
+    if (fd.context.allowOutline || fd.context.allowBold)
+    {
+        FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1); //this renders alpha coverage only
+        bitmap = &reinterpret_cast<FT_BitmapGlyph>(glyphDesc)->bitmap;
+    }
+    else
+    {
+        //TODO use this to render a double density texture
+        /*FT_Matrix scaleMat;
+        scaleMat.xx = 2;
+        scaleMat.xy = 0;
+        scaleMat.yy = 2;
+        scaleMat.yx = 0;
+
+        FT_Glyph_Copy(glyphDesc, &glyphDouble);
+        FT_Glyph_Transform(glyphDouble, &scaleMat, nullptr);
+        */
+
+        //this is needed if we're rendering colour
+        //so assume outlining etc is disabled.
+        FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+        bitmap = &face->glyph->bitmap;
+    }
 
     if (!outline)
     {
         if (bold)
         {
-            FT_Bitmap_Embolden(std::any_cast<FT_Library>(m_library), &bitmap, weight, weight);
+            FT_Bitmap_Embolden(fontDataResource->library, bitmap, weight, weight);
         }
     }
 
@@ -314,8 +459,8 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         retVal.advance += static_cast<float>(weight) / MagicNumber; //surely this is the same as adding 1?
     }
 
-    std::int32_t width = bitmap.width;
-    std::int32_t height = bitmap.rows;
+    std::int32_t width = bitmap->width;
+    std::int32_t height = bitmap->rows;
 
     if (width > 0 && height > 0)
     {
@@ -344,33 +489,55 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         retVal.bounds.height = static_cast<float>(face->glyph->metrics.height) / MagicNumber;
         retVal.bounds.bottom -= retVal.bounds.height;
 
-        //buffer the pixel data and update the page texture
-        m_pixelBuffer.resize(width * height * 4);
-
-        auto* current = m_pixelBuffer.data();
-        auto* end = current + m_pixelBuffer.size();
-
-        while (current != end)
+        if (&fd != &m_fontData[0])
         {
-            (*current++) = 255;
-            (*current++) = 255;
-            (*current++) = 255;
-            (*current++) = 0;
+            //scale other characters to match that of the base font
+            const float lineHeight = getLineHeight(charSize);
+            const float scale = std::min(1.f, lineHeight / retVal.bounds.height);
+            retVal.bounds.height *= scale;
+            retVal.bounds.width *= scale;
+
+            retVal.bounds.height -= 1.f;
+            retVal.bounds.width -= 1.f;
+            retVal.bounds.bottom += 1.f;
         }
 
+
+        //buffer the pixel data and update the page texture
+        m_pixelBuffer.resize(width * height * 4);
+        std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 0);
+
         //copy from rasterised bitmap
-        const auto* pixels = bitmap.buffer;
-        if (bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
+        const auto* pixels = bitmap->buffer;
+        if (bitmap->pixel_mode == FT_PIXEL_MODE_MONO)
         {
             //for(auto y = height - padding - 1; y >= padding; --y)
             for(auto y = padding; y < height - padding; ++y)
             {
                 for (auto x = padding; x < width - padding; ++x)
                 {
-                    std::size_t index = x + y * width;
+                    const std::size_t index = x + y * width;
                     m_pixelBuffer[index * 4 + 3] = ((pixels[(x - padding) / 8]) & (1 << (7 - ((x - padding) % 8)))) ? 255 : 0;
                 }
-                pixels += bitmap.pitch;
+                pixels += bitmap->pitch;
+            }
+        }
+        else if (bitmap->pixel_mode == FT_PIXEL_MODE_BGRA)
+        {
+            for (auto y = padding; y < height - padding; ++y)
+            {
+                for (auto x = padding; x < width - padding; ++x)
+                {
+                    const std::size_t index = (x + y * width)* 4;
+                    const std::size_t xIndex = (x - padding) * 4;
+
+                    m_pixelBuffer[index] = pixels[xIndex + 2];
+                    m_pixelBuffer[index + 1] = pixels[xIndex + 1];
+                    m_pixelBuffer[index + 2] = pixels[xIndex];
+
+                    m_pixelBuffer[index + 3] = pixels[xIndex + 3];
+                }
+                pixels += bitmap->pitch;
             }
         }
         else
@@ -380,10 +547,14 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
             {
                 for (auto x = padding; x < width - padding; ++x)
                 {
-                    std::size_t index = x + y * width;
-                    m_pixelBuffer[index * 4 + 3] = pixels[x - padding];
+                    const std::size_t index = (x + y * width) * 4;
+                    
+                    m_pixelBuffer[index] = 255;
+                    m_pixelBuffer[index + 1] = 255;
+                    m_pixelBuffer[index + 2] = 255;
+                    m_pixelBuffer[index + 3] = pixels[x - padding];
                 }
-                pixels += bitmap.pitch;
+                pixels += bitmap->pitch;
             }
         }
 
@@ -395,6 +566,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         page.texture.update(m_pixelBuffer.data(), false, { x,y,w,h });
     }
 
+    retVal.useFillColour = fd.context.allowFillColour;
     return retVal;
 }
 
@@ -445,10 +617,16 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
                 //increase texture 4 fold
                 Texture texture;
                 texture.create(texWidth * 2, texHeight * 2);
-                texture.setSmooth(true);
+                texture.setSmooth(page.texture.isSmooth());
                 texture.update(page.texture);
+                
                 page.texture.swap(texture);
                 page.updated = true;
+
+                for (auto* o : m_observers)
+                {
+                    o->onFontUpdate();
+                }
             }
             else
             {
@@ -470,67 +648,68 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
 
 bool Font::setCurrentCharacterSize(std::uint32_t size) const
 {
-    auto face = std::any_cast<FT_Face>(m_face);
-    FT_UShort currentSize = face->size->metrics.x_ppem;
-
-    if (currentSize != size)
+    for (auto& fd : m_fontData)
     {
-        FT_Error result = FT_Set_Pixel_Sizes(face, 0, size);
+        auto face = std::any_cast<FT_Face>(fd.face);
+        FT_UShort currentSize = face->size->metrics.x_ppem;
 
-        if (result == FT_Err_Invalid_Pixel_Size)
+        if (currentSize != size)
         {
-            Logger::log("Failed to set font face to " + std::to_string(size), Logger::Type::Error);
+            FT_Error result = FT_Set_Pixel_Sizes(face, 0, size);
 
-            //bitmap fonts may fail if the size isn't supported
-            if (!FT_IS_SCALABLE(face))
+            if (result == FT_Err_Invalid_Pixel_Size)
             {
-                Logger::log("Available sizes:", Logger::Type::Info);
-                std::stringstream ss;
-                for (auto i = 0; i < face->num_fixed_sizes; ++i)
+                Logger::log("Failed to set font face to " + std::to_string(size), Logger::Type::Error);
+
+                //bitmap fonts may fail if the size isn't supported
+                if (!FT_IS_SCALABLE(face))
                 {
-                    ss << ((face->available_sizes[i].y_ppem + 32) >> 6) << " ";
+                    Logger::log("Available sizes:", Logger::Type::Info);
+                    std::stringstream ss;
+                    for (auto i = 0; i < face->num_fixed_sizes; ++i)
+                    {
+                        ss << ((face->available_sizes[i].y_ppem + 32) >> 6) << " ";
+                    }
+                    Logger::log(ss.str(), Logger::Type::Info);
                 }
-                Logger::log(ss.str(), Logger::Type::Info);
+            }
+
+            if (result != FT_Err_Ok)
+            {
+                return false;
             }
         }
-
-        return result == FT_Err_Ok;
     }
     return true;
 }
 
 void Font::cleanup()
 {
-    if (m_stroker.has_value())
+    for (auto& fd : m_fontData)
     {
-        auto stroker = std::any_cast<FT_Stroker>(m_stroker);
-        if (stroker)
+        if (fd.stroker.has_value())
         {
-            FT_Stroker_Done(stroker);
+            auto stroker = std::any_cast<FT_Stroker>(fd.stroker);
+            if (stroker)
+            {
+                FT_Stroker_Done(stroker);
+            }
         }
+
+        if (fd.face.has_value())
+        {
+            auto face = std::any_cast<FT_Face>(fd.face);
+            if (face)
+            {
+                FT_Done_Face(face);
+            }
+        }
+
+        fd.stroker.reset();
+        fd.face.reset();
     }
 
-    if (m_face.has_value())
-    {
-        auto face = std::any_cast<FT_Face>(m_face);
-        if (face)
-        {
-            FT_Done_Face(face);
-        }
-    }
-
-    if (m_library.has_value())
-    {
-        auto library = std::any_cast<FT_Library>(m_library);
-        if (library)
-        {
-            FT_Done_FreeType(library);
-        }
-    }
-
-    m_stroker.reset();
-    m_face.reset();
-    m_library.reset();
+    m_fontData.clear();
 
     m_pages.clear();
     m_pixelBuffer.clear();
@@ -544,6 +723,21 @@ bool Font::pageUpdated(std::uint32_t charSize) const
 void Font::markPageRead(std::uint32_t charSize) const
 {
     m_pages[charSize].updated = false;
+}
+
+void Font::registerObserver(FontObserver* o) const
+{
+    m_observers.push_back(o);
+}
+
+void Font::unregisterObserver(FontObserver* o) const
+{
+    m_observers.erase(std::remove_if(m_observers.begin(), m_observers.end(), [o](const FontObserver* ob) { return o == ob; }), m_observers.end());
+}
+
+bool Font::isRegistered(const FontObserver* o) const
+{
+    return std::find_if(m_observers.begin(), m_observers.end(), [o](const FontObserver* fo) {return fo == o; }) != m_observers.end();
 }
 
 Font::Page::Page()

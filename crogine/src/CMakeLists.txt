@@ -85,6 +85,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/DebugInfo.cpp
   ${PROJECT_DIR}/ecs/systems/DeferredRenderSystem.cpp
   ${PROJECT_DIR}/ecs/systems/DynamicTreeSystem.cpp
+  ${PROJECT_DIR}/ecs/systems/LightVolumeSystem.cpp
   ${PROJECT_DIR}/ecs/systems/ModelRenderer.cpp
   ${PROJECT_DIR}/ecs/systems/ParticleSystem.cpp
   ${PROJECT_DIR}/ecs/systems/ProjectionMapSystem.cpp
@@ -150,9 +151,11 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui.cpp
   ${PROJECT_DIR}/imgui/imgui_demo.cpp
   ${PROJECT_DIR}/imgui/imgui_draw.cpp
+  ${PROJECT_DIR}/imgui/imgui_freetype.cpp
   ${PROJECT_DIR}/imgui/imgui_impl_opengl3.cpp
   ${PROJECT_DIR}/imgui/imgui_impl_sdl.cpp
   ${PROJECT_DIR}/imgui/imgui_stdlib.cpp
+  ${PROJECT_DIR}/imgui/imgui_tables.cpp
   ${PROJECT_DIR}/imgui/imgui_widgets.cpp
   ${PROJECT_DIR}/imgui/ImGuizmo.cpp
   ${PROJECT_DIR}/imgui/implot.cpp

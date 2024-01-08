@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -89,13 +89,13 @@ source distribution.
 
 namespace
 {
-#include "WaterShader.inl"
-#include "CelShader.inl"
-#include "BillboardShader.inl"
-#include "TreeShader.inl"
-#include "ShadowMapping.inl"
-#include "CloudShader.inl"
-#include "ShaderIncludes.inl"
+#include "shaders/WaterShader.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/BillboardShader.inl"
+#include "shaders/TreeShader.inl"
+#include "shaders/ShadowMapping.inl"
+#include "shaders/CloudShader.inl"
+#include "shaders/ShaderIncludes.inl"
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
     const std::string ShrubPath = "assets/golf/shrubs/";
@@ -585,11 +585,9 @@ void PlaylistState::render()
     cam.viewport = { 0.f,0.f,1.f,1.f };
 
     cam.setActivePass(cro::Camera::Pass::Reflection);
-    cam.renderFlags = RenderFlags::Reflection;
 
     auto& skyCam = m_skyboxScene.getActiveCamera().getComponent<cro::Camera>();
     skyCam.setActivePass(cro::Camera::Pass::Reflection);
-    skyCam.renderFlags = RenderFlags::Reflection;
     skyCam.viewport = { 0.f,0.f,1.f,1.f };
 
     cam.reflectionBuffer.clear(cro::Colour::Red);
@@ -600,11 +598,9 @@ void PlaylistState::render()
     cam.reflectionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Final);
-    cam.renderFlags = RenderFlags::All;
     cam.viewport = oldVP;
 
     skyCam.setActivePass(cro::Camera::Pass::Final);
-    skyCam.renderFlags = RenderFlags::All;
     skyCam.viewport = oldVP;
 
 
@@ -895,6 +891,7 @@ void PlaylistState::buildScene()
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.setMaxShadowDistance(20.f);
+    cam.setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     cam.resizeCallback = updateView;
     updateView(cam);
 
@@ -1387,7 +1384,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     m_skyboxes.erase(std::remove_if(m_skyboxes.begin(), m_skyboxes.end(),
         [](const std::string& box)
         {
-            return cro::FileSystem::getFileExtension(box) != ".sbf";
+            return cro::FileSystem::getFileExtension(box) != ".sbf" || box.find("_n") != std::string::npos;
         }), m_skyboxes.end());
     //just to make consistent across platforms
     std::sort(m_skyboxes.begin(), m_skyboxes.end());
@@ -1599,7 +1596,12 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
                             m_skyboxScene.destroyEntity(e); //this includes destroying the active cloud ring
                         }
 
-                        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+                        SkyboxMaterials materials;
+                        materials.horizon = m_materialIDs[MaterialID::Horizon];
+                        //materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
+                        materials.skinned = m_materialIDs[MaterialID::CelTexturedSkinned];
+
+                        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, materials);
                         if (cloudEnt.isValid())
                         {
                             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cloud]);
@@ -1628,7 +1630,13 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     if (!m_skyboxes.empty())
     {
         m_skyboxIndex = 0;
-        auto ent = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+
+        SkyboxMaterials materials;
+        materials.horizon = m_materialIDs[MaterialID::Horizon];
+        //materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
+        materials.skinned = m_materialIDs[MaterialID::CelTexturedSkinned];
+
+        auto ent = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, materials);
         //we only want one of these
         if (!cloudEnt.isValid())
         {
@@ -4266,7 +4274,13 @@ void PlaylistState::loadCourse()
         {
             m_skyboxScene.destroyEntity(e); //this includes destroying the active clouds...
         }
-        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+        
+        SkyboxMaterials materials;
+        materials.horizon = m_materialIDs[MaterialID::Horizon];
+        //materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
+        materials.skinned = m_materialIDs[MaterialID::CelTexturedSkinned];
+        
+        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, materials);
         //hum I didn't think this through did I?
         if (cloudEnt.isValid())
         {

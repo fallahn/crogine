@@ -28,12 +28,16 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfState.hpp"
+#include "PacketIDs.hpp"
 #include "CameraFollowSystem.hpp"
 #include "AchievementIDs.hpp"
 #include "AchievementStrings.hpp"
+#include "WeatherAnimationSystem.hpp"
+#include "ChunkVisSystem.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/systems/LightVolumeSystem.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -231,19 +235,31 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    //registerWindow([&]()
+    //registerWindow([&]() 
     //    {
-    //        if (ImGui::Begin("sunlight"))
+    //        if (ImGui::Begin("asefsd"))
     //        {
-    //            static float col[3] = { 1.f, 1.f, 1.f };
-    //            if (ImGui::ColorPicker3("Sky", col))
+    //            /*if (m_drone.isValid())
     //            {
-    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-    //            }
+    //                auto pos = m_drone.getComponent<cro::Transform>().getPosition();
+    //                float height = pos.y - m_collisionMesh.getTerrain(pos).height;
+    //                ImGui::Text("height %3.3f", height);
+    //            }*/
+    //            /*ImGui::Text("Shader ID %d", m_targetShader.shaderID);
+    //            ImGui::Text("Shader Uniform %d", m_targetShader.vpUniform);
+    //            ImGui::Text("Position %3.2f, %3.2f, %3.2f", m_targetShader.position.x, m_targetShader.position.y, m_targetShader.position.z);
+    //            ImGui::Text("Size %3.3f", m_targetShader.size);*/
+    //            
+    //            const auto* system = m_gameScene.getSystem<ChunkVisSystem>();
+    //            ImGui::Text("Visible Chunks %d", system->getIndexList().size());
     //        }
-    //        ImGui::End();
+    //        ImGui::End();        
     //    });
+
+    registerCommand("refresh_turn", [&](const std::string&)
+        {
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SkipTurn), net::NetFlag::Reliable);
+        });
 
     registerCommand("build_cubemaps",
         [&](const std::string&)
@@ -267,7 +283,7 @@ void GolfState::registerDebugCommands()
             cam.addComponent<cro::Transform>();
             cam.addComponent<cro::Camera>().setPerspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 280.f);
             cam.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
-            cam.getComponent<cro::Camera>().renderFlags = RenderFlags::CubeMap;
+            cam.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::CubeMap);
             m_gameScene.simulate(0.f); //do this once to integrate the new entity;
 
             auto oldCam = m_gameScene.setActiveCamera(cam);
@@ -355,21 +371,301 @@ void GolfState::registerDebugCommands()
             cro::Console::print("Done!");
         });
 
+    registerCommand("noclip", [&](const std::string&)
+        {
+            toggleFreeCam();
+            if (m_photoMode)
+            {
+                cro::Console::print("noclip ON");
+            }
+            else
+            {
+                cro::Console::print("noclip OFF");
+            }
+        });
+
+
+    registerCommand("cl_shownet", [&](const std::string& param)
+        {
+            if (param == "0" || param == "false")
+            {
+                m_networkDebugContext.showUI = false;
+            }
+            else if (param == "1" || param == "true")
+            {
+                m_networkDebugContext.showUI = true;
+
+                if (!m_networkDebugContext.wasShown)
+                {
+                    registerWindow([&]()
+                    {
+                        if (m_networkDebugContext.showUI)
+                        {
+                            ImGui::SetNextWindowSize({ 300.f, 90.f });
+                            if (ImGui::Begin("Network", &m_networkDebugContext.showUI))
+                            {
+                                float bps = static_cast<float>(m_networkDebugContext.bitrate) / 1024.f;
+                                float BPS = bps / 8.f;
+                                ImGui::Text("Connection Bitrate: %3.2fkbps (%3.2f KB/s)", bps, BPS);
+
+                                auto KB = static_cast<double>(m_networkDebugContext.total) / 1024.;
+                                if (KB > 1024.)
+                                {
+                                    ImGui::Text("Data Transferred: %3.2fMB this session", KB / 1024.);
+                                }
+                                else
+                                {
+                                    ImGui::Text("Data Transferred: %3.2fKB this session", KB);
+                                }
+
+                                /*ImGui::NewLine();
+                                ImGui::Text("Most frequent packet: %d", m_networkDebugContext.lastHighestID);*/
+                            }
+                            ImGui::End();
+                        }
+                    });
+                    m_networkDebugContext.wasShown = true;
+                }
+            }
+            else
+            {
+                cro::Console::print("Usage: cl_shownet <0|1>");
+            }
+        });
+
+
+    //nasssssty staticses
+    static bool showKickWindow = false;
+    if (m_sharedData.hosting)
+    {
+        registerWindow([&]()
+            {
+                if (showKickWindow)
+                {
+                    if (ImGui::Begin("Kick Player", &showKickWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
+                    {
+                        struct ListItem final
+                        {
+                            const cro::String* name = nullptr;
+                            std::uint8_t client = 0;
+                        };
+                        static std::vector<ListItem> items;
+                        items.clear();
+
+                        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+                        {
+                            const auto& client = m_sharedData.connectionData[i];
+                            for (auto j = 0u; j < client.playerCount; ++j)
+                            {
+                                auto& item = items.emplace_back();
+                                item.name = &client.playerData[j].name;
+                                item.client = i;
+                            }
+                        }
+
+                        static std::int32_t idx = 0;
+                        if (ImGui::BeginListBox("Players", ImVec2(-FLT_MIN, 6.f * ImGui::GetTextLineHeightWithSpacing())))
+                        {
+                            for (auto n = 0u; n < items.size(); ++n)
+                            {
+                                const bool selected = (idx == n);
+                                if (ImGui::Selectable(reinterpret_cast<char*>(items[n].name->toUtf8().data()), selected))
+                                {
+                                    idx = n;
+                                }
+
+                                if (selected)
+                                {
+                                    ImGui::SetItemDefaultFocus();
+                                }
+                            }
+                            ImGui::EndListBox();
+                        }
+                        if (ImGui::Button("Kick"))
+                        {
+                            //again, assuming host is client 0...
+                            if (items[idx].client != 0)
+                            {
+                                std::uint16_t data = std::uint16_t(ServerCommand::KickClient) | ((items[idx].client) << 8);
+                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                                showKickWindow = false;
+                            }
+                        }
+                    }
+                    ImGui::End();
+                }
+            });
+
+        registerCommand("kick", [](const std::string&) {showKickWindow = true; });
+    }
+#ifdef CRO_DEBUG_
+
     registerCommand("rain", [&](const std::string&)
         {
             static bool raining = false;
+            static constexpr float Density = 0.5f;
             if (!raining)
             {
                 createWeather(WeatherType::Rain);
 
-                auto& shader = m_resources.shaders.get(ShaderID::Fog);
-                auto uniform = shader.getUniformID("u_density");
-                glUseProgram(shader.getGLHandle());
-                glUniform1f(uniform, 0.49f);
+                setFog(Density);
 
                 raining = true;
+                m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
+                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(false);
+            }
+            else
+            {
+                static bool hidden = false;
+                hidden = !hidden;
+                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(hidden);
+
+                setFog(hidden ? 0.f : Density);
             }
         });
+
+    registerCommand("fog", [&](const std::string& amount)
+        {
+            if (amount.empty())
+            {
+                cro::Console::print("Usage: fog <0 - 1> where value represents density. EG fog 0.5");
+            }
+            else
+            {
+                float density = 0.f;
+                std::stringstream ss;
+                ss << amount;
+                ss >> density;
+                density = std::clamp(density, 0.f, 1.f);
+
+                setFog(density);
+            }
+        });
+
+
+
+
+    registerCommand("fast_cpu", [&](const std::string& param)
+        {
+            if (m_sharedData.hosting)
+            {
+                const auto sendCmd = [&]()
+                    {
+                        m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::FastCPU, m_sharedData.fastCPU ? 1 : 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                        m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
+
+                        //TODO set active or not if current player is CPU
+
+                    };
+
+                if (param == "0")
+                {
+                    m_sharedData.fastCPU = false;
+                    sendCmd();
+                }
+                else if (param == "1")
+                {
+                    m_sharedData.fastCPU = true;
+                    sendCmd();
+                }
+                else
+                {
+                    cro::Console::print("Usage: fast_cpu <0|1>");
+                }
+            }
+        });
+#endif
+
+    /*registerWindow([&]()
+        {
+            const auto printCam = [](const std::string& s, bool active)
+                {
+                    if (active)
+                    {
+                        ImGui::ColorButton("##", ImVec4(0.f, 1.f, 0.f, 1.f));
+                    }
+                    else
+                    {
+                        ImGui::ColorButton("##", ImVec4(1.f, 0.f, 0.f, 1.f));
+                    }
+                    ImGui::SameLine();
+                    ImGui::Text("%s", s.c_str());
+                };
+
+            if (ImGui::Begin("Cams"))
+            {
+                for (auto i = 0u; i < CameraID::Count; ++i)
+                {
+                    printCam(CameraStrings[i], m_cameras[i].getComponent<cro::Camera>().active);
+                }
+                printCam("Flight Cam", m_flightCam.getComponent<cro::Camera>().active);
+                printCam("Green Cam", m_greenCam.getComponent<cro::Camera>().active);
+                printCam("Map Cam", m_mapCam.getComponent<cro::Camera>().active);
+            }
+            ImGui::End();
+        
+        });*/
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("sunlight"))
+    //        {
+    //            /*static float col[3] = { 1.f, 1.f, 1.f };
+    //            if (ImGui::ColorPicker3("Sky", col))
+    //            {
+    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //            }*/
+
+    //            //this only works on night mode obvs
+    //            /*auto size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
+
+    //            auto size = glm::vec2(m_lightMaps[LightMapID::Scene].getSize()) / 2.f;
+    //            ImGui::Image(m_lightMaps[LightMapID::Scene].getTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //            ImGui::Image(m_gameSceneMRTexture.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+    //            /*ImGui::SameLine();
+    //            size = glm::vec2(m_lightBlurTextures[LightMapID::Overhead].getSize()) * 2.f;
+    //            ImGui::Image(m_lightBlurTextures[LightMapID::Overhead].getTexture(), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
+
+
+
+    //            //const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
+    //            //auto size = glm::vec2(buff.getSize()/* / 2u*/);
+    //            //ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+    //            //ImGui::SameLine();
+    //            //ImGui::Image(m_overheadBuffer.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //            //ImGui::SameLine();
+    //            //ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+
+    //            //size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+    //            //ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //        }
+    //        ImGui::End();
+    //    });
+
+
+
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Weather"))
+    //        {
+    //            /*auto c = m_skyScene.getSunlight().getComponent<cro::Sunlight>().getColour();
+    //            if (ImGui::ColorPicker3("Sun", c.asArray()))
+    //            {
+    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
+    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
+    //            }*/
+    //            if (ImGui::Button("Rain"))
+    //            {
+    //                cro::Console::doCommand("rain");
+    //            }
+    //        }
+    //        ImGui::End();
+    //    
+    //    });
 
     //registerCommand("show_stat_window", 
     //    [&](const std::string&)

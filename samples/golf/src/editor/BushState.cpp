@@ -53,8 +53,8 @@ source distribution.
 
 namespace
 {
-#include "../golf/TreeShader.inl"
-#include "../golf/ShaderIncludes.inl"
+#include "../golf/shaders/TreeShader.inl"
+#include "../golf/shaders/ShaderIncludes.inl"
 
     struct BushShaderID final
     {
@@ -462,7 +462,7 @@ void BushState::createScene()
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&BushState::updateView, this, std::placeholders::_1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlagsThumbnail;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlagsThumbnail);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(10.f);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
@@ -479,16 +479,16 @@ void BushState::createScene()
     m_billboardCamera = m_gameScene.createEntity();
     m_billboardCamera.addComponent<cro::Transform>().setPosition({0.f, 0.f, 3.f});
     m_billboardCamera.addComponent<cro::Camera>().setOrthographic(-(camSize.x) / 2.f, camSize.x / 2.f, 0.f, camSize.y, 0.1f, 16.f);
-    m_billboardCamera.getComponent<cro::Camera>().renderFlags = RenderFlagsBillboard;
+    m_billboardCamera.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlagsBillboard);
 
 
     //ortho cam for creating thumbnails
     m_thumbnailCamera = m_gameScene.createEntity();
-    m_thumbnailCamera.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
+    m_thumbnailCamera.addComponent<cro::Transform>().setPosition({ 0.f, 40.f, 0.f });
     m_thumbnailCamera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 20.f);
+    m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 50.f);
     m_thumbnailCamera.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
-    m_thumbnailCamera.getComponent<cro::Camera>().renderFlags = RenderFlagsThumbnail;
+    m_thumbnailCamera.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlagsThumbnail);
 }
 
 void BushState::updateView(cro::Camera& cam3D)
@@ -1032,7 +1032,7 @@ void BushState::loadSkyboxFile()
             m_skyScene.destroyEntity(e);
         }
 
-        loadSkybox(path, m_skyScene, m_resources, -1);
+        loadSkybox(path, m_skyScene, m_resources, SkyboxMaterials());
         const auto& colours = m_skyScene.getSkyboxColours();
         skyMid = colours.middle;
         skyTop = colours.top;
@@ -1103,6 +1103,8 @@ void BushState::createThumbnails()
     std::vector<std::string> outPaths;
 
     auto dirs = cro::FileSystem::listDirectories("assets/golf/courses");
+    dirs.erase(std::remove_if(dirs.begin(), dirs.end(), [](const std::string& s) {return s.find("course_") == std::string::npos; }), dirs.end());
+
     for (auto dir : dirs)
     {
         auto path = "assets/golf/courses/" + dir + "/course.data";
@@ -1113,7 +1115,7 @@ void BushState::createThumbnails()
             path = "assets/golf/thumbs/" + dir;
             if (!cro::FileSystem::directoryExists(path))
             {
-                LogI << "creating directory..." << std::endl;
+                LogI << "creating directory " << dir << "..." << std::endl;
                 cro::FileSystem::createDirectory(path);
             }
             outPaths.push_back(path);

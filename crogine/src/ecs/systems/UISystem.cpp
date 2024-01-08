@@ -209,16 +209,16 @@ void UISystem::handleEvent(const Event& evt)
             }
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                m_controllerMask |= ControllerBits::Up;
+                selectPrev(m_columnCount, UIInput::Index::Up);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                m_controllerMask |= ControllerBits::Down;
+                selectNext(m_columnCount, UIInput::Index::Down);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-                m_controllerMask |= ControllerBits::Left;
+                selectPrev(1, UIInput::Index::Left);
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-                m_controllerMask |= ControllerBits::Right;
+                selectNext(1, UIInput::Index::Right);
                 break;
             }
         }
@@ -235,18 +235,6 @@ void UISystem::handleEvent(const Event& evt)
                 buttonEvent.type = evt.type;
                 buttonEvent.cbutton = evt.cbutton;
             }
-                break;
-            case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                m_controllerMask &= ~ControllerBits::Up;
-                break;
-            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                m_controllerMask &= ~ControllerBits::Down;
-                break;
-            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-                m_controllerMask &= ~ControllerBits::Left;
-                break;
-            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-                m_controllerMask &= ~ControllerBits::Right;
                 break;
             }
         }
@@ -271,7 +259,7 @@ void UISystem::handleEvent(const Event& evt)
         if (m_activeControllerID == ActiveControllerAll ||
             evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            static constexpr std::int16_t Threshold = 15000;
+            static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone;// 15000;
             switch (evt.caxis.axis)
             {
             default: break;

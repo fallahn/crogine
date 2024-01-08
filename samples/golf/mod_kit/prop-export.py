@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2023, 3, 4),
+    "version": (2023, 12, 31),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -128,6 +128,28 @@ def WriteParticles(file, path, location):
     file.write("    }\n\n")
 
 
+def WriteLight(file, ob):
+    light = ob.data
+    if light.type == 'POINT':
+        location = ob.location
+        colour = light.color
+        
+        file.write("    light\n    {\n")
+        file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
+        file.write("        colour = %f,%f,%f,1.0\n" % (colour.r, colour.g, colour.b))
+        file.write("        radius = %f\n" % light.shadow_soft_size)
+
+        if ob.get('animation') is not None:
+            file.write("        animation = \"%s\"\n" % ob['animation'])
+
+        if ob.get('preset') is not None:
+            file.write("        preset = \"%s\"\n" % ob['preset'])
+
+        file.write("    }\n\n")
+
+
+
+
 def showMessageBox(message = "", title = "Message Box", icon = 'INFO'):
 
     def draw(self, context):
@@ -150,14 +172,14 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
         file.write("hole %s\n{\n" % Path(self.properties.filepath).stem)
 
         if scene.get('map_path') is not None:
-            file.write("    map=\"%s/%s.png\"\n" % (scene['map_path'], Path(self.properties.filepath).stem))
+            file.write("    map = \"%s/%s.png\"\n" % (scene['map_path'], Path(self.properties.filepath).stem))
         else:
-            file.write("    map=\"assets/golf/courses/course_0/%s.png\"\n" % Path(self.properties.filepath).stem)
+            file.write("    map = \"assets/golf/courses/course_0/%s.png\"\n" % Path(self.properties.filepath).stem)
 
         if scene.get('model_path') is not None:
-            file.write("    model=\"%s\"\n" % scene['model_path'])
+            file.write("    model = \"%s\"\n" % scene['model_path'])
         else:
-            file.write("    model=\"assets/golf/models/course_0/%s.cmt\"\n" % Path(self.properties.filepath).stem)
+            file.write("    model = \"assets/golf/models/course_0/%s.cmt\"\n" % Path(self.properties.filepath).stem)
         
         if scene.get('par') is not None:
             file.write("    par = %d\n\n" % scene['par'])
@@ -167,6 +189,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
         teeWritten = False
         pinWritten = False
         targetWritten = False
+        subtargetWritten = False
 
         for ob in bpy.context.selected_objects:
 
@@ -195,12 +218,21 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                         pinWritten = True
                     else:
                         self.report({'WARNING'}, "Multiple pins selected")
-                elif "target" in modelName.lower():
+                elif "target" == modelName.lower():
                     if targetWritten == False:
                         WriteProperty(file, "target", worldLocation)
                         targetWritten = True
                     else:
                         self.report({'WARNING'}, "Multiple targets selected")
+
+                elif "subtarget" == modelName.lower():
+                    if subtargetWritten == False:
+                        WriteProperty(file, "subtarget", worldLocation)
+                        subtargetWritten = True
+                    else:
+                        self.report({'WARNING'}, "Multiple sub-targets selected")
+
+
                 elif "tee" in modelName.lower():
                     if teeWritten == False:
                         WriteProperty(file, "tee", worldLocation)
@@ -224,6 +256,9 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                     elif ob.type == 'SPEAKER' and ob.parent is None:
                         WriteSpeakerSolo(file, ob)
 
+            elif ob.type == 'LIGHT':
+                WriteLight(file, ob)
+        
 
         file.write("}")
         file.close()

@@ -100,6 +100,13 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     for (auto entity : entities)
     {
         auto& drawable = entity.getComponent<Drawable2D>();
+        drawable.m_wasCulledLastFrame = true;
+
+        if ((camera.getPass(Camera::Pass::Final).renderFlags & drawable.m_renderFlags) == 0)
+        {
+            continue;
+        }
+
         if (drawable.m_autoCrop)
         {
             auto scale = entity.getComponent<cro::Transform>().getWorldScale();
@@ -112,12 +119,14 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
                 if (bounds.intersects(viewRect))
                 {
                     drawlist.push_back(entity);
+                    drawable.m_wasCulledLastFrame = false;
                 }
             }
         }
         else
         {
             drawlist.push_back(entity);
+            drawable.m_wasCulledLastFrame = false;
         }
     }
 
@@ -142,7 +151,7 @@ void RenderSystem2D::process(float)
         //check shader flag and set correct shader if needed
         if (drawable.m_applyDefaultShader)
         {
-            if (drawable.m_texture)
+            if (drawable.m_textureInfo.textureID.textureID)
             {
                 //use textured shader
                 drawable.m_shader = &m_texturedShader;
@@ -192,6 +201,11 @@ void RenderSystem2D::process(float)
             drawable.m_croppingWorldArea = drawable.m_croppingArea.transform(tx.getWorldTransform());
         }
     }
+
+    //for (auto& list : m_drawLists)
+    //{
+    //    list.erase(std::remove_if(list.begin(), list.end(), [](cro::Entity e) {return !e.isValid(); }), list.end());
+    //}
 }
 
 void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
@@ -212,11 +226,17 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
         const auto& entities = m_drawLists[camComponent.getDrawListIndex()];
         for (auto entity : entities)
         {
+#ifdef CRO_DEBUG_
+            //these are probably OK to draw as they aren't yet cleared up
+            //(just marked for removal) but it will ASSERT on debug builds
+            if (!entity.isValid()) continue;
+#endif
+
             const auto& drawable = entity.getComponent<Drawable2D>();
             const auto& tx = entity.getComponent<cro::Transform>();
             glm::mat4 worldMat = tx.getWorldTransform();
 
-            if ((camComponent.renderFlags & drawable.m_renderFlags) &&
+            if (//TODO surely these ought to be culling criteria?
                 drawable.m_shader && !drawable.m_updateBufferData)
             {
                 //apply shader
@@ -231,10 +251,10 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, glm::value_ptr(worldMat)));
 
                 //apply texture if active
-                if (drawable.m_texture)
+                if (drawable.m_textureInfo.textureID.textureID)
                 {
                     glCheck(glActiveTexture(GL_TEXTURE0));
-                    glCheck(glBindTexture(GL_TEXTURE_2D, drawable.m_texture->getGLHandle()));
+                    glCheck(glBindTexture(GL_TEXTURE_2D, drawable.m_textureInfo.textureID.textureID));
                     glCheck(glUniform1i(drawable.m_textureUniform, 0));
                 }
 
@@ -245,6 +265,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                     glCheck(glActiveTexture(GL_TEXTURE0 + j));
                     glCheck(glBindTexture(GL_TEXTURE_2D, value));
                     glCheck(glUniform1i(uniform, j));
+                    j++;
                 }
                 for (auto [uniform, value] : drawable.m_floatBindings)
                 {
@@ -402,6 +423,7 @@ void RenderSystem2D::onEntityAdded(Entity entity)
         {
             m_needsSort = true;
         });
+    m_needsSort = true;
 }
 
 void RenderSystem2D::onEntityRemoved(Entity entity)

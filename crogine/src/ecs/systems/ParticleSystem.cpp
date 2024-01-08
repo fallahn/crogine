@@ -46,6 +46,10 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+#ifdef CRO_DEBUG_
+#include <crogine/gui/Gui.hpp>
+#endif
+
 #ifdef PLATFORM_DESKTOP
 #define ENABLE_POINT_SPRITES glCheck(glEnable(GL_PROGRAM_POINT_SIZE));
 #define DISABLE_POINT_SPRITES glCheck(glDisable(GL_PROGRAM_POINT_SIZE));
@@ -109,11 +113,17 @@ namespace
         uniform vec2 u_textureSize;
         uniform vec2 u_cameraRange;
 
+#if defined (SUNLIGHT)
+        uniform vec4 u_lightColour;
+#endif
+
+
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED mat2 v_rotation;
         VARYING_IN LOW float v_currentFrame;
         VARYING_IN HIGH float v_depth;
         OUTPUT
+
 
 #if defined (MOBILE)
         float smoothstep(float edge0, float edge1, float x)
@@ -121,6 +131,12 @@ namespace
             float t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
             return t * t * (3.0 - 2.0 * t);
         }
+#else
+//horrible hack to stop particles outputting
+//to light buffer in golf
+
+layout (location = 3) out vec4 LIGHT_OUT;
+
 #endif
 
         float linearise(float z)
@@ -155,6 +171,10 @@ namespace
 
             FRAG_OUT = v_colour * TEXTURE(u_texture, coord);// * strength;
 
+        #if defined (SUNLIGHT)
+            FRAG_OUT *= u_lightColour;
+        #endif
+
         #if defined (BLEND_ADD)
             FRAG_OUT.rgb *= v_colour.a;
         #endif
@@ -162,6 +182,11 @@ namespace
         #if defined (BLEND_MULTIPLY)
             FRAG_OUT.rgb += (vec3(1.0) - FRAG_OUT.rgb) * (1.0 - FRAG_OUT.a);
         #endif
+
+#if !defined(MOBILE)
+LIGHT_OUT = vec4(vec3(0.0), 1.0);
+#endif
+
         }
     )";
 
@@ -209,7 +234,7 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
 
     const std::array<std::string, ShaderID::Count> Defines =
     {
-        "", "#define BLEND_ADD\n", "#define BLEND_MULTIPLY\n"
+        "#define SUNLIGHT\n", "#define BLEND_ADD\n", "#define BLEND_MULTIPLY\n"
     };
 
     for (auto i = 0; i < ShaderID::Count; ++i)
@@ -235,6 +260,10 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
             handle.uniformIDs[UniformID::ClipPlane] = uniforms.find("u_clipPlane")->second;
 #endif
             handle.uniformIDs[UniformID::Projection] = uniforms.find("u_projection")->second;
+            if (i == ShaderID::Alpha)
+            {
+                handle.uniformIDs[UniformID::LightColour] = uniforms.find("u_lightColour")->second;
+            }
             handle.uniformIDs[UniformID::Texture] = uniforms.find("u_texture")->second;
             handle.uniformIDs[UniformID::ViewProjection] = uniforms.find("u_viewProjection")->second;
             handle.uniformIDs[UniformID::Viewport] = uniforms.find("u_viewportHeight")->second;
@@ -312,6 +341,11 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
         for (auto i = 0; i < passCount; ++i)
         {
+            if ((emitter.m_renderFlags & cam.getPass(i).renderFlags) == 0)
+            {
+                continue;
+            }
+
             if (glm::dot(forwardVec, emitterDirection) > 0)
             {
                 if (!emitter.m_pendingUpdate)
@@ -344,78 +378,100 @@ void ParticleSystem::process(float dt)
     {
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
+
+        emitter.m_prevTimestamp = emitter.m_currentTimestamp;
+        emitter.m_currentTimestamp += dt;
+
+        const float rate = (1.f / emitter.settings.emitRate); //TODO this ought to be const when rate itself is set...
+
         if (/*emitter.m_pendingUpdate &&*/
-            emitter.m_running &&
-            emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.settings.emitRate))
+            emitter.m_running)
         {
-            //make sure not to update this again unless it gets marked as visible next frame
-            emitter.m_pendingUpdate = false;
-            
-            //apply fallback texture if one doesn't exist
-            //this would be speedier to do once when adding the emitter to the system
-            //but the texture may change at runtime.
-            if (emitter.settings.textureID == 0)
-            {
-                emitter.settings.textureID = m_fallbackTexture.getGLHandle();
-            }
+            auto& tx = e.getComponent<Transform>();
+            glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
+            auto worldPos = tx.getWorldPosition();
 
-            emitter.m_emissionClock.restart();
-            static const float epsilon = 0.0001f;
-            auto emitCount = emitter.settings.emitCount;
-            while (emitCount--)
+            emitter.m_emissionTime += dt;
+
+            while (emitter.m_emissionTime > rate)
             {
-                if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
+                //make sure not to update this again unless it gets marked as visible next frame
+                emitter.m_pendingUpdate = false;
+
+                //apply fallback texture if one doesn't exist
+                //this would be speedier to do once when adding the emitter to the system
+                //but the texture may change at runtime.
+                if (emitter.settings.textureID == 0)
                 {
-                    auto& tx = e.getComponent<Transform>();
-                    glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
+                    emitter.settings.textureID = m_fallbackTexture.getGLHandle();
+                }
 
-                    const auto& settings = emitter.settings;
-                    CRO_ASSERT(settings.emitRate > 0, "Emit rate must be grater than 0");
-                    CRO_ASSERT(settings.lifetime > 0, "Lifetime must be greater than 0");
-                    auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
-                    p.colour = settings.colour;
-                    p.gravity = settings.gravity;
-                    p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
-                    p.maxLifeTime = p.lifetime;
+                emitter.m_emissionTime -= rate;
 
-                    auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);
-                    randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
+                //interpolate position
+                emitter.m_emissionTimestamp += rate;
 
-                    auto worldScale = tx.getWorldScale();
+                const float t = (emitter.m_emissionTimestamp - emitter.m_prevTimestamp) / (emitter.m_currentTimestamp - emitter.m_prevTimestamp);
+                auto basePosition = glm::mix(emitter.m_previousPosition, worldPos, t);
 
-                    p.velocity = randRot * settings.initialVelocity;
-                    p.rotation = (settings.randomInitialRotation) ? Util::Random::value(-Util::Const::PI, Util::Const::PI) : 0.f;
-                    p.scale = std::abs((worldScale.x + worldScale.y) / 2.f);// 1.f;
-                    p.acceleration = settings.acceleration;
-                    p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
-                    p.frameTime = 0.f;
-                    p.loopCount = settings.loopCount;
-
-                    //spawn particle in world position
-                    auto basePosition = tx.getWorldPosition();
-                    p.position = basePosition + (settings.initialVelocity * cro::Util::Random::value(0.001f, 0.007f));
-
-                    //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
-                    p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-                    p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-                    p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-
-                    if (emitter.settings.inheritRotation)
+                static const float epsilon = 0.0001f;
+                auto emitCount = emitter.settings.emitCount;
+                while (emitCount--)
+                {
+                    if (emitter.m_nextFreeParticle < emitter.m_particles.size() - 1)
                     {
-                        /*p.position -= basePosition;
-                        p.position = rotation * glm::vec4(p.position, 1.f);
-                        p.position += basePosition;*/
-                        p.velocity = glm::vec3(tx.getWorldTransform() * glm::vec4(p.velocity, 0.0));
-                    }
+                        //TODO a lot of this only needs to be calc'd ONCE for every particle in emitCount
+                        const auto& settings = emitter.settings;
+                        CRO_ASSERT(settings.emitRate > 0, "Emit rate must be grater than 0");
+                        CRO_ASSERT(settings.lifetime > 0, "Lifetime must be greater than 0");
+                        auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
+                        p.colour = settings.colour;
+                        p.gravity = settings.gravity;
+                        p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
+                        //p.lifetime -= (emitter.m_currentTimestamp - emitter.m_emissionTimestamp);
+                        p.maxLifeTime = p.lifetime;
+                        //p.lifetime *= 1.f - t;
 
-                    auto offset = settings.spawnOffset;
-                    offset *= worldScale;
-                    p.position += offset;
+                        auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);
+                        randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
 
-                    emitter.m_nextFreeParticle++;
-                    if (emitter.m_releaseCount > 0)
-                    {
-                        emitter.m_releaseCount--;
+                        auto worldScale = tx.getWorldScale();
+
+                        p.velocity = randRot * settings.initialVelocity;
+                        p.rotation = (settings.randomInitialRotation) ? Util::Random::value(-Util::Const::PI, Util::Const::PI) : 0.f;
+                        p.scale = std::abs((worldScale.x + worldScale.y) / 2.f);// 1.f;
+                        p.acceleration = settings.acceleration;
+                        p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
+                        p.frameTime = 0.f;
+                        p.loopCount = settings.loopCount;
+
+                        //spawn particle in world position
+                        //auto basePosition = worldPos + interpolation;// tx.getWorldPosition();
+                        p.position = basePosition + (settings.initialVelocity * cro::Util::Random::value(0.001f, 0.007f));
+
+                        //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
+                        p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+                        p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+                        p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+
+                        if (emitter.settings.inheritRotation)
+                        {
+                            /*p.position -= basePosition;
+                            p.position = rotation * glm::vec4(p.position, 1.f);
+                            p.position += basePosition;*/
+                            p.velocity = glm::vec3(tx.getWorldTransform() * glm::vec4(p.velocity, 0.0));
+                        }
+
+                        auto offset = settings.spawnOffset;
+                        offset *= worldScale;
+                        p.position += offset;
+
+
+                        emitter.m_nextFreeParticle++;
+                        if (emitter.m_releaseCount > 0)
+                        {
+                            emitter.m_releaseCount--;
+                        }
                     }
                 }
             }
@@ -517,6 +573,8 @@ void ParticleSystem::process(float dt)
         }
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, idx * sizeof(float), m_dataBuffer.data()));
+
+        emitter.m_previousPosition = e.getComponent<cro::Transform>().getWorldPosition();
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -526,6 +584,8 @@ void ParticleSystem::process(float dt)
 
 void ParticleSystem::render(Entity camera, const RenderTarget& rt)
 {   
+    const auto sunlightColour = getScene()->getSunlight().getComponent<cro::Sunlight>().getColour();
+
     //particles are already in world space so just need viewProj
     const auto& cam = camera.getComponent<Camera>();
     if (cam.getDrawListIndex() < m_drawLists.size())
@@ -585,11 +645,6 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
 
             const auto& emitter = entity.getComponent<ParticleEmitter>();
 
-            if ((emitter.m_renderFlags & cam.renderFlags) == 0)
-            {
-                continue;
-            }
-
             //apply blend mode - this also binds the appropriate shader for current mode
             switch (emitter.settings.blendmode)
             {
@@ -597,6 +652,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
             case EmitterSettings::Alpha:
                 glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
                 bindShader(ShaderID::Alpha, emitter);
+                glCheck(glUniform4f(m_shaderHandles[ShaderID::Alpha].uniformIDs[UniformID::LightColour], sunlightColour.getRed(), sunlightColour.getGreen(), sunlightColour.getBlue(), 1.f));
                 break;
             case EmitterSettings::Multiply:
                 glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
@@ -670,6 +726,9 @@ void ParticleSystem::onEntityAdded(Entity entity)
             allocateBuffer();
         }
     }
+
+    auto pos = entity.getComponent<cro::Transform>().getWorldPosition();
+    entity.getComponent<cro::ParticleEmitter>().m_previousPosition = pos;
 
     entity.getComponent<ParticleEmitter>().m_vbo = m_vboIDs[m_nextBuffer];
     entity.getComponent<ParticleEmitter>().m_vao = m_vaoIDs[m_nextBuffer];

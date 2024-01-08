@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::Billboard
 {
-    static const std::string Vertex = R"(
+    inline const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position; //relative to root position (below)
         ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
         ATTRIBUTE vec4 a_colour;
@@ -171,7 +171,7 @@ namespace cro::Shaders::Billboard
     channel, which is then discarded based on the alpha clip value.
     */
 
-    static const std::string Fragment = R"(
+    inline const std::string Fragment = R"(
         OUTPUT
         #if defined (TEXTURED)
         uniform sampler2D u_diffuseMap;

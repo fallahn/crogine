@@ -336,6 +336,17 @@ bool FileSystem::setCurrentDirectory(std::string path)
 #endif
 }
 
+void FileSystem::removeDirectory(const std::string& path)
+{
+    std::error_code ec;
+    std::filesystem::remove_all(std::filesystem::u8path(path), ec);
+
+    if (ec)
+    {
+        LogE << "unable to remove directory " << path << ": error code " << ec.value() << std::endl;
+    }
+}
+
 std::string FileSystem::getRelativePath(std::string path, const std::string& root)
 {
     auto currentPath = root;
@@ -542,7 +553,7 @@ std::string FileSystem::getResourcePath()
     auto rpath = resourcePath();
     if (m_resourceDirectory.find(rpath) == std::string::npos)
     {
-        return resourcePath() + m_resourceDirectory;
+        return rpath + m_resourceDirectory;
     }
 
     return m_resourceDirectory;
@@ -569,6 +580,8 @@ void FileSystem::setResourceDirectory(const std::string& path)
             m_resourceDirectory.push_back('/');
         }
     }
+
+    LogI << "Resource directory set to " << m_resourceDirectory << std::endl;
 }
 
 bool FileSystem::showMessageBox(const std::string& title, const std::string& message, ButtonType buttonType, IconType iconType)

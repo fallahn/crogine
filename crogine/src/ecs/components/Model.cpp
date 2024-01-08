@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -38,9 +38,30 @@ source distribution.
 
 using namespace cro;
 
+namespace
+{
+    //this asserts the min point is always 0 and max is always 1
+    //to prevent spheres being created with incorrect centre points
+    void assertAABB(Box& aabb)
+    {
+        float x = std::min(aabb[0].x, aabb[1].x);
+        float y = std::min(aabb[0].y, aabb[1].y);
+        float z = std::min(aabb[0].z, aabb[1].z);
+
+        glm::vec3 minimum(x,y,z);
+
+        x = std::max(aabb[0].x, aabb[1].x);
+        y = std::max(aabb[0].y, aabb[1].y);
+        z = std::max(aabb[0].z, aabb[1].z);
+        glm::vec3 maximum(x,y,z);
+
+        aabb[0] = minimum;
+        aabb[1] = maximum;
+    }
+}
+
 Model::Model()
-    : m_visible     (true),
-    m_hidden        (false),
+    : m_hidden      (false),
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
     m_facing        (GL_CCW),
     m_skeleton      (nullptr),
@@ -53,8 +74,7 @@ Model::Model()
 }
 
 Model::Model(Mesh::Data data, Material::Data material)
-    : m_visible     (true),
-    m_hidden        (false),
+    : m_hidden      (false),
     m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
     m_facing        (GL_CCW),
     m_boundingSphere(data.boundingSphere),
@@ -63,6 +83,10 @@ Model::Model(Mesh::Data data, Material::Data material)
     m_skeleton      (nullptr),
     m_jointCount    (0)
 {
+    assertAABB(m_meshData.boundingBox);
+    assertAABB(m_boundingBox);
+    m_boundingSphere = m_boundingBox;
+
     for (auto& pair : m_vaos)
     {
         std::fill(pair.begin(), pair.end(), 0);
@@ -114,7 +138,6 @@ Model::Model(Model&& other) noexcept
     : Model()
 {
     //we can swap because we initialised to nothing
-    std::swap(m_visible, other.m_visible);
     std::swap(m_hidden, other.m_hidden);
     std::swap(m_renderFlags, other.m_renderFlags);
     std::swap(m_facing, other.m_facing);
@@ -146,7 +169,6 @@ Model& Model::operator=(Model&& other) noexcept
 {
     if (&other != this)
     {
-        m_visible = other.m_visible;
         m_hidden = other.m_hidden;
         m_renderFlags = other.m_renderFlags;
         m_facing = other.m_facing;
@@ -318,7 +340,9 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
         normalMatrices[i] = glm::inverseTranspose(transforms[i]);
     }
     m_boundingBox = newBB;
-    m_boundingSphere = newBB;
+    
+    assertAABB(m_boundingBox);
+    m_boundingSphere = m_boundingBox;
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
     glCheck(glBufferData(GL_ARRAY_BUFFER, m_instanceBuffers.instanceCount * sizeof(glm::mat3), normalMatrices.data(), GL_STATIC_DRAW));
@@ -342,6 +366,45 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
         }
     }
 #endif
+}
+
+void Model::updateInstanceTransforms(const std::vector<const std::vector<glm::mat4>*>& transforms, const std::vector<const std::vector<glm::mat3>*>& normalMatrices)
+{
+    //as this is intended for speed we'll assert rather than conditional
+    CRO_ASSERT(!transforms.empty() && transforms.size() == normalMatrices.size(), "Invalid transform data");
+    CRO_ASSERT(m_instanceBuffers.normalBuffer && m_instanceBuffers.transformBuffer, "setInstanceTransforms() must be used at least once");
+    //CRO_ASSERT(transforms.size() <= initialInstanceCount, "We're using sub-data so no resizing!");
+
+    //TODO we could double buffer and swap this
+
+    std::uint32_t offset = 0;
+    std::uint32_t instanceCount = 0;
+
+    //upload transform data
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+    for (const auto* v : transforms)
+    {
+        auto size = v->size() * sizeof(glm::mat4);
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset, size, v->data()));
+
+        offset += size;
+        instanceCount += v->size();
+    }
+
+    offset = 0;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+    for (const auto& v : normalMatrices)
+    {
+        auto size = v->size() * sizeof(glm::mat3);
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset, size, v->data()));
+
+        offset += size;
+    }
+
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    //TODO assert instance count fits within the original buffer (although we've already errored by this point if it is)
+    m_instanceBuffers.instanceCount = instanceCount;
 }
 
 //private
@@ -432,8 +495,11 @@ void Model::updateBounds()
     //unfortunately we need to keep a copy of this as it's the only
     //way of comparing against the mesh data to see if it was updated
     m_meshBox = m_meshData.boundingBox;
+    assertAABB(m_meshBox);
+
     //and yet another copy which may be modified by instancing (and is what's actually returned as the model bounds)
     m_boundingBox = m_meshData.boundingBox;
+    assertAABB(m_boundingBox);
     m_boundingSphere = m_boundingBox;
 }
 

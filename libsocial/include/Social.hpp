@@ -47,17 +47,20 @@ source distribution.
 //(terrain vertex data and materials changed 1100 -> 1110)
 //(player avatar data format changed 1110 -> 1120)
 //(ball started sending wind effect 1120 -> 1124)
-static constexpr std::uint16_t CURRENT_VER = 1141;
+//(added night mode/weather 1141 -> 1150)
+static constexpr std::uint16_t CURRENT_VER = 1150;
 #ifdef __APPLE__
-static const std::string StringVer("1.14.1 (macOS beta)");
+static const std::string StringVer("1.15.0 (macOS beta)");
 #else
-static const std::string StringVer("1.14.1");
+static const std::string StringVer("1.15.0");
 #endif
 
 struct HallEntry final
 {
-    cro::String topTen;
-    cro::String nearestTen;
+    cro::String topTenNames;
+    cro::String topTenScores;
+    cro::String nearestTenNames;
+    cro::String nearestTenScores;
     cro::String personalBest;
     bool hasData = false;
 };
@@ -108,7 +111,8 @@ public:
             XPAwarded,
             OverlayActivated,
             PlayerAchievement, //as in we should cheer, not an actual achievement
-            MonthlyProgress
+            MonthlyProgress,
+            LobbyUpdated
         }type = LevelUp;
         std::int32_t level = 0; //if monthly progress then current value
         std::int32_t reason = -1; //if monthly progress then target value
@@ -132,10 +136,10 @@ public:
     };
     static cro::Image userIcon;
 
-    static cro::String getPlayerName() { return {}; }
-
+    static cro::String getPlayerName();
+    static void setPlayerName(const cro::String&);
     static bool isGreyscale() { return false; }
-    static bool isValid() { return true; }
+    static bool isValid();
     static bool isValid(const std::string&) { return true; }
     static bool isAvailable() { return false; }
     static bool isSteamdeck() { return false; }
@@ -162,7 +166,9 @@ public:
         };
     };
     static void findLeaderboards(std::int32_t) {}
-    static void insertScore(const std::string&, std::uint8_t, std::int32_t) {}
+    static void insertScore(const std::string&, std::uint8_t, std::int32_t);
+    static cro::String getTopFive(const std::string& course, std::uint8_t holeCount);
+    static void invalidateTopFive(const std::string& course, std::uint8_t holeCount);
     static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
     static std::int32_t getMonthlyBest(const std::string&, std::uint8_t) { return -1; }
     static void getRandomBest() {}

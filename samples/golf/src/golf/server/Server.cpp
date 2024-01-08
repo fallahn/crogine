@@ -166,7 +166,18 @@ void Server::run()
     {
         while (!m_sharedData.messageBus.empty())
         {
-            m_currentState->handleMessage(m_sharedData.messageBus.poll());
+            const auto& msg = m_sharedData.messageBus.poll();
+            m_currentState->handleMessage(msg);
+
+            if (msg.id == sv::MessageID::ConnectionMessage)
+            {
+                const auto& data = msg.getData<ConnectionEvent>();
+                if (data.type == ConnectionEvent::Kicked
+                    && data.clientID < ConstVal::MaxClients)
+                {
+                    kickClient(data.clientID);
+                }
+            }
         }
 
         net::NetEvent evt;
@@ -206,14 +217,18 @@ void Server::run()
                     m_sharedData.host.broadcastPacket(PacketID::AchievementGet, evt.packet.as<std::array<std::uint8_t, 2u>>(), net::NetFlag::Reliable);
                     break;
                 case PacketID::ClientVersion:
-                    if (evt.packet.as<std::uint16_t>() != CURRENT_VER)
+                {
+                    auto clientVer = evt.packet.as<std::uint16_t>();
+                    if (clientVer != CURRENT_VER)
                     {
                         m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), net::NetFlag::Reliable);
+                        LogE << "Client responded with version " << clientVer << ", server is " << CURRENT_VER << std::endl;
                     }
                     else
                     {
                         m_sharedData.host.sendPacket(evt.peer, PacketID::ClientPlayerCount, std::uint8_t(0), net::NetFlag::Reliable);
                     }
+                }
                     break;
                 case PacketID::ClientPlayerCount:
                     validatePeer(evt.peer, evt.packet.as<std::uint8_t>());
@@ -407,21 +422,38 @@ void Server::removeClient(const net::NetEvent& evt)
 
     if (result != m_sharedData.clients.end())
     {
-        m_playerCount -= result->playerCount;
+        removeClient(std::distance(m_sharedData.clients.begin(), result));
+    }
+}
 
-        *result = sv::ClientConnection(); //resets the data, setting 'connected' to false etc
+void Server::removeClient(std::size_t clientID)
+{
+    m_playerCount -= m_sharedData.clients[clientID].playerCount;
 
-        auto clientID = std::distance(m_sharedData.clients.begin(), result);
-        auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
-        msg->clientID = static_cast<std::uint8_t>(clientID);
-        msg->type = ConnectionEvent::Disconnected;
+    m_sharedData.clients[clientID] = sv::ClientConnection(); //resets the data, setting 'connected' to false etc
 
-        m_sharedData.clubLevels[clientID] = 2; //reset this if quitting, else we might clamp to the level of a quit player
+    auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
+    msg->clientID = static_cast<std::uint8_t>(clientID);
+    msg->type = ConnectionEvent::Disconnected;
 
-        //broadcast to all connected clients
-        m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(clientID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        LOG("Client disconnected", cro::Logger::Type::Info);
+    m_sharedData.clubLevels[clientID] = 2; //reset this if quitting, else we might clamp to the level of a quit player
 
-        m_clientCount--;
+    //broadcast to all connected clients
+    m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(clientID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    LOG("Client disconnected", cro::Logger::Type::Info);
+
+    m_clientCount--;
+}
+
+void Server::kickClient(std::size_t clientID)
+{
+    if (m_sharedData.clients[clientID].connected)
+    {
+        //we assume host is always 0...
+        auto& peer = m_sharedData.clients[clientID].peer;
+        m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::Kicked), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.disconnectLater(peer);
+
+        removeClient(clientID);
     }
 }

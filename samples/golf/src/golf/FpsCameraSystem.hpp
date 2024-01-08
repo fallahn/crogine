@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -63,16 +63,12 @@ struct FpsCamera final
     }
 };
 
-
+class CollisionMesh;
 class FpsCameraSystem final : public cro::System
 {
 public:
-    explicit FpsCameraSystem(cro::MessageBus&);
+    FpsCameraSystem(cro::MessageBus&, const CollisionMesh&);
 
-    /*
-    Call this from your event handler to forward incoming events
-    from the keyboard or any attached game controllers.
-    */
     void handleEvent(const cro::Event&);
 
     void process(float) override;
@@ -80,6 +76,8 @@ public:
     //TODO allow adding keybinds to controller index mapping
 
 private:
+
+    const CollisionMesh& m_collisionMesh;
 
     struct Input final
     {

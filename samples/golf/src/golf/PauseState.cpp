@@ -96,6 +96,7 @@ PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     buildScene();
 
     cacheState(StateID::Options);
+    cacheState(StateID::PlayerManagement); //TODO don't need to do this in the driving range
 }
 
 //public
@@ -241,13 +242,20 @@ void PauseState::buildScene()
                 m_minimapButton.getComponent<cro::UIInput>().enabled = active;
                 m_minimapButton.getComponent<cro::Transform>().setScale(glm::vec2(active ? 1.f : 0.f));
             }
+
+            {
+                auto players = (m_sharedData.baseState == StateID::Golf && m_sharedData.hosting);
+                m_playerButton.getComponent<cro::UIInput>().enabled = players;
+                m_playerButton.getComponent<cro::Transform>().setScale(glm::vec2(players ? 1.f : 0.f));
+            }
+
             if (currTime == 1)
             {
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
-                //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_scene.getSystem<cro::UISystem>()->selectAt(0);
             }
             break;
         case RootCallbackData::FadeOut:
@@ -310,12 +318,12 @@ void PauseState::buildScene()
    
     //background
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
@@ -364,21 +372,9 @@ void PauseState::buildScene()
         return e;
     };
 
-    //options button
-    entity = createItem(glm::vec2(0.f, 16.f), "Options", menuEntity);
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
-            {
-                if (activated(evt))
-                {
-                    requestStackPush(StateID::Options);
-                }            
-            });
-
     //return to game
-    entity = createItem(glm::vec2(0.f, 6.f), "Return", menuEntity);
+    entity = createItem(glm::vec2(0.f, 28.f), "Return", menuEntity);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -390,8 +386,23 @@ void PauseState::buildScene()
             });
 
 
+    //options button
+    entity = createItem(glm::vec2(0.f, 17.f), "Options", menuEntity);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::Options);
+                }            
+            });
+
+
+
     //restart button
-    entity = createItem(glm::vec2(0.f, -4.f), "Restart Round", menuEntity);
+    entity = createItem(glm::vec2(0.f, 6.f), "Restart Round", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -411,7 +422,7 @@ void PauseState::buildScene()
 
 
     //minimap button
-    entity = createItem(glm::vec2(0.f, -4.f), "Hole Overview", menuEntity);
+    entity = createItem(glm::vec2(0.f, 6.f), "Hole Overview", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -425,9 +436,24 @@ void PauseState::buildScene()
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_minimapButton = entity;
 
+    //player management
+    entity = createItem(glm::vec2(0.f, -5.f), "Player Management", menuEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::PlayerManagement);
+                }
+            });
+    entity.getComponent<cro::UIInput>().enabled = false;
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_playerButton = entity;
+
 
     //quit button
-    entity = createItem(glm::vec2(0.f, -14.f), "Quit To Menu", menuEntity);
+    entity = createItem(glm::vec2(0.f, -26.f), "Quit To Menu", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable

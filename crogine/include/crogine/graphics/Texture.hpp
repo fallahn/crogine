@@ -172,7 +172,7 @@ namespace cro
         */
         FloatRect getNormalisedSubrect(FloatRect rect) const;
 
-        /*
+        /*!
         \brief Saves the texture to a png file if it is a valid texture.
         If the texture contains no data, or create() had not been called
         then this function does nothing.
@@ -181,13 +181,21 @@ namespace cro
         */
         bool saveToFile(const std::string& path) const;
 
-        /*
+        /*!
         \brief Saves the texture to the given image file.
         Resizes the image to the texture size if necessary
         \param image The destination image
         \returns true if successful, else false
         */
         bool saveToImage(cro::Image& image) const;
+
+        /*!
+        \brief Saves the texture to the given buffer as an RGBA array of floats.
+        Resizes the buffer if necessary.
+        \param dst The destination vector in which the returned data is stored
+        \returns true on success, else false if the Texture is currently empty
+        */
+        bool saveToBuffer(std::vector<float>& dst) const;
 
     private:
         glm::uvec2 m_size;

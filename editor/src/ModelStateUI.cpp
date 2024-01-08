@@ -399,6 +399,12 @@ void ModelState::buildUI()
                     {
                         importModel();
                     }
+                    
+                    if (ImGui::MenuItem("Flip Normals", nullptr, nullptr, m_entities[EntityID::ActiveModel].isValid()))
+                    {
+                        flipNormals();
+                    }
+                    
                     if (ImGui::MenuItem("Export Model", nullptr, nullptr, !m_importedVBO.empty()))
                     {
                         //TODO show modal asking if we want to export animation
@@ -1429,6 +1435,62 @@ void ModelState::drawInspector()
                     applyMaterial = true;
                 }
                 ImGui::PopItemWidth();
+
+
+                //material tags list
+                ImGui::NewLine();
+                ImGui::Text("Tags");
+                static std::string tagBuffer;
+                ImGui::InputText("##0", &tagBuffer);
+                ImGui::SameLine();
+                if (ImGui::Button("Add##tag"))
+                {
+                    if (!tagBuffer.empty())
+                    {
+                        matDef.tags.push_back(tagBuffer);
+                    }
+                    tagBuffer.clear();
+                }
+
+                static std::vector<const char*> items;
+                items.clear();
+
+                if (!matDef.tags.empty())
+                {
+                    for (auto i = 0u; i < matDef.tags.size(); ++i)
+                    {
+                        items.push_back(matDef.tags[i].c_str());
+                    }
+
+                    static std::int32_t idx = 0;
+                    if (ImGui::BeginListBox("Tags##1", ImVec2(-FLT_MIN, 6.f * ImGui::GetTextLineHeightWithSpacing())))
+                    {
+                        for (auto n = 0u; n < items.size(); ++n)
+                        {
+                            const bool selected = (idx == n);
+                            if (ImGui::Selectable(items[n], selected))
+                            {
+                                idx = n;
+                            }
+
+                            if (selected)
+                            {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndListBox();
+                    }
+                    if (ImGui::Button("Remove##item"))
+                    {
+                        matDef.tags.erase(std::remove_if(matDef.tags.begin(), matDef.tags.end(), 
+                            [&](const std::string& s)
+                            {
+                                return s.c_str() == items[idx];
+                            }), matDef.tags.end());
+                    }
+                }
+
+
 
                 ImGui::NewLine();
                 if (ImGui::Button("Export"))

@@ -711,6 +711,21 @@
     <ClInclude Include="..\crogine\include\crogine\core\ProfileTimer.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\ArrayTexture.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\LightVolumeSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\LightVolume.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\imconfig_cro.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\imgui\imgui_freetype.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1198,6 +1213,15 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\sound_system\MusicPlayer.cpp">
       <Filter>Source Files\audio\sound system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\LightVolumeSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\imgui_tables.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\imgui_freetype.cpp">
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

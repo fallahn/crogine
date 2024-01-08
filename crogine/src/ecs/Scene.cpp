@@ -86,6 +86,7 @@ namespace
 
         uniform float u_stepStart = 0.48;//0.495;
         uniform float u_stepEnd = 0.505;
+        uniform float u_starsAmount = 0.0;
 
         VARYING_IN vec3 v_texCoords;
 
@@ -93,6 +94,39 @@ namespace
         //const LOW vec3 lightColour = vec3(0.21, 0.5, 0.96);
 
         const vec3 Up = vec3(0.0, 1.0, 0.0);
+
+        //3D Gradient noise from: https://www.shadertoy.com/view/Xsl3Dl
+        //The MIT License
+        //Copyright 2013 Inigo Quilez
+
+        vec3 hash(vec3 p)
+        {
+            p = vec3(dot(p,vec3(127.1,311.7, 74.7)),
+                     dot(p,vec3(269.5,183.3,246.1)),
+                     dot(p,vec3(113.5,271.9,124.6)));
+
+            return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+        }
+
+        float noise(vec3 p)
+        {
+            vec3 i = floor(p);
+            vec3 f = fract(p);
+    
+            vec3 u = f * f * (3.0 - 2.0 * f);
+
+            return mix(mix(mix(dot(hash(i + vec3(0.0, 0.0, 0.0)), f - vec3(0.0, 0.0, 0.0)), 
+                               dot(hash(i + vec3(1.0, 0.0, 0.0)), f - vec3(1.0, 0.0, 0.0)), u.x),
+                           mix(dot(hash(i + vec3(0.0, 1.0, 0.0)), f - vec3(0.0, 1.0, 0.0)), 
+                               dot(hash(i + vec3(1.0, 1.0, 0.0)), f - vec3(1.0, 1.0, 0.0)), u.x), u.y),
+                       mix(mix(dot(hash(i + vec3(0.0, 0.0, 1.0)), f - vec3(0.0, 0.0, 1.0)), 
+                               dot(hash(i + vec3(1.0, 0.0, 1.0)), f - vec3(1.0, 0.0, 1.0)), u.x),
+                           mix(dot(hash(i + vec3(0.0, 1.0, 1.0)), f - vec3(0.0, 1.0, 1.0)), 
+                               dot(hash(i + vec3(1.0, 1.0, 1.0)), f - vec3(1.0, 1.0, 1.0)), u.x), u.y), u.z );
+        }
+
+        const float Threshold = 8.0;
+        const float Exposure = 100.0;
 
         void main()
         {
@@ -102,6 +136,12 @@ namespace
 
             vec3 top = mix(u_midColour, u_lightColour, smoothstep(u_stepEnd, /*0.545*/u_stepEnd + 0.03, amount));
             FRAG_OUT = vec4(mix(u_darkColour, top, smoothstep(u_stepStart, u_stepEnd, amount)), 1.0);
+
+            vec3 viewDirection = normalize(v_texCoords);
+            float stars = pow(clamp(noise(viewDirection * 200.0), 0.0f, 1.0f), Threshold) * Exposure;
+            stars *= mix(0.4, 1.4, noise(viewDirection * 100.0));
+
+            FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(1.0), stars * amount * u_starsAmount);
 
         })";
     const std::string skyboxFragTextured =
@@ -156,6 +196,7 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize, std::uint32_t infoFlag
     m_projectionMapCount    (0),
     m_waterLevel            (0.f),
     m_activeSkyboxTexture   (0),
+    m_starsUniform          (-1),
     m_shaderIndex           (0)
 {
     auto defaultCamera = createEntity();
@@ -346,6 +387,7 @@ void Scene::enableSkybox()
             m_skyColourUniforms[0] = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_darkColour");
             m_skyColourUniforms[1] = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_midColour");
             m_skyColourUniforms[2] = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_lightColour");
+            m_starsUniform = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_starsAmount");
         }
         else
         {
@@ -420,6 +462,12 @@ void Scene::setSkyboxColours(SkyColours colours)
 {
     m_skybox.colours = colours;
     applySkyboxColours();
+}
+
+void Scene::setStarsAmount(float amount)
+{
+    m_skybox.starsAmount = std::clamp(amount, 0.f, 1.f);
+    applyStars();
 }
 
 Entity Scene::getDefaultCamera() const
@@ -555,6 +603,16 @@ void Scene::applySkyboxColours()
         glCheck(glUniform3f(m_skyColourUniforms[1], mid.getRed(), mid.getGreen(), mid.getBlue()));
         glCheck(glUniform3f(m_skyColourUniforms[2], light.getRed(), light.getGreen(), light.getBlue()));
         glCheck(glUseProgram(0));
+    }
+}
+
+void Scene::applyStars()
+{
+    if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle())
+    {
+        glCheck(glUseProgram(m_skyboxShaders[SkyboxType::Coloured].getGLHandle()));
+        glCheck(glUniform1f(m_starsUniform, m_skybox.starsAmount));
+        //glCheck(glUseProgram(0));
     }
 }
 

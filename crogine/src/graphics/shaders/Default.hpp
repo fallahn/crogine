@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::Default
 {
-    static const std::string Vertex = R"(
+    inline const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
         ATTRIBUTE LOW vec4 a_colour;
         ATTRIBUTE vec3 a_normal;
@@ -69,7 +69,7 @@ namespace cro::Shaders::Default
 
         })";
 
-    static const std::string Fragment = R"(
+    inline const std::string Fragment = R"(
 
         uniform sampler2D u_diffuseMap;
         uniform sampler2D u_normalMap;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,10 @@ source distribution.
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
 #include "StoredValue.hpp"
+
+#ifdef USE_GJS
+#include <libgjs.hpp>
+#endif
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -85,6 +89,31 @@ namespace
 }
 
 cro::Image Social::userIcon;
+
+cro::String Social::getPlayerName()
+{
+#ifdef USE_GJS
+    return GJ::getActiveName();
+#else
+    return {};
+#endif
+}
+
+void Social::setPlayerName(const cro::String& name)
+{
+#ifdef USE_GJS
+    GJ::setActiveName(name);
+#endif
+}
+
+bool Social::isValid()
+{
+#ifdef USE_GJS
+    return GJ::isValid();
+#else
+    return true;
+#endif
+}
 
 void Social::awardXP(std::int32_t amount, std::int32_t reason)
 {
@@ -373,7 +402,7 @@ void Social::setUnlockStatus(UnlockType type, std::int32_t set)
 
 std::string Social::getBaseContentPath()
 {
-    return cro::App::getPreferencePath() + "user/";
+    return cro::App::getPreferencePath() + "user/1234/";
 }
 
 std::string Social::getUserContentPath(std::int32_t contentType)
@@ -596,4 +625,30 @@ MonthlyChallenge& Social::getMonthlyChallenge()
 std::int32_t Social::getMonth()
 {
     return cro::SysTime::now().months() - 1; //we're using this as an index
+}
+
+
+
+void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score)
+{
+#ifdef USE_GJS
+    //GJ::insertScore(course, hole, score);
+#endif
+}
+
+cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount)
+{
+#ifdef USE_GJS
+    //return GJ::getTopFive(course, holeCount);
+    return {};
+#else
+    return {};
+#endif
+}
+
+void Social::invalidateTopFive(const std::string& course, std::uint8_t holeCount)
+{
+#ifdef USE_GJS
+    //GJ::invalidateTopFive(course, holeCount);
+#endif
 }

@@ -48,7 +48,13 @@ MultiRenderTexture::~MultiRenderTexture()
     if (m_fboID)
     {
         glCheck(glDeleteFramebuffers(1, &m_fboID));
-        glCheck(glDeleteTextures(static_cast<GLsizei>(m_textureIDs.size()), m_textureIDs.data()));
+
+        //we've shoehorned in a regular texture in slot 0
+        //so only delete buffers > than that
+        if (m_textureIDs.size() > 1)
+        {
+            glCheck(glDeleteTextures(static_cast<GLsizei>(m_textureIDs.size() - 1), &m_textureIDs[1]));
+        }
         glCheck(glDeleteTextures(1, &m_depthTextureID));
     }
 }
@@ -59,6 +65,7 @@ MultiRenderTexture::MultiRenderTexture(MultiRenderTexture&& other) noexcept
     m_fboID = other.m_fboID;
     m_depthTextureID = other.m_depthTextureID;
     m_textureIDs = std::move(other.m_textureIDs);
+    m_defaultTexture = std::move(other.m_defaultTexture);
     m_maxAttachments = other.m_maxAttachments;
     setViewport(other.getViewport());
     setView(other.getView());
@@ -84,6 +91,7 @@ MultiRenderTexture& MultiRenderTexture::operator=(MultiRenderTexture&& other) no
         m_fboID = other.m_fboID;
         m_depthTextureID = other.m_depthTextureID;
         m_textureIDs = std::move(other.m_textureIDs);
+        m_defaultTexture = std::move(other.m_defaultTexture);
         m_maxAttachments = other.m_maxAttachments;
         setViewport(other.getViewport());
         setView(other.getView());
@@ -103,6 +111,11 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
     LogE << "Depth Textures are not available on mobile platforms" << std::endl;
     return false;
 #else
+    if (width == m_size.x && height == m_size.y && colourCount == m_textureIDs.size())
+    {
+        return true;
+    }
+
     getMaxAttaments(); //just updates the attachment count if not init
     CRO_ASSERT(colourCount > 0 && colourCount < m_maxAttachments, "Out of Range");
 
@@ -138,13 +151,21 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         glCheck(glReadBuffer(GL_NONE));
     }
 
+    //automatically resizes if already created
+    m_defaultTexture.create(width, height);
+    if (m_textureIDs.empty())
+    {
+        //store this so the handles align to indices correctly
+        m_textureIDs.push_back(m_defaultTexture.getGLHandle());
+    }
 
+    std::uint32_t removeCount = 0;
     if (colourCount == m_textureIDs.size())
     {
         //resize the existing buffers
-        for (auto id : m_textureIDs)
+        for(auto i = 1u; i < m_textureIDs.size(); ++i)
         {
-            glBindTexture(GL_TEXTURE_2D, id);
+            glBindTexture(GL_TEXTURE_2D, m_textureIDs[i]);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
         }
 
@@ -157,7 +178,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
 
         return true;
     }
-    else
+    else if (colourCount > 1)
     {
         if (colourCount > m_textureIDs.size())
         {
@@ -178,38 +199,49 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         else
         {
             //remove the difference
-            for (auto i = colourCount; i < m_textureIDs.size(); ++i)
+            removeCount = m_textureIDs.size() - colourCount;
+            //for (auto i = colourCount; i < m_textureIDs.size(); ++i)
             {
-                glCheck(glDeleteTextures(1, &m_textureIDs[i]));
+                glCheck(glDeleteTextures(removeCount, &m_textureIDs[colourCount]));
             }
 
             std::vector<std::uint32_t> temp(m_textureIDs.begin(), m_textureIDs.begin() + (colourCount - 1));
             m_textureIDs.swap(temp);
         }
+    }
+    //and rebind to FBO - TODO if we just removed attachments we need to bind 0 to the previous attachment points...
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
 
-        //and rebind to FBO
-        glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
+    std::vector<GLenum> attachments;
+    glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_defaultTexture.getGLHandle(), 0));
+    attachments.push_back(GL_COLOR_ATTACHMENT0);
 
-        std::vector<GLenum> attachments;
-        for (auto i = 0u; i < m_textureIDs.size(); ++i)
-        {
-            glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_textureIDs[i], 0));
-            attachments.push_back(GL_COLOR_ATTACHMENT0 + i);
-        }
-        glCheck(glDrawBuffers(static_cast<GLsizei>(attachments.size()), attachments.data()));
+    std::uint32_t i = 1u;
+    for (; i < m_textureIDs.size(); ++i)
+    {
+        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_textureIDs[i], 0));
+        attachments.push_back(GL_COLOR_ATTACHMENT0 + i);
+    }
+    glCheck(glDrawBuffers(static_cast<GLsizei>(attachments.size()), attachments.data()));
 
-        bool result = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
-        setView(FloatRect(getViewport()));
-        m_size = { width, height };
-
-        return result;
+    //set previously used to null
+    for (; i < m_textureIDs.size() + removeCount; ++i)
+    {
+        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, 0, 0));
     }
 
-    return false;
+    bool result = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
+    setView(FloatRect(getViewport()));
+    m_size = { width, height };
+
+    return result;
+    
+
+    //return false;
 #endif
 }
 

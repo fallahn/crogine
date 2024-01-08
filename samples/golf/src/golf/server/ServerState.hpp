@@ -73,6 +73,8 @@ namespace sv
         cro::MessageBus messageBus;
         cro::String mapDir;
         std::uint8_t scoreType = 0;
+        std::uint8_t nightTime = 0;
+        std::uint8_t weatherType = 0;
         std::uint8_t gimmeRadius = 0;
         std::uint8_t holeCount = 0;
         std::uint8_t reverseCourse = 0;

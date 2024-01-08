@@ -63,13 +63,14 @@ struct XPStringID final
 
         ChallengeComplete,
         BullsEyeHit,
+        Survivor,
 
         Count
     };
 };
 
 //note that final message appends a space and the XP value.
-static const std::array<std::string, XPStringID::Count> XPStrings =
+static inline const std::array<std::string, XPStringID::Count> XPStrings =
 {
     std::string("Nice On!"),
     "Near Miss",
@@ -97,5 +98,6 @@ static const std::array<std::string, XPStringID::Count> XPStrings =
     "Par",
 
     "Challenge Completed",
-    "Target Hit"
+    "Target Hit",
+    "Survivor"
 };

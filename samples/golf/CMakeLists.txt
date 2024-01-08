@@ -33,9 +33,9 @@ SET (USE_GNS FALSE CACHE STRING "Can't use newsfeed with this")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -Wno-potentially-evaluated-expression -std=c++17 -static")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -std=c++17 -static")
   else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -Wno-potentially-evaluated-expression -std=c++17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -std=c++17")
   endif()
 endif()
 
@@ -124,10 +124,10 @@ include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
 SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${SQLITE_SRC})
-if(USE_NEWSFEED)
+#if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
-endif()
+#endif()
 
 if(USE_GNS)
   #include source of workshop, libgns
@@ -168,7 +168,7 @@ if(APPLE AND MACOS_BUNDLE)
                  ${PROJECT_SRC} 
                  ${GOLF_SRC} 
                  ${CMAKE_SOURCE_DIR}/assets 
-                 ${CMAKE_SOURCE_DIR}/icon.icns)
+                 ${CMAKE_SOURCE_DIR}/macOS/icon.icns)
 
 
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE icon.icns)
@@ -205,9 +205,9 @@ endif()
 # install to the bundle
 if(APPLE AND MACOS_BUNDLE)
 
-  #install(TARGETS ${PROJECT_NAME}
-  #  RUNTIME DESTINATION .
-  #  BUNDLE DESTINATION ${CMAKE_SOURCE_DIR}/bundle)
+  install(TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION .
+    BUNDLE DESTINATION ${CMAKE_SOURCE_DIR}/bundle)
 
 
   install(CODE " include(BundleUtilities)

@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::ShadowMap
 {
-    static const std::string Vertex = R"(
+    inline const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
 
     #if defined (ALPHA_CLIP)
@@ -92,7 +92,7 @@ namespace cro::Shaders::ShadowMap
 
         })";
 
-    static const std::string FragmentMobile = R"(
+    inline const std::string FragmentMobile = R"(
         //ideally we want highp but not all mobile hardware supports it in the frag shader :(
         #if defined(MOBILE)
         #if defined (GL_FRAGMENT_PRECISION_HIGH)
@@ -124,7 +124,7 @@ namespace cro::Shaders::ShadowMap
         })";
 
 
-    const static std::string FragmentDesktop = R"(
+    inline static std::string FragmentDesktop = R"(
         #if defined(ALPHA_CLIP)
 
         uniform sampler2D u_diffuseMap;

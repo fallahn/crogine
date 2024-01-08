@@ -80,6 +80,9 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default:break;
+        case PacketID::ServerCommand:
+            doServerCommand(evt);
+            break;
         case PacketID::PlayerInfo:
             insertPlayerInfo(evt);
             break;
@@ -110,6 +113,20 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             {
                 m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
                 m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case PacketID::NightTime:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.nightTime = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case PacketID::WeatherType:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.weatherType = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
         case PacketID::FastCPU:
@@ -179,6 +196,15 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 //make sure to enforce club set if needed
                 if (m_sharedData.clubLimit)
                 {
+                    //one final check to make sure disconnected clients are reset
+                    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+                    {
+                        if (!m_sharedData.clients[i].connected)
+                        {
+                            m_sharedData.clubLevels[i] = 2;
+                        }
+                    }
+
                     std::sort(m_sharedData.clubLevels.begin(), m_sharedData.clubLevels.end(),
                         [](std::uint8_t a, std::uint8_t b)
                         {
@@ -282,9 +308,40 @@ void LobbyState::broadcastRules()
     m_sharedData.host.broadcastPacket(PacketID::MapInfo, mapDir.data(), mapDir.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
     m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.host.broadcastPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void LobbyState::doServerCommand(const net::NetEvent& evt)
+{
+    if (evt.peer.getID() == m_sharedData.hostID)
+    {
+        const auto data = evt.packet.as<std::uint16_t>();
+        const std::uint8_t command = (data & 0xff);
+        const std::uint8_t target = ((data >> 8) & 0xff);
+
+        switch (command)
+        {
+        default: break;
+        case ServerCommand::PokeClient:
+            if (/*target != 0 &&*/ target < ConstVal::MaxClients)
+            {
+                m_sharedData.host.sendPacket(m_sharedData.clients[target].peer, PacketID::Poke, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case ServerCommand::KickClient:
+            if (target != 0 && target < ConstVal::MaxClients)
+            {
+                auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(MessageID::ConnectionMessage);
+                msg->type = ConnectionEvent::Kicked;
+                msg->clientID = target;
+            }
+            break;
+        }
+    }
 }

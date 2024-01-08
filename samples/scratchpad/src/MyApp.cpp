@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2024
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -45,6 +45,8 @@ source distribution.
 #include "ssao/SSAOState.hpp"
 #include "log/LogState.hpp"
 #include "gc/GcState.hpp"
+#include "interiormapping/InteriormappingState.hpp"
+#include "endless/EndlessDrivingState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -166,9 +168,11 @@ bool MyApp::initialise()
     m_stateStack.registerState<LogState>(States::ScratchPad::Log);
     m_stateStack.registerState<GCState>(States::ScratchPad::GC);
     m_stateStack.registerState<BounceState>(States::ScratchPad::Bounce);
+    m_stateStack.registerState<InteriorMappingState>(States::ScratchPad::InteriorMapping);
+    m_stateStack.registerState<EndlessDrivingState>(States::ScratchPad::EndlessDriving);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Bounce);
+    m_stateStack.pushState(States::ScratchPad::EndlessDriving);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

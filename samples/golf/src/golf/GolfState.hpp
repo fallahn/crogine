@@ -40,7 +40,6 @@ source distribution.
 #include "LeaderboardTexture.hpp"
 #include "CPUGolfer.hpp"
 #include "TerrainDepthmap.hpp"
-#include "TerrainChunks.hpp"
 #include "MinimapZoom.hpp"
 #include "BallTrail.hpp"
 #include "TextChat.hpp"
@@ -57,6 +56,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/MultiRenderTexture.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
@@ -110,6 +110,7 @@ class GolfState final : public cro::State, public cro::GuiClient, public cro::Co
 {
 public:
     GolfState(cro::StateStack&, cro::State::Context, struct SharedStateData&);
+    ~GolfState();
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;
@@ -133,6 +134,7 @@ private:
 
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
+    std::int32_t m_humanCount;
     cro::Clock m_turnTimer;
 
     cro::Clock m_idleTimer;
@@ -141,9 +143,49 @@ private:
     bool m_allowAchievements;
     cro::Clock m_readyClock; //pings ready state until ack'd
 
+    struct RenderTargetContext final
+    {
+        std::function<void(cro::Colour)> clear;
+        std::function<void()> display;
+        std::function<glm::uvec2()> getSize;
+    }m_renderTarget;
+
     cro::RenderTexture m_gameSceneTexture;
+    cro::MultiRenderTexture m_gameSceneMRTexture;
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
+
+    struct LightMapID final
+    {
+        enum
+        {
+            Scene, Overhead,
+
+            Count
+        };
+    };
+    std::array<cro::RenderTexture, LightMapID::Count> m_lightMaps = {};
+    cro::ModelDefinition m_lightVolumeDefinition;
+
+    std::array<cro::RenderTexture, LightMapID::Count> m_lightBlurTextures = {};
+    std::array<cro::SimpleQuad, LightMapID::Count> m_lightBlurQuads = {};
+
+    struct TargetShader final
+    {
+        static constexpr float Epsilon = 0.0001f;
+
+        std::uint32_t shaderID = 0;
+        std::int32_t vpUniform = -1;
+
+        glm::vec3 position = glm::vec3(0.f);
+        float size = Epsilon;
+
+        glm::mat4 viewMat = glm::mat4(1.f);
+        glm::mat4 projMat = glm::mat4(1.f);
+
+        void update(); //GolfStateAssets.cpp
+
+    }m_targetShader;
 
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
@@ -166,7 +208,7 @@ private:
     {
         enum
         {
-            Noise, Fog,
+            Noise, Composite,
             Count
         };
     };
@@ -179,7 +221,6 @@ private:
     float m_distanceToHole;
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
-    TerrainChunker m_terrainChunker;
 
     TerrainBuilder m_terrainBuilder;
 
@@ -191,10 +232,15 @@ private:
             WireFrameCulled,
             Water,
             Horizon,
+            HorizonSun,
             Cel,
             CelSkinned,
             CelTextured,
+            CelTexturedNoWind,
+            CelTexturedMasked,
+            CelTexturedMaskedNoWind,
             CelTexturedSkinned,
+            CelTexturedSkinnedMasked,
             ShadowMap,
             ShadowMapInstanced,
             ShadowMapSkinned,
@@ -203,11 +249,15 @@ private:
             Hair,
             Course,
             Ball,
+            BallNight,
             Billboard,
             Trophy,
             Beacon,
+            Target,
             BallTrail,
             Flag,
+            PointLight,
+            Glass,
 
             Count
         };
@@ -240,23 +290,28 @@ private:
     cro::String m_courseTitle;
 
     std::vector<cro::Entity> m_spectatorModels;
+    std::vector<std::uint64_t> m_modelStats;
 
+    /*GolfStateAssets.cpp*/
     void loadAssets();
+    void loadMaterials();
+    void loadSprites();
+    void loadModels();
     void loadSpectators();
-    void addSystems();
-    void buildScene();
+    void loadMap();
     void initAudio(bool loadTrees);
 
-    struct WeatherType final
-    {
-        enum
-        {
-            Snow, Rain
-        };
-    };
-    void createWeather(std::int32_t); //weather.cpp
+    void addSystems();
+    void buildScene();
+
+    //weather.cpp
+    void createWeather(std::int32_t);
+    void setFog(float density);
     void createClouds();
     void buildBow();
+    void handleWeatherChange(std::uint8_t);
+
+    //GolfState.cpp
     void createDrone();
     void spawnBall(const struct ActorInfo&);
     void spawnBullsEye(const BullsEye&);
@@ -295,10 +350,6 @@ private:
     }m_shadowQuality;
 
 
-    //follows the ball mid-flight
-    cro::Entity m_flightCam;
-    cro::RenderTexture m_flightTexture;
-
     //allows switching camera, TV style (GolfStateCameras.cpp)
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
@@ -317,7 +368,13 @@ private:
     };
     std::array<cro::Entity, SkyCam::Count> m_skyCameras = {};
     void updateSkybox(float);
+    
+    static const cro::Time DefaultIdleTime;
+    cro::Time m_idleTime;
+    void resetIdle();
 
+    //follows the ball mid-flight
+    cro::Entity m_flightCam;
     cro::Entity m_drone;
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
@@ -347,6 +404,8 @@ private:
             WindSpeed,
             WindSpeedBg,
             Thinking,
+            Sleeping,
+            Typing,
             MessageBoard,
             Bunker,
             Foul,
@@ -412,7 +471,7 @@ private:
     {
         Bunker, Scrub, Water,
         PlayerName, HoleScore,
-        Gimme
+        Gimme, Eliminated
     };
     void showMessageBoard(MessageBoardID, bool special = false);
     void floatingMessage(const std::string&);
@@ -425,6 +484,7 @@ private:
     SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();
+    glm::vec3 findTargetPos(glm::vec3 playerPos) const; //decides if we should be using the sub-target (if it exists)
 
     //hack to allow the profile update to be const.
     std::int32_t m_courseIndex; //-1 if not an official course
@@ -461,6 +521,8 @@ private:
         cro::Entity rootNode;
         std::array<cro::Entity, 8u> buttonNodes = {};
         std::array<cro::Entity, 8u> labelNodes = {};
+        cro::Entity chatNode;
+        cro::Entity chatButtonNode;
 
         std::array<std::array<std::int16_t, 2u>, cro::GameController::MaxControllers> axisPos = {};
 
@@ -488,7 +550,7 @@ private:
     void retargetMinimap(bool reset);
 
     cro::Entity m_greenCam;
-    cro::RenderTexture m_greenBuffer;
+    cro::MultiRenderTexture m_overheadBuffer;
 
     std::vector<cro::Entity> m_netStrengthIcons;
 
@@ -567,6 +629,21 @@ private:
     void addCameraDebugging();
     void registerDebugCommands();
     void registerDebugWindows();
+
+    struct NetworkDebugContext final
+    {
+        std::size_t bitrate = 0;
+        std::size_t bitrateCounter = 0;
+        std::size_t total = 0;
+        float bitrateTimer = 0.f;
+
+        std::int32_t highestID = 0;
+        std::int32_t lastHighestID = 0;
+        std::array<std::int32_t, /*PacketID::Poke*/35> packetIDCounts = {};
+
+        bool showUI = false;
+        bool wasShown = false;
+    }m_networkDebugContext;
 
     struct AchievementDebugContext final
     {

@@ -28,21 +28,26 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfState.hpp"
+#include "PacketIDs.hpp"
 #include "FpsCameraSystem.hpp"
 #include "CommandIDs.hpp"
 #include "GameConsts.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "BallSystem.hpp"
+#include "CallbackData.hpp"
 
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/LightVolumeSystem.hpp>
 
 #include <crogine/detail/glm/gtx/rotate_vector.hpp>
 #include <crogine/util/Maths.hpp>
 
 #include "../ErrorCheck.hpp"
+
+const cro::Time GolfState::DefaultIdleTime = cro::seconds(180.f);
 
 void GolfState::createCameras()
 {
@@ -60,22 +65,48 @@ void GolfState::createCameras()
                 std::uint32_t samples = m_sharedData.pixelScale ? 0 :
                     m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-                cro::RenderTarget::Context ctx;
-                ctx.depthBuffer = true;
-#ifdef __APPLE__
-                //*sigh*
-                ctx.depthTexture = false;
-#else
-                ctx.depthTexture = true;
-#endif
-                ctx.samples = samples;
-                ctx.width = static_cast<std::uint32_t>(texSize.x);
-                ctx.height = static_cast<std::uint32_t>(texSize.y);
+                if (m_sharedData.nightTime)
+                {
+                    glm::uvec2 usize(texSize);
+                    m_sharedData.antialias =
+                        m_gameSceneMRTexture.create(usize.x, usize.y, MRTIndex::Count)
+                        && m_sharedData.multisamples != 0
+                        && !m_sharedData.pixelScale;
 
-                m_sharedData.antialias =
-                    m_gameSceneTexture.create(ctx)
-                    && m_sharedData.multisamples != 0
-                    && !m_sharedData.pixelScale;
+                    m_renderTarget.clear = [&](cro::Colour c) { m_gameSceneMRTexture.clear(c); };
+                    m_renderTarget.display = std::bind(&cro::MultiRenderTexture::display, &m_gameSceneMRTexture);
+                    m_renderTarget.getSize = std::bind(&cro::MultiRenderTexture::getSize, &m_gameSceneMRTexture);
+
+                    m_lightMaps[LightMapID::Scene].create(usize.x, usize.y, false/*, false, samples*/);
+
+                    m_lightBlurTextures[LightMapID::Scene].create(usize.x / 4u, usize.y / 4u, false);
+                    m_lightBlurTextures[LightMapID::Scene].setSmooth(true);
+                    m_lightBlurQuads[LightMapID::Scene].setTexture(m_gameSceneMRTexture.getTexture(MRTIndex::Light), usize / 4u);
+                    m_lightBlurQuads[LightMapID::Scene].setShader(m_resources.shaders.get(ShaderID::Blur));
+                }
+                else
+                {
+                    cro::RenderTarget::Context ctx;
+                    ctx.depthBuffer = true;
+#ifdef __APPLE__
+                    //*sigh*
+                    ctx.depthTexture = false;
+#else
+                    ctx.depthTexture = true;
+#endif
+                    ctx.samples = samples;
+                    ctx.width = static_cast<std::uint32_t>(texSize.x);
+                    ctx.height = static_cast<std::uint32_t>(texSize.y);
+
+                    m_sharedData.antialias =
+                        m_gameSceneTexture.create(ctx)
+                        && m_sharedData.multisamples != 0
+                        && !m_sharedData.pixelScale;
+
+                    m_renderTarget.clear = std::bind(&cro::RenderTexture::clear, &m_gameSceneTexture, std::placeholders::_1);
+                    m_renderTarget.display = std::bind(&cro::RenderTexture::display, &m_gameSceneTexture);
+                    m_renderTarget.getSize = std::bind(&cro::RenderTexture::getSize, &m_gameSceneTexture);
+                }
 
                 auto invScale = (maxScale + 1.f) - scale;
                 glCheck(glPointSize(invScale * BallPointSize));
@@ -84,16 +115,14 @@ void GolfState::createCameras()
                 m_scaleBuffer.setData(invScale);
 
                 m_resolutionUpdate.resolutionData.resolution = texSize / invScale;
+                m_resolutionUpdate.resolutionData.bufferResolution = texSize;
                 m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
 
 
                 //this lets the shader scale leaf billboards correctly
-                if (m_sharedData.treeQuality == SharedStateData::High)
-                {
-                    auto targetHeight = texSize.y;
-                    glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
-                    glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
-                }
+                auto targetHeight = texSize.y;
+                glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
+                glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
             }
 
             //fetch this explicitly so the transition cam also gets the correct zoom
@@ -131,6 +160,8 @@ void GolfState::createCameras()
 
     m_cameras[CameraID::Player] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
+    cam.setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    cam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     cam.resizeCallback = updateView;
     updateView(cam);
 
@@ -178,6 +209,8 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = SkyCamRadius * SkyCamRadius;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
@@ -217,6 +250,8 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::DroneCam;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<CameraFollower::ZoomData>();
@@ -246,6 +281,8 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
@@ -276,6 +313,8 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowNearDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
 
@@ -322,6 +361,8 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowNearDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     camEnt.addComponent<cro::Callback>().setUserData<CameraFollower::ZoomData>(zoomData); //needed by resize callback, but not used HUM
@@ -359,6 +400,8 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(45.f);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     updateView(camEnt.getComponent<cro::Camera>());
@@ -381,6 +424,8 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(15.f);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
     setPerspective(camEnt.getComponent<cro::Camera>());
@@ -392,37 +437,11 @@ void GolfState::createCameras()
     addCameraDebugging();
 
 
-    const auto createFlightTexture =
+    const auto flightCamCallback =
         [&](cro::Camera& cam)
     {
-            auto texSize = MapSize.y / 2u;
-
-            auto windowScale = getViewScale();
-            float scale = m_sharedData.pixelScale ? windowScale : 1.f;
-            scale = (windowScale + 1.f) - scale;
-            texSize *= static_cast<std::uint32_t>(scale);
-
-            std::uint32_t samples = m_sharedData.pixelScale ? 0 :
-                m_sharedData.antialias ? m_sharedData.multisamples : 0;
-
-            cro::RenderTarget::Context ctx;
-            ctx.depthBuffer = true;
-#ifdef __APPLE__
-            //*sigh*
-            ctx.depthTexture = false;
-#else
-            ctx.depthTexture = true;
-#endif
-            ctx.samples = samples;
-            ctx.width = texSize;
-            ctx.height = texSize;
-
-            m_flightTexture.create(ctx);
-
-            //we let the callback for the green overhead view rescale the sprite
-            //though we could explicitly set this if not performed in the correct order.
-            //greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
-
+            //we're using the same texture as the green view
+            //so just set the camera properties
             cam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.06f, 200.f);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
@@ -430,8 +449,8 @@ void GolfState::createCameras()
     //follows the ball in flight
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
-    camEnt.addComponent<cro::Camera>().resizeCallback = createFlightTexture;
-    camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::FlightCam;
+    camEnt.addComponent<cro::Camera>().resizeCallback = flightCamCallback;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::FlightCam);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 4, ShadowMapSize / 4);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(/*m_shadowQuality.shadowFarDistance*/3.f);
@@ -484,13 +503,14 @@ void GolfState::createCameras()
                 }
             }
         };
-    createFlightTexture(camEnt.getComponent<cro::Camera>());
+    flightCamCallback(camEnt.getComponent<cro::Camera>());
     m_flightCam = camEnt;
 
 
 
     //set up the skybox cameras so they can be updated with the relative active cams
     m_skyCameras[SkyCam::Main] = m_skyScene.getActiveCamera();
+    m_skyCameras[SkyCam::Main].getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     m_skyCameras[SkyCam::Flight] = m_skyScene.createEntity();
     m_skyCameras[SkyCam::Flight].addComponent<cro::Transform>();
     auto& skyCam = m_skyCameras[SkyCam::Flight].addComponent<cro::Camera>();
@@ -846,4 +866,37 @@ void GolfState::updateSkybox(float dt)
     //and make sure the skybox is up to date too, so there's
     //no lag between camera orientation.
     m_skyScene.simulate(dt);
+}
+
+void GolfState::resetIdle()
+{
+    m_idleTimer.restart();
+    m_idleTime = DefaultIdleTime / 3.f;
+
+    if (m_currentCamera == CameraID::Idle)
+    {
+        setActiveCamera(CameraID::Player);
+        m_inputParser.setSuspended(false);
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+        cmd.action = [&](cro::Entity e, float)
+            {
+                auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
+                e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
+            };
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        //resets the drone which may have drifted while player idled.
+        if (m_drone.isValid())
+        {
+            auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+            data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
+        }
+
+        Activity a;
+        a.client = m_sharedData.clientConnection.connectionID;
+        a.type = Activity::PlayerIdleEnd;
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
 }

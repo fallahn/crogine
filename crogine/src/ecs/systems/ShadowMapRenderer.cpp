@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -65,7 +65,6 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     requireComponent<cro::Transform>();
     requireComponent<cro::ShadowCaster>();
 }
-
 
 //public
 void ShadowMapRenderer::setMaxDistance(float)
@@ -226,11 +225,23 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 continue;
             }
 
+            if ((model.m_renderFlags & camera.getPass(Camera::Pass::Final).renderFlags) == 0)
+            {
+                continue;
+            }
+
             const auto& tx = entity.getComponent<Transform>();
             auto sphere = model.getBoundingSphere();
 
             sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
-            auto scale = tx.getScale();
+            auto scale = tx.getWorldScale();
+
+            //if it's approaching zero scale then don't cast shadow
+            /*if (scale.x * scale.y * scale.z < 0.01f)
+            {
+                continue;
+            }*/
+
             sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
             std::vector<std::pair<std::size_t, std::size_t>> drawListOffsets;
@@ -304,11 +315,6 @@ void ShadowMapRenderer::render()
             for (const auto& [e, _] : list)
             {
                 const auto& model = e.getComponent<Model>();
-                //skip this model if its flags don't pass
-                if ((model.m_renderFlags & camera.renderFlags) == 0)
-                {
-                    continue;
-                }
 
                 glCheck(glFrontFace(model.m_facing));
 
@@ -350,6 +356,11 @@ void ShadowMapRenderer::render()
                         switch (prop.second.second.type)
                         {
                         default: break;
+                        case Material::Property::TextureArray:
+                            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+                            glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, prop.second.second.textureID));
+                            glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+                            break;
                         case Material::Property::Texture:
                             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
                             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
@@ -411,7 +422,7 @@ void ShadowMapRenderer::render()
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif //PLATFORM
 
-        glCheck(glUseProgram(0));
+        //glCheck(glUseProgram(0));
 
         glCheck(glFrontFace(GL_CCW));
         glCheck(glDisable(GL_DEPTH_TEST));

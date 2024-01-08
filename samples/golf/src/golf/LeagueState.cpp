@@ -661,7 +661,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 86.f, TextTop, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 86.f, TextTop + 1.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(str);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -683,7 +683,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     }
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 328.f, TextTop, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 328.f, TextTop + 1.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(str);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -692,7 +692,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
 
     //check if a previous season exists and scroll the results
-    const auto path = cro::App::getPreferencePath() + PrevFileName;
+    const auto path = Social::getBaseContentPath() + PrevFileName;
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;

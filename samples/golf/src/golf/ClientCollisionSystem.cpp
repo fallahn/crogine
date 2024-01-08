@@ -75,7 +75,7 @@ void ClientCollisionSystem::process(float)
 
         //skip if not near the ground
         if (!collider.active
-            || position.y > 10.f)
+            || position.y > 30.f) //NOTE this assumes the ground is less than this, some courses are 27m high!
         {
             continue;
         }
@@ -210,10 +210,14 @@ void ClientCollisionSystem::process(float)
                 notify(CollisionEvent::Begin, position);
 
                 //really we only want to do this if the lie is 'buried' however
-                //it's not been updated from the servr yet...
+                //it's not been updated from the server yet...
                 if (collider.terrain == TerrainID::Bunker)
                 {
                     entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius * 1.2f, 0.f });
+                }
+                else
+                {
+                    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f));
                 }
             }
             else if(collider.terrain == TerrainID::Hole

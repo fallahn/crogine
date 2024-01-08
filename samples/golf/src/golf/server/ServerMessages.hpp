@@ -50,7 +50,7 @@ struct ConnectionEvent final
     std::uint8_t clientID = ConstVal::NullValue;
     enum
     {
-        Connected, Disconnected
+        Connected, Disconnected, Kicked
     }type = Connected;
 };
 

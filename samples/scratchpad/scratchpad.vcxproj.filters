@@ -115,6 +115,24 @@
     <Filter Include="Header Files\bounce">
       <UniqueIdentifier>{f48efd51-7ca1-486f-85a4-b816f9d99734}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\interior mapping">
+      <UniqueIdentifier>{def795ca-dae9-45cf-8772-45631eeb5b53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\interior mapping">
+      <UniqueIdentifier>{fab49e99-8d9c-44b4-a1cc-02384eac9ffa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\chunk vis">
+      <UniqueIdentifier>{1ade601f-29b0-4580-81a5-ae4f00144099}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\chunk vis">
+      <UniqueIdentifier>{9dcc73e0-0849-4f1e-b21e-d9bc5c985d27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\endless">
+      <UniqueIdentifier>{4ef7a93b-a87f-430b-861e-f083f3252579}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\endless">
+      <UniqueIdentifier>{78467010-56b5-44ab-ba21-40029ebe776f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -236,6 +254,18 @@
     </ClCompile>
     <ClCompile Include="src\bounce\BounceState.cpp">
       <Filter>Source Files\bounce</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ssao\LightVolumeSystem.cpp">
+      <Filter>Source Files\ssao</Filter>
+    </ClCompile>
+    <ClCompile Include="src\interiormapping\InteriormappingState.cpp">
+      <Filter>Source Files\interior mapping</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chunkvis\ChunkVisSystem.cpp">
+      <Filter>Source Files\chunk vis</Filter>
+    </ClCompile>
+    <ClCompile Include="src\endless\EndlessDrivingState.cpp">
+      <Filter>Source Files\endless</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -392,6 +422,18 @@
     <ClInclude Include="src\bounce\BounceState.hpp">
       <Filter>Header Files\bounce</Filter>
     </ClInclude>
+    <ClInclude Include="src\ssao\LightVolumeSystem.hpp">
+      <Filter>Header Files\ssao</Filter>
+    </ClInclude>
+    <ClInclude Include="src\interiormapping\InteriormappingState.hpp">
+      <Filter>Header Files\interior mapping</Filter>
+    </ClInclude>
+    <ClInclude Include="src\chunkvis\ChunkVisSystem.hpp">
+      <Filter>Header Files\chunk vis</Filter>
+    </ClInclude>
+    <ClInclude Include="src\endless\EndlessDrivingState.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">
@@ -402,6 +444,18 @@
     </None>
     <None Include="src\ssao\BlurShaders.inl">
       <Filter>Header Files\ssao</Filter>
+    </None>
+    <None Include="src\swingput\Rain.inl">
+      <Filter>Header Files\swingput</Filter>
+    </None>
+    <None Include="src\swingput\Glow.inl">
+      <Filter>Header Files\swingput</Filter>
+    </None>
+    <None Include="src\interiormapping\IMShader.inl">
+      <Filter>Header Files\interior mapping</Filter>
+    </None>
+    <None Include="src\interiormapping\ProjectionShader.inl">
+      <Filter>Header Files\interior mapping</Filter>
     </None>
   </ItemGroup>
 </Project>

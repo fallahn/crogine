@@ -284,6 +284,20 @@ namespace cro
 
 
         /*!
+        \brief Sets the strength of the star rendering on the default skybox.
+        If a skybox texture or environment map has been set then this does nothing.
+        \param amount A value between 0 (no stars) and 1 (full stars)
+        */
+        void setStarsAmount(float amount);
+
+        /*!
+        \brief Returns the current mix value for the stars amount
+        \see setStarsAmount()
+        */
+        float getStarsAmount() const { return m_skybox.starsAmount; }
+
+
+        /*!
         \brief Sets a global level in the Scene to use when rendering an
         infinite water plane.
         The CameraSystem uses this value to update the reflection pass
@@ -470,6 +484,7 @@ namespace cro
             glm::mat4 modelMatrix = glm::mat4(1.f);
 
             SkyColours colours;
+            float starsAmount = 0.f;
 
             void setShader(const Shader& shader)
             {
@@ -489,10 +504,12 @@ namespace cro
             Cubemap, Environment, Coloured,
             Count
         };
+        std::int32_t m_starsUniform;
         std::array<std::int32_t, 3u> m_skyColourUniforms;
         std::array<Shader, SkyboxType::Count> m_skyboxShaders;
         std::size_t m_shaderIndex;
         void applySkyboxColours();
+        void applyStars();
 
         //we use a pointer here so we can create an array of just one
         //camera without having to create a vector from it

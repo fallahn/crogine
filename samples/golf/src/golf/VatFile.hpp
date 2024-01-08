@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,8 +29,13 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/ArrayTexture.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+
 #include <string>
 #include <cstdint>
+#include <vector>
+#include <array>
 
 class VatFile final
 {
@@ -40,11 +45,16 @@ public:
     bool loadFromFile(const std::string&);
 
     const std::string& getModelPath() const { return m_modelPath; }
-    const std::string& getPositionPath() const { return m_positionPath; }
-    const std::string& getNormalPath() const { return m_normalPath; }
-    const std::string& getTangentPath() const { return m_tangentPath; }
+    const std::string& getPositionPath() const;
+    const std::string& getNormalPath() const;
+    const std::string& getTangentPath() const;
 
-    bool hasTangents() const { return !m_tangentPath.empty(); }
+    bool hasTangents() const;
+
+    //returns false if there was no array texture to create
+    //model texture is layer 0, followed by position, normal
+    //and optionally tangent
+    bool fillArrayTexture(cro::ArrayTexture<float, 4>&) const;
 
 private:
 
@@ -53,9 +63,21 @@ private:
     std::int32_t m_frameLoop;
 
     std::string m_modelPath;
-    std::string m_positionPath;
-    std::string m_normalPath;
-    std::string m_tangentPath;
+    std::string m_diffusePath;
+
+    struct DataID final
+    {
+        enum
+        {
+            Position, Normal, Tangent,
+            Count
+        };
+    };
+    std::array<std::string, DataID::Count> m_dataPaths = {};
+    std::array<std::vector<float>, DataID::Count> m_binaryData = {};
+    glm::uvec2 m_binaryDims;
+
+    void loadBinary(const std::string& path, std::vector<float>& dst, glm::uvec2 dims);
 
     void reset();
 

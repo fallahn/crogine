@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ProfileDB.hpp"
+#include "../golf/HoleData.hpp"
 
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -35,21 +36,8 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 10u> CourseNames =
-    {
-        "course_01",
-        "course_02",
-        "course_03",
-        "course_04",
-        "course_05",
-        "course_06",
-        "course_07",
-        "course_08",
-        "course_09",
-        "course_10",
-    };
     constexpr std::int32_t MinCourse = 0;
-    constexpr std::int32_t MaxCourse = 9;
+    constexpr std::int32_t MaxCourse = 11;
 }
 
 ProfileDB::ProfileDB()
@@ -69,7 +57,7 @@ ProfileDB::~ProfileDB()
     {
         //TODO we should also finalise pending
         //queries - must check how we know if there
-        //are any outstandinf or if it's just ok
+        //are any outstanding or if it's just ok
         //to call finalise regardless.
 
         sqlite3_close(m_connection);

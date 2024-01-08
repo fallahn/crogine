@@ -94,6 +94,30 @@ namespace cro::Util::String
     }
 
     /*!
+    \brief Performs a word wrap on the given String in place,
+    to the given MaxWidth
+    \returns Total number of rows of the wrapped string
+    */
+    static inline std::size_t wordWrap(cro::String& str, std::size_t MaxWidth)
+    {
+        static const cro::String endline(" ");
+        static const cro::String newline("\n");
+
+        std::size_t rowCount = 1;
+
+        std::size_t startPos = MaxWidth - 1;
+        while ((startPos = str.find(endline, startPos)) != cro::String::InvalidPos)
+        {
+            str.replace(startPos, endline.size(), newline);
+            startPos += newline.size() + MaxWidth;
+
+            rowCount++;
+        }
+
+        return rowCount;
+    }
+
+    /*!
     \brief Remove all instances of c from line
     */
     static inline void removeChar(std::string& line, const char c)
@@ -133,6 +157,21 @@ namespace cro::Util::String
         {
             str.replace(startPos, s.length(), r);
             startPos += r.length();
+        }
+    }
+
+    static inline void replace(cro::String& str, const cro::String& s, const cro::String& r)
+    {
+        if (s.empty())
+        {
+            return;
+        }
+
+        std::size_t startPos = 0;
+        while ((startPos = str.find(s, startPos)) != cro::String::InvalidPos)
+        {
+            str.replace(startPos, s.size(), r);
+            startPos += r.size();
         }
     }
 
@@ -322,6 +361,25 @@ namespace cro::Util::String
             }
         }
         return output;
+    }
+
+    static inline std::vector<cro::String> tokenize(const cro::String& str, const cro::String& delim)
+    {
+        std::vector<cro::String> retVal;
+        std::size_t begin = 0;
+        std::size_t end = str.find(delim, begin);
+
+        while (end != cro::String::InvalidPos)
+        {
+            if (end > begin)
+            {
+                retVal.push_back(str.substr(begin, end - begin));
+            }
+            begin = end + 1;
+            end = str.find(delim, begin);
+        }
+
+        return retVal;
     }
 
     /*!

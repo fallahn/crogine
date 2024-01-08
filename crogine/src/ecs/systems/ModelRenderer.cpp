@@ -161,17 +161,14 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
             //foreach submesh / material:
             const auto& model = entity.getComponent<Model>();
-
-            if ((model.m_renderFlags & camComponent.renderFlags) == 0)
-            {
-                continue;
-            }
             glCheck(glFrontFace(model.m_facing));
 
             //calc entity transform
             const auto& tx = entity.getComponent<Transform>();
-            glm::mat4 worldMat = tx.getWorldTransform();
-            glm::mat4 worldView = pass.viewMatrix * worldMat;
+            const glm::mat4 worldMat = tx.getWorldTransform();
+            const glm::mat4 worldView = pass.viewMatrix * worldMat;
+            //hmm for some reason doning this only once breaks rendering
+            //const glm::mat4 normalMat = glm::inverseTranspose(glm::mat3(worldMat));
 
 #ifndef PLATFORM_DESKTOP
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
@@ -240,7 +237,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif //PLATFORM
 
-        glCheck(glUseProgram(0));
+        //glCheck(glUseProgram(0));
 
         glCheck(glFrontFace(GL_CCW));
         glCheck(glDisable(GL_BLEND));
@@ -318,10 +315,10 @@ void ModelRenderer::onEntityRemoved(Entity entity)
 void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 {
     const auto& camComponent = cameraEnt.getComponent<Camera>();
-    auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
+    const auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
     //assume if there's no reflection buffer there's no need to sort the
     //entities for the second pass...
-    auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
+    const auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
     auto& entities = getEntities();
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
@@ -345,20 +342,32 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
             model.updateBounds();
         }
 
-        //render flags are tested when drawing as the flags may have changed
-        //between draw calls but without updating the visiblity list.
-
         //use the bounding sphere for depth testing
         auto sphere = model.getBoundingSphere();
         const auto& tx = entity.getComponent<Transform>();
 
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
-        auto scale = tx.getScale();
+        auto scale = tx.getWorldScale();
+
+        /*if (scale.x * scale.y * scale.z == 0)
+        {
+            continue;
+        }*/
+
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+
+        //for some reason the tighter fitting Spheres cause incorrect culling
+        //so this is a hack to mitigate it somewhat
+        sphere.radius *= 1.2f;
 
         //for each pass in the list (different passes may use different projections, eg reflections)
         for (auto p = 0; p < passCount; ++p)
         {
+            if ((model.m_renderFlags & camComponent.getPass(p).renderFlags) == 0)
+            {
+                continue;
+            }
+            
             //this is a good approximation of distance based on the centre
             //of the model (large models might suffer without face sorting...)
             //assuming the forward vector is normalised - though WHY would you
@@ -373,15 +382,15 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
             }
 
 
+            bool visible = true;
             //if (camComponent.isOrthographic())
             {
                 const auto& frustum = camComponent.getPass(p).getFrustum();
 
-                model.m_visible = true;
                 std::size_t j = 0;
-                while (model.m_visible && j < frustum.size())
+                while (visible && j < frustum.size())
                 {
-                    model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+                    visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
                 }
             }
             /*else
@@ -390,7 +399,7 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                 model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
             }*/
 
-            if (model.m_visible)
+            if (visible)
             {
                 auto opaque = std::make_pair(entity, SortData());
                 auto transparent = std::make_pair(entity, SortData());
@@ -453,6 +462,11 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
                 continue;
             }
 
+            if ((model.m_renderFlags & camComponent.getPass(p).renderFlags) == 0)
+            {
+                continue;
+            }
+
             if (model.m_meshBox != model.m_meshData.boundingBox)
             {
                 model.updateBounds();
@@ -476,15 +490,16 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
             }
 
             //frustum test
+            bool visible = true;
             //if (camComponent.isOrthographic())
             {
                 const auto& frustum = camComponent.getPass(p).getFrustum();
 
-                model.m_visible = true;
+                visible = true;
                 std::size_t j = 0;
-                while (model.m_visible && j < frustum.size())
+                while (visible && j < frustum.size())
                 {
-                    model.m_visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+                    visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
                 }
             }
             /*else
@@ -493,7 +508,7 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
             }*/
 
             //add visible ents to lists for depth sorting
-            if (model.m_visible)
+            if (visible)
             {
                 auto opaque = std::make_pair(entity, SortData());
                 auto transparent = std::make_pair(entity, SortData());

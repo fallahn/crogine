@@ -29,37 +29,11 @@ source distribution.
 
 #pragma once
 
+#include "ScoreType.hpp"
+
 #include <cstdint>
 #include <string>
 #include <array>
-
-namespace ScoreType
-{
-    enum
-    {
-        Stroke, 
-        Stableford,
-        StablefordPro,
-        
-        Match, Skins,
-        MultiTarget,
-        ShortRound,
-
-        Count,
-        BBB,
-        NearestThePin,
-        LongestDrive,
-    };
-}
-
-namespace GimmeSize
-{
-    enum
-    {
-        None, Leather, Putter,
-        Count
-    };
-}
 
 namespace MessageType
 {
@@ -69,7 +43,8 @@ namespace MessageType
         NotInLobby,
         MapNotFound,
         BadData,
-        VersionMismatch
+        VersionMismatch,
+        Kicked
     };
 }
 
@@ -89,6 +64,23 @@ namespace MaxStrokeID
         Forfeit
     };
 }
+
+struct Activity final
+{
+    enum
+    {
+        CPUThinkStart,
+        CPUThinkEnd,
+        PlayerThinkStart,
+        PlayerThinkEnd,
+        PlayerChatStart,
+        PlayerChatEnd,
+        PlayerIdleStart,
+        PlayerIdleEnd
+    };
+    std::uint8_t type = 0;
+    std::uint8_t client = 0;
+};
 
 struct TextMessage final
 {
@@ -131,6 +123,7 @@ namespace PacketID
         WindDirection, //< compressed vec3
         BallLanded, //< BallUpdate struct
         Gimme, //< uint16 client << 8 | player turn was ended on a gimme
+        Elimination, //< uint16 client << 8 | player was eliminated
         TableInfo, //< TableInfo struct
         TargetID, //< uint16 billiards player OR'd ball ID to update the UI
         ServerAchievement, //< uint8 client, uint8 player, uint8 achievement id - up to client to decide if to award
@@ -140,13 +133,16 @@ namespace PacketID
         BullsEye, //< bullseye struct
         BullHit, //< BullHit struct
         FlagHit, //< BullHit struct
+        WarnTime, //< uint8 warning time for AFK in seconds
+        WeatherChange, //< 0 off 1 on uint8
+        Poke, //< uint8 0 - only sent to specific client
 
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc
         ClientReady, //< uint8 clientID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< InputUpdate struct for golf, or BilliardBallInput
         PlayerInfo, //< ConnectionData array
-        ServerCommand, //< uint8_t command type
+        ServerCommand, //< uint16_t command type | optionally client target
         TransitionComplete, //< uint8 clientID, signal hole transition completed
         NewPlayer, //< animation completed on the client and new player active
         ReadyQuit, //< uint8 clientID - client wants to toggle skip viewing scores
@@ -160,6 +156,8 @@ namespace PacketID
         TurnReady, //< uint8 clientID - ready to take their turn - rebroadcast by server to tell all clients to clear messages
         MapInfo, //< serialised cro::String containing course directory
         ScoreType, //< uint8 ScoreType of golf game
+        NightTime, //< uint8 0 false else true
+        WeatherType, //< uint8 WeatherType
         FastCPU, //< uint8 0 false else true
         GimmeRadius, //< uint8 gimme radius of golf
         HoleCount, //< uint8 0 - 2: all, front or back
@@ -167,7 +165,7 @@ namespace PacketID
         ClubLimit, //< uint8 0 false else true
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
         AchievementGet, //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
-        CPUThink, //< uint8 0 if begin think, 1 end think
+        Activity, //< Activity struct contains start/end events for 'thinking'
         CueUpdate, //< BilliardsUpdate to show the 'ghost' cue on remote clients
         NewLobbyReady, //< uint64 lobbyID - broadcast by host when returning from existing game and relayed by server
         Emote, //< uint32 00|client|player|emoteID
@@ -189,6 +187,10 @@ namespace ServerCommand
         GotoHole,
         EndGame,
         ChangeWind,
+        SkipTurn,
+        KickClient,
+        PokeClient,
+        ForfeitClient,
 
         //billiards
         SpawnBall,

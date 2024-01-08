@@ -78,6 +78,7 @@ void TrophyDisplaySystem::process(float dt)
                 if (trophy.scale == 1)
                 {
                     trophy.state = TrophyDisplay::Active;
+                    trophy.particleTime = TrophyDisplay::ParticleInterval + cro::Util::Random::value(-0.4f, 0.4f);
                     entity.getComponent<cro::ParticleEmitter>().start();
                     entity.getComponent<cro::AudioEmitter>().play();
 
@@ -95,6 +96,17 @@ void TrophyDisplaySystem::process(float dt)
                     auto position = tx.getPosition();
                     position.y = trophy.startHeight + m_wavetable[trophy.tableIndex];
                     tx.setPosition(position);
+                }
+
+                trophy.particleTime -= dt;
+                if (trophy.particleCount && trophy.particleTime < 0.f)
+                {
+                    trophy.particleCount--;
+                    trophy.particleTime += TrophyDisplay::ParticleInterval + cro::Util::Random::value(-0.4f, 0.4f);
+
+                    entity.getComponent<cro::ParticleEmitter>().start();
+                    entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
+                    entity.getComponent<cro::AudioEmitter>().play();
                 }
             }
             tx.rotate(cro::Transform::Y_AXIS, dt);

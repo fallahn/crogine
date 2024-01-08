@@ -37,10 +37,9 @@ default shaders. They are automatically registered with any ShaderResource manag
 only are they available to all built-in shaders, they can be used with external/custom
 shaders via #include directives, as long as the shaders are loaded via a ShaderResource instance.
 */
-//TODO probably need to be extern to prevent multiple copies with each ShaderResource instance
 
 //#include WVP_UNIFORMS
-static const std::string WVPMatrices =
+inline const std::string WVPMatrices =
 R"(
 #if defined(INSTANCING)
     uniform mat4 u_viewMatrix;
@@ -55,14 +54,14 @@ R"(
 
 
 //#include INSTANCE_ATTRIBS
-static const std::string InstanceAttribs =
+inline const std::string InstanceAttribs =
 R"(
     ATTRIBUTE mat4 a_instanceWorldMatrix;
     ATTRIBUTE mat3 a_instanceNormalMatrix;
 )";
 
 //#include INSTANCE_MATRICES
-static const std::string InstanceMatrices =
+inline const std::string InstanceMatrices =
 R"(
     mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
     mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
@@ -72,7 +71,7 @@ R"(
 
 
 //#include SKIN_UNIFORMS
-static const std::string SkinUniforms =
+inline const std::string SkinUniforms =
 R"(
     ATTRIBUTE vec4 a_boneIndices;
     ATTRIBUTE vec4 a_boneWeights;
@@ -80,7 +79,7 @@ R"(
 )";
 
 //#include SKIN_MATRIX
-static const std::string SkinMatrix =
+inline const std::string SkinMatrix =
 R"(
     mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
 
@@ -92,7 +91,7 @@ R"(
 
 
 //#include SHADOWMAP_UNIFORMS_VERT
-static const std::string ShadowmapUniformsVert =
+inline const std::string ShadowmapUniformsVert =
 R"(
     #if !defined(MAX_CASCADES)
     #define MAX_CASCADES 3
@@ -106,14 +105,14 @@ R"(
 )";
 
 //#include SHADOWMAP_OUTPUTS
-static const std::string ShadowmapOutputs =
+inline const std::string ShadowmapOutputs =
 R"(
     VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
     VARYING_OUT float v_viewDepth;
 )";
 
 //#include SHADOWMAP_VERTEX_PROC
-static const std::string ShadowmapVertProc =
+inline const std::string ShadowmapVertProc =
 R"(
     for(int i = 0; i < u_cascadeCount; i++)
     {
@@ -123,7 +122,7 @@ R"(
 )";
 
 //#include SHADOWMAP_UNIFORMS_FRAG
-static const std::string ShadowmapUniformsFrag =
+inline const std::string ShadowmapUniformsFrag =
 R"(
     #if !defined(MAX_CASCADES)
     #define MAX_CASCADES 3
@@ -134,14 +133,14 @@ R"(
 )";
 
 //#include SHADOWMAP_INPUTS
-static const std::string ShadowmapInputs =
+inline const std::string ShadowmapInputs =
 R"(
     VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
     VARYING_IN float v_viewDepth;
 )";
 
 //#include PCF_SHADOWS
-static const std::string PCFShadows = 
+inline const std::string PCFShadows = 
 R"(
     int getCascadeIndex()
     {
@@ -226,3 +225,63 @@ R"(
         }
 #endif
 )";
+
+//https://www.geeks3d.com/20110405/fxaa-fast-approximate-anti-aliasing-demo-glsl-opengl-test-radeon-geforce/3/
+//https://www.shadertoy.com/view/4tf3D8
+//by Nikos Papadopoulos, 4rknova / 2015
+//WTFPL
+
+//#include FXAA
+inline const std::string FXAA = R"(
+    uniform vec2 u_resolution = vec2(640.0, 480.0);
+
+    const vec3 luma = vec3(0.299, 0.587, 0.114);
+
+    vec3 fxaa(sampler2D sampler, vec2 uv)
+    {
+        float FXAA_SPAN_MAX = 8.0;
+        float FXAA_REDUCE_MUL = 1.0 / 8.0;
+        float FXAA_REDUCE_MIN = 1.0 / 128.0;
+
+        //1st stage - Find edge
+        vec3 rgbNW = textureOffset(sampler, uv, ivec2(-1, -1)).rgb;
+        vec3 rgbNE = textureOffset(sampler, uv, ivec2(1, -1)).rgb;
+        vec3 rgbSW = textureOffset(sampler, uv, ivec2(-1, 1)).rgb;
+        vec3 rgbSE = textureOffset(sampler, uv, ivec2(1, 1)).rgb;
+        vec3 rgbM = texture(sampler, uv).rgb;
+
+
+        float lumaNW = dot(rgbNW, luma);
+        float lumaNE = dot(rgbNE, luma);
+        float lumaSW = dot(rgbSW, luma);
+        float lumaSE = dot(rgbSE, luma);
+        float lumaM = dot(rgbM, luma);
+
+        vec2 dir = vec2(0.0);
+        dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
+        dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));
+
+        float lumaSum = lumaNW + lumaNE + lumaSW + lumaSE;
+        float dirReduce = max(lumaSum * (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
+        float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
+
+        dir = min(vec2(FXAA_SPAN_MAX), max(vec2(-FXAA_SPAN_MAX), dir * rcpDirMin)) / u_resolution;
+
+        //2nd stage - Blur
+        vec3 rgbA = 0.5 * (texture(sampler, uv + dir * (1.0 / 3.0 - 0.5)).rgb +
+                            texture(sampler, uv + dir * (2.0 / 3.0 - 0.5)).rgb);
+        vec3 rgbB = rgbA * 0.5 + 0.25 * (
+            texture(sampler, uv + dir * (0.0 / 3.0 - 0.5)).rgb +
+            texture(sampler, uv + dir * (3.0 / 3.0 - 0.5)).rgb);
+
+        float lumaB = dot(rgbB, luma);
+
+        float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
+        float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
+
+        if ((lumaB < lumaMin) || (lumaB > lumaMax))
+        {
+            return rgbA;
+        }
+        return rgbB;
+    })";

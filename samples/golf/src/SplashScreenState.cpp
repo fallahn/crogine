@@ -176,6 +176,16 @@ bool SplashState::handleEvent(const cro::Event& evt)
             m_sharedData.errorMessage = "Welcome";
             requestStackPush(StateID::MessageOverlay);
         }
+#ifdef USE_GNS
+#undef USE_RSS
+        else
+        {
+            if (!Social::isSteamdeck())
+            {
+                requestStackPush(StateID::News);
+            }
+        }
+#endif
 #ifdef USE_RSS
         else
         {
@@ -216,11 +226,21 @@ bool SplashState::simulate(float dt)
             m_sharedData.errorMessage = "Welcome";
             requestStackPush(StateID::MessageOverlay);
         }
-#ifdef USE_RSS
+#ifdef USE_GNS
+#undef USE_RSS
         else
         {
-            requestStackPush(StateID::News);
+            if (!Social::isSteamdeck())
+            {
+                requestStackPush(StateID::News);
+            }
         }
+#endif
+#ifdef USE_RSS
+    else
+    {
+        requestStackPush(StateID::News);
+    }
 #endif
     }
 

@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::GBuffer
 {
-    static const std::string Vertex = R"(
+    inline const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
         ATTRIBUTE vec3 a_normal;
     #if defined(BUMP)
@@ -116,7 +116,7 @@ namespace cro::Shaders::GBuffer
 
         })";
 
-    static const std::string BillboardVertex = R"(
+    inline const std::string BillboardVertex = R"(
         ATTRIBUTE vec4 a_position; //relative to root position (below)
         ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
 
@@ -193,7 +193,7 @@ namespace cro::Shaders::GBuffer
             v_fragPosition = u_viewMatrix * vec4(position, 1.0);
         })";
 
-    static const std::string Fragment = R"(
+    inline const std::string Fragment = R"(
     #if defined(TEXTURED)
     #if defined(ALPHA_CLIP)
         uniform sampler2D u_diffuseMap;

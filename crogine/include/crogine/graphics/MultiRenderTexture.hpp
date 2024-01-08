@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 #include <crogine/graphics/RenderTarget.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/Texture.hpp>
 
 #include <array>
 
@@ -43,7 +44,8 @@ namespace cro
     as a G-Buffer for techniques such as deferred rendering or screen-space
     post processes like SSAO or depth of field. Unlike the standard RenderTexture
     the colour buffers are 32 bit floating point format for higher precision
-    when rendering data such as normal or vertex position information.
+    when rendering data such as normal or vertex position information, EXCEPT
+    for attachment 0 which is a regular 8bit colour buffer.
     MultiRenderTextures are not available on mobile platforms, and RenderTexture
     should be used instead.
     */
@@ -119,6 +121,11 @@ namespace cro
         bool available() const { return m_fboID != 0; }
 
         /*!
+        \brief Returns the colour attachment at 0 as a default 8 bit texture
+        */
+        const cro::Texture& getTexture() const { return m_defaultTexture; }
+
+        /*!
         \brief Returns the texture ID of a texture wrapped 
         in a handle which can be bound to material uniforms.
         \param index The index of the texture to return.
@@ -147,5 +154,7 @@ namespace cro
         std::array<float, 4u> m_lastClearColour = {};
 
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
+
+        Texture m_defaultTexture; //this is used for colour rendering on target 0
     };
 }

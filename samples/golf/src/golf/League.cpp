@@ -270,7 +270,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         }
 
         //write the data to a file
-        const auto path = cro::App::getPreferencePath() + PrevFileName;
+        const auto path = Social::getBaseContentPath() + PrevFileName;
         cro::RaiiRWops file;
         file.file = SDL_RWFromFile(path.c_str(), "wb");
         if (file.file)
@@ -339,7 +339,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 //private
 void League::read()
 {
-    const auto path = cro::App::getPreferencePath() + FileName;
+    const auto path = Social::getBaseContentPath() + FileName;
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
@@ -395,7 +395,7 @@ void League::read()
 
 void League::write()
 {
-    const auto path = cro::App::getPreferencePath() + FileName;
+    const auto path = Social::getBaseContentPath() + FileName;
 
     cro::RaiiRWops file;
     file.file = SDL_RWFromFile(path.c_str(), "wb");

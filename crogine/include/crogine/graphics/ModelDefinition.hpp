@@ -192,6 +192,12 @@ namespace cro
         */
         bool isLoaded() const { return m_modelLoaded; }
 
+        /*!
+        \brief Returns true if the material at the given index has the given tag
+        else false if the tag or material doesn't exist
+        */
+        bool hasTag(std::size_t index, const std::string& tag) const;
+
     private:
         ResourceCollection& m_resources;
         EnvironmentMap* m_envMap;
@@ -200,6 +206,8 @@ namespace cro
         std::size_t m_meshID = 0; //!< ID of the mesh in the mesh resource
         std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_materialIDs = {}; //!< list of material IDs in the order in which they appear on the model
         std::array<std::int32_t, Mesh::IndexData::MaxBuffers> m_shadowIDs = {}; //!< IDs of shadow map materials if this model casts shadows
+
+        std::array<std::vector<std::string>, Mesh::IndexData::MaxBuffers> m_materialTags = {};
 
         std::size_t m_materialCount; //!< number of active materials
         Skeleton m_skeleton; //!< overloaded operator bool indicates if currently valid

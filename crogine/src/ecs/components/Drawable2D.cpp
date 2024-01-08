@@ -29,14 +29,14 @@ source distribution.
 
 #include "../../detail/GLCheck.hpp"
 #include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/graphics/Texture.hpp>
 
 #include <limits>
 
 using namespace cro;
 
 Drawable2D::Drawable2D()
-    : m_texture             (nullptr),
-    m_shader                (nullptr),
+    : m_shader              (nullptr),
     m_customShader          (false),
     m_applyDefaultShader    (true),
     m_autoCrop              (true),
@@ -53,18 +53,53 @@ Drawable2D::Drawable2D()
     m_croppingArea          (std::numeric_limits<float>::lowest() / 2.f, std::numeric_limits<float>::lowest() / 2.f,
                                 std::numeric_limits<float>::max(), std::numeric_limits<float>::max()),
     m_cropped               (false),
+    m_wasCulledLastFrame    (true),
     m_sortCriteria          (0)
 {
 
 }
 
 //public
-void Drawable2D::setTexture(const Texture* texture)
+bool Drawable2D::setTexture(const Texture* texture)
 {
-    m_texture = texture;
-    m_applyDefaultShader = !m_customShader;
+    if (texture != m_textureInfo.texture ||
+        (texture && (texture->getGLHandle() != m_textureInfo.textureID.textureID)))
+    {
+        m_textureInfo.texture = texture;
 
-    applyShader();
+        if (texture)
+        {
+            m_textureInfo.textureID = texture->getGLHandle();
+            m_textureInfo.size = texture->getSize();
+        }
+        else
+        {
+            m_textureInfo.textureID = {};
+            m_textureInfo.size = { 0u, 0u };
+        }
+
+        m_applyDefaultShader = !m_customShader;
+
+        applyShader();
+        return true;
+    }
+    return false;
+}
+
+void Drawable2D::setTexture(TextureID textureID, glm::uvec2 size)
+{
+    //it might be that we just resized the texture
+    m_textureInfo.size = size;
+
+    if (textureID.textureID != m_textureInfo.textureID.textureID)
+    {
+        m_textureInfo.texture = nullptr;
+        m_textureInfo.textureID = textureID;
+
+        m_applyDefaultShader = !m_customShader;
+
+        applyShader();
+    }
 }
 
 void Drawable2D::setShader(Shader* shader)
@@ -114,7 +149,7 @@ void Drawable2D::setPrimitiveType(std::uint32_t primitiveType)
 
 const Texture* Drawable2D::getTexture() const
 {
-    return m_texture;
+    return m_textureInfo.texture;
 }
 
 Shader* Drawable2D::getShader()
@@ -252,7 +287,7 @@ void Drawable2D::applyShader()
     if (m_shader)
     {
         //grab uniform locations
-        if (m_texture != nullptr)
+        if (m_textureInfo.textureID.textureID)
         {
             if (m_shader->getUniformMap().count("u_texture") != 0)
             {
@@ -330,7 +365,7 @@ void Drawable2D::applyShader()
             data.offset = 4 * sizeof(float); //last after 2 position and 2 UV
         }
 
-        if (m_texture)
+        if (m_textureInfo.textureID.textureID)
         {
             if (attribs[Mesh::Attribute::UV0] == -1)
             {

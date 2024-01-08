@@ -300,7 +300,19 @@ void ModelState::saveModel(const std::string& path)
             if (prop.getName() == "mesh")
             {
                 newCfg.addProperty(prop);
-                meshPath = m_sharedData.workingDirectory + "/" + prop.getValue<std::string>();
+
+                auto propValue = prop.getValue<std::string>();
+                std::replace(propValue.begin(), propValue.end(), '\\', '/');
+
+                if (propValue.find('/') != std::string::npos)
+                {
+                    meshPath = m_sharedData.workingDirectory + "/" + propValue;
+                }
+                else
+                {
+                    //relative path
+                    meshPath = cro::FileSystem::getFilePath(path) + propValue;
+                }
             }
         }
     }
@@ -444,6 +456,15 @@ void ModelState::saveModel(const std::string& path)
         if (m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
         {
             obj->addProperty("skinned").setValue(true);
+        }
+
+        if (!mat.tags.empty())
+        {
+            auto* tags = obj->addObject("tags");
+            for (const auto& t : mat.tags)
+            {
+                tags->addProperty("tag").setValue(t);
+            }
         }
     }
 
@@ -1147,6 +1168,34 @@ void ModelState::applyImportTransform()
     }
     m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
     m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTITY);
+}
+
+void ModelState::flipNormals()
+{
+    const auto& meshData = m_entities[EntityID::ActiveModel].getComponent<cro::Model>().getMeshData();
+
+    if (!m_modelProperties.vertexData.empty())
+    {
+        auto& verts = m_modelProperties.vertexData;
+
+        auto stride = meshData.vertexSize / sizeof(float);
+        auto offset = 0u;
+        for (auto i = 0u; i < cro::Mesh::Normal; ++i)
+        {
+            offset += meshData.attributes[i];
+        }
+
+        for (auto i = offset; i < verts.size(); i += stride)
+        {
+            verts[i] *= -1.f;
+            verts[i+1] *= -1.f;
+            verts[i+2] *= -1.f;
+        }
+
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, meshData.vertexCount * meshData.vertexSize, verts.data(), GL_STATIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    }
 }
 
 void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices)

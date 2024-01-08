@@ -103,4 +103,6 @@ private:
     //returns slot index, or >= MaxClients if full
     std::uint8_t addClient(const net::NetPeer&, std::uint8_t playerCount);
     void removeClient(const net::NetEvent&);
+    void removeClient(std::size_t);
+    void kickClient(std::size_t);
 };

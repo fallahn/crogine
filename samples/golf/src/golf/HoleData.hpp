@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -34,11 +34,12 @@ source distribution.
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/util/Spline.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 #include <array>
 #include <string>
 
-static const std::array<std::string, 10u> CourseNames =
+static inline const std::array<std::string, 12u> CourseNames =
 {
     "course_01",
     "course_02",
@@ -50,6 +51,8 @@ static const std::array<std::string, 10u> CourseNames =
     "course_08",
     "course_09",
     "course_10",
+    "course_11",
+    "course_12",
 };
 
 static inline std::int32_t getCourseIndex(const std::string& name)
@@ -61,10 +64,19 @@ static inline std::int32_t getCourseIndex(const std::string& name)
     return -1;
 }
 
+struct LightData final
+{
+    float radius = 0.f;
+    glm::vec3 position = glm::vec3(0.f);
+    cro::Colour colour = cro::Colour::White;
+    std::string animation;
+};
+
 struct HoleData final
 {
     glm::vec3 tee = glm::vec3(0.f);
     glm::vec3 target = glm::vec3(1.f);
+    glm::vec3 subtarget = glm::vec3(std::numeric_limits<float>::max());
     glm::vec3 pin = glm::vec3(0.f);
     float distanceToPin = 0.f;
     std::int32_t par = 0;
@@ -72,6 +84,8 @@ struct HoleData final
     std::string mapPath;
     std::string modelPath;
     cro::Entity modelEntity;
+    std::vector<LightData> lightData;
+    std::vector<cro::Entity> lights;
     std::vector<cro::Entity> propEntities;
     std::vector<cro::Entity> particleEntities;
     std::vector<cro::Entity> audioEntities;
@@ -80,4 +94,4 @@ struct HoleData final
     std::vector<Path> propCurves;
 };
 
-static constexpr std::size_t MaxHoles = 18;
+static inline constexpr std::size_t MaxHoles = 18;

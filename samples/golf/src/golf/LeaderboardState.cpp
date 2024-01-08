@@ -487,7 +487,7 @@ void LeaderboardState::buildScene()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_displayContext.personalBest = entity;
 
-    //leaderboard values text
+    //leaderboard names text
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 22.f, 216.f });
     entity.addComponent<cro::Drawable2D>();
@@ -497,6 +497,16 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::Text>().setString("Waiting for data...");
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_displayContext.leaderboardText = entity;
+
+    //leaderboard scores text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 288.f, 216.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_displayContext.leaderboardScores = entity;
 
 
     //course thumbnail
@@ -1162,24 +1172,28 @@ void LeaderboardState::refreshDisplay()
         {
             if (m_displayContext.showNearest)
             {
-                if (entry.nearestTen.empty())
+                if (entry.nearestTenNames.empty())
                 {
                     m_displayContext.leaderboardText.getComponent<cro::Text>().setString("No Score Entered");
+                    m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(" ");
                 }
                 else
                 {
-                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.nearestTen);
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.nearestTenNames);
+                    m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(entry.nearestTenScores);
                 }
             }
             else
             {
-                if (entry.topTen.empty())
+                if (entry.topTenNames.empty())
                 {
                     m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Waiting...");
+                    m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(" ");
                 }
                 else
                 {
-                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTen);
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTenNames);
+                    m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(entry.topTenScores);
                 }
             }
             m_displayContext.personalBest.getComponent<cro::Text>().setString(entry.personalBest);
@@ -1189,6 +1203,7 @@ void LeaderboardState::refreshDisplay()
         {
             m_displayContext.personalBest.getComponent<cro::Text>().setString(" ");
             m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Waiting...");
+            m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(" ");
         }
     };
 
@@ -1208,24 +1223,28 @@ void LeaderboardState::refreshDisplay()
         {
             if (m_displayContext.showNearest)
             {
-                if (entry.nearestTen.empty())
+                if (entry.nearestTenNames.empty())
                 {
                     m_displayContext.leaderboardText.getComponent<cro::Text>().setString("No Attempt");
+                    m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(" ");
                 }
                 else
                 {
-                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.nearestTen);
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.nearestTenNames);
+                    m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(entry.nearestTenScores);
                 }
             }
             else
             {
-                if (entry.topTen.empty())
+                if (entry.topTenNames.empty())
                 {
                     m_displayContext.leaderboardText.getComponent<cro::Text>().setString("No Scores");
+                    m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(" ");
                 }
                 else
                 {
-                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTen);
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTenNames);
+                    m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(entry.topTenScores);
                 }
             }
 
@@ -1243,6 +1262,7 @@ void LeaderboardState::refreshDisplay()
         {
             m_displayContext.personalBest.getComponent<cro::Text>().setString(" ");
             m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Waiting...");
+            m_displayContext.leaderboardScores.getComponent<cro::Text>().setString(" ");
         }
     }
         break;

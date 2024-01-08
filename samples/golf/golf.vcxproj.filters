@@ -399,6 +399,24 @@
     <ClCompile Include="src\golf\TableData.cpp">
       <Filter>Source Files\golf\shared</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\LightAnimationSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\WeatherAnimationSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\GolfStateAssets.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\WeatherDirector.cpp">
+      <Filter>Source Files\golf\server\directors</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\PlayerManagementState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ChunkVisSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -803,62 +821,26 @@
     <ClInclude Include="src\golf\TableData.hpp">
       <Filter>Header Files\golf\shared</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\LightAnimationSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\WeatherAnimationSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\WeatherDirector.hpp">
+      <Filter>Header Files\golf\server\directors</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\PlayerManagementState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ScoreType.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ChunkVisSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\golf\WaterShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\TerrainShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\PostProcess.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\MinimapShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\TutorialShaders.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\WireframeShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\TransitionShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\BillboardShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\CloudShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\PaletteSwap.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\ShadowMapping.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\BeaconShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\TreeShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\CelShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\ShaderIncludes.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\UnlockShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\FogShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
-    <None Include="src\golf\TVShader.inl">
-      <Filter>Header Files\golf\client\shaders</Filter>
-    </None>
     <None Include="src\golf\OptionsEnum.inl">
       <Filter>Header Files\golf\client\states</Filter>
     </None>
@@ -867,6 +849,69 @@
     </None>
     <None Include="src\golf\ProfileEnum.inl">
       <Filter>Header Files\golf\client\states</Filter>
+    </None>
+    <None Include="src\golf\shaders\BeaconShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\BillboardShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\CelShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\CloudShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\CompositeShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\GlowShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\MinimapShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\PaletteSwap.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\PointLightShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\PostProcess.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\ShaderIncludes.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\ShadowMapping.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\TerrainShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\TransitionShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\TreeShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\TutorialShaders.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\TVShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\UnlockShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\WaterShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\WireframeShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\Glass.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

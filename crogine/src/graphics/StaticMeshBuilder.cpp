@@ -138,7 +138,15 @@ Mesh::Data StaticMeshBuilder::build() const
         }
         auto rad = (meshData.boundingBox[1] - meshData.boundingBox[0]) / 2.f;
         meshData.boundingSphere.centre = meshData.boundingBox[0] + rad;
-        meshData.boundingSphere.radius = glm::length(rad);
+        
+        for (auto i = 0; i < 3; ++i)
+        {
+            auto l = std::abs(rad[i]);
+            if (l > meshData.boundingSphere.radius)
+            {
+                meshData.boundingSphere.radius = l;
+            }
+        }
 
         return meshData;
     }

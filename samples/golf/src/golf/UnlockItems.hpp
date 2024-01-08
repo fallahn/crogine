@@ -57,6 +57,7 @@ namespace ul
             GoldCup,
             PlatinumCup,
             DiamondCup,
+            AmbassadorCup,
 
             LevelBadge01,
             LevelBadge10,
@@ -64,6 +65,7 @@ namespace ul
             LevelBadge30,
             LevelBadge40,
             LevelBadge50,
+            LevelBadge100,
 
             Padlock,
 
@@ -91,12 +93,14 @@ namespace ul
         std::string("assets/golf/models/balls/ball_gold.cmt"),
         std::string("assets/golf/models/balls/ball_platinum.cmt"),
         std::string("assets/golf/models/balls/ball_diamond.cmt"),
+        std::string("assets/golf/models/balls/centurion.cmt"),
         std::string("assets/golf/models/trophies/level01.cmt"),
         std::string("assets/golf/models/trophies/level10.cmt"),
         std::string("assets/golf/models/trophies/level20.cmt"),
         std::string("assets/golf/models/trophies/level30.cmt"),
         std::string("assets/golf/models/trophies/level40.cmt"),
         std::string("assets/golf/models/trophies/level50.cmt"),
+        std::string("assets/golf/models/trophies/level50.cmt"), //update me!!
         std::string("assets/golf/models/trophies/unlock.cmt"),
         std::string("assets/golf/models/trophies/streak01.cmt"),
         std::string("assets/golf/models/trophies/streak02.cmt"),
@@ -125,6 +129,7 @@ namespace ul
             GoldBall,
             PlatinumBall,
             DiamondBall,
+            AmbassadorBall,
 
             Level1,
             Level10,
@@ -132,6 +137,7 @@ namespace ul
             Level30,
             Level40,
             Level50,
+            Level100,
 
             RangeExtend01,
             RangeExtend02,
@@ -149,6 +155,7 @@ namespace ul
             Count
         };
     };
+    static_assert(UnlockID::Count - UnlockID::RangeExtend01 < 32, "Max Flags Available");
 
     static const std::array<UnlockData, UnlockID::Count> Items =
     {
@@ -158,11 +165,12 @@ namespace ul
         { ModelID::Iron, "7 Iron", "New Golf Club!" },
         { ModelID::Iron, "9 Iron", "New Golf Club!" },
 
-        { ModelID::BronzeCup,   "Bronze Ball",   "New Golf Ball!" },
-        { ModelID::SilverCup,   "Silver Ball",   "New Golf Ball!" },
-        { ModelID::GoldCup,     "Gold Ball",     "New Golf Ball!" },
-        { ModelID::PlatinumCup, "Platinum Ball", "New Golf Ball!" },
-        { ModelID::DiamondCup,  "Diamond Ball",  "New Golf Ball!" },
+        { ModelID::BronzeCup,      "Bronze Ball",        "New Golf Ball!" },
+        { ModelID::SilverCup,      "Silver Ball",        "New Golf Ball!" },
+        { ModelID::GoldCup,        "Gold Ball",          "New Golf Ball!" },
+        { ModelID::PlatinumCup,    "Platinum Ball",      "New Golf Ball!" },
+        { ModelID::DiamondCup,     "Diamond Ball",       "New Golf Ball!" },
+        { ModelID::AmbassadorCup,  "Ambassador's Ball",  "New Golf Ball!" },
 
         { ModelID::LevelBadge01,  "Level One",     "New Level Badge!" },
         { ModelID::LevelBadge10,  "Level Ten",     "New Level Badge!" },
@@ -170,6 +178,7 @@ namespace ul
         { ModelID::LevelBadge30,  "Level Thirty",  "New Level Badge!" },
         { ModelID::LevelBadge40,  "Level Forty",   "New Level Badge!" },
         { ModelID::LevelBadge50,  "Level Fifty",   "New Level Badge!" },
+        { ModelID::LevelBadge100, "Centenary",     "New Level Badge!" },
 
         { ModelID::GolfBag01,  "Expert Clubs Available!",   "Club Range Extended" },
         { ModelID::GolfBag02,  "Pro Clubs Available!",   "Club Range Extended" },

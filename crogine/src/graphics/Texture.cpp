@@ -467,6 +467,24 @@ bool Texture::saveToImage(Image& dst) const
     return true;
 }
 
+bool Texture::saveToBuffer(std::vector<float>& dst) const
+{
+    if (m_handle == 0)
+    {
+        LogE << "Failed to save texture to image, texture not created." << std::endl;
+        return false;
+    }
+
+    dst.clear();
+    dst.resize(m_size.x * m_size.y * 4);
+
+    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+    glCheck(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, dst.data()));
+    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
+    return true;
+}
+
 //private
 bool Texture::update(const void* pixels, bool createMipMaps, URect area)
 {

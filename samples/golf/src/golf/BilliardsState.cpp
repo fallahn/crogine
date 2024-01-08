@@ -86,9 +86,9 @@ using namespace cl;
 
 namespace
 {
-#include "WireframeShader.inl"
-#include "CelShader.inl"
-#include "ShaderIncludes.inl"
+#include "shaders/WireframeShader.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/ShaderIncludes.inl"
 
     constexpr float MaxShadowDistance = 12.f;
     constexpr float ShadowExpansion = 10.f;
@@ -241,10 +241,10 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_F2:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::SpawnBall), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SpawnBall), net::NetFlag::Reliable);
             break;
         case SDLK_F3:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::StrikeBall), net::NetFlag::Reliable);
             break;
         case SDLK_F4:
             //addPocketBall(1);
@@ -286,7 +286,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             setActiveCamera(CameraID::Overhead);
             break;
         case SDLK_F6:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::EndGame), net::NetFlag::Reliable);
             break;
         case SDLK_F7:
         {
@@ -842,7 +842,7 @@ void BilliardsState::buildScene()
     m_cameras[CameraID::Spectate] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = setPerspective;
-    cam.renderFlags = ~RenderFlags::Cue;
+    cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::Cue);
     setPerspective(cam);
 
     const std::uint32_t ShadowMapSize = m_sharedData.hqShadows ? 4096u : 2048u;
@@ -892,7 +892,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion * 2.f);
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::Cue);
     camEnt.addComponent<CameraProperties>().farPlane = 7.f;
     camEnt.getComponent<CameraProperties>().FOVAdjust = 0.8f; //needs to match spectate cam initial value to prevent popping
     camEnt.addComponent<cro::AudioListener>();
@@ -1367,7 +1367,7 @@ void BilliardsState::handleNetEvent(const net::NetEvent& evt)
     }
     else if (evt.type == net::NetEvent::ClientDisconnect)
     {
-        m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
+        m_sharedData.errorMessage = "Disconnected From Server";
         requestStackPush(StateID::Error);
     }
 }

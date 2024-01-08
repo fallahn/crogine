@@ -39,6 +39,10 @@ struct TrophyDisplay final
     float delay = 0.f;
     float scale = 0.f;
 
+    std::int32_t particleCount = 3;
+    float particleTime = 0.f;
+    static constexpr float ParticleInterval = 0.6f;
+
     enum
     {
         Idle, In, Active

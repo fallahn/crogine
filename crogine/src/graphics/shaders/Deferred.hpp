@@ -34,7 +34,7 @@ source distribution.
 
 namespace cro::Shaders::Deferred
 {
-    static const std::string GBufferVertex = R"(
+    inline const std::string GBufferVertex = R"(
         ATTRIBUTE vec4 a_position;
     #if defined (VERTEX_COLOUR)
         ATTRIBUTE LOW vec4 a_colour;
@@ -124,7 +124,7 @@ namespace cro::Shaders::Deferred
         #endif
         })";
 
-    static const std::string GBufferFragment = R"(
+    inline const std::string GBufferFragment = R"(
     #if defined(DIFFUSE_MAP)
         uniform sampler2D u_diffuseMap;
     #endif
@@ -195,7 +195,7 @@ namespace cro::Shaders::Deferred
 
         })";
 
-    static const std::string LightingVertex = 
+    inline const std::string LightingVertex = 
         R"(
             ATTRIBUTE vec4 a_position;
 
@@ -211,7 +211,7 @@ namespace cro::Shaders::Deferred
             }
         )";
     
-    static const std::string LightingFragment = 
+    inline const std::string LightingFragment = 
         R"(
             uniform sampler2D u_diffuseMap;
             uniform sampler2D u_maskMap;
@@ -443,7 +443,7 @@ namespace cro::Shaders::Deferred
         )";
 
 
-    static const std::string OITShadedFragment = 
+    inline const std::string OITShadedFragment = 
         R"(
             out vec4[6] o_outColour;
 
@@ -613,7 +613,7 @@ o_outColour[0].rgb = (u_viewMatrix * vec4(normal, 0.0)).xyz;
 o_outColour[1].rgb = (u_viewMatrix * vec4(v_worldPosition, 1.0)).xyz;
         })";
 
-    static const std::string OITUnlitFragment = 
+    inline const std::string OITUnlitFragment = 
         R"(
             out vec4[6] o_outColour;
 
@@ -719,7 +719,7 @@ float weight =
             o_outColour[5].r = finalColour.a;
         })";
 
-    static const std::string OITOutputFragment =
+    inline const std::string OITOutputFragment =
         R"(
             OUTPUT
 

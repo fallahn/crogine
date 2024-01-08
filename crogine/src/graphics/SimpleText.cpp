@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -36,11 +36,18 @@ source distribution.
 using namespace cro;
 
 SimpleText::SimpleText()
-    : m_lastTextureSize (0),
-    m_fontTexture       (nullptr),
+    : m_fontTexture     (nullptr),
     m_dirtyFlags        (DirtyFlags::All)
 {
     setPrimitiveType(GL_TRIANGLES);
+}
+
+SimpleText::~SimpleText()
+{
+    if (m_context.font)
+    {
+        m_context.font->unregisterObserver(this);
+    }
 }
 
 SimpleText::SimpleText(const Font& font)
@@ -54,7 +61,13 @@ void SimpleText::setFont(const Font& font)
 {
     if (m_context.font != &font)
     {
+        if (m_context.font)
+        {
+            m_context.font->unregisterObserver(this);
+        }
+
         m_context.font = &font;
+        m_context.font->registerObserver(this);
         m_dirtyFlags |= DirtyFlags::All;
     }
 }
@@ -221,8 +234,7 @@ FloatRect SimpleText::getGlobalBounds()
 
 void SimpleText::draw(const glm::mat4& parentTransform)
 {
-    if (m_dirtyFlags
-        || (m_fontTexture && m_fontTexture->getSize() != m_lastTextureSize))
+    if (m_dirtyFlags)
     {
         m_dirtyFlags = 0;
         updateVertices();
@@ -238,11 +250,22 @@ void SimpleText::updateVertices()
         //do this first because the update below may
         //resize the texture and we want to know about it :)
         m_fontTexture = &m_context.font->getTexture(m_context.charSize);
-        m_lastTextureSize = m_fontTexture->getSize();
         setTexture(*m_fontTexture);
 
         std::vector<Vertex2D> verts;
         m_localBounds = Detail::Text::updateVertices(verts, m_context);
         setVertexData(verts);
     }
+}
+
+void SimpleText::onFontUpdate()
+{
+    //m_dirtyFlags |= DirtyFlags::All;
+    updateVertices();
+}
+
+void SimpleText::removeFont()
+{
+    m_context.font = nullptr;
+    m_fontTexture = nullptr;
 }

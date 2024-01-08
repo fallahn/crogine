@@ -673,6 +673,13 @@ void StatsState::parseProfileData()
                 auto& pf = m_profileData.emplace_back();
                 pf.name = pd.name;
                 pf.dbPath = profilePath + "profile.db3";
+
+#ifdef USE_GNS
+                if (dir == Social::getPlayerID())
+                {
+                    pf.name = Social::getPlayerName();
+                }
+#endif
             }
         }
 
@@ -1618,17 +1625,18 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
     //bar chart for play time
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 218.f, 98.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 214.f, 68.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Your Average Play Duration");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.addComponent<cro::Text>(labelFont).setString("Your Average\nPlay Duration");
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 236.f, 40.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 266.f, 40.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
@@ -1649,10 +1657,10 @@ void StatsState::createHistoryTab(cro::Entity parent)
     {
         timeString = std::to_string(static_cast<std::int32_t>(playTime)) + "s";
     }
-    timeString += "\n|\n|\n0s";
+    timeString += "\n|\n0s";
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 384.f, 84.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 426.f, 76.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont).setString(timeString);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);

@@ -73,6 +73,9 @@ static constexpr float MaxFOV = 90.f;
 
 struct SharedStateData final
 {
+    bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
+    cro::String OSKBuffer;
+
     struct MinimapData final
     {
         cro::MultiRenderTexture* mrt = nullptr;
@@ -110,6 +113,7 @@ struct SharedStateData final
         std::string modelPath;
         bool rollAnimation = true;
         bool locked = false;
+        std::uint64_t workshopID = 0;
         BallInfo() {}
         BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
             : tint(c), uid(i), modelPath(str) {}
@@ -123,6 +127,7 @@ struct SharedStateData final
         std::string modelPath;
         std::string texturePath;
         std::string audioscape;
+        std::uint64_t workshopID = 0;
     };
     std::vector<AvatarInfo> avatarInfo;
 
@@ -131,6 +136,7 @@ struct SharedStateData final
     {
         std::uint32_t uid = 0;
         std::string modelPath;
+        std::uint64_t workshopID = 0;
         HairInfo() = default;
         HairInfo(std::uint32_t i, const std::string& str)
             :uid(i), modelPath(str) {}
@@ -159,6 +165,11 @@ struct SharedStateData final
     std::uint8_t holeCount = 0; //0-1-2 all, front, back
     std::uint8_t reverseCourse = 0; //play holes in reverse order
     std::uint8_t clubLimit = 0; //limit game to lowest player's clubs
+    std::uint8_t nightTime = 0; //bool
+    std::uint8_t weatherType = 0;
+
+    //counts the number of holes actually played in elimination
+    std::uint8_t holesPlayed = 0;
 
     //printed by the error state
     std::string errorMessage;
@@ -206,6 +217,7 @@ struct SharedStateData final
     bool fastCPU = true;
     std::int32_t enableRumble = 1;
     std::int32_t clubSet = 0;
+    bool pressHold = false; //press and hold the action button to select power
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

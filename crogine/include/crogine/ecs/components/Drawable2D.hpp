@@ -71,8 +71,28 @@ namespace cro
         which should be kept in mind if using a custom shader.
         This has no effect when using Sprite or Text components
         as they override this property with their own.
+        \returns true if the new texture was applied or false
+        if the given texture was the same as the existing one
         */
-        void setTexture(const cro::Texture*);
+        bool setTexture(const Texture*);
+
+        /*!
+        \brief Sets the Drawable2D texture via a TextureID
+        This should be used when rendering the TextureID returned
+        from a RenderTarget or similar, when a Texture is not
+        available, otherwise setting via setTexture(Texture*)
+        is preferred.
+        Note that setting the texture via this function means
+        that getTexture() will return nullptr, even when a 
+        texture is in use.
+        Using a texture ID still requires that vertex data be
+        set - and is not compatible with Sprite components.
+        \param textureID a TextureID containing the handle of
+        an available texture to use
+        \param size A vector containing the dimensions of the
+        given texture.
+        */
+        void setTexture(TextureID textureID, glm::uvec2 size);
 
         /*!
         \brief Set a custom shader for this drawable.
@@ -119,7 +139,8 @@ namespace cro
 
         /*!
         \brief Returns a pointer to the active texture
-        May be nullptr is no texture is set.
+        May be nullptr is no texture is set, or the
+        texture was set via TextureID.
         */
         const Texture* getTexture() const;
 
@@ -242,6 +263,12 @@ namespace cro
         void setCullingEnabled(bool enabled) { m_autoCrop = enabled; }
 
 
+        /*!
+        \brief Returns whether or not the Drawable was culled from drawing last frame
+        */
+        bool wasCulledLastFrame() const { return m_wasCulledLastFrame; }
+
+
         enum class Facing
         {
             Front, Back
@@ -267,7 +294,14 @@ namespace cro
 
     private:
 
-        const Texture* m_texture;
+        //fudgy wrapper which allows drawing with TextureID
+        struct TextureInfo final
+        {
+            const Texture* texture = nullptr;
+            TextureID textureID;
+            glm::uvec2 size = glm::vec2(0);
+        }m_textureInfo;
+
         Shader* m_shader;
         bool m_customShader;
         bool m_applyDefaultShader;
@@ -302,6 +336,7 @@ namespace cro
         FloatRect m_croppingArea;
         FloatRect m_croppingWorldArea;
         bool m_cropped;
+        bool m_wasCulledLastFrame;
 
         std::int32_t m_sortCriteria; //either Y or Z value depending on system sort mode
 

@@ -51,6 +51,29 @@ namespace
 {
 #include "RandNames.hpp"
 
+    std::uint64_t findWorkshopID(const std::string& path)
+    {
+        //do this with a cro string to try and preserve utf encoding
+        cro::String str = cro::String::fromUtf8(path.begin(), path.end());
+        auto dirList = cro::Util::String::tokenize(str, "/");
+
+        if (!dirList.empty())
+        {
+            if (dirList.back().find("w") == dirList.back().size() - 1)
+            {
+                std::stringstream ss;
+                ss << dirList.back().substr(0, dirList.back().size() - 1).toAnsiString();
+
+                std::uint64_t id = 0;
+                ss >> id;
+
+                return id;
+            }
+        }
+
+        return 0;
+    };
+
     SharedStateData::BallInfo readBallCfg(const cro::ConfigFile& cfg)
     {
         SharedStateData::BallInfo retVal;
@@ -199,7 +222,7 @@ void MenuState::createBallScene()
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, static_cast<float>(BallPreviewSize.x) / BallPreviewSize.y, 0.001f, 2.f);
     m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
-    m_ballCam.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
+    m_ballCam.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, BallRenderFlags);
     m_ballCam.addComponent<cro::Callback>().active = true;
     m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
     m_ballCam.getComponent<cro::Callback>().function = ballTargetCallback;
@@ -256,7 +279,7 @@ void MenuState::createBallScene()
             auto path = BallUserPath + dir + "/" ;
             auto files = cro::FileSystem::listFiles(path);
 
-            for (auto file : files)
+            for (const auto& file : files)
             {
                 if (cro::FileSystem::getFileExtension(file) == ".ball")
                 {
@@ -265,6 +288,7 @@ void MenuState::createBallScene()
                     {
                         auto info = readBallCfg(cfg);
                         info.modelPath = path + info.modelPath;
+                        info.workshopID = findWorkshopID(path);
 
                         insertInfo(info, m_sharedData.ballInfo, false);
                     }
@@ -287,7 +311,12 @@ void MenuState::createBallScene()
         std::string("assets/golf/special/20.spec"),
         std::string("assets/golf/special/30.spec"),
         std::string("assets/golf/special/40.spec"),
-        std::string("assets/golf/special/50.spec")
+        std::string("assets/golf/special/50.spec"),
+        std::string("assets/golf/special/100.spec"),
+    };
+    constexpr std::array SpecialLevels =
+    {
+        10,20,30,40,50,100
     };
     const std::uint32_t level = Social::getLevel();
     std::vector<SharedStateData::BallInfo> delayedEntries;
@@ -306,7 +335,7 @@ void MenuState::createBallScene()
                 cfg.save(SpecialPaths[i]);
             }
 
-            if (level >= (i + 1) * 10)
+            if (level >= SpecialLevels[i])
             {
                 insertInfo(info, m_sharedData.ballInfo, true);
             }
@@ -557,6 +586,7 @@ void MenuState::parseAvatarDirectory()
                 {
                     auto info = readHairCfg(cfg);
                     info.modelPath = userPath + info.modelPath;
+                    info.workshopID = findWorkshopID(userPath);
 
                     insertInfo(info, m_sharedData.hairInfo, false);
                     break; //only load one...
@@ -693,6 +723,7 @@ void MenuState::processAvatarList(const std::vector<std::string>& fileList, cons
 
                     if (result == m_sharedData.avatarInfo.end())
                     {
+                        info.workshopID = findWorkshopID(searchPath);
                         m_sharedData.avatarInfo.push_back(info);
                         m_playerAvatars.emplace_back(info.texturePath);
                     }
@@ -937,7 +968,16 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         //and reloaded, but that's probably OK. They just need to
         //exist in the shared data so the main game can find the
         //models for remote players who have them.
-        const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball) + std::to_string(id) + "/";
+        const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball) + std::to_string(id) + "w/";
+
+        //this can happen sometimes when the UGC fails to install (usually linux)
+        //so quit so we don't throw
+        if (!cro::FileSystem::directoryExists(BallUserPath))
+        {
+            LogE << "Couldn't find UGC at " << BallUserPath << std::endl;
+            return;
+        }
+        
         auto files = cro::FileSystem::listFiles(BallUserPath);
         LogI << "installed remote ball" << std::endl;
         for (const auto& file : files)
@@ -949,6 +989,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
                 {
                     auto info = readBallCfg(cfg);
                     info.modelPath = BallUserPath + info.modelPath;
+                    info.workshopID = id;
 
                     insertInfo(info, m_sharedData.ballInfo, false);
                 }
@@ -959,8 +1000,15 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     }
     else if (type == Social::UserContent::Hair)
     {
-        const auto HairUserPath = Social::getUserContentPath(Social::UserContent::Hair) + std::to_string(id) + "/";
+        const auto HairUserPath = Social::getUserContentPath(Social::UserContent::Hair) + std::to_string(id) + "w/";
+
+        if (!cro::FileSystem::directoryExists(HairUserPath))
+        {
+            LogE << "Couldn't find UGC at " << HairUserPath << std::endl;
+            return;
+        }
         auto files = cro::FileSystem::listFiles(HairUserPath);
+
         LogI << "installed remote hair" << std::endl;
         for (const auto& file : files)
         {
@@ -971,6 +1019,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
                 {
                     auto info = readHairCfg(cfg);
                     info.modelPath = HairUserPath + info.modelPath;
+                    info.workshopID = id;
 
                     insertInfo(info, m_sharedData.hairInfo, false);
                 }
@@ -982,7 +1031,14 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     else if (type == Social::UserContent::Avatar)
     {
         //insert into m_sharedData.avatarInfo so GolfState can find it
-        const auto& avatarPath = Social::getUserContentPath(Social::UserContent::Avatar) + std::to_string(id) + "/";
+        const auto& avatarPath = Social::getUserContentPath(Social::UserContent::Avatar) + std::to_string(id) + "w/";
+
+        if (!cro::FileSystem::directoryExists(avatarPath))
+        {
+            LogE << "Couldn't find UGC at " << avatarPath << std::endl;
+            return;
+        }
+
         auto files = cro::FileSystem::listFiles(avatarPath);
         processAvatarList(files, avatarPath, avatarPath);
         LogI << "Installed remote avatar" << std::endl;

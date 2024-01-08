@@ -37,15 +37,17 @@ source distribution.
 #include "CameraFollowSystem.hpp"
 #include "CommandIDs.hpp"
 #include "BallSystem.hpp"
+#include "PacketIDs.hpp"
 
 #include <AchievementStrings.hpp>
 
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 #include <crogine/util/Easings.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 using namespace cl;
 
@@ -97,11 +99,15 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_currentClub       (ClubID::Driver),
     m_firstClub         (ClubID::Driver),
     m_clubOffset        (0),
+    m_bunkerTableIndex  (0),
+    m_roughTableIndex   (0),
     m_terrain           (TerrainID::Fairway),
     m_lie               (1),
-    m_estimatedDistance (0.f)
+    m_estimatedDistance (0.f),
+    m_iconActive        (false)
 {
-
+    m_bunkerWavetable = cro::Util::Wavetable::sine(0.25f, 0.035f);
+    m_roughWavetable = cro::Util::Wavetable::sine(0.25f, 0.025f);
 }
 
 //public
@@ -340,15 +346,13 @@ void InputParser::handleEvent(const cro::Event& evt)
             }
         }
 
+        //this would be nice - but I cba to block the input when, say,
+        //a menu is open so clicking the menu doesn't take a swing...
         /*else if (evt.type == SDL_MOUSEBUTTONDOWN)
         {
             if (evt.button.button == SDL_BUTTON_LEFT)
             {
                 m_inputFlags |= InputFlag::Action;
-            }
-            else if (evt.button.button == SDL_BUTTON_RIGHT)
-            {
-                m_inputFlags |= InputFlag::NextClub;
             }
         }
         else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -357,17 +361,13 @@ void InputParser::handleEvent(const cro::Event& evt)
             {
                 m_inputFlags &= ~InputFlag::Action;
             }
-            else if (evt.button.button == SDL_BUTTON_RIGHT)
-            {
-                m_inputFlags &= ~InputFlag::NextClub;
-            }
         }*/
 
-        /*else if (evt.type == SDL_MOUSEWHEEL)
+        else if (evt.type == SDL_MOUSEWHEEL)
         {
             m_mouseWheel += evt.wheel.y;
         }
-        else if (evt.type == SDL_MOUSEMOTION)
+        /*else if (evt.type == SDL_MOUSEMOTION)
         {
             m_mouseMove += evt.motion.xrel;
         }*/
@@ -482,7 +482,7 @@ float InputParser::getHook() const
         && m_lie == 0)
     {
         //TODO include the current player/CPU skill level here?
-        hook = std::min(1.f, hook * (1.f + (hook * 0.04f)));
+        hook = std::min(1.f, hook * (1.f + (hook * 0.0004f)));
     }
     
     return hook * 2.f - 1.f;
@@ -648,6 +648,19 @@ void InputParser::update(float dt)
     }
 
     m_prevFlags = m_inputFlags;
+
+    if (m_state == State::Aim
+        || m_state == State::Drone)
+    {
+        m_bunkerTableIndex = (m_bunkerTableIndex + 1) % m_bunkerWavetable.size();
+        m_roughTableIndex = (m_roughTableIndex + 1) % m_roughWavetable.size();
+    }
+
+    if (m_iconActive 
+        && m_iconTimer.elapsed() > cro::seconds(2.f))
+    {
+        endIcon();
+    }
 }
 
 bool InputParser::inProgress() const
@@ -745,6 +758,17 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     return { impulse, spin, hook };
 }
 
+float InputParser::getEstimatedDistance() const
+{
+    switch (m_terrain)
+    {
+    default: return m_estimatedDistance;
+    case TerrainID::Bunker: return m_estimatedDistance * (1.f - m_bunkerWavetable[m_bunkerTableIndex]);
+    case TerrainID::Rough: return m_estimatedDistance * (1.f - m_roughWavetable[m_roughTableIndex]);
+    }
+    return m_estimatedDistance; 
+}
+
 void InputParser::doFastStroke(float accuracy, float power)
 {
     //this ONLY works with the CPU because it's been estimating
@@ -804,7 +828,7 @@ void InputParser::updateDistanceEstimation()
         totalSteps += 1.f;
     } while (endPos.y > 0.f);
 
-    m_estimatedDistance = glm::length(endPos) * 1.08f; //correction of the average difference of club rating (we're only usin this for the range indicator)
+    m_estimatedDistance = glm::length(endPos) * 1.08f; //correction of the average difference of club rating (we're only using this for the range indicator)
 }
 
 void InputParser::updateStroke(float dt)
@@ -854,17 +878,20 @@ void InputParser::updateStroke(float dt)
             if (m_inputFlags & InputFlag::Left)
             {
                 rotate(rotation);
+                beginIcon();
             }
 
             if (m_inputFlags & InputFlag::Right)
             {
                 rotate(-rotation);
+                beginIcon();
             }
 
             if (m_inputFlags & InputFlag::Action)
             {
                 m_state = State::Power;
                 m_doubleTapClock.restart();
+                beginIcon();
             }
 
             if ((m_prevFlags & InputFlag::PrevClub) == 0
@@ -882,6 +909,7 @@ void InputParser::updateStroke(float dt)
                 msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
 
                 updateDistanceEstimation();
+                beginIcon();
             }
 
             if ((m_prevFlags & InputFlag::NextClub) == 0
@@ -899,6 +927,7 @@ void InputParser::updateStroke(float dt)
                 msg->score = m_isCPU? 0 : 1;
 
                 updateDistanceEstimation();
+                beginIcon();
             }
         }
         break;
@@ -935,27 +964,29 @@ void InputParser::updateStroke(float dt)
                 m_powerbarDirection = -1.f;
             }
 
-            if (/*m_power == 0 //this just resets the shot now - see above.
-                ||*/ ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
+            if (m_sharedData.pressHold)
             {
-                if (m_doubleTapClock.elapsed() > DoubleTapTime)
+                if ((m_inputFlags & InputFlag::Action) == 0 && (m_prevFlags & InputFlag::Action))
                 {
                     m_powerbarDirection = 1.f;
 
-                    //if (m_sharedData.showPuttingPower
-                    //    && terrainID == TerrainID::Green)
-                    //{
-                    //    //skip the hook bar cos we're on easy mode
-                    //    m_state = State::Flight;
-
-                    //    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
-                    //    msg->type = GolfEvent::HitBall;
-                    //}
-                    //else
-                    {
-                        m_state = State::Stroke;
-                    }
+                    m_state = State::Stroke;
                     m_doubleTapClock.restart();
+                    beginIcon();
+                }
+            }
+            else
+            {
+                if ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0))
+                {
+                    if (m_doubleTapClock.elapsed() > DoubleTapTime)
+                    {
+                        m_powerbarDirection = 1.f;
+
+                        m_state = State::Stroke;
+                        m_doubleTapClock.restart();
+                        beginIcon();
+                    }
                 }
             }
         }
@@ -1002,6 +1033,8 @@ void InputParser::updateStroke(float dt)
                     msg->type = GolfEvent::HitBall;
 
                     m_doubleTapClock.restart();
+
+                    endIcon();
                 }
             }
         }
@@ -1195,19 +1228,19 @@ void InputParser::checkMouseInput()
 {
     if (m_mouseWheel > 0)
     {
-        m_inputFlags |= InputFlag::PrevClub;
+        m_inputFlags |= InputFlag::NextClub;
     }
     else if (m_mouseWheel < 0)
     {
-        m_inputFlags |= InputFlag::NextClub;
+        m_inputFlags |= InputFlag::PrevClub;
     }
     else if (m_prevMouseWheel > 0)
     {
-        m_inputFlags &= ~InputFlag::PrevClub;
+        m_inputFlags &= ~InputFlag::NextClub;
     }
     else if (m_prevMouseWheel < 0)
     {
-        m_inputFlags &= ~InputFlag::NextClub;
+        m_inputFlags &= ~InputFlag::PrevClub;
     }
 
     m_prevMouseWheel = m_mouseWheel;
@@ -1281,4 +1314,37 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
     }
 
     return rotation;
+}
+
+void InputParser::beginIcon()
+{
+    //this is false if we're on the driving range
+    if (!m_isCPU &&
+        !m_iconActive &&
+        m_sharedData.clientConnection.connected)
+    {
+        Activity a;
+        a.type = Activity::PlayerThinkStart;
+        a.client = m_sharedData.clientConnection.connectionID;
+
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        m_iconActive = true;
+    }
+    m_iconTimer.restart();
+}
+
+void InputParser::endIcon()
+{
+    if (!m_isCPU &&
+        m_sharedData.clientConnection.connected)
+    {
+        Activity a;
+        a.type = Activity::PlayerThinkEnd;
+        a.client = m_sharedData.clientConnection.connectionID;
+
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
+
+    m_iconActive = false;
 }

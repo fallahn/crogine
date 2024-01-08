@@ -96,6 +96,8 @@ namespace cro
         auto size() const { return m_data.size(); }
         bool empty() const { return m_data.empty(); }
 
+        void swap(std::vector<T>& other) noexcept { m_data.swap(other); }
+
         void clear()
         {
             m_data.clear();

@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/SysTime.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -72,6 +73,7 @@ static constexpr float FlightCamRotation = -0.158f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
+static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f); //used to validate the sub-target property of a hole
 
 static constexpr float CameraStrokeHeight = 2.f;
 static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
@@ -119,20 +121,22 @@ static constexpr glm::vec2 LabelIconSize(Social::IconSize);
 static constexpr glm::uvec2 LabelTextureSize(160u, 128u + (Social::IconSize * 4));
 static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 
-static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
-static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
-static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
-static const cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
+static constexpr cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
+static constexpr cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
+static constexpr cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
+static constexpr cro::Colour SkyNight(std::uint8_t(101), 103, 178);
+//static constexpr cro::Colour SkyNight(std::uint8_t(69), 71, 130);
+static constexpr cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
 
-static const cro::Colour SwingputDark(std::uint8_t(40), 23, 33);
-//static const cro::Colour SwingputLight(std::uint8_t(242), 207, 92);
-static const cro::Colour SwingputLight(std::uint8_t(236), 119, 61);
-//static const cro::Colour SwingputLight(std::uint8_t(236), 153, 61);
+static constexpr cro::Colour SwingputDark(std::uint8_t(40), 23, 33);
+//static constexpr cro::Colour SwingputLight(std::uint8_t(242), 207, 92);
+static constexpr cro::Colour SwingputLight(std::uint8_t(236), 119, 61);
+//static constexpr cro::Colour SwingputLight(std::uint8_t(236), 153, 61);
 
-//default values from DX sdk
-static constexpr std::int16_t LeftThumbDeadZone = 7849;
-static constexpr std::int16_t RightThumbDeadZone = 8689;
-static constexpr std::int16_t TriggerDeadZone = 30;
+//moved to GameController but I'm too lazy to update all references
+static constexpr std::int16_t LeftThumbDeadZone = cro::GameController::LeftThumbDeadZone;
+static constexpr std::int16_t RightThumbDeadZone = cro::GameController::RightThumbDeadZone;
+static constexpr std::int16_t TriggerDeadZone = cro::GameController::TriggerDeadZone;
 
 static constexpr glm::vec3 BallHairScale(0.277f);
 static constexpr glm::vec3 BallHairOffset(0.f, 0.04f, -0.007f);
@@ -140,6 +144,31 @@ static constexpr glm::vec3 BallHairOffset(0.f, 0.04f, -0.007f);
 class btVector3;
 glm::vec3 btToGlm(btVector3 v);
 btVector3 glmToBt(glm::vec3 v);
+
+struct WeatherType final
+{
+    enum
+    {
+        Clear, Rain, Showers, Mist,
+        Count,
+        Snow
+    };
+};
+static inline const std::array<cro::String, WeatherType::Count> WeatherStrings =
+{
+    "Clear", "Rain",
+    "Showers", "Mist"
+};
+
+struct MRTIndex final
+{
+    enum
+    {
+        Colour, Position, Normal, Light,
+
+        Count
+    };
+};
 
 struct TutorialID
 {
@@ -202,6 +231,7 @@ struct WindData final
 struct ResolutionData final
 {
     glm::vec2 resolution = glm::vec2(1.f);
+    glm::vec2 bufferResolution = glm::vec2(1.f);
     float nearFadeDistance = 2.f;
 };
 
@@ -211,19 +241,26 @@ struct ShaderID final
     {
         Water = 100,
         Horizon,
+        HorizonSun,
         Terrain,
         Billboard,
         BillboardShadow,
         Cel,
         CelSkinned,
         CelTextured,
+        CelTexturedNoWind,
+        CelTexturedMasked,
+        CelTexturedMaskedNoWind,
         CelTexturedInstanced,
         CelTexturedSkinned,
+        CelTexturedSkinnedMasked,
         ShadowMap,
         ShadowMapInstanced,
         ShadowMapSkinned,
         Crowd,
         CrowdShadow,
+        CrowdArray,
+        CrowdShadowArray,
         Cloud,
         CloudRing,
         Leaderboard,
@@ -233,6 +270,7 @@ struct ShaderID final
         CourseGreen,
         CourseGrid,
         Ball,
+        BallNight,
         Slope,
         Minimap,
         MinimapView,
@@ -243,6 +281,7 @@ struct ShaderID final
         Transition,
         Trophy,
         Beacon,
+        Target,
         Bow,
         Noise,
         TreesetLeaf,
@@ -251,9 +290,13 @@ struct ShaderID final
         TreesetLeafShadow,
         BallTrail,
         FXAA,
-        Fog,
+        Composite,
+        Blur,
         Flag,
-        TV
+        TV,
+        PointLight,
+        Glass
+
     };
 };
 
@@ -291,7 +334,8 @@ struct Avatar final
     cro::Entity ballModel;
 };
 
-static const std::array BallTints =
+//TODO these aren't used now
+static inline const std::array BallTints =
 {
     cro::Colour(1.f,0.937f,0.752f), //default
     cro::Colour(1.f,0.364f,0.015f), //pumpkin
@@ -300,6 +344,11 @@ static const std::array BallTints =
     cro::Colour(0.015f,0.031f,1.f), //bowling
     cro::Colour(0.964f,1.f,0.878f) //snowman
 };
+
+static inline std::int32_t courseOfTheMonth()
+{
+    return cro::SysTime::now().months() % 12;
+}
 
 static inline float getWindMultiplier(float ballHeight, float distanceToPin)
 {
@@ -644,8 +693,9 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
     if (auto* m = modelDef.getMaterial(matID); m != nullptr)
     {
         //skip over materials with alpha blend as they are
-        //probably glass or shadow materials
-        if (m->blendMode == cro::Material::BlendMode::Alpha)
+        //probably shadow materials if not explicitly glass
+        if (m->blendMode == cro::Material::BlendMode::Alpha
+            && !modelDef.hasTag(matID, "glass"))
         {
             dest = *m;
             return;
@@ -658,6 +708,11 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         if (m->properties.count("u_diffuseMap"))
         {
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+        }
+
+        if (m->properties.count("u_maskMap"))
+        {
+            dest.setProperty("u_maskMap", cro::TextureID(m->properties.at("u_maskMap").second.textureID));
         }
 
         if (m->properties.count("u_colour")
@@ -857,11 +912,19 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     return img;
 }
 
+struct SkyboxMaterials final
+{
+    std::int32_t horizon = -1;
+    std::int32_t horizonSun = -1;
+    std::int32_t skinned = -1;
+};
+
 //return the entity with the cloud ring (so we can apply material)
-static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID, std::int32_t skinMatID = -1)
+static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials materials)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
+    float stars = 0.f;
 
     cro::ConfigFile cfg;
 
@@ -871,6 +934,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
         glm::vec3 position = glm::vec3(0.f);
         glm::vec3 scale = glm::vec3(0.f);
         float rotation = 0.f;
+        bool useSunlight = false;
     };
     std::vector<PropData> propModels;
 
@@ -889,6 +953,10 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                 else if (name == "sky_bottom")
                 {
                     skyMid = p.getValue<cro::Colour>();
+                }
+                else if (name == "stars")
+                {
+                    stars = p.getValue<float>();
                 }
             }
         }
@@ -920,6 +988,10 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                     {
                         data.scale = p.getValue<glm::vec3>();
                     }
+                    else if (propName == "skylight")
+                    {
+                        data.useSunlight = p.getValue<bool>();
+                    }
                 }
             }
         }
@@ -937,13 +1009,23 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
             entity.setLabel(cro::FileSystem::getFileName(model.path));
             md.createModel(entity);
 
-            if (materialID > -1)
+            std::int32_t matID = -1;
+            if (model.useSunlight && materials.horizonSun != -1)
             {
-                auto material = resources.materials.get(materialID);
+                matID = materials.horizonSun;
+            }
+            else
+            {
+                matID = materials.horizon;
+            }
 
-                if (md.hasSkeleton() && skinMatID > -1)
+            if (matID > -1)
+            {
+                auto material = resources.materials.get(matID);
+
+                if (md.hasSkeleton() && materials.skinned > -1)
                 {
-                    material = resources.materials.get(skinMatID);
+                    material = resources.materials.get(materials.skinned);
                     entity.getComponent<cro::Skeleton>().play(0);
                 }
 
@@ -973,6 +1055,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
 
     skyScene.enableSkybox();
     skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
+    skyScene.setStarsAmount(stars);
 
     cro::Entity cloudEnt;
     if (md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))

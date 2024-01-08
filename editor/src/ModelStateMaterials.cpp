@@ -376,6 +376,15 @@ void ModelState::exportMaterial() const
             file.addProperty("lightmap", getTextureName(matDef.textureIDs[MaterialDefinition::Lightmap]));
         }
 
+        if(!matDef.tags.empty())
+        {
+            auto* o = file.addObject("tags");
+            for (const auto& tag : matDef.tags)
+            {
+                o->addProperty("tag").setValue(tag);
+            }
+        }
+
         file.save(path);
     }
 }
@@ -519,6 +528,23 @@ void ModelState::importMaterial(const std::string& path)
                 else if (name == "use_mipmaps")
                 {
                     def.useMipmaps = prop.getValue<bool>();
+                }
+            }
+
+            //sub-objects (currently just nested tags)
+            const auto& subObjs = file.getObjects();
+            for (const auto& so : subObjs)
+            {
+                if (so.getName() == "tags")
+                {
+                    const auto& subProps = so.getProperties();
+                    for (const auto& sp : subProps)
+                    {
+                        if (sp.getName() == "tag")
+                        {
+                            def.tags.push_back(sp.getValue<std::string>());
+                        }
+                    }
                 }
             }
 
@@ -711,6 +737,23 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         else if (name == "use_mipmaps")
         {
             matDef.useMipmaps = prop.getValue<bool>();
+        }
+    }
+
+    //sub-objects (currently just nested tags)
+    const auto& subObjs = obj.getObjects();
+    for (const auto& so : subObjs)
+    {
+        if (so.getName() == "tags")
+        {
+            const auto& subProps = so.getProperties();
+            for (const auto& sp : subProps)
+            {
+                if (sp.getName() == "tag")
+                {
+                    matDef.tags.push_back(sp.getValue<std::string>());
+                }
+            }
         }
     }
 }

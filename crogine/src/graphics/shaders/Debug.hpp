@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::Debug
 {
-    static const std::string Vertex = R"(
+    inline const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
         ATTRIBUTE LOW vec4 a_colour;
 
@@ -47,7 +47,7 @@ namespace cro::Shaders::Debug
             v_colour = a_colour;
         })";
 
-    static const std::string Fragment = R"(
+    inline const std::string Fragment = R"(
         VARYING_IN LOW vec4 v_colour;
         OUTPUT
 
@@ -55,4 +55,48 @@ namespace cro::Shaders::Debug
         {
             FRAG_OUT = v_colour;
         })";
+
+    //based on example at geeks3D
+    inline const std::string NormalGeometry = 
+        R"(
+        layout(triangles) in;
+
+        // Three lines will be generated: 6 vertices
+        layout(line_strip, max_vertices=6) out;
+
+        uniform mat4 u_modelMatrix;
+        uniform mat4 u_viewProjectionMatrix;
+
+        in Vertex
+        {
+          vec4 normal;
+        } vertex[];
+
+        out vec4 o_colour;
+
+        const float NormalLength = 0.02;
+        const vec4 Colour = vec4 (1.0, 1.0, 0.0, 1.0);
+
+        void main()
+        {
+            mat4 mvp = u_viewProjectionMatrix * u_modelMatrix;
+
+            int i = 0;
+            for(i = 0; i < gl_in.length(); i++)
+            {
+                vec3 P = gl_in[i].gl_Position.xyz;
+                vec3 N = vertex[i].normal.xyz;
+    
+                gl_Position = mvp * vec4(P, 1.0);
+                o_colour = Colour;
+                EmitVertex();
+    
+                gl_Position = mvp * vec4(P + N * NormalLength, 1.0);
+                o_colour = Colour;
+                EmitVertex();
+    
+                EndPrimitive();
+            }
+        }
+        )";
 }

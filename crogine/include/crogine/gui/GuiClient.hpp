@@ -83,5 +83,9 @@ namespace cro
         \brief Removes all console tabs currently registered by this state
         */
         void unregisterConsoleTabs() const;
+
+    private:
+        mutable bool m_wantsWindowsRemoving = true;
+        mutable bool m_wantsTabsRemoving = true;
     };
 }

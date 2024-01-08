@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -75,7 +75,7 @@ static const std::array<std::string, ChallengeID::Count> ChallengeStrings =
 
 static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
 {
-    "Make 50 So Close chips on to the green",
+    "Make 100 So Close chips on to the green",
     "Make 50 Nice Putts",
     "Hit 25 random bull's eyes",
     "Play a full 18 (or 12) hole round in every game mode",
@@ -84,7 +84,7 @@ static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
     "Get 99% or better on each target on the Driving Range",
     "Take 50 gimmies resulting from a Near Miss",
     "Make 250 shots with Great Accuracy",
-    "Score 2 Birdies in one round on the front 9 of each course",
+    "Score 4 Birdies in one round on the front 9 of each course",
     "Score 1 Eagle on the back 9 of each course",
     "Hit the flag stick 50 times"
 };
@@ -133,7 +133,7 @@ public:
 private:
     std::array<Challenge, ChallengeID::Count> m_challenges =
     {
-        Challenge(50, Challenge::Counter),
+        Challenge(100, Challenge::Counter),
         Challenge(50, Challenge::Counter),
         Challenge(25, Challenge::Counter),
         Challenge(0x7F, Challenge::Flag), //game mode count

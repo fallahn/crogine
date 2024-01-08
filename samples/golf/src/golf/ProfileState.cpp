@@ -226,6 +226,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
+        handleTextEdit(evt);
         switch (evt.key.keysym.sym)
         {
         default:
@@ -446,43 +447,45 @@ void ProfileState::handleMessage(const cro::Message& msg)
 bool ProfileState::simulate(float dt)
 {
     //rotate/zoom avatar
-    float rotation = 0.f;
-    
-    if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
-        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
+    if (!m_textEdit.entity.isValid())
     {
-        rotation -= dt;
-    }
-    if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonRightShoulder)
-        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
-    {
-        rotation += dt;
-    }
-    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);
+        float rotation = 0.f;
 
-
-    float zoom = 0.f;
-    if(cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > TriggerDeadZone
-        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
-    {
-        zoom -= dt;
-    }
-    if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) > TriggerDeadZone
-        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
-    {
-        zoom += dt;
-    }
-    if (zoom != 0)
-    {
-        auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
-        if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom 
-            && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
+        if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
         {
-            pos += CameraZoomVector * zoom;
-            m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
+            rotation -= dt;
+        }
+        if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonRightShoulder)
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
+        {
+            rotation += dt;
+        }
+        m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);
+
+
+        float zoom = 0.f;
+        if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > TriggerDeadZone
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
+        {
+            zoom -= dt;
+        }
+        if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) > TriggerDeadZone
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+        {
+            zoom += dt;
+        }
+        if (zoom != 0)
+        {
+            auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
+            if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom
+                && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
+            {
+                pos += CameraZoomVector * zoom;
+                m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
+            }
         }
     }
-
 
     m_modelScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -1060,7 +1063,8 @@ void ProfileState::buildScene()
     nameButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
-                if (activated(evt))
+                if (!m_activeProfile.isSteamID &&
+                    activated(evt))
                 {
                     auto& callback = m_menuEntities[EntityID::NameText].getComponent<cro::Callback>();
                     callback.active = !callback.active;
@@ -1071,7 +1075,9 @@ void ProfileState::buildScene()
 
                         if (evt.type == SDL_CONTROLLERBUTTONUP)
                         {
-                            requestStackPush(StateID::Keyboard);
+                            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                            msg->type = SystemEvent::RequestOSK;
+                            msg->data = 0;
                         }
                     }
                     else
@@ -1712,7 +1718,7 @@ void ProfileState::buildPreviewScene()
     auto& cam2 = m_cameras[CameraID::Mugshot].addComponent<cro::Camera>();
     cam2.setPerspective(60.f * cro::Util::Const::degToRad, 1.f, 0.1f, 6.f);
     cam2.viewport = { 0.f, 0.f, 0.5f, 1.f };
-    cam2.renderFlags = ~(1 << 1);
+    cam2.setRenderFlags(cro::Camera::Pass::Final, ~(1 << 1));
 
 
     m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 96.f * cro::Util::Const::degToRad);
@@ -2319,6 +2325,7 @@ void ProfileState::refreshBio()
 void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)
 {
     *dst = dst->substr(0, maxChars);
+    m_previousString = *dst;
 
     stringEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
     m_textEdit.string = dst;
@@ -2349,6 +2356,32 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
                 m_textEdit.string->erase(m_textEdit.string->size() - 1);
             }
             break;
+        case SDLK_v:
+            if (evt.key.keysym.mod & KMOD_CTRL)
+            {
+                if (SDL_HasClipboardText())
+                {
+                    char* text = SDL_GetClipboardText();
+                    auto codePoints = cro::Util::String::getCodepoints(text);
+                    SDL_free(text);
+
+                    cro::String str = cro::String::fromUtf32(codePoints.begin(), codePoints.end());
+                    auto len = std::min(str.size(), ConstVal::MaxStringChars - m_textEdit.string->size());
+
+                    *m_textEdit.string += str.substr(0, len);
+                }
+            }
+            break;
+        }
+    }
+    else if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_ESCAPE:
+            cancelTextEdit();
+            break;
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
@@ -2360,6 +2393,19 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
             *m_textEdit.string += cro::String::fromUtf32(codePoints.begin(), codePoints.end());
         }
     }
+}
+
+void ProfileState::cancelTextEdit()
+{
+    *m_textEdit.string = m_previousString;
+    applyTextEdit();
+
+    //strictly speaking this should be whichever entity
+    //that just cancelled editing - but m_textEdit is reset
+    //after having applied the edit...
+    centreText(m_menuEntities[EntityID::NameText]);
+
+    m_previousString.clear();
 }
 
 bool ProfileState::applyTextEdit()

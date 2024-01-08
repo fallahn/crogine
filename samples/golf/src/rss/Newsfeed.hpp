@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#ifdef USE_RSS
+#include <crogine/core/String.hpp>
 
 #include <string>
 #include <vector>
@@ -47,10 +47,10 @@ public:
     */
     struct Item final
     {
-        std::string title;
-        std::string url;
-        std::string date;
-        std::string description;
+        cro::String title;
+        cro::String url;
+        cro::String date;
+        cro::String description;
     };
 
     /*!
@@ -89,7 +89,5 @@ private:
     std::mutex m_mutex;
     
     std::vector<Item> m_items;
-    bool parseFeed(const std::string&);
+    bool parseFeed(const std::vector<std::uint8_t>&);
 };
-
-#endif

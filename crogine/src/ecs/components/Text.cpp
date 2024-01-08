@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,6 +41,92 @@ Text::Text()
 
 }
 
+Text::~Text()
+{
+    if (m_context.font)
+    {
+        m_context.font->unregisterObserver(this);
+    }
+}
+
+Text::Text(const Text& other)
+    : m_dirtyFlags(DirtyFlags::All)
+{
+    m_context = other.m_context;
+    if (m_context.font)
+    {
+        m_context.font->registerObserver(this);
+    }
+}
+
+Text::Text(Text&& other) noexcept
+    : m_dirtyFlags(DirtyFlags::All)
+{
+    m_context = other.m_context;
+    if (m_context.font)
+    {
+        m_context.font->registerObserver(this);
+        m_context.font->unregisterObserver(&other);
+    }
+
+    other.m_context = {};
+    other.m_dirtyFlags = 0;
+}
+
+Text& Text::operator=(const Text& other)
+{
+    if (&other == this)
+    {
+        return *this;
+    }
+
+    //we're interested in our own state
+    //being dirty, rather than whatever
+    //the other state was.
+    m_dirtyFlags = DirtyFlags::All;
+
+    if (m_context.font)
+    {
+        m_context.font->unregisterObserver(this);
+    }
+
+    m_context = other.m_context;
+
+    if (m_context.font)
+    {
+        m_context.font->registerObserver(this);
+    }
+
+    return *this;
+}
+
+Text& Text::operator=(Text&& other) noexcept
+{
+    if (&other == this)
+    {
+        return *this;
+    }
+
+    if (m_context.font)
+    {
+        m_context.font->unregisterObserver(this);
+    }
+
+    m_dirtyFlags = DirtyFlags::All;
+    m_context = other.m_context;
+
+    if (m_context.font)
+    {
+        m_context.font->registerObserver(this);
+        m_context.font->unregisterObserver(&other);
+    }
+
+    other.m_context = {};
+    other.m_dirtyFlags = 0;
+
+    return *this;
+}
+
 Text::Text(const Font& font)
     : Text()
 {
@@ -50,7 +136,13 @@ Text::Text(const Font& font)
 //public
 void Text::setFont(const Font& font)
 {
+    if (m_context.font)
+    {
+        m_context.font->unregisterObserver(this);
+    }
+
     m_context.font = &font;
+    m_context.font->registerObserver(this);
     m_dirtyFlags |= DirtyFlags::All;
 }
 
@@ -72,6 +164,11 @@ void Text::setString(const String& str)
     {
         m_context.string = str;
         m_dirtyFlags |= DirtyFlags::All;
+
+        /*if (!m_context.font->isRegistered(this))
+        {
+            LogI << "text is not registered with ofotn observers!" << std::endl;
+        }*/
     }
 }
 
@@ -188,7 +285,7 @@ FloatRect Text::getLocalBounds(Entity entity)
     if (text.m_dirtyFlags)
     {
         //check if only the colour needs updating
-        if (text.m_dirtyFlags == DirtyFlags::Colour)
+        if ((text.m_dirtyFlags & DirtyFlags::Colour) != 0)
         {
             auto& verts = drawable.getVertexData();
 
@@ -214,14 +311,21 @@ FloatRect Text::getLocalBounds(Entity entity)
                 }
             }
         }
-        else
+        //else
         {
             text.updateVertices(drawable);
             drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
             drawable.setPrimitiveType(GL_TRIANGLES);
+            
+            if ((text.m_dirtyFlags & DirtyFlags::Texture) != 0)
+            {
+                drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
+            }
+            
             text.m_dirtyFlags = 0;
         }
     }
+
     return drawable.getLocalBounds();
 }
 
@@ -237,7 +341,7 @@ void Text::setAlignment(Text::Alignment alignment)
 //private
 void Text::updateVertices(Drawable2D& drawable)
 {
-    m_dirtyFlags = 0;
+    //m_dirtyFlags = (m_dirtyFlags & ~DirtyFlags::Texture);
 
     FloatRect localBounds;
 
@@ -262,4 +366,14 @@ void Text::updateVertices(Drawable2D& drawable)
 
 
     drawable.updateLocalBounds(localBounds);
+}
+
+void Text::onFontUpdate()
+{
+    m_dirtyFlags |= DirtyFlags::Texture;
+}
+
+void Text::removeFont()
+{
+    m_context.font = nullptr;
 }

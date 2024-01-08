@@ -97,7 +97,7 @@ public:
     };
     StrokeResult getStroke(std::int32_t club, std::int32_t facing, float holeDistance) const; //facing is -1 or 1 to decide on slice/hook
 
-    float getEstimatedDistance() const { return m_estimatedDistance; } //projected magnitude of distance vector of the current club with the current spin setting
+    float getEstimatedDistance() const; //projected magnitude of distance vector of the current club with the current spin setting
 
     static constexpr std::uint32_t CPU_ID = 1337u;
 
@@ -150,6 +150,11 @@ private:
     std::int32_t m_firstClub;
     std::int32_t m_clubOffset; //offset ID from first club
 
+    std::vector<float> m_bunkerWavetable;
+    std::vector<float> m_roughWavetable;
+    std::size_t m_bunkerTableIndex;
+    std::size_t m_roughTableIndex;
+
     std::int32_t m_terrain;
     std::uint8_t m_lie;
     float m_estimatedDistance;
@@ -163,4 +168,9 @@ private:
     void checkControllerInput();
     void checkMouseInput();
     glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const; //used for drone cam and spin amount
+
+    cro::Clock m_iconTimer;
+    bool m_iconActive;
+    void beginIcon();
+    void endIcon();
 };

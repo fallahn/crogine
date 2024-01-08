@@ -70,7 +70,7 @@ source distribution.
 
 namespace
 {
-#include "UnlockShader.inl"
+#include "shaders/UnlockShader.inl"
 
     struct ItemCallbackData final
     {

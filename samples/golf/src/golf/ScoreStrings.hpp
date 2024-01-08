@@ -51,7 +51,7 @@ struct ScoreID final
     static constexpr std::int32_t ScoreOffset = 4;
 };
 
-static const std::array<std::string, ScoreID::Count> ScoreStrings =
+static inline const std::array<std::string, ScoreID::Count> ScoreStrings =
 {
     "Hole\nIn\nOne!", "Albatross", "Eagle", "Birdie", "Par", "Bogey", "Double Bogey", "Triple Bogey"
 };

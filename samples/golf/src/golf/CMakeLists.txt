@@ -11,6 +11,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/BilliardsSystem.cpp
   #${PROJECT_DIR}/golf/BilliardsSystemReact.cpp
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
+  ${PROJECT_DIR}/golf/ChunkVisSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/CloudSystem.cpp
   ${PROJECT_DIR}/golf/ClubhouseState.cpp
@@ -31,6 +32,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/GolfParticleDirector.cpp
   ${PROJECT_DIR}/golf/GolfSoundDirector.cpp
   ${PROJECT_DIR}/golf/GolfState.cpp
+  ${PROJECT_DIR}/golf/GolfStateAssets.cpp
   ${PROJECT_DIR}/golf/GolfStateCameras.cpp
   ${PROJECT_DIR}/golf/GolfStateDebug.cpp
   ${PROJECT_DIR}/golf/GolfStateScoring.cpp
@@ -43,6 +45,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp
   ${PROJECT_DIR}/golf/League.cpp
   ${PROJECT_DIR}/golf/LeagueState.cpp
+  ${PROJECT_DIR}/golf/LightAnimationSystem.cpp
   ${PROJECT_DIR}/golf/MenuAvatars.cpp
   ${PROJECT_DIR}/golf/MapOverviewState.cpp
   ${PROJECT_DIR}/golf/MenuCallbacks.cpp
@@ -61,6 +64,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/Path.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
   ${PROJECT_DIR}/golf/PlayerData.cpp
+  ${PROJECT_DIR}/golf/PlayerManagementState.cpp
   ${PROJECT_DIR}/golf/PlaylistState.cpp
   ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
@@ -90,6 +94,8 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/VatAnimationSystem.cpp
   ${PROJECT_DIR}/golf/VatFile.cpp
   ${PROJECT_DIR}/golf/Weather.cpp
+  ${PROJECT_DIR}/golf/WeatherAnimationSystem.cpp
+  ${PROJECT_DIR}/golf/WeatherDirector.cpp
 
   #${PROJECT_DIR}/golf/server/GolfDefaultDirector.cpp
   ${PROJECT_DIR}/golf/server/EightballDirector.cpp

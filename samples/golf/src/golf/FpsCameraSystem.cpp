@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "FpsCameraSystem.hpp"
+#include "CollisionMesh.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Keyboard.hpp>
@@ -37,11 +38,13 @@ source distribution.
 
 namespace
 {
-    const float FlyMultiplier = 15.f;
+    constexpr float FlyMultiplier = 15.f;
+    constexpr float MinHeight = 0.3f;
 }
 
-FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(FpsCameraSystem))
+FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm)
+    : cro::System   (mb, typeid(FpsCameraSystem)),
+    m_collisionMesh (cm)
 {
     requireComponent<FpsCamera>();
     requireComponent<cro::Transform>();
@@ -216,61 +219,6 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
 
 void FpsCameraSystem::process(float dt)
 {
-    //read the game controller axis if connected
-    static constexpr float MaxLookAxis = 50.f;
-    //for (auto i = 0; i < 4; ++i)
-    //{
-    //    if (cro::GameController::isConnected(i))
-    //    {
-    //        //look around
-    //        float xPos = static_cast<float>(cro::GameController::getAxisPosition(i, cro::GameController::AxisRightX));
-    //        xPos /= cro::GameController::AxisMax;
-    //        m_inputs[i].xMove = static_cast<std::int8_t>(xPos * MaxLookAxis);
-
-    //        float yPos = static_cast<float>(cro::GameController::getAxisPosition(i, cro::GameController::AxisRightY));
-    //        yPos /= cro::GameController::AxisMax;
-    //        m_inputs[i].yMove = static_cast<std::int8_t>(yPos * MaxLookAxis);
-
-
-    //        //move
-    //        auto xMove = cro::GameController::getAxisPosition(i, cro::GameController::AxisLeftX);
-    //        if (xMove == 0)
-    //        {
-    //            //hmmm how do we stop this unsetting state set by the DPad event (above)?
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Right;
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Left;
-    //        }
-    //        else if (xMove > 0)
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Right;
-    //        }
-    //        else
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Left;
-    //        }
-
-    //        auto yMove = cro::GameController::getAxisPosition(i, cro::GameController::AxisLeftY);
-    //        if (yMove == 0)
-    //        {
-    //            //hmmm how do we stop this unsetting state set by the DPad event (above)?
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Forward;
-    //            //m_inputs[i].buttonFlags &= ~Input::Flags::Backward;
-    //        }
-    //        else if (yMove > 0)
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Forward;
-    //        }
-    //        else
-    //        {
-    //            m_inputs[i].buttonFlags |= Input::Flags::Backward;
-    //        }
-
-    //        //TODO create a normalised vector from left stick
-    //        //and use the length to calculate moement speed...
-    //    }
-    //}
-
-
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -334,7 +282,7 @@ void FpsCameraSystem::process(float dt)
         float moveSpeed = controller.moveSpeed * dt;
         if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
         {
-            moveSpeed *= 0.1f;
+            moveSpeed *= 0.05f;
         }
 
         if (controller.flyMode)
@@ -376,6 +324,13 @@ void FpsCameraSystem::process(float dt)
         else
         {
             //add gravity / any jump impulse
+        }
+
+        auto pos = tx.getPosition();
+        auto result = m_collisionMesh.getTerrain(pos);
+        if (auto diff = pos.y - result.height; diff < MinHeight)
+        {
+            tx.move({ 0.f, MinHeight - diff, 0.f });
         }
     }
 }

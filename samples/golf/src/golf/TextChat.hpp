@@ -42,10 +42,13 @@ class TextChat final : public cro::GuiClient
 {
 public:
     TextChat(cro::Scene&, SharedStateData&);
+    ~TextChat(); //there's no ownership here it just resets the OSK
+
+    void handleMessage(const cro::Message&);
 
     void handlePacket(const net::NetEvent::Packet&);
 
-    void toggleWindow();
+    void toggleWindow(bool showOSK);
 
     bool isVisible() const { return m_visible; }
 
@@ -56,6 +59,8 @@ public:
         Angry, Happy, Laughing, Applaud
     };
     void quickEmote(std::int32_t);
+
+    void sendBufferedString();
 
 private:
 
@@ -69,9 +74,10 @@ private:
     {
         const cro::String str;
         ImVec4 colour;
-
-        BufferLine(const std::string& s, ImVec4 c)
-            : str(s), colour(c) {}
+        
+        BufferLine(const cro::String& s, ImVec4 c)
+            : str(s), colour(c)
+        { }
     };
 
     static constexpr std::size_t MaxLines = 24;
@@ -81,8 +87,14 @@ private:
     cro::Clock m_limitClock;
 
     cro::Entity m_rootNode;
-    std::array<cro::Entity, 2U> m_screenChatBuffer = {};
+    std::array<cro::Entity, 10U> m_screenChatBuffer = {};
     std::size_t m_screenChatIndex;
+    std::size_t m_screenChatActiveCount;
+
+    //raises notifications for client icons
+    cro::Clock m_chatTimer;
+    void beginChat();
+    void endChat();
 
     void sendTextChat();
 };

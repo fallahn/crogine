@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "SSAOState.hpp"
+#include "LightVolumeSystem.hpp"
 #include "../StateIDs.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -155,12 +156,23 @@ namespace
 
     uniform sampler2D u_texture;
     uniform sampler2D u_aoMap;
+    uniform sampler2D u_lightMap;
 
     VARYING_IN vec2 v_texCoord;
 
+#include FXAA
+
     void main()
     {
-        FRAG_OUT = vec4(TEXTURE(u_texture, v_texCoord).rgb * TEXTURE(u_aoMap, v_texCoord).r, 1.0);
+        //vec3 colour = TEXTURE(u_texture, v_texCoord).rgb;
+        //vec3 colour = fxaa(u_texture, v_texCoord).rgb;
+
+        vec3 colour = mix(TEXTURE(u_texture, v_texCoord).rgb, fxaa(u_texture, v_texCoord).rgb, step(0.5, v_texCoord.x));
+        vec2 px = vec2(1.0) / u_resolution;
+        colour = mix(colour, vec3(1.0, 0.0, 0.0), step(0.5 - px.x, v_texCoord.x) * (1.0 - step(0.5 + px.x, v_texCoord.x)));
+
+        FRAG_OUT = vec4(colour * TEXTURE(u_aoMap, v_texCoord).r, 1.0);
+        FRAG_OUT.rgb += TEXTURE(u_lightMap, v_texCoord).rgb;
     })";
 }
 
@@ -210,6 +222,30 @@ void SSAOState::handleMessage(const cro::Message& msg)
 
 bool SSAOState::simulate(float dt)
 {
+    glm::vec3 movement(0.f);
+    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    {
+        movement.x -= 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    {
+        movement.x += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    {
+        movement.z += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    {
+        movement.z -= 1.f;
+    }
+    if (auto len2 = glm::length2(movement); len2 > 1)
+    {
+        movement /= std::sqrt(len2);
+    }
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().move(movement * dt);
+
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -221,10 +257,14 @@ void SSAOState::render()
     m_gameScene.render();
     m_renderBuffer.display();
 
+    m_gameScene.getSystem<test::LightVolumeSystem>()->updateBuffer(m_gameScene.getActiveCamera());
+
+
     m_colourQuad.draw();
     m_normalQuad.draw();
     m_positionQuad.draw();
     m_depthQuad.draw();
+    m_lightQuad.draw();
 
     m_ssaoBuffer.clear(cro::Colour::CornflowerBlue);
     updateSSAOData();
@@ -234,11 +274,19 @@ void SSAOState::render()
     m_ssaoBlurQuad.draw();
 
 
-    glActiveTexture(GL_TEXTURE10);
+    glActiveTexture(GL_TEXTURE0+10);
     glBindTexture(GL_TEXTURE_2D, m_ssaoBuffer.getTexture().getGLHandle());
+
+    glActiveTexture(GL_TEXTURE0+11);
+    glBindTexture(GL_TEXTURE_2D, m_gameScene.getSystem<test::LightVolumeSystem>()->getBuffer().getGLHandle());
+
     glUseProgram(m_outputData.shader);
     glUniform1i(m_outputData.aoMap, 10);
+    glUniform1i(m_outputData.lightMap, 11);
     m_outputQuad.draw();
+
+    m_textA.draw();
+    m_textB.draw();
 
     m_uiScene.render();
 }
@@ -252,6 +300,7 @@ void SSAOState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<test::LightVolumeSystem>(mb);
 }
 
 void SSAOState::loadAssets()
@@ -275,6 +324,7 @@ void SSAOState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::SSAOBlend);
     m_outputData.shader = shader->getGLHandle();
     m_outputData.aoMap = shader->getUniformID("u_aoMap");
+    m_outputData.lightMap = shader->getUniformID("u_lightMap");
 }
 
 void SSAOState::createScene()
@@ -301,12 +351,52 @@ void SSAOState::createScene()
         md.createModel(entity);
     }
 
+    if (md.loadFromFile("assets/ssao/light_sphere.cmt"))
+    {
+        //TODO update the model so radius is 1m, not diametre
+        static constexpr float Radius = 0.5f;
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 1.2f, 1.f, 0.f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(Radius * 2.f));
+        md.createModel(entity);
+
+        entity.addComponent<test::LightVolume>().radius = Radius;
+        entity.getComponent<test::LightVolume>().colour = cro::Colour::AliceBlue;
+        entity.getComponent<cro::Model>().setHidden(true);
+
+
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -1.2f, 1.f, 0.f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(Radius * 3.f));
+        md.createModel(entity);
+
+        entity.addComponent<test::LightVolume>().radius = Radius * 1.5f;
+        entity.getComponent<test::LightVolume>().colour = cro::Colour::Plum;
+        entity.getComponent<cro::Model>().setHidden(true);
+    }
+
+    m_resources.fonts.load(1, "assets/fonts/VeraMono.ttf");
+    auto& font = m_resources.fonts.get(1);
+    m_textA.setFont(font);
+    m_textA.setCharacterSize(16);
+    m_textA.setFillColour(cro::Colour::Red);
+    m_textA.setString("No AA");
+
+    m_textB.setFont(font);
+    m_textB.setCharacterSize(16);
+    m_textB.setFillColour(cro::Colour::Red);
+    m_textB.setString("FXAA (GeeXLab)");
+
     auto resizeWindow = [&](cro::Camera& cam)
     {
         auto buffSize = cro::App::getWindow().getSize();
         auto size = glm::vec2(buffSize);
 
+        static constexpr std::uint32_t LightBufferScale = 1;
+        auto& lightVolSystem = *m_gameScene.getSystem<test::LightVolumeSystem>();
+
         m_renderBuffer.create(buffSize.x, buffSize.y, 3);
+        lightVolSystem.setTargetSize(size, LightBufferScale);
         
         m_colourQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Colour), buffSize);
         m_colourQuad.setPosition({ 0.f, (size.y / 4.f) * 3.f });
@@ -315,13 +405,19 @@ void SSAOState::createScene()
         m_normalQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Normal), buffSize);
         m_normalQuad.setPosition({ 0.f, size.y / 2.f });
         m_normalQuad.setScale({ 0.25f, 0.25f });
+        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Normal), test::LightVolumeSystem::BufferID::Normal);
 
         m_positionQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Position), buffSize);
         m_positionQuad.setPosition({ 0.f, size.y / 4.f });
         m_positionQuad.setScale({ 0.25f, 0.25f });
+        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Position), test::LightVolumeSystem::BufferID::Position);
 
         m_depthQuad.setTexture(m_renderBuffer.getDepthTexture(), buffSize);
         m_depthQuad.setScale({ 0.25f, 0.25f });
+
+        m_lightQuad.setTexture(lightVolSystem.getBuffer());
+        m_lightQuad.setScale({ 0.25f, 0.25f });
+        m_lightQuad.setPosition({ (size.x / 4.f) * 3.f, 0.f });
 
         buffSize /= 2u;
 
@@ -342,10 +438,22 @@ void SSAOState::createScene()
         m_ssaoBufferQuad.setShader(m_resources.shaders.get(ShaderID::SSAO));
 
 
-        m_outputQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Colour), buffSize * 2u);
+        m_outputQuad.setTexture(m_renderBuffer.getTexture());
         m_outputQuad.setShader(m_resources.shaders.get(ShaderID::SSAOBlend));
         m_outputQuad.setPosition({ size.x / 4.f, size.y / 4.f });
         m_outputQuad.setScale({ 0.75f, 0.75f });
+
+
+        glm::vec2 res = glm::vec2(m_renderBuffer.getTexture().getSize());
+        auto& shader = m_resources.shaders.get(ShaderID::SSAOBlend);
+        auto uniform = shader.getUniformID("u_resolution");
+        glUseProgram(shader.getGLHandle());
+        glUniform2f(uniform, res.x, res.y);
+
+        auto pos = m_outputQuad.getPosition();
+        m_textA.setPosition(pos + glm::vec2(2.f, 2.f));
+        pos.x += (res.x / 2.f) * 0.75f;
+        m_textB.setPosition(pos + glm::vec2(2.f, 2.f));
 
         cam.setPerspective(0.7f, size.x / size.y, 2.1f, 7.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -360,6 +468,7 @@ void SSAOState::createScene()
     auto sun = m_gameScene.getSunlight();
     sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.3f);
     sun.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.4f);
+    //sun.getComponent<cro::Sunlight>().setColour(cro::Colour(0.251f, 0.243f, 0.412f));
 
     generateSSAOData();
 }
@@ -381,7 +490,13 @@ void SSAOState::createUI()
                 {
                     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
                 }*/
-                ImGui::Image(m_noiseTexture, { 32.f, 32.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                //ImGui::Image(m_noiseTexture, { 32.f, 32.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                auto c = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+                if (ImGui::ColorEdit3("Sky Colour", &c[0]))
+                {
+                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
+                }
             }
             ImGui::End();        
         });
@@ -429,10 +544,10 @@ void SSAOState::updateSSAOData()
     //position texture is automatically set to m_texture via SimpleQuad
 
     glUseProgram(m_ssaoData.shader);
-    glActiveTexture(GL_TEXTURE10);
+    glActiveTexture(GL_TEXTURE0 + 10);
     glBindTexture(GL_TEXTURE_2D, m_renderBuffer.getTexture(1).textureID);
     glUniform1i(m_ssaoData.normal, 10);
-    glActiveTexture(GL_TEXTURE11);
+    glActiveTexture(GL_TEXTURE0 + 11);
     glBindTexture(GL_TEXTURE_2D, m_noiseTexture.getGLHandle());
     glUniform1i(m_ssaoData.noise, 11);
     glUniform3fv(m_ssaoData.kernel, KernelSize, &m_sampleKernel[0][0]);

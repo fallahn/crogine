@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -56,6 +56,7 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 
 #include "../ErrorCheck.hpp"
 
@@ -65,8 +66,10 @@ using namespace cl;
 
 namespace
 {
-#include "TerrainShader.inl"
-#include "CelShader.inl"
+#include "shaders/TerrainShader.inl"
+#include "shaders/CelShader.inl"
+
+    constexpr glm::vec2 ChunkSize(static_cast<float>(MapSize.x) / ChunkVisSystem::ColCount, static_cast<float>(MapSize.y) / ChunkVisSystem::RowCount);
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -80,7 +83,10 @@ namespace
     static constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
     static constexpr std::int32_t SlopeGridSize = 20;
     static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
-    static constexpr std::int32_t NormalMapMultiplier = 4; //number of times the resolution of the map to increase normal map resolution by
+    
+    //number of times the resolution of the map to increase normal map resolution by
+    //MUST be even and should be 2,4 or 8 as 1 will cause a div0!
+    static constexpr std::int32_t NormalMapMultiplier = 8; 
 
     //callback data
     struct SwapData final
@@ -92,6 +98,7 @@ namespace
         cro::Entity otherEnt;
         cro::Entity instancedEnt; //entity containing instanced waterside geometry
         std::array<cro::Entity, 2u> billboardEnts = {};
+        std::array<cro::Entity, 2u> billboardTreeEnts = {}; //low quality trees
         std::array<cro::Entity, 4u> shrubberyEnts; //instanced shrubbery/trees (if HQ)
         std::vector<cro::Entity>* crowdEnts = nullptr;
     };
@@ -120,9 +127,11 @@ namespace
                 if (swapData.otherEnt.isValid())
                 {
                     swapData.billboardEnts[0].getComponent<cro::Model>().setHidden(true);
+                    swapData.billboardTreeEnts[0].getComponent<cro::Model>().setHidden(true);
 
                     swapData.otherEnt.getComponent<cro::Callback>().active = true;
                     swapData.billboardEnts[1].getComponent<cro::Model>().setHidden(false);
+                    swapData.billboardTreeEnts[1].getComponent<cro::Model>().setHidden(false);
                     terrainEntity.getComponent<cro::Callback>().active = true; //starts terrain morph
                 }
 
@@ -157,11 +166,10 @@ namespace
     };
 }
 
-TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>& hd, TerrainChunker& chunker)
+TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>& hd)
     : m_sharedData  (sd),
     m_holeData      (hd),
     m_currentHole   (0),
-    m_terrainChunker(chunker),
     m_swapIndex     (0),
     m_terrainBuffer ((MapSize.x * MapSize.y) / QuadsPerMetre),
     m_threadRunning (false),
@@ -313,21 +321,18 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto reedShadowID = resources.materials.add(resources.shaders.get(ShaderID::ShadowMapInstanced));
 
 
-    std::int32_t branchMaterialID = 0;
-    std::int32_t leafMaterialID = 0;
-    std::int32_t treeShadowMaterialID = 0;
-    std::int32_t leafShadowMaterialID = 0;
-    if (m_sharedData.treeQuality == SharedStateData::High)
-    {
-        branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
-        leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
-        treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
-        leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
-    }
+    //HQ tree materials
+    std::int32_t branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
+    std::int32_t leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
+    std::int32_t treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
+    std::int32_t leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
+
     //and VATs shader for crowd
     auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
     auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
 
+    auto crowdArrayMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdArray));
+    auto shadowArrayMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadowArray));
 
     //create billboard/instanced entities
     cro::ModelDefinition billboardDef(resources);
@@ -361,45 +366,64 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
         //create a billboard entity for each chunk in the TerrainChunker
         //reload the the model def each time to ensure unique VBOs
-        if (billboardDef.loadFromFile(theme.billboardModel))
+        const auto createBillboardEnt = [&]()
+            {
+                if (billboardDef.loadFromFile(theme.billboardModel))
+                {
+                    auto e = scene.createEntity();
+                    e.addComponent<cro::Transform>();
+                    entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+
+                    billboardDef.createModel(e);
+                    //if the model def failed to load for some reason this will be
+                    //missing, so we'll add it here just to stop the thread exploding
+                    //if it can't find the component
+                    if (!e.hasComponent<cro::BillboardCollection>())
+                    {
+                        e.addComponent<cro::BillboardCollection>();
+                    }
+
+                    if (e.hasComponent<cro::Model>())
+                    {
+                        e.getComponent<cro::Model>().setHidden(true);
+                        e.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(0.f), glm::vec3(MapSize.x, 20.f, -static_cast<float>(MapSize.y)) };
+                        e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
+
+                        auto material = resources.materials.get(billboardMatID);
+                        applyMaterialData(billboardDef, material);
+                        material.setProperty("u_noiseTexture", noiseTex);
+                        e.getComponent<cro::Model>().setMaterial(0, material);
+
+                        material = resources.materials.get(billboardShadowID);
+                        applyMaterialData(billboardDef, material);
+                        material.setProperty("u_noiseTexture", noiseTex);
+                        material.doubleSided = true; //do this second because applyMaterial() overwrites it
+                        e.getComponent<cro::Model>().setShadowMaterial(0, material);
+                    }
+                    return e;
+                }
+                return cro::Entity();
+            };
+
+        //this contains the regular billboards (always visible)
+        auto bbe = createBillboardEnt();
+        if (bbe.hasComponent<cro::Model>())
         {
-            auto e = scene.createEntity();
-            e.addComponent<cro::Transform>();
-            entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
-
-            billboardDef.createModel(e);
-            //if the model def failed to load for some reason this will be
-            //missing, so we'll add it here just to stop the thread exploding
-            //if it can't find the component
-            if (!e.hasComponent<cro::BillboardCollection>())
-            {
-                e.addComponent<cro::BillboardCollection>();
-            }
-
-            if (e.hasComponent<cro::Model>())
-            {
-                e.getComponent<cro::Model>().setHidden(true);
-                e.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(0.f), glm::vec3(MapSize.x, 20.f, -static_cast<float>(MapSize.y)) };
-                e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap));
-
-                auto material = resources.materials.get(billboardMatID);
-                applyMaterialData(billboardDef, material);
-                material.setProperty("u_noiseTexture", noiseTex);
-                e.getComponent<cro::Model>().setMaterial(0, material);
-
-                material = resources.materials.get(billboardShadowID);
-                applyMaterialData(billboardDef, material);
-                material.setProperty("u_noiseTexture", noiseTex);
-                material.doubleSided = true; //do this second because applyMaterial() overwrites it
-                e.getComponent<cro::Model>().setShadowMaterial(0, material);
-
-                m_billboardEntities[b++] = e;
-            }
+            m_billboardEntities[b] = bbe;
         }
+        //these have billboarded trees used for flight cam and when
+        //tree quality is set to low.
+        bbe = createBillboardEnt();
+        if (bbe.hasComponent<cro::Model>())
+        {
+            bbe.getComponent<cro::Model>().setRenderFlags(RenderFlags::FlightCam);
+            m_billboardTreeEntities[b] = bbe;
+        }
+        b++;
 
         //create a child entity for instanced geometry
         std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
-
+        //these are the plants etc that appear newar the water
         if (shrubDef.loadFromFile(instancePath, true))
         {
             auto material = resources.materials.get(reedMaterialID);
@@ -420,62 +444,59 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 childEnt.getComponent<cro::Model>().setShadowMaterial(j, shadowMat);
             }
             childEnt.getComponent<cro::Model>().setHidden(true);
-            childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+            childEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
             entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
             m_instancedEntities[i] = childEnt;
         }
 
-        //instanced shrubs
-        if (m_sharedData.treeQuality == SharedStateData::High)
+        //instanced trees/shrubs
+        for (auto j = 0u; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
         {
-            for (auto j = 0u; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
+            if (shrubDef.loadFromFile(theme.treesets[j].modelPath, true))
             {
-                if (shrubDef.loadFromFile(theme.treesets[j].modelPath, true))
+                auto childEnt = scene.createEntity();
+                childEnt.addComponent<cro::Transform>();
+                shrubDef.createModel(childEnt);
+
+                for (auto idx : theme.treesets[j].branchIndices)
                 {
-                    auto childEnt = scene.createEntity();
-                    childEnt.addComponent<cro::Transform>();
-                    shrubDef.createModel(childEnt);
+                    auto material = resources.materials.get(branchMaterialID);
+                    applyMaterialData(shrubDef, material, idx);
+                    material.setProperty("u_noiseTexture", noiseTex);
+                    childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
-                    for (auto idx : theme.treesets[j].branchIndices)
-                    {
-                        auto material = resources.materials.get(branchMaterialID);
-                        applyMaterialData(shrubDef, material, idx);
-                        material.setProperty("u_noiseTexture", noiseTex);
-                        childEnt.getComponent<cro::Model>().setMaterial(idx, material);
-
-                        material = resources.materials.get(treeShadowMaterialID);
-                        material.setProperty("u_noiseTexture", noiseTex);
-                        applyMaterialData(shrubDef, material, idx);
-                        childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
-                    }
-
-                    auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();
-                    for (auto idx : theme.treesets[j].leafIndices)
-                    {
-                        auto material = resources.materials.get(leafMaterialID);
-                        meshData.indexData[idx].primitiveType = GL_POINTS;
-                        material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
-                        material.setProperty("u_leafSize", theme.treesets[j].leafSize);
-                        material.setProperty("u_randAmount", theme.treesets[j].randomness);
-                        material.setProperty("u_colour", theme.treesets[j].colour);
-                        material.setProperty("u_noiseTexture", noiseTex);
-                        childEnt.getComponent<cro::Model>().setMaterial(idx, material);
-
-                        material = resources.materials.get(leafShadowMaterialID);
-                        if (m_sharedData.hqShadows)
-                        {
-                            material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
-                            material.setProperty("u_noiseTexture", noiseTex);
-                        }
-                        material.setProperty("u_leafSize", theme.treesets[j].leafSize);
-                        childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
-                    }
-
-                    childEnt.getComponent<cro::Model>().setHidden(true);
-                    childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
-                    entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
-                    m_instancedShrubs[i][j] = childEnt;
+                    material = resources.materials.get(treeShadowMaterialID);
+                    material.setProperty("u_noiseTexture", noiseTex);
+                    applyMaterialData(shrubDef, material, idx);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
                 }
+
+                auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();
+                for (auto idx : theme.treesets[j].leafIndices)
+                {
+                    auto material = resources.materials.get(leafMaterialID);
+                    meshData.indexData[idx].primitiveType = GL_POINTS;
+                    material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                    material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                    material.setProperty("u_randAmount", theme.treesets[j].randomness);
+                    material.setProperty("u_colour", theme.treesets[j].colour);
+                    material.setProperty("u_noiseTexture", noiseTex);
+                    childEnt.getComponent<cro::Model>().setMaterial(idx, material);
+
+                    material = resources.materials.get(leafShadowMaterialID);
+                    if (m_sharedData.hqShadows)
+                    {
+                        material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                        material.setProperty("u_noiseTexture", noiseTex);
+                    }
+                    material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
+                }
+
+                childEnt.getComponent<cro::Model>().setHidden(true);
+                childEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen | RenderFlags::FlightCam));
+                entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+                m_instancedShrubs[i][j] = childEnt;
             }
         }
 
@@ -491,17 +512,38 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 crowdDef.createModel(childEnt);
 
                 //setup material
-                auto material = resources.materials.get(crowdMaterialID);
-                applyMaterialData(crowdDef, material);
+                std::unique_ptr<cro::ArrayTexture<float, 4u>> tex = std::make_unique<cro::ArrayTexture<float, 4u>>();
+                if (!m_sharedData.vertexSnap && vatFile.fillArrayTexture(*tex))
+                {
+                    auto material = resources.materials.get(crowdArrayMaterialID);
+                    applyMaterialData(crowdDef, material);
 
-                material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
-                material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
+                    material.setProperty("u_arrayMap", *tex);
 
-                auto shadowMaterial = resources.materials.get(shadowMaterialID);
-                shadowMaterial.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+                    auto shadowMaterial = resources.materials.get(shadowArrayMaterialID);
+                    shadowMaterial.setProperty("u_arrayMap", *tex);
 
-                childEnt.getComponent<cro::Model>().setMaterial(0, material);
-                childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
+                    childEnt.getComponent<cro::Model>().setMaterial(0, material);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
+                    
+                    m_arrayTextures.push_back(std::move(tex));
+                }
+                else
+                {
+                    auto material = resources.materials.get(crowdMaterialID);
+                    applyMaterialData(crowdDef, material);
+
+                    material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+                    material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
+
+                    auto shadowMaterial = resources.materials.get(shadowMaterialID);
+                    shadowMaterial.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+
+                    childEnt.getComponent<cro::Model>().setMaterial(0, material);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
+                }
+
+
                 childEnt.getComponent<cro::Model>().setHidden(true);
                 childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
                 childEnt.addComponent<VatAnimation>().setVatData(vatFile);
@@ -531,6 +573,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
     m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
+    applyTreeQuality();
 
     //create a mesh to display the slope data
     flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
@@ -589,7 +632,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
     glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
     glm::vec2 mapSize(MapSize);
-    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -10.f, 20.f);
+    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -40.f, 40.f);
     auto normalViewProj = projMat * viewMat;
 
     //we can set this once so we don't need to store the matrix
@@ -597,7 +640,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
     glCheck(glUseProgram(0));
 
-    m_normalMap.create(MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier, false);
+    m_normalMap.create(MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier, 2);
     if (m_currentHole < m_holeData.size())
     {
         renderNormalMap();
@@ -637,6 +680,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.currentTime = 0.f;
 
                 m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
+                m_billboardTreeEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardTreeBuffer);
                 m_propRootEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
 
                 swapData.start = m_propRootEntities[second].getComponent<cro::Transform>().getPosition().y;
@@ -647,6 +691,8 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.crowdEnts = &m_crowdEntities[second];
                 swapData.billboardEnts[0] = m_billboardEntities[second];
                 swapData.billboardEnts[1] = m_billboardEntities[first];
+                swapData.billboardTreeEnts[0] = m_billboardTreeEntities[second];
+                swapData.billboardTreeEnts[1] = m_billboardTreeEntities[first];
                 swapData.currentTime = 0.f;
                 m_propRootEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
                 m_propRootEntities[second].getComponent<cro::Callback>().active = true;
@@ -713,11 +759,6 @@ void TerrainBuilder::update(std::size_t holeIndex)
         
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 
-
-        //TODO this wants to be done at the bottom of the animation - need to make it available to the callback
-        m_terrainChunker.setChunks(m_chunks);
-
-
         //signal to the thread we want to update the buffers
         //ready for next time
         m_currentHole++;
@@ -742,44 +783,99 @@ float TerrainBuilder::getSlopeAlpha() const
     return m_slopeProperties.currentAlpha;
 }
 
+void TerrainBuilder::applyTreeQuality()
+{
+    std::uint64_t hqFlags = 0;
+    std::uint64_t bbFlags = RenderFlags::FlightCam | RenderFlags::Main | RenderFlags::Reflection;
+
+    if (m_sharedData.treeQuality == SharedStateData::High)
+    {
+        hqFlags = RenderFlags::Main | RenderFlags::Reflection;
+        bbFlags = RenderFlags::FlightCam;
+    }
+    
+    for (auto& ents : m_instancedShrubs)
+    {
+        for (auto e : ents)
+        {
+            if (e.isValid())
+            {
+                e.getComponent<cro::Model>().setRenderFlags(hqFlags);
+            }
+        }
+    }
+
+    for (auto e : m_billboardTreeEntities)
+    {
+        if (e.isValid())
+        {
+            e.getComponent<cro::Model>().setRenderFlags(bbFlags);
+        }
+    }
+}
+
 //private
+void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunks)
+{
+    auto shrubIndex = m_swapIndex % 2;
+
+    //for each instanced model
+    for (auto i = 0u; i < MaxShrubInstances; ++i)
+    {
+        //if this instance exists...
+        if (m_instancedShrubs[shrubIndex][i].isValid())
+        {
+            //grab its cells
+            const auto& treeCells = m_cellData[shrubIndex][i];
+            std::vector<const std::vector<glm::mat4>*> transforms;
+            std::vector<const std::vector<glm::mat3>*> normals;
+
+            //check each visible cell and stash it if not empty
+            for (auto c : visibleChunks)
+            {
+                if (!treeCells[c].transforms.empty())
+                {
+                    transforms.push_back(&treeCells[c].transforms);
+                    normals.push_back(&treeCells[c].normalMats);
+                }
+            }
+
+            //if transforms exist update the model
+            if (!transforms.empty())
+            {
+                m_instancedShrubs[shrubIndex][i].getComponent<cro::Model>().setHidden(false);
+                m_instancedShrubs[shrubIndex][i].getComponent<cro::Model>().updateInstanceTransforms(transforms, normals);
+            }
+            //else hide is as there's no point drawing it.
+            else
+            {
+                m_instancedShrubs[shrubIndex][i].getComponent<cro::Model>().setHidden(true);
+            }
+        }
+    }
+}
+
 void TerrainBuilder::threadFunc()
 {
-    const auto chunkIndex = [](glm::vec3 worldPos)
-    {
-        static constexpr float ChunkSizeX = static_cast<float>(MapSize.x) / TerrainChunker::ChunkCountX;
-        static constexpr float ChunkSizeY = static_cast<float>(MapSize.y) / TerrainChunker::ChunkCountY;
-
-        glm::vec2 pos(worldPos.x, -worldPos.z);
-        //TODO is this safe to assume the position is always within the map?
-        std::int32_t xPos = static_cast<std::int32_t>(pos.x / ChunkSizeX);
-        std::int32_t yPos = static_cast<std::int32_t>(pos.y / ChunkSizeY);
-        return yPos * TerrainChunker::ChunkCountX + xPos;
-    };
-
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
-        auto size = m_normalMapImage.getSize();
+        auto size = m_normalMap.getSize();
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
-        float height = static_cast<float>(m_normalMapImage.getPixel(x, y)[3]) / 255.f;
-
-        return m_holeHeight.bottom + (m_holeHeight.height * height);
+        auto idx = 4 * (y * size.x + x);
+        return m_normalMapValues[idx + 3];
     };
 
     const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
-        auto size = m_normalMapImage.getSize();
+        auto size = m_normalMap.getSize();
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
-        glm::vec3 normal(static_cast<float>(m_normalMapImage.getPixel(x, y)[0]) / 255.f,
-            static_cast<float>(m_normalMapImage.getPixel(x, y)[2]) / 255.f,
-            -static_cast<float>(m_normalMapImage.getPixel(x, y)[1]) / 255.f);
+        auto idx = 4 * (y * size.x + x);
+        glm::vec3 normal(m_normalMapValues[idx], m_normalMapValues[idx + 1], m_normalMapValues[idx + 2]);
 
-        normal *= 2.f;
-        normal -= glm::vec3(1.f);
         return normal;
     };
 
@@ -814,9 +910,6 @@ void TerrainBuilder::threadFunc()
     {
         if (m_wantsUpdate)
         {
-            m_chunks.clear();
-            m_chunks.resize(TerrainChunker::ChunkCount);
-
             //should be empty anyway because we clear after assigning them
             m_instanceTransforms.clear();
             for (auto& tx : m_shrubTransforms)
@@ -824,9 +917,18 @@ void TerrainBuilder::threadFunc()
                 tx.clear();
             }
 
+            auto cellIndex = (m_swapIndex + 1) % 2;
+            for (auto& cellData : m_cellData[cellIndex])
+            {
+                for (auto& cell : cellData)
+                {
+                    cell.normalMats.clear();
+                    cell.transforms.clear();
+                }
+            }
+
             //we checked the file validity when the game starts.
             //if the map file is broken now something more drastic happened...
-            //cro::Image mapImage;
             cro::ImageArray<std::uint8_t> mapImage;
             if (mapImage.loadFromFile(m_holeData[m_currentHole].mapPath, true))
             {
@@ -852,6 +954,7 @@ void TerrainBuilder::threadFunc()
 
                 //filter distribution by map area
                 m_billboardBuffer.clear();
+                m_billboardTreeBuffer.clear();
                 
                 for (auto [x, y] : grass)
                 {
@@ -931,10 +1034,7 @@ void TerrainBuilder::threadFunc()
                                 static std::size_t shrubIdx = 0;
                                 auto currIndex = shrubIdx % MaxShrubInstances;
 
-                                //bool quality = m_sharedData.treeQuality == 2 || (m_sharedData.treeQuality == 1 && (shrubIdx % 2) == 0);
-
-                                if (m_instancedShrubs[0][currIndex].isValid()
-                                    && m_sharedData.treeQuality == SharedStateData::High)
+                                if (m_instancedShrubs[0][currIndex].isValid())
                                 {
                                     glm::vec3 position(x, height - 0.05f, -y);
                                     float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
@@ -944,26 +1044,37 @@ void TerrainBuilder::threadFunc()
                                     mat4 = glm::translate(mat4, position);
                                     mat4 = glm::rotate(mat4, rotation, cro::Transform::Y_AXIS);
                                     mat4 = glm::scale(mat4, glm::vec3(scale));
-                                }
-                                else
-                                {
-                                    //no model loaded for this theme or quality setting prevents it, so fall back to billboard
-                                    glm::vec3 bbPos({ x, height - 0.05f, -y });
 
-                                    float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
-                                    auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
-                                    bb.position = bbPos; //small vertical offset to stop floating billboards
-                                    bb.size *= scale;
-                                    bb.origin *= scale;
-                                    
-                                    if (cro::Util::Random::value(0, 1) == 0)
-                                    {
-                                        //flip billboard
-                                        auto rect = bb.textureRect;
-                                        bb.textureRect.left = rect.left + rect.width;
-                                        bb.textureRect.width = -rect.width;
-                                    }
+                                    //find which chunk this is in based on position and update the 
+                                    //appropriate cell data for culling
+                                    auto norm = glm::inverseTranspose(mat4);
+
+                                    auto xCell = std::floor(x / ChunkSize.x);
+                                    auto yCell = std::floor(y / ChunkSize.y);
+
+                                    auto idx = static_cast<std::int32_t>(yCell * ChunkVisSystem::ColCount + xCell);
+                                    //LogI << idx <<std::endl;
+                                    m_cellData[cellIndex][currIndex][idx].transforms.push_back(mat4);
+                                    m_cellData[cellIndex][currIndex][idx].normalMats.push_back(norm);
                                 }
+
+                                //low quality version - always rendered on flight cam and optionally on LQ settings
+                                glm::vec3 bbPos({ x, height - 0.05f, -y });
+
+                                float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+                                auto& bb = m_billboardTreeBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
+                                bb.position = bbPos; //small vertical offset to stop floating billboards
+                                bb.size *= scale;
+                                bb.origin *= scale;
+                                    
+                                if (cro::Util::Random::value(0, 1) == 0)
+                                {
+                                    //flip billboard
+                                    auto rect = bb.textureRect;
+                                    bb.textureRect.left = rect.left + rect.width;
+                                    bb.textureRect.width = -rect.width;
+                                }
+
                                 shrubIdx++;
                             }
                         }
@@ -1048,8 +1159,6 @@ void TerrainBuilder::threadFunc()
                 } 
 
                 //update the vertex data for the slope indicator
-                loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated when rendering texture
-
                 m_slopeBuffer.clear();
                 m_slopeIndices.clear();
 
@@ -1060,9 +1169,9 @@ void TerrainBuilder::threadFunc()
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
                 static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
-                static constexpr float SlopeSpeed = -30.f;//REMEMBER this const is also used in the slope frag shader
+                static constexpr float SlopeSpeed = -40.f;//REMEMBER this const is also used in the slope frag shader
                 static constexpr std::int32_t AvgDistance = 1;
-                static constexpr std::int32_t GridDensity = 4; //verts per metre, however grid size is half this. Can only be 1,2 or 4 to match Normal Map resolution
+                static constexpr std::int32_t GridDensity = NormalMapMultiplier; //verts per metre, however grid size is half this.
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
                 static constexpr float SurfaceOffset = 0.02f; //verts are pushed along normal by this much
@@ -1137,7 +1246,7 @@ void TerrainBuilder::threadFunc()
                             //TODO this is a lazy addition where we could really skip
                             //all vert processing entirely when not needed, but it
                             //doesn't actually make processing time *worse*
-                            if (y % 2)
+                            if ((y % (NormalMapMultiplier / 2) == 0))
                             {
                                 m_slopeBuffer.push_back(vert);
                                 m_slopeIndices.push_back(currIndex++);
@@ -1145,7 +1254,7 @@ void TerrainBuilder::threadFunc()
                                 m_slopeIndices.push_back(currIndex++);
                             }
 
-                            if (x % 2)
+                            if ((x % (NormalMapMultiplier / 2)) == 0)
                             {
                                 m_slopeBuffer.push_back(vert3);
                                 m_slopeIndices.push_back(currIndex++);
@@ -1191,12 +1300,13 @@ void TerrainBuilder::threadFunc()
 
 void TerrainBuilder::renderNormalMap()
 {
-#ifdef CRO_DEBUG_
-    if (m_normalMapImage.getSize().x)
+    //skip this if we rendered the model the previous hole
+    if (m_currentHole && 
+        m_holeData[m_currentHole].modelEntity == m_holeData[m_currentHole - 1].modelEntity)
     {
-        m_normalDebugTexture.loadFromImage(m_normalMapImage);
+        return;
     }
-#endif
+
 
     //hmmm is there some of this we can pre-process to save doing it here?
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
@@ -1226,10 +1336,6 @@ void TerrainBuilder::renderNormalMap()
     glCheck(glUseProgram(m_normalShader.getGLHandle()));
     glCheck(glDisable(GL_CULL_FACE));
 
-    m_holeHeight.bottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
-    m_holeHeight.height = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - m_holeHeight.bottom;
-    glCheck(glUniform1f(m_normalShader.getUniformID("u_lowestPoint"), m_holeHeight.bottom));
-    glCheck(glUniform1f(m_normalShader.getUniformID("u_maxHeight"), m_holeHeight.height));
 
     //clear the alpha to 0 so unrendered areas have zero height
     //then the heightmap image can be compared and highest value used
@@ -1246,7 +1352,8 @@ void TerrainBuilder::renderNormalMap()
     glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
 
 
-    //TODO this might be faster with glReadPixels directly from the above framebuffer?
-    //probably doesn't matter if it's fast enough.
-    m_normalMap.getTexture().saveToImage(m_normalMapImage);
+    //copy the texture to an array we can query
+    m_normalMapValues.resize(m_normalMap.getSize().x * m_normalMap.getSize().y * 4);
+    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, m_normalMapValues.data());
 }

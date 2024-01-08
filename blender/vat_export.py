@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export Vertex Animation Textures",
     "author": "Bald Guy (Based on Martin Donald's example)",
-    "version": (2022, 5, 9),
+    "version": (2023, 10, 15),
     "blender": (2, 93, 0),
     "location": "File > Export > Vertex Animation Texture",
     "description": "Export active animation on selected object as texture information.",
@@ -15,6 +15,7 @@ import bpy
 import bmesh
 import mathutils
 import bpy_extras
+import struct
 from pathlib import Path
 
 def export_mesh(obj, path, name, settings):
@@ -41,7 +42,10 @@ def export_mesh(obj, path, name, settings):
 
 
 #writes UV coord for each vertex into the generated texture
-#and stores in a new UV channel on the given object
+#and stores in a new UV channel on the given object - in 
+#other words UV stores the regular texture coords, UV1 stores
+#the coords of the current vertex position/normal in the VAT
+#texture
 def insert_UVs(obj, scale):
     bm = bmesh.new()
     bm.from_mesh(obj.data)
@@ -78,6 +82,12 @@ def write_image(pixels, filename, size, path, settings):
     bpy.data.images.remove(image)
 
 
+def write_bin(pixels, filename, path):
+    fileBytes = bytearray(struct.pack('%sf' % len(pixels), *pixels))
+    file = open(path + filename + ".bin", "wb")
+    file.write(fileBytes)
+    file.close()
+
 def unsign_vector(vec, yUp):
 
     if yUp == True:
@@ -112,6 +122,10 @@ def data_from_frame(obj, settings):
             position = obj.data.vertices[index].co.copy()
             position = obj.matrix_world @ position
 
+            #dividing by the scale normalises the vector and sets the
+            #max range, which is then rescaled in the shader. We might
+            #not need this when writing binaries as we can load the result
+            #directly into a floating point texture in-engine
             position = unsign_vector(position / settings.scale, settings.yUp)
             position.append(1.0)
 
@@ -180,8 +194,14 @@ def export_textures(obj, frame_range, path, settings):
     write_image(positions, filename + '_position', [width, height], filepath, settings)
     write_image(normals, filename + '_normal', [width, height], filepath, settings)
 
+    #TODO decide if there's no need to compress/normalise the positions when storing
+    #the data as aa binary file rather than an image
+    write_bin(positions, filename + '_position', filepath)
+    write_bin(normals, filename + '_normal', filepath)
+
     if settings.tangents == True:
         write_image(tangents, filename + '_tangent', [width, height], filepath, settings)
+        write_bin(tangents, filename + '_tangent', filepath)
 
     base_frame = object_from_frame(obj, 0)
     insert_UVs(base_frame, settings.scale)
@@ -192,6 +212,8 @@ def export_textures(obj, frame_range, path, settings):
     file = open(filepath + filename + ".vat", 'w')
     file.write("vat %s\n{\n" % filename)
     file.write("    model = \"%s.cmt\"\n" % filename)
+    file.write("    width = %f\n" % width)
+    file.write("    height = %f\n" % height)
     file.write("    scale = %f\n" % settings.scale)
     file.write("    frame_count = %d\n" % frame_count)
     file.write("    frame_rate = %f\n" % (bpy.context.scene.render.fps / settings.frame_skip))

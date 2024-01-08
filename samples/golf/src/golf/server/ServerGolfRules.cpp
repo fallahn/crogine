@@ -129,6 +129,39 @@ void GolfState::handleRules(const GolfBallEvent& data)
                 m_playerInfo[0].holeScore[m_currentHole] = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? 6 : 12;
             }
             break;
+        case ScoreType::BattleRoyale:
+            //check if all other players already holed and eliminate remaining
+            if (m_eliminationStarted)
+            {
+                auto sortData = m_playerInfo; //don't sort on the live data
+                std::sort(sortData.begin(), sortData.end(), [](const PlayerStatus& a, const PlayerStatus& b)
+                    {
+                        if (!a.eliminated && !b.eliminated)
+                        {
+                            return a.distanceToHole > b.distanceToHole;
+                        }
+
+                        return !a.eliminated;
+                    });
+
+                if (sortData[1].distanceToHole == 0)
+                {
+                    auto eliminee = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), 
+                        [&](const PlayerStatus ps)
+                        {
+                            return ps.client == sortData[0].client && ps.player == sortData[0].player;                    
+                        });
+                    eliminee->eliminated = true;
+                    eliminee->holeScore[m_currentHole] = m_holeData[m_currentHole].puttFromTee ? 6 : 12;
+                    eliminee->distanceToHole = 0.f;
+
+                    std::uint16_t packet = ((sortData[0].client << 8) | sortData[0].player);
+                    m_sharedData.host.broadcastPacket(PacketID::Elimination, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    //LogI << (int)sortData[0].player << " was eliminated" << std::endl;
+                }
+            }
+            break;
         }
     }
     else if (data.type == GolfBallEvent::Gimme)
@@ -167,6 +200,17 @@ void GolfState::handleRules(const GolfBallEvent& data)
 bool GolfState::summariseRules()
 {
     bool gameFinished = false;
+
+    if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+    {
+        if (m_playerInfo.size() == 1
+            || m_playerInfo[1].eliminated)
+        {
+            //everyone quit or all but player 1 are eliminated
+            return true;
+        }
+        return false;
+    }
 
     if (m_playerInfo.size() > 1)
     {

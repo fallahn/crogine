@@ -26,9 +26,9 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mo
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-potentially-evaluated-expression -std=c++17 -static")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -static")
   else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-potentially-evaluated-expression -std=c++17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
   endif()
 endif()
 
@@ -81,8 +81,11 @@ else()
   find_package(SDL2_mixer REQUIRED)
 endif()
 
+#used in dumping stack traces
 if(MSVC)
   find_package(DbgHelp REQUIRED)
+elseif(LINUX)
+  find_package(Libunwind REQUIRED)
 endif()
 
 include_directories(
@@ -92,6 +95,8 @@ include_directories(
   
 if(MSVC)
   include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
+elseif(LINUX)
+  include_directories(${LIBUNWIND_INCLUDE_DIRS})
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -147,6 +152,8 @@ if(NOT TARGET crogine)
 
   if(MSVC)
     target_link_libraries(${PROJECT_NAME} winmm ws2_32 IPHLPAPI ${DBGHELP_LIBRARIES} shlwapi)
+  elseif(LINUX)
+    target_link_libraries(${PROJECT_NAME} ${LIBUNWIND_LIBRARIES})
   endif()
 
   target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

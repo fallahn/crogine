@@ -1,0 +1,23 @@
+model int_map_plane
+{
+    mesh = plane_tangents.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        mask_colour = 0.000000,1.000000,1.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+
+    }
+}

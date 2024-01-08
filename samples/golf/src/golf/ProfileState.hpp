@@ -182,8 +182,10 @@ private:
         std::size_t maxLen = ConstVal::MaxStringChars;
     }m_textEdit;
 
+    cro::String m_previousString;
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
+    void cancelTextEdit();
     bool applyTextEdit(); //returns true if this consumed event
 
     std::string generateRandomBio() const;

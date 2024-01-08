@@ -170,6 +170,7 @@ private:
     void buildSkeleton();
     void exportModel(bool = false, bool = true);
     void applyImportTransform();
+    void flipNormals();
     void readBackVertexData(cro::Mesh::Data, std::vector<float>&, std::vector<std::vector<std::uint32_t>>&);
     //-------------------------------------------//
 

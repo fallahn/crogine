@@ -30,6 +30,7 @@ source distribution.
 #include "MenuState.hpp"
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
+#include "MenuConsts.hpp"
 #include "CallbackData.hpp"
 #include "Clubs.hpp"
 #include "TextAnimCallback.hpp"
@@ -1424,6 +1425,17 @@ void MenuState::createMenuCallbacks()
             }
         });
 
+    m_courseSelectCallbacks.toggleNightTime = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.nightTime = m_sharedData.nightTime == 0 ? 1 : 0;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
     m_courseSelectCallbacks.toggleFriendsOnly = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
@@ -1431,6 +1443,17 @@ void MenuState::createMenuCallbacks()
             {
                 m_matchMaking.setFriendsOnly(!m_matchMaking.getFriendsOnly());
 
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
+    m_courseSelectCallbacks.setWeather = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                std::uint8_t weatherType = (m_sharedData.weatherType + 1) % WeatherType::Count;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
@@ -1491,6 +1514,61 @@ void MenuState::createMenuCallbacks()
         [](cro::Entity e)
         {
             e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        });
+
+    m_courseSelectCallbacks.selectPM = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e)
+        {
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour = TextGoldColour;
+            }
+            e.getComponent<cro::AudioEmitter>().play();
+            //e.getComponent<cro::Callback>().active = true;
+
+            //set prev/next indices based on which sub-menu is active
+            const auto holeScale = m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y;
+            const auto infoScale = m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().getScale().y;
+
+            if (holeScale + infoScale == 0)
+            {
+                //we're on the rules tab
+                e.getComponent<cro::UIInput>().setNextIndex(LobbyCourseA, LobbyQuit);
+                e.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoA, LobbyQuit);
+            }
+            else
+            {
+                if (holeScale == 0)
+                {
+                    //we're on info
+                    e.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyQuit);
+                    e.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesB, LobbyQuit);
+                }
+                else
+                {
+                    //we're on course tab
+                    e.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyQuit);
+                    e.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoB, LobbyQuit);
+                }
+            }
+        });
+    m_courseSelectCallbacks.unselectPM = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour = cro::Colour::Transparent;
+            }
+        });
+    m_courseSelectCallbacks.activatePM = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt)
+                && m_sharedData.hosting)
+            {
+                requestStackPush(StateID::PlayerManagement);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
         });
 }
 
@@ -1571,6 +1649,9 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
     labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+    m_sharedData.clubSet = std::min(m_sharedData.clubSet, Social::getClubLevel());
+
 
     labelEnt = m_uiScene.createEntity();
     labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(-xPos * 0.6f), 4.f, 0.1f });
@@ -2155,9 +2236,23 @@ void MenuState::updateLobbyAvatars()
 
 
         auto strClientCount = std::to_string(clientCount);
-        Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), std::to_string(ConstVal::MaxClients).c_str() });
+        auto strGameType = std::to_string(ConstVal::MaxClients) + " - " + ScoreTypes[m_sharedData.scoreType];
+
+        Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
         Social::setGroup(/*m_sharedData.lobbyID*/m_sharedData.clientConnection.hostID, playerCount);
-        LogI << "Set group data to " << m_sharedData.clientConnection.hostID << ", " << playerCount << std::endl;
+        //LogI << "Set group data to " << m_sharedData.clientConnection.hostID << ", " << playerCount << std::endl;
+
+        m_connectedClientCount = clientCount;
+        m_connectedPlayerCount = playerCount;
+        if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
+        {
+            m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        }
+        else
+        {
+            m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+        m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
         auto temp = m_uiScene.createEntity();
         temp.addComponent<cro::Callback>().active = true;

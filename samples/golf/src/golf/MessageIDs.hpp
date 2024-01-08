@@ -75,7 +75,8 @@ struct GolfEvent final
         BirdHit,
         TargetHit,
         Gimme,
-        RoundEnd
+        RoundEnd,
+        ClientDisconnect
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);
@@ -106,7 +107,9 @@ struct SceneEvent
         PlayerRotate,
         PlayerBad,
         MinimapUpdated,
-        ChatMessage
+        ChatMessage,
+        Poke,
+        PlayerEliminated
     }type = TransitionComplete;
 
     //union
@@ -145,8 +148,12 @@ struct SystemEvent final
         StateRequest,
         InputActivated,
         ShadowQualityChanged,
+        TreeQualityChanged,
         MenuChanged,
-        RestartActiveMode //currently just driving range, but might apply somewhere else one day :)
+        RestartActiveMode, //currently just driving range, but might apply somewhere else one day :)
+        RequestOSK,
+        SubmitOSK, //OSK was closed and there's data in the buffer to be read
+        CancelOSK
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };

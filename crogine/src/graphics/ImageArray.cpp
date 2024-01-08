@@ -170,10 +170,15 @@ namespace cro::Detail
             wantedChannels = 4;
         }
 
+        //TODO the float interface is meant for HDR images
+        //this is a hack when using this func to load ldr
+        //images and needs to be addressed properly
+        stbi_ldr_to_hdr_gamma(1.0f);
+
         auto* img = stbi_loadf_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, wantedChannels);
         if (img)
         {
-            d = (wantedChannels) ? wantedChannels : 0;
+            d = (wantedChannels) ? wantedChannels : d;
             auto size = w * h * d;
 
             dst.resize(size);
@@ -185,12 +190,16 @@ namespace cro::Detail
             stbi_image_free(img);
             SDL_RWclose(file);
 
+            stbi_ldr_to_hdr_gamma(2.2f);
+
             return true;
         }
         else
         {
             Logger::log("failed to open image: " + path, Logger::Type::Error);
             SDL_RWclose(file);
+
+            stbi_ldr_to_hdr_gamma(2.2f);
 
             return false;
         }

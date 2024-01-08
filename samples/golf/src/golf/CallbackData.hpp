@@ -34,6 +34,52 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 
+//used for though/chat bubble animation
+struct CogitationData final
+{
+    std::int32_t direction = 1;
+    float currentTime = 0.f;
+    std::int32_t spriteID = 0;
+};
+
+struct CogitationCallback final
+{
+    cro::Entity nameEnt;
+
+    CogitationCallback(cro::Entity e) : nameEnt(e) {}
+
+    void operator () (cro::Entity e, float dt)
+    {
+        auto end = nameEnt.getComponent<cro::Drawable2D>().getLocalBounds().width;
+        e.getComponent<cro::Transform>().setPosition({ end + 6.f, 4.f });
+
+        float scale = 0.f;
+        auto& [direction, currTime, _] = e.getComponent<cro::Callback>().getUserData<CogitationData>();
+        if (direction == 0)
+        {
+            //grow
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            scale = cro::Util::Easing::easeOutQuint(currTime);
+        }
+        else
+        {
+            //shrink
+            currTime = std::max(0.f, currTime - (dt * 3.f));
+            if (currTime == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+
+            scale = cro::Util::Easing::easeInQuint(currTime);
+        }
+
+        e.getComponent<cro::Transform>().setScale({ scale, scale });
+    }
+};
+
+
+
+
 //used to move the flag as the player approaches
 struct FlagCallbackData final
 {

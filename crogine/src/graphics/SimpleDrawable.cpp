@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -271,13 +271,16 @@ void SimpleDrawable::setCroppingArea(FloatRect area)
 }
 
 //protected
-void SimpleDrawable::setTexture(const Texture& texture)
+bool SimpleDrawable::setTexture(const Texture& texture)
 {
-    if (m_texture != &texture)
+    if (m_texture != &texture ||
+        m_textureID != texture.getGLHandle())
     {
         setTexture(TextureID(texture.getGLHandle()));
         m_texture = &texture;
+        return true;
     }
+    return false;
 }
 
 void SimpleDrawable::setTexture(TextureID texture)

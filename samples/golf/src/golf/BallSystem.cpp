@@ -373,7 +373,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             auto vel2 = glm::length2(ball.velocity);
             static constexpr float MaxVel = 20.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
             static constexpr float MaxRotation = 5.f;
-            float r = cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation;
+            float r = cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation;// *ball.spin.x;
             r = std::clamp(r, -MaxRotation, MaxRotation);
 
 

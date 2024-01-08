@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifdef _MSC_VER
+#ifndef __APPLE__
 #include "../detail/StackDump.hpp"
 #include <signal.h>
 void winAbort(int)
@@ -53,7 +53,6 @@ void winAbort(int)
 #include <SDL_joystick.h>
 #include <SDL_filesystem.h>
 
-//#include "../detail/backward.hpp"
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
 #include "../imgui/imgui_impl_opengl3.h"
@@ -70,7 +69,7 @@ void winAbort(int)
 #include <sstream>
 
 #ifdef CRO_DEBUG_
-#define DEBUG_NO_CONTROLLER
+//#define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
 using namespace cro;
@@ -224,8 +223,8 @@ App::App(std::uint32_t styleFlags)
 {
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
-#ifdef _MSC_VER
 #ifndef CRO_DEBUG_
+#ifndef __APPLE__ //mac actually gives a decent stack dump
     //register custom abort which prints the call stack
     signal(SIGABRT, &winAbort);
 #endif
@@ -240,6 +239,7 @@ App::App(std::uint32_t styleFlags)
 #define INIT_FLAGS SDL_INIT_EVERYTHING
 #endif
 
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, "1");
     if (SDL_Init(INIT_FLAGS) < 0)
     {
         const std::string err(SDL_GetError());
@@ -249,25 +249,36 @@ App::App(std::uint32_t styleFlags)
     {
         m_instance = this;
 
+        //maps the steam deck rear buttons to the controller paddles
+        SDL_GameControllerAddMapping("03000000de2800000512000011010000,Steam Deck,platform:Linux,crc:17f6,a:b3,b:b4,x:b5,y:b6,back:b11,guide:b13,start:b12,leftstick:b14,rightstick:b15,leftshoulder:b7,rightshoulder:b8,dpup:b16,dpdown:b17,dpleft:b18,dpright:b19,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a9,righttrigger:a8,");
+
         std::fill(m_controllers.begin(), m_controllers.end(), ControllerInfo());
         //controllers are automatically connected as the connect events are raised
         //on start up
-
-        if (!AudioRenderer::init())
-        {
-            Logger::log("Failed to initialise audio renderer", Logger::Type::Error);
-        }
 
         char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
         m_prefPath = std::string(pp);
         SDL_free(pp);
         std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 
+        if (!AudioRenderer::init())
+        {
+            Logger::log("Failed to initialise audio renderer", Logger::Type::Error);
+        }
+
+
 #ifdef WIN32
 #ifdef CRO_DEBUG_
         //places the console window in the top right so it's a bit more visible when debugging
         HWND consoleWindow = GetConsoleWindow();
         SetWindowPos(consoleWindow, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+
+        //https://stackoverflow.com/a/45622802
+        //enables utf8 encoded strings in the console
+        SetConsoleOutputCP(CP_UTF8);
+
+        ////enable buffering to prevent VS from chopping up UTF-8 byte sequences
+        //setvbuf(stdout, nullptr, _IOFBF, 1000);
 #endif
 #endif
     }

@@ -87,13 +87,31 @@ OpenALImpl::OpenALImpl()
 //public
 bool OpenALImpl::init()
 {
-    /*alcCheck*/(m_device = alcOpenDevice(nullptr));
-    if (!m_device)
+    //creates the ImGui window to choose a preferred device
+    //and loads the config if it's found
+    enumerateDevices();
+
+    if (!m_preferredDevice.empty()
+        && m_preferredDevice != "Default")
     {
-        LOG("Failed opening valid OpenAL device", Logger::Type::Error);        
-        return false;
+        m_device = alcOpenDevice(m_preferredDevice.c_str());
+
+        if (!m_device)
+        {
+            LogW << "Unable to open preferred device " << m_preferredDevice << ". Trying default device." << std::endl;
+        }
     }
 
+    if (!m_device)
+    {
+        /*alcCheck*/(m_device = alcOpenDevice(nullptr));
+        if (!m_device)
+        {
+            LOG("Failed opening valid OpenAL device", Logger::Type::Error);
+            return false;
+        }
+    }
+    
     /*alcCheck*/(m_context = alcCreateContext(m_device, nullptr));
     if (!m_context)
     {
@@ -109,6 +127,9 @@ bool OpenALImpl::init()
 
 void OpenALImpl::shutdown()
 {
+    unregisterWindows();
+    removeCommands();
+
     for (auto i = 0u; i < m_nextFreeSource; ++i)
     {
         deleteAudioSource(m_sourcePool[i]);
@@ -635,6 +656,117 @@ void OpenALImpl::resizeSourcePool()
         m_sourcePool.resize(m_sourcePool.size() + SourceResizeCount);
 
         alCheck(alGenSources(SourceResizeCount, &m_sourcePool[startIndex]));
+    }
+}
+
+void OpenALImpl::enumerateDevices()
+{
+    //check first - this probably doesn't work on mac for example
+    auto enumAvailable = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
+    if (enumAvailable)
+    {
+        const auto* deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+
+        if (deviceList)
+        {
+            char* pp = SDL_GetPrefPath("Trederia", "common");
+            auto prefPath = std::string(pp);
+            SDL_free(pp);
+            std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
+            prefPath += u8"audio_device.cfg";
+
+            auto* next = deviceList + 1;
+            std::size_t len = 0;
+
+            while (deviceList && *deviceList != '\0'
+                && next
+                && *next != '\0')
+            {
+                m_devices.push_back(std::string(deviceList));
+                len = strlen(deviceList);
+                deviceList += (len + 1);
+                next += (len + 2);
+            }
+            m_devices.push_back("Default");
+
+            static bool showWindow = false;
+
+            registerCommand("al_config",
+                [](const std::string)
+                {
+                    showWindow = !showWindow;
+                });
+
+            registerWindow(
+                [&, prefPath]()
+                {
+                    if (showWindow)
+                    {
+                        if (ImGui::Begin("Default Audio Device", &showWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
+                        {
+                            std::vector<const char*> items; //lol.
+                            for (const auto& d : m_devices)
+                            {
+                                items.push_back(d.c_str());
+                            }
+
+                            static std::int32_t idx = 0;
+                            if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
+                            {
+                                for (auto n = 0u; n < items.size(); ++n)
+                                {
+                                    const bool selected = (idx == n);
+                                    if (ImGui::Selectable(items[n], selected))
+                                    {
+                                        idx = n;
+                                    }
+
+                                    if (selected)
+                                    {
+                                        ImGui::SetItemDefaultFocus();
+                                    }
+                                }
+                                ImGui::EndListBox();
+                            }
+
+                            if (!m_preferredDevice.empty())
+                            {
+                                ImGui::Text("Current Device: %s", m_preferredDevice.c_str());
+                            }
+                            else
+                            {
+                                ImGui::Text("Current Device: Default");
+                            }
+
+                            if (ImGui::Button("Make Selected Preferred"))
+                            {
+                                m_preferredDevice = m_devices[idx];
+
+                                ConfigFile cfg;
+                                cfg.addProperty("preferred_device", m_preferredDevice);
+                                cfg.save(prefPath);
+                            }
+                            ImGui::SameLine();
+                            ImGui::Text("(Takes effect after restart)");
+                        }
+                        ImGui::End();
+                    }
+                });
+
+            //look for device config and load if found
+            ConfigFile cfg;
+            if (cfg.loadFromFile(prefPath))
+            {
+                const auto& props = cfg.getProperties();
+                for (const auto& prop : props)
+                {
+                    if (prop.getName() == "preferred_device")
+                    {
+                        m_preferredDevice = prop.getValue<std::string>();
+                    }
+                }
+            }
+        }
     }
 }
 

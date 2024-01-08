@@ -87,6 +87,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Drawable2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\DynamicTreeComponent.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\GBuffer.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\LightVolume.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ParticleEmitter.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ProjectionMap.hpp" />
@@ -114,6 +115,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DebugInfo.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DeferredRenderSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DynamicTreeSystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\LightVolumeSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ParticleSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ProjectionMapSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ModelRenderer.hpp" />
@@ -125,6 +127,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem3D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\UISystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\ArrayTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BinaryMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BoundingBox.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp" />
@@ -175,6 +178,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\Vertex2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\VideoPlayer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\GraphEditor.h" />
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\imconfig_cro.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImCurveEdit.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\ImGradient.h" />
     <ClInclude Include="..\crogine\include\crogine\gui\detail\imgui.h" />
@@ -230,6 +234,7 @@
     <ClInclude Include="..\crogine\src\graphics\shaders\VertexLit.hpp" />
     <ClInclude Include="..\crogine\src\graphics\stb_image.h" />
     <ClInclude Include="..\crogine\src\imgui\imconfig.h" />
+    <ClInclude Include="..\crogine\src\imgui\imgui_freetype.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_opengl3.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_sdl.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_internal.h" />
@@ -319,6 +324,7 @@
     <ClCompile Include="..\crogine\src\ecs\systems\DebugInfo.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\DeferredRenderSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\DynamicTreeSystem.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\LightVolumeSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ParticleSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ProjectionMapSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ModelRenderer.cpp" />
@@ -382,9 +388,11 @@
     <ClCompile Include="..\crogine\src\imgui\ImGuizmo.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\imgui_freetype.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_impl_sdl.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_stdlib.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\crogine\src\imgui\implot.cpp" />
     <ClCompile Include="..\crogine\src\imgui\implot_demo.cpp" />

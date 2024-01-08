@@ -37,7 +37,9 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 namespace cro
 {
@@ -70,6 +72,20 @@ private:
 
     cro::SimpleVertexArray m_target;
     cro::SimpleVertexArray m_follower;
+
+    cro::SimpleQuad m_rainQuad;
+
+    cro::RenderTexture m_ballTexture;
+    cro::SimpleQuad m_ballQuad;
+    cro::Entity m_ballCam;
+
+    struct RainShder final
+    {
+        std::uint32_t shaderID = 0;
+        std::uint32_t textureID = 0;
+        std::int32_t rainUniform = -1;
+        std::int32_t rectUniform = -1;
+    }m_rainShader;
 
     void addSystems();
     void loadAssets();

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,6 +37,7 @@ source distribution.
 #include "Billboard.hpp"
 #include "SharedStateData.hpp"
 #include "MenuCallbacks.hpp"
+#include "TextChat.hpp"
 
 #include <MatchMaking.hpp>
 
@@ -103,7 +104,10 @@ public:
 private:
     SharedStateData& m_sharedData;
     SharedProfileData& m_profileData;
+    std::int32_t m_connectedClientCount;
+    std::int32_t m_connectedPlayerCount;
 
+    TextChat m_textChat;
     MatchMaking m_matchMaking;
     cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;
@@ -119,6 +123,7 @@ private:
         enum
         {
             Accept, Back, Start,
+            Message, Nope, Poke,
 
             Count
         };
@@ -172,8 +177,10 @@ private:
         std::uint32_t nextHoleType = 0;
         std::uint32_t toggleReverseCourse = 0;
         std::uint32_t toggleClubLimit = 0;
+        std::uint32_t toggleNightTime = 0;
         std::uint32_t toggleFriendsOnly = 0;
         std::uint32_t toggleFastCPU = 0;
+        std::uint32_t setWeather = 0;
         std::uint32_t inviteFriends = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
@@ -181,6 +188,9 @@ private:
         std::uint32_t unselectHighlight = 0;
         std::uint32_t selectText = 0;
         std::uint32_t unselectText = 0;
+        std::uint32_t selectPM = 0;
+        std::uint32_t unselectPM = 0;
+        std::uint32_t activatePM = 0;
     }m_courseSelectCallbacks;
     std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
 
@@ -199,6 +209,8 @@ private:
             CourseTicker,
             Background,
             Info,
+            MonthlyCourse,
+            MinPlayerCount,
 
             Scorecard,
 
@@ -328,6 +340,7 @@ private:
     {
         cro::Entity infoLeague;
         cro::Entity lobbyCourseA;
+        cro::Entity lobbyCourseB;
         cro::Entity lobbyInfoA;
         cro::Entity lobbyInfoB;
         cro::Entity lobbyRulesA;
@@ -354,7 +367,7 @@ private:
     void prevCourse();
     void nextCourse();
     void refreshUI();
-    void updateCourseRuleString();
+    void updateCourseRuleString(bool updateScoreboard );
     void updateUnlockedItems();
 
     void createPreviousScoreCard();

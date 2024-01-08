@@ -521,7 +521,7 @@ void MapOverviewState::loadAssets()
     m_shaderUniforms.gridAmount = m_mapShader.getUniformID("u_gridAmount");
     m_shaderUniforms.gridScale = m_mapShader.getUniformID("u_gridScale");
 
-    m_mapQuad.setTexture(m_sharedData.minimapData.mrt->getTexture(0), m_renderBuffer.getSize());
+    m_mapQuad.setTexture(m_sharedData.minimapData.mrt->getTexture(MRTIndex::Colour), m_renderBuffer.getSize());
     m_mapQuad.setShader(m_mapShader);
 
     m_slopeShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), MiniSlopeFragment);
@@ -752,13 +752,13 @@ void MapOverviewState::refreshMap()
     static constexpr std::int32_t NormalSlot = 8;
 
     glActiveTexture(GL_TEXTURE0 + PosSlot);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(1).textureID);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Position).textureID);
 
     glActiveTexture(GL_TEXTURE0 + MaskSlot);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(3).textureID);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Count).textureID);
 
     glActiveTexture(GL_TEXTURE0 + NormalSlot);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(2).textureID);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
 
     glUseProgram(m_mapShader.getGLHandle());
     glUniform1i(m_shaderUniforms.posMap, PosSlot);
@@ -806,12 +806,12 @@ void MapOverviewState::updateNormals()
 
     //so much for doing this all in the shader...
     std::vector<float> image(imageSize.x * imageSize.y * 4);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(2).textureID);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Normal).textureID);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, image.data());
 
     //TODO we already have an image mask stored from which we could get the terrain
     std::vector<float> mask(imageSize.x * imageSize.y);
-    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(3).textureID);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(MRTIndex::Count).textureID);
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, mask.data());
 
 

@@ -311,12 +311,15 @@
     <ClCompile Include="src\bsp\Patch.cpp" />
     <ClCompile Include="src\bsp\Q3BspSystem.cpp" />
     <ClCompile Include="src\bush\BushState.cpp" />
+    <ClCompile Include="src\chunkvis\ChunkVisSystem.cpp" />
     <ClCompile Include="src\collision\BallSystem.cpp" />
     <ClCompile Include="src\collision\CollisionState.cpp" />
     <ClCompile Include="src\collision\DebugDraw.cpp" />
     <ClCompile Include="src\collision\RollSystem.cpp" />
+    <ClCompile Include="src\endless\EndlessDrivingState.cpp" />
     <ClCompile Include="src\frustum\FrustumState.cpp" />
     <ClCompile Include="src\gc\GcState.cpp" />
+    <ClCompile Include="src\interiormapping\InteriormappingState.cpp" />
     <ClCompile Include="src\league\League.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\log\LogState.cpp" />
@@ -326,6 +329,7 @@
     <ClCompile Include="src\retro\RetroState.cpp" />
     <ClCompile Include="src\rolling\RollingState.cpp" />
     <ClCompile Include="src\rolling\RollingSystem.cpp" />
+    <ClCompile Include="src\ssao\LightVolumeSystem.cpp" />
     <ClCompile Include="src\ssao\SSAOState.cpp" />
     <ClCompile Include="src\swingput\Swingput.cpp" />
     <ClCompile Include="src\swingput\SwingState.cpp" />
@@ -359,15 +363,18 @@
     <ClInclude Include="src\bsp\Q3Bsp.hpp" />
     <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
     <ClInclude Include="src\bush\BushState.hpp" />
+    <ClInclude Include="src\chunkvis\ChunkVisSystem.hpp" />
     <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\collision\BallSystem.hpp" />
     <ClInclude Include="src\collision\CollisionState.hpp" />
     <ClInclude Include="src\collision\DebugDraw.hpp" />
     <ClInclude Include="src\collision\RollSystem.hpp" />
     <ClInclude Include="src\collision\Utils.hpp" />
+    <ClInclude Include="src\endless\EndlessDrivingState.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\frustum\FrustumState.hpp" />
     <ClInclude Include="src\gc\GcState.hpp" />
+    <ClInclude Include="src\interiormapping\InteriormappingState.hpp" />
     <ClInclude Include="src\league\League.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\log\LogState.hpp" />
@@ -379,6 +386,7 @@
     <ClInclude Include="src\rolling\RollingState.hpp" />
     <ClInclude Include="src\rolling\RollingSystem.hpp" />
     <ClInclude Include="src\rolling\Utility.hpp" />
+    <ClInclude Include="src\ssao\LightVolumeSystem.hpp" />
     <ClInclude Include="src\ssao\SSAOState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\swingput\Swingput.hpp" />
@@ -392,8 +400,12 @@
     <ClInclude Include="src\voxels\VoxelState.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\interiormapping\IMShader.inl" />
+    <None Include="src\interiormapping\ProjectionShader.inl" />
     <None Include="src\retro\RetroShaders.inl" />
     <None Include="src\ssao\BlurShaders.inl" />
+    <None Include="src\swingput\Glow.inl" />
+    <None Include="src\swingput\Rain.inl" />
     <None Include="src\voxels\Tables.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

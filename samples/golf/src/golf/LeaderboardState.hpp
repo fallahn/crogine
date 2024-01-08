@@ -106,6 +106,7 @@ private:
     {
         cro::Entity courseTitle;
         cro::Entity leaderboardText;
+        cro::Entity leaderboardScores;
         cro::Entity personalBest;
         cro::Entity thumbnail;
         cro::Entity holeText;

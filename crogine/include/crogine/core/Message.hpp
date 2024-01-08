@@ -62,6 +62,7 @@ namespace cro
             SceneMessage,
             StateMessage,
             ConsoleMessage,
+            SystemMessage,
             SkeletalAnimationMessage,
             SpriteAnimationMessage,
             Count
@@ -139,6 +140,17 @@ namespace cro
             }level = Info;
 
             ConfigObject* convar = nullptr;
+        };
+
+        /*!
+        \brief Raised on system events such as full screen toggle
+        */
+        struct SystemEvent final
+        {
+            enum
+            {
+                FullScreenToggled
+            }type = FullScreenToggled;
         };
 
         struct SkeletalAnimationEvent final

@@ -45,6 +45,7 @@ source distribution.
 #include "golf/TrophyState.hpp"
 #include "golf/NewsState.hpp"
 #include "golf/PlaylistState.hpp"
+#include "golf/PlayerManagementState.hpp"
 #include "golf/CreditsState.hpp"
 #include "golf/UnlockState.hpp"
 #include "golf/ProfileState.hpp"
@@ -84,6 +85,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/SysTime.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/detail/Types.hpp>
@@ -98,11 +100,11 @@ using namespace cl;
 
 namespace
 {
-#include "golf/TutorialShaders.inl"
-#include "golf/TerrainShader.inl"
-#include "golf/BeaconShader.inl"
-#include "golf/PostProcess.inl"
-#include "golf/ShaderIncludes.inl"
+#include "golf/shaders/TutorialShaders.inl"
+#include "golf/shaders/TerrainShader.inl"
+#include "golf/shaders/BeaconShader.inl"
+#include "golf/shaders/PostProcess.inl"
+#include "golf/shaders/ShaderIncludes.inl"
 #include "golf/RandNames.hpp"
 
     struct ShaderDescription final
@@ -178,6 +180,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
+    m_stateStack.registerState<PlayerManagementState>(StateID::PlayerManagement, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
@@ -193,6 +196,8 @@ GolfGame::GolfGame()
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
+
+    m_sharedData.courseIndex = courseOfTheMonth();
 
 #ifdef CRO_DEBUG_
     m_stateStack.registerState<SqliteState>(StateID::SQLite);
@@ -292,6 +297,21 @@ void GolfGame::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case SystemEvent::RequestOSK:
+            if (m_stateStack.getTopmostState() != StateID::Keyboard)
+            {
+                if (data.data == 1)
+                {
+                    m_sharedData.useOSKBuffer = true;
+                    m_sharedData.OSKBuffer.clear();
+                }
+                else
+                {
+                    m_sharedData.useOSKBuffer = false;
+                }
+                m_stateStack.pushState(StateID::Keyboard);
+            }
+            break;
         case SystemEvent::PostProcessToggled:
             if (m_postShader->getGLHandle() != 0)
             {
@@ -426,20 +446,36 @@ bool GolfGame::initialise()
     }
 
 
-    //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
-    loadPreferences();
-    loadAvatars();
-
 #if defined USE_GNS
     m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
 #else
     m_achievements = std::make_unique<DefaultAchievements>();
 #endif
-    if (!Achievements::init(*m_achievements))
+    auto initResult = Achievements::init(*m_achievements);
+
+    //in 1.15 we moved user prefs to individual user IDs
+    //so multiple users can have their own profiles on the
+    //same device. This just looks for existing data and
+    //moves it to the current user's dir, in an attempt to
+    //prevent any profile loss.
+    if (initResult)
+    {
+        //however this relies on having successfully
+        //init Steam as we need the uid of the logged on user
+        convertPreferences();
+    }
+
+
+    //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
+    loadPreferences();
+
+    if (!initResult)
     {
         //no point trying to load the menu if we failed to init.
         return false;
     }
+
+    loadAvatars(); //this relies on steam being initialised
 
 //#ifdef USE_WORKSHOP
 //    registerCommand("workshop",
@@ -576,31 +612,6 @@ bool GolfGame::initialise()
             }
         });
 
-    /*registerConsoleTab("Credits",
-        []()
-        {
-            ImGui::Text("Credits:");
-
-            for (const auto& [title, names] : credits)
-            {
-                ImGui::Text(title.toAnsiString().c_str());
-
-                for (const auto& name : names)
-                {
-                    ImGui::Text(name.toAnsiString().c_str());
-                }
-                ImGui::NewLine();
-            }
-
-#ifndef USE_GNS
-            ImGui::Text("Check out other games available from https://fallahn.itch.io !");
-#endif
-            if (ImGui::Button("Visit Website"))
-            {
-                cro::Util::String::parseURL(Social::WebURL);
-            }
-        });*/
-
     registerCommand("log_benchmark", 
         [&](const std::string& state)
         {
@@ -706,9 +717,7 @@ bool GolfGame::initialise()
     }
 
     //preload resources which will be used in dynamically loaded menus
-    m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
-    m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
-    m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
+    initFonts();
 
     for (const auto& [name, str] : IncludeMappings)
     {
@@ -816,8 +825,8 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
     //m_stateStack.pushState(StateID::Bush);
     //m_stateStack.pushState(StateID::Clubhouse);
-    m_stateStack.pushState(StateID::SplashScreen);
-    //m_stateStack.pushState(StateID::Menu);
+    //m_stateStack.pushState(StateID::SplashScreen);
+    m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::Workshop);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
@@ -862,6 +871,197 @@ void GolfGame::finalise()
     m_achievements.reset();
 
     getWindow().setCursor(nullptr);
+}
+
+void GolfGame::initFonts()
+{
+    m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
+    m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
+    m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
+
+    m_sharedData.sharedResources->fonts.load(FontID::OSK, "assets/fonts/VeraMono.ttf");
+
+    //international fonts - these mappings are those used in DearImGui
+    cro::FontAppendmentContext ctx;
+    static const std::array FontMappings =
+    {
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", cro::CodePointRange::Cyrillic),
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", cro::CodePointRange::Greek),
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0102, 0x0103})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0110, 0x0111})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0128, 0x0129})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0168, 0x0169})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01A0, 0x01A1})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01AF, 0x01B0})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x1EA0, 0x1EF9})), //VT
+
+        std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x2010, 0x205E})),
+        std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x0E00, 0x0E7F})),
+        std::make_pair("assets/golf/fonts/NotoSansKR-Regular.ttf", std::array<std::uint32_t, 2u>({0x3131, 0x3163})),
+        std::make_pair("assets/golf/fonts/NotoSansKR-Regular.ttf", std::array<std::uint32_t, 2u>({0xAC00, 0xD7A3})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x2000, 0x206F})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x3000, 0x30FF})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x31F0, 0x31FF})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0xFF00, 0xFFEF})),
+        //std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0xFFFD, 0xFFFD})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x4e00, 0x9FAF})),
+    };
+
+    for (const auto& [path, codepoints] : FontMappings)
+    {
+        ctx.codepointRange = codepoints;
+        m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(path, ctx);
+        m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
+        m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
+
+        m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
+    }
+
+
+
+    //emoji fonts
+    ctx.allowBold = false;
+    ctx.allowFillColour = true;
+    ctx.allowOutline = false;
+
+    static constexpr std::array Ranges =
+    {
+        cro::CodePointRange::EmojiLower,
+        cro::CodePointRange::EmojiMid,
+        cro::CodePointRange::EmojiUpper,
+    };
+
+#ifdef _WIN32
+    const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    //const std::string winPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
+    
+    if (cro::FileSystem::fileExists(winPath))
+    {
+        ctx.allowFillColour = false;
+        for (const auto& r : Ranges)
+        {
+            ctx.codepointRange = r;
+            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, ctx);
+
+            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(winPath, ctx);
+        }
+    }
+    else
+#endif
+    {
+        for (const auto& r : Ranges)
+        {
+            ctx.codepointRange = r;
+            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+
+            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+        }
+    }
+}
+
+void GolfGame::convertPreferences() const
+{
+    auto srcPath = cro::App::getPreferencePath();
+    const auto dstPath = Social::getBaseContentPath();
+
+    if (cro::FileSystem::directoryExists(dstPath))
+    {
+        //assume conversion has already been run at some point
+        //this is just a catch-all if switching between versions
+        //though once 1.15 is released it shouldn't be possible
+        //to run 1.14 outside of the non-steam version
+        return;
+    }
+
+    const std::array FileNames =
+    {
+        std::string("profiles.tar"),
+        std::string("last.gue"),
+        std::string("lea.gue"),
+        std::string("keys.bind"),
+    };
+
+    //make sure the target doesn't yet exist - else
+    //chances are this is already done and we're overwriting
+    //with old data...
+    for (const auto& name : FileNames)
+    {
+        const auto outPath = dstPath + name;
+        const auto inPath = srcPath + name;
+
+        if (!cro::FileSystem::fileExists(outPath))
+        {
+            //LogI << outPath << " doesn't exist" << std::endl;
+            
+            if (cro::FileSystem::fileExists(inPath))
+            {
+                LogI << inPath << " exists - attempting to copy..." << std::endl;
+
+                std::error_code ec;
+                std::filesystem::path src = std::filesystem::u8path(inPath);
+                std::filesystem::path dst = std::filesystem::u8path(outPath);
+
+                std::filesystem::copy(src, dst, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
+
+                if (ec)
+                {
+                    LogE << "Failed copying " << inPath << ": " << ec.message() << std::endl;
+                }
+            }
+        }
+        else
+        {
+            //LogI << outPath << " already exists - skipping." << std::endl;
+            if (cro::FileSystem::fileExists(inPath))
+            {
+                std::error_code ec;
+                std::filesystem::rename(std::filesystem::u8path(inPath), std::filesystem::u8path(inPath + ".old"), ec);
+
+                if (ec)
+                {
+                    LogI << "Failed to rename existing file: " << ec.message() << std::endl;
+                }
+            }
+        }
+    }
+
+    const std::array DirNames =
+    {
+        std::string("avatars"),
+        std::string("balls"),
+        std::string("hair"),
+        std::string("music"),
+        std::string("profiles"),
+    };
+    srcPath += "user/";
+
+    for (const auto& dir : DirNames)
+    {
+        const auto outPath = dstPath + dir;
+        const auto inPath = srcPath + dir;
+
+        if (cro::FileSystem::directoryExists(inPath))
+        {
+            std::error_code ec;
+            std::filesystem::path src = std::filesystem::u8path(inPath);
+            std::filesystem::path dst = std::filesystem::u8path(outPath);
+
+            std::filesystem::copy(src, dst, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
+
+            if (ec)
+            {
+                LogE << "Failed copying " << inPath << ": " << ec.message() << std::endl;
+            }
+            else
+            {
+                std::filesystem::rename(inPath, inPath + ".old");
+            }
+        }
+    }
 }
 
 void GolfGame::loadPreferences()
@@ -995,12 +1195,16 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.clubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
                 }
+                else if (name == "press_hold")
+                {
+                    m_sharedData.pressHold = prop.getValue<bool>();
+                }
             }
         }
     }
 
     //read keybind bin
-    path = getPreferencePath() + "keys.bind";
+    path = Social::getBaseContentPath() + "keys.bind";
 
     if (cro::FileSystem::fileExists(path))
     {
@@ -1089,11 +1293,12 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_beacon_colour").setValue(m_sharedData.trailBeaconColour);
     cfg.addProperty("fast_cpu").setValue(m_sharedData.fastCPU);
     cfg.addProperty("clubset").setValue(m_sharedData.clubSet);
+    cfg.addProperty("press_hold").setValue(m_sharedData.pressHold);
     cfg.save(path);
 
 
     //keybinds
-    path = getPreferencePath() + "keys.bind";
+    path = Social::getBaseContentPath() + "keys.bind";
     cro::RaiiRWops file;
     file.file = SDL_RWFromFile(path.c_str(), "wb");
     if (file.file)
@@ -1200,8 +1405,62 @@ void GolfGame::loadAvatars()
         cro::FileSystem::createDirectory(path);
     }
 
-    auto profileDirs = cro::FileSystem::listDirectories(path);
+
     std::int32_t i = 0;
+#ifdef USE_GNS
+    auto uid = Social::getPlayerID();
+    
+    auto steamPath = path + uid + "/";
+    if (!cro::FileSystem::directoryExists(steamPath))
+    {
+        cro::FileSystem::createDirectory(steamPath);
+
+        PlayerData sPlayer;
+        sPlayer.profileID = uid;
+        sPlayer.name = Social::getPlayerName();
+        sPlayer.saveProfile();
+
+        m_profileData.playerProfiles.push_back(sPlayer);
+        i++;
+    }
+    else
+    {
+        auto files = cro::FileSystem::listFiles(steamPath);
+        files.erase(std::remove_if(files.begin(), files.end(),
+            [](const std::string& f)
+            {
+                return cro::FileSystem::getFileExtension(f) != ".pfl";
+            }), files.end());
+
+        if (!files.empty())
+        {
+            PlayerData pd;
+            if (pd.loadProfile(steamPath + files[0], files[0].substr(0, files[0].size() - 4)))
+            {
+                //always use the current Steam user name
+                pd.name = Social::getPlayerName();
+
+                m_profileData.playerProfiles.push_back(pd);
+                i++;
+            }
+        }
+    }
+    m_profileData.playerProfiles[0].isSteamID = true;
+#endif
+
+    auto profileDirs = cro::FileSystem::listDirectories(path);
+#ifdef USE_GNS
+    //remove the steam profile because we already explicitly parsed it
+    profileDirs.erase(std::remove_if(profileDirs.begin(), profileDirs.end(),
+        [uid](const std::string& d) 
+        {
+            return d == uid;
+        }), profileDirs.end());
+
+#endif // USE_GNS
+
+
+
     for (const auto& dir : profileDirs)
     {
         auto profilePath = path + dir + "/";
@@ -1217,8 +1476,45 @@ void GolfGame::loadAvatars()
             PlayerData pd;
             if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4)))
             {
-                m_profileData.playerProfiles.push_back(pd);
-                i++;
+#ifdef USE_GNS
+                //check if we need to convert this to the UID profile
+                if (pd.name == Social::getPlayerName())
+                {
+                    pd.profileID = Social::getPlayerID();
+                    pd.saveProfile();
+                    m_profileData.playerProfiles[0] = pd;
+
+                    auto copyFiles = cro::FileSystem::listFiles(profilePath);
+                    for (const auto& cFile : copyFiles)
+                    {
+                        if (cro::FileSystem::getFileExtension(cFile) != ".pfl")
+                        {
+                            auto dbPath = profilePath + cFile;
+                            if (cro::FileSystem::fileExists(dbPath))
+                            {
+                                std::error_code ec;
+                                std::filesystem::copy_file(std::filesystem::u8path(dbPath),
+                                    std::filesystem::u8path(steamPath + cFile),
+                                    std::filesystem::copy_options::update_existing, ec);
+
+                                if (ec)
+                                {
+                                    LogE << "Failed copying player data, error code: " << ec.value() << std::endl;
+                                }
+                            }
+                        }
+                    }
+                    //remove the old data so it stops getting sync'd
+                    cro::FileSystem::removeDirectory(profilePath);
+                }
+                else
+                {
+#endif
+                    m_profileData.playerProfiles.push_back(pd);
+                    i++;
+#ifdef USE_GNS
+                }
+#endif
             }
         }
 

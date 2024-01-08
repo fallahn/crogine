@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,6 +35,10 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+
+#if defined USE_GNS || defined USE_RSS
+#define RSS_ENABLED
+#endif
 
 struct SharedStateData;
 
@@ -75,7 +79,7 @@ private:
     void buildScene();
     void quitState();
 
-#ifdef USE_RSS
+#if defined RSS_ENABLED
     RSSFeed m_feed;
 #endif
 };

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -731,7 +731,7 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
 
     std::size_t written = 0;
     std::string str = stream.str();
-    written += SDL_RWwrite(file, str.data(), sizeof(char) * str.size(), 1) * str.size(); //TODO this assumes single width charstring
+    written += SDL_RWwrite(file, str.data(), sizeof(char), str.size());
 
     for (auto& o : m_objects)
     {
@@ -741,7 +741,7 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     stream = std::stringstream();
     stream << indent << "}" << std::endl;
     str = stream.str();
-    written += SDL_RWwrite(file, str.data(), sizeof(char) * str.size(), 1) * str.size();
+    written += SDL_RWwrite(file, str.data(), sizeof(char), str.size());
 
     return written;
 }

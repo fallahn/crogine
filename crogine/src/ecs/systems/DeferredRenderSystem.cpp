@@ -53,7 +53,8 @@ using namespace cro;
 
 namespace
 {
-
+    //TODO Albedo needs to be moved to channel 0, as it is only
+    //an 8 bit buffer by default.
     /*
     GBuffer layout:
     Channel 0 - View space normal, RGB
@@ -187,14 +188,14 @@ void DeferredRenderSystem::updateDrawList(Entity camera)
             const auto& frustum = cam.getPass(Camera::Pass::Final).getFrustum();
             auto forwardVector = cro::Util::Matrix::getForwardVector(cam.getPass(Camera::Pass::Final).viewMatrix);
 
-            model.m_visible = true;
+            bool visible = true;
             std::size_t i = 0;
-            while (model.m_visible && i < frustum.size())
+            while (visible && i < frustum.size())
             {
-                model.m_visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
+                visible = (Spatial::intersects(frustum[i++], sphere) != Planar::Back);
             }
 
-            if (model.m_visible)
+            if (visible)
             {
                 auto direction = (sphere.centre - cameraPos);
                 float distance = glm::dot(forwardVector, direction);
@@ -283,7 +284,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
-        if ((model.m_renderFlags & cam.renderFlags) == 0)
+        if ((model.m_renderFlags & pass.renderFlags) == 0)
         {
             continue;
         }
@@ -336,7 +337,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
-        if ((model.m_renderFlags & cam.renderFlags) == 0)
+        if ((model.m_renderFlags & pass.renderFlags) == 0)
         {
             continue;
         }

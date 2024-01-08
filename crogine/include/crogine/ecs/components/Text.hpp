@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -57,10 +57,18 @@ namespace cro
     Text components also require a TextSystem in the active Scene.
     \see RenderSystem2D::setSortOrder()
     */
-    class CRO_EXPORT_API Text final
+    class CRO_EXPORT_API Text final : private FontObserver
     {
     public:
         Text();
+        ~Text();
+
+        Text(const Text&);
+        Text(Text&&) noexcept;
+
+        Text& operator = (const Text&);
+        Text& operator = (Text&&) noexcept;
+
 
         /*!
         \brief Construct a Text component with a given Font
@@ -225,16 +233,20 @@ namespace cro
         {
             enum
             {
-                Colour = 0x1,
-                Font   = 0x2,
-                String = 0x4,
+                Colour  = 0x1,
+                Font    = 0x2,
+                String  = 0x4,
+                Texture = 0x8,
 
-                All = Colour | Font | String
+                All = Colour | Font | String | Texture
             };
         };
         std::uint16_t m_dirtyFlags;
 
         void updateVertices(Drawable2D&);
+
+        void onFontUpdate() override;
+        void removeFont() override;
 
         friend class TextSystem;
     };

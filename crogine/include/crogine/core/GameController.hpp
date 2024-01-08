@@ -106,11 +106,20 @@ namespace cro
             DPadDown = SDL_CONTROLLER_BUTTON_DPAD_DOWN,
             DPadLeft = SDL_CONTROLLER_BUTTON_DPAD_LEFT,
             DPadRight = SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
-            ButtonTrackpad = SDL_CONTROLLER_BUTTON_TOUCHPAD
+            ButtonTrackpad = SDL_CONTROLLER_BUTTON_TOUCHPAD,
+            PaddleL4 = SDL_CONTROLLER_BUTTON_PADDLE2,
+            PaddleL5 = SDL_CONTROLLER_BUTTON_PADDLE4,
+            PaddleR4 = SDL_CONTROLLER_BUTTON_PADDLE1,
+            PaddleR5 = SDL_CONTROLLER_BUTTON_PADDLE3,
         };
 
         static constexpr std::int16_t AxisMax = 32767;
         static constexpr std::int16_t AxisMin = -32768;
+
+        //these are the values in the DX SDK for XInput
+        static constexpr std::int16_t LeftThumbDeadZone = 7849;
+        static constexpr std::int16_t RightThumbDeadZone = 8689;
+        static constexpr std::int16_t TriggerDeadZone = 30;
 
         /*!
         \brief Returns the event ID associated with the controller at the given index

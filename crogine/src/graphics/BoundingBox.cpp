@@ -64,7 +64,7 @@ Box::Box(FloatRect rect, float thickness)
     CRO_ASSERT(thickness > 0, "");
 }
 
-glm::vec3 constexpr Box::getCentre() const
+glm::vec3 Box::getCentre() const
 {
     return m_points[0] + ((m_points[1] - m_points[0]) / 2.f);
 }

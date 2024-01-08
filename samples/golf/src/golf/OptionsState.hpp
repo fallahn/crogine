@@ -119,10 +119,12 @@ private:
             Video, Controls,
             Achievements, Stats,
             NeedsRestart,
+            CustomMusic,
             Count
         };
     };
     std::array<cro::Entity, ToolTipID::Count> m_tooltips = {};
+    std::int32_t m_activeToolTip;
 
     std::array<std::string, InputBinding::Count> m_labelStrings = {};
 

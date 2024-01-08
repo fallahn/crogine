@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/MultiRenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
 
 #include <crogine/gui/GuiClient.hpp>
 
@@ -72,6 +73,10 @@ private:
     cro::SimpleQuad m_normalQuad;
     cro::SimpleQuad m_positionQuad;
     cro::SimpleQuad m_depthQuad;
+    cro::SimpleQuad m_lightQuad;
+
+    cro::SimpleText m_textA;
+    cro::SimpleText m_textB;
 
     cro::RenderTexture m_ssaoBuffer;
     cro::RenderTexture m_ssaoBlurBuffer;
@@ -81,6 +86,7 @@ private:
     {
         std::uint32_t shader = 0;
         std::int32_t aoMap = -1;
+        std::int32_t lightMap = -1;
     }m_outputData;
     cro::SimpleQuad m_outputQuad;
 

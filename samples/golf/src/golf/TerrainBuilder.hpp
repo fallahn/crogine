@@ -32,14 +32,15 @@ source distribution.
 #include "HoleData.hpp"
 #include "Billboard.hpp"
 #include "Treeset.hpp"
-#include "TerrainChunks.hpp"
+#include "ChunkVisSystem.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Image.hpp>
-#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/MultiRenderTexture.hpp>
+#include <crogine/graphics/ArrayTexture.hpp>
 
 #include <vector>
 #include <thread>
@@ -72,7 +73,7 @@ struct SharedStateData;
 class TerrainBuilder final : public cro::GuiClient
 {
 public:
-    TerrainBuilder(SharedStateData&, const std::vector<HoleData>&, TerrainChunker&);
+    TerrainBuilder(SharedStateData&, const std::vector<HoleData>&);
     ~TerrainBuilder();
 
     TerrainBuilder(const TerrainBuilder&) = delete;
@@ -89,29 +90,39 @@ public:
 
     float getSlopeAlpha() const;
 
+    void applyTreeQuality();
+
 private:
     SharedStateData& m_sharedData;
     const std::vector<HoleData>& m_holeData;
     std::size_t m_currentHole;
 
-    TerrainChunker& m_terrainChunker;
-    std::vector<TerrainChunk> m_chunks;
-
-    static constexpr auto ChunkCount = TerrainChunker::ChunkCountX * TerrainChunker::ChunkCountY;
+    std::vector<std::unique_ptr<cro::ArrayTexture<float, 4>>> m_arrayTextures;
 
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
     std::vector<cro::Billboard> m_billboardBuffer;
+    std::vector<cro::Billboard> m_billboardTreeBuffer;
     std::array<cro::Entity, 2u> m_billboardEntities = {};
+    std::array<cro::Entity, 2u> m_billboardTreeEntities = {};
     std::array<cro::Entity, 2u> m_propRootEntities = {};
     std::size_t m_swapIndex; //might not swap every hole so we need to track this independently
 
-    std::vector<glm::mat4> m_instanceTransforms;
+    std::vector<glm::mat4> m_instanceTransforms; //water-side instances (not trees)
     std::array<cro::Entity, 2u> m_instancedEntities = {};
 
     static constexpr std::size_t MaxShrubInstances = 4;
-    std::array<std::vector<glm::mat4>, MaxShrubInstances> m_shrubTransforms;
+    std::array<std::vector<glm::mat4>, MaxShrubInstances> m_shrubTransforms; //these are the incoming transforms and will be set next swap
     std::array<std::array<cro::Entity, MaxShrubInstances>, 2u> m_instancedShrubs = {};
 
+    struct CellData final
+    {
+        std::vector<glm::mat4> transforms;
+        std::vector<glm::mat3> normalMats;
+    };
+    //contains matrix data for current and next hole, indexed by m_swapIndex
+    std::array<std::array<std::array<CellData, ChunkVisSystem::RowCount* ChunkVisSystem::ColCount>, MaxShrubInstances>, 2> m_cellData = {};
+    friend class ChunkVisSystem;
+    void onChunkUpdate(const std::vector<std::int32_t>&);
 
     std::array<std::vector<cro::Entity>, 2u> m_crowdEntities = {};
 
@@ -157,7 +168,6 @@ private:
         cro::Entity entity;
         float currentAlpha = 0.f;
     }m_slopeProperties;
-    std::vector<glm::vec3> m_normalMapBuffer;
 
 
     std::atomic_bool m_threadRunning;
@@ -166,15 +176,12 @@ private:
 
     void threadFunc();
 
-    cro::RenderTexture m_normalMap;
+    cro::MultiRenderTexture m_normalMap;
     cro::Shader m_normalShader;
-    cro::Image m_normalMapImage;
-    struct HoleHeight final
-    {
-        float bottom = 0.f;
-        float height = 0.f;
-    }m_holeHeight;
+    std::vector<float> m_normalMapValues;
+
     void renderNormalMap(); //don't call this from thread!!
+
 
 #ifdef CRO_DEBUG_
     cro::Texture m_normalDebugTexture;

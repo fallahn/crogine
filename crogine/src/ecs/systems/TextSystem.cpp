@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -57,7 +57,7 @@ void TextSystem::process(float)
         bool isPageUpdate = text.m_context.font->pageUpdated(text.getCharacterSize());
         if (text.m_dirtyFlags || isPageUpdate)
         {
-            if (text.m_dirtyFlags == Text::DirtyFlags::Colour)
+            if ((text.m_dirtyFlags & Text::DirtyFlags::Colour) != 0)
             {
                 //don't rebuild the entire array
                 auto& verts = drawable.getVertexData();
@@ -92,12 +92,17 @@ void TextSystem::process(float)
                     }
                 }
             }
-            else
+            //else
             {
                 text.updateVertices(drawable);
-                drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
                 drawable.setPrimitiveType(GL_TRIANGLES);
                 m_readPages.push_back({ text.getFont(), text.getCharacterSize() }); //font needs its pages marked as read
+
+                //do this last as updateVertices() might set this flag (and would then be reset, below)
+                if ((text.m_dirtyFlags & Text::DirtyFlags::Texture) != 0)
+                {
+                    drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
+                }
             }
 
             text.m_dirtyFlags = 0;

@@ -65,6 +65,7 @@ namespace sv
 
         //game rule stuff. TODO encapsulate somewhere
         bool m_gameStarted;
+        bool m_eliminationStarted; //< allows playing X holes before elimination starts
         bool m_allMapsLoaded;
         bool m_skinsFinals;
         std::uint8_t m_currentHole;

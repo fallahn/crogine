@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/Texture.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
+
 #include <vector>
 #include <memory>
 
@@ -50,6 +52,9 @@ namespace cro
     particle systems.
     */
     class CRO_EXPORT_API ParticleSystem final : public Renderable, public System
+#ifdef CRO_DEBUG_
+        ,public GuiClient
+#endif
     {
     public:
         explicit ParticleSystem(MessageBus&);
@@ -97,6 +102,7 @@ namespace cro
             ClipPlane,
             ViewProjection,
             Projection,
+            LightColour,
             Texture,
             TextureSize,
             Viewport,

@@ -59,5 +59,10 @@ namespace cro
         \param func A Console::Command containing the function to execute when the command is received
         */
         void registerCommand(const std::string& command, const std::function<void(const std::string&)>& func);
+
+        void removeCommands();
+
+    private:
+        bool m_wantsRemoving = true;
     };
 }

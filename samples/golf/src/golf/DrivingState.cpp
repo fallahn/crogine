@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -102,16 +102,16 @@ using namespace cl;
 
 namespace
 {
-#include "CelShader.inl"
-#include "TerrainShader.inl"
-#include "TransitionShader.inl"
-#include "MinimapShader.inl"
-#include "WireframeShader.inl"
-#include "BillboardShader.inl"
-#include "CloudShader.inl"
-#include "BeaconShader.inl"
-#include "WaterShader.inl"
-#include "ShaderIncludes.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/TerrainShader.inl"
+#include "shaders/TransitionShader.inl"
+#include "shaders/MinimapShader.inl"
+#include "shaders/WireframeShader.inl"
+#include "shaders/BillboardShader.inl"
+#include "shaders/CloudShader.inl"
+#include "shaders/BeaconShader.inl"
+#include "shaders/WaterShader.inl"
+#include "shaders/ShaderIncludes.inl"
 
 #ifdef CRO_DEBUG_
     float powerMultiplier = 1.f;
@@ -948,9 +948,9 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 #ifdef  CRO_DEBUG_
-    m_gameScene.addSystem<FpsCameraSystem>(mb);
+    //m_gameScene.addSystem<FpsCameraSystem>(mb, m_colli);
 
-    m_gameScene.setSystemActive<FpsCameraSystem>(false);
+    //m_gameScene.setSystemActive<FpsCameraSystem>(false);
 #endif
 
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
@@ -1593,7 +1593,11 @@ void DrivingState::createScene()
     //and sky detail
     std::string skybox = "assets/golf/skyboxes/spring.sbf";
 
-    auto cloudRing = loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+    SkyboxMaterials materials;
+    materials.horizon = m_materialIDs[MaterialID::Horizon];
+    //materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
+
+    auto cloudRing = loadSkybox(skybox, m_skyScene, m_resources, materials);
     if (cloudRing.isValid()
         && cloudRing.hasComponent<cro::Model>())
     {
@@ -1656,7 +1660,7 @@ void DrivingState::createScene()
     cam.resizeCallback = updateView;
     cam.setMaxShadowDistance(40.f);
     cam.setShadowExpansion(30.f);
-    cam.renderFlags = ~RenderFlags::MiniMap;
+    cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     updateView(cam);
     
     m_cameras[CameraID::Player] = camEnt;
@@ -1757,7 +1761,7 @@ void DrivingState::createScene()
     };
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(80.f);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::MiniMap;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 85.f * 85.f;
@@ -1780,7 +1784,7 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::MiniMap;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(50.f);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
@@ -1909,8 +1913,8 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     glCheck(glUniform1f(normalShader.getUniformID("u_maxHeight"), holeHeight));
     glCheck(glUniformMatrix4fv(normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
 
-    cro::RenderTexture normalMap;
-    normalMap.create(280, 290, false); //course size + borders
+    cro::MultiRenderTexture normalMap;
+    normalMap.create(280, 290); //course size + borders
 
     //clear the alpha to 0 so unrendered areas have zero height
     static const cro::Colour ClearColour = cro::Colour(0x7f7fff00);
@@ -1925,8 +1929,11 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     glCheck(glBindVertexArray(0));
     glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
 
-    cro::Image normalMapImage;
-    normalMap.getTexture().saveToImage(normalMapImage);
+
+    std::vector<float> normalMapValues(normalMap.getSize().x * normalMap.getSize().y * 4);
+    glBindTexture(GL_TEXTURE_2D, normalMap.getTexture(1).textureID);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, normalMapValues.data());
+
 
 #ifdef CRO_DEBUG_
     m_debugHeightmap.loadFromImage(normalMapImage);
@@ -1934,12 +1941,12 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
 
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y)
     {
-        auto size = normalMapImage.getSize();
+        auto size = normalMap.getSize();
         x = std::min(size.x - 1, std::max(0u, x));
         y = std::min(size.y - 1, std::max(0u, y));
 
-        float height = static_cast<float>(normalMapImage.getPixel(x, y)[3]) / 255.f;
-        return holeBottom + (holeHeight * height);
+        auto idx = 4 * (y * size.x + x);
+        return normalMapValues[idx + 3];
     };
 
     auto createBillboards = [&](cro::Entity dst, std::array<float, 2u> minBounds, std::array<float, 2u> maxBounds, float radius = 0.f, glm::vec2 centre = glm::vec2(0.f))

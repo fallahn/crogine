@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -46,7 +46,7 @@ namespace cro
     the SimpleText class is less flexible. SimpleText is rendered at the
     current target resolution with one pixel per-unit.
     */
-    class CRO_EXPORT_API SimpleText final : public cro::Transformable2D, public cro::SimpleDrawable
+    class CRO_EXPORT_API SimpleText final : public Transformable2D, public SimpleDrawable, private FontObserver
     {
     public:
         /*!
@@ -54,6 +54,12 @@ namespace cro
         A font must be set before this text will render.
         */
         SimpleText();
+
+        ~SimpleText();
+        SimpleText(const SimpleText&) = delete;
+        SimpleText(SimpleText&&) = delete;
+        SimpleText& operator = (const SimpleText&) = delete;
+        SimpleText& operator = (SimpleText&&) = delete;
 
         /*!
         \brief Construct a SimpleText with the given Font.
@@ -228,7 +234,6 @@ namespace cro
     private:
         TextContext m_context;
         FloatRect m_localBounds;
-        glm::uvec2 m_lastTextureSize;
         const Texture* m_fontTexture;
 
         struct DirtyFlags final
@@ -246,5 +251,7 @@ namespace cro
         std::uint16_t m_dirtyFlags;
 
         void updateVertices();
+        void onFontUpdate() override;
+        void removeFont() override;
     };
 }

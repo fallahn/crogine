@@ -105,8 +105,10 @@ struct SpriteID final
         LobbyRuleButtonHighlight,
         LobbyLeft,
         LobbyRight,
+        WeatherHighlight,
         Envelope,
         LevelBadge,
+        InviteHighlight,
 
         Count
     };
