@@ -2253,6 +2253,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             if (clubSet < m_sharedData.clubSet)
             {
                 m_sharedData.clubSet = clubSet;
+                Club::setClubLevel(clubSet);
             }
         }
             break;

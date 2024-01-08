@@ -196,6 +196,15 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 //make sure to enforce club set if needed
                 if (m_sharedData.clubLimit)
                 {
+                    //one final check to make sure disconnected clients are reset
+                    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+                    {
+                        if (!m_sharedData.clients[i].connected)
+                        {
+                            m_sharedData.clubLevels[i] = 2;
+                        }
+                    }
+
                     std::sort(m_sharedData.clubLevels.begin(), m_sharedData.clubLevels.end(),
                         [](std::uint8_t a, std::uint8_t b)
                         {
