@@ -3912,6 +3912,7 @@ void MenuState::prevHoleCount()
 {
     m_sharedData.holeCount = (m_sharedData.holeCount + 2) % 3;
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 }
@@ -3920,6 +3921,7 @@ void MenuState::nextHoleCount()
 {
     m_sharedData.holeCount = (m_sharedData.holeCount + 1) % 3;
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }
