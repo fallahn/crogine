@@ -395,8 +395,8 @@ bool MapOverviewState::simulate(float dt)
         auto zoom = -cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightY);
         if (zoom < -LeftThumbDeadZone || zoom > LeftThumbDeadZone)
         {
-            zoom /= cro::GameController::AxisMax;
-            m_zoomScale = std::clamp(m_zoomScale + (2.f * zoom * m_zoomScale * dt), MinZoom, MaxZoom);
+            float zoomRatio = static_cast<float>(zoom) / cro::GameController::AxisMax;
+            m_zoomScale = std::clamp(m_zoomScale + (2.f * zoomRatio * m_zoomScale * dt), MinZoom, MaxZoom);
             rescaleMap();
         }
     }
