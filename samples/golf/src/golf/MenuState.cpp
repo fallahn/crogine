@@ -529,6 +529,16 @@ MenuState::~MenuState()
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
+    const auto showPlayerManagement = 
+        [&]()
+        {
+            if (m_currentMenu == MenuID::Lobby
+                && m_sharedData.hosting)
+            {
+                requestStackPush(StateID::PlayerManagement);
+            }
+        };
+
     const auto setChatHint =
         [&](bool controller, std::int32_t joyID)
         {
@@ -772,6 +782,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 requestStackPush(StateID::PlayerManagement);
             }
             break;
+        case SDLK_p:
+            showPlayerManagement();
+            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -815,6 +828,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         default: 
             //cro::Console::show();
             
+            break;
+        case cro::GameController::ButtonStart:
+            showPlayerManagement();
             break;
             //leave the current menu when B is pressed.
         case cro::GameController::ButtonB:
