@@ -17,6 +17,8 @@
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 namespace
 {
@@ -28,24 +30,25 @@ namespace
     //TODO encapsulate in relative classes
     
     //rendering
-    float roadWidth = 2000.f; //road is +/- this
-    constexpr float segmentLength = 200.f;
-    constexpr std::int32_t rumbleLength = 3; //number of segs per strip
-    constexpr std::int32_t drawDistance = 100; //max number of road segments to process and draw
+    //float roadWidth = 2000.f; //road is +/- this
+    //constexpr float segmentLength = 200.f;
+    //constexpr std::int32_t rumbleLength = 3; //number of segs per strip
+    //constexpr std::int32_t drawDistance = 100; //max number of road segments to process and draw
     float trackLength = 100000.f; //total length before looping
-    float lanes = 3.f; //might be superfluous
-    float fov = 60.f;
+    //constexpr float laneCount = 3.f;
+    //float fogDensity = 5.f;
+    //float fov = 60.f;
     float cameraHeight = 1000.f;
-    float cameraDepth = 0.f;
-    float fogDensity = 5.f;
+    float cameraDepth = 1.f;
+    float camZ = 0.f; //add player z to get absolute player pos
 
+    
     //player specific
     float playerX = 0.f; //+/- 1 from X centre
     float playerZ = 0.f; //rel distance from camera
-    float camZ = 0.f; //add player z to get absolute player pos
     float speed = 0.f;
     //TODO constify these - current non-const so we can play with imgui
-    constexpr float MaxSpeed = segmentLength * 60.f; //60 is our frame time
+    constexpr float MaxSpeed = SegmentLength * 60.f; //60 is our frame time
     float acceleration = MaxSpeed / 5.f;
     float braking = -MaxSpeed;
     float deceleration = -acceleration;
@@ -115,9 +118,6 @@ namespace
         playerX = std::clamp(playerX, -2.f, 2.f);
         speed = std::clamp(speed, 0.f, MaxSpeed);
 
-        //TODO only update on FOV change
-        //TODO set fov in rads so we don't have to keep converting
-        cameraDepth = 1.f / std::tan((fov / 2.f) * cro::Util::Const::degToRad);
         playerZ = cameraHeight * cameraDepth;
 
         //TODO rotate player model with steering
@@ -126,77 +126,12 @@ namespace
         const float x = ((RenderSizeFloat.x / 4.f) * playerX) + (RenderSizeFloat.x / 2.f);
         const float scale = cameraDepth / playerZ;
         entity.getComponent<cro::Transform>().setPosition(glm::vec2(x, 0.f));
-        //entity.getComponent<cro::Transform>().setScale(glm::vec2(scale)); //TODO fix this
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(scale)); //TODO fix this
     }
 
 
 
-    //TODO move this to own file
-    struct Point final
-    {
-        glm::vec3 world = glm::vec3(0.f);
-        glm::vec3 camera = glm::vec3(0.f);
-        glm::vec4 screen = glm::vec4(0.f);
-        float scale = 1.f;
-    };
-    void project(Point& p, glm::vec3 camera, float cameraDepth)
-    {
-        p.camera = p.world - camera;
-        p.scale = cameraDepth / p.camera.z;
 
-        const auto screenCentre = RenderSizeFloat / 2.f;
-        p.screen.x = std::round(screenCentre.x + (p.scale * p.camera.x * screenCentre.x));
-        p.screen.y = std::round(screenCentre.y + (p.scale * p.camera.y * screenCentre.y));
-        p.screen.w = std::round(p.scale * roadWidth * screenCentre.x);
-    }
-
-    struct Segment final
-    {
-        Point p0;
-        Point p1;
-        cro::Colour colour;
-    };
-    std::vector<Segment> road;
-
-    void createRoad()
-    {
-        static constexpr std::int32_t SegmentCount = 250;
-
-        for (auto i = 0; i < SegmentCount; ++i)
-        {
-            auto& seg = road.emplace_back();
-            seg.p0.world.z = i * segmentLength;
-            seg.p1.world.z = (i + 1) * segmentLength;
-
-            seg.colour = ((i / rumbleLength) % 2) ? cro::Colour::White : cro::Colour::LightGrey;
-        }
-
-        trackLength = SegmentCount * segmentLength;
-    }
-
-    void updateRoad(float dt, cro::Entity entity)
-    {
-        const std::int32_t baseSeg = std::int32_t(camZ / segmentLength) % road.size();
-        float maxY = RenderSizeFloat.y;
-
-        for (auto i = 0; i < drawDistance; ++i)
-        {
-            //TODO maintain these camera positions somewhere
-            auto& seg = road[(baseSeg + i) % road.size()];
-            project(seg.p0, { playerX * roadWidth, cameraHeight, camZ }, cameraDepth);
-            project(seg.p1, { playerX * roadWidth, cameraHeight, camZ }, cameraDepth);
-
-            if (seg.p0.camera.z < cameraDepth //behind us
-                || seg.p1.screen.y > maxY) //out of view
-            {
-                continue;
-            }
-
-            //TODO insert into vertex array
-
-            maxY = seg.p1.screen.y;
-        }
-    }
 }
 
 EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Context context)
@@ -243,6 +178,11 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
 
                 ImGui::Text("Speed %3.3f", speed);
                 ImGui::Text("PlayerX %3.3f", playerX);
+
+                //ImGui::Text("Camera depth %3.3f", cameraDepth);
+                ImGui::SliderFloat("Cam height", &cameraHeight, 1.f, 1000.f);
+                ImGui::SliderFloat("Cam depth", &cameraDepth, 1.f, 1000.f);
+                ImGui::Text("Scale %3.3f", cameraDepth / playerZ);
             }
             ImGui::End();
         });
@@ -419,11 +359,28 @@ void EndlessDrivingState::createScene()
     m_playerEntity = entity;
 
     //road
-    createRoad();
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -8.f));
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(320.f, 224.f, -8.f));
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    //entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.getComponent<cro::Drawable2D>().setCullingEnabled(false); //assume we're always visible and skip bounds checking
     m_roadEntity = entity;
+
+
+
+    auto segmentCount = cro::Util::Random::value(5, 20);
+    for (auto i = 0; i < segmentCount; ++i)
+    {
+        const auto enter = cro::Util::Random::value(EnterMin, EnterMax);
+        const auto hold = cro::Util::Random::value(HoldMin, HoldMax);
+        const auto exit = cro::Util::Random::value(ExitMin, ExitMax);
+
+        const float curve = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(CurveMin, CurveMax) : 0.f;
+        const float hill = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(HillMin, HillMax) * SegmentLength : 0.f;
+        
+        m_road.addSegment(enter, hold, exit, curve, hill);
+    }
+
 
     auto resize = [](cro::Camera& cam)
     {
@@ -463,4 +420,63 @@ void EndlessDrivingState::createUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
+}
+
+void EndlessDrivingState::updateRoad(float dt, cro::Entity entity)
+{
+    m_trackCamera.move(glm::vec3(0.f, 0.f, speed * dt));
+
+    const float maxLen = m_road.getSegmentCount() * SegmentLength;
+    if (m_trackCamera.getPosition().z > maxLen)
+    {
+        m_trackCamera.move(glm::vec3(0.f, 0.f, - maxLen));
+    }
+
+    std::size_t start = static_cast<std::size_t>(m_trackCamera.getPosition().z / SegmentLength);
+    float x = 0.f;
+    float dx = 0.f;
+    auto camPos = m_trackCamera.getPosition();
+    float maxY = RenderSizeFloat.y;
+
+    const auto trackHeight = m_road[start % m_road.getSegmentCount()].position.y;
+    m_trackCamera.move(glm::vec3(0.f, trackHeight, 0.f));
+
+    for (auto i = start; i < start + DrawDistance; ++i)
+    {
+        //TODO as this is a loop we can just save the current to prev
+        //every iteration.
+        const auto& prev = m_road[(i - 1) % m_road.getSegmentCount()];
+        const auto& curr = m_road[i % m_road.getSegmentCount()];
+
+        if (i - 1 >= m_road.getSegmentCount())
+        {
+            m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
+        }
+        m_trackCamera.setX(camPos.x - x);
+        auto prevProj = m_trackCamera.getScreenProjection(prev, glm::vec3(0.f), RenderSizeFloat);
+
+
+        //increment
+        dx += curr.curve;
+        x += dx;
+
+        if (i >= m_road.getSegmentCount())
+        {
+            m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
+        }
+        m_trackCamera.setX(camPos.x - x);
+        auto currProj = m_trackCamera.getScreenProjection(curr, glm::vec3(0.f), RenderSizeFloat);
+
+        //cull OOB segments
+        if (currProj.z < m_trackCamera.getDepth()
+            || currProj.y > maxY)
+        {
+            continue;
+        }
+
+
+        //TODO update vertex array
+    }
+
+    m_trackCamera.setPosition(camPos);
 }

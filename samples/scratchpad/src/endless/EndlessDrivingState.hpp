@@ -3,6 +3,8 @@
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "TrackCamera.hpp"
+#include "Track.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -41,10 +43,16 @@ private:
     cro::RenderTexture m_gameTexture;
     cro::Entity m_gameEntity;
 
+    //logic ents
+    TrackCamera m_trackCamera;
+    Track m_road;
+
     void addSystems();
     void loadAssets();
     void createPlayer();
     void createScene();
     void createUI();
 
+
+    void updateRoad(float dt, cro::Entity entity);
 };
