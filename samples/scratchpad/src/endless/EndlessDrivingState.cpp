@@ -28,26 +28,12 @@ namespace
     constexpr glm::vec2 RenderSizeFloat = glm::vec2(RenderSize);
 
     //TODO encapsulate in relative classes
-    
-    //rendering
-    //float roadWidth = 2000.f; //road is +/- this
-    //constexpr float segmentLength = 200.f;
-    //constexpr std::int32_t rumbleLength = 3; //number of segs per strip
-    //constexpr std::int32_t drawDistance = 100; //max number of road segments to process and draw
-    float trackLength = 100000.f; //total length before looping
-    //constexpr float laneCount = 3.f;
-    //float fogDensity = 5.f;
-    //float fov = 60.f;
-    float cameraHeight = 1000.f;
-    float cameraDepth = 1.f;
-    float camZ = 0.f; //add player z to get absolute player pos
-
-    
+        
     //player specific
     float playerX = 0.f; //+/- 1 from X centre
     float playerZ = 0.f; //rel distance from camera
     float speed = 0.f;
-    //TODO constify these - current non-const so we can play with imgui
+    //TODO constify these - currently non-const so we can play with imgui
     constexpr float MaxSpeed = SegmentLength * 60.f; //60 is our frame time
     float acceleration = MaxSpeed / 5.f;
     float braking = -MaxSpeed;
@@ -67,61 +53,6 @@ namespace
         std::uint16_t flags = 0;
         std::uint16_t prevFlags = 0;
     }inputFlags;
-
-    //TODO move this to player class
-    void updatePlayer(float dt, cro::Entity entity)
-    {
-        const float dx = dt * 2.f * (speed / MaxSpeed);
-        if (inputFlags.flags & InputFlags::Left)
-        {
-            playerX -= dx;
-        }
-
-        if (inputFlags.flags & InputFlags::Right)
-        {
-            playerX += dx;
-        }
-
-        
-        if ((inputFlags.flags & (InputFlags::Up | InputFlags::Down)) == 0)
-        {
-            //free wheel decel
-            speed += deceleration * dt;
-        }
-        else
-        {
-            if (inputFlags.flags & InputFlags::Up)
-            {
-                speed += acceleration * dt;
-            }
-            if (inputFlags.flags & InputFlags::Down)
-            {
-                speed += braking * dt;
-            }
-        }
-
-        //+/-1 is off road
-        if ((playerX < -1 || playerX > 1)
-            && (speed > offroadMaxSpeed))
-        {
-            //slow down
-            speed += offroadDeceleration * dt;
-        }
-
-        playerX = std::clamp(playerX, -2.f, 2.f);
-        speed = std::clamp(speed, 0.f, MaxSpeed);
-
-        playerZ = cameraHeight * cameraDepth;
-
-        //TODO rotate player model with steering
-
-        //update sprite ent position (playerX is +/- 2)
-        const float x = ((RenderSizeFloat.x / 4.f) * playerX) + (RenderSizeFloat.x / 2.f);
-        const float scale = cameraDepth / playerZ;
-        entity.getComponent<cro::Transform>().setPosition(glm::vec2(x, 0.f));
-        entity.getComponent<cro::Transform>().setScale(glm::vec2(scale)); //TODO fix this
-    }
-
 
     constexpr float fogDensity = 5.f;
     float expFog(float distance, float density)
@@ -181,11 +112,6 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
 
                 ImGui::Text("Speed %3.3f", speed);
                 ImGui::Text("PlayerX %3.3f", playerX);
-
-                //ImGui::Text("Camera depth %3.3f", cameraDepth);
-                ImGui::SliderFloat("Cam height", &cameraHeight, 1.f, 1000.f);
-                ImGui::SliderFloat("Cam depth", &cameraDepth, 1.f, 1000.f);
-                ImGui::Text("Scale %3.3f", cameraDepth / playerZ);
             }
             ImGui::End();
         });
@@ -261,8 +187,8 @@ void EndlessDrivingState::handleMessage(const cro::Message& msg)
 
 bool EndlessDrivingState::simulate(float dt)
 {
-    updateRoad(dt, m_roadEntity);
-    updatePlayer(dt, m_playerEntity);
+    updateRoad(dt);
+    updatePlayer(dt);
 
     m_playerScene.simulate(dt);
     m_gameScene.simulate(dt);
@@ -441,9 +367,62 @@ void EndlessDrivingState::createUI()
     resize(cam);
 }
 
-void EndlessDrivingState::updateRoad(float dt, cro::Entity entity)
+void EndlessDrivingState::updatePlayer(float dt)
 {
-    const float s = /*speed*/ MaxSpeed;
+    const float dx = dt * 2.f * (speed / MaxSpeed);
+    if (inputFlags.flags & InputFlags::Left)
+    {
+        playerX -= dx;
+    }
+
+    if (inputFlags.flags & InputFlags::Right)
+    {
+        playerX += dx;
+    }
+
+
+    if ((inputFlags.flags & (InputFlags::Up | InputFlags::Down)) == 0)
+    {
+        //free wheel decel
+        speed += deceleration * dt;
+    }
+    else
+    {
+        if (inputFlags.flags & InputFlags::Up)
+        {
+            speed += acceleration * dt;
+        }
+        if (inputFlags.flags & InputFlags::Down)
+        {
+            speed += braking * dt;
+        }
+    }
+
+    //is off road
+    if ((playerX < -1.7f || playerX > 1.7f)
+        && (speed > offroadMaxSpeed))
+    {
+        //slow down
+        speed += offroadDeceleration * dt;
+    }
+
+    playerX = std::clamp(playerX, -2.f, 2.f);
+    speed = std::clamp(speed, 0.f, MaxSpeed);
+
+    playerZ = m_trackCamera.getDepth() + 0.5f;
+
+    //TODO rotate player model with steering
+
+    //update sprite ent position (playerX is +/- 2)
+    const float x = ((RenderSizeFloat.x / 4.f) * playerX) + (RenderSizeFloat.x / 2.f);
+    const float scale = m_trackCamera.getDepth() / playerZ;
+    m_playerEntity.getComponent<cro::Transform>().setPosition(glm::vec2(x, 10.f));
+    m_playerEntity.getComponent<cro::Transform>().setScale(glm::vec2(scale)); //TODO fix this
+}
+
+void EndlessDrivingState::updateRoad(float dt)
+{
+    const float s = speed /*MaxSpeed*/;
     
     m_trackCamera.move(glm::vec3(0.f, 0.f, s * dt));
 
@@ -475,7 +454,7 @@ void EndlessDrivingState::updateRoad(float dt, cro::Entity entity)
             m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
         }
         m_trackCamera.setX(camPos.x - x);
-        auto prevProj = m_trackCamera.getScreenProjection(prev, glm::vec3(0.f), RenderSizeFloat);
+        auto prevProj = m_trackCamera.getScreenProjection(prev, glm::vec3(playerX, 0.f, playerZ), RenderSizeFloat);
 
 
         //increment
@@ -487,7 +466,7 @@ void EndlessDrivingState::updateRoad(float dt, cro::Entity entity)
             m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
         }
         m_trackCamera.setX(camPos.x - x);
-        auto currProj = m_trackCamera.getScreenProjection(curr, glm::vec3(0.f), RenderSizeFloat);
+        auto currProj = m_trackCamera.getScreenProjection(curr, glm::vec3(playerX, 0.f, playerZ), RenderSizeFloat);
 
         prev = curr;
 

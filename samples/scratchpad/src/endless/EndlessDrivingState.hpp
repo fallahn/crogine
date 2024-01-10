@@ -69,7 +69,7 @@ private:
     void createScene();
     void createUI();
 
-
-    void updateRoad(float dt, cro::Entity entity);
+    void updatePlayer(float dt);
+    void updateRoad(float dt);
     void addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour, std::vector<cro::Vertex2D>&);
 };
