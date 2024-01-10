@@ -3150,7 +3150,8 @@ void GolfState::spawnBall(const ActorInfo& info)
             m_ballModels[ballID]->createModel(entity);
             applyMaterialData(*m_ballModels[ballID], material);
 #ifdef USE_GNS
-            if (ball->workshopID)
+            if (ball->workshopID
+                && info.clientID == m_sharedData.localConnectionData.connectionID)
             {
                 std::vector<std::uint64_t> v;
                 v.push_back(ball->workshopID);
