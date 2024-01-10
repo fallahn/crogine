@@ -11,6 +11,7 @@
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/Vertex2D.hpp>
 
 class EndlessDrivingState final : public cro::State, public cro::GuiClient
 {
@@ -55,4 +56,5 @@ private:
 
 
     void updateRoad(float dt, cro::Entity entity);
+    void addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour, std::vector<cro::Vertex2D>&);
 };

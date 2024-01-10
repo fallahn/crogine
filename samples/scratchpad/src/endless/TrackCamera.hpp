@@ -86,5 +86,5 @@ private:
     float m_fov = 80.f;
     float m_depth = 1.f; //normalised
 
-    glm::vec3 m_position = glm::vec3(0.f);
+    glm::vec3 m_position = glm::vec3(0.f, 1800.f, 0.f);
 };

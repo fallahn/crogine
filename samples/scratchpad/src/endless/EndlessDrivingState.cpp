@@ -72,11 +72,11 @@ namespace
     void updatePlayer(float dt, cro::Entity entity)
     {
         //I'm sure there are better ways to wrap around but meh
-        camZ += speed * dt;
+        /*camZ += speed * dt;
         if (camZ > trackLength)
         {
             camZ -= trackLength;
-        }
+        }*/
 
         const float dx = dt * 2.f * (speed / MaxSpeed);
         if (inputFlags.flags & InputFlags::Left)
@@ -360,12 +360,11 @@ void EndlessDrivingState::createScene()
 
     //road
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(320.f, 224.f, -8.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -8.f));
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    //entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.getComponent<cro::Drawable2D>().setCullingEnabled(false); //assume we're always visible and skip bounds checking
     m_roadEntity = entity;
-
 
 
     auto segmentCount = cro::Util::Random::value(5, 20);
@@ -381,6 +380,7 @@ void EndlessDrivingState::createScene()
         m_road.addSegment(enter, hold, exit, curve, hill);
     }
 
+    //m_road.addSegment(EnterMin, HoldMin, ExitMin, 0.f, 0.f);
 
     auto resize = [](cro::Camera& cam)
     {
@@ -425,7 +425,7 @@ void EndlessDrivingState::createUI()
 void EndlessDrivingState::updateRoad(float dt, cro::Entity entity)
 {
     m_trackCamera.move(glm::vec3(0.f, 0.f, speed * dt));
-
+    //return;
     const float maxLen = m_road.getSegmentCount() * SegmentLength;
     if (m_trackCamera.getPosition().z > maxLen)
     {
@@ -438,14 +438,15 @@ void EndlessDrivingState::updateRoad(float dt, cro::Entity entity)
     auto camPos = m_trackCamera.getPosition();
     float maxY = RenderSizeFloat.y;
 
+    std::vector<cro::Vertex2D> verts;
+    const float halfWidth = RenderSizeFloat.x / 2.f;
+
     const auto trackHeight = m_road[start % m_road.getSegmentCount()].position.y;
     m_trackCamera.move(glm::vec3(0.f, trackHeight, 0.f));
 
+    auto prev = m_road[(start - 1) % m_road.getSegmentCount()];
     for (auto i = start; i < start + DrawDistance; ++i)
     {
-        //TODO as this is a loop we can just save the current to prev
-        //every iteration.
-        const auto& prev = m_road[(i - 1) % m_road.getSegmentCount()];
         const auto& curr = m_road[i % m_road.getSegmentCount()];
 
         if (i - 1 >= m_road.getSegmentCount())
@@ -467,16 +468,51 @@ void EndlessDrivingState::updateRoad(float dt, cro::Entity entity)
         m_trackCamera.setX(camPos.x - x);
         auto currProj = m_trackCamera.getScreenProjection(curr, glm::vec3(0.f), RenderSizeFloat);
 
+        prev = curr;
+
         //cull OOB segments
-        if (currProj.z < m_trackCamera.getDepth()
-            || currProj.y > maxY)
+        if (currProj.z <= m_trackCamera.getDepth()
+            || currProj.y >= maxY)
         {
             continue;
         }
+        maxY = RenderSizeFloat.y - currProj.y;
 
+        //update vertex array
+        cro::Colour roadColour = ((i / 3) % 2) ? cro::Colour(std::uint8_t(100), 100, 100) : cro::Colour(std::uint8_t(120), 120, 120);
+        cro::Colour grassColour = ((i / 3) % 2) ? cro::Colour(std::uint8_t(0), 168, 0) : cro::Colour(std::uint8_t(0), 190, 0);
+        cro::Colour rumbleColour = ((i / 9) % 2) ? cro::Colour::Red : cro::Colour::White;
 
-        //TODO update vertex array
+        bool roadLine = ((i / 6) % 2);
+
+        //grass
+        addRoadQuad(halfWidth, halfWidth, prevProj.y, currProj.y, halfWidth, halfWidth, grassColour, verts);
+
+        //rumble strip
+        addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z * 1.1f, currProj.z * 1.1f, rumbleColour, verts);
+
+        //road
+        addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z, currProj.z, roadColour, verts);
+
+        //markings
+        if (roadLine)
+        {
+            addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z * 0.02f, currProj.z * 0.02f, cro::Colour::White, verts);
+        }
     }
+    //addRoadQuad(320.f, 320.f, 0.f, 100.f, 320.f, 320.f, cro::Colour::Magenta, verts);
+    m_roadEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
 
     m_trackCamera.setPosition(camPos);
+}
+
+void EndlessDrivingState::addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour c, std::vector<cro::Vertex2D>& dst)
+{
+    dst.emplace_back(glm::vec2(x1 - w1, y1), c);
+    dst.emplace_back(glm::vec2(x2 - w2, y2), c);
+    dst.emplace_back(glm::vec2(x1 + w1, y1), c);
+
+    dst.emplace_back(glm::vec2(x1 + w1, y1), c);
+    dst.emplace_back(glm::vec2(x2 - w2, y2), c);
+    dst.emplace_back(glm::vec2(x2 + w2, y2), c);
 }
