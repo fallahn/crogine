@@ -35,13 +35,14 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 
 #include "TrackSegment.hpp"
 
+#include <crogine/core/Log.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <vector>
 
 static inline constexpr float SegmentLength = 250.f;
-static inline constexpr float RoadWidth = 2500.f;
+static inline constexpr float RoadWidth = 1500.f;
 
 static inline constexpr std::size_t EnterMin = 30;
 static inline constexpr std::size_t EnterMax = 100;
@@ -50,12 +51,12 @@ static inline constexpr std::size_t HoldMax = 500;
 static inline constexpr std::size_t ExitMin = EnterMin;
 static inline constexpr std::size_t ExitMax = EnterMax;
 
-static inline constexpr float CurveMin = -10.f;
-static inline constexpr float CurveMax = 10.f;
-static inline constexpr float HillMin = -60.f;
-static inline constexpr float HillMax = 60.f;
+static inline constexpr float CurveMin = -5.f;
+static inline constexpr float CurveMax = 5.f;
+static inline constexpr float HillMin = -30.f;
+static inline constexpr float HillMax = 30.f;
 
-static inline constexpr std::int32_t DrawDistance = 100; //number of segs
+static inline constexpr std::int32_t DrawDistance = 200; //number of segs
 
 class Track final
 {
@@ -65,33 +66,46 @@ public:
     void addSegment(std::size_t enter, std::size_t hold, std::size_t exit, float curve, float hill)
     {
         const float z = m_segments.size() * SegmentLength;
+        const std::size_t start = m_segments.size();
+
         std::size_t i = 0;
         std::size_t end = enter;
+
+        const auto setColour =
+            [&](TrackSegment& seg)
+            {
+                seg.roadColour = (((start + i) / 3) % 2) ? cro::Colour(0.45f, 0.45f, 0.45f) : cro::Colour(0.4f, 0.4f, 0.4f);
+                seg.grassColour = (((start + i) / 3) % 2) ? cro::Colour(0.f, 0.65f, 0.f) : cro::Colour(0.f, 0.75f, 0.f);
+                seg.rumbleColour = (((start + i) / 9) % 2) ? cro::Colour::Red : cro::Colour::White;
+
+                seg.roadMarking = (((start + i) / 6) % 2);
+            };
 
         for (; i < end; ++i)
         {
             const float progress = static_cast<float>(i) / enter;
             glm::vec3 pos(0.f, hill * cro::Util::Easing::easeInOutSine(progress), z + (i * SegmentLength));
-            m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve * cro::Util::Easing::easeInSine(progress));
+            setColour(m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve * cro::Util::Easing::easeInSine(progress)));
         }
 
         end += hold;
         for (; i < end; ++i)
         {
             glm::vec3 pos(0.f, hill, z + (i * SegmentLength));
-            m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve);
+            setColour(m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve));
         }
 
         end += exit;
         for (; i < end; ++i)
         {
             const float progress = static_cast<float>(i - enter - hold) / exit;
-            glm::vec3 pos(0.f, 1.f - (hill * cro::Util::Easing::easeInOutSine(progress)), z + (i * SegmentLength));
-            m_segments.emplace_back(pos, SegmentLength, RoadWidth, 1.f - (curve * cro::Util::Easing::easeOutSine(progress)));
+            glm::vec3 pos(0.f, hill * (1.f - cro::Util::Easing::easeInOutSine(progress)), z + (i * SegmentLength));
+            setColour(m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve * (1.f - cro::Util::Easing::easeOutSine(progress))));
         }
     }
 
     const TrackSegment& operator[](std::size_t i)const { return m_segments[i]; }
+    TrackSegment& operator[](std::size_t i) { return m_segments[i]; }
 
 private:
     std::vector<TrackSegment> m_segments;

@@ -33,6 +33,7 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 
 #pragma once
 
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 struct TrackSegment final
@@ -41,6 +42,11 @@ struct TrackSegment final
     float length = 200.f;
     float width = 2000.f;
     float curve = 0.f;
+
+    cro::Colour roadColour;
+    cro::Colour rumbleColour;
+    cro::Colour grassColour;
+    bool roadMarking = false;
 
     TrackSegment() = default;
     TrackSegment(glm::vec3 p, float l, float w, float c)

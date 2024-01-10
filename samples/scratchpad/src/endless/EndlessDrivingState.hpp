@@ -13,6 +13,8 @@
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/Vertex2D.hpp>
 
+#include <array>
+
 class EndlessDrivingState final : public cro::State, public cro::GuiClient
 {
 public:
@@ -33,6 +35,19 @@ private:
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+
+    struct BackgroundLayer final
+    {
+        cro::Entity entity;
+        cro::FloatRect textureRect;
+        float speed = 0.f;
+        enum
+        {
+            Sky, Hills, Trees,
+            Count
+        };
+    };
+    std::array<BackgroundLayer, BackgroundLayer::Count> m_background = {};
 
     //buffer for player sprite
     cro::RenderTexture m_playerTexture;

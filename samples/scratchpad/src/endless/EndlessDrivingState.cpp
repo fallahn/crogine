@@ -23,8 +23,8 @@
 namespace
 {
     //TODO move these to some Const header
-    constexpr glm::uvec2 PlayerSize = glm::uvec2(160);
-    constexpr glm::uvec2 RenderSize = glm::uvec2(640, 448);
+    constexpr glm::uvec2 PlayerSize = glm::uvec2(80);
+    constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224);
     constexpr glm::vec2 RenderSizeFloat = glm::vec2(RenderSize);
 
     //TODO encapsulate in relative classes
@@ -71,13 +71,6 @@ namespace
     //TODO move this to player class
     void updatePlayer(float dt, cro::Entity entity)
     {
-        //I'm sure there are better ways to wrap around but meh
-        /*camZ += speed * dt;
-        if (camZ > trackLength)
-        {
-            camZ -= trackLength;
-        }*/
-
         const float dx = dt * 2.f * (speed / MaxSpeed);
         if (inputFlags.flags & InputFlags::Left)
         {
@@ -130,8 +123,18 @@ namespace
     }
 
 
+    constexpr float fogDensity = 5.f;
+    float expFog(float distance, float density)
+    {
+        float fogAmount = 1.f / (std::pow(cro::Util::Const::E, (distance * distance * density)));
+        fogAmount = (0.5f * (1.f - fogAmount));
 
+        fogAmount = std::round(fogAmount * 25.f);
+        fogAmount /= 25.f;
 
+        return fogAmount;
+    }
+    const cro::Colour FogColour = cro::Colour::Teal;
 }
 
 EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Context context)
@@ -334,21 +337,35 @@ void EndlessDrivingState::createPlayer()
 void EndlessDrivingState::createScene()
 {
     //background
+    auto* tex = &m_resources.textures.get("assets/cars/sky.png");
+    tex->setRepeated(true);
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.5f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_resources.textures.get("assets/cars/sky.png"));
+    entity.addComponent<cro::Sprite>(*tex);
+    m_background[BackgroundLayer::Sky].entity = entity;
+    m_background[BackgroundLayer::Sky].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
+    m_background[BackgroundLayer::Sky].speed = 0.04f;
 
+    tex = &m_resources.textures.get("assets/cars/hills.png");
+    tex->setRepeated(true);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.4f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_resources.textures.get("assets/cars/hills.png"));
+    entity.addComponent<cro::Sprite>(*tex);
+    m_background[BackgroundLayer::Hills].entity = entity;
+    m_background[BackgroundLayer::Hills].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
+    m_background[BackgroundLayer::Hills].speed = 0.08f;
 
+    tex = &m_resources.textures.get("assets/cars/trees.png");
+    tex->setRepeated(true);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.3f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_resources.textures.get("assets/cars/trees.png"));
-
+    entity.addComponent<cro::Sprite>(*tex);
+    m_background[BackgroundLayer::Trees].entity = entity;
+    m_background[BackgroundLayer::Trees].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
+    m_background[BackgroundLayer::Trees].speed = 0.12f;
 
     //player
     entity = m_gameScene.createEntity();
@@ -379,6 +396,8 @@ void EndlessDrivingState::createScene()
         
         m_road.addSegment(enter, hold, exit, curve, hill);
     }
+    m_road[m_road.getSegmentCount() - 1].roadColour = cro::Colour::White;
+    m_road[m_road.getSegmentCount() - 1].rumbleColour = cro::Colour::Blue;
 
     //m_road.addSegment(EnterMin, HoldMin, ExitMin, 0.f, 0.f);
 
@@ -424,8 +443,10 @@ void EndlessDrivingState::createUI()
 
 void EndlessDrivingState::updateRoad(float dt, cro::Entity entity)
 {
-    m_trackCamera.move(glm::vec3(0.f, 0.f, speed * dt));
-    //return;
+    const float s = /*speed*/ MaxSpeed;
+    
+    m_trackCamera.move(glm::vec3(0.f, 0.f, s * dt));
+
     const float maxLen = m_road.getSegmentCount() * SegmentLength;
     if (m_trackCamera.getPosition().z > maxLen)
     {
@@ -471,37 +492,47 @@ void EndlessDrivingState::updateRoad(float dt, cro::Entity entity)
         prev = curr;
 
         //cull OOB segments
-        if (currProj.z <= m_trackCamera.getDepth()
-            || currProj.y >= maxY)
+        if (prevProj.z < m_trackCamera.getDepth()
+            || currProj.y > maxY)
         {
             continue;
         }
         maxY = RenderSizeFloat.y - currProj.y;
 
         //update vertex array
-        cro::Colour roadColour = ((i / 3) % 2) ? cro::Colour(std::uint8_t(100), 100, 100) : cro::Colour(std::uint8_t(120), 120, 120);
-        cro::Colour grassColour = ((i / 3) % 2) ? cro::Colour(std::uint8_t(0), 168, 0) : cro::Colour(std::uint8_t(0), 190, 0);
-        cro::Colour rumbleColour = ((i / 9) % 2) ? cro::Colour::Red : cro::Colour::White;
-
-        bool roadLine = ((i / 6) % 2);
-
+        float fogAmount = expFog(static_cast<float>(i - start) / DrawDistance, fogDensity);
+        
         //grass
-        addRoadQuad(halfWidth, halfWidth, prevProj.y, currProj.y, halfWidth, halfWidth, grassColour, verts);
+        auto colour = glm::mix(curr.grassColour.getVec4(), FogColour.getVec4(), fogAmount);
+        addRoadQuad(halfWidth, halfWidth, prevProj.y, currProj.y, halfWidth, halfWidth, colour, verts);
 
         //rumble strip
-        addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z * 1.1f, currProj.z * 1.1f, rumbleColour, verts);
+        colour = glm::mix(curr.rumbleColour.getVec4(), FogColour.getVec4(), fogAmount);
+        addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z * 1.1f, currProj.z * 1.1f, curr.rumbleColour, verts);
 
         //road
-        addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z, currProj.z, roadColour, verts);
+        colour = glm::mix(curr.roadColour.getVec4(), FogColour.getVec4(), fogAmount);
+        addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z, currProj.z, curr.roadColour, verts);
 
         //markings
-        if (roadLine)
+        if (curr.roadMarking)
         {
             addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z * 0.02f, currProj.z * 0.02f, cro::Colour::White, verts);
         }
+
     }
     //addRoadQuad(320.f, 320.f, 0.f, 100.f, 320.f, 320.f, cro::Colour::Magenta, verts);
     m_roadEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
+
+
+    //update the background
+    const float speedRatio = s / MaxSpeed;
+    for (auto& layer : m_background)
+    {
+        //TODO scroll vertically with hills
+        layer.textureRect.left += layer.speed * m_road[start].curve * speedRatio;
+        layer.entity.getComponent<cro::Sprite>().setTextureRect(layer.textureRect);
+    }
 
     m_trackCamera.setPosition(camPos);
 }
