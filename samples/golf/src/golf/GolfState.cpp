@@ -194,6 +194,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat)
 {
+    if (sd.weatherType == WeatherType::Random)
+    {
+        sd.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+    }
+
     sd.holesPlayed = 0;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 

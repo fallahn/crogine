@@ -150,6 +150,7 @@ struct WeatherType final
     enum
     {
         Clear, Rain, Showers, Mist,
+        Random,
         Count,
         Snow
     };
@@ -157,7 +158,8 @@ struct WeatherType final
 static inline const std::array<cro::String, WeatherType::Count> WeatherStrings =
 {
     "Clear", "Rain",
-    "Showers", "Mist"
+    "Showers", "Mist",
+    "Random"
 };
 
 struct MRTIndex final

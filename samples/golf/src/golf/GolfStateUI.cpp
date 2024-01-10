@@ -1693,7 +1693,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         Achievements::incrementStat(StatStrings[StatID::PlaysInClearWeather + m_sharedData.weatherType]);
 
         std::int32_t weatherProgress = 0;
-        for (auto i = 0; i < WeatherType::Count; ++i)
+        for (auto i = 0; i < WeatherType::Random; ++i)
         {
             if (Achievements::getStat(StatStrings[StatID::PlaysInClearWeather + i])->value != 0)
             {
