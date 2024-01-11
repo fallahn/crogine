@@ -42,7 +42,7 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 #include <vector>
 
 static inline constexpr float SegmentLength = 250.f;
-static inline constexpr float RoadWidth = 1500.f;
+static inline constexpr float RoadWidth = 2500.f;
 
 static inline constexpr std::size_t EnterMin = 30;
 static inline constexpr std::size_t EnterMax = 100;
@@ -51,8 +51,8 @@ static inline constexpr std::size_t HoldMax = 500;
 static inline constexpr std::size_t ExitMin = EnterMin;
 static inline constexpr std::size_t ExitMax = EnterMax;
 
-static inline constexpr float CurveMin = -5.f;
-static inline constexpr float CurveMax = 5.f;
+static inline constexpr float CurveMin = -4.f;
+static inline constexpr float CurveMax = 4.f;
 static inline constexpr float HillMin = -30.f;
 static inline constexpr float HillMax = 30.f;
 
@@ -84,7 +84,7 @@ public:
         for (; i < end; ++i)
         {
             const float progress = static_cast<float>(i) / enter;
-            glm::vec3 pos(0.f, hill * cro::Util::Easing::easeInOutSine(progress), z + (i * SegmentLength));
+            glm::vec3 pos(0.f, hill * cro::Util::Easing::easeOutSine(progress), z + (i * SegmentLength));
             setColour(m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve * cro::Util::Easing::easeInSine(progress)));
         }
 
@@ -99,8 +99,8 @@ public:
         for (; i < end; ++i)
         {
             const float progress = static_cast<float>(i - enter - hold) / exit;
-            glm::vec3 pos(0.f, hill * (1.f - cro::Util::Easing::easeInOutSine(progress)), z + (i * SegmentLength));
-            setColour(m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve * (1.f - cro::Util::Easing::easeOutSine(progress))));
+            glm::vec3 pos(0.f, hill * (cro::Util::Easing::easeOutSine(1.f - progress)), z + (i * SegmentLength));
+            setColour(m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve * (cro::Util::Easing::easeOutSine(1.f - progress))));
         }
     }
 

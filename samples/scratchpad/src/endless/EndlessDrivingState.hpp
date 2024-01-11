@@ -41,6 +41,7 @@ private:
         cro::Entity entity;
         cro::FloatRect textureRect;
         float speed = 0.f;
+        float verticalSpeed = 0.f;
         enum
         {
             Sky, Hills, Trees,
@@ -51,7 +52,7 @@ private:
 
     //buffer for player sprite
     cro::RenderTexture m_playerTexture;
-    cro::Entity m_playerEntity;
+    cro::Entity m_playerEntity; //3D model
     cro::Entity m_roadEntity;
 
     //texture is fixed size and game is rendered to this
@@ -62,6 +63,43 @@ private:
     //logic ents
     TrackCamera m_trackCamera;
     Track m_road;
+
+    struct Player final
+    {
+        float x = 0.f; //+/- 1 from X centre
+        float z = 0.f; //rel distance from camera
+        float speed = 0.f;
+
+        static inline constexpr float MaxSpeed = SegmentLength * 60.f; //60 is our frame time
+        static inline constexpr float Acceleration = MaxSpeed / 5.f;
+        static inline constexpr float Braking = -MaxSpeed;
+        static inline constexpr float Deceleration = -Acceleration;
+        static inline constexpr float OffroadDeceleration = -MaxSpeed / 2.f;
+        static inline constexpr float OffroadMaxSpeed = MaxSpeed / 4.f;
+
+        struct Model final
+        {
+            float rotationX = 0.f;
+            float rotationY = 0.f;
+
+            static constexpr float MaxX = 0.1f;
+            static constexpr float MaxY = 0.4f;
+        }model;
+    }m_player;
+
+    struct InputFlags final
+    {
+        enum
+        {
+            Up    = 0x1,
+            Down  = 0x2,
+            Left  = 0x4,
+            Right = 0x8
+        };
+        std::uint16_t flags = 0;
+        std::uint16_t prevFlags = 0;
+    }m_inputFlags;
+
 
     void addSystems();
     void loadAssets();

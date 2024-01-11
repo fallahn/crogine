@@ -19,40 +19,14 @@
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/glm/gtx/euler_angles.hpp>
 
 namespace
 {
-    //TODO move these to some Const header
     constexpr glm::uvec2 PlayerSize = glm::uvec2(80);
     constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224);
     constexpr glm::vec2 RenderSizeFloat = glm::vec2(RenderSize);
-
-    //TODO encapsulate in relative classes
-        
-    //player specific
-    float playerX = 0.f; //+/- 1 from X centre
-    float playerZ = 0.f; //rel distance from camera
-    float speed = 0.f;
-    //TODO constify these - currently non-const so we can play with imgui
-    constexpr float MaxSpeed = SegmentLength * 60.f; //60 is our frame time
-    float acceleration = MaxSpeed / 5.f;
-    float braking = -MaxSpeed;
-    float deceleration = -acceleration;
-    float offroadDeceleration = -MaxSpeed / 2.f;
-    float offroadMaxSpeed = MaxSpeed / 4.f;
-
-    struct InputFlags final
-    {
-        enum
-        {
-            Up = 0x1,
-            Down = 0x2,
-            Left = 0x4,
-            Right = 0x8
-        };
-        std::uint16_t flags = 0;
-        std::uint16_t prevFlags = 0;
-    }inputFlags;
+    
 
     constexpr float fogDensity = 5.f;
     float expFog(float distance, float density)
@@ -88,7 +62,7 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
             {
                 static const auto Red = ImVec4(1.f, 0.f, 0.f, 1.f);
                 static const auto Green = ImVec4(0.f, 1.f, 0.f, 1.f);
-                if (inputFlags.flags & InputFlags::Left)
+                if (m_inputFlags.flags & InputFlags::Left)
                 {
                     ImGui::PushStyleColor(ImGuiCol_Text, Green);
                 }
@@ -99,7 +73,7 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
                 ImGui::Text("Left");
                 ImGui::PopStyleColor();
 
-                if (inputFlags.flags & InputFlags::Right)
+                if (m_inputFlags.flags & InputFlags::Right)
                 {
                     ImGui::PushStyleColor(ImGuiCol_Text, Green);
                 }
@@ -110,8 +84,8 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
                 ImGui::Text("Right");
                 ImGui::PopStyleColor();
 
-                ImGui::Text("Speed %3.3f", speed);
-                ImGui::Text("PlayerX %3.3f", playerX);
+                ImGui::Text("Speed %3.3f", m_player.speed);
+                ImGui::Text("PlayerX %3.3f", m_player.x);
             }
             ImGui::End();
         });
@@ -138,16 +112,16 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 
             //TODO move this to player/input and read keybinds
         case SDLK_w:
-            inputFlags.flags |= InputFlags::Up;
+            m_inputFlags.flags |= InputFlags::Up;
             break;
         case SDLK_s:
-            inputFlags.flags |= InputFlags::Down;
+            m_inputFlags.flags |= InputFlags::Down;
             break;
         case SDLK_a:
-            inputFlags.flags |= InputFlags::Left;
+            m_inputFlags.flags |= InputFlags::Left;
             break;
         case SDLK_d:
-            inputFlags.flags |= InputFlags::Right;
+            m_inputFlags.flags |= InputFlags::Right;
             break;
         }
     }
@@ -158,16 +132,16 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         default: break;
             //TODO move this to player/input and read keybinds
         case SDLK_w:
-            inputFlags.flags &= ~InputFlags::Up;
+            m_inputFlags.flags &= ~InputFlags::Up;
             break;
         case SDLK_s:
-            inputFlags.flags &= ~InputFlags::Down;
+            m_inputFlags.flags &= ~InputFlags::Down;
             break;
         case SDLK_a:
-            inputFlags.flags &= ~InputFlags::Left;
+            m_inputFlags.flags &= ~InputFlags::Left;
             break;
         case SDLK_d:
-            inputFlags.flags &= ~InputFlags::Right;
+            m_inputFlags.flags &= ~InputFlags::Right;
             break;
         }
     }
@@ -198,7 +172,7 @@ bool EndlessDrivingState::simulate(float dt)
 
 void EndlessDrivingState::render()
 {
-    m_playerTexture.clear(cro::Colour::Transparent);
+    m_playerTexture.clear(cro::Colour::Transparent/*Blue*/);
     m_playerScene.render();
     m_playerTexture.display();
 
@@ -235,27 +209,29 @@ void EndlessDrivingState::createPlayer()
 {
     m_playerTexture.create(PlayerSize.x, PlayerSize.y);
 
+    auto entity = m_playerScene.createEntity();
+    entity.addComponent<cro::Transform>();
+
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/cars/cart.cmt"))
     {
-        auto entity = m_playerScene.createEntity();
-        entity.addComponent<cro::Transform>();
         md.createModel(entity);
     }
+    m_playerEntity = entity;
 
-    auto resize = [](cro::Camera& cam)
+    auto resize = [&](cro::Camera& cam)
         {
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-            cam.setPerspective(cro::Util::Const::degToRad * 54.f, 1.f, 0.1f, 10.f);
+            cam.setPerspective(cro::Util::Const::degToRad * m_trackCamera.getFOV(), 1.f, 0.1f, 10.f);
         };
 
     auto& cam = m_playerScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
 
-    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ -2.6f, 1.5f, 0.f });
+    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ -2.3f, 1.9f, 0.f });
     m_playerScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f);
-    m_playerScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.28f);
+    m_playerScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.58f);
 
     m_playerScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
 }
@@ -282,6 +258,7 @@ void EndlessDrivingState::createScene()
     m_background[BackgroundLayer::Hills].entity = entity;
     m_background[BackgroundLayer::Hills].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
     m_background[BackgroundLayer::Hills].speed = 0.08f;
+    m_background[BackgroundLayer::Hills].verticalSpeed = 0.04f;
 
     tex = &m_resources.textures.get("assets/cars/trees.png");
     tex->setRepeated(true);
@@ -292,14 +269,15 @@ void EndlessDrivingState::createScene()
     m_background[BackgroundLayer::Trees].entity = entity;
     m_background[BackgroundLayer::Trees].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
     m_background[BackgroundLayer::Trees].speed = 0.12f;
+    m_background[BackgroundLayer::Trees].verticalSpeed = 0.06f;
 
     //player
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(320.f, 0.f, -0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(160.f, 10.f, -0.1f));
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(static_cast<float>(PlayerSize.x / 2u), 0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_playerTexture.getTexture());
-    m_playerEntity = entity;
+    
 
     //road
     entity = m_gameScene.createEntity();
@@ -369,60 +347,78 @@ void EndlessDrivingState::createUI()
 
 void EndlessDrivingState::updatePlayer(float dt)
 {
-    const float dx = dt * 2.f * (speed / MaxSpeed);
-    if (inputFlags.flags & InputFlags::Left)
-    {
-        playerX -= dx;
-    }
+    const float speedRatio = (m_player.speed / Player::MaxSpeed);
+    const float dx = dt * 2.f * speedRatio;
 
-    if (inputFlags.flags & InputFlags::Right)
+    if ((m_inputFlags.flags & (InputFlags::Left | InputFlags::Right)) == 0)
     {
-        playerX += dx;
-    }
-
-
-    if ((inputFlags.flags & (InputFlags::Up | InputFlags::Down)) == 0)
-    {
-        //free wheel decel
-        speed += deceleration * dt;
+        m_player.model.rotationY *= 1.f - (0.1f * speedRatio);   
     }
     else
     {
-        if (inputFlags.flags & InputFlags::Up)
+        if (m_inputFlags.flags & InputFlags::Left)
         {
-            speed += acceleration * dt;
+            m_player.x -= dx;
+            m_player.model.rotationY = std::min(Player::Model::MaxY, m_player.model.rotationY + dx);
         }
-        if (inputFlags.flags & InputFlags::Down)
+
+        if (m_inputFlags.flags & InputFlags::Right)
         {
-            speed += braking * dt;
+            m_player.x += dx;
+            m_player.model.rotationY = std::max(-Player::Model::MaxY, m_player.model.rotationY - dx);
+        }
+    }
+    
+    //centrifuge on curves
+    static constexpr float Centrifuge = 0.3f;
+    const std::size_t segID = static_cast<std::size_t>(m_trackCamera.getPosition().z / SegmentLength);
+    m_player.x -= dx * speedRatio * m_road[segID].curve * Centrifuge;
+
+    //uphill/downhill anim
+    const auto nextID = (segID - 1) % m_road.getSegmentCount();
+    m_player.model.rotationX = std::clamp((m_road[segID].position.y - m_road[nextID].position.y) * dt, -Player::Model::MaxX, Player::Model::MaxX);
+    m_player.model.rotationX *= 1.f - (0.1f * speedRatio);
+    
+
+    if ((m_inputFlags.flags & (InputFlags::Up | InputFlags::Down)) == 0)
+    {
+        //free wheel decel
+        m_player.speed += Player::Deceleration * dt;
+    }
+    else
+    {
+        if (m_inputFlags.flags & InputFlags::Up)
+        {
+            m_player.speed += Player::Acceleration * dt;
+        }
+        if (m_inputFlags.flags & InputFlags::Down)
+        {
+            m_player.speed += Player::Braking * dt;
         }
     }
 
     //is off road
-    if ((playerX < -1.7f || playerX > 1.7f)
-        && (speed > offroadMaxSpeed))
+    if ((m_player.x < -1.f || m_player.x > 1.f)
+        && (m_player.speed > Player::OffroadMaxSpeed))
     {
         //slow down
-        speed += offroadDeceleration * dt;
+        m_player.speed += Player::OffroadDeceleration * dt;
     }
 
-    playerX = std::clamp(playerX, -2.f, 2.f);
-    speed = std::clamp(speed, 0.f, MaxSpeed);
+    m_player.x = std::clamp(m_player.x, -2.f, 2.f);
+    m_player.speed = std::clamp(m_player.speed, 0.f, Player::MaxSpeed);
 
-    playerZ = m_trackCamera.getDepth() + 0.5f;
+    m_player.z = m_trackCamera.getDepth() + 0.5f;
 
-    //TODO rotate player model with steering
-
-    //update sprite ent position (playerX is +/- 2)
-    const float x = ((RenderSizeFloat.x / 4.f) * playerX) + (RenderSizeFloat.x / 2.f);
-    const float scale = m_trackCamera.getDepth() / playerZ;
-    m_playerEntity.getComponent<cro::Transform>().setPosition(glm::vec2(x, 10.f));
-    m_playerEntity.getComponent<cro::Transform>().setScale(glm::vec2(scale)); //TODO fix this
+    //rotate player model with steering
+    //TODO X rot needs to account for the inverse of Y
+    glm::quat r = glm::toQuat(glm::orientate3(glm::vec3(0.f, /*m_player.model.rotationX*/0.f, m_player.model.rotationY)));
+    m_playerEntity.getComponent<cro::Transform>().setRotation(r);
 }
 
 void EndlessDrivingState::updateRoad(float dt)
 {
-    const float s = speed /*MaxSpeed*/;
+    const float s = m_player.speed /*Player::MaxSpeed*/;
     
     m_trackCamera.move(glm::vec3(0.f, 0.f, s * dt));
 
@@ -432,11 +428,11 @@ void EndlessDrivingState::updateRoad(float dt)
         m_trackCamera.move(glm::vec3(0.f, 0.f, - maxLen));
     }
 
-    std::size_t start = static_cast<std::size_t>(m_trackCamera.getPosition().z / SegmentLength);
+    const std::size_t start = static_cast<std::size_t>(m_trackCamera.getPosition().z / SegmentLength);
     float x = 0.f;
     float dx = 0.f;
     auto camPos = m_trackCamera.getPosition();
-    float maxY = RenderSizeFloat.y;
+    float maxY = 0.f;// RenderSizeFloat.y;
 
     std::vector<cro::Vertex2D> verts;
     const float halfWidth = RenderSizeFloat.x / 2.f;
@@ -454,7 +450,7 @@ void EndlessDrivingState::updateRoad(float dt)
             m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
         }
         m_trackCamera.setX(camPos.x - x);
-        auto prevProj = m_trackCamera.getScreenProjection(prev, glm::vec3(playerX, 0.f, playerZ), RenderSizeFloat);
+        auto prevProj = m_trackCamera.getScreenProjection(prev, m_player.x * prev.width, RenderSizeFloat);
 
 
         //increment
@@ -466,13 +462,13 @@ void EndlessDrivingState::updateRoad(float dt)
             m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
         }
         m_trackCamera.setX(camPos.x - x);
-        auto currProj = m_trackCamera.getScreenProjection(curr, glm::vec3(playerX, 0.f, playerZ), RenderSizeFloat);
+        auto currProj = m_trackCamera.getScreenProjection(curr, m_player.x * curr.width, RenderSizeFloat);
 
         prev = curr;
 
         //cull OOB segments
         if (prevProj.z < m_trackCamera.getDepth()
-            || currProj.y > maxY)
+            || currProj.y >= maxY)
         {
             continue;
         }
@@ -505,11 +501,11 @@ void EndlessDrivingState::updateRoad(float dt)
 
 
     //update the background
-    const float speedRatio = s / MaxSpeed;
+    const float speedRatio = s / Player::MaxSpeed;
     for (auto& layer : m_background)
     {
-        //TODO scroll vertically with hills
         layer.textureRect.left += layer.speed * m_road[start].curve * speedRatio;
+        layer.textureRect.bottom = layer.verticalSpeed * m_road[start].position.y * 0.05f;
         layer.entity.getComponent<cro::Sprite>().setTextureRect(layer.textureRect);
     }
 

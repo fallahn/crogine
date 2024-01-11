@@ -54,10 +54,10 @@ public:
     float getFOV() const { return m_fov; }
     float getDepth() const { return m_depth; }
 
-    glm::vec3 getScreenProjection(const TrackSegment segment, glm::vec3 playerPos, glm::vec2 screenSize)
+    glm::vec3 getScreenProjection(const TrackSegment& segment, float playerX, glm::vec2 screenSize)
     {
         auto translation = segment.position - m_position;
-        translation.x -= playerPos.x;
+        translation.x -= playerX;
 
         const float scale = (m_depth / translation.z);
         auto projection = translation * scale;
@@ -83,8 +83,8 @@ public:
     void setZ(float f) { m_position.z = f; }
 
 private:
-    float m_fov = 80.f;
-    float m_depth = 1.f; //normalised
+    float m_fov = 65.f;
+    float m_depth = 1.f;
 
-    glm::vec3 m_position = glm::vec3(0.f, 1800.f, 0.f);
+    glm::vec3 m_position = glm::vec3(0.f, 1800.f, 300.f);
 };
