@@ -53,6 +53,7 @@ private:
     //buffer for player sprite
     cro::RenderTexture m_playerTexture;
     cro::Entity m_playerEntity; //3D model
+    cro::Entity m_playerSprite;
     cro::Entity m_roadEntity;
 
     //texture is fixed size and game is rendered to this
@@ -66,8 +67,10 @@ private:
 
     struct Player final
     {
-        float x = 0.f; //+/- 1 from X centre
-        float z = 0.f; //rel distance from camera
+        //float x = 0.f; //+/- 1 from X centre
+        //float y = 0.f;
+        //float z = 0.f; //rel distance from camera
+        glm::vec3 position = glm::vec3(0.f);
         float speed = 0.f;
 
         static inline constexpr float MaxSpeed = SegmentLength * 60.f; //60 is our frame time
@@ -83,7 +86,7 @@ private:
             float rotationY = 0.f;
 
             static constexpr float MaxX = 0.1f;
-            static constexpr float MaxY = 0.4f;
+            static constexpr float MaxY = 0.3f;
         }model;
     }m_player;
 

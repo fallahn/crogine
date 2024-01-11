@@ -23,10 +23,11 @@
 
 namespace
 {
-    constexpr glm::uvec2 PlayerSize = glm::uvec2(80);
     constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224);
     constexpr glm::vec2 RenderSizeFloat = glm::vec2(RenderSize);
-    
+    constexpr float PlayerWidth = 74.f;
+    constexpr float PlayerHeight = 84.f;
+    constexpr cro::FloatRect PlayerBounds((RenderSizeFloat.x - PlayerWidth) / 2.f, 0.f, PlayerWidth, PlayerHeight);
 
     constexpr float fogDensity = 5.f;
     float expFog(float distance, float density)
@@ -40,6 +41,12 @@ namespace
         return fogAmount;
     }
     const cro::Colour FogColour = cro::Colour::Teal;
+
+    struct Debug final
+    {
+        float maxY = 0.f;
+        float segmentProgress = 0.f;
+    }debug;
 }
 
 EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Context context)
@@ -60,6 +67,29 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
         {
             if (ImGui::Begin("Player"))
             {
+                /*cro::FloatRect textureBounds = m_playerSprite.getComponent<cro::Sprite>().getTextureRect();
+                if (ImGui::SliderFloat("Width", &textureBounds.width, 10.f, RenderSizeFloat.x))
+                {
+                    textureBounds.left = (RenderSizeFloat.x - textureBounds.width) / 2.f;
+                    m_playerSprite.getComponent<cro::Sprite>().setTextureRect(textureBounds);
+                    m_playerSprite.getComponent<cro::Transform>().setOrigin(glm::vec2(textureBounds.width / 2.f, 0.f));
+                }
+                if (ImGui::SliderFloat("Height", &textureBounds.height, 10.f, RenderSizeFloat.y))
+                {
+                    m_playerSprite.getComponent<cro::Sprite>().setTextureRect(textureBounds);
+                }
+                
+                auto pos = m_playerScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Cam height", &pos.y, 1.f, 6.f))
+                {
+                    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
+                }*/
+
+                ImGui::Text("Max Y  %3.3f", debug.maxY);
+                ImGui::Text("Player Y  %3.3f", m_player.position.y);
+                ImGui::Text("Player Z  %3.3f", m_player.position.z);
+                ImGui::Text("Player Segment Progress  %3.3f", debug.segmentProgress);
+
                 static const auto Red = ImVec4(1.f, 0.f, 0.f, 1.f);
                 static const auto Green = ImVec4(0.f, 1.f, 0.f, 1.f);
                 if (m_inputFlags.flags & InputFlags::Left)
@@ -85,7 +115,7 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
                 ImGui::PopStyleColor();
 
                 ImGui::Text("Speed %3.3f", m_player.speed);
-                ImGui::Text("PlayerX %3.3f", m_player.x);
+                ImGui::Text("PlayerX %3.3f", m_player.position.x);
             }
             ImGui::End();
         });
@@ -207,7 +237,7 @@ void EndlessDrivingState::loadAssets()
 
 void EndlessDrivingState::createPlayer()
 {
-    m_playerTexture.create(PlayerSize.x, PlayerSize.y);
+    m_playerTexture.create(RenderSize.x, RenderSize.y);
 
     auto entity = m_playerScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -222,16 +252,16 @@ void EndlessDrivingState::createPlayer()
     auto resize = [&](cro::Camera& cam)
         {
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-            cam.setPerspective(cro::Util::Const::degToRad * m_trackCamera.getFOV(), 1.f, 0.1f, 10.f);
+            cam.setPerspective(cro::Util::Const::degToRad * m_trackCamera.getFOV(), RenderSizeFloat.x/RenderSizeFloat.y, 0.1f, 50.f);
         };
 
     auto& cam = m_playerScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
 
-    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ -2.3f, 1.9f, 0.f });
+    //this has to look straight ahead, as that's what we're supposing in the 2D projection
+    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ -5.146f, 3.1f, 0.f });
     m_playerScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f);
-    m_playerScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.58f);
 
     m_playerScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
 }
@@ -273,11 +303,12 @@ void EndlessDrivingState::createScene()
 
     //player
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(160.f, 10.f, -0.1f));
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(static_cast<float>(PlayerSize.x / 2u), 0.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(160.f, 0.f, -0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_playerTexture.getTexture());
-    
+    entity.getComponent<cro::Sprite>().setTextureRect(PlayerBounds);
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(PlayerBounds.width / 2.f, 0.f));
+    m_playerSprite = entity;
 
     //road
     entity = m_gameScene.createEntity();
@@ -358,21 +389,21 @@ void EndlessDrivingState::updatePlayer(float dt)
     {
         if (m_inputFlags.flags & InputFlags::Left)
         {
-            m_player.x -= dx;
+            m_player.position.x -= dx;
             m_player.model.rotationY = std::min(Player::Model::MaxY, m_player.model.rotationY + dx);
         }
 
         if (m_inputFlags.flags & InputFlags::Right)
         {
-            m_player.x += dx;
+            m_player.position.x += dx;
             m_player.model.rotationY = std::max(-Player::Model::MaxY, m_player.model.rotationY - dx);
         }
     }
     
     //centrifuge on curves
     static constexpr float Centrifuge = 0.3f;
-    const std::size_t segID = static_cast<std::size_t>(m_trackCamera.getPosition().z / SegmentLength);
-    m_player.x -= dx * speedRatio * m_road[segID].curve * Centrifuge;
+    const std::size_t segID = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength);
+    m_player.position.x -= dx * speedRatio * m_road[segID].curve * Centrifuge;
 
     //uphill/downhill anim
     const auto nextID = (segID - 1) % m_road.getSegmentCount();
@@ -398,17 +429,25 @@ void EndlessDrivingState::updatePlayer(float dt)
     }
 
     //is off road
-    if ((m_player.x < -1.f || m_player.x > 1.f)
+    if ((m_player.position.x < -1.f || m_player.position.x > 1.f)
         && (m_player.speed > Player::OffroadMaxSpeed))
     {
         //slow down
         m_player.speed += Player::OffroadDeceleration * dt;
     }
 
-    m_player.x = std::clamp(m_player.x, -2.f, 2.f);
+    m_player.position.x = std::clamp(m_player.position.x, -2.f, 2.f);
     m_player.speed = std::clamp(m_player.speed, 0.f, Player::MaxSpeed);
 
-    m_player.z = m_trackCamera.getDepth() + 0.5f;
+    m_player.position.z = m_trackCamera.getDepth() * m_trackCamera.getPosition().y;
+
+    const float segmentProgress = ((m_trackCamera.getPosition().z + m_player.position.z) - m_road[segID].position.z) / SegmentLength;
+    debug.segmentProgress = segmentProgress;
+    m_player.position.y = glm::mix(m_road[segID].position.y, m_road[nextID].position.y, segmentProgress);
+
+
+
+
 
     //rotate player model with steering
     //TODO X rot needs to account for the inverse of Y
@@ -428,11 +467,11 @@ void EndlessDrivingState::updateRoad(float dt)
         m_trackCamera.move(glm::vec3(0.f, 0.f, - maxLen));
     }
 
-    const std::size_t start = static_cast<std::size_t>(m_trackCamera.getPosition().z / SegmentLength);
+    const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength);
     float x = 0.f;
     float dx = 0.f;
     auto camPos = m_trackCamera.getPosition();
-    float maxY = 0.f;// RenderSizeFloat.y;
+    float maxY = 0.f;
 
     std::vector<cro::Vertex2D> verts;
     const float halfWidth = RenderSizeFloat.x / 2.f;
@@ -450,7 +489,9 @@ void EndlessDrivingState::updateRoad(float dt)
             m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
         }
         m_trackCamera.setX(camPos.x - x);
-        auto prevProj = m_trackCamera.getScreenProjection(prev, m_player.x * prev.width, RenderSizeFloat);
+        auto playerPos = m_player.position;
+        playerPos.x *= prev.width;
+        auto prevProj = m_trackCamera.getScreenProjection(prev, playerPos, RenderSizeFloat);
 
 
         //increment
@@ -462,17 +503,20 @@ void EndlessDrivingState::updateRoad(float dt)
             m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
         }
         m_trackCamera.setX(camPos.x - x);
-        auto currProj = m_trackCamera.getScreenProjection(curr, m_player.x * curr.width, RenderSizeFloat);
+        playerPos = m_player.position;
+        playerPos.x *= curr.width;
+        auto currProj = m_trackCamera.getScreenProjection(curr, playerPos, RenderSizeFloat);
 
         prev = curr;
 
         //cull OOB segments
-        if (prevProj.z < m_trackCamera.getDepth()
-            || currProj.y >= maxY)
+        if ((prev.position.z < m_trackCamera.getPosition().z)
+            || currProj.y < maxY)
         {
             continue;
         }
-        maxY = RenderSizeFloat.y - currProj.y;
+        maxY = currProj.y;
+        debug.maxY = maxY;
 
         //update vertex array
         float fogAmount = expFog(static_cast<float>(i - start) / DrawDistance, fogDensity);
@@ -505,7 +549,7 @@ void EndlessDrivingState::updateRoad(float dt)
     for (auto& layer : m_background)
     {
         layer.textureRect.left += layer.speed * m_road[start].curve * speedRatio;
-        layer.textureRect.bottom = layer.verticalSpeed * m_road[start].position.y * 0.05f;
+        layer.textureRect.bottom = layer.verticalSpeed * m_player.position.y * 0.05f;
         layer.entity.getComponent<cro::Sprite>().setTextureRect(layer.textureRect);
     }
 
