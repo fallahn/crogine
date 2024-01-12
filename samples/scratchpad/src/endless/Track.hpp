@@ -34,6 +34,7 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 #pragma once
 
 #include "TrackSegment.hpp"
+#include "Colordome-32.hpp"
 
 #include <crogine/core/Log.hpp>
 #include <crogine/util/Easings.hpp>
@@ -74,9 +75,9 @@ public:
         const auto setColour =
             [&](TrackSegment& seg)
             {
-                seg.roadColour = (((start + i) / 3) % 2) ? cro::Colour(0.45f, 0.45f, 0.45f) : cro::Colour(0.4f, 0.4f, 0.4f);
-                seg.grassColour = (((start + i) / 3) % 2) ? cro::Colour(0.f, 0.65f, 0.f) : cro::Colour(0.f, 0.75f, 0.f);
-                seg.rumbleColour = (((start + i) / 9) % 2) ? cro::Colour::Red : cro::Colour::White;
+                seg.roadColour = CD32::Colours[CD32::GreyDark];// (((start + i) / 3) % 2) ? CD32::Colours[CD32::GreyDark] : CD32::Colours[CD32::GreyMid];
+                seg.grassColour = CD32::Colours[CD32::GreenMid];// (((start + i) / 3) % 2) ? CD32::Colours[CD32::GreenDark] : CD32::Colours[CD32::GreenMid];
+                seg.rumbleColour = (((start + i) / 9) % 2) ? CD32::Colours[CD32::Red] : CD32::Colours[CD32::BeigeLight];
 
                 seg.roadMarking = (((start + i) / 6) % 2);
             };

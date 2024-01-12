@@ -502,7 +502,7 @@ void TrophyState::buildScene()
     backgroundEnt.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
 
     auto descEnt = m_scene.createEntity();
-    descEnt.addComponent<cro::Transform>().setPosition({ 74.f, 269.f, 0.1f });
+    descEnt.addComponent<cro::Transform>().setPosition({ 74.f, 269.f, 0.2f });
     descEnt.addComponent<cro::Drawable2D>();
     descEnt.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
     descEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -516,7 +516,7 @@ void TrophyState::buildScene()
     backgroundEnt.getComponent<cro::Transform>().addChild(dateEnt.getComponent<cro::Transform>());
 
     auto iconEnt = m_scene.createEntity();
-    iconEnt.addComponent<cro::Transform>().setPosition({ 32.f, 238.f, 0.1f });
+    iconEnt.addComponent<cro::Transform>().setPosition({ 32.f, 238.f, 0.2f });
     iconEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     iconEnt.addComponent<cro::Drawable2D>();
     backgroundEnt.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
@@ -587,7 +587,7 @@ void TrophyState::buildScene()
             m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
         }
 
-
+        //skip location 0 as it's not a valid achievement
         m_trophyIndex = ((m_trophyIndex + (AchievementID::Count - 1)) % AchievementID::Count);
         if (m_trophyIndex == 0)
         {
@@ -609,7 +609,7 @@ void TrophyState::buildScene()
             m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
         }
 
-
+        //skip location 0 as it's not a valid achievement
         m_trophyIndex = ((m_trophyIndex + 1) % AchievementID::Count);
 
         //there's probably a smart way to do this, but brain.
@@ -707,7 +707,7 @@ void TrophyState::buildScene()
 
     //displays trophy render texture
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, 138.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, 138.f, 0.15f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();

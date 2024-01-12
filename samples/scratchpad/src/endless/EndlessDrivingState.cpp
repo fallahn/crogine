@@ -18,6 +18,7 @@
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
 
@@ -40,7 +41,7 @@ namespace
 
         return fogAmount;
     }
-    const cro::Colour FogColour = cro::Colour::Teal;
+    const cro::Colour FogColour = CD32::Colours[CD32::GreenDark];
 
     struct Debug final
     {
@@ -206,7 +207,7 @@ void EndlessDrivingState::render()
     m_playerScene.render();
     m_playerTexture.display();
 
-    m_gameTexture.clear(cro::Colour::Magenta);
+    m_gameTexture.clear(cro::Colour(std::uint8_t(169), 186, 192));
     m_gameScene.render();
     m_gameTexture.display();
 
@@ -243,7 +244,7 @@ void EndlessDrivingState::createPlayer()
     entity.addComponent<cro::Transform>();
 
     cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/cars/cart.cmt"))
+    if (md.loadFromFile("assets/golf/models/cart_v2.cmt"))
     {
         md.createModel(entity);
     }
@@ -260,16 +261,14 @@ void EndlessDrivingState::createPlayer()
     resize(cam);
 
     //this has to look straight ahead, as that's what we're supposing in the 2D projection
-    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ -5.146f, 3.1f, 0.f });
-    m_playerScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f);
-
+    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 3.1f, 5.146f });
     m_playerScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
 }
 
 void EndlessDrivingState::createScene()
 {
     //background
-    auto* tex = &m_resources.textures.get("assets/cars/sky.png");
+    auto* tex = &m_resources.textures.get("assets/golf/images/skybox/layers/01.png");
     tex->setRepeated(true);
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.5f));
@@ -279,7 +278,7 @@ void EndlessDrivingState::createScene()
     m_background[BackgroundLayer::Sky].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
     m_background[BackgroundLayer::Sky].speed = 0.04f;
 
-    tex = &m_resources.textures.get("assets/cars/hills.png");
+    tex = &m_resources.textures.get("assets/golf/images/skybox/layers/02.png");
     tex->setRepeated(true);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.4f));
@@ -290,7 +289,7 @@ void EndlessDrivingState::createScene()
     m_background[BackgroundLayer::Hills].speed = 0.08f;
     m_background[BackgroundLayer::Hills].verticalSpeed = 0.04f;
 
-    tex = &m_resources.textures.get("assets/cars/trees.png");
+    tex = &m_resources.textures.get("assets/golf/images/skybox/layers/03.png");
     tex->setRepeated(true);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.3f));
@@ -298,7 +297,7 @@ void EndlessDrivingState::createScene()
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Trees].entity = entity;
     m_background[BackgroundLayer::Trees].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
-    m_background[BackgroundLayer::Trees].speed = 0.12f;
+    m_background[BackgroundLayer::Trees].speed = 0.16f;
     m_background[BackgroundLayer::Trees].verticalSpeed = 0.06f;
 
     //player
@@ -405,11 +404,7 @@ void EndlessDrivingState::updatePlayer(float dt)
     const std::size_t segID = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength);
     m_player.position.x -= dx * speedRatio * m_road[segID].curve * Centrifuge;
 
-    //uphill/downhill anim
-    const auto nextID = (segID - 1) % m_road.getSegmentCount();
-    m_player.model.rotationX = std::clamp((m_road[segID].position.y - m_road[nextID].position.y) * dt, -Player::Model::MaxX, Player::Model::MaxX);
-    m_player.model.rotationX *= 1.f - (0.1f * speedRatio);
-    
+   
 
     if ((m_inputFlags.flags & (InputFlags::Up | InputFlags::Down)) == 0)
     {
@@ -443,16 +438,20 @@ void EndlessDrivingState::updatePlayer(float dt)
 
     const float segmentProgress = ((m_trackCamera.getPosition().z + m_player.position.z) - m_road[segID].position.z) / SegmentLength;
     debug.segmentProgress = segmentProgress;
+
+    const auto nextID = (segID - 1) % m_road.getSegmentCount();
     m_player.position.y = glm::mix(m_road[segID].position.y, m_road[nextID].position.y, segmentProgress);
 
 
+    glm::vec2 p2(SegmentLength, m_road[nextID].position.y - m_road[segID].position.y);
+    m_player.model.targetRotationX = std::atan2(-p2.y, p2.x);
 
-
+    m_player.model.rotationX += cro::Util::Maths::shortestRotation(m_player.model.rotationX, m_player.model.targetRotationX) * dt;
 
     //rotate player model with steering
-    //TODO X rot needs to account for the inverse of Y
-    glm::quat r = glm::toQuat(glm::orientate3(glm::vec3(0.f, /*m_player.model.rotationX*/0.f, m_player.model.rotationY)));
-    m_playerEntity.getComponent<cro::Transform>().setRotation(r);
+    glm::quat r = glm::toQuat(glm::orientate3(glm::vec3(0.f, 0.f, m_player.model.rotationY)));
+    glm::quat s = glm::toQuat(glm::orientate3(glm::vec3(m_player.model.rotationX, 0.f, 0.f)));
+    m_playerEntity.getComponent<cro::Transform>().setRotation(s * r);
 }
 
 void EndlessDrivingState::updateRoad(float dt)
@@ -536,7 +535,7 @@ void EndlessDrivingState::updateRoad(float dt)
         //markings
         if (curr.roadMarking)
         {
-            addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z * 0.02f, currProj.z * 0.02f, cro::Colour::White, verts);
+            addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z * 0.02f, currProj.z * 0.02f, CD32::Colours[CD32::BeigeLight], verts);
         }
 
     }

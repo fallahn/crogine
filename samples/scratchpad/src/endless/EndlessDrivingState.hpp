@@ -82,11 +82,12 @@ private:
 
         struct Model final
         {
+            float targetRotationX = 0.f;
             float rotationX = 0.f;
             float rotationY = 0.f;
 
             static constexpr float MaxX = 0.1f;
-            static constexpr float MaxY = 0.3f;
+            static constexpr float MaxY = 0.2f;
         }model;
     }m_player;
 

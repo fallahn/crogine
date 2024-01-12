@@ -689,7 +689,7 @@ bool WorldState::imageToArray(const cro::Image& img, const std::string& outpath)
         if (file.is_open() && file.good())
         {
             file << "#pragma once\n\n#include <array>\n#include <crogine/graphics/Colour.hpp>\n\n";
-            file << "static const std::array<cro::Colour, " << colours.size() << "u> Colours =\n{\n";
+            file << "static constexpr inline std::array<cro::Colour, " << colours.size() << "u> Colours =\n{\n";
 
             for (auto c : colours)
             {
