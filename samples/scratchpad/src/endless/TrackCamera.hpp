@@ -54,7 +54,7 @@ public:
     float getFOV() const { return m_fov; }
     float getDepth() const { return m_depth; }
 
-    glm::vec3 getScreenProjection(const TrackSegment& segment, glm::vec3 playerPos, glm::vec2 screenSize)
+    /*glm::vec3*/void updateScreenProjection(TrackSegment& segment, glm::vec3 playerPos, glm::vec2 screenSize)
     {
         auto translation = segment.position - m_position;
         translation.x -= playerPos.x;
@@ -64,11 +64,16 @@ public:
         auto projection = translation * scale;
         projection.z = segment.width * scale;
 
+        segment.projection.position.x = (screenSize.x / 2.f) * (1.f + projection.x);
+        segment.projection.position.y = (screenSize.y / 2.f) * (1.f + projection.y);
+        segment.projection.width = (screenSize.x / 2.f) * projection.z;
+        segment.projection.scale = scale;
+
         //scale to the output
-        return glm::vec3(
+        /*return glm::vec3(
             (screenSize.x / 2.f) * (1.f + projection.x),
             (screenSize.y / 2.f) * (1.f + projection.y),
-            (screenSize.x / 2.f) * projection.z);
+            (screenSize.x / 2.f) * projection.z);*/
     }
 
     void setPosition(glm::vec3 p) { m_position = p; }

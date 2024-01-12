@@ -33,36 +33,22 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 
 #pragma once
 
-#include "TrackSprite.hpp"
+#include <crogine/graphics/Rectangle.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
-#include <crogine/graphics/Colour.hpp>
-#include <crogine/detail/glm/vec3.hpp>
-
-#include <vector>
-
-struct TrackSegment final
+struct TrackSprite final
 {
-    glm::vec3 position = glm::vec3(0.f);
-    float length = 200.f;
-    float width = 2000.f;
-    float curve = 0.f;
+    float scale = 1.f;
+    float position = 0.f; //0 center +/- 1 road >1 <-1 off road
+    glm::vec2 size = glm::vec2(0.f);
+    cro::FloatRect uv;
 
-    cro::Colour roadColour;
-    cro::Colour rumbleColour;
-    cro::Colour grassColour;
-    bool roadMarking = false;
-
-    std::vector<TrackSprite> sprites;
-
-    //contains the last known screen projection
-    struct Projection final
+    enum
     {
-        glm::vec2 position = glm::vec2(0.f);
-        float width = 0.f;
-        float scale = 1.f;
-    }projection;
+        Tree01,
+        Tree02,
 
-    TrackSegment() = default;
-    TrackSegment(glm::vec3 p, float l, float w, float c)
-        : position(p), length(l), width(w), curve(c) {}
+
+        Count
+    };
 };

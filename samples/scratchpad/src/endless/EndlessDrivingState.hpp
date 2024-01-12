@@ -4,6 +4,7 @@
 
 #include "../StateIDs.hpp"
 #include "TrackCamera.hpp"
+#include "TrackSprite.hpp"
 #include "Track.hpp"
 
 #include <crogine/core/State.hpp>
@@ -49,6 +50,10 @@ private:
         };
     };
     std::array<BackgroundLayer, BackgroundLayer::Count> m_background = {};
+
+    std::array<TrackSprite, TrackSprite::Count> m_trackSprites = {};
+    cro::Entity m_trackSpriteEntity;
+
 
     //buffer for player sprite
     cro::RenderTexture m_playerTexture;
@@ -114,4 +119,5 @@ private:
     void updatePlayer(float dt);
     void updateRoad(float dt);
     void addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour, std::vector<cro::Vertex2D>&);
+    void addRoadSprite(const TrackSprite&, glm::vec2, float, std::vector<cro::Vertex2D>&);
 };

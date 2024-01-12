@@ -16,6 +16,8 @@
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
+
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -234,6 +236,27 @@ void EndlessDrivingState::addSystems()
 
 void EndlessDrivingState::loadAssets()
 {
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_autumn02_low.spt", m_resources.textures);
+
+    const auto parseSprite = 
+        [&](const cro::Sprite& sprite, std::int32_t spriteID)
+        {
+            auto bounds = sprite.getTextureBounds();
+            m_trackSprites[spriteID].size = { bounds.width, bounds.height };
+            m_trackSprites[spriteID].uv = sprite.getTextureRectNormalised();
+        };
+
+    parseSprite(spriteSheet.getSprite("tree01"), TrackSprite::Tree01);
+    parseSprite(spriteSheet.getSprite("tree03"), TrackSprite::Tree02);
+
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -7.f });
+    entity.addComponent<cro::Drawable2D>().setTexture(spriteSheet.getTexture());
+    entity.getComponent<cro::Drawable2D>().setCullingEnabled(false);
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    m_trackSpriteEntity = entity;
 }
 
 void EndlessDrivingState::createPlayer()
@@ -321,14 +344,37 @@ void EndlessDrivingState::createScene()
     auto segmentCount = cro::Util::Random::value(5, 20);
     for (auto i = 0; i < segmentCount; ++i)
     {
+        const std::size_t first = m_road.getSegmentCount();
+        
         const auto enter = cro::Util::Random::value(EnterMin, EnterMax);
         const auto hold = cro::Util::Random::value(HoldMin, HoldMax);
         const auto exit = cro::Util::Random::value(ExitMin, ExitMax);
+
+        const std::size_t last = first + enter + hold + exit;
 
         const float curve = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(CurveMin, CurveMax) : 0.f;
         const float hill = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(HillMin, HillMax) * SegmentLength : 0.f;
         
         m_road.addSegment(enter, hold, exit, curve, hill);
+
+
+        //add sprites to the new segment
+        for (auto j = first; j < last; ++j)
+        {
+            auto& seg = m_road[j];
+            auto count = cro::Util::Random::value(0, 2) == 0 ? 1 : 0;
+            for (auto k = 0; k < count; ++k)
+            {
+                auto spriteID = cro::Util::Random::value(TrackSprite::Tree01, TrackSprite::Tree02);
+                auto pos = -1.25f - cro::Util::Random::value(0.3f, 0.6f);
+                if (cro::Util::Random::value(0, 1) == 0)
+                {
+                    pos *= -1.f;
+                }
+                seg.sprites.emplace_back(m_trackSprites[spriteID]).position = pos;
+                seg.sprites.back().scale *= cro::Util::Random::value(0.9f, 1.1f);
+            }
+        }
     }
     m_road[m_road.getSegmentCount() - 1].roadColour = cro::Colour::White;
     m_road[m_road.getSegmentCount() - 1].rumbleColour = cro::Colour::Blue;
@@ -401,7 +447,7 @@ void EndlessDrivingState::updatePlayer(float dt)
     
     //centrifuge on curves
     static constexpr float Centrifuge = 0.3f;
-    const std::size_t segID = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength);
+    const std::size_t segID = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) % m_road.getSegmentCount();
     m_player.position.x -= dx * speedRatio * m_road[segID].curve * Centrifuge;
 
    
@@ -466,7 +512,7 @@ void EndlessDrivingState::updateRoad(float dt)
         m_trackCamera.move(glm::vec3(0.f, 0.f, - maxLen));
     }
 
-    const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength);
+    const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) - 1;
     float x = 0.f;
     float dx = 0.f;
     auto camPos = m_trackCamera.getPosition();
@@ -478,20 +524,23 @@ void EndlessDrivingState::updateRoad(float dt)
     const auto trackHeight = m_road[start % m_road.getSegmentCount()].position.y;
     m_trackCamera.move(glm::vec3(0.f, trackHeight, 0.f));
 
-    auto prev = m_road[(start - 1) % m_road.getSegmentCount()];
+    //keep this because we need to reverse the draw order
+    std::vector<std::size_t> spriteSegments;
+
+    auto* prev = &m_road[(start - 1) % m_road.getSegmentCount()];
+    
+    if (start - 1 >= m_road.getSegmentCount())
+    {
+        m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
+    }
+    auto playerPos = m_player.position;
+    playerPos.x *= prev->width;
+    m_trackCamera.updateScreenProjection(*prev, playerPos, RenderSizeFloat);  
+
     for (auto i = start; i < start + DrawDistance; ++i)
     {
-        const auto& curr = m_road[i % m_road.getSegmentCount()];
-
-        if (i - 1 >= m_road.getSegmentCount())
-        {
-            m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
-        }
-        m_trackCamera.setX(camPos.x - x);
-        auto playerPos = m_player.position;
-        playerPos.x *= prev.width;
-        auto prevProj = m_trackCamera.getScreenProjection(prev, playerPos, RenderSizeFloat);
-
+        const auto currIndex = i % m_road.getSegmentCount();
+        auto& curr = m_road[currIndex];
 
         //increment
         dx += curr.curve;
@@ -504,17 +553,24 @@ void EndlessDrivingState::updateRoad(float dt)
         m_trackCamera.setX(camPos.x - x);
         playerPos = m_player.position;
         playerPos.x *= curr.width;
-        auto currProj = m_trackCamera.getScreenProjection(curr, playerPos, RenderSizeFloat);
+        m_trackCamera.updateScreenProjection(curr, playerPos, RenderSizeFloat);
 
-        prev = curr;
+
+        //stash the sprites - these might poke out from
+        //behind a hill so we'll draw them anyway regardless
+        //of segment culling
+        if (!curr.sprites.empty())
+        {
+            spriteSegments.push_back(currIndex);
+        }
 
         //cull OOB segments
-        if ((prev.position.z < m_trackCamera.getPosition().z)
-            || currProj.y < maxY)
+        if ((prev->position.z < m_trackCamera.getPosition().z)
+            || curr.projection.position.y < maxY)
         {
             continue;
         }
-        maxY = currProj.y;
+        maxY = curr.projection.position.y;
         debug.maxY = maxY;
 
         //update vertex array
@@ -522,32 +578,57 @@ void EndlessDrivingState::updateRoad(float dt)
         
         //grass
         auto colour = glm::mix(curr.grassColour.getVec4(), FogColour.getVec4(), fogAmount);
-        addRoadQuad(halfWidth, halfWidth, prevProj.y, currProj.y, halfWidth, halfWidth, colour, verts);
+        addRoadQuad(halfWidth, halfWidth, prev->projection.position.y, curr.projection.position.y, halfWidth, halfWidth, colour, verts);
 
         //rumble strip
         colour = glm::mix(curr.rumbleColour.getVec4(), FogColour.getVec4(), fogAmount);
-        addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z * 1.1f, currProj.z * 1.1f, curr.rumbleColour, verts);
+        addRoadQuad(prev->projection.position.x, curr.projection.position.x,
+                    prev->projection.position.y, curr.projection.position.y,
+                    prev->projection.width * 1.1f, curr.projection.width * 1.1f, curr.rumbleColour, verts);
 
         //road
         colour = glm::mix(curr.roadColour.getVec4(), FogColour.getVec4(), fogAmount);
-        addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z, currProj.z, curr.roadColour, verts);
+        addRoadQuad(prev->projection.position.x, curr.projection.position.x, 
+                    prev->projection.position.y, curr.projection.position.y,
+                    prev->projection.width, curr.projection.width, curr.roadColour, verts);
 
         //markings
         if (curr.roadMarking)
         {
-            addRoadQuad(prevProj.x, currProj.x, prevProj.y, currProj.y, prevProj.z * 0.02f, currProj.z * 0.02f, CD32::Colours[CD32::BeigeLight], verts);
+            addRoadQuad(prev->projection.position.x, curr.projection.position.x,
+                        prev->projection.position.y, curr.projection.position.y,
+                        prev->projection.width * 0.02f, curr.projection.width * 0.02f, CD32::Colours[CD32::BeigeLight], verts);
         }
 
+
+        //do this LAST!! buh
+        prev = &curr;
     }
     //addRoadQuad(320.f, 320.f, 0.f, 100.f, 320.f, 320.f, cro::Colour::Magenta, verts);
     m_roadEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
 
+    verts.clear();
+    //hmmm what's faster, reversing the vector, or iterating backwards?
+    for (auto i = spriteSegments.crbegin(); i != spriteSegments.crend(); ++i)
+    {
+        const auto idx = *i;
+        const auto& seg = m_road[idx];
+
+        for (const auto& sprite : seg.sprites)
+        {
+            //TODO use the current maxY value to clip the bottom of sprites
+            glm::vec2 pos = seg.projection.position;
+            pos.x += seg.projection.scale * sprite.position * RoadWidth * halfWidth;
+            addRoadSprite(sprite, pos, seg.projection.scale, verts);
+        }
+    }
+    m_trackSpriteEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
 
     //update the background
     const float speedRatio = s / Player::MaxSpeed;
     for (auto& layer : m_background)
     {
-        layer.textureRect.left += layer.speed * m_road[start].curve * speedRatio;
+        layer.textureRect.left += layer.speed * m_road[start % m_road.getSegmentCount()].curve * speedRatio;
         layer.textureRect.bottom = layer.verticalSpeed * m_player.position.y * 0.05f;
         layer.entity.getComponent<cro::Sprite>().setTextureRect(layer.textureRect);
     }
@@ -564,4 +645,32 @@ void EndlessDrivingState::addRoadQuad(float x1, float x2, float y1, float y2, fl
     dst.emplace_back(glm::vec2(x1 + w1, y1), c);
     dst.emplace_back(glm::vec2(x2 - w2, y2), c);
     dst.emplace_back(glm::vec2(x2 + w2, y2), c);
+}
+
+void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos, float scale, std::vector<cro::Vertex2D>& dst)
+{
+    //TODO clip bottom my maxY and skip completely if top < maxY
+
+
+    auto uv = sprite.uv;
+    scale *= sprite.scale;
+
+    glm::vec2 size = sprite.size * scale * 1000.f;
+    pos.x -= (size.x / 2.f);
+
+    dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), glm::vec2(uv.left, uv.bottom + uv.height));
+    dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom));
+    dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height));
+
+    dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height));
+    dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom));
+    dst.emplace_back(glm::vec2(pos.x + size.x, pos.y), glm::vec2(uv.left + uv.width, uv.bottom));
+
+    //dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), cro::Colour::Magenta);
+    //dst.emplace_back(pos, cro::Colour::Magenta);
+    //dst.emplace_back(pos + size, cro::Colour::Magenta);
+
+    //dst.emplace_back(pos + size, cro::Colour::Magenta);
+    //dst.emplace_back(pos, cro::Colour::Magenta);
+    //dst.emplace_back(glm::vec2(pos.x + size.x, pos.y), cro::Colour::Magenta);
 }
