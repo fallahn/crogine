@@ -57,7 +57,7 @@ static inline constexpr float CurveMax = 0.004f;
 static inline constexpr float HillMin = -30.f;
 static inline constexpr float HillMax = 30.f;
 
-static inline constexpr std::int32_t DrawDistance = 200; //number of segs
+static inline constexpr std::int32_t DrawDistance = 300; //number of segs
 
 class Track final
 {

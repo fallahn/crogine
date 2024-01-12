@@ -51,8 +51,10 @@ struct TrackSegment final
     cro::Colour rumbleColour;
     cro::Colour grassColour;
     bool roadMarking = false;
+    float fogAmount = 0.f;
 
     std::vector<TrackSprite> sprites;
+    bool clipSprites = false;
 
     //contains the last known screen projection
     struct Projection final

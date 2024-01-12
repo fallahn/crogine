@@ -78,12 +78,13 @@ private:
         glm::vec3 position = glm::vec3(0.f);
         float speed = 0.f;
 
-        static inline constexpr float MaxSpeed = SegmentLength * 60.f; //60 is our frame time
-        static inline constexpr float Acceleration = MaxSpeed / 5.f;
+        static inline constexpr float MaxSpeed = SegmentLength * 120.f; //60 is our frame time
+        static inline constexpr float Acceleration = MaxSpeed / 3.f;
         static inline constexpr float Braking = -MaxSpeed;
         static inline constexpr float Deceleration = -Acceleration;
         static inline constexpr float OffroadDeceleration = -MaxSpeed / 2.f;
         static inline constexpr float OffroadMaxSpeed = MaxSpeed / 4.f;
+        static inline constexpr float Centrifuge = 530.f; // "pull" on cornering
 
         struct Model final
         {
@@ -119,5 +120,5 @@ private:
     void updatePlayer(float dt);
     void updateRoad(float dt);
     void addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour, std::vector<cro::Vertex2D>&);
-    void addRoadSprite(const TrackSprite&, glm::vec2, float scale, float clip, std::vector<cro::Vertex2D>&);
+    void addRoadSprite(const TrackSprite&, glm::vec2, float scale, float clip, float fogAmount, std::vector<cro::Vertex2D>&);
 };

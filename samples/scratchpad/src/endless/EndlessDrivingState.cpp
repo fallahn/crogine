@@ -26,10 +26,11 @@
 
 namespace
 {
-    constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224);
+    constexpr std::uint32_t RenderScale = 2;
+    constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224) * RenderScale;
     constexpr glm::vec2 RenderSizeFloat = glm::vec2(RenderSize);
-    constexpr float PlayerWidth = 74.f;
-    constexpr float PlayerHeight = 84.f;
+    constexpr float PlayerWidth = 74.f * RenderScale;
+    constexpr float PlayerHeight = 84.f * RenderScale;
     constexpr cro::FloatRect PlayerBounds((RenderSizeFloat.x - PlayerWidth) / 2.f, 0.f, PlayerWidth, PlayerHeight);
 
     constexpr float fogDensity = 5.f;
@@ -237,7 +238,7 @@ void EndlessDrivingState::addSystems()
 void EndlessDrivingState::loadAssets()
 {
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_autumn02_low.spt", m_resources.textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_autumn02.spt", m_resources.textures);
 
     const auto parseSprite = 
         [&](const cro::Sprite& sprite, std::int32_t spriteID)
@@ -256,6 +257,7 @@ void EndlessDrivingState::loadAssets()
     entity.addComponent<cro::Drawable2D>().setTexture(spriteSheet.getTexture());
     entity.getComponent<cro::Drawable2D>().setCullingEnabled(false);
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() }); //there's a crash on nvidia drivers if we don't initialise this with at least 1 vertex...
     m_trackSpriteEntity = entity;
 }
 
@@ -290,11 +292,14 @@ void EndlessDrivingState::createPlayer()
 
 void EndlessDrivingState::createScene()
 {
+    static constexpr float BGScale = static_cast<float>(RenderScale) / 2.f;
+
     //background
     auto* tex = &m_resources.textures.get("assets/golf/images/skybox/layers/01.png");
     tex->setRepeated(true);
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.5f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(BGScale));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Sky].entity = entity;
@@ -305,6 +310,7 @@ void EndlessDrivingState::createScene()
     tex->setRepeated(true);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.4f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(BGScale));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Hills].entity = entity;
@@ -316,6 +322,7 @@ void EndlessDrivingState::createScene()
     tex->setRepeated(true);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.3f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(BGScale));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Trees].entity = entity;
@@ -325,7 +332,7 @@ void EndlessDrivingState::createScene()
 
     //player
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(160.f, 0.f, -0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(RenderSizeFloat.x / 2.f, 0.f, -0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_playerTexture.getTexture());
     entity.getComponent<cro::Sprite>().setTextureRect(PlayerBounds);
@@ -338,6 +345,7 @@ void EndlessDrivingState::createScene()
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.getComponent<cro::Drawable2D>().setCullingEnabled(false); //assume we're always visible and skip bounds checking
+    entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() });
     m_roadEntity = entity;
 
 
@@ -372,14 +380,13 @@ void EndlessDrivingState::createScene()
                     pos *= -1.f;
                 }
                 seg.sprites.emplace_back(m_trackSprites[spriteID]).position = pos;
-                seg.sprites.back().scale *= cro::Util::Random::value(0.9f, 1.1f);
+                seg.sprites.back().scale *= cro::Util::Random::value(0.9f, 1.8f) * RenderScale;
             }
         }
     }
     m_road[m_road.getSegmentCount() - 1].roadColour = cro::Colour::White;
     m_road[m_road.getSegmentCount() - 1].rumbleColour = cro::Colour::Blue;
 
-    //m_road.addSegment(EnterMin, HoldMin, ExitMin, 0.f, 0.f);
 
     auto resize = [](cro::Camera& cam)
     {
@@ -446,9 +453,8 @@ void EndlessDrivingState::updatePlayer(float dt)
     }
     
     //centrifuge on curves
-    static constexpr float Centrifuge = 300.f;
     const std::size_t segID = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) % m_road.getSegmentCount();
-    m_player.position.x -= dx * speedRatio * m_road[segID].curve * Centrifuge;
+    m_player.position.x -= dx * speedRatio * m_road[segID].curve * Player::Centrifuge;
 
    
 
@@ -517,7 +523,6 @@ void EndlessDrivingState::updateRoad(float dt)
     float dx = 0.f;
     auto camPos = m_trackCamera.getPosition();
     float maxY = 0.f;
-    float clipDepth = 0.f; //anything beyonf this requires clipping
 
     std::vector<cro::Vertex2D> verts;
     const float halfWidth = RenderSizeFloat.x / 2.f;
@@ -556,6 +561,8 @@ void EndlessDrivingState::updateRoad(float dt)
         playerPos.x *= curr.width;
         m_trackCamera.updateScreenProjection(curr, playerPos, RenderSizeFloat);
 
+        float fogAmount = expFog(static_cast<float>(i - start) / DrawDistance, fogDensity);
+        curr.fogAmount = fogAmount;
 
         //stash the sprites - these might poke out from
         //behind a hill so we'll draw them anyway regardless
@@ -569,14 +576,14 @@ void EndlessDrivingState::updateRoad(float dt)
         if ((prev->position.z < m_trackCamera.getPosition().z)
             || curr.projection.position.y < maxY)
         {
+            curr.clipSprites = (curr.projection.position.y < maxY);
             continue;
         }
         maxY = curr.projection.position.y;
-        clipDepth = curr.position.z;
+        curr.clipSprites = false;
         debug.maxY = maxY;
 
         //update vertex array
-        float fogAmount = expFog(static_cast<float>(i - start) / DrawDistance, fogDensity);
         
         //grass
         auto colour = glm::mix(curr.grassColour.getVec4(), FogColour.getVec4(), fogAmount);
@@ -606,7 +613,6 @@ void EndlessDrivingState::updateRoad(float dt)
         //do this LAST!! buh
         prev = &curr;
     }
-    //addRoadQuad(320.f, 320.f, 0.f, 100.f, 320.f, 320.f, cro::Colour::Magenta, verts);
     m_roadEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
 
     verts.clear();
@@ -616,13 +622,13 @@ void EndlessDrivingState::updateRoad(float dt)
         const auto idx = *i;
         const auto& seg = m_road[idx];
 
-        const float clipHeight = seg.position.z > clipDepth ? maxY : 0.f;
+        const float clipHeight = seg.clipSprites ? maxY : 0.f;
 
         for (const auto& sprite : seg.sprites)
         {
             glm::vec2 pos = seg.projection.position;
             pos.x += seg.projection.scale * sprite.position * RoadWidth * halfWidth;
-            addRoadSprite(sprite, pos, seg.projection.scale, clipHeight, verts);
+            addRoadSprite(sprite, pos, seg.projection.scale, clipHeight, seg.fogAmount, verts);
         }
     }
     m_trackSpriteEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
@@ -650,7 +656,7 @@ void EndlessDrivingState::addRoadQuad(float x1, float x2, float y1, float y2, fl
     dst.emplace_back(glm::vec2(x2 + w2, y2), c);
 }
 
-void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos, float scale, float clip, std::vector<cro::Vertex2D>& dst)
+void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos, float scale, float clip, float fogAmount, std::vector<cro::Vertex2D>& dst)
 {
     auto uv = sprite.uv;
     scale *= sprite.scale;
@@ -658,11 +664,15 @@ void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos
     glm::vec2 size = sprite.size * scale;
     pos.x -= (size.x / 2.f);
 
-    cro::Colour c = cro::Colour::White;
-    if (clip > pos.x + size.x)
+    cro::Colour c = glm::mix(glm::vec4(1.f), FogColour.getVec4(), fogAmount);
+    if (clip > pos.y + size.y)
     {
         //fully occluded
-        //return;
+        return;
+    }
+
+    if (clip)
+    {
         c = cro::Colour::Magenta;
     }
 
@@ -673,6 +683,15 @@ void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos
     dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height), c);
     dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom), c);
     dst.emplace_back(glm::vec2(pos.x + size.x, pos.y), glm::vec2(uv.left + uv.width, uv.bottom), c);
+
+
+
+
+
+
+
+
+
 
     //dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), cro::Colour::Magenta);
     //dst.emplace_back(pos, cro::Colour::Magenta);
