@@ -54,7 +54,7 @@ public:
     float getFOV() const { return m_fov; }
     float getDepth() const { return m_depth; }
 
-    /*glm::vec3*/void updateScreenProjection(TrackSegment& segment, glm::vec3 playerPos, glm::vec2 screenSize)
+    void updateScreenProjection(TrackSegment& segment, glm::vec3 playerPos, glm::vec2 screenSize)
     {
         auto translation = segment.position - m_position;
         translation.x -= playerPos.x;
@@ -68,12 +68,6 @@ public:
         segment.projection.position.y = (screenSize.y / 2.f) * (1.f + projection.y);
         segment.projection.width = (screenSize.x / 2.f) * projection.z;
         segment.projection.scale = scale;
-
-        //scale to the output
-        /*return glm::vec3(
-            (screenSize.x / 2.f) * (1.f + projection.x),
-            (screenSize.y / 2.f) * (1.f + projection.y),
-            (screenSize.x / 2.f) * projection.z);*/
     }
 
     void setPosition(glm::vec3 p) { m_position = p; }
@@ -92,5 +86,5 @@ private:
     float m_fov = 75.f;
     float m_depth = 1.f; //normalised value based on FOV of camera
 
-    glm::vec3 m_position = glm::vec3(0.f, 1800.f, 300.f);
+    glm::vec3 m_position = glm::vec3(0.f, 1.8f, 0.3f);
 };

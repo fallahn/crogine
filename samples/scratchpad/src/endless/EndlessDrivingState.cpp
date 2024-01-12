@@ -446,7 +446,7 @@ void EndlessDrivingState::updatePlayer(float dt)
     }
     
     //centrifuge on curves
-    static constexpr float Centrifuge = 0.3f;
+    static constexpr float Centrifuge = 300.f;
     const std::size_t segID = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) % m_road.getSegmentCount();
     m_player.position.x -= dx * speedRatio * m_road[segID].curve * Centrifuge;
 
@@ -655,7 +655,7 @@ void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos
     auto uv = sprite.uv;
     scale *= sprite.scale;
 
-    glm::vec2 size = sprite.size * scale * 1000.f;
+    glm::vec2 size = sprite.size * scale;// *1000.f;
     pos.x -= (size.x / 2.f);
 
     dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), glm::vec2(uv.left, uv.bottom + uv.height));

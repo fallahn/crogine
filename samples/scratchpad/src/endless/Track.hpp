@@ -42,8 +42,8 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 
 #include <vector>
 
-static inline constexpr float SegmentLength = 250.f;
-static inline constexpr float RoadWidth = 2500.f;
+static inline constexpr float SegmentLength = 0.25f;
+static inline constexpr float RoadWidth = 2.5f;
 
 static inline constexpr std::size_t EnterMin = 70;
 static inline constexpr std::size_t EnterMax = 100;
@@ -52,10 +52,10 @@ static inline constexpr std::size_t HoldMax = 500;
 static inline constexpr std::size_t ExitMin = EnterMin;
 static inline constexpr std::size_t ExitMax = EnterMax;
 
-static inline constexpr float CurveMin = -4.f;
-static inline constexpr float CurveMax = 4.f;
-static inline constexpr float HillMin = 0.f;
-static inline constexpr float HillMax = 30.f;
+static inline constexpr float CurveMin = -0.004f;
+static inline constexpr float CurveMax = 0.004f;
+static inline constexpr float HillMin = -0.03f;
+static inline constexpr float HillMax = 0.03f;
 
 static inline constexpr std::int32_t DrawDistance = 200; //number of segs
 
