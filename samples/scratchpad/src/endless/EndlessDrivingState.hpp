@@ -119,5 +119,5 @@ private:
     void updatePlayer(float dt);
     void updateRoad(float dt);
     void addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour, std::vector<cro::Vertex2D>&);
-    void addRoadSprite(const TrackSprite&, glm::vec2, float, std::vector<cro::Vertex2D>&);
+    void addRoadSprite(const TrackSprite&, glm::vec2, float scale, float clip, std::vector<cro::Vertex2D>&);
 };

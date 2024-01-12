@@ -299,7 +299,7 @@ void EndlessDrivingState::createScene()
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Sky].entity = entity;
     m_background[BackgroundLayer::Sky].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
-    m_background[BackgroundLayer::Sky].speed = 0.04f;
+    m_background[BackgroundLayer::Sky].speed = 40.f;
 
     tex = &m_resources.textures.get("assets/golf/images/skybox/layers/02.png");
     tex->setRepeated(true);
@@ -309,8 +309,8 @@ void EndlessDrivingState::createScene()
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Hills].entity = entity;
     m_background[BackgroundLayer::Hills].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
-    m_background[BackgroundLayer::Hills].speed = 0.08f;
-    m_background[BackgroundLayer::Hills].verticalSpeed = 0.04f;
+    m_background[BackgroundLayer::Hills].speed = 80.f;
+    m_background[BackgroundLayer::Hills].verticalSpeed = 40.f;
 
     tex = &m_resources.textures.get("assets/golf/images/skybox/layers/03.png");
     tex->setRepeated(true);
@@ -320,8 +320,8 @@ void EndlessDrivingState::createScene()
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Trees].entity = entity;
     m_background[BackgroundLayer::Trees].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
-    m_background[BackgroundLayer::Trees].speed = 0.16f;
-    m_background[BackgroundLayer::Trees].verticalSpeed = 0.06f;
+    m_background[BackgroundLayer::Trees].speed = 160.f;
+    m_background[BackgroundLayer::Trees].verticalSpeed = 60.f;
 
     //player
     entity = m_gameScene.createEntity();
@@ -517,6 +517,7 @@ void EndlessDrivingState::updateRoad(float dt)
     float dx = 0.f;
     auto camPos = m_trackCamera.getPosition();
     float maxY = 0.f;
+    float clipDepth = 0.f; //anything beyonf this requires clipping
 
     std::vector<cro::Vertex2D> verts;
     const float halfWidth = RenderSizeFloat.x / 2.f;
@@ -571,6 +572,7 @@ void EndlessDrivingState::updateRoad(float dt)
             continue;
         }
         maxY = curr.projection.position.y;
+        clipDepth = curr.position.z;
         debug.maxY = maxY;
 
         //update vertex array
@@ -614,12 +616,13 @@ void EndlessDrivingState::updateRoad(float dt)
         const auto idx = *i;
         const auto& seg = m_road[idx];
 
+        const float clipHeight = seg.position.z > clipDepth ? maxY : 0.f;
+
         for (const auto& sprite : seg.sprites)
         {
-            //TODO use the current maxY value to clip the bottom of sprites
             glm::vec2 pos = seg.projection.position;
             pos.x += seg.projection.scale * sprite.position * RoadWidth * halfWidth;
-            addRoadSprite(sprite, pos, seg.projection.scale, verts);
+            addRoadSprite(sprite, pos, seg.projection.scale, clipHeight, verts);
         }
     }
     m_trackSpriteEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
@@ -647,24 +650,29 @@ void EndlessDrivingState::addRoadQuad(float x1, float x2, float y1, float y2, fl
     dst.emplace_back(glm::vec2(x2 + w2, y2), c);
 }
 
-void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos, float scale, std::vector<cro::Vertex2D>& dst)
+void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos, float scale, float clip, std::vector<cro::Vertex2D>& dst)
 {
-    //TODO clip bottom my maxY and skip completely if top < maxY
-
-
     auto uv = sprite.uv;
     scale *= sprite.scale;
 
-    glm::vec2 size = sprite.size * scale;// *1000.f;
+    glm::vec2 size = sprite.size * scale;
     pos.x -= (size.x / 2.f);
 
-    dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), glm::vec2(uv.left, uv.bottom + uv.height));
-    dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom));
-    dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height));
+    cro::Colour c = cro::Colour::White;
+    if (clip > pos.x + size.x)
+    {
+        //fully occluded
+        //return;
+        c = cro::Colour::Magenta;
+    }
 
-    dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height));
-    dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom));
-    dst.emplace_back(glm::vec2(pos.x + size.x, pos.y), glm::vec2(uv.left + uv.width, uv.bottom));
+    dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), glm::vec2(uv.left, uv.bottom + uv.height), c);
+    dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom), c);
+    dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height), c);
+
+    dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height), c);
+    dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom), c);
+    dst.emplace_back(glm::vec2(pos.x + size.x, pos.y), glm::vec2(uv.left + uv.width, uv.bottom), c);
 
     //dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), cro::Colour::Magenta);
     //dst.emplace_back(pos, cro::Colour::Magenta);
