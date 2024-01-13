@@ -108,6 +108,10 @@ private:
         };
         std::uint16_t flags = 0;
         std::uint16_t prevFlags = 0;
+
+        float steerMultiplier = 1.f;
+        float accelerateMultiplier = 1.f;
+        float brakeMultiplier = 1.f;
     }m_inputFlags;
 
 
@@ -117,6 +121,7 @@ private:
     void createScene();
     void createUI();
 
+    void updateControllerInput();
     void updatePlayer(float dt);
     void updateRoad(float dt);
     void addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour, std::vector<cro::Vertex2D>&);

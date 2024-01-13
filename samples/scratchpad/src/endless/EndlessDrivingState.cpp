@@ -50,6 +50,8 @@ namespace
     {
         float maxY = 0.f;
         float segmentProgress = 0.f;
+
+
     }debug;
 }
 
@@ -88,6 +90,10 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
                 {
                     m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
                 }*/
+
+                ImGui::ProgressBar(m_inputFlags.brakeMultiplier);
+                ImGui::ProgressBar(m_inputFlags.accelerateMultiplier);
+                ImGui::ProgressBar(m_inputFlags.steerMultiplier);
 
                 ImGui::Text("Max Y  %3.3f", debug.maxY);
                 ImGui::Text("Player Y  %3.3f", m_player.position.y);
@@ -143,40 +149,44 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(0);
             break;
+        }
 
-            //TODO move this to player/input and read keybinds
-        case SDLK_w:
+        //TODO compare to keybind
+        if (evt.key.keysym.sym == SDLK_w)
+        {
             m_inputFlags.flags |= InputFlags::Up;
-            break;
-        case SDLK_s:
+        }
+        if (evt.key.keysym.sym == SDLK_s)
+        {
             m_inputFlags.flags |= InputFlags::Down;
-            break;
-        case SDLK_a:
+        }
+        if (evt.key.keysym.sym == SDLK_a)
+        {
             m_inputFlags.flags |= InputFlags::Left;
-            break;
-        case SDLK_d:
+        }
+        if (evt.key.keysym.sym == SDLK_d)
+        {
             m_inputFlags.flags |= InputFlags::Right;
-            break;
         }
     }
     else if (evt.type == SDL_KEYUP)
     {
-        switch (evt.key.keysym.sym)
+        //TODO compare to keybind
+        if (evt.key.keysym.sym == SDLK_w)
         {
-        default: break;
-            //TODO move this to player/input and read keybinds
-        case SDLK_w:
             m_inputFlags.flags &= ~InputFlags::Up;
-            break;
-        case SDLK_s:
+        }
+        if (evt.key.keysym.sym == SDLK_s)
+        {
             m_inputFlags.flags &= ~InputFlags::Down;
-            break;
-        case SDLK_a:
+        }
+        if (evt.key.keysym.sym == SDLK_a)
+        {
             m_inputFlags.flags &= ~InputFlags::Left;
-            break;
-        case SDLK_d:
+        }
+        if (evt.key.keysym.sym == SDLK_d)
+        {
             m_inputFlags.flags &= ~InputFlags::Right;
-            break;
         }
     }
 
@@ -195,6 +205,7 @@ void EndlessDrivingState::handleMessage(const cro::Message& msg)
 
 bool EndlessDrivingState::simulate(float dt)
 {
+    updateControllerInput();
     updateRoad(dt);
     updatePlayer(dt);
 
@@ -428,10 +439,60 @@ void EndlessDrivingState::createUI()
     resize(cam);
 }
 
+void EndlessDrivingState::updateControllerInput()
+{
+    m_inputFlags.steerMultiplier = 1.f;
+    m_inputFlags.accelerateMultiplier = 1.f;
+    m_inputFlags.brakeMultiplier = 1.f;
+
+
+    auto axisPos = cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight);
+    if (axisPos > cro::GameController::TriggerDeadZone)
+    {
+        m_inputFlags.accelerateMultiplier = cro::Util::Easing::easeInCubic(static_cast<float>(axisPos) / cro::GameController::AxisMax);
+        m_inputFlags.flags |= InputFlags::Up;
+    }
+    else
+    {
+        //hmm, how to check if the keys aren't being used?
+        m_inputFlags.flags &= ~InputFlags::Up;
+    }
+
+    axisPos = cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft);
+    if (axisPos > cro::GameController::TriggerDeadZone)
+    {
+        m_inputFlags.brakeMultiplier = static_cast<float>(axisPos) / cro::GameController::AxisMax;
+        m_inputFlags.flags |= InputFlags::Down;
+    }
+    else
+    {
+        m_inputFlags.flags &= ~InputFlags::Down;
+    }
+
+    axisPos = cro::GameController::getAxisPosition(0, cro::GameController::AxisLeftX);
+    if (axisPos > cro::GameController::LeftThumbDeadZone)
+    {
+        m_inputFlags.steerMultiplier = cro::Util::Easing::easeInCubic(static_cast<float>(axisPos) / cro::GameController::AxisMax);
+        m_inputFlags.flags |= InputFlags::Right;
+        m_inputFlags.flags &= ~InputFlags::Left;
+    }
+    else if (axisPos < -cro::GameController::LeftThumbDeadZone)
+    {
+        m_inputFlags.steerMultiplier = cro::Util::Easing::easeInCubic(static_cast<float>(axisPos) / -cro::GameController::AxisMax);
+        m_inputFlags.flags |= InputFlags::Left;
+        m_inputFlags.flags &= ~InputFlags::Right;
+    }
+    else
+    {
+        m_inputFlags.flags &= ~(InputFlags::Left | InputFlags::Right);
+    }
+}
+
 void EndlessDrivingState::updatePlayer(float dt)
 {
     const float speedRatio = (m_player.speed / Player::MaxSpeed);
     const float dx = dt * 2.f * speedRatio;
+    const float dxSteer = dt * 2.f * cro::Util::Easing::easeOutQuad(speedRatio);
 
     if ((m_inputFlags.flags & (InputFlags::Left | InputFlags::Right)) == 0)
     {
@@ -441,20 +502,22 @@ void EndlessDrivingState::updatePlayer(float dt)
     {
         if (m_inputFlags.flags & InputFlags::Left)
         {
-            m_player.position.x -= dx;
-            m_player.model.rotationY = std::min(Player::Model::MaxY, m_player.model.rotationY + dx);
+            const auto d = dxSteer * m_inputFlags.steerMultiplier;
+            m_player.position.x -= d;
+            m_player.model.rotationY = std::min(Player::Model::MaxY, m_player.model.rotationY + d);
         }
 
         if (m_inputFlags.flags & InputFlags::Right)
         {
-            m_player.position.x += dx;
-            m_player.model.rotationY = std::max(-Player::Model::MaxY, m_player.model.rotationY - dx);
+            const auto d = dxSteer * m_inputFlags.steerMultiplier;
+            m_player.position.x += d;
+            m_player.model.rotationY = std::max(-Player::Model::MaxY, m_player.model.rotationY - d);
         }
     }
     
     //centrifuge on curves
     const std::size_t segID = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) % m_road.getSegmentCount();
-    m_player.position.x -= dx * speedRatio * m_road[segID].curve * Player::Centrifuge;
+    m_player.position.x -= dx * cro::Util::Easing::easeInCubic(speedRatio) * m_road[segID].curve * Player::Centrifuge;
 
    
 
@@ -467,11 +530,11 @@ void EndlessDrivingState::updatePlayer(float dt)
     {
         if (m_inputFlags.flags & InputFlags::Up)
         {
-            m_player.speed += Player::Acceleration * dt;
+            m_player.speed += Player::Acceleration * dt * m_inputFlags.accelerateMultiplier;
         }
         if (m_inputFlags.flags & InputFlags::Down)
         {
-            m_player.speed += Player::Braking * dt;
+            m_player.speed += Player::Braking * dt *  m_inputFlags.brakeMultiplier;
         }
     }
 
