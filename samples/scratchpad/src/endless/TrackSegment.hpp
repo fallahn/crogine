@@ -54,7 +54,7 @@ struct TrackSegment final
     float fogAmount = 0.f;
 
     std::vector<TrackSprite> sprites;
-    bool clipSprites = false;
+    float clipHeight = 0.f;
 
     //contains the last known screen projection
     struct Projection final

@@ -112,6 +112,8 @@ private:
         float steerMultiplier = 1.f;
         float accelerateMultiplier = 1.f;
         float brakeMultiplier = 1.f;
+
+        std::int32_t keyCount = 0; //tracks how many keys are pressed and only allows controller to override when 0
     }m_inputFlags;
 
 

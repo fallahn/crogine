@@ -95,6 +95,8 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
                 ImGui::ProgressBar(m_inputFlags.accelerateMultiplier);
                 ImGui::ProgressBar(m_inputFlags.steerMultiplier);
 
+                ImGui::Text("Key Count %d", m_inputFlags.keyCount);
+
                 ImGui::Text("Max Y  %3.3f", debug.maxY);
                 ImGui::Text("Player Y  %3.3f", m_player.position.y);
                 ImGui::Text("Player Z  %3.3f", m_player.position.z);
@@ -151,22 +153,29 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
             break;
         }
 
-        //TODO compare to keybind
-        if (evt.key.keysym.sym == SDLK_w)
+        if (!evt.key.repeat)
         {
-            m_inputFlags.flags |= InputFlags::Up;
-        }
-        if (evt.key.keysym.sym == SDLK_s)
-        {
-            m_inputFlags.flags |= InputFlags::Down;
-        }
-        if (evt.key.keysym.sym == SDLK_a)
-        {
-            m_inputFlags.flags |= InputFlags::Left;
-        }
-        if (evt.key.keysym.sym == SDLK_d)
-        {
-            m_inputFlags.flags |= InputFlags::Right;
+            //TODO compare to keybind
+            if (evt.key.keysym.sym == SDLK_w)
+            {
+                m_inputFlags.flags |= InputFlags::Up;
+                m_inputFlags.keyCount++;
+            }
+            if (evt.key.keysym.sym == SDLK_s)
+            {
+                m_inputFlags.flags |= InputFlags::Down;
+                m_inputFlags.keyCount++;
+            }
+            if (evt.key.keysym.sym == SDLK_a)
+            {
+                m_inputFlags.flags |= InputFlags::Left;
+                m_inputFlags.keyCount++;
+            }
+            if (evt.key.keysym.sym == SDLK_d)
+            {
+                m_inputFlags.flags |= InputFlags::Right;
+                m_inputFlags.keyCount++;
+            }
         }
     }
     else if (evt.type == SDL_KEYUP)
@@ -175,18 +184,22 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         if (evt.key.keysym.sym == SDLK_w)
         {
             m_inputFlags.flags &= ~InputFlags::Up;
+            m_inputFlags.keyCount--;
         }
         if (evt.key.keysym.sym == SDLK_s)
         {
             m_inputFlags.flags &= ~InputFlags::Down;
+            m_inputFlags.keyCount--;
         }
         if (evt.key.keysym.sym == SDLK_a)
         {
             m_inputFlags.flags &= ~InputFlags::Left;
+            m_inputFlags.keyCount--;
         }
         if (evt.key.keysym.sym == SDLK_d)
         {
             m_inputFlags.flags &= ~InputFlags::Right;
+            m_inputFlags.keyCount--;
         }
     }
 
@@ -445,6 +458,12 @@ void EndlessDrivingState::updateControllerInput()
     m_inputFlags.accelerateMultiplier = 1.f;
     m_inputFlags.brakeMultiplier = 1.f;
 
+    if (m_inputFlags.keyCount)
+    {
+        //some keys are pressed, don't use controller
+        return;
+    }
+
 
     auto axisPos = cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight);
     if (axisPos > cro::GameController::TriggerDeadZone)
@@ -504,14 +523,14 @@ void EndlessDrivingState::updatePlayer(float dt)
         {
             const auto d = dxSteer * m_inputFlags.steerMultiplier;
             m_player.position.x -= d;
-            m_player.model.rotationY = std::min(Player::Model::MaxY, m_player.model.rotationY + d);
+            m_player.model.rotationY = std::min(Player::Model::MaxY, m_player.model.rotationY + (dx * m_inputFlags.steerMultiplier));
         }
 
         if (m_inputFlags.flags & InputFlags::Right)
         {
             const auto d = dxSteer * m_inputFlags.steerMultiplier;
             m_player.position.x += d;
-            m_player.model.rotationY = std::max(-Player::Model::MaxY, m_player.model.rotationY - d);
+            m_player.model.rotationY = std::max(-Player::Model::MaxY, m_player.model.rotationY - (dx * m_inputFlags.steerMultiplier));
         }
     }
     
@@ -639,11 +658,11 @@ void EndlessDrivingState::updateRoad(float dt)
         if ((prev->position.z < m_trackCamera.getPosition().z)
             || curr.projection.position.y < maxY)
         {
-            curr.clipSprites = (curr.projection.position.y < maxY);
+            curr.clipHeight = (curr.projection.position.y < maxY) ? maxY : 0.f;
             continue;
         }
         maxY = curr.projection.position.y;
-        curr.clipSprites = false;
+        curr.clipHeight = 0.f;
         debug.maxY = maxY;
 
         //update vertex array
@@ -685,13 +704,11 @@ void EndlessDrivingState::updateRoad(float dt)
         const auto idx = *i;
         const auto& seg = m_road[idx];
 
-        const float clipHeight = seg.clipSprites ? maxY : 0.f;
-
         for (const auto& sprite : seg.sprites)
         {
             glm::vec2 pos = seg.projection.position;
             pos.x += seg.projection.scale * sprite.position * RoadWidth * halfWidth;
-            addRoadSprite(sprite, pos, seg.projection.scale, clipHeight, seg.fogAmount, verts);
+            addRoadSprite(sprite, pos, seg.projection.scale, seg.clipHeight, seg.fogAmount, verts);
         }
     }
     m_trackSpriteEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
@@ -736,7 +753,17 @@ void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos
 
     if (clip)
     {
-        c = cro::Colour::Magenta;
+        //c = cro::Colour::Magenta;
+
+        const auto diff = clip - pos.y;
+        const auto uvOffset = diff / size.y;
+        const auto uvDiff = uv.height * uvOffset;
+
+        pos.y += diff;
+        size.y -= diff;
+
+        uv.bottom += uvDiff;
+        uv.height -= uvDiff;
     }
 
     dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), glm::vec2(uv.left, uv.bottom + uv.height), c);
