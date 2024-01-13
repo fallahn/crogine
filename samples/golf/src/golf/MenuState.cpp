@@ -655,7 +655,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 case SDLK_ESCAPE:
                     if (m_textChat.isVisible())
                     {
-                        m_textChat.toggleWindow(false);
+                        m_textChat.toggleWindow(false, false);
                     }
                     break;
                 /*case SDLK_F8:
@@ -806,7 +806,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             if ((evt.key.keysym.mod & KMOD_SHIFT)
                 && m_currentMenu == MenuID::Lobby)
             {
-                m_textChat.toggleWindow(false);
+                m_textChat.toggleWindow(false, false);
             }
             break;
         }
@@ -872,7 +872,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonY:
             if (m_currentMenu == MenuID::Lobby)
             {
-                m_textChat.toggleWindow(true);
+                m_textChat.toggleWindow(true, false);
             }
             break;
         }

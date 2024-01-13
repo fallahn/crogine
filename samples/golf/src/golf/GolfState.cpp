@@ -350,13 +350,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 case SDLK_ESCAPE:
                     if (m_textChat.isVisible())
                     {
-                        m_textChat.toggleWindow(false);
+                        m_textChat.toggleWindow(false, true);
                     }
                     break;
                 case SDLK_F8:
                     if (evt.key.keysym.mod & KMOD_SHIFT)
                     {
-                        m_textChat.toggleWindow(false);
+                        m_textChat.toggleWindow(false, true);
                     }
                     break;
                 }                
@@ -481,7 +481,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
             {
-                m_textChat.toggleWindow(false);
+                m_textChat.toggleWindow(false, true);
             }
             break;
         case SDLK_F9:
@@ -520,14 +520,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
             break;
-        case SDLK_KP_0:
-            setActiveCamera(CameraID::Idle);
-        {
-            /*static bool hidden = false;
-            m_activeAvatar->model.getComponent<cro::Model>().setHidden(!hidden);
-            hidden = !hidden;*/
-        }
-            break;
+        //case SDLK_KP_0: //used by emote quick key
+        //    setActiveCamera(CameraID::Idle);
+        //{
+        //    /*static bool hidden = false;
+        //    m_activeAvatar->model.getComponent<cro::Model>().setHidden(!hidden);
+        //    hidden = !hidden;*/
+        //}
+        //    break;
         case SDLK_KP_1:
             //setActiveCamera(1);
             //m_cameras[CameraID::Sky].getComponent<CameraFollower>().state = CameraFollower::Zoom;
@@ -566,7 +566,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             msg->level = 19;
         }
             break;
-        case SDLK_KP_7:
+        /*case SDLK_KP_7: //taken over by emote quick key
         {
             auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg2->type = GolfEvent::BirdHit;
@@ -574,7 +574,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             float rot = glm::eulerAngles(m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldRotation()).y;
             msg2->travelDistance = rot;
         }
-            break;
+            break;*/
             //used in font smoothing debug GolfGame.cpp
         /*case SDLK_KP_MULTIPLY:
         {
@@ -678,7 +678,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
             if (m_textChat.isVisible())
             {
-                m_textChat.toggleWindow(false);
+                m_textChat.toggleWindow(false, true);
                 break;
             }
             [[fallthrough]];
@@ -690,15 +690,19 @@ bool GolfState::handleEvent(const cro::Event& evt)
             toggleQuitReady();
             break;
         case SDLK_7:
+        case SDLK_KP_7:
             m_textChat.quickEmote(TextChat::Applaud);
             break;
         case SDLK_8:
+        case SDLK_KP_8:
             m_textChat.quickEmote(TextChat::Happy);
             break;
         case SDLK_9:
+        case SDLK_KP_9:
             m_textChat.quickEmote(TextChat::Laughing);
             break;
         case SDLK_0:
+        case SDLK_KP_0:
             m_textChat.quickEmote(TextChat::Angry);
             break;
         }
@@ -736,7 +740,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonTrackpad:
         case cro::GameController::PaddleR4:
-            m_textChat.toggleWindow(true);
+            m_textChat.toggleWindow(true, true);
             break;
         }
     }

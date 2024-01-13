@@ -4785,7 +4785,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 return true;
             }
 
-            switch (evt.key.keysym.sym)
+            /*switch (evt.key.keysym.sym)
             {
             default: break;
             case SDLK_7:
@@ -4808,7 +4808,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 cooldown = 6.f;
                 buttonNodes[7].getComponent<cro::Callback>().active = true;
                 return true;
-            }
+            }*/
         }
     }
 
@@ -4883,7 +4883,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 //consume this so we don't mess with the swing
                 return true;
             case cro::GameController::ButtonX:
-                m_textChat.toggleWindow(true);
+                m_textChat.toggleWindow(true, true);
                 //close emote wheel automatically
                 targetScale = 0.f;
                 return true;

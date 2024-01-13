@@ -48,9 +48,9 @@ include_directories(
 add_subdirectory(include)
 add_subdirectory(src)
 
-# Add XY_DEBUG on Debug builds
+# Add CRO_DEBUG on Debug builds
 if (CMAKE_BUILD_TYPE MATCHES Debug) 
-  add_definitions(-DXY_DEBUG)
+  add_definitions(-DCRO_DEBUG)
 endif()
 
 # Create the actual binary (PROJECT_SRC variable is set inside previous steps)
