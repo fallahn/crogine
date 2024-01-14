@@ -434,6 +434,18 @@
     <ClInclude Include="src\endless\EndlessDrivingState.hpp">
       <Filter>Header Files\endless</Filter>
     </ClInclude>
+    <ClInclude Include="src\endless\TrackCamera.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\endless\TrackSegment.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\endless\Track.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\endless\TrackSprite.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1893,7 +1893,8 @@ void GolfState::loadModels()
                                     e.getComponent<cro::Model>().setHidden(entity.getComponent<cro::Model>().isHidden());
                                 };
 
-                            if (m_sharedData.hairInfo[hairID].workshopID)
+                            if (m_sharedData.hairInfo[hairID].workshopID
+                                && i == m_sharedData.localConnectionData.connectionID)
                             {
                                 m_modelStats.push_back(m_sharedData.hairInfo[hairID].workshopID);
                             }
@@ -1905,7 +1906,8 @@ void GolfState::loadModels()
                 entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
                 m_avatars[i][j].model = entity;
 
-                if (m_sharedData.avatarInfo[avatarIndex].workshopID)
+                if (m_sharedData.avatarInfo[avatarIndex].workshopID
+                    && i == m_sharedData.localConnectionData.connectionID)
                 {
                     m_modelStats.push_back(m_sharedData.avatarInfo[avatarIndex].workshopID);
                 }

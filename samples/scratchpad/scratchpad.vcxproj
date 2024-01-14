@@ -371,6 +371,10 @@
     <ClInclude Include="src\collision\RollSystem.hpp" />
     <ClInclude Include="src\collision\Utils.hpp" />
     <ClInclude Include="src\endless\EndlessDrivingState.hpp" />
+    <ClInclude Include="src\endless\Track.hpp" />
+    <ClInclude Include="src\endless\TrackCamera.hpp" />
+    <ClInclude Include="src\endless\TrackSegment.hpp" />
+    <ClInclude Include="src\endless\TrackSprite.hpp" />
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\frustum\FrustumState.hpp" />
     <ClInclude Include="src\gc\GcState.hpp" />

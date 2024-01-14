@@ -194,6 +194,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat)
 {
+    if (sd.weatherType == WeatherType::Random)
+    {
+        sd.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+    }
+
     sd.holesPlayed = 0;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
@@ -345,13 +350,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 case SDLK_ESCAPE:
                     if (m_textChat.isVisible())
                     {
-                        m_textChat.toggleWindow(false);
+                        m_textChat.toggleWindow(false, true);
                     }
                     break;
                 case SDLK_F8:
                     if (evt.key.keysym.mod & KMOD_SHIFT)
                     {
-                        m_textChat.toggleWindow(false);
+                        m_textChat.toggleWindow(false, true);
                     }
                     break;
                 }                
@@ -476,7 +481,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
             {
-                m_textChat.toggleWindow(false);
+                m_textChat.toggleWindow(false, true);
             }
             break;
         case SDLK_F9:
@@ -515,14 +520,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
             break;
-        case SDLK_KP_0:
-            setActiveCamera(CameraID::Idle);
-        {
-            /*static bool hidden = false;
-            m_activeAvatar->model.getComponent<cro::Model>().setHidden(!hidden);
-            hidden = !hidden;*/
-        }
-            break;
+        //case SDLK_KP_0: //used by emote quick key
+        //    setActiveCamera(CameraID::Idle);
+        //{
+        //    /*static bool hidden = false;
+        //    m_activeAvatar->model.getComponent<cro::Model>().setHidden(!hidden);
+        //    hidden = !hidden;*/
+        //}
+        //    break;
         case SDLK_KP_1:
             //setActiveCamera(1);
             //m_cameras[CameraID::Sky].getComponent<CameraFollower>().state = CameraFollower::Zoom;
@@ -561,7 +566,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             msg->level = 19;
         }
             break;
-        case SDLK_KP_7:
+        /*case SDLK_KP_7: //taken over by emote quick key
         {
             auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg2->type = GolfEvent::BirdHit;
@@ -569,7 +574,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             float rot = glm::eulerAngles(m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldRotation()).y;
             msg2->travelDistance = rot;
         }
-            break;
+            break;*/
             //used in font smoothing debug GolfGame.cpp
         /*case SDLK_KP_MULTIPLY:
         {
@@ -673,7 +678,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
             if (m_textChat.isVisible())
             {
-                m_textChat.toggleWindow(false);
+                m_textChat.toggleWindow(false, true);
                 break;
             }
             [[fallthrough]];
@@ -685,15 +690,19 @@ bool GolfState::handleEvent(const cro::Event& evt)
             toggleQuitReady();
             break;
         case SDLK_7:
+        case SDLK_KP_7:
             m_textChat.quickEmote(TextChat::Applaud);
             break;
         case SDLK_8:
+        case SDLK_KP_8:
             m_textChat.quickEmote(TextChat::Happy);
             break;
         case SDLK_9:
+        case SDLK_KP_9:
             m_textChat.quickEmote(TextChat::Laughing);
             break;
         case SDLK_0:
+        case SDLK_KP_0:
             m_textChat.quickEmote(TextChat::Angry);
             break;
         }
@@ -731,7 +740,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonTrackpad:
         case cro::GameController::PaddleR4:
-            m_textChat.toggleWindow(true);
+            m_textChat.toggleWindow(true, true);
             break;
         }
     }
@@ -3145,7 +3154,8 @@ void GolfState::spawnBall(const ActorInfo& info)
             m_ballModels[ballID]->createModel(entity);
             applyMaterialData(*m_ballModels[ballID], material);
 #ifdef USE_GNS
-            if (ball->workshopID)
+            if (ball->workshopID
+                && info.clientID == m_sharedData.localConnectionData.connectionID)
             {
                 std::vector<std::uint64_t> v;
                 v.push_back(ball->workshopID);
@@ -4922,7 +4932,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 #ifdef USE_GNS
     m_sharedData.minimapData.courseName += Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
 #endif
-    m_sharedData.minimapData.courseName += "\nHole: " + std::to_string(m_sharedData.minimapData.holeNumber + 2); //this isn't updated until the map texture is 
+    std::int32_t offset = m_sharedData.reverseCourse ? 0 : 2;
+    m_sharedData.minimapData.courseName += "\nHole: " + std::to_string(m_sharedData.minimapData.holeNumber + offset); //this isn't updated until the map texture is 
     m_sharedData.minimapData.courseName += "\nPar: " + std::to_string(m_holeData[m_currentHole].par);
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions);
 }

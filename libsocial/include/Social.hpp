@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -48,11 +48,11 @@ source distribution.
 //(player avatar data format changed 1110 -> 1120)
 //(ball started sending wind effect 1120 -> 1124)
 //(added night mode/weather 1141 -> 1150)
-static constexpr std::uint16_t CURRENT_VER = 1150;
+static constexpr std::uint16_t CURRENT_VER = 1151;
 #ifdef __APPLE__
-static const std::string StringVer("1.15.0 (macOS beta)");
+static const std::string StringVer("1.15.1 (macOS beta)");
 #else
-static const std::string StringVer("1.15.0");
+static const std::string StringVer("1.15.1");
 #endif
 
 struct HallEntry final

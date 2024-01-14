@@ -1935,6 +1935,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     m_sharedData.showBeacon = !m_sharedData.showBeacon;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
             });
 
@@ -2125,6 +2126,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     m_sharedData.showPuttingPower = !m_sharedData.showPuttingPower;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
             });
 

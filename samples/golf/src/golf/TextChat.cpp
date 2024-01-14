@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -48,6 +48,17 @@ source distribution.
 
 namespace
 {
+    static void showToolTip(const char* desc)
+    {
+        if (ImGui::BeginItemTooltip())
+        {
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::TextUnformatted(desc);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
+
     const cro::Time ResendTime = cro::seconds(1.5f);
 
     const std::array<std::string, 12u> ApplaudStrings =
@@ -131,8 +142,39 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_scrollToEnd           (false),
     m_focusInput            (false),
     m_screenChatIndex       (0),
-    m_screenChatActiveCount (0)
+    m_screenChatActiveCount (0),
+    m_showShortcuts         (false)
 {
+    //use cro string to construct the utf8 strings
+    cro::String str(std::uint32_t(0x1F44F));
+
+    auto utf = str.toUtf8();
+
+    m_buttonStrings.applaud.resize(utf.size());
+    std::memcpy(m_buttonStrings.applaud.data(), utf.data(), utf.size());
+    m_buttonStrings.applaud.push_back(0);
+
+    str.clear();
+    str = std::uint32_t(0x1F600);
+    utf = str.toUtf8();
+    m_buttonStrings.happy.resize(utf.size());
+    std::memcpy(m_buttonStrings.happy.data(), utf.data(), utf.size());
+    m_buttonStrings.happy.push_back(0);
+
+    str.clear();
+    str = std::uint32_t(0x1F923);
+    utf = str.toUtf8();
+    m_buttonStrings.laughing.resize(utf.size());
+    std::memcpy(m_buttonStrings.laughing.data(), utf.data(), utf.size());
+    m_buttonStrings.laughing.push_back(0);
+
+    str.clear();
+    str = std::uint32_t(0x1F624);
+    utf = str.toUtf8();
+    m_buttonStrings.angry.resize(utf.size());
+    std::memcpy(m_buttonStrings.angry.data(), utf.data(), utf.size());
+    m_buttonStrings.angry.push_back(0);
+
     registerWindow([&]() 
         {
             if (m_visible)
@@ -140,11 +182,47 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                 //used to detect if we had any input
                 auto buffSize = m_inputBuffer.size();
 
-                ImGui::SetNextWindowSize({ 600.f, 280.f });
-                if (ImGui::Begin("Chat Window", &m_visible))
+                ImGui::SetNextWindowSize({ 600.f, 340.f });
+                if (ImGui::Begin("Chat Window", &m_visible, ImGuiWindowFlags_NoCollapse))
                 {
+                    if (m_showShortcuts)
+                    {
+                        ImGui::Text("Quick Emotes: ");
+                        ImGui::SameLine();
+                        if (ImGui::Button(m_buttonStrings.applaud.data()))
+                        {
+                            quickEmote(TextChat::Applaud);
+                            m_visible = false;
+                        }
+                        showToolTip("Applaud - Shortcut: Number 7");
+                        ImGui::SameLine();
+                        if (ImGui::Button(m_buttonStrings.happy.data()))
+                        {
+                            quickEmote(TextChat::Happy);
+                            m_visible = false;
+                        }
+                        showToolTip("Happy - Shortcut: Number 8");
+                        ImGui::SameLine();
+                        if (ImGui::Button(m_buttonStrings.laughing.data()))
+                        {
+                            quickEmote(TextChat::Laughing);
+                            m_visible = false;
+                        }
+                        showToolTip("Laughing - Shortcut: Number 9");
+                        ImGui::SameLine();
+                        if (ImGui::Button(m_buttonStrings.angry.data()))
+                        {
+                            quickEmote(TextChat::Angry);
+                            m_visible = false;
+                        }
+                        showToolTip("Grumpy - Shortcut: Number 0");
+                        ImGui::Separator();
+                    }
+
                     const float reserveHeight = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-                    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveHeight), false);
+                    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f,0.f,0.f,0.4f));
+                    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                    ImGui::PopStyleColor();
 
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
                     for (const auto& [str, colour] : m_displayBuffer)
@@ -187,6 +265,9 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     }
 
                     m_focusInput = false;
+
+
+                    //TODO emoji keypad rollout
                 }
                 ImGui::End();
 
@@ -376,8 +457,10 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
 }
 
-void TextChat::toggleWindow(bool showOSK)
+void TextChat::toggleWindow(bool showOSK, bool showQuickEmote)
 {
+    m_showShortcuts = showQuickEmote;
+
 #ifdef USE_GNS
     if (Social::isSteamdeck())
     {

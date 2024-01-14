@@ -16,187 +16,43 @@
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
+
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/detail/glm/gtx/euler_angles.hpp>
 
 namespace
 {
-    //TODO move these to some Const header
-    constexpr glm::uvec2 PlayerSize = glm::uvec2(160);
-    constexpr glm::uvec2 RenderSize = glm::uvec2(640, 448);
+    constexpr std::uint32_t RenderScale = 2;
+    constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224) * RenderScale;
     constexpr glm::vec2 RenderSizeFloat = glm::vec2(RenderSize);
+    constexpr float PlayerWidth = 74.f * RenderScale;
+    constexpr float PlayerHeight = 84.f * RenderScale;
+    constexpr cro::FloatRect PlayerBounds((RenderSizeFloat.x - PlayerWidth) / 2.f, 0.f, PlayerWidth, PlayerHeight);
 
-    //TODO encapsulate in relative classes
-    
-    //rendering
-    float roadWidth = 2000.f; //road is +/- this
-    constexpr float segmentLength = 200.f;
-    constexpr std::int32_t rumbleLength = 3; //number of segs per strip
-    constexpr std::int32_t drawDistance = 100; //max number of road segments to process and draw
-    float trackLength = 100000.f; //total length before looping
-    float lanes = 3.f; //might be superfluous
-    float fov = 60.f;
-    float cameraHeight = 1000.f;
-    float cameraDepth = 0.f;
-    float fogDensity = 5.f;
-
-    //player specific
-    float playerX = 0.f; //+/- 1 from X centre
-    float playerZ = 0.f; //rel distance from camera
-    float camZ = 0.f; //add player z to get absolute player pos
-    float speed = 0.f;
-    //TODO constify these - current non-const so we can play with imgui
-    constexpr float MaxSpeed = segmentLength * 60.f; //60 is our frame time
-    float acceleration = MaxSpeed / 5.f;
-    float braking = -MaxSpeed;
-    float deceleration = -acceleration;
-    float offroadDeceleration = -MaxSpeed / 2.f;
-    float offroadMaxSpeed = MaxSpeed / 4.f;
-
-    struct InputFlags final
+    constexpr float fogDensity = 5.f;
+    float expFog(float distance, float density)
     {
-        enum
-        {
-            Up = 0x1,
-            Down = 0x2,
-            Left = 0x4,
-            Right = 0x8
-        };
-        std::uint16_t flags = 0;
-        std::uint16_t prevFlags = 0;
-    }inputFlags;
+        float fogAmount = 1.f / (std::pow(cro::Util::Const::E, (distance * distance * density)));
+        fogAmount = (0.5f * (1.f - fogAmount));
 
-    //TODO move this to player class
-    void updatePlayer(float dt, cro::Entity entity)
-    {
-        //I'm sure there are better ways to wrap around but meh
-        camZ += speed * dt;
-        if (camZ > trackLength)
-        {
-            camZ -= trackLength;
-        }
+        fogAmount = std::round(fogAmount * 25.f);
+        fogAmount /= 25.f;
 
-        const float dx = dt * 2.f * (speed / MaxSpeed);
-        if (inputFlags.flags & InputFlags::Left)
-        {
-            playerX -= dx;
-        }
-
-        if (inputFlags.flags & InputFlags::Right)
-        {
-            playerX += dx;
-        }
-
-        
-        if ((inputFlags.flags & (InputFlags::Up | InputFlags::Down)) == 0)
-        {
-            //free wheel decel
-            speed += deceleration * dt;
-        }
-        else
-        {
-            if (inputFlags.flags & InputFlags::Up)
-            {
-                speed += acceleration * dt;
-            }
-            if (inputFlags.flags & InputFlags::Down)
-            {
-                speed += braking * dt;
-            }
-        }
-
-        //+/-1 is off road
-        if ((playerX < -1 || playerX > 1)
-            && (speed > offroadMaxSpeed))
-        {
-            //slow down
-            speed += offroadDeceleration * dt;
-        }
-
-        playerX = std::clamp(playerX, -2.f, 2.f);
-        speed = std::clamp(speed, 0.f, MaxSpeed);
-
-        //TODO only update on FOV change
-        //TODO set fov in rads so we don't have to keep converting
-        cameraDepth = 1.f / std::tan((fov / 2.f) * cro::Util::Const::degToRad);
-        playerZ = cameraHeight * cameraDepth;
-
-        //TODO rotate player model with steering
-
-        //update sprite ent position (playerX is +/- 2)
-        const float x = ((RenderSizeFloat.x / 4.f) * playerX) + (RenderSizeFloat.x / 2.f);
-        const float scale = cameraDepth / playerZ;
-        entity.getComponent<cro::Transform>().setPosition(glm::vec2(x, 0.f));
-        //entity.getComponent<cro::Transform>().setScale(glm::vec2(scale)); //TODO fix this
+        return fogAmount;
     }
+    const cro::Colour FogColour = CD32::Colours[CD32::GreenDark];
 
-
-
-    //TODO move this to own file
-    struct Point final
+    struct Debug final
     {
-        glm::vec3 world = glm::vec3(0.f);
-        glm::vec3 camera = glm::vec3(0.f);
-        glm::vec4 screen = glm::vec4(0.f);
-        float scale = 1.f;
-    };
-    void project(Point& p, glm::vec3 camera, float cameraDepth)
-    {
-        p.camera = p.world - camera;
-        p.scale = cameraDepth / p.camera.z;
+        float maxY = 0.f;
+        float segmentProgress = 0.f;
 
-        const auto screenCentre = RenderSizeFloat / 2.f;
-        p.screen.x = std::round(screenCentre.x + (p.scale * p.camera.x * screenCentre.x));
-        p.screen.y = std::round(screenCentre.y + (p.scale * p.camera.y * screenCentre.y));
-        p.screen.w = std::round(p.scale * roadWidth * screenCentre.x);
-    }
 
-    struct Segment final
-    {
-        Point p0;
-        Point p1;
-        cro::Colour colour;
-    };
-    std::vector<Segment> road;
-
-    void createRoad()
-    {
-        static constexpr std::int32_t SegmentCount = 250;
-
-        for (auto i = 0; i < SegmentCount; ++i)
-        {
-            auto& seg = road.emplace_back();
-            seg.p0.world.z = i * segmentLength;
-            seg.p1.world.z = (i + 1) * segmentLength;
-
-            seg.colour = ((i / rumbleLength) % 2) ? cro::Colour::White : cro::Colour::LightGrey;
-        }
-
-        trackLength = SegmentCount * segmentLength;
-    }
-
-    void updateRoad(float dt, cro::Entity entity)
-    {
-        const std::int32_t baseSeg = std::int32_t(camZ / segmentLength) % road.size();
-        float maxY = RenderSizeFloat.y;
-
-        for (auto i = 0; i < drawDistance; ++i)
-        {
-            //TODO maintain these camera positions somewhere
-            auto& seg = road[(baseSeg + i) % road.size()];
-            project(seg.p0, { playerX * roadWidth, cameraHeight, camZ }, cameraDepth);
-            project(seg.p1, { playerX * roadWidth, cameraHeight, camZ }, cameraDepth);
-
-            if (seg.p0.camera.z < cameraDepth //behind us
-                || seg.p1.screen.y > maxY) //out of view
-            {
-                continue;
-            }
-
-            //TODO insert into vertex array
-
-            maxY = seg.p1.screen.y;
-        }
-    }
+    }debug;
 }
 
 EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Context context)
@@ -217,9 +73,38 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
         {
             if (ImGui::Begin("Player"))
             {
+                /*cro::FloatRect textureBounds = m_playerSprite.getComponent<cro::Sprite>().getTextureRect();
+                if (ImGui::SliderFloat("Width", &textureBounds.width, 10.f, RenderSizeFloat.x))
+                {
+                    textureBounds.left = (RenderSizeFloat.x - textureBounds.width) / 2.f;
+                    m_playerSprite.getComponent<cro::Sprite>().setTextureRect(textureBounds);
+                    m_playerSprite.getComponent<cro::Transform>().setOrigin(glm::vec2(textureBounds.width / 2.f, 0.f));
+                }
+                if (ImGui::SliderFloat("Height", &textureBounds.height, 10.f, RenderSizeFloat.y))
+                {
+                    m_playerSprite.getComponent<cro::Sprite>().setTextureRect(textureBounds);
+                }
+                
+                auto pos = m_playerScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Cam height", &pos.y, 1.f, 6.f))
+                {
+                    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
+                }*/
+
+                ImGui::ProgressBar(m_inputFlags.brakeMultiplier);
+                ImGui::ProgressBar(m_inputFlags.accelerateMultiplier);
+                ImGui::ProgressBar(m_inputFlags.steerMultiplier);
+
+                ImGui::Text("Key Count %d", m_inputFlags.keyCount);
+
+                ImGui::Text("Max Y  %3.3f", debug.maxY);
+                ImGui::Text("Player Y  %3.3f", m_player.position.y);
+                ImGui::Text("Player Z  %3.3f", m_player.position.z);
+                ImGui::Text("Player Segment Progress  %3.3f", debug.segmentProgress);
+
                 static const auto Red = ImVec4(1.f, 0.f, 0.f, 1.f);
                 static const auto Green = ImVec4(0.f, 1.f, 0.f, 1.f);
-                if (inputFlags.flags & InputFlags::Left)
+                if (m_inputFlags.flags & InputFlags::Left)
                 {
                     ImGui::PushStyleColor(ImGuiCol_Text, Green);
                 }
@@ -230,7 +115,7 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
                 ImGui::Text("Left");
                 ImGui::PopStyleColor();
 
-                if (inputFlags.flags & InputFlags::Right)
+                if (m_inputFlags.flags & InputFlags::Right)
                 {
                     ImGui::PushStyleColor(ImGuiCol_Text, Green);
                 }
@@ -241,8 +126,8 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
                 ImGui::Text("Right");
                 ImGui::PopStyleColor();
 
-                ImGui::Text("Speed %3.3f", speed);
-                ImGui::Text("PlayerX %3.3f", playerX);
+                ImGui::Text("Speed %3.3f", m_player.speed);
+                ImGui::Text("PlayerX %3.3f", m_player.position.x);
             }
             ImGui::End();
         });
@@ -266,40 +151,55 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(0);
             break;
+        }
 
-            //TODO move this to player/input and read keybinds
-        case SDLK_w:
-            inputFlags.flags |= InputFlags::Up;
-            break;
-        case SDLK_s:
-            inputFlags.flags |= InputFlags::Down;
-            break;
-        case SDLK_a:
-            inputFlags.flags |= InputFlags::Left;
-            break;
-        case SDLK_d:
-            inputFlags.flags |= InputFlags::Right;
-            break;
+        if (!evt.key.repeat)
+        {
+            //TODO compare to keybind
+            if (evt.key.keysym.sym == SDLK_w)
+            {
+                m_inputFlags.flags |= InputFlags::Up;
+                m_inputFlags.keyCount++;
+            }
+            if (evt.key.keysym.sym == SDLK_s)
+            {
+                m_inputFlags.flags |= InputFlags::Down;
+                m_inputFlags.keyCount++;
+            }
+            if (evt.key.keysym.sym == SDLK_a)
+            {
+                m_inputFlags.flags |= InputFlags::Left;
+                m_inputFlags.keyCount++;
+            }
+            if (evt.key.keysym.sym == SDLK_d)
+            {
+                m_inputFlags.flags |= InputFlags::Right;
+                m_inputFlags.keyCount++;
+            }
         }
     }
     else if (evt.type == SDL_KEYUP)
     {
-        switch (evt.key.keysym.sym)
+        //TODO compare to keybind
+        if (evt.key.keysym.sym == SDLK_w)
         {
-        default: break;
-            //TODO move this to player/input and read keybinds
-        case SDLK_w:
-            inputFlags.flags &= ~InputFlags::Up;
-            break;
-        case SDLK_s:
-            inputFlags.flags &= ~InputFlags::Down;
-            break;
-        case SDLK_a:
-            inputFlags.flags &= ~InputFlags::Left;
-            break;
-        case SDLK_d:
-            inputFlags.flags &= ~InputFlags::Right;
-            break;
+            m_inputFlags.flags &= ~InputFlags::Up;
+            m_inputFlags.keyCount--;
+        }
+        if (evt.key.keysym.sym == SDLK_s)
+        {
+            m_inputFlags.flags &= ~InputFlags::Down;
+            m_inputFlags.keyCount--;
+        }
+        if (evt.key.keysym.sym == SDLK_a)
+        {
+            m_inputFlags.flags &= ~InputFlags::Left;
+            m_inputFlags.keyCount--;
+        }
+        if (evt.key.keysym.sym == SDLK_d)
+        {
+            m_inputFlags.flags &= ~InputFlags::Right;
+            m_inputFlags.keyCount--;
         }
     }
 
@@ -318,8 +218,9 @@ void EndlessDrivingState::handleMessage(const cro::Message& msg)
 
 bool EndlessDrivingState::simulate(float dt)
 {
-    updateRoad(dt, m_roadEntity);
-    updatePlayer(dt, m_playerEntity);
+    updateControllerInput();
+    updateRoad(dt);
+    updatePlayer(dt);
 
     m_playerScene.simulate(dt);
     m_gameScene.simulate(dt);
@@ -329,11 +230,11 @@ bool EndlessDrivingState::simulate(float dt)
 
 void EndlessDrivingState::render()
 {
-    m_playerTexture.clear(cro::Colour::Transparent);
+    m_playerTexture.clear(cro::Colour::Transparent/*Blue*/);
     m_playerScene.render();
     m_playerTexture.display();
 
-    m_gameTexture.clear(cro::Colour::Magenta);
+    m_gameTexture.clear(cro::Colour(std::uint8_t(169), 186, 192));
     m_gameScene.render();
     m_gameTexture.display();
 
@@ -360,70 +261,156 @@ void EndlessDrivingState::addSystems()
 
 void EndlessDrivingState::loadAssets()
 {
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_autumn02.spt", m_resources.textures);
+
+    const auto parseSprite = 
+        [&](const cro::Sprite& sprite, std::int32_t spriteID)
+        {
+            auto bounds = sprite.getTextureBounds();
+            m_trackSprites[spriteID].size = { bounds.width, bounds.height };
+            m_trackSprites[spriteID].uv = sprite.getTextureRectNormalised();
+        };
+
+    parseSprite(spriteSheet.getSprite("tree01"), TrackSprite::Tree01);
+    parseSprite(spriteSheet.getSprite("tree03"), TrackSprite::Tree02);
+
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -7.f });
+    entity.addComponent<cro::Drawable2D>().setTexture(spriteSheet.getTexture());
+    entity.getComponent<cro::Drawable2D>().setCullingEnabled(false);
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() }); //there's a crash on nvidia drivers if we don't initialise this with at least 1 vertex...
+    m_trackSpriteEntity = entity;
 }
 
 void EndlessDrivingState::createPlayer()
 {
-    m_playerTexture.create(PlayerSize.x, PlayerSize.y);
+    m_playerTexture.create(RenderSize.x, RenderSize.y);
+
+    auto entity = m_playerScene.createEntity();
+    entity.addComponent<cro::Transform>();
 
     cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/cars/cart.cmt"))
+    if (md.loadFromFile("assets/golf/models/cart_v2.cmt"))
     {
-        auto entity = m_playerScene.createEntity();
-        entity.addComponent<cro::Transform>();
         md.createModel(entity);
     }
+    m_playerEntity = entity;
 
-    auto resize = [](cro::Camera& cam)
+    auto resize = [&](cro::Camera& cam)
         {
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-            cam.setPerspective(cro::Util::Const::degToRad * 54.f, 1.f, 0.1f, 10.f);
+            cam.setPerspective(cro::Util::Const::degToRad * m_trackCamera.getFOV(), RenderSizeFloat.x/RenderSizeFloat.y, 0.1f, 50.f);
         };
 
     auto& cam = m_playerScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
 
-    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ -2.6f, 1.5f, 0.f });
-    m_playerScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f);
-    m_playerScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.28f);
-
+    //this has to look straight ahead, as that's what we're supposing in the 2D projection
+    m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 3.1f, 5.146f });
     m_playerScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
 }
 
 void EndlessDrivingState::createScene()
 {
+    static constexpr float BGScale = static_cast<float>(RenderScale) / 2.f;
+
     //background
+    auto* tex = &m_resources.textures.get("assets/golf/images/skybox/layers/01.png");
+    tex->setRepeated(true);
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.5f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(BGScale));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_resources.textures.get("assets/cars/sky.png"));
+    entity.addComponent<cro::Sprite>(*tex);
+    m_background[BackgroundLayer::Sky].entity = entity;
+    m_background[BackgroundLayer::Sky].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
+    m_background[BackgroundLayer::Sky].speed = 40.f;
 
+    tex = &m_resources.textures.get("assets/golf/images/skybox/layers/02.png");
+    tex->setRepeated(true);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.4f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(BGScale));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_resources.textures.get("assets/cars/hills.png"));
+    entity.addComponent<cro::Sprite>(*tex);
+    m_background[BackgroundLayer::Hills].entity = entity;
+    m_background[BackgroundLayer::Hills].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
+    m_background[BackgroundLayer::Hills].speed = 80.f;
+    m_background[BackgroundLayer::Hills].verticalSpeed = 40.f;
 
+    tex = &m_resources.textures.get("assets/golf/images/skybox/layers/03.png");
+    tex->setRepeated(true);
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -9.3f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(BGScale));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_resources.textures.get("assets/cars/trees.png"));
-
+    entity.addComponent<cro::Sprite>(*tex);
+    m_background[BackgroundLayer::Trees].entity = entity;
+    m_background[BackgroundLayer::Trees].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
+    m_background[BackgroundLayer::Trees].speed = 160.f;
+    m_background[BackgroundLayer::Trees].verticalSpeed = 60.f;
 
     //player
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(320.f, 0.f, -0.1f));
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(static_cast<float>(PlayerSize.x / 2u), 0.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(RenderSizeFloat.x / 2.f, 0.f, -0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_playerTexture.getTexture());
-    m_playerEntity = entity;
+    entity.getComponent<cro::Sprite>().setTextureRect(PlayerBounds);
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(PlayerBounds.width / 2.f, 0.f));
+    m_playerSprite = entity;
 
     //road
-    createRoad();
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -8.f));
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.getComponent<cro::Drawable2D>().setCullingEnabled(false); //assume we're always visible and skip bounds checking
+    entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() });
     m_roadEntity = entity;
+
+
+    auto segmentCount = cro::Util::Random::value(5, 20);
+    for (auto i = 0; i < segmentCount; ++i)
+    {
+        const std::size_t first = m_road.getSegmentCount();
+        
+        const auto enter = cro::Util::Random::value(EnterMin, EnterMax);
+        const auto hold = cro::Util::Random::value(HoldMin, HoldMax);
+        const auto exit = cro::Util::Random::value(ExitMin, ExitMax);
+
+        const std::size_t last = first + enter + hold + exit;
+
+        const float curve = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(CurveMin, CurveMax) : 0.f;
+        const float hill = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(HillMin, HillMax) * SegmentLength : 0.f;
+        
+        m_road.addSegment(enter, hold, exit, curve, hill);
+
+
+        //add sprites to the new segment
+        for (auto j = first; j < last; ++j)
+        {
+            auto& seg = m_road[j];
+            auto count = cro::Util::Random::value(0, 2) == 0 ? 1 : 0;
+            for (auto k = 0; k < count; ++k)
+            {
+                auto spriteID = cro::Util::Random::value(TrackSprite::Tree01, TrackSprite::Tree02);
+                auto pos = -1.25f - cro::Util::Random::value(0.3f, 0.6f);
+                if (cro::Util::Random::value(0, 1) == 0)
+                {
+                    pos *= -1.f;
+                }
+                seg.sprites.emplace_back(m_trackSprites[spriteID]).position = pos;
+                seg.sprites.back().scale *= cro::Util::Random::value(0.9f, 1.8f) * RenderScale;
+            }
+        }
+    }
+    m_road[m_road.getSegmentCount() - 1].roadColour = cro::Colour::White;
+    m_road[m_road.getSegmentCount() - 1].rumbleColour = cro::Colour::Blue;
+
 
     auto resize = [](cro::Camera& cam)
     {
@@ -463,4 +450,344 @@ void EndlessDrivingState::createUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
+}
+
+void EndlessDrivingState::updateControllerInput()
+{
+    m_inputFlags.steerMultiplier = 1.f;
+    m_inputFlags.accelerateMultiplier = 1.f;
+    m_inputFlags.brakeMultiplier = 1.f;
+
+    if (m_inputFlags.keyCount)
+    {
+        //some keys are pressed, don't use controller
+        return;
+    }
+
+
+    auto axisPos = cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight);
+    if (axisPos > cro::GameController::TriggerDeadZone)
+    {
+        m_inputFlags.accelerateMultiplier = cro::Util::Easing::easeInCubic(static_cast<float>(axisPos) / cro::GameController::AxisMax);
+        m_inputFlags.flags |= InputFlags::Up;
+    }
+    else
+    {
+        //hmm, how to check if the keys aren't being used?
+        m_inputFlags.flags &= ~InputFlags::Up;
+    }
+
+    axisPos = cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft);
+    if (axisPos > cro::GameController::TriggerDeadZone)
+    {
+        m_inputFlags.brakeMultiplier = static_cast<float>(axisPos) / cro::GameController::AxisMax;
+        m_inputFlags.flags |= InputFlags::Down;
+    }
+    else
+    {
+        m_inputFlags.flags &= ~InputFlags::Down;
+    }
+
+    axisPos = cro::GameController::getAxisPosition(0, cro::GameController::AxisLeftX);
+    if (axisPos > cro::GameController::LeftThumbDeadZone)
+    {
+        m_inputFlags.steerMultiplier = cro::Util::Easing::easeInCubic(static_cast<float>(axisPos) / cro::GameController::AxisMax);
+        m_inputFlags.flags |= InputFlags::Right;
+        m_inputFlags.flags &= ~InputFlags::Left;
+    }
+    else if (axisPos < -cro::GameController::LeftThumbDeadZone)
+    {
+        m_inputFlags.steerMultiplier = cro::Util::Easing::easeInCubic(static_cast<float>(axisPos) / -cro::GameController::AxisMax);
+        m_inputFlags.flags |= InputFlags::Left;
+        m_inputFlags.flags &= ~InputFlags::Right;
+    }
+    else
+    {
+        m_inputFlags.flags &= ~(InputFlags::Left | InputFlags::Right);
+    }
+}
+
+void EndlessDrivingState::updatePlayer(float dt)
+{
+    const float speedRatio = (m_player.speed / Player::MaxSpeed);
+    const float dx = dt * 2.f * speedRatio;
+    const float dxSteer = dt * 2.f * cro::Util::Easing::easeOutQuad(speedRatio);
+
+    if ((m_inputFlags.flags & (InputFlags::Left | InputFlags::Right)) == 0)
+    {
+        m_player.model.rotationY *= 1.f - (0.1f * speedRatio);   
+    }
+    else
+    {
+        if (m_inputFlags.flags & InputFlags::Left)
+        {
+            const auto d = dxSteer * m_inputFlags.steerMultiplier;
+            m_player.position.x -= d;
+            m_player.model.rotationY = std::min(Player::Model::MaxY, m_player.model.rotationY + (dx * m_inputFlags.steerMultiplier));
+        }
+
+        if (m_inputFlags.flags & InputFlags::Right)
+        {
+            const auto d = dxSteer * m_inputFlags.steerMultiplier;
+            m_player.position.x += d;
+            m_player.model.rotationY = std::max(-Player::Model::MaxY, m_player.model.rotationY - (dx * m_inputFlags.steerMultiplier));
+        }
+    }
+    
+    //centrifuge on curves
+    const std::size_t segID = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) % m_road.getSegmentCount();
+    m_player.position.x -= dx * cro::Util::Easing::easeInCubic(speedRatio) * m_road[segID].curve * Player::Centrifuge;
+
+   
+
+    if ((m_inputFlags.flags & (InputFlags::Up | InputFlags::Down)) == 0)
+    {
+        //free wheel decel
+        m_player.speed += Player::Deceleration * dt;
+    }
+    else
+    {
+        if (m_inputFlags.flags & InputFlags::Up)
+        {
+            m_player.speed += Player::Acceleration * dt * m_inputFlags.accelerateMultiplier;
+        }
+        if (m_inputFlags.flags & InputFlags::Down)
+        {
+            m_player.speed += Player::Braking * dt *  m_inputFlags.brakeMultiplier;
+        }
+    }
+
+    //is off road
+    if ((m_player.position.x < -1.f || m_player.position.x > 1.f)
+        && (m_player.speed > Player::OffroadMaxSpeed))
+    {
+        //slow down
+        m_player.speed += Player::OffroadDeceleration * dt;
+    }
+
+    m_player.position.x = std::clamp(m_player.position.x, -2.f, 2.f);
+    m_player.speed = std::clamp(m_player.speed, 0.f, Player::MaxSpeed);
+
+    m_player.position.z = m_trackCamera.getDepth() * m_trackCamera.getPosition().y;
+
+    const float segmentProgress = ((m_trackCamera.getPosition().z + m_player.position.z) - m_road[segID].position.z) / SegmentLength;
+    debug.segmentProgress = segmentProgress;
+
+    const auto nextID = (segID - 1) % m_road.getSegmentCount();
+    m_player.position.y = glm::mix(m_road[segID].position.y, m_road[nextID].position.y, segmentProgress);
+
+
+    glm::vec2 p2(SegmentLength, m_road[nextID].position.y - m_road[segID].position.y);
+    m_player.model.targetRotationX = std::atan2(-p2.y, p2.x);
+
+    m_player.model.rotationX += cro::Util::Maths::shortestRotation(m_player.model.rotationX, m_player.model.targetRotationX) * dt;
+
+    //rotate player model with steering
+    glm::quat r = glm::toQuat(glm::orientate3(glm::vec3(0.f, 0.f, m_player.model.rotationY)));
+    glm::quat s = glm::toQuat(glm::orientate3(glm::vec3(m_player.model.rotationX, 0.f, 0.f)));
+    m_playerEntity.getComponent<cro::Transform>().setRotation(s * r);
+}
+
+void EndlessDrivingState::updateRoad(float dt)
+{
+    const float s = m_player.speed /*Player::MaxSpeed*/;
+    
+    m_trackCamera.move(glm::vec3(0.f, 0.f, s * dt));
+
+    const float maxLen = m_road.getSegmentCount() * SegmentLength;
+    if (m_trackCamera.getPosition().z > maxLen)
+    {
+        m_trackCamera.move(glm::vec3(0.f, 0.f, - maxLen));
+    }
+
+    const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) - 1;
+    float x = 0.f;
+    float dx = 0.f;
+    auto camPos = m_trackCamera.getPosition();
+    float maxY = 0.f;
+
+    std::vector<cro::Vertex2D> verts;
+    const float halfWidth = RenderSizeFloat.x / 2.f;
+
+    const auto trackHeight = m_road[start % m_road.getSegmentCount()].position.y;
+    m_trackCamera.move(glm::vec3(0.f, trackHeight, 0.f));
+
+    //keep this because we need to reverse the draw order
+    std::vector<std::size_t> spriteSegments;
+
+    auto* prev = &m_road[(start - 1) % m_road.getSegmentCount()];
+    
+    if (start - 1 >= m_road.getSegmentCount())
+    {
+        m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
+    }
+    auto playerPos = m_player.position;
+    playerPos.x *= prev->width;
+    m_trackCamera.updateScreenProjection(*prev, playerPos, RenderSizeFloat);  
+
+    for (auto i = start; i < start + DrawDistance; ++i)
+    {
+        const auto currIndex = i % m_road.getSegmentCount();
+        auto& curr = m_road[currIndex];
+
+        //increment
+        dx += curr.curve;
+        x += dx;
+
+        if (i >= m_road.getSegmentCount())
+        {
+            m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
+        }
+        m_trackCamera.setX(camPos.x - x);
+        playerPos = m_player.position;
+        playerPos.x *= curr.width;
+        m_trackCamera.updateScreenProjection(curr, playerPos, RenderSizeFloat);
+
+        float fogAmount = expFog(static_cast<float>(i - start) / DrawDistance, fogDensity);
+        curr.fogAmount = fogAmount;
+
+        //stash the sprites - these might poke out from
+        //behind a hill so we'll draw them anyway regardless
+        //of segment culling
+        if (!curr.sprites.empty())
+        {
+            spriteSegments.push_back(currIndex);
+        }
+
+        //cull OOB segments
+        if ((prev->position.z < m_trackCamera.getPosition().z)
+            || curr.projection.position.y < maxY)
+        {
+            curr.clipHeight = (curr.projection.position.y < maxY) ? maxY : 0.f;
+            continue;
+        }
+        maxY = curr.projection.position.y;
+        curr.clipHeight = 0.f;
+        debug.maxY = maxY;
+
+        //update vertex array
+        
+        //grass
+        auto colour = glm::mix(curr.grassColour.getVec4(), FogColour.getVec4(), fogAmount);
+        addRoadQuad(halfWidth, halfWidth, prev->projection.position.y, curr.projection.position.y, halfWidth, halfWidth, colour, verts);
+
+        //rumble strip
+        colour = glm::mix(curr.rumbleColour.getVec4(), FogColour.getVec4(), fogAmount);
+        addRoadQuad(prev->projection.position.x, curr.projection.position.x,
+                    prev->projection.position.y, curr.projection.position.y,
+                    prev->projection.width * 1.1f, curr.projection.width * 1.1f, curr.rumbleColour, verts);
+
+        //road
+        colour = glm::mix(curr.roadColour.getVec4(), FogColour.getVec4(), fogAmount);
+        addRoadQuad(prev->projection.position.x, curr.projection.position.x, 
+                    prev->projection.position.y, curr.projection.position.y,
+                    prev->projection.width, curr.projection.width, curr.roadColour, verts);
+
+        //markings
+        if (curr.roadMarking)
+        {
+            addRoadQuad(prev->projection.position.x, curr.projection.position.x,
+                        prev->projection.position.y, curr.projection.position.y,
+                        prev->projection.width * 0.02f, curr.projection.width * 0.02f, CD32::Colours[CD32::BeigeLight], verts);
+        }
+
+
+        //do this LAST!! buh
+        prev = &curr;
+    }
+    m_roadEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
+
+    verts.clear();
+    //hmmm what's faster, reversing the vector, or iterating backwards?
+    for (auto i = spriteSegments.crbegin(); i != spriteSegments.crend(); ++i)
+    {
+        const auto idx = *i;
+        const auto& seg = m_road[idx];
+
+        for (const auto& sprite : seg.sprites)
+        {
+            glm::vec2 pos = seg.projection.position;
+            pos.x += seg.projection.scale * sprite.position * RoadWidth * halfWidth;
+            addRoadSprite(sprite, pos, seg.projection.scale, seg.clipHeight, seg.fogAmount, verts);
+        }
+    }
+    m_trackSpriteEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
+
+    //update the background
+    const float speedRatio = s / Player::MaxSpeed;
+    for (auto& layer : m_background)
+    {
+        layer.textureRect.left += layer.speed * m_road[start % m_road.getSegmentCount()].curve * speedRatio;
+        layer.textureRect.bottom = layer.verticalSpeed * m_player.position.y * 0.05f;
+        layer.entity.getComponent<cro::Sprite>().setTextureRect(layer.textureRect);
+    }
+
+    m_trackCamera.setPosition(camPos);
+}
+
+void EndlessDrivingState::addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour c, std::vector<cro::Vertex2D>& dst)
+{
+    dst.emplace_back(glm::vec2(x1 - w1, y1), c);
+    dst.emplace_back(glm::vec2(x2 - w2, y2), c);
+    dst.emplace_back(glm::vec2(x1 + w1, y1), c);
+
+    dst.emplace_back(glm::vec2(x1 + w1, y1), c);
+    dst.emplace_back(glm::vec2(x2 - w2, y2), c);
+    dst.emplace_back(glm::vec2(x2 + w2, y2), c);
+}
+
+void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos, float scale, float clip, float fogAmount, std::vector<cro::Vertex2D>& dst)
+{
+    auto uv = sprite.uv;
+    scale *= sprite.scale;
+
+    glm::vec2 size = sprite.size * scale;
+    pos.x -= (size.x / 2.f);
+
+    cro::Colour c = glm::mix(glm::vec4(1.f), FogColour.getVec4(), fogAmount);
+    if (clip > pos.y + size.y)
+    {
+        //fully occluded
+        return;
+    }
+
+    if (clip)
+    {
+        //c = cro::Colour::Magenta;
+
+        const auto diff = clip - pos.y;
+        const auto uvOffset = diff / size.y;
+        const auto uvDiff = uv.height * uvOffset;
+
+        pos.y += diff;
+        size.y -= diff;
+
+        uv.bottom += uvDiff;
+        uv.height -= uvDiff;
+    }
+
+    dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), glm::vec2(uv.left, uv.bottom + uv.height), c);
+    dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom), c);
+    dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height), c);
+
+    dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height), c);
+    dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom), c);
+    dst.emplace_back(glm::vec2(pos.x + size.x, pos.y), glm::vec2(uv.left + uv.width, uv.bottom), c);
+
+
+
+
+
+
+
+
+
+
+    //dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), cro::Colour::Magenta);
+    //dst.emplace_back(pos, cro::Colour::Magenta);
+    //dst.emplace_back(pos + size, cro::Colour::Magenta);
+
+    //dst.emplace_back(pos + size, cro::Colour::Magenta);
+    //dst.emplace_back(pos, cro::Colour::Magenta);
+    //dst.emplace_back(glm::vec2(pos.x + size.x, pos.y), cro::Colour::Magenta);
 }

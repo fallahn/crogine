@@ -48,7 +48,7 @@ public:
 
     void handlePacket(const net::NetEvent::Packet&);
 
-    void toggleWindow(bool showOSK);
+    void toggleWindow(bool showOSK, bool showQuickEmote);
 
     bool isVisible() const { return m_visible; }
 
@@ -90,6 +90,16 @@ private:
     std::array<cro::Entity, 10U> m_screenChatBuffer = {};
     std::size_t m_screenChatIndex;
     std::size_t m_screenChatActiveCount;
+
+    bool m_showShortcuts;
+    struct ButtonStrings final
+    {
+        std::vector<char> angry;
+        std::vector<char> applaud;
+        std::vector<char> happy;
+        std::vector<char> laughing;
+    }m_buttonStrings;
+
 
     //raises notifications for client icons
     cro::Clock m_chatTimer;
