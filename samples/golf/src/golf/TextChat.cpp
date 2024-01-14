@@ -152,25 +152,28 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 
     m_buttonStrings.applaud.resize(utf.size());
     std::memcpy(m_buttonStrings.applaud.data(), utf.data(), utf.size());
+    m_buttonStrings.applaud.push_back(0);
 
     str.clear();
     str = std::uint32_t(0x1F600);
     utf = str.toUtf8();
     m_buttonStrings.happy.resize(utf.size());
     std::memcpy(m_buttonStrings.happy.data(), utf.data(), utf.size());
+    m_buttonStrings.happy.push_back(0);
 
     str.clear();
     str = std::uint32_t(0x1F923);
     utf = str.toUtf8();
     m_buttonStrings.laughing.resize(utf.size());
     std::memcpy(m_buttonStrings.laughing.data(), utf.data(), utf.size());
+    m_buttonStrings.laughing.push_back(0);
 
     str.clear();
     str = std::uint32_t(0x1F624);
     utf = str.toUtf8();
     m_buttonStrings.angry.resize(utf.size());
     std::memcpy(m_buttonStrings.angry.data(), utf.data(), utf.size());
-
+    m_buttonStrings.angry.push_back(0);
 
     registerWindow([&]() 
         {
@@ -184,8 +187,8 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                 {
                     if (m_showShortcuts)
                     {
-                        ImGui::Text("Quick Emotes");
-                        ImGui::Separator();
+                        ImGui::Text("Quick Emotes: ");
+                        ImGui::SameLine();
                         if (ImGui::Button(m_buttonStrings.applaud.data()))
                         {
                             quickEmote(TextChat::Applaud);
