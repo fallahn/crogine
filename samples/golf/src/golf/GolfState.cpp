@@ -690,19 +690,19 @@ bool GolfState::handleEvent(const cro::Event& evt)
             toggleQuitReady();
             break;
         case SDLK_7:
-        case SDLK_KP_7:
+        //case SDLK_KP_7: //don't do this, people use it as keybinds
             m_textChat.quickEmote(TextChat::Applaud);
             break;
         case SDLK_8:
-        case SDLK_KP_8:
+        //case SDLK_KP_8:
             m_textChat.quickEmote(TextChat::Happy);
             break;
         case SDLK_9:
-        case SDLK_KP_9:
+        //case SDLK_KP_9:
             m_textChat.quickEmote(TextChat::Laughing);
             break;
         case SDLK_0:
-        case SDLK_KP_0:
+        //case SDLK_KP_0:
             m_textChat.quickEmote(TextChat::Angry);
             break;
         }
