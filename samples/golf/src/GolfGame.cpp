@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -832,7 +832,7 @@ bool GolfGame::initialise()
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
 
-    applyImGuiStyle();
+    applyImGuiStyle(m_sharedData);
 
     return true;
 }
