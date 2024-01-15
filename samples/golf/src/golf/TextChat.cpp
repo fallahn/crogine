@@ -133,6 +133,23 @@ namespace
         "/me explodes in a shower of fleshy chunks",
         "/me should've known better"
     };
+
+    struct Emote final
+    {
+        Emote(std::vector<std::uint32_t> cp)
+            : codepoint(cp) {}
+        std::vector<std::uint32_t> codepoint;
+        std::vector<char> icon;
+    };
+
+    std::array<Emote, 25u> Emotes =
+    {
+        Emote({0x1F600}), Emote({0x1F601}), Emote({0x1F602}), Emote({0x1F929}), Emote({0x1F61B}),
+        Emote({0x1F914}), Emote({0x1F92D}), Emote({0x1F973}), Emote({0x1F60E}), Emote({0x1F644}),
+        Emote({0x1F62C}), Emote({0x1F632}), Emote({0x1F633}), Emote({0x1F629}), Emote({0x1F624}),
+        Emote({0x1F3C6}), Emote({0x1F947}), Emote({0x1F948}), Emote({0x1F949}), Emote({0x26F3}),
+        Emote({0x2764}),  Emote({0x1F573}), Emote({0x1F4A5}), Emote({0x1F4A8}), Emote({0x1F4A4}),
+    };
 }
 
 TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
@@ -175,8 +192,22 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     std::memcpy(m_buttonStrings.angry.data(), utf.data(), utf.size());
     m_buttonStrings.angry.push_back(0);
 
+    for (auto& e : Emotes)
+    {
+        str.clear();
+        for (auto cp : e.codepoint)
+        {
+            str += cp;
+        }
+        utf = str.toUtf8();
+        e.icon.resize(utf.size());
+        std::memcpy(e.icon.data(), utf.data(), utf.size());
+        e.icon.push_back(0);
+    }
+
     registerWindow([&]() 
         {
+            //ImGui::ShowDemoWindow();
             if (m_visible)
             {
                 //used to detect if we had any input
@@ -259,23 +290,48 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     ImGui::SetItemDefaultFocus();
                     if (m_focusInput
                         || ImGui::IsItemHovered()
-                        || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)
+                        || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow/*AndChildWindows*/)
                             && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
                     {
                         ImGui::SetKeyboardFocusHere(-1);
                     }
 
                     ImGui::SameLine();
-                    if (ImGui::Button("Send"))
+                    if (ImGui::Button(m_buttonStrings.happy.data()))
                     {
-                        sendTextChat();
-                        //m_focusInput = true;
+                        ImGui::OpenPopup("emote_popup");
                     }
 
                     m_focusInput = false;
 
+                    //emoji keypad popout
+                    ImGui::SameLine();
+                    if (ImGui::Button("Send"))
+                    {
+                        sendTextChat();
+                    }
 
-                    //TODO emoji keypad rollout
+                    if (ImGui::BeginPopup("emote_popup"))
+                    {
+                        ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
+
+                        for (auto i = 0; i < 25; ++i)
+                        {
+                            if (ImGui::Button(Emotes[i].icon.data()))
+                            {
+                                for (auto cp : Emotes[i].icon)
+                                {
+                                    m_inputBuffer.push_back(cp);
+                                }
+                                m_inputBuffer.pop_back(); //removes the terminator.. ugh
+                            }
+
+                            if ((i % 5) != 4) ImGui::SameLine();
+                        }
+
+                        ImGui::PopFont();
+                        ImGui::EndPopup();
+                    }
                 }
                 ImGui::End();
 
