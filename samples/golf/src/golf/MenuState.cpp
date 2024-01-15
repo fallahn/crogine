@@ -2399,6 +2399,9 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        //if we're returning from an existing game apply the friends filter
+        m_matchMaking.setFriendsOnly(m_matchMaking.getFriendsOnly());
     }
 }
 
