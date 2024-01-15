@@ -98,6 +98,7 @@ private:
         std::vector<char> applaud;
         std::vector<char> happy;
         std::vector<char> laughing;
+        std::vector<char> popout;
     }m_buttonStrings;
 
 

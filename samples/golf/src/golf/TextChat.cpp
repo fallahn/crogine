@@ -137,12 +137,23 @@ namespace
     struct Emote final
     {
         Emote(std::vector<std::uint32_t> cp)
-            : codepoint(cp) {}
+            : codepoint(cp)
+        {
+            cro::String str;
+            for (auto cp : codepoint)
+            {
+                str += cp;
+            }
+            auto utf = str.toUtf8();
+            icon.resize(utf.size());
+            std::memcpy(icon.data(), utf.data(), utf.size());
+            icon.push_back(0);
+        }
         std::vector<std::uint32_t> codepoint;
         std::vector<char> icon;
     };
 
-    std::array<Emote, 25u> Emotes =
+    const std::array<Emote, 25u> Emotes =
     {
         Emote({0x1F600}), Emote({0x1F601}), Emote({0x1F602}), Emote({0x1F929}), Emote({0x1F61B}),
         Emote({0x1F914}), Emote({0x1F92D}), Emote({0x1F973}), Emote({0x1F60E}), Emote({0x1F644}),
@@ -169,6 +180,9 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 
     m_buttonStrings.applaud.resize(utf.size());
     std::memcpy(m_buttonStrings.applaud.data(), utf.data(), utf.size());
+    m_buttonStrings.applaud.push_back('#'); //these duplicate some button labels in the flyout *sigh*
+    m_buttonStrings.applaud.push_back('#');
+    m_buttonStrings.applaud.push_back('1');
     m_buttonStrings.applaud.push_back(0);
 
     str.clear();
@@ -176,6 +190,15 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     utf = str.toUtf8();
     m_buttonStrings.happy.resize(utf.size());
     std::memcpy(m_buttonStrings.happy.data(), utf.data(), utf.size());
+    m_buttonStrings.popout = m_buttonStrings.happy;
+    m_buttonStrings.popout.push_back('#');
+    m_buttonStrings.popout.push_back('#');
+    m_buttonStrings.popout.push_back('2');
+    m_buttonStrings.popout.push_back(0);
+    
+    m_buttonStrings.happy.push_back('#');
+    m_buttonStrings.happy.push_back('#');
+    m_buttonStrings.happy.push_back('1');
     m_buttonStrings.happy.push_back(0);
 
     str.clear();
@@ -183,6 +206,9 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     utf = str.toUtf8();
     m_buttonStrings.laughing.resize(utf.size());
     std::memcpy(m_buttonStrings.laughing.data(), utf.data(), utf.size());
+    m_buttonStrings.laughing.push_back('#');
+    m_buttonStrings.laughing.push_back('#');
+    m_buttonStrings.laughing.push_back('1');
     m_buttonStrings.laughing.push_back(0);
 
     str.clear();
@@ -190,20 +216,11 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     utf = str.toUtf8();
     m_buttonStrings.angry.resize(utf.size());
     std::memcpy(m_buttonStrings.angry.data(), utf.data(), utf.size());
+    m_buttonStrings.angry.push_back('#');
+    m_buttonStrings.angry.push_back('#');
+    m_buttonStrings.angry.push_back('1');
     m_buttonStrings.angry.push_back(0);
 
-    for (auto& e : Emotes)
-    {
-        str.clear();
-        for (auto cp : e.codepoint)
-        {
-            str += cp;
-        }
-        utf = str.toUtf8();
-        e.icon.resize(utf.size());
-        std::memcpy(e.icon.data(), utf.data(), utf.size());
-        e.icon.push_back(0);
-    }
 
     registerWindow([&]() 
         {
@@ -297,7 +314,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     }
 
                     ImGui::SameLine();
-                    if (ImGui::Button(m_buttonStrings.happy.data()))
+                    if (ImGui::Button(m_buttonStrings.popout.data()))
                     {
                         ImGui::OpenPopup("emote_popup");
                     }
