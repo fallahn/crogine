@@ -121,6 +121,7 @@ private:
     void loadAssets();
     void createPlayer();
     void createScene();
+    void createRoad();
     void createUI();
 
     void updateControllerInput();

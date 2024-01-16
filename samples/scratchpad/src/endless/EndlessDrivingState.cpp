@@ -33,7 +33,7 @@ namespace
     constexpr float PlayerHeight = 84.f * RenderScale;
     constexpr cro::FloatRect PlayerBounds((RenderSizeFloat.x - PlayerWidth) / 2.f, 0.f, PlayerWidth, PlayerHeight);
 
-    constexpr float fogDensity = 5.f;
+    constexpr float FogDensity = 15.f;
     float expFog(float distance, float density)
     {
         float fogAmount = 1.f / (std::pow(cro::Util::Const::E, (distance * distance * density)));
@@ -44,7 +44,8 @@ namespace
 
         return fogAmount;
     }
-    const cro::Colour FogColour = CD32::Colours[CD32::GreenDark];
+    const cro::Colour GrassFogColour = CD32::Colours[CD32::GreenDark];
+    const cro::Colour RoadFogColour = CD32::Colours[CD32::BlueDark];
 
     struct Debug final
     {
@@ -261,8 +262,10 @@ void EndlessDrivingState::addSystems()
 
 void EndlessDrivingState::loadAssets()
 {
+    //everything needs to be in a single sprite sheet as we're
+    //relying on draw order for depth sorting.
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery_autumn02.spt", m_resources.textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/collectibles.spt", m_resources.textures);
 
     const auto parseSprite = 
         [&](const cro::Sprite& sprite, std::int32_t spriteID)
@@ -273,7 +276,9 @@ void EndlessDrivingState::loadAssets()
         };
 
     parseSprite(spriteSheet.getSprite("tree01"), TrackSprite::Tree01);
-    parseSprite(spriteSheet.getSprite("tree03"), TrackSprite::Tree02);
+    parseSprite(spriteSheet.getSprite("bush01"), TrackSprite::Bush01);
+    parseSprite(spriteSheet.getSprite("ball"), TrackSprite::Ball);
+    parseSprite(spriteSheet.getSprite("flag"), TrackSprite::Flag);
 
 
     auto entity = m_gameScene.createEntity();
@@ -372,44 +377,7 @@ void EndlessDrivingState::createScene()
     entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() });
     m_roadEntity = entity;
 
-
-    auto segmentCount = cro::Util::Random::value(5, 20);
-    for (auto i = 0; i < segmentCount; ++i)
-    {
-        const std::size_t first = m_road.getSegmentCount();
-        
-        const auto enter = cro::Util::Random::value(EnterMin, EnterMax);
-        const auto hold = cro::Util::Random::value(HoldMin, HoldMax);
-        const auto exit = cro::Util::Random::value(ExitMin, ExitMax);
-
-        const std::size_t last = first + enter + hold + exit;
-
-        const float curve = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(CurveMin, CurveMax) : 0.f;
-        const float hill = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(HillMin, HillMax) * SegmentLength : 0.f;
-        
-        m_road.addSegment(enter, hold, exit, curve, hill);
-
-
-        //add sprites to the new segment
-        for (auto j = first; j < last; ++j)
-        {
-            auto& seg = m_road[j];
-            auto count = cro::Util::Random::value(0, 2) == 0 ? 1 : 0;
-            for (auto k = 0; k < count; ++k)
-            {
-                auto spriteID = cro::Util::Random::value(TrackSprite::Tree01, TrackSprite::Tree02);
-                auto pos = -1.25f - cro::Util::Random::value(0.3f, 0.6f);
-                if (cro::Util::Random::value(0, 1) == 0)
-                {
-                    pos *= -1.f;
-                }
-                seg.sprites.emplace_back(m_trackSprites[spriteID]).position = pos;
-                seg.sprites.back().scale *= cro::Util::Random::value(0.9f, 1.8f) * RenderScale;
-            }
-        }
-    }
-    m_road[m_road.getSegmentCount() - 1].roadColour = cro::Colour::White;
-    m_road[m_road.getSegmentCount() - 1].rumbleColour = cro::Colour::Blue;
+    createRoad();    
 
 
     auto resize = [](cro::Camera& cam)
@@ -421,6 +389,91 @@ void EndlessDrivingState::createScene()
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
+}
+
+void EndlessDrivingState::createRoad()
+{
+    const std::vector<std::int32_t> SwapPattern =
+    {
+        cro::Util::Random::value(10, 16),
+        cro::Util::Random::value(6, 10),
+        cro::Util::Random::value(10, 16),
+        cro::Util::Random::value(10, 20),
+        cro::Util::Random::value(6, 10),
+    };
+    std::int32_t swapIndex = 0;
+    std::int32_t swapCounter = 0;
+    float offsetMultiplier = 1.f;
+
+    auto segmentCount = cro::Util::Random::value(5, 20);
+    for (auto i = 0; i < segmentCount; ++i)
+    {
+        const std::size_t first = m_road.getSegmentCount();
+
+        const auto enter = cro::Util::Random::value(EnterMin, EnterMax);
+        const auto hold = cro::Util::Random::value(HoldMin, HoldMax);
+        const auto exit = cro::Util::Random::value(ExitMin, ExitMax);
+
+        const std::size_t last = first + enter + hold + exit;
+
+        const float curve = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(CurveMin, CurveMax) : 0.f;
+        const float hill = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(HillMin, HillMax) * SegmentLength : 0.f;
+
+        m_road.addSegment(enter, hold, exit, curve, hill);
+
+
+        //add sprites to the new segment
+        for (auto j = first; j < last; ++j)
+        {
+            auto& seg = m_road[j];
+
+            //road side foliage
+            auto count = cro::Util::Random::value(0, 2) == 0 ? 1 : 0;
+            for (auto k = 0; k < count; ++k)
+            {
+                auto spriteID = cro::Util::Random::value(TrackSprite::Tree01, TrackSprite::Bush01);
+                auto pos = -1.25f - cro::Util::Random::value(0.3f, 0.6f);
+                if (cro::Util::Random::value(0, 1) == 0)
+                {
+                    pos *= -1.f;
+                }
+                seg.sprites.emplace_back(m_trackSprites[spriteID]).position = pos;
+                seg.sprites.back().scale *= cro::Util::Random::value(0.9f, 1.8f) * RenderScale;
+            }
+
+            //collectibles
+            if (j - first > enter
+                && j < last - exit)
+            {
+                if (j % 16 == 0)
+                {
+                    seg.sprites.emplace_back(m_trackSprites[TrackSprite::Ball]).position = 0.5f * offsetMultiplier;
+                    seg.sprites.back().scale = 2.5f;
+
+
+                    //counts the generated slices and swaps
+                    //the position of collectibles based on SwapPattern
+                    swapCounter++;
+                    if (swapCounter == SwapPattern[swapIndex])
+                    {
+                        swapCounter = 0;
+                        swapIndex = (swapIndex + 1) % SwapPattern.size();
+                        offsetMultiplier *= -1.f;
+
+                        seg.sprites.back().position = 0.f; //smoother transition
+                    }
+                }
+            }
+
+            if ((j == last - exit) && (i % 5) == 4)
+            {
+                seg.sprites.emplace_back(m_trackSprites[TrackSprite::Flag]).position = -0.5f * offsetMultiplier;
+                seg.sprites.back().scale = 3.5f;
+            }
+        }
+    }
+    m_road[m_road.getSegmentCount() - 1].roadColour = cro::Colour::White;
+    m_road[m_road.getSegmentCount() - 1].rumbleColour = cro::Colour::Blue;
 }
 
 void EndlessDrivingState::createUI()
@@ -643,7 +696,7 @@ void EndlessDrivingState::updateRoad(float dt)
         playerPos.x *= curr.width;
         m_trackCamera.updateScreenProjection(curr, playerPos, RenderSizeFloat);
 
-        float fogAmount = expFog(static_cast<float>(i - start) / DrawDistance, fogDensity);
+        float fogAmount = expFog(static_cast<float>(i - start) / DrawDistance, FogDensity);
         curr.fogAmount = fogAmount;
 
         //stash the sprites - these might poke out from
@@ -668,20 +721,20 @@ void EndlessDrivingState::updateRoad(float dt)
         //update vertex array
         
         //grass
-        auto colour = glm::mix(curr.grassColour.getVec4(), FogColour.getVec4(), fogAmount);
+        auto colour = glm::mix(curr.grassColour.getVec4(), GrassFogColour.getVec4(), fogAmount);
         addRoadQuad(halfWidth, halfWidth, prev->projection.position.y, curr.projection.position.y, halfWidth, halfWidth, colour, verts);
 
         //rumble strip
-        colour = glm::mix(curr.rumbleColour.getVec4(), FogColour.getVec4(), fogAmount);
+        colour = glm::mix(curr.rumbleColour.getVec4(), RoadFogColour.getVec4(), fogAmount);
         addRoadQuad(prev->projection.position.x, curr.projection.position.x,
                     prev->projection.position.y, curr.projection.position.y,
-                    prev->projection.width * 1.1f, curr.projection.width * 1.1f, curr.rumbleColour, verts);
+                    prev->projection.width * 1.1f, curr.projection.width * 1.1f, colour, verts);
 
         //road
-        colour = glm::mix(curr.roadColour.getVec4(), FogColour.getVec4(), fogAmount);
+        colour = glm::mix(curr.roadColour.getVec4(), RoadFogColour.getVec4(), fogAmount);
         addRoadQuad(prev->projection.position.x, curr.projection.position.x, 
                     prev->projection.position.y, curr.projection.position.y,
-                    prev->projection.width, curr.projection.width, curr.roadColour, verts);
+                    prev->projection.width, curr.projection.width, colour, verts);
 
         //markings
         if (curr.roadMarking)
@@ -744,7 +797,7 @@ void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos
     glm::vec2 size = sprite.size * scale;
     pos.x -= (size.x / 2.f);
 
-    cro::Colour c = glm::mix(glm::vec4(1.f), FogColour.getVec4(), fogAmount);
+    cro::Colour c = glm::mix(glm::vec4(1.f), GrassFogColour.getVec4(), fogAmount);
     if (clip > pos.y + size.y)
     {
         //fully occluded

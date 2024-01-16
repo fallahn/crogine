@@ -46,7 +46,9 @@ struct TrackSprite final
     enum
     {
         Tree01,
-        Tree02,
+        Bush01,
+        Ball,
+        Flag,
 
 
         Count
