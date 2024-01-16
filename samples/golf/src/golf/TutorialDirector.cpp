@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -104,7 +104,7 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
             case TutorialID::Swing:
                 //allow all input
                 m_inputParser.setEnableFlags(InputFlag::All);
-                if (cro::GameController::getControllerCount() == 0)
+                //if (cro::GameController::getControllerCount() == 0)
                 {
                     //skip to spin if there's no controller
                     m_sharedData.tutorialIndex = TutorialID::Spin;
