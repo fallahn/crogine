@@ -53,4 +53,19 @@ struct TrackSprite final
 
         Count
     };
+    std::int32_t id = 0;
+    std::size_t frameIndex = 0;
+    
+    struct Animation final
+    {
+        enum
+        {
+            None, Rotate, Float,
+
+            Count
+        };
+    };
+    std::int32_t animation = 0;
+
+    bool collisionActive = true;
 };

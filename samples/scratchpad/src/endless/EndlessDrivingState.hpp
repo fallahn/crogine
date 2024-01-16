@@ -61,6 +61,8 @@ private:
     cro::Entity m_playerSprite;
     cro::Entity m_roadEntity;
 
+    cro::Entity m_debugEntity;
+
     //texture is fixed size and game is rendered to this
     //the ui scene then scales this to the current output
     cro::RenderTexture m_gameTexture;
@@ -117,6 +119,8 @@ private:
     }m_inputFlags;
 
 
+    std::array<std::vector<float>, TrackSprite::Animation::Count> m_wavetables = {};
+
     void addSystems();
     void loadAssets();
     void createPlayer();
@@ -128,5 +132,7 @@ private:
     void updatePlayer(float dt);
     void updateRoad(float dt);
     void addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour, std::vector<cro::Vertex2D>&);
-    void addRoadSprite(const TrackSprite&, glm::vec2, float scale, float clip, float fogAmount, std::vector<cro::Vertex2D>&);
+    void addRoadSprite(TrackSprite&, const TrackSegment&, std::vector<cro::Vertex2D>&);
+
+    std::pair<glm::vec2, glm::vec2> getScreenCoords(TrackSprite&, const TrackSegment&, bool animate);
 };

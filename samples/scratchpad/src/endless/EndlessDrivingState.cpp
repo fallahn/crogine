@@ -21,6 +21,7 @@
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Wavetable.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
 
@@ -29,6 +30,7 @@ namespace
     constexpr std::uint32_t RenderScale = 2;
     constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224) * RenderScale;
     constexpr glm::vec2 RenderSizeFloat = glm::vec2(RenderSize);
+    constexpr float ScreenHalfWidth = RenderSizeFloat.x / 2.f;
     constexpr float PlayerWidth = 74.f * RenderScale;
     constexpr float PlayerHeight = 84.f * RenderScale;
     constexpr cro::FloatRect PlayerBounds((RenderSizeFloat.x - PlayerWidth) / 2.f, 0.f, PlayerWidth, PlayerHeight);
@@ -262,23 +264,33 @@ void EndlessDrivingState::addSystems()
 
 void EndlessDrivingState::loadAssets()
 {
+    m_wavetables[TrackSprite::Animation::Rotate] = cro::Util::Wavetable::sine(1.5f);// used to animate sprites
+    for (auto& f : m_wavetables[TrackSprite::Animation::Rotate])
+    {
+        f += 1.f;
+        f /= 2.f;
+    }
+    m_wavetables[TrackSprite::Animation::Float] = cro::Util::Wavetable::sine(0.5f, 20.f);
+
     //everything needs to be in a single sprite sheet as we're
     //relying on draw order for depth sorting.
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/collectibles.spt", m_resources.textures);
 
     const auto parseSprite = 
-        [&](const cro::Sprite& sprite, std::int32_t spriteID)
+        [&](const cro::Sprite& sprite, std::int32_t spriteID, std::int32_t animation)
         {
             auto bounds = sprite.getTextureBounds();
             m_trackSprites[spriteID].size = { bounds.width, bounds.height };
             m_trackSprites[spriteID].uv = sprite.getTextureRectNormalised();
+            m_trackSprites[spriteID].id = spriteID;
+            m_trackSprites[spriteID].animation = animation;
         };
 
-    parseSprite(spriteSheet.getSprite("tree01"), TrackSprite::Tree01);
-    parseSprite(spriteSheet.getSprite("bush01"), TrackSprite::Bush01);
-    parseSprite(spriteSheet.getSprite("ball"), TrackSprite::Ball);
-    parseSprite(spriteSheet.getSprite("flag"), TrackSprite::Flag);
+    parseSprite(spriteSheet.getSprite("tree01"), TrackSprite::Tree01, 0);
+    parseSprite(spriteSheet.getSprite("bush01"), TrackSprite::Bush01, 0);
+    parseSprite(spriteSheet.getSprite("ball"), TrackSprite::Ball, TrackSprite::Animation::Rotate);
+    parseSprite(spriteSheet.getSprite("flag"), TrackSprite::Flag, TrackSprite::Animation::Float);
 
 
     auto entity = m_gameScene.createEntity();
@@ -288,6 +300,14 @@ void EndlessDrivingState::loadAssets()
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() }); //there's a crash on nvidia drivers if we don't initialise this with at least 1 vertex...
     m_trackSpriteEntity = entity;
+
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.5f });
+    entity.addComponent<cro::Drawable2D>().setCullingEnabled(false);
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() });
+    m_debugEntity = entity;
 }
 
 void EndlessDrivingState::createPlayer()
@@ -393,6 +413,9 @@ void EndlessDrivingState::createScene()
 
 void EndlessDrivingState::createRoad()
 {
+    //TODO create a constant start/end segment DrawDistance in size
+    //TODO add UV coords for ground texture
+
     const std::vector<std::int32_t> SwapPattern =
     {
         cro::Util::Random::value(10, 16),
@@ -404,6 +427,9 @@ void EndlessDrivingState::createRoad()
     std::int32_t swapIndex = 0;
     std::int32_t swapCounter = 0;
     float offsetMultiplier = 1.f;
+
+    //offset the start frame of anumations so not all in sync (looks weird)
+    std::array<std::size_t, TrackSprite::Animation::Count> animationFrameOffsets = {};
 
     auto segmentCount = cro::Util::Random::value(5, 20);
     for (auto i = 0; i < segmentCount; ++i)
@@ -432,7 +458,7 @@ void EndlessDrivingState::createRoad()
             for (auto k = 0; k < count; ++k)
             {
                 auto spriteID = cro::Util::Random::value(TrackSprite::Tree01, TrackSprite::Bush01);
-                auto pos = -1.25f - cro::Util::Random::value(0.3f, 0.6f);
+                auto pos = -1.75f - cro::Util::Random::value(0.15f, 0.3f);
                 if (cro::Util::Random::value(0, 1) == 0)
                 {
                     pos *= -1.f;
@@ -447,9 +473,12 @@ void EndlessDrivingState::createRoad()
             {
                 if (j % 16 == 0)
                 {
-                    seg.sprites.emplace_back(m_trackSprites[TrackSprite::Ball]).position = 0.5f * offsetMultiplier;
-                    seg.sprites.back().scale = 2.5f;
+                    auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::Ball]);
+                    spr.position = 0.5f * offsetMultiplier;
+                    spr.scale = 2.5f;
+                    spr.frameIndex = animationFrameOffsets[spr.animation];
 
+                    animationFrameOffsets[spr.animation] = (animationFrameOffsets[spr.animation] + 5) % m_wavetables[spr.animation].size();
 
                     //counts the generated slices and swaps
                     //the position of collectibles based on SwapPattern
@@ -460,15 +489,19 @@ void EndlessDrivingState::createRoad()
                         swapIndex = (swapIndex + 1) % SwapPattern.size();
                         offsetMultiplier *= -1.f;
 
-                        seg.sprites.back().position = 0.f; //smoother transition
+                        spr.position = 0.f; //smoother transition
                     }
                 }
             }
 
             if ((j == last - exit) && (i % 5) == 4)
             {
-                seg.sprites.emplace_back(m_trackSprites[TrackSprite::Flag]).position = -0.5f * offsetMultiplier;
-                seg.sprites.back().scale = 3.5f;
+                auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::Flag]);
+                spr.position = -0.5f * offsetMultiplier;
+                spr.scale = 3.5f;
+                spr.frameIndex = animationFrameOffsets[spr.animation];
+
+                animationFrameOffsets[spr.animation] = (animationFrameOffsets[spr.animation] + 5) % m_wavetables[spr.animation].size();
             }
         }
     }
@@ -639,6 +672,81 @@ void EndlessDrivingState::updatePlayer(float dt)
     glm::quat r = glm::toQuat(glm::orientate3(glm::vec3(0.f, 0.f, m_player.model.rotationY)));
     glm::quat s = glm::toQuat(glm::orientate3(glm::vec3(m_player.model.rotationX, 0.f, 0.f)));
     m_playerEntity.getComponent<cro::Transform>().setRotation(s * r);
+
+
+
+
+    //collect the IDs of the next 3 segs to test collision on 
+    //(just one seg can miss collisions because of tunnelling)
+    std::vector<std::size_t> collisionSegs;
+    auto collisionID = segID;
+    for (auto i = 0; i < 3; ++i)
+    {
+        collisionSegs.push_back(collisionID);
+        collisionID = (collisionID + 1) % m_road.getSegmentCount();
+    }
+
+    std::vector<cro::Vertex2D> debugVerts;
+    auto playerBounds = m_playerSprite.getComponent<cro::Transform>().getWorldTransform() * m_playerSprite.getComponent<cro::Drawable2D>().getLocalBounds();
+    auto p = glm::vec2(playerBounds.left, playerBounds.bottom);
+    auto w = glm::vec2(playerBounds.width, playerBounds.height) * 0.65f; //better fit sprite bounds for collision
+    p.x += (playerBounds.width - w.x) / 2.f;
+    
+    /*debugVerts.emplace_back(glm::vec2(p.x, p.y + w.y), cro::Colour::Blue);
+    debugVerts.emplace_back(p, cro::Colour::Blue);
+    debugVerts.emplace_back(p + w, cro::Colour::Blue);
+
+    debugVerts.emplace_back(p + w, cro::Colour::Blue);
+    debugVerts.emplace_back(p, cro::Colour::Blue);
+    debugVerts.emplace_back(glm::vec2(p.x + w.x, p.y), cro::Colour::Blue);*/
+
+    const cro::FloatRect PlayerCollision(p, w);
+
+    //test each sprite in each collision segment for player collision
+    for (auto i : collisionSegs)
+    {
+        for (auto& spr : m_road[i].sprites)
+        {
+            if (spr.collisionActive)
+            {
+                auto [pos, size] = getScreenCoords(spr, m_road[segID], false);
+
+                if (PlayerCollision.intersects({ pos, size }))
+                {
+                    switch (spr.id)
+                    {
+                    default:break;
+                    case TrackSprite::Flag:
+                        //BEEF STICK
+                        LogI << "Beef Stick!" << std::endl;
+                        break;
+                    case TrackSprite::Ball:
+                        //seconds
+                        LogI << "Kerching" << std::endl;
+                        break;
+                    case TrackSprite::Bush01:
+                        //slow down
+                        LogI << "Hit Bush" << std::endl;
+                        break;
+                    case TrackSprite::Tree01:
+                        //crash
+                        LogI << "Hit Tree" << std::endl;
+                        break;
+                    }
+                    spr.collisionActive = false; //prevent multiple collisions
+                }
+
+                /*debugVerts.emplace_back(glm::vec2(pos.x, pos.y + size.y), cro::Colour::Magenta);
+                debugVerts.emplace_back(pos, cro::Colour::Magenta);
+                debugVerts.emplace_back(pos + size, cro::Colour::Magenta);
+
+                debugVerts.emplace_back(pos + size, cro::Colour::Magenta);
+                debugVerts.emplace_back(pos, cro::Colour::Magenta);
+                debugVerts.emplace_back(glm::vec2(pos.x + size.x, pos.y), cro::Colour::Magenta);*/
+            }
+        }
+    }
+    m_debugEntity.getComponent<cro::Drawable2D>().getVertexData().swap(debugVerts);
 }
 
 void EndlessDrivingState::updateRoad(float dt)
@@ -660,7 +768,6 @@ void EndlessDrivingState::updateRoad(float dt)
     float maxY = 0.f;
 
     std::vector<cro::Vertex2D> verts;
-    const float halfWidth = RenderSizeFloat.x / 2.f;
 
     const auto trackHeight = m_road[start % m_road.getSegmentCount()].position.y;
     m_trackCamera.move(glm::vec3(0.f, trackHeight, 0.f));
@@ -722,7 +829,7 @@ void EndlessDrivingState::updateRoad(float dt)
         
         //grass
         auto colour = glm::mix(curr.grassColour.getVec4(), GrassFogColour.getVec4(), fogAmount);
-        addRoadQuad(halfWidth, halfWidth, prev->projection.position.y, curr.projection.position.y, halfWidth, halfWidth, colour, verts);
+        addRoadQuad(ScreenHalfWidth, ScreenHalfWidth, prev->projection.position.y, curr.projection.position.y, ScreenHalfWidth, ScreenHalfWidth, colour, verts);
 
         //rumble strip
         colour = glm::mix(curr.rumbleColour.getVec4(), RoadFogColour.getVec4(), fogAmount);
@@ -755,16 +862,23 @@ void EndlessDrivingState::updateRoad(float dt)
     for (auto i = spriteSegments.crbegin(); i != spriteSegments.crend(); ++i)
     {
         const auto idx = *i;
-        const auto& seg = m_road[idx];
+        auto& seg = m_road[idx];
 
-        for (const auto& sprite : seg.sprites)
+        for (auto& sprite : seg.sprites)
         {
-            glm::vec2 pos = seg.projection.position;
-            pos.x += seg.projection.scale * sprite.position * RoadWidth * halfWidth;
-            addRoadSprite(sprite, pos, seg.projection.scale, seg.clipHeight, seg.fogAmount, verts);
+            addRoadSprite(sprite, seg, verts);
         }
     }
     m_trackSpriteEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
+
+    //reset the collision on sprites which came back into view
+    if (!spriteSegments.empty())
+    {
+        for (auto& spr : m_road[spriteSegments.back()].sprites)
+        {
+            spr.collisionActive = true;
+        }
+    }
 
     //update the background
     const float speedRatio = s / Player::MaxSpeed;
@@ -789,26 +903,29 @@ void EndlessDrivingState::addRoadQuad(float x1, float x2, float y1, float y2, fl
     dst.emplace_back(glm::vec2(x2 + w2, y2), c);
 }
 
-void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos, float scale, float clip, float fogAmount, std::vector<cro::Vertex2D>& dst)
+void EndlessDrivingState::addRoadSprite(TrackSprite& sprite, const TrackSegment& seg, std::vector<cro::Vertex2D>& dst)
 {
+    if (!sprite.collisionActive)
+    {
+        return;
+    }
+
     auto uv = sprite.uv;
-    scale *= sprite.scale;
+    
+    auto [pos, size] = getScreenCoords(sprite, seg, sprite.animation != 0);
 
-    glm::vec2 size = sprite.size * scale;
-    pos.x -= (size.x / 2.f);
-
-    cro::Colour c = glm::mix(glm::vec4(1.f), GrassFogColour.getVec4(), fogAmount);
-    if (clip > pos.y + size.y)
+    cro::Colour c = glm::mix(glm::vec4(1.f), GrassFogColour.getVec4(), seg.fogAmount);
+    if (seg.clipHeight > pos.y + size.y)
     {
         //fully occluded
         return;
     }
 
-    if (clip)
+    if (seg.clipHeight)
     {
         //c = cro::Colour::Magenta;
 
-        const auto diff = clip - pos.y;
+        const auto diff = seg.clipHeight - pos.y;
         const auto uvOffset = diff / size.y;
         const auto uvDiff = uv.height * uvOffset;
 
@@ -826,21 +943,34 @@ void EndlessDrivingState::addRoadSprite(const TrackSprite& sprite, glm::vec2 pos
     dst.emplace_back(pos + size, glm::vec2(uv.left + uv.width, uv.bottom + uv.height), c);
     dst.emplace_back(pos, glm::vec2(uv.left, uv.bottom), c);
     dst.emplace_back(glm::vec2(pos.x + size.x, pos.y), glm::vec2(uv.left + uv.width, uv.bottom), c);
+}
+
+std::pair<glm::vec2, glm::vec2> EndlessDrivingState::getScreenCoords(TrackSprite& sprite, const TrackSegment& seg, bool animate)
+{
+    glm::vec2 pos = seg.projection.position;
+    pos.x += seg.projection.scale * sprite.position * RoadWidth * ScreenHalfWidth;
+
+    const float scale = seg.projection.scale * sprite.scale;
+
+    glm::vec2 size = sprite.size * scale;
+
+    if (sprite.animation == TrackSprite::Animation::Rotate)
+    {
+        size.x *= m_wavetables[sprite.animation][sprite.frameIndex];
+    }
+    else if (sprite.animation == TrackSprite::Animation::Float)
+    {
+        pos.y += m_wavetables[sprite.animation][sprite.frameIndex] * scale;
+    }
+    pos.x -= (size.x / 2.f);
+
+    //we mightjust be querying the sprite screen size for collision
+    //which won't want to update the animation
+    if (animate)
+    {
+        sprite.frameIndex = (sprite.frameIndex + 1) % m_wavetables[sprite.animation].size();
+    }
 
 
-
-
-
-
-
-
-
-
-    //dst.emplace_back(glm::vec2(pos.x, pos.y + size.y), cro::Colour::Magenta);
-    //dst.emplace_back(pos, cro::Colour::Magenta);
-    //dst.emplace_back(pos + size, cro::Colour::Magenta);
-
-    //dst.emplace_back(pos + size, cro::Colour::Magenta);
-    //dst.emplace_back(pos, cro::Colour::Magenta);
-    //dst.emplace_back(glm::vec2(pos.x + size.x, pos.y), cro::Colour::Magenta);
+    return std::make_pair(pos, size);
 }
