@@ -833,17 +833,19 @@ void EndlessDrivingState::updateRoad(float dt)
         
         //grass
         auto colour = glm::mix(curr.grassColour.getVec4(), GrassFogColour.getVec4(), fogAmount);
-        const glm::vec2 uvOffsetP(0.5f + ((ScreenHalfWidth - prev->projection.position.x) / ScreenHalfWidth), 0.f);
-        const glm::vec2 uvOffsetC(0.5f + ((ScreenHalfWidth - curr.projection.position.x) / ScreenHalfWidth), 0.f);
-        
-        cro::Colour c = colour;
-        verts.emplace_back(glm::vec2(0.f, prev->projection.position.y), prev->uv - uvOffsetP, c);
-        verts.emplace_back(glm::vec2(0.f, curr.projection.position.y), curr.uv - uvOffsetC, c);
-        verts.emplace_back(glm::vec2(RenderSizeFloat.x, prev->projection.position.y), prev->uv + glm::vec2(1.f, 0.f) + uvOffsetP, c);
+        const float uvP = ScreenHalfWidth / (prev->projection.width);
+        const float offsetP = ((prev->projection.position.x - ScreenHalfWidth) / ScreenHalfWidth) * -uvP;
+        const float uvC = ScreenHalfWidth / (curr.projection.width);
+        const float offsetC = ((curr.projection.position.x - ScreenHalfWidth) / ScreenHalfWidth) * -uvC;
 
-        verts.emplace_back(glm::vec2(RenderSizeFloat.x, prev->projection.position.y), prev->uv + glm::vec2(1.f,0.f) + uvOffsetP, c);
-        verts.emplace_back(glm::vec2(0.f, curr.projection.position.y), curr.uv - uvOffsetC, c);
-        verts.emplace_back(glm::vec2(RenderSizeFloat.x, curr.projection.position.y), curr.uv + glm::vec2(1.f, 0.f) + uvOffsetC, c);
+        cro::Colour c = colour;
+        verts.emplace_back(glm::vec2(0.f, prev->projection.position.y), glm::vec2(-uvP + offsetP, prev->uv.y), c);
+        verts.emplace_back(glm::vec2(0.f, curr.projection.position.y), glm::vec2(-uvC + offsetC, curr.uv.y), c);
+        verts.emplace_back(glm::vec2(RenderSizeFloat.x, prev->projection.position.y), glm::vec2(uvP + offsetP, prev->uv.y), c);
+
+        verts.emplace_back(glm::vec2(RenderSizeFloat.x, prev->projection.position.y), glm::vec2(uvP + offsetP, prev->uv.y), c);
+        verts.emplace_back(glm::vec2(0.f, curr.projection.position.y), glm::vec2(-uvC + offsetC, curr.uv.y), c);
+        verts.emplace_back(glm::vec2(RenderSizeFloat.x, curr.projection.position.y), glm::vec2(uvC + offsetC, curr.uv.y), c);
 
 
 
