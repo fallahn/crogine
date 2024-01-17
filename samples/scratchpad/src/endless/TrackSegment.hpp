@@ -64,6 +64,8 @@ struct TrackSegment final
         float scale = 1.f;
     }projection;
 
+    glm::vec2 uv = glm::vec2(0.f);
+
     TrackSegment() = default;
     TrackSegment(glm::vec3 p, float l, float w, float c)
         : position(p), length(l), width(w), curve(c) {}
