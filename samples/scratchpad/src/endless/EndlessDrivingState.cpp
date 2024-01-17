@@ -389,6 +389,26 @@ void EndlessDrivingState::createScene()
     m_playerSprite = entity;
 
     //road
+    auto& noiseTex = m_resources.textures.get("assets/golf/images/track_noise.png");
+    noiseTex.setRepeated(true);
+    //entity = m_gameScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -7.8f));
+    //entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    //entity.getComponent<cro::Drawable2D>().setCullingEnabled(false);
+    //entity.getComponent<cro::Drawable2D>().setTexture(&noiseTex);
+    //entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Multiply);
+    //entity.getComponent<cro::Drawable2D>().setVertexData(
+    //    {
+    //        cro::Vertex2D(glm::vec2(0.f, RenderSizeFloat.y / 2.f), glm::vec2(0.f, 1.f)) ,
+    //        cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f)) ,
+    //        cro::Vertex2D(glm::vec2(RenderSizeFloat.x, RenderSizeFloat.y / 2.f), glm::vec2(1.f)) ,
+
+    //        cro::Vertex2D(glm::vec2(RenderSizeFloat.x, RenderSizeFloat.y / 2.f), glm::vec2(1.f)) ,
+    //        cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f)) ,
+    //        cro::Vertex2D(glm::vec2(RenderSizeFloat.x, 0.f), glm::vec2(1.f, 0.f)) ,
+    //    });
+
+
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, -8.f));
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
@@ -829,26 +849,27 @@ void EndlessDrivingState::updateRoad(float dt)
         
         //grass
         auto colour = glm::mix(curr.grassColour.getVec4(), GrassFogColour.getVec4(), fogAmount);
-        addRoadQuad(ScreenHalfWidth, ScreenHalfWidth, prev->projection.position.y, curr.projection.position.y, ScreenHalfWidth, ScreenHalfWidth, colour, verts);
+        cro::Colour c = colour;
+        verts.emplace_back(glm::vec2(0.f, prev->projection.position.y), c);
+        verts.emplace_back(glm::vec2(0.f, curr.projection.position.y), c);
+        verts.emplace_back(glm::vec2(RenderSizeFloat.x, prev->projection.position.y), c);
+
+        verts.emplace_back(glm::vec2(RenderSizeFloat.x, prev->projection.position.y), c);
+        verts.emplace_back(glm::vec2(0.f, curr.projection.position.y), c);
+        verts.emplace_back(glm::vec2(RenderSizeFloat.x, curr.projection.position.y), c);
 
         //rumble strip
         colour = glm::mix(curr.rumbleColour.getVec4(), RoadFogColour.getVec4(), fogAmount);
-        addRoadQuad(prev->projection.position.x, curr.projection.position.x,
-                    prev->projection.position.y, curr.projection.position.y,
-                    prev->projection.width * 1.1f, curr.projection.width * 1.1f, colour, verts);
+        addRoadQuad(*prev, curr, 1.1f, colour, verts);
 
         //road
         colour = glm::mix(curr.roadColour.getVec4(), RoadFogColour.getVec4(), fogAmount);
-        addRoadQuad(prev->projection.position.x, curr.projection.position.x, 
-                    prev->projection.position.y, curr.projection.position.y,
-                    prev->projection.width, curr.projection.width, colour, verts);
+        addRoadQuad(*prev, curr, 1.f, colour, verts);
 
         //markings
         if (curr.roadMarking)
         {
-            addRoadQuad(prev->projection.position.x, curr.projection.position.x,
-                        prev->projection.position.y, curr.projection.position.y,
-                        prev->projection.width * 0.02f, curr.projection.width * 0.02f, CD32::Colours[CD32::BeigeLight], verts);
+            addRoadQuad(*prev, curr, 0.02f, CD32::Colours[CD32::BeigeLight], verts);
         }
 
 
@@ -892,15 +913,21 @@ void EndlessDrivingState::updateRoad(float dt)
     m_trackCamera.setPosition(camPos);
 }
 
-void EndlessDrivingState::addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour c, std::vector<cro::Vertex2D>& dst)
+void EndlessDrivingState::addRoadQuad(const TrackSegment& s1, const TrackSegment& s2, float widthMultiplier, cro::Colour c, std::vector<cro::Vertex2D>& dst)
 {
-    dst.emplace_back(glm::vec2(x1 - w1, y1), c);
-    dst.emplace_back(glm::vec2(x2 - w2, y2), c);
-    dst.emplace_back(glm::vec2(x1 + w1, y1), c);
+    const auto p1 = s1.projection.position;
+    const auto p2 = s2.projection.position;
 
-    dst.emplace_back(glm::vec2(x1 + w1, y1), c);
-    dst.emplace_back(glm::vec2(x2 - w2, y2), c);
-    dst.emplace_back(glm::vec2(x2 + w2, y2), c);
+    const auto w1 = s1.projection.width * widthMultiplier;
+    const auto w2 = s2.projection.width * widthMultiplier;
+
+    dst.emplace_back(glm::vec2(p1.x - w1, p1.y), c);
+    dst.emplace_back(glm::vec2(p2.x - w2, p2.y), c);
+    dst.emplace_back(glm::vec2(p1.x + w1, p1.y), c);
+
+    dst.emplace_back(glm::vec2(p1.x + w1, p1.y), c);
+    dst.emplace_back(glm::vec2(p2.x - w2, p2.y), c);
+    dst.emplace_back(glm::vec2(p2.x + w2, p2.y), c);
 }
 
 void EndlessDrivingState::addRoadSprite(TrackSprite& sprite, const TrackSegment& seg, std::vector<cro::Vertex2D>& dst)
