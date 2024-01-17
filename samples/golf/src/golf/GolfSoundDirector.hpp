@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -57,7 +57,8 @@ public:
     void setActivePlayer(std::size_t client, std::size_t player, bool skipAudio);
     void setCrowdPositions(const std::vector<glm::mat4>& v) { m_crowdPositions = &v; }
 
-private:
+    cro::Entity playSound(std::int32_t, glm::vec3, float = 1.f);
+
     struct AudioID final
     {
         enum
@@ -165,6 +166,8 @@ private:
             Count
         };
     };
+private:
+
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
 
     const SharedStateData& m_sharedData;
@@ -183,7 +186,6 @@ private:
     //fudge to stop double sounds
     std::array<cro::Clock, AudioID::Count> m_soundTimers = {};
 
-    cro::Entity playSound(std::int32_t, glm::vec3, float = 1.f);
     void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f, std::uint8_t = 1/*MixerChannel::Effects*/);
     cro::Entity playAvatarSound(std::int32_t, const std::string&, glm::vec3);
     void playAvatarSoundDelayed(std::int32_t, const std::string&, glm::vec3, float);

@@ -301,7 +301,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         Achievements::awardAchievement(AchievementStrings[AchievementID::BetterWithFriends]);
     }
     m_cpuGolfer.setCPUCount(cpuCount, sd);
-
+    
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
@@ -318,8 +318,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
-#endif
     registerDebugWindows();
+#endif
     registerDebugCommands(); //includes cubemap creation
 
     cro::App::getInstance().resetFrameTime();
@@ -3754,6 +3754,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         break;
         case PacketID::ReadyQuitStatus:
             m_readyQuitFlags = evt.packet.as<std::uint8_t>();
+            m_gameScene.getDirector<GolfSoundDirector>()->playSound(GolfSoundDirector::AudioID::Stone, m_currentPlayer.position);
             break;
         case PacketID::AchievementGet:
             notifyAchievement(evt.packet.as<std::array<std::uint8_t, 2u>>());
