@@ -303,9 +303,15 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                     auto scissorStart = mapCoordsToPixel(start, pass.viewProjectionMatrix, viewport);
                     auto scissorEnd = mapCoordsToPixel(end, pass.viewProjectionMatrix, viewport);
 
+                    scissorStart.x = std::clamp(scissorStart.x, 0, viewport.width - 1);
+                    scissorStart.y = std::clamp(scissorStart.y, 0, viewport.height - 1);
+
+                    scissorEnd.x = std::clamp(scissorEnd.x, scissorStart.x, viewport.width);
+                    scissorEnd.y = std::clamp(scissorEnd.y, scissorStart.y, viewport.height);
+
                     auto w = scissorEnd.x - scissorStart.x;
                     auto h = scissorEnd.y - scissorStart.y;
-                    
+
                     glCheck(glScissor(scissorStart.x, scissorStart.y, w, h));
                 }
                 else
