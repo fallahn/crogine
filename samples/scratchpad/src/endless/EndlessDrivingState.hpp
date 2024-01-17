@@ -119,6 +119,22 @@ private:
     }m_inputFlags;
 
 
+    struct GameRules final
+    {
+        float remainingTime = 30.f;
+        float totalTime = 0.f;
+
+        struct State final
+        {
+            enum
+            {
+                CountIn, Running
+            };
+        };
+        std::int32_t state = State::CountIn;
+    }m_gameRules;
+
+
     std::array<std::vector<float>, TrackSprite::Animation::Count> m_wavetables = {};
 
     void addSystems();

@@ -9,9 +9,11 @@
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Text.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
@@ -24,6 +26,9 @@
 #include <crogine/util/Wavetable.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
+
+#include <sstream>
+#include <iomanip>
 
 namespace
 {
@@ -222,6 +227,31 @@ void EndlessDrivingState::handleMessage(const cro::Message& msg)
 bool EndlessDrivingState::simulate(float dt)
 {
     updateControllerInput();
+    if (m_gameRules.state == GameRules::State::Running)
+    {
+        //TODO update vehicles
+        if (getStateCount() != 1)
+        {
+            m_inputFlags.flags = 0;
+        }
+        else
+        {
+            m_gameRules.remainingTime -= dt;
+            m_gameRules.remainingTime = std::max(0.f, m_gameRules.remainingTime);
+            
+            //TODO some sort of flashing warning if time is low
+
+            if(m_gameRules.remainingTime == 0)
+            {
+                //TODO push game over state
+            }
+            m_gameRules.totalTime += dt;
+        }
+    }
+    else
+    {
+        m_inputFlags.flags = 0;
+    }
     updateRoad(dt);
     updatePlayer(dt);
 
@@ -257,7 +287,9 @@ void EndlessDrivingState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::RenderSystem2D>(mb);
 
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 }
@@ -525,6 +557,82 @@ void EndlessDrivingState::createUI()
 
     //TODO add border overlay (recycle GvG?)
 
+
+    //TODO switch font to shared resources
+    std::uint32_t fontID = 2;
+    m_resources.fonts.load(fontID, "assets/golf/fonts/IBM_CGA.ttf");
+    auto& font = m_resources.fonts.get(fontID);
+
+    //create a count-in
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(RenderSizeFloat.x / 2.f, std::floor(RenderSizeFloat.y * 0.75f), 0.1f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f)); //hide until menu popped
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("3");
+    entity.getComponent<cro::Text>().setCharacterSize(8 * 10);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(1.f, 3);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            if (getStateCount() == 1)
+            {
+                auto& [currTime, count] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+                currTime -= dt;
+
+                if (currTime < 0.f)
+                {
+                    currTime += 1.f;
+                    count--;
+                    if (count)
+                    {
+                        if (count == -1)
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(e);
+                        }
+                        else
+                        {
+                            e.getComponent<cro::Text>().setString(std::to_string(count));
+                        }
+                    }
+                    else
+                    {
+                        //TODO check if accelerate was being held and set input flag
+
+                        e.getComponent<cro::Text>().setString("GO!");
+                        m_gameRules.state = GameRules::State::Running;
+                    }
+                }
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+        };
+
+    m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //time display
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(12.f, std::floor(RenderSizeFloat.y * 0.95f), 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(16);
+    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            std::stringstream stream;
+            stream << std::fixed << std::setprecision(2) 
+                << "Total: " << m_gameRules.totalTime << "\n"
+                << "Remaining: " << m_gameRules.remainingTime;
+            
+            std::string str = stream.str();
+            e.getComponent<cro::Text>().setString(str);
+        };
+    m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     auto resize = 
         [&](cro::Camera& cam)
     {
@@ -696,14 +804,6 @@ void EndlessDrivingState::updatePlayer(float dt)
     auto w = glm::vec2(playerBounds.width, playerBounds.height) * 0.65f; //better fit sprite bounds for collision
     p.x += (playerBounds.width - w.x) / 2.f;
     
-    /*debugVerts.emplace_back(glm::vec2(p.x, p.y + w.y), cro::Colour::Blue);
-    debugVerts.emplace_back(p, cro::Colour::Blue);
-    debugVerts.emplace_back(p + w, cro::Colour::Blue);
-
-    debugVerts.emplace_back(p + w, cro::Colour::Blue);
-    debugVerts.emplace_back(p, cro::Colour::Blue);
-    debugVerts.emplace_back(glm::vec2(p.x + w.x, p.y), cro::Colour::Blue);*/
-
     const cro::FloatRect PlayerCollision(p, w);
 
     //test each sprite in each collision segment for player collision
@@ -739,14 +839,6 @@ void EndlessDrivingState::updatePlayer(float dt)
                     }
                     spr.collisionActive = false; //prevent multiple collisions
                 }
-
-                /*debugVerts.emplace_back(glm::vec2(pos.x, pos.y + size.y), cro::Colour::Magenta);
-                debugVerts.emplace_back(pos, cro::Colour::Magenta);
-                debugVerts.emplace_back(pos + size, cro::Colour::Magenta);
-
-                debugVerts.emplace_back(pos + size, cro::Colour::Magenta);
-                debugVerts.emplace_back(pos, cro::Colour::Magenta);
-                debugVerts.emplace_back(glm::vec2(pos.x + size.x, pos.y), cro::Colour::Magenta);*/
             }
         }
     }

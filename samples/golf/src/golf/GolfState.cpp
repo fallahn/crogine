@@ -318,8 +318,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
-    registerDebugWindows();
 #endif
+    registerDebugWindows();
     registerDebugCommands(); //includes cubemap creation
 
     cro::App::getInstance().resetFrameTime();
