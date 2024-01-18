@@ -27,8 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "EndlessAttractState.hpp"
 #include "../golf/SharedStateData.hpp"
+#include "../golf/MenuConsts.hpp"
+
+#include "EndlessAttractState.hpp"
+#include "EndlessConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -37,10 +40,13 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 
-#include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
-#include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
@@ -49,15 +55,11 @@ source distribution.
 EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
-    m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus())
 {
-    context.mainWindow.loadResources([this]() {
-        addSystems();
-        loadAssets();
-        createScene();
-        createUI();
-    });
+    addSystems();
+    loadAssets();
+    createUI();
 }
 
 //public
@@ -68,6 +70,30 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    const auto startGame = [&]()
+        {
+            requestStackClear();
+            requestStackPush(StateID::EndlessRunner);
+        };
+    const auto quitGame = [&]()
+        {
+            requestStackClear();
+            requestStackPush(StateID::Clubhouse);
+        };
+
+    const auto updateTextPrompt = [&](bool controller)
+        {
+            static bool prevController = false;
+            if (controller != prevController)
+            {
+                prevController = controller;
+
+                //TODO actual update
+            }
+
+            cro::App::getWindow().setMouseCaptured(true);
+        };
+
     if (evt.type == SDL_KEYDOWN)
     {
         switch (evt.key.keysym.sym)
@@ -75,33 +101,68 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
-            requestStackClear();
-            requestStackPush(0);
+#ifndef CRO_DEBUG_
+            quitGame();
+#endif
             break;
         }
+
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        {
+            startGame();
+        }
+
+        updateTextPrompt(false);
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case cro::GameController::ButtonLeftShoulder:
+            //TODO goto prev page
+            break;
+        case cro::GameController::ButtonRightShoulder:
+            //TODO goto next page
+            break;
+        case cro::GameController::ButtonA:
+            startGame();
+            break;
+        case cro::GameController::ButtonB:
+        case cro::GameController::ButtonBack:
+            quitGame();
+            break;
+        }
+
+        updateTextPrompt(true);
     }
 
-    m_gameScene.forwardEvent(evt);
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        updateTextPrompt(true);
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
+
     m_uiScene.forwardEvent(evt);
     return true;
 }
 
 void EndlessAttractState::handleMessage(const cro::Message& msg)
 {
-    m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
 
 bool EndlessAttractState::simulate(float dt)
 {
-    m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
 }
 
 void EndlessAttractState::render()
 {
-    m_gameScene.render();
     m_uiScene.render();
 }
 
@@ -109,10 +170,10 @@ void EndlessAttractState::render()
 void EndlessAttractState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_gameScene.addSystem<cro::CallbackSystem>(mb);
-    m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_uiScene.addSystem<cro::CommandSystem>(mb);
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
@@ -122,29 +183,104 @@ void EndlessAttractState::loadAssets()
 {
 }
 
-void EndlessAttractState::createScene()
-{
-    auto resize = [](cro::Camera& cam)
-    {
-        glm::vec2 size(cro::App::getWindow().getSize());
-        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 10.f);
-    };
-
-    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    cam.resizeCallback = resize;
-    resize(cam);
-
-    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 2.f });
-}
-
 void EndlessAttractState::createUI()
 {
-    auto resize = [](cro::Camera& cam)
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    m_rootNode = entity;
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    //text prompt to start
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Press Space to Start");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -16.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = TextFlashCallback();
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_startTextPrompt = entity;
+
+
+    //text prompt to quit
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Press Escape to Quit");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 32.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = TextFlashCallback();
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_quitTextPrompt = entity;
+
+
+    //TODO create a proper set of nodes to cycle through title, leaderboards, rules, and Game Over
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("GAME\nOVER");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 10);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 80.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+    //scaled independently of root node (see callback, below)
+    cro::Colour bgColour(0.f, 0.f, 0.f, BackgroundAlpha);
+    auto bgEnt = m_uiScene.createEntity();
+    bgEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -9.f });
+    bgEnt.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 1.f), bgColour),
+            cro::Vertex2D(glm::vec2(0.f), bgColour),
+            cro::Vertex2D(glm::vec2(1.f), bgColour),
+            cro::Vertex2D(glm::vec2(1.f, 0.f), bgColour),
+        }
+    );
+
+    auto resize = [&, bgEnt](cro::Camera& cam) mutable
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = {0.f, 0.f, 1.f, 1.f};
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 10.f);
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -1.f, 10.f);
+
+        bgEnt.getComponent<cro::Transform>().setScale(size);
+
+        const float scale = getViewScale(size.y);
+        m_rootNode.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+        size *= scale;
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UIElement;
+        cmd.action =
+            [size](cro::Entity e, float)
+            {
+                const auto& element = e.getComponent<UIElement>();
+                auto pos = size * element.relativePosition;
+                pos.x = std::round(pos.x);
+                pos.y = std::round(pos.y);
+
+                pos += element.absolutePosition;
+                e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();

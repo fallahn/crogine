@@ -53,13 +53,15 @@ private:
 
     SharedStateData& m_sharedData;
 
-    cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
+    cro::Entity m_rootNode;
+    cro::Entity m_startTextPrompt;
+    cro::Entity m_quitTextPrompt;
+
     void addSystems();
     void loadAssets();
-    void createScene();
     void createUI();
 
 };

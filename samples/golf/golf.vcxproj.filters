@@ -875,6 +875,9 @@
     <ClInclude Include="src\runner\TrackSprite.hpp">
       <Filter>Header Files\endless</Filter>
     </ClInclude>
+    <ClInclude Include="src\runner\EndlessConsts.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

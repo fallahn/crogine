@@ -849,6 +849,7 @@
     <ClInclude Include="src\rss\pugiconfig.hpp" />
     <ClInclude Include="src\rss\pugixml.hpp" />
     <ClInclude Include="src\runner\EndlessAttractState.hpp" />
+    <ClInclude Include="src\runner\EndlessConsts.hpp" />
     <ClInclude Include="src\runner\EndlessDrivingState.hpp" />
     <ClInclude Include="src\runner\EndlessPauseState.hpp" />
     <ClInclude Include="src\runner\Track.hpp" />

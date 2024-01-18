@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "EndlessDrivingState.hpp"
+#include "EndlessConsts.hpp"
 #include "../golf/SharedStateData.hpp"
 #include "../golf/MenuConsts.hpp"
 
@@ -61,28 +62,6 @@ source distribution.
 
 namespace
 {
-    constexpr std::uint32_t RenderScale = 2;
-    constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224) * RenderScale;
-    constexpr glm::vec2 RenderSizeFloat = glm::vec2(RenderSize);
-    constexpr float ScreenHalfWidth = RenderSizeFloat.x / 2.f;
-    constexpr float PlayerWidth = 74.f * RenderScale;
-    constexpr float PlayerHeight = 84.f * RenderScale;
-    constexpr cro::FloatRect PlayerBounds((RenderSizeFloat.x - PlayerWidth) / 2.f, 0.f, PlayerWidth, PlayerHeight);
-
-    constexpr float FogDensity = 15.f;
-    float expFog(float distance, float density)
-    {
-        float fogAmount = 1.f / (std::pow(cro::Util::Const::E, (distance * distance * density)));
-        fogAmount = (0.5f * (1.f - fogAmount));
-
-        fogAmount = std::round(fogAmount * 25.f);
-        fogAmount /= 25.f;
-
-        return fogAmount;
-    }
-    const cro::Colour GrassFogColour = CD32::Colours[CD32::GreenDark];
-    const cro::Colour RoadFogColour = CD32::Colours[CD32::BlueDark];
-
     struct Debug final
     {
         float maxY = 0.f;
@@ -108,6 +87,9 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
 
         cacheState(StateID::EndlessAttract);
         cacheState(StateID::EndlessPause);
+
+        cro::Clock c;
+        while (c.elapsed().asSeconds() < 2) {}
     });
 
     registerWindow([&]() 
@@ -184,6 +166,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYDOWN)
     {
+        cro::App::getWindow().setMouseCaptured(true);
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -195,23 +178,22 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 
         if (!evt.key.repeat)
         {
-            //TODO compare to keybind
-            if (evt.key.keysym.sym == SDLK_w)
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up])
             {
                 m_inputFlags.flags |= InputFlags::Up;
                 m_inputFlags.keyCount++;
             }
-            if (evt.key.keysym.sym == SDLK_s)
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
             {
                 m_inputFlags.flags |= InputFlags::Down;
                 m_inputFlags.keyCount++;
             }
-            if (evt.key.keysym.sym == SDLK_a)
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
             {
                 m_inputFlags.flags |= InputFlags::Left;
                 m_inputFlags.keyCount++;
             }
-            if (evt.key.keysym.sym == SDLK_d)
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
             {
                 m_inputFlags.flags |= InputFlags::Right;
                 m_inputFlags.keyCount++;
@@ -220,27 +202,35 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYUP)
     {
-        //TODO compare to keybind
-        if (evt.key.keysym.sym == SDLK_w)
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up])
         {
             m_inputFlags.flags &= ~InputFlags::Up;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.keysym.sym == SDLK_s)
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
         {
             m_inputFlags.flags &= ~InputFlags::Down;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.keysym.sym == SDLK_a)
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
         {
             m_inputFlags.flags &= ~InputFlags::Left;
             m_inputFlags.keyCount--;
         }
-        if (evt.key.keysym.sym == SDLK_d)
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
         {
             m_inputFlags.flags &= ~InputFlags::Right;
             m_inputFlags.keyCount--;
         }
+    }
+
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(true);
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
     }
 
     m_playerScene.forwardEvent(evt);
@@ -262,6 +252,8 @@ bool EndlessDrivingState::simulate(float dt)
     if (m_gameRules.state == GameRules::State::Running)
     {
         //TODO update vehicles
+
+
         if (getStateCount() != 1)
         {
             m_inputFlags.flags = 0;
@@ -273,11 +265,14 @@ bool EndlessDrivingState::simulate(float dt)
             
             //TODO some sort of flashing warning if time is low
 
+            m_gameRules.totalTime += dt;
             if(m_gameRules.remainingTime == 0)
             {
-                //TODO push game over state
-            }
-            m_gameRules.totalTime += dt;
+                //push game over state
+                requestStackPush(StateID::EndlessAttract);
+
+                //TODO update the leaderboard
+            }            
         }
     }
     else
@@ -590,7 +585,7 @@ void EndlessDrivingState::createUI()
     //TODO add border overlay (recycle GvG?)
 
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //create a count-in
     entity = m_uiScene.createEntity();
@@ -629,7 +624,11 @@ void EndlessDrivingState::createUI()
                     }
                     else
                     {
-                        //TODO check if accelerate was being held and set input flag
+                        //check if accelerate was being held and set input flag
+                        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+                        {
+                            m_inputFlags.flags |= InputFlag::Up;
+                        }
 
                         e.getComponent<cro::Text>().setString("GO!");
                         m_gameRules.state = GameRules::State::Running;
@@ -669,7 +668,7 @@ void EndlessDrivingState::createUI()
         cam.viewport = {0.f, 0.f, 1.f, 1.f};
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -1.f, 10.f);
 
-        const float scale = std::max(1.f, std::floor(size.y / RenderSize.y));
+        const float scale = getViewScale(size.y);
         m_gameEntity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         m_gameEntity.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
     };
