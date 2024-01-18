@@ -63,6 +63,11 @@ EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Con
 //public
 bool EndlessAttractState::handleEvent(const cro::Event& evt)
 {
+    if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
+
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;
@@ -138,10 +143,6 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
         updateTextPrompt(true);
-    }
-    else if (evt.type == SDL_MOUSEMOTION)
-    {
-        cro::App::getWindow().setMouseCaptured(false);
     }
 
     m_uiScene.forwardEvent(evt);

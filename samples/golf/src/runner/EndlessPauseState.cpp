@@ -65,6 +65,11 @@ EndlessPauseState::EndlessPauseState(cro::StateStack& stack, cro::State::Context
 //public
 bool EndlessPauseState::handleEvent(const cro::Event& evt)
 {
+    if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
+
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;
@@ -137,10 +142,6 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
     {
         updateTextPrompt(true);
     }
-    else if (evt.type == SDL_MOUSEMOTION)
-    {
-        cro::App::getWindow().setMouseCaptured(false);
-    }
 
 
     m_uiScene.forwardEvent(evt);
@@ -149,6 +150,18 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
 
 void EndlessPauseState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Pushed
+            && data.id == StateID::EndlessPause)
+        {
+            //HAX
+            //refresh the text cos edge cases cause it to garble
+            m_pausedText.getComponent<cro::Text>().setString("PAUSED");
+        }
+    }
+
     m_uiScene.forwardMessage(msg);
 }
 
@@ -192,13 +205,14 @@ void EndlessPauseState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("PAUSED");
+    entity.addComponent<cro::Text>(font).setString("PAUSE");
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 10);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().absolutePosition = { 0.f, 40.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    m_pausedText = entity;
 
     //text prompt
     entity = m_uiScene.createEntity();

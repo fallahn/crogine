@@ -27,39 +27,29 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "CarSystem.hpp"
+#include "Track.hpp"
+#include "EndlessConsts.hpp"
 
-#include "../StateIDs.hpp"
-
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
-
-struct SharedStateData;
-class EndlessPauseState final : public cro::State
+CarSystem::CarSystem(cro::MessageBus& mb, Track& track)
+    : cro::System   (mb, typeid(CarSystem)),
+    m_track         (track)
 {
-public:
-    EndlessPauseState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    requireComponent<Car>();
+}
 
-    cro::StateID getStateID() const override { return StateID::EndlessPause; }
+//public
+void CarSystem::process(float dt)
+{
+    auto& entities = getEntities();
+    for (auto e : entities)
+    {
+        auto& car = e.getComponent<Car>();
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+        //TODO update each cars Z position
+        //TODO avoid other cars
+        //TODO animate based on current seg curve
 
-private:
-    SharedStateData& m_sharedData;
-
-    cro::Scene m_uiScene;
-    cro::ResourceCollection m_resources;
-
-    cro::Entity m_rootNode;
-    cro::Entity m_textPrompt;
-    cro::Entity m_pausedText;
-
-    void addSystems();
-    void loadAssets();
-    void createUI();
-
-};
+        //seg can be retrieved from car's current z pos
+    }
+}

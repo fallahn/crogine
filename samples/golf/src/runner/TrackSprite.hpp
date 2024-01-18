@@ -48,7 +48,7 @@ struct TrackSprite final
         Bush01,
         Ball,
         Flag,
-
+        CartAway,
 
         Count
     };

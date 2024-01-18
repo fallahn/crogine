@@ -38,6 +38,7 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 #include "Track.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -47,7 +48,7 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 #include <array>
 
 struct SharedStateData;
-class EndlessDrivingState final : public cro::State, public cro::GuiClient
+class EndlessDrivingState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     EndlessDrivingState(cro::StateStack&, cro::State::Context, SharedStateData&);

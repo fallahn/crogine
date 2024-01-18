@@ -78,8 +78,19 @@ namespace cro::Util::String
                 output.replace(output.size() - 1, 1, "\n");
                 currentWidth = 0;
             }
-            output += cro::String::fromUtf8(tmp.begin(), tmp.end()) + " ";
-            currentWidth += tmp.size() + 1;
+
+            auto appendment = cro::String::fromUtf8(tmp.begin(), tmp.end());
+
+            output += appendment + " ";
+
+            if (auto newLine = appendment.find("\n"); newLine == cro::String::InvalidPos)
+            {
+                currentWidth += tmp.size() + 1;
+            }
+            else
+            {
+                currentWidth = appendment.size() - newLine;
+            }
         }
 
         if (currentWidth + (tmp.size() + 1) > MaxWidth)

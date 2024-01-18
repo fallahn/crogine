@@ -27,10 +27,12 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "EndlessDrivingState.hpp"
-#include "EndlessConsts.hpp"
 #include "../golf/SharedStateData.hpp"
 #include "../golf/MenuConsts.hpp"
+
+#include "CarSystem.hpp"
+#include "EndlessDrivingState.hpp"
+#include "EndlessConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -49,6 +51,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
@@ -92,6 +95,7 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
         while (c.elapsed().asSeconds() < 2) {}
     });
 
+#ifdef CRO_DEBUG_
     registerWindow([&]() 
         {
             if (ImGui::Begin("Player"))
@@ -154,11 +158,55 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
             }
             ImGui::End();
         });
+
+    registerCommand("create_sprite", 
+        [&](const std::string&)
+        {
+            //creates a sprite sheet from the player model
+            //to use for other vehicles
+            cro::SimpleQuad sprite(m_playerTexture.getTexture());
+            sprite.setTextureRect(PlayerBounds);
+            
+            auto size = glm::uvec2(sprite.getSize());
+            cro::RenderTexture tempBuffer;
+            if (tempBuffer.create(size.x * 5, size.y, false))
+            {
+                tempBuffer.clear(cro::Colour::Transparent);
+                float rotation = Player::Model::MaxX;
+                for (auto i = 0; i < 5; ++i)
+                {
+                    glm::quat r = glm::toQuat(glm::orientate3(glm::vec3(0.f, 0.f, rotation)));
+                    m_playerEntity.getComponent<cro::Transform>().setRotation(r);
+
+                    m_playerScene.simulate(0.f);
+                    m_playerTexture.clear(cro::Colour::Transparent);
+                    m_playerScene.render();
+                    m_playerTexture.display();
+
+                    sprite.draw();
+                    sprite.move(glm::vec2(static_cast<float>(size.x), 0.f));
+
+                    rotation -= (Player::Model::MaxX / 2.f);
+                }
+                tempBuffer.display();
+                tempBuffer.getTexture().saveToFile("cart_sheet.png");
+            }
+            else
+            {
+                LogE << "Failed creating sprite - buffer not created." << std::endl;
+            }
+        });
+#endif
 }
 
 //public
 bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 {
+    if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
+
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;
@@ -240,10 +288,6 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
     {
         cro::App::getWindow().setMouseCaptured(true);
     }
-    else if (evt.type == SDL_MOUSEMOTION)
-    {
-        cro::App::getWindow().setMouseCaptured(false);
-    }
 
     m_playerScene.forwardEvent(evt);
     m_gameScene.forwardEvent(evt);
@@ -321,6 +365,7 @@ void EndlessDrivingState::addSystems()
     m_playerScene.addSystem<cro::CameraSystem>(mb);
     m_playerScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_gameScene.addSystem<CarSystem>(mb, m_road);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SpriteSystem2D>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
@@ -346,7 +391,7 @@ void EndlessDrivingState::loadAssets()
     //everything needs to be in a single sprite sheet as we're
     //relying on draw order for depth sorting.
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/collectibles.spt", m_resources.textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/runner.spt", m_resources.textures);
 
     const auto parseSprite = 
         [&](const cro::Sprite& sprite, std::int32_t spriteID, std::int32_t animation)
@@ -360,25 +405,28 @@ void EndlessDrivingState::loadAssets()
 
     parseSprite(spriteSheet.getSprite("tree01"), TrackSprite::Tree01, 0);
     parseSprite(spriteSheet.getSprite("bush01"), TrackSprite::Bush01, 0);
+    parseSprite(spriteSheet.getSprite("cart_away"), TrackSprite::CartAway, 0);
     parseSprite(spriteSheet.getSprite("ball"), TrackSprite::Ball, TrackSprite::Animation::Rotate);
     parseSprite(spriteSheet.getSprite("flag"), TrackSprite::Flag, TrackSprite::Animation::Float);
 
-
+    //vertex array contains all visible sprites
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -7.f });
     entity.addComponent<cro::Drawable2D>().setTexture(spriteSheet.getTexture());
     entity.getComponent<cro::Drawable2D>().setCullingEnabled(false);
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() }); //there's a crash on nvidia drivers if we don't initialise this with at least 1 vertex...
+    //there's a crash on nvidia drivers if we don't initialise this with at least 1 vertex...
+    entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() });
     m_trackSpriteEntity = entity;
 
-
+#ifdef CRO_DEBUG_
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.5f });
     entity.addComponent<cro::Drawable2D>().setCullingEnabled(false);
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() });
     m_debugEntity = entity;
+#endif
 }
 
 void EndlessDrivingState::createPlayer()
@@ -542,6 +590,23 @@ void EndlessDrivingState::createRoad()
                 seg.sprites.back().scale *= cro::Util::Random::value(0.9f, 1.8f) * RenderScale;
             }
 
+            if (cro::Util::Random::value(0, 100) == 0)
+            {
+                auto pos = -0.5f - cro::Util::Random::value(0.15f, 0.3f);
+                if (cro::Util::Random::value(0, 1) == 0)
+                {
+                    pos *= -1.f;
+                }
+
+                auto entity = m_gameScene.createEntity();
+                auto& car = entity.addComponent<Car>();
+                car.sprite = m_trackSprites[TrackSprite::CartAway];
+                car.sprite.position = pos;
+                car.sprite.scale = 2.f;
+                seg.cars.push_back(entity);
+            }
+
+
             //collectibles
             if (j - first > enter
                 && j < last - exit)
@@ -550,7 +615,7 @@ void EndlessDrivingState::createRoad()
                 {
                     auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::Ball]);
                     spr.position = 0.5f * offsetMultiplier;
-                    spr.scale = 2.5f;
+                    spr.scale = 1.5f;
                     spr.frameIndex = animationFrameOffsets[spr.animation];
 
                     animationFrameOffsets[spr.animation] = (animationFrameOffsets[spr.animation] + 5) % m_wavetables[spr.animation].size();
@@ -582,6 +647,8 @@ void EndlessDrivingState::createRoad()
     }
     m_road[m_road.getSegmentCount() - 1].roadColour = cro::Colour::White;
     m_road[m_road.getSegmentCount() - 1].rumbleColour = cro::Colour::Blue;
+    m_road[m_road.getSegmentCount() - 2].roadColour = cro::Colour::White;
+    m_road[m_road.getSegmentCount() - 2].rumbleColour = cro::Colour::Blue;
 }
 
 void EndlessDrivingState::createUI()
@@ -617,6 +684,17 @@ void EndlessDrivingState::createUI()
             {
                 auto& [currTime, count] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
                 currTime -= dt;
+
+                if (count == 0)
+                {
+                    //we have go sign so move upwards
+                    static constexpr glm::vec2 MoveVec(0.f, 60.f);
+                    e.getComponent<cro::Transform>().move(MoveVec * dt);
+
+                    auto c = e.getComponent<cro::Text>().getFillColour();
+                    c.setAlpha(std::max(0.f, currTime));
+                    e.getComponent<cro::Text>().setFillColour(c);
+                }
 
                 if (currTime < 0.f)
                 {
@@ -845,11 +923,7 @@ void EndlessDrivingState::updatePlayer(float dt)
     p.x += (playerBounds.width - w.x) / 2.f;
     
     const cro::FloatRect PlayerCollision(p, w);
-
-    //test each sprite in each collision segment for player collision
-    for (auto i : collisionSegs)
-    {
-        for (auto& spr : m_road[i].sprites)
+    const auto testCollision = [&](TrackSprite& spr)
         {
             if (spr.collisionActive)
             {
@@ -876,10 +950,27 @@ void EndlessDrivingState::updatePlayer(float dt)
                         //crash
                         LogI << "Hit Tree" << std::endl;
                         break;
+                    case TrackSprite::CartAway:
+                        LogI << "Hit Cart" << std::endl;
+                        break;
                     }
                     spr.collisionActive = false; //prevent multiple collisions
                 }
             }
+        };
+
+    //test each sprite in each collision segment for player collision
+    for (auto i : collisionSegs)
+    {
+        for (auto& spr : m_road[i].sprites)
+        {
+            testCollision(spr);
+        }
+
+        for (auto e : m_road[i].cars)
+        {
+            auto& spr = e.getComponent<Car>().sprite;
+            testCollision(spr);
         }
     }
     m_debugEntity.getComponent<cro::Drawable2D>().getVertexData().swap(debugVerts);
@@ -911,8 +1002,14 @@ void EndlessDrivingState::updateRoad(float dt)
     //keep this because we need to reverse the draw order
     std::vector<std::size_t> spriteSegments;
 
-    auto* prev = &m_road[(start - 1) % m_road.getSegmentCount()];
+    const auto prevIndex = (start - 1) % m_road.getSegmentCount();
+    auto* prev = &m_road[prevIndex];
     
+    if (!prev->sprites.empty() || !prev->cars.empty())
+    {
+        spriteSegments.push_back(prevIndex);
+    }
+
     if (start - 1 >= m_road.getSegmentCount())
     {
         m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));
@@ -945,7 +1042,7 @@ void EndlessDrivingState::updateRoad(float dt)
         //stash the sprites - these might poke out from
         //behind a hill so we'll draw them anyway regardless
         //of segment culling
-        if (!curr.sprites.empty())
+        if (!curr.sprites.empty() || !curr.cars.empty())
         {
             spriteSegments.push_back(currIndex);
         }
@@ -1012,6 +1109,11 @@ void EndlessDrivingState::updateRoad(float dt)
         {
             addRoadSprite(sprite, seg, verts);
         }
+
+        for (auto e : seg.cars)
+        {
+            addRoadSprite(e.getComponent<Car>().sprite, seg, verts);
+        }
     }
     m_trackSpriteEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
 
@@ -1021,6 +1123,11 @@ void EndlessDrivingState::updateRoad(float dt)
         for (auto& spr : m_road[spriteSegments.back()].sprites)
         {
             spr.collisionActive = true;
+        }
+
+        for (auto e : m_road[spriteSegments.back()].cars)
+        {
+            e.getComponent<Car>().sprite.collisionActive = true;
         }
     }
 

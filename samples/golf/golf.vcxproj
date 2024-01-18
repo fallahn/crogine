@@ -705,6 +705,7 @@
     <ClCompile Include="src\GolfGame.cpp" />
     <ClCompile Include="src\rss\Newsfeed.cpp" />
     <ClCompile Include="src\rss\pugixml.cpp" />
+    <ClCompile Include="src\runner\CarSystem.cpp" />
     <ClCompile Include="src\runner\EndlessAttractState.cpp" />
     <ClCompile Include="src\runner\EndlessDrivingState.cpp" />
     <ClCompile Include="src\runner\EndlessPauseState.cpp" />
@@ -848,6 +849,7 @@
     <ClInclude Include="src\rss\Newsfeed.hpp" />
     <ClInclude Include="src\rss\pugiconfig.hpp" />
     <ClInclude Include="src\rss\pugixml.hpp" />
+    <ClInclude Include="src\runner\CarSystem.hpp" />
     <ClInclude Include="src\runner\EndlessAttractState.hpp" />
     <ClInclude Include="src\runner\EndlessConsts.hpp" />
     <ClInclude Include="src\runner\EndlessDrivingState.hpp" />

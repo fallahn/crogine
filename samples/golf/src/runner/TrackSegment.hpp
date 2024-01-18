@@ -34,14 +34,17 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 
 #include "TrackSprite.hpp"
 
+#include <crogine/ecs/Entity.hpp>
+
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <vector>
 
+//conceptually 2D - at least 2 segments are required to draw a quad
 struct TrackSegment final
 {
-    glm::vec3 position = glm::vec3(0.f);
+    glm::vec3 position = glm::vec3(0.f); //x is always 0, y is height and z is distance from start
     float length = 200.f;
     float width = 2000.f;
     float curve = 0.f;
@@ -52,17 +55,19 @@ struct TrackSegment final
     bool roadMarking = false;
     float fogAmount = 0.f;
 
+    std::vector<cro::Entity> cars; //updated by a system - Car component contains TrackSprite for rendering
     std::vector<TrackSprite> sprites;
     float clipHeight = 0.f;
 
     //contains the last known screen projection
     struct Projection final
     {
-        glm::vec2 position = glm::vec2(0.f);
-        float width = 0.f;
+        glm::vec2 position = glm::vec2(0.f); //rel to centre of the screen on x
+        float width = 0.f; //+/- the position
         float scale = 1.f;
     }projection;
 
+    //for applying ground texture
     glm::vec2 uv = glm::vec2(0.f);
 
     TrackSegment() = default;

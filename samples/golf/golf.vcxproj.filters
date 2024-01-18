@@ -432,6 +432,9 @@
     <ClCompile Include="src\runner\EndlessPauseState.cpp">
       <Filter>Source Files\endless</Filter>
     </ClCompile>
+    <ClCompile Include="src\runner\CarSystem.cpp">
+      <Filter>Source Files\endless</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -876,6 +879,9 @@
       <Filter>Header Files\endless</Filter>
     </ClInclude>
     <ClInclude Include="src\runner\EndlessConsts.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\CarSystem.hpp">
       <Filter>Header Files\endless</Filter>
     </ClInclude>
   </ItemGroup>

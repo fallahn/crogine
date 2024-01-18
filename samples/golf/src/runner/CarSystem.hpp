@@ -29,37 +29,23 @@ source distribution.
 
 #pragma once
 
-#include "../StateIDs.hpp"
+#include "TrackSprite.hpp"
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/ecs/System.hpp>
 
-struct SharedStateData;
-class EndlessPauseState final : public cro::State
+struct Car final
+{
+    TrackSprite sprite;
+};
+
+class Track;
+class CarSystem final : public cro::System
 {
 public:
-    EndlessPauseState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    CarSystem(cro::MessageBus&, Track&);
 
-    cro::StateID getStateID() const override { return StateID::EndlessPause; }
-
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+    void process(float) override;
 
 private:
-    SharedStateData& m_sharedData;
-
-    cro::Scene m_uiScene;
-    cro::ResourceCollection m_resources;
-
-    cro::Entity m_rootNode;
-    cro::Entity m_textPrompt;
-    cro::Entity m_pausedText;
-
-    void addSystems();
-    void loadAssets();
-    void createUI();
-
+    Track& m_track;
 };
