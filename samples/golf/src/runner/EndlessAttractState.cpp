@@ -264,7 +264,7 @@ void EndlessAttractState::createUI()
         const float scale = getViewScale(size.y);
         m_rootNode.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 
-        size *= scale;
+        size /= scale;
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::UIElement;

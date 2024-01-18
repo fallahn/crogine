@@ -212,6 +212,7 @@ void EndlessPauseState::createUI()
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().absolutePosition = { 0.f, 40.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_pausedText = entity;
 
     //text prompt
@@ -255,7 +256,7 @@ void EndlessPauseState::createUI()
         const float scale = getViewScale(size.y);
         m_rootNode.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 
-        size *= scale;
+        size /= scale;
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::UIElement;

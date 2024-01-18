@@ -212,6 +212,15 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+    const auto pauseGame = 
+        [&]()
+        {
+            if (getStateCount() == 1)
+            {
+                requestStackPush(StateID::EndlessPause);
+            }
+        };
+
     if (evt.type == SDL_KEYDOWN)
     {
         cro::App::getWindow().setMouseCaptured(true);
@@ -221,7 +230,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
         case SDLK_p:
-            requestStackPush(StateID::EndlessPause);
+            pauseGame();
             break;
         }
 
@@ -279,7 +288,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case cro::GameController::ButtonStart:
-            requestStackPush(StateID::EndlessPause);
+            pauseGame();
             break;
         }
     }
@@ -300,6 +309,21 @@ void EndlessDrivingState::handleMessage(const cro::Message& msg)
     m_playerScene.forwardMessage(msg);
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
+
+    /*
+    SIGH the above may catch this event, but if the game is paused the
+    result isn't processed until the game is unpaused - unless we for
+    a single update here...
+    */
+
+    if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            m_uiScene.simulate(0.f);
+        }
+    }
 }
 
 bool EndlessDrivingState::simulate(float dt)
