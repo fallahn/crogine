@@ -33,11 +33,10 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
 struct SharedStateData;
-class EndlessAttractState final : public cro::State, public cro::GuiClient
+class EndlessAttractState final : public cro::State
 {
 public:
     EndlessAttractState(cro::StateStack&, cro::State::Context, SharedStateData&);

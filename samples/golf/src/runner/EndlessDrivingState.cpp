@@ -172,6 +172,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
+        case SDLK_p:
             requestStackPush(StateID::EndlessPause);
             break;
         }
@@ -221,6 +222,17 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         {
             m_inputFlags.flags &= ~InputFlags::Right;
             m_inputFlags.keyCount--;
+        }
+    }
+
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case cro::GameController::ButtonStart:
+            requestStackPush(StateID::EndlessPause);
+            break;
         }
     }
 

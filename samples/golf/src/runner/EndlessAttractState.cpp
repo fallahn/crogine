@@ -33,8 +33,6 @@ source distribution.
 #include "EndlessAttractState.hpp"
 #include "EndlessConsts.hpp"
 
-#include <crogine/gui/Gui.hpp>
-
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>

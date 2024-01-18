@@ -33,11 +33,10 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
-#include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
 struct SharedStateData;
-class EndlessPauseState final : public cro::State, public cro::GuiClient
+class EndlessPauseState final : public cro::State
 {
 public:
     EndlessPauseState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -52,13 +51,14 @@ public:
 private:
     SharedStateData& m_sharedData;
 
-    cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
+    cro::Entity m_rootNode;
+    cro::Entity m_textPrompt;
+
     void addSystems();
     void loadAssets();
-    void createScene();
     void createUI();
 
 };
