@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -25,47 +25,47 @@ and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any
 source distribution.
 
+Based on articles: http://www.extentofthejam.com/pseudo/
+                   https://codeincomplete.com/articles/javascript-racer/
+
 -----------------------------------------------------------------------*/
 
 #pragma once
 
-struct StateID final
-{
-    enum
-    {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards,
-        Trophy,
-        News,
-        Bush,
-        Playlist,
-        MessageOverlay,
-        Credits,
-        EventOverlay, //consumes events if the overlay is open
-        Unlock,
-        Profile, 
-        Leaderboard,
-        Stats,
-        MapOverview,
-        GC,
-        League,
-        PlayerManagement,
-        EndlessAttract,
-        EndlessRunner,
-        EndlessPause,
+#include "TrackSprite.hpp"
 
-        SQLite, //used for testing SQLite features
-        Workshop = 1100
-    };
+#include <crogine/graphics/Colour.hpp>
+#include <crogine/detail/glm/vec3.hpp>
+
+#include <vector>
+
+struct TrackSegment final
+{
+    glm::vec3 position = glm::vec3(0.f);
+    float length = 200.f;
+    float width = 2000.f;
+    float curve = 0.f;
+
+    cro::Colour roadColour;
+    cro::Colour rumbleColour;
+    cro::Colour grassColour;
+    bool roadMarking = false;
+    float fogAmount = 0.f;
+
+    std::vector<TrackSprite> sprites;
+    float clipHeight = 0.f;
+
+    //contains the last known screen projection
+    struct Projection final
+    {
+        glm::vec2 position = glm::vec2(0.f);
+        float width = 0.f;
+        float scale = 1.f;
+    }projection;
+
+    glm::vec2 uv = glm::vec2(0.f);
+
+    TrackSegment() = default;
+    TrackSegment(glm::vec3 p, float l, float w, float c)
+        : position(p), length(l), width(w), curve(c) {}
 };

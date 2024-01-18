@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,43 +29,36 @@ source distribution.
 
 #pragma once
 
-struct StateID final
-{
-    enum
-    {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards,
-        Trophy,
-        News,
-        Bush,
-        Playlist,
-        MessageOverlay,
-        Credits,
-        EventOverlay, //consumes events if the overlay is open
-        Unlock,
-        Profile, 
-        Leaderboard,
-        Stats,
-        MapOverview,
-        GC,
-        League,
-        PlayerManagement,
-        EndlessAttract,
-        EndlessRunner,
-        EndlessPause,
+#include "../StateIDs.hpp"
 
-        SQLite, //used for testing SQLite features
-        Workshop = 1100
-    };
+#include <crogine/core/State.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/gui/GuiClient.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+
+struct SharedStateData;
+class EndlessPauseState final : public cro::State, public cro::GuiClient
+{
+public:
+    EndlessPauseState(cro::StateStack&, cro::State::Context, SharedStateData&);
+
+    cro::StateID getStateID() const override { return StateID::EndlessPause; }
+
+    bool handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    bool simulate(float) override;
+    void render() override;
+
+private:
+    SharedStateData& m_sharedData;
+
+    cro::Scene m_gameScene;
+    cro::Scene m_uiScene;
+    cro::ResourceCollection m_resources;
+
+    void addSystems();
+    void loadAssets();
+    void createScene();
+    void createUI();
+
 };

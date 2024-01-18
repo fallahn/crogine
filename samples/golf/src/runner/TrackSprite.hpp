@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -25,47 +25,46 @@ and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any
 source distribution.
 
+Based on articles: http://www.extentofthejam.com/pseudo/
+                   https://codeincomplete.com/articles/javascript-racer/
+
 -----------------------------------------------------------------------*/
 
 #pragma once
 
-struct StateID final
+#include <crogine/graphics/Rectangle.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+
+struct TrackSprite final
 {
+    float scale = 1.f;
+    float position = 0.f; //0 center +/- 1 road >1 <-1 off road
+    glm::vec2 size = glm::vec2(0.f);
+    cro::FloatRect uv;
+
     enum
     {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards,
-        Trophy,
-        News,
-        Bush,
-        Playlist,
-        MessageOverlay,
-        Credits,
-        EventOverlay, //consumes events if the overlay is open
-        Unlock,
-        Profile, 
-        Leaderboard,
-        Stats,
-        MapOverview,
-        GC,
-        League,
-        PlayerManagement,
-        EndlessAttract,
-        EndlessRunner,
-        EndlessPause,
+        Tree01,
+        Bush01,
+        Ball,
+        Flag,
 
-        SQLite, //used for testing SQLite features
-        Workshop = 1100
+
+        Count
     };
+    std::int32_t id = 0;
+    std::size_t frameIndex = 0;
+    
+    struct Animation final
+    {
+        enum
+        {
+            None, Rotate, Float,
+
+            Count
+        };
+    };
+    std::int32_t animation = 0;
+
+    bool collisionActive = true;
 };
