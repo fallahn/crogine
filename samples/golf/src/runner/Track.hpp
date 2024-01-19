@@ -40,6 +40,7 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <vector>
+#include <mutex>
 
 static inline constexpr float SegmentLength = 0.25f;
 static inline constexpr float RoadWidth = 2.5f;
@@ -65,8 +66,10 @@ public:
 
     void addSegment(std::size_t enter, std::size_t hold, std::size_t exit, float curve, float hill)
     {
-        const float z = m_segments.size() * SegmentLength;
-        const std::size_t start = m_segments.size();
+        std::scoped_lock lock(m_mutex);
+
+        const float z = m_pendingSegments.size() * SegmentLength;
+        const std::size_t start = m_pendingSegments.size();
 
         std::size_t i = 0;
         std::size_t end = enter;
@@ -83,21 +86,21 @@ public:
                 seg.uv.x = 0.f;
                 seg.uv.y = seg.position.z / (1.f / SegmentLength);
 
-                seg.index = m_segments.size() - 1;
+                seg.index = m_pendingSegments.size() - 1;
             };
 
         for (; i < end; ++i)
         {
             const float progress = static_cast<float>(i) / enter;
             glm::vec3 pos(0.f, hill * cro::Util::Easing::easeOutSine(progress), z + (i * SegmentLength));
-            setColour(m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve * cro::Util::Easing::easeInSine(progress)));
+            setColour(m_pendingSegments.emplace_back(pos, SegmentLength, RoadWidth, curve * cro::Util::Easing::easeInSine(progress)));
         }
 
         end += hold;
         for (; i < end; ++i)
         {
             glm::vec3 pos(0.f, hill, z + (i * SegmentLength));
-            setColour(m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve));
+            setColour(m_pendingSegments.emplace_back(pos, SegmentLength, RoadWidth, curve));
         }
 
         end += exit;
@@ -105,13 +108,25 @@ public:
         {
             const float progress = static_cast<float>(i - enter - hold) / exit;
             glm::vec3 pos(0.f, hill * (cro::Util::Easing::easeOutSine(1.f - progress)), z + (i * SegmentLength));
-            setColour(m_segments.emplace_back(pos, SegmentLength, RoadWidth, curve * (cro::Util::Easing::easeOutSine(1.f - progress))));
+            setColour(m_pendingSegments.emplace_back(pos, SegmentLength, RoadWidth, curve * (cro::Util::Easing::easeOutSine(1.f - progress))));
         }
     }
+
+    //swaps in pending buffer of road segments
+    void swap()
+    {
+        std::scoped_lock lock(m_mutex);
+        m_segments.swap(m_pendingSegments);
+    }
+
+    std::vector<TrackSegment>& getPendingSegments() { return m_pendingSegments; }
 
     const TrackSegment& operator[](std::size_t i)const { return m_segments[i]; }
     TrackSegment& operator[](std::size_t i) { return m_segments[i]; }
 
 private:
+    std::vector<TrackSegment> m_pendingSegments;
     std::vector<TrackSegment> m_segments;
+
+    std::mutex m_mutex;
 };

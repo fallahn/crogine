@@ -167,6 +167,22 @@ private:
         float remainingTime = 30.f;
         float totalTime = 0.f;
 
+        //awarded on lap line, reduced by 10
+        //until < 10 in which case *= 0.5
+        float lapAward = 30.f;
+        void awardLapTime()
+        {
+            remainingTime += lapAward;
+            if (lapAward > 10.f)
+            {
+                lapAward -= 10.f;
+            }
+            else
+            {
+                lapAward *= 0.5f;
+            }
+        }
+
         struct State final
         {
             enum

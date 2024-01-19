@@ -552,7 +552,7 @@ void EndlessDrivingState::createScene()
     m_roadEntity = entity;
 
     createRoad();    
-
+    m_road.swap();
 
     auto resize = [](cro::Camera& cam)
     {
@@ -567,9 +567,11 @@ void EndlessDrivingState::createScene()
 
 void EndlessDrivingState::createRoad()
 {
-    //TODO create a constant start/end segment DrawDistance in size
-    //TODO add UV coords for ground texture
+    //create a constant start/end segment DrawDistance in size
+    //TODO decorate with clubhouse
+    m_road.addSegment(1, DrawDistance, 1, 0.f, 0.f);
 
+    
     const std::vector<std::int32_t> SwapPattern =
     {
         cro::Util::Random::value(10, 16),
@@ -585,10 +587,10 @@ void EndlessDrivingState::createRoad()
     //offset the start frame of anumations so not all in sync (looks weird)
     std::array<std::size_t, TrackSprite::Animation::Count> animationFrameOffsets = {};
 
-    auto segmentCount = cro::Util::Random::value(5, 20);
+    auto segmentCount = cro::Util::Random::value(8, 10);
     for (auto i = 0; i < segmentCount; ++i)
     {
-        const std::size_t first = m_road.getSegmentCount();
+        const std::size_t first = m_road.getPendingSegments().size();
 
         const auto enter = cro::Util::Random::value(EnterMin, EnterMax);
         const auto hold = cro::Util::Random::value(HoldMin, HoldMax);
@@ -605,7 +607,7 @@ void EndlessDrivingState::createRoad()
         //add sprites to the new segment
         for (auto j = first; j < last; ++j)
         {
-            auto& seg = m_road[j];
+            auto& seg = m_road.getPendingSegments()[j];
 
             //road side foliage
             auto count = cro::Util::Random::value(0, 2) == 0 ? 1 : 0;
@@ -679,10 +681,13 @@ void EndlessDrivingState::createRoad()
             }
         }
     }
-    m_road[m_road.getSegmentCount() - 1].roadColour = cro::Colour::White;
-    m_road[m_road.getSegmentCount() - 1].rumbleColour = cro::Colour::Blue;
-    m_road[m_road.getSegmentCount() - 2].roadColour = cro::Colour::White;
-    m_road[m_road.getSegmentCount() - 2].rumbleColour = cro::Colour::Blue;
+    //tail
+    m_road.addSegment(10, 50, 10, 0.f, 0.f);
+
+    m_road.getPendingSegments().back().roadColour = cro::Colour::White;
+    m_road.getPendingSegments().back().rumbleColour = cro::Colour::Blue;
+    //m_road[m_road.getSegmentCount() - 2].roadColour = cro::Colour::White;
+    //m_road[m_road.getSegmentCount() - 2].rumbleColour = cro::Colour::Blue;
 }
 
 void EndlessDrivingState::createUI()
