@@ -709,6 +709,7 @@
     <ClCompile Include="src\runner\EndlessAttractState.cpp" />
     <ClCompile Include="src\runner\EndlessDrivingState.cpp" />
     <ClCompile Include="src\runner\EndlessPauseState.cpp" />
+    <ClCompile Include="src\runner\Track.cpp" />
     <ClCompile Include="src\SplashScreenState.cpp" />
     <ClCompile Include="src\sqlite\ProfileDB.cpp" />
     <ClCompile Include="src\sqlite\SqliteState.cpp" />

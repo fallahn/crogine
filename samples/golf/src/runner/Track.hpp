@@ -36,6 +36,7 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 #include "../Colordome-32.hpp"
 
 #include <crogine/core/Log.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
@@ -113,11 +114,7 @@ public:
     }
 
     //swaps in pending buffer of road segments
-    void swap()
-    {
-        std::scoped_lock lock(m_mutex);
-        m_segments.swap(m_pendingSegments);
-    }
+    void swap(cro::Scene& scene);
 
     std::vector<TrackSegment>& getPendingSegments() { return m_pendingSegments; }
 

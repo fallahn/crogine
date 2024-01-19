@@ -63,6 +63,7 @@ source distribution.
 
 #include <sstream>
 #include <iomanip>
+#include <future>
 
 namespace
 {
@@ -552,7 +553,12 @@ void EndlessDrivingState::createScene()
     m_roadEntity = entity;
 
     createRoad();    
-    m_road.swap();
+    m_road.swap(m_gameScene);
+
+    //pre-emptively creates next road section
+    //for when player hits lap line
+    createRoad(); //swap is called on lap line
+
 
     auto resize = [](cro::Camera& cam)
     {
@@ -567,9 +573,11 @@ void EndlessDrivingState::createScene()
 
 void EndlessDrivingState::createRoad()
 {
+    m_road.getPendingSegments().clear(); //this is sooooo poorly guarded for MT....
+
     //create a constant start/end segment DrawDistance in size
     //TODO decorate with clubhouse
-    m_road.addSegment(1, DrawDistance, 1, 0.f, 0.f);
+    m_road.addSegment(10, DrawDistance + 250, 10, 0.f, 0.f);
 
     
     const std::vector<std::int32_t> SwapPattern =
@@ -963,11 +971,6 @@ void EndlessDrivingState::updatePlayer(float dt)
     m_playerEntity.getComponent<cro::Transform>().setRotation(s * r);
 
 
-    //TODO check if player moved from one seg to another in the move above
-    //and if the previous seg was the lap line.
-    //TODO when crossing the lap line swap in the new road and award some bonus time
-
-
     //collect the IDs of the next 3 segs to test collision on 
     //(just one seg can miss collisions because of tunnelling)
     std::vector<std::size_t> collisionSegs;
@@ -978,7 +981,7 @@ void EndlessDrivingState::updatePlayer(float dt)
         collisionID = (collisionID + 1) % m_road.getSegmentCount();
     }
 
-    std::vector<cro::Vertex2D> debugVerts;
+    //std::vector<cro::Vertex2D> debugVerts;
     auto playerBounds = m_playerSprite.getComponent<cro::Transform>().getWorldTransform() * m_playerSprite.getComponent<cro::Drawable2D>().getLocalBounds();
     auto p = glm::vec2(playerBounds.left, playerBounds.bottom);
     auto w = glm::vec2(playerBounds.width, playerBounds.height) * 0.65f; //better fit sprite bounds for collision
@@ -1060,7 +1063,7 @@ void EndlessDrivingState::updatePlayer(float dt)
             testCollision(spr, m_road[i]);
         }
     }
-    m_debugEntity.getComponent<cro::Drawable2D>().getVertexData().swap(debugVerts);
+    //m_debugEntity.getComponent<cro::Drawable2D>().getVertexData().swap(debugVerts);
 }
 
 void EndlessDrivingState::updateRoad(float dt)
@@ -1073,6 +1076,12 @@ void EndlessDrivingState::updateRoad(float dt)
     if (m_trackCamera.getPosition().z > maxLen)
     {
         m_trackCamera.move(glm::vec3(0.f, 0.f, - maxLen));
+
+        //we did a lap so update the track
+        m_gameRules.awardLapTime();
+        m_road.swap(m_gameScene);
+
+        auto result = std::async(std::launch::async, &EndlessDrivingState::createRoad, this);
     }
 
     const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) - 1;

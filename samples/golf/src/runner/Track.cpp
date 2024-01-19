@@ -25,47 +25,33 @@ and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any
 source distribution.
 
+Based on articles: http://www.extentofthejam.com/pseudo/
+                   https://codeincomplete.com/articles/javascript-racer/
+
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "Track.hpp"
+#include "CarSystem.hpp"
 
-#include "TrackSprite.hpp"
-
-#include <crogine/ecs/System.hpp>
-
-struct Car final
+void Track::swap(cro::Scene& scene)
 {
-    TrackSprite sprite;
-    float speed = 10.f;
-    float z = 0.f;
-
-    //don't update vehicles in a pending piece of track
-    bool active = false;
-
-    struct Frame final
+    for (auto& seg : m_segments)
     {
-        enum
+        for (auto e : seg.cars)
         {
-            HardLeft, Left,
-            Straight,
-            Right, HardRight,
-
-            Count
-        };
-    };
-    std::array<cro::FloatRect, Frame::Count> frames = {};
-};
-
-class Track;
-class CarSystem final : public cro::System
-{
-public:
-    CarSystem(cro::MessageBus&, Track&);
-
-    void process(float) override;
-
-private:
-    Track& m_track;
-
-    void onEntityAdded(cro::Entity) override;
-};
+            e.getComponent<Car>().active = false;
+            scene.destroyEntity(e);
+        }
+    }
+    {
+        std::scoped_lock lock(m_mutex);
+        m_segments.swap(m_pendingSegments);
+    }
+    for (auto& seg : m_segments)
+    {
+        for (auto e : seg.cars)
+        {
+            e.getComponent<Car>().active = true;
+        }
+    }
+}

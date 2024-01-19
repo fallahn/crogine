@@ -47,6 +47,10 @@ void CarSystem::process(float dt)
     for (auto e : entities)
     {
         auto& car = e.getComponent<Car>();
+        if (!car.active)
+        {
+            continue;
+        }
         
         std::size_t oldSeg = static_cast<std::size_t>(std::floor(car.z / SegmentLength));
 
