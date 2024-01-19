@@ -853,6 +853,7 @@
     <ClInclude Include="src\runner\EndlessAttractState.hpp" />
     <ClInclude Include="src\runner\EndlessConsts.hpp" />
     <ClInclude Include="src\runner\EndlessDrivingState.hpp" />
+    <ClInclude Include="src\runner\EndlessMessages.hpp" />
     <ClInclude Include="src\runner\EndlessPauseState.hpp" />
     <ClInclude Include="src\runner\Track.hpp" />
     <ClInclude Include="src\runner\TrackCamera.hpp" />

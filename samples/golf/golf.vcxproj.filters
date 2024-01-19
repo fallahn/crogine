@@ -884,6 +884,9 @@
     <ClInclude Include="src\runner\CarSystem.hpp">
       <Filter>Header Files\endless</Filter>
     </ClInclude>
+    <ClInclude Include="src\runner\EndlessMessages.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

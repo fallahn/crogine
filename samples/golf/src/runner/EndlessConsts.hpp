@@ -36,6 +36,9 @@ source distribution.
 
 #include <cstdint>
 
+static inline constexpr float BeefStickTime = 5.f;
+static inline constexpr float BallTime = 0.25f;
+
 static inline constexpr std::uint32_t RenderScale = 2;
 //static inline constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224) * RenderScale;
 static inline constexpr glm::uvec2 RenderSize = glm::uvec2(320, 180) * RenderScale;

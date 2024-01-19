@@ -33,6 +33,7 @@ source distribution.
 #include "CarSystem.hpp"
 #include "EndlessDrivingState.hpp"
 #include "EndlessConsts.hpp"
+#include "EndlessMessages.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -435,6 +436,9 @@ void EndlessDrivingState::loadAssets()
     parseSprite(spriteSheet.getSprite("cart_away"), TrackSprite::CartAway, 0);
     parseSprite(spriteSheet.getSprite("ball"), TrackSprite::Ball, TrackSprite::Animation::Rotate);
     parseSprite(spriteSheet.getSprite("flag"), TrackSprite::Flag, TrackSprite::Animation::Float);
+
+    m_trackSprites[TrackSprite::Tree01].hitboxMultiplier = 0.2f;
+    m_trackSprites[TrackSprite::CartAway].hitboxMultiplier = 0.65f;
 
     //vertex array contains all visible sprites
     auto entity = m_gameScene.createEntity();
@@ -855,6 +859,26 @@ void EndlessDrivingState::updateControllerInput()
 
 void EndlessDrivingState::updatePlayer(float dt)
 {
+    if (m_player.state == Player::State::Reset)
+    {
+        //play reset animation
+        glm::quat r = glm::toQuat(glm::orientate3(glm::vec3(0.f, 0.f, m_player.model.rotationY)));
+        //glm::quat s = glm::toQuat(glm::orientate3(glm::vec3(m_player.model.rotationX, 0.f, 0.f)));
+        m_playerEntity.getComponent<cro::Transform>().setRotation(r);
+
+        if (m_player.position.x < -1.f)
+        {
+            m_player.position.x += dt;
+        }
+        else if (m_player.position.x > 1.f)
+        {
+            m_player.position.x -= dt;
+        }
+
+        return;
+    }
+
+    //else normal input
     const float speedRatio = (m_player.speed / Player::MaxSpeed);
     const float dx = dt * 2.f * speedRatio;
     const float dxSteer = dt * 2.f * cro::Util::Easing::easeOutQuad(speedRatio);
@@ -934,6 +958,9 @@ void EndlessDrivingState::updatePlayer(float dt)
     m_playerEntity.getComponent<cro::Transform>().setRotation(s * r);
 
 
+    //TODO check if player moved from one seg to another in the move above
+    //and if the previous seg was the lap line.
+    //TODO when crossing the lap line swap in the new road and award some bonus time
 
 
     //collect the IDs of the next 3 segs to test collision on 
@@ -960,36 +987,53 @@ void EndlessDrivingState::updatePlayer(float dt)
                 auto [pos, size] = getScreenCoords(spr, seg, false);
 
                 //hmmmm would be prefereable to not have to do this
-                if (spr.id == TrackSprite::CartAway)
-                {
-                    float oldW = size.x;
-                    size *= 0.65f;
-                    pos.x += (oldW - size.x) / 2.f;
-                }
+                //we should really only need to calc the hitbox once
+                float oldW = size.x;
+                size *= spr.hitboxMultiplier;
+                pos.x += (oldW - size.x) / 2.f;
 
                 if (PlayerCollision.intersects({pos, size}))
                 {
+                    auto* msg = cro::App::postMessage<els::CollisionEvent>(els::MessageID::CollisionMessage);
+                    msg->id = spr.id;
+
                     switch (spr.id)
                     {
                     default:break;
                     case TrackSprite::Flag:
-                        //BEEF STICK
-                        LogI << "Beef Stick!" << std::endl;
+                        m_gameRules.remainingTime += BeefStickTime;
                         break;
                     case TrackSprite::Ball:
-                        //seconds
-                        LogI << "Kerching" << std::endl;
+                        m_gameRules.remainingTime += BallTime;
                         break;
                     case TrackSprite::Bush01:
-                        //slow down
-                        LogI << "Hit Bush" << std::endl;
+                        m_player.speed *= 0.5f;
                         break;
                     case TrackSprite::Tree01:
-                        //crash
-                        LogI << "Hit Tree" << std::endl;
+
+                        m_player.speed = 0.f;
+                        {
+                            m_player.state = Player::State::Reset;
+
+                            auto ent = m_gameScene.createEntity();
+                            ent.addComponent<cro::Callback>().active = true;
+                            ent.getComponent<cro::Callback>().function =
+                                [&](cro::Entity e, float dt)
+                                {
+                                    m_player.model.rotationY += dt * 10.f;
+                                    if (m_player.model.rotationY > cro::Util::Const::TAU)
+                                    {
+                                        m_player.model.rotationY = 0.f;
+                                        m_player.state = Player::State::Normal;
+
+                                        e.getComponent<cro::Callback>().active = false;
+                                        m_gameScene.destroyEntity(e);
+                                    }
+                                };
+                        }
                         break;
                     case TrackSprite::CartAway:
-                        LogI << "Hit Cart" << std::endl;
+                        m_player.speed *= 0.1f;
                         break;
                     }
                     spr.collisionActive = false; //prevent multiple collisions

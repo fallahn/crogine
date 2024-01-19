@@ -62,7 +62,8 @@ void CarSystem::process(float dt)
         }
 
         //TODO avoid other cars
-
+        //eg if there's a car in front and car is slower, move towards centre of road
+        //else move back to edge
 
         //if we switched segs, remove from old and add to new
         std::size_t newSeg = static_cast<std::size_t>(std::floor(car.z / SegmentLength));

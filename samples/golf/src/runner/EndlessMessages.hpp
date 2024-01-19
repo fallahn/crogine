@@ -25,48 +25,25 @@ and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any
 source distribution.
 
-Based on articles: http://www.extentofthejam.com/pseudo/
-                   https://codeincomplete.com/articles/javascript-racer/
-
 -----------------------------------------------------------------------*/
 
 #pragma once
 
-#include <crogine/graphics/Rectangle.hpp>
-#include <crogine/detail/glm/vec2.hpp>
+//remember this is app-wide so we need to start at existing message size
+#include "../golf/MessageIDs.hpp"
 
-struct TrackSprite final
+namespace els
 {
-    float segmentInterp = 0.f; //used when interpolating position between two segments
-    float scale = 1.f;
-    float position = 0.f; //0 center +/- 1 road >1 <-1 off road
-    glm::vec2 size = glm::vec2(0.f);
-    cro::FloatRect uv;
-
-    enum
-    {
-        Tree01,
-        Bush01,
-        Ball,
-        Flag,
-        CartAway,
-
-        Count
-    };
-    std::int32_t id = 0;
-    std::size_t frameIndex = 0;
-    float hitboxMultiplier = 1.f; //things like trees and vehicles have a smaller hitbox
-    
-    struct Animation final
+    struct MessageID final
     {
         enum
         {
-            None, Rotate, Float,
-
-            Count
+            CollisionMessage = cl::MessageID::Count
         };
     };
-    std::int32_t animation = 0;
 
-    bool collisionActive = true;
-};
+    struct CollisionEvent final
+    {
+        std::int32_t id = 0;
+    };
+}

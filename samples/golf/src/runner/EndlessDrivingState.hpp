@@ -131,6 +131,15 @@ private:
             static constexpr float MaxX = 0.1f;
             static constexpr float MaxY = 0.2f;
         }model;
+
+        struct State final
+        {
+            enum
+            {
+                Normal, Reset
+            };
+        };
+        std::int32_t state = 0;
     }m_player;
 
     struct InputFlags final
