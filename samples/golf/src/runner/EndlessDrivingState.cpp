@@ -782,7 +782,7 @@ void EndlessDrivingState::createUI()
         cam.viewport = {0.f, 0.f, 1.f, 1.f};
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -1.f, 10.f);
 
-        const float scale = getViewScale(size.y);
+        const float scale = getViewScale(size);
         m_gameEntity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         m_gameEntity.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
     };
@@ -947,13 +947,21 @@ void EndlessDrivingState::updatePlayer(float dt)
     p.x += (playerBounds.width - w.x) / 2.f;
     
     const cro::FloatRect PlayerCollision(p, w);
-    const auto testCollision = [&](TrackSprite& spr)
+    const auto testCollision = [&](TrackSprite& spr, const TrackSegment& seg)
         {
             if (spr.collisionActive)
             {
-                auto [pos, size] = getScreenCoords(spr, m_road[segID], false);
+                auto [pos, size] = getScreenCoords(spr, seg, false);
 
-                if (PlayerCollision.intersects({ pos, size }))
+                //hmmmm would be prefereable to not have to do this
+                if (spr.id == TrackSprite::CartAway)
+                {
+                    float oldW = size.x;
+                    size *= 0.65f;
+                    pos.x += (oldW - size.x) / 2.f;
+                }
+
+                if (PlayerCollision.intersects({pos, size}))
                 {
                     switch (spr.id)
                     {
@@ -988,13 +996,13 @@ void EndlessDrivingState::updatePlayer(float dt)
     {
         for (auto& spr : m_road[i].sprites)
         {
-            testCollision(spr);
+            testCollision(spr, m_road[i]);
         }
 
         for (auto e : m_road[i].cars)
         {
             auto& spr = e.getComponent<Car>().sprite;
-            testCollision(spr);
+            testCollision(spr, m_road[i]);
         }
     }
     m_debugEntity.getComponent<cro::Drawable2D>().getVertexData().swap(debugVerts);

@@ -37,7 +37,8 @@ source distribution.
 #include <cstdint>
 
 static inline constexpr std::uint32_t RenderScale = 2;
-static inline constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224) * RenderScale;
+//static inline constexpr glm::uvec2 RenderSize = glm::uvec2(320, 224) * RenderScale;
+static inline constexpr glm::uvec2 RenderSize = glm::uvec2(320, 180) * RenderScale;
 static inline constexpr glm::vec2 RenderSizeFloat = glm::vec2(RenderSize);
 static inline constexpr float ScreenHalfWidth = RenderSizeFloat.x / 2.f;
 static inline constexpr float PlayerWidth = 74.f * RenderScale;
@@ -58,9 +59,19 @@ static inline float expFog(float distance, float density)
 static inline const cro::Colour GrassFogColour = CD32::Colours[CD32::GreenDark];
 static inline const cro::Colour RoadFogColour = CD32::Colours[CD32::BlueDark];
 
-static inline float getViewScale(float ySize)
+static inline float getViewScale(glm::vec2 windowSize)
 {
-    return std::max(1.f, std::floor(ySize / RenderSize.y));
+    //return std::max(1.f, std::floor(windowSize.y / RenderSize.y));
+
+    //float scale = std::floor(windowSize.x / RenderSize.x);
+    float scale = std::floor(windowSize.y / RenderSize.y);
+
+    //if we have a bigger ratio than 16:9 we're probably ultra-wide so zoom out
+    if ((windowSize.x / windowSize.y) > (16.f / 9.f))
+    {
+        scale = std::max(1.f, scale - 1.f);
+    }
+    return scale;
 }
 
 struct CommandID final

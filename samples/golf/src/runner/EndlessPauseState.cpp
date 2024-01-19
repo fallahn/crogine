@@ -253,7 +253,7 @@ void EndlessPauseState::createUI()
 
         bgEnt.getComponent<cro::Transform>().setScale(size);
 
-        const float scale = getViewScale(size.y);
+        const float scale = getViewScale(size);
         m_rootNode.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 
         size /= scale;
