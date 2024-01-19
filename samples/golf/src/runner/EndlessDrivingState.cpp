@@ -346,13 +346,16 @@ bool EndlessDrivingState::simulate(float dt)
             //TODO some sort of flashing warning if time is low
 
             m_gameRules.totalTime += dt;
+
+#ifndef CRO_DEBUG_
             if(m_gameRules.remainingTime == 0)
             {
                 //push game over state
                 requestStackPush(StateID::EndlessAttract);
 
                 //TODO update the leaderboard
-            }            
+            }
+#endif
         }
     }
     else
@@ -614,6 +617,7 @@ void EndlessDrivingState::createRoad()
                 seg.sprites.back().scale *= cro::Util::Random::value(0.9f, 1.8f) * RenderScale;
             }
 
+            //vehicles
             if (cro::Util::Random::value(0, 100) == 0)
             {
                 auto pos = -0.5f - cro::Util::Random::value(0.15f, 0.3f);
@@ -627,6 +631,8 @@ void EndlessDrivingState::createRoad()
                 car.sprite = m_trackSprites[TrackSprite::CartAway];
                 car.sprite.position = pos;
                 car.sprite.scale = 2.f;
+                car.z = seg.position.z;
+                car.speed += cro::Util::Random::value(-4.f, 4.f);
                 seg.cars.push_back(entity);
             }
 
@@ -1236,10 +1242,13 @@ void EndlessDrivingState::addRoadSprite(TrackSprite& sprite, const TrackSegment&
 
 std::pair<glm::vec2, glm::vec2> EndlessDrivingState::getScreenCoords(TrackSprite& sprite, const TrackSegment& seg, bool animate)
 {
-    glm::vec2 pos = seg.projection.position;
-    pos.x += seg.projection.scale * sprite.position * RoadWidth * ScreenHalfWidth;
+    const auto& nextSeg = m_road[(seg.index + 1) % m_road.getSegmentCount()];  
+    float segmentScale = glm::mix(seg.projection.scale, nextSeg.projection.scale, sprite.segmentInterp);
 
-    const float scale = seg.projection.scale * sprite.scale;
+    auto pos = glm::mix(seg.projection.position, nextSeg.projection.position, sprite.segmentInterp);
+    pos.x += segmentScale * sprite.position * RoadWidth * ScreenHalfWidth;
+
+    const float scale = segmentScale * sprite.scale;
 
     glm::vec2 size = sprite.size * scale;
 
@@ -1253,13 +1262,12 @@ std::pair<glm::vec2, glm::vec2> EndlessDrivingState::getScreenCoords(TrackSprite
     }
     pos.x -= (size.x / 2.f);
 
-    //we mightjust be querying the sprite screen size for collision
+    //we might just be querying the sprite screen size for collision
     //which won't want to update the animation
     if (animate)
     {
         sprite.frameIndex = (sprite.frameIndex + 1) % m_wavetables[sprite.animation].size();
     }
-
 
     return std::make_pair(pos, size);
 }

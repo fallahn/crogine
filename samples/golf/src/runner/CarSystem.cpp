@@ -41,15 +41,95 @@ CarSystem::CarSystem(cro::MessageBus& mb, Track& track)
 //public
 void CarSystem::process(float dt)
 {
+    const auto TrackLength = m_track.getSegmentCount() * SegmentLength;
+
     auto& entities = getEntities();
     for (auto e : entities)
     {
         auto& car = e.getComponent<Car>();
+        
+        std::size_t oldSeg = static_cast<std::size_t>(std::floor(car.z / SegmentLength));
 
-        //TODO update each cars Z position
+        //update each cars Z position
+        car.z += car.speed * dt;
+        if (car.z >= TrackLength)
+        {
+            car.z -= TrackLength;
+        }
+        else if (car.z < 0.f)
+        {
+            car.z += TrackLength;
+        }
+
         //TODO avoid other cars
-        //TODO animate based on current seg curve
 
-        //seg can be retrieved from car's current z pos
+
+        //if we switched segs, remove from old and add to new
+        std::size_t newSeg = static_cast<std::size_t>(std::floor(car.z / SegmentLength));
+        if (oldSeg != newSeg)
+        {
+            auto& cars = m_track[oldSeg].cars;
+            cars.erase(std::remove_if(cars.begin(), cars.end(), [e](const cro::Entity ent) {return ent == e; }), cars.end());
+
+            m_track[newSeg].cars.push_back(e);
+        }
+
+        car.sprite.segmentInterp = (car.z - m_track[newSeg].position.z) / SegmentLength;
+
+        //animate based on current seg curve
+        //and which side of the road they're currently on
+        //const auto curve = m_track[newSeg].curve;
+        //if (curve > 0)
+        //{
+        //    //hard right
+        //    car.sprite.uv = car.frames[Car::Frame::HardRight];
+        //}
+        //else if (curve < 0)
+        //{
+        //    //hard left
+        //    car.sprite.uv = car.frames[Car::Frame::HardLeft];
+        //}
+        //else
+        //{
+        //    //straight so which side of the road?
+        //    if (car.sprite.position < -0.5f)
+        //    {
+        //        //right
+        //        car.sprite.uv = car.frames[Car::Frame::Right];
+        //    }
+        //    else if (car.sprite.position > 0.5f)
+        //    {
+        //        //left
+        //        car.sprite.uv = car.frames[Car::Frame::Left];
+        //    }
+        //    else
+        //    {
+        //        //middle
+        //        car.sprite.uv = car.frames[Car::Frame::Straight];
+        //    }
+        //}
     }
+}
+
+//private
+void CarSystem::onEntityAdded(cro::Entity e)
+{
+    //calc the animation frames based on the
+    //assumption they move from left to right
+    auto& car = e.getComponent<Car>();
+    auto baseUV = car.sprite.uv;
+
+    car.frames[Car::Frame::HardLeft] = baseUV;
+    car.frames[Car::Frame::HardLeft].left -= baseUV.width * 2.f;
+
+    car.frames[Car::Frame::Left] = baseUV;
+    car.frames[Car::Frame::Left].left -= baseUV.width;
+
+    car.frames[Car::Frame::Straight] = baseUV;
+
+    car.frames[Car::Frame::Right] = baseUV;
+    car.frames[Car::Frame::Right].left += baseUV.width;
+
+    car.frames[Car::Frame::HardRight] = baseUV;
+    car.frames[Car::Frame::HardRight].left += baseUV.width * 2.f;
 }

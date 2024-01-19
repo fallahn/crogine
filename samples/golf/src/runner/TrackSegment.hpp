@@ -44,6 +44,8 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 //conceptually 2D - at least 2 segments are required to draw a quad
 struct TrackSegment final
 {
+    std::size_t index = 0; //where in the track array this seg is
+
     glm::vec3 position = glm::vec3(0.f); //x is always 0, y is height and z is distance from start
     float length = 200.f;
     float width = 2000.f;

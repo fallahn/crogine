@@ -82,6 +82,8 @@ public:
 
                 seg.uv.x = 0.f;
                 seg.uv.y = seg.position.z / (1.f / SegmentLength);
+
+                seg.index = m_segments.size() - 1;
             };
 
         for (; i < end; ++i)

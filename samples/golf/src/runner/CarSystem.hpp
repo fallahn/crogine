@@ -36,6 +36,21 @@ source distribution.
 struct Car final
 {
     TrackSprite sprite;
+    float speed = 10.f;
+    float z = 0.f;
+
+    struct Frame final
+    {
+        enum
+        {
+            HardLeft, Left,
+            Straight,
+            Right, HardRight,
+
+            Count
+        };
+    };
+    std::array<cro::FloatRect, Frame::Count> frames = {};
 };
 
 class Track;
@@ -48,4 +63,6 @@ public:
 
 private:
     Track& m_track;
+
+    void onEntityAdded(cro::Entity) override;
 };

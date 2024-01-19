@@ -37,6 +37,7 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 
 struct TrackSprite final
 {
+    float segmentInterp = 0.f; //used when interpolating position between two segments
     float scale = 1.f;
     float position = 0.f; //0 center +/- 1 road >1 <-1 off road
     glm::vec2 size = glm::vec2(0.f);
