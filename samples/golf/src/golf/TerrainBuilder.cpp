@@ -587,6 +587,23 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
     //resources.materials.get(materialID).enableDepthTest = false;
 
+    //auto vid = slopeShader.getUniformID("u_value");
+    //registerWindow([&,vid]()
+    //    {
+    //        if (ImGui::Begin("Grid"))
+    //        {
+    //            static float v = 1.f;
+    //            if (ImGui::SliderFloat("V", &v, 0.1f, 6.f))
+    //            {
+    //                glUseProgram(m_slopeProperties.shader);
+    //                glUniform1f(vid, v);
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
+
+
     entity = scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::SlopeIndicator;

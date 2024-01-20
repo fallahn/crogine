@@ -2276,6 +2276,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //prev/next grid transparency
     entity = createHighlight(glm::vec2(263.f, 41.f));
+    entity.setLabel("Sets the transparency of the grid on the green when putting.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVGridL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVGridR, AVTreeL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVVertSnap, AVUnits);
@@ -2291,6 +2292,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     entity = createHighlight(glm::vec2(378.f, 41.f));
+    entity.setLabel("Sets the transparency of the grid on the green when putting.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVGridR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVVertSnap, AVTreeR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVGridL, AVPostR);
