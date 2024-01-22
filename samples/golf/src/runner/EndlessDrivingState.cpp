@@ -34,6 +34,7 @@ source distribution.
 #include "EndlessDrivingState.hpp"
 #include "EndlessConsts.hpp"
 #include "EndlessMessages.hpp"
+#include "EndlessSoundDirector.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -43,6 +44,7 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -50,6 +52,7 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
@@ -345,7 +348,7 @@ bool EndlessDrivingState::simulate(float dt)
             
             m_gameRules.totalTime += dt;
 
-#ifndef CRO_DEBUG_
+//#ifndef CRO_DEBUG_
             if(m_gameRules.remainingTime == 0)
             {
                 //push game over state
@@ -353,7 +356,7 @@ bool EndlessDrivingState::simulate(float dt)
 
                 //TODO update the leaderboard
             }
-#endif
+//#endif
         }
     }
     else
@@ -401,6 +404,9 @@ void EndlessDrivingState::addSystems()
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
+
+    m_uiScene.addDirector<EndlessSoundDirector>(m_resources.audio);
 }
 
 void EndlessDrivingState::loadAssets()
@@ -883,7 +889,7 @@ void EndlessDrivingState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
-            std::int32_t mins = std::floor(m_gameRules.totalTime / 60.f);
+            std::int32_t mins = static_cast<std::int32_t>(std::floor(m_gameRules.totalTime / 60.f));
             auto sec = m_gameRules.totalTime - (mins * 60);
             
             std::stringstream stream;

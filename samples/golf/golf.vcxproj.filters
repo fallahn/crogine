@@ -438,6 +438,9 @@
     <ClCompile Include="src\runner\Track.cpp">
       <Filter>Source Files\endless</Filter>
     </ClCompile>
+    <ClCompile Include="src\runner\EndlessSoundDirector.cpp">
+      <Filter>Source Files\endless</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -888,6 +891,9 @@
       <Filter>Header Files\endless</Filter>
     </ClInclude>
     <ClInclude Include="src\runner\EndlessMessages.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\EndlessSoundDirector.hpp">
       <Filter>Header Files\endless</Filter>
     </ClInclude>
   </ItemGroup>
