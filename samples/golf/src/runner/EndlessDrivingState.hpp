@@ -106,6 +106,9 @@ private:
     TrackCamera m_trackCamera;
     Track m_road;
 
+    std::vector<Track::GenerationContext> m_trackContexts;
+    std::size_t m_contextIndex; //NOTE this is usually accessed from another thread BUT IS UNGUARDED as there should be no concurrent access
+
     struct Player final
     {
         //float x = 0.f; //+/- 1 from X centre
@@ -169,18 +172,11 @@ private:
 
         //awarded on lap line, reduced by 10
         //until < 10 in which case *= 0.5
-        float lapAward = 30.f;
+        float lapAward = 10.f;
         void awardLapTime()
         {
-            remainingTime += lapAward;
-            if (lapAward > 10.f)
-            {
-                lapAward -= 10.f;
-            }
-            else
-            {
-                lapAward *= 0.5f;
-            }
+            remainingTime = std::min(30.f, remainingTime + lapAward);
+            lapAward *= 0.9f;
         }
 
         struct State final

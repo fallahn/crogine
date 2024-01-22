@@ -63,6 +63,13 @@ static inline constexpr std::int32_t DrawDistance = 500; //number of segs
 class Track final
 {
 public:
+    struct GenerationContext final
+    {
+        float hill = 0.f;
+        float curve = 0.f;
+        std::int32_t traffic = 0;
+    };
+
     std::size_t getSegmentCount() const { return m_segments.size(); }
 
     void addSegment(std::size_t enter, std::size_t hold, std::size_t exit, float curve, float hill)

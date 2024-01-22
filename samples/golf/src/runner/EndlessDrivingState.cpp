@@ -81,7 +81,8 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
     m_sharedData    (sd),
     m_playerScene   (context.appInstance.getMessageBus()),
     m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus())
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_contextIndex  (0)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -459,6 +460,17 @@ void EndlessDrivingState::loadAssets()
     entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() });
     m_debugEntity = entity;
 #endif
+
+    //contexts used to increase difficulty when generating the track
+    static constexpr std::int32_t ContextCount = 8;
+    for (auto i = 0; i < ContextCount; ++i)
+    {
+        auto& ctx = m_trackContexts.emplace_back();
+        const float progress = static_cast<float>(i) / ContextCount;
+        ctx.curve = (CurveMax * progress) + 0.00001f;
+        ctx.hill = (HillMax * progress) + 0.001f;
+        ctx.traffic = ((ContextCount / 2) - (i / 2)) * 100;
+    }
 }
 
 void EndlessDrivingState::createPlayer()
@@ -573,11 +585,41 @@ void EndlessDrivingState::createScene()
 
 void EndlessDrivingState::createRoad()
 {
-    m_road.getPendingSegments().clear(); //this is sooooo poorly guarded for MT....
+    auto& pendingSegs = m_road.getPendingSegments();
+    pendingSegs.clear(); //this is sooooo poorly guarded for MT....
 
     //create a constant start/end segment DrawDistance in size
     //TODO decorate with clubhouse
     m_road.addSegment(10, DrawDistance + 250, 10, 0.f, 0.f);
+
+    //lap line
+    for (auto i = 0u; i < 8u; ++i)
+    {
+        auto& seg = pendingSegs[i];
+        seg.roadColour = (i % 2) ? cro::Colour::LightGrey : cro::Colour::White;
+        seg.rumbleColour = (i % 2) ? cro::Colour::DarkGrey : cro::Colour::Blue;
+    }
+
+    //offset the start frame of animations so not all in sync (looks weird)
+    std::array<std::size_t, TrackSprite::Animation::Count> animationFrameOffsets = {};
+
+    //inital collectibles (more sparse than main track)
+    float offsetMultiplier = 1.f;
+    for (auto i = pendingSegs.size() / 3; i < pendingSegs.size(); ++i)
+    {
+        if (i % 16 == 0)
+        {
+            auto& seg = pendingSegs[i];
+            auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::Ball]);
+            spr.position = 0.5f * offsetMultiplier;
+            spr.scale = 1.5f;
+            spr.frameIndex = animationFrameOffsets[spr.animation];
+
+            animationFrameOffsets[spr.animation] = (animationFrameOffsets[spr.animation] + 5) % m_wavetables[spr.animation].size();
+
+            offsetMultiplier *= -1.f;
+        }
+    }
 
     
     const std::vector<std::int32_t> SwapPattern =
@@ -590,10 +632,10 @@ void EndlessDrivingState::createRoad()
     };
     std::int32_t swapIndex = 0;
     std::int32_t swapCounter = 0;
-    float offsetMultiplier = 1.f;
 
-    //offset the start frame of anumations so not all in sync (looks weird)
-    std::array<std::size_t, TrackSprite::Animation::Count> animationFrameOffsets = {};
+
+    const auto& ctx = m_trackContexts[m_contextIndex];
+    m_contextIndex = std::min(m_trackContexts.size() - 1, m_contextIndex + 1);
 
     auto segmentCount = cro::Util::Random::value(8, 10);
     for (auto i = 0; i < segmentCount; ++i)
@@ -606,8 +648,15 @@ void EndlessDrivingState::createRoad()
 
         const std::size_t last = first + enter + hold + exit;
 
-        const float curve = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(CurveMin, CurveMax) : 0.f;
-        const float hill = cro::Util::Random::value(0, 1) ? cro::Util::Random::value(HillMin, HillMax) * SegmentLength : 0.f;
+        const float curve = cro::Util::Random::value(0, 1) ?
+            cro::Util::Random::value(0, 5) ?
+            cro::Util::Random::value(-ctx.curve, ctx.curve) : cro::Util::Random::value(CurveMin, CurveMax)
+            : 0.f;
+
+        const float hill = cro::Util::Random::value(0, 1) ? 
+            cro::Util::Random::value(0, 6) ?
+            cro::Util::Random::value(-ctx.hill, ctx.hill) * SegmentLength : cro::Util::Random::value(HillMin, HillMax) * SegmentLength
+            : 0.f;
 
         m_road.addSegment(enter, hold, exit, curve, hill);
 
@@ -632,7 +681,7 @@ void EndlessDrivingState::createRoad()
             }
 
             //vehicles
-            if (cro::Util::Random::value(0, 100) == 0)
+            if (cro::Util::Random::value(0, ctx.traffic) == 0)
             {
                 auto pos = -0.5f - cro::Util::Random::value(0.15f, 0.3f);
                 if (cro::Util::Random::value(0, 1) == 0)
@@ -692,10 +741,6 @@ void EndlessDrivingState::createRoad()
     //tail
     m_road.addSegment(10, 50, 10, 0.f, 0.f);
 
-    m_road.getPendingSegments().back().roadColour = cro::Colour::White;
-    m_road.getPendingSegments().back().rumbleColour = cro::Colour::Blue;
-    //m_road[m_road.getSegmentCount() - 2].roadColour = cro::Colour::White;
-    //m_road[m_road.getSegmentCount() - 2].rumbleColour = cro::Colour::Blue;
 }
 
 void EndlessDrivingState::createUI()
@@ -708,7 +753,7 @@ void EndlessDrivingState::createUI()
     entity.addComponent<cro::Sprite>(m_gameTexture.getTexture());
     m_gameEntity = entity;
 
-    //TODO add border overlay (recycle GvG?)
+    //TODO add border overlay
 
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -785,16 +830,42 @@ void EndlessDrivingState::createUI()
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
     entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(1.f, 1.f);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
+            std::int32_t mins = std::floor(m_gameRules.totalTime / 60.f);
+            auto sec = m_gameRules.totalTime - (mins * 60);
+            
             std::stringstream stream;
             stream << std::fixed << std::setprecision(2) 
-                << "Total: " << m_gameRules.totalTime << "\n"
+                << "Total: " << mins << "m " << sec << "s\n"
                 << "Remaining: " << m_gameRules.remainingTime;
             
             std::string str = stream.str();
             e.getComponent<cro::Text>().setString(str);
+
+
+            auto& [s, t] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
+            t -= (dt * 4.f);
+            if (t < 0)
+            {
+                s = s == 1 ? 0.f : 1.f;
+                t += 1.f;
+            }
+
+            float scale = 1.f;
+            if (m_gameRules.remainingTime < 5
+                && m_gameRules.remainingTime != 0)
+            {
+                scale = s;
+
+                if (scale == 0)
+                {
+                    //TODO play some sort of sound attached to the entity
+                }
+            }
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
     m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1012,7 +1083,7 @@ void EndlessDrivingState::updatePlayer(float dt)
                         m_gameRules.remainingTime += BeefStickTime;
                         break;
                     case TrackSprite::Ball:
-                        m_gameRules.remainingTime += BallTime;
+                        m_gameRules.remainingTime += 0.1f + (BallTime * std::min(1.f, m_gameRules.remainingTime / 30.f));
                         break;
                     case TrackSprite::Bush01:
                         m_player.speed *= 0.5f;
