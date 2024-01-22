@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -240,7 +240,9 @@ App::App(std::uint32_t styleFlags)
 #endif
 
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS5, "1");
+#ifdef _WIN32
     SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2");
+#endif
     if (SDL_Init(INIT_FLAGS) < 0)
     {
         const std::string err(SDL_GetError());
