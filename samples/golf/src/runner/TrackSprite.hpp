@@ -47,8 +47,16 @@ struct TrackSprite final
     {
         Tree01,
         Bush01,
+
+        TallTree01,
+        TallTree02,
+        LampPost,
+        CartSide,
+        CartFront,
+
         Ball,
         Flag,
+
         CartAway,
 
         Count

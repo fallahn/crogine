@@ -47,6 +47,7 @@ void CarSystem::process(float dt)
     for (auto e : entities)
     {
         auto& car = e.getComponent<Car>();
+        //cars on a buffered piece of track (ie pre-generated) are inactive
         if (!car.active)
         {
             continue;
@@ -79,7 +80,7 @@ void CarSystem::process(float dt)
             m_track[newSeg].cars.push_back(e);
         }
 
-        car.sprite.segmentInterp = (car.z - m_track[newSeg].position.z) / SegmentLength;
+        car.sprite.segmentInterp = std::clamp((car.z - m_track[newSeg].position.z) / SegmentLength, 0.f, 1.f);
 
         //animate based on current seg curve
         //and which side of the road they're currently on

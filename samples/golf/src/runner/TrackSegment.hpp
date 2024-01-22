@@ -47,8 +47,8 @@ struct TrackSegment final
     std::size_t index = 0; //where in the track array this seg is
 
     glm::vec3 position = glm::vec3(0.f); //x is always 0, y is height and z is distance from start
-    float length = 200.f;
-    float width = 2000.f;
+    float length = 0.25f;
+    float width = 2.5f;
     float curve = 0.f;
 
     cro::Colour roadColour;

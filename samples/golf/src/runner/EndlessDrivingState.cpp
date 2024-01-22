@@ -334,9 +334,6 @@ bool EndlessDrivingState::simulate(float dt)
     updateControllerInput();
     if (m_gameRules.state == GameRules::State::Running)
     {
-        //TODO update vehicles
-
-
         if (getStateCount() != 1)
         {
             m_inputFlags.flags = 0;
@@ -346,8 +343,6 @@ bool EndlessDrivingState::simulate(float dt)
             m_gameRules.remainingTime -= dt;
             m_gameRules.remainingTime = std::max(0.f, m_gameRules.remainingTime);
             
-            //TODO some sort of flashing warning if time is low
-
             m_gameRules.totalTime += dt;
 
 #ifndef CRO_DEBUG_
@@ -433,12 +428,19 @@ void EndlessDrivingState::loadAssets()
             m_trackSprites[spriteID].animation = animation;
         };
 
+    parseSprite(spriteSheet.getSprite("tall_tree01"), TrackSprite::TallTree01, 0);
+    parseSprite(spriteSheet.getSprite("tall_tree01"), TrackSprite::TallTree02, 0);
+    parseSprite(spriteSheet.getSprite("lamp_post"), TrackSprite::LampPost, 0);
+    parseSprite(spriteSheet.getSprite("cart_side"), TrackSprite::CartSide, 0);
+    parseSprite(spriteSheet.getSprite("cart_front"), TrackSprite::CartFront, 0);
     parseSprite(spriteSheet.getSprite("tree01"), TrackSprite::Tree01, 0);
     parseSprite(spriteSheet.getSprite("bush01"), TrackSprite::Bush01, 0);
     parseSprite(spriteSheet.getSprite("cart_away"), TrackSprite::CartAway, 0);
     parseSprite(spriteSheet.getSprite("ball"), TrackSprite::Ball, TrackSprite::Animation::Rotate);
     parseSprite(spriteSheet.getSprite("flag"), TrackSprite::Flag, TrackSprite::Animation::Float);
 
+    
+    //TODO just calc the hitbox once and set it here
     m_trackSprites[TrackSprite::Tree01].hitboxMultiplier = 0.2f;
     m_trackSprites[TrackSprite::CartAway].hitboxMultiplier = 0.65f;
 
@@ -468,8 +470,8 @@ void EndlessDrivingState::loadAssets()
         auto& ctx = m_trackContexts.emplace_back();
         const float progress = static_cast<float>(i) / ContextCount;
         ctx.curve = (CurveMax * progress) + 0.00001f;
-        ctx.hill = (HillMax * progress) + 0.001f;
-        ctx.traffic = ((ContextCount / 2) - (i / 2)) * 100;
+        ctx.hill = ((HillMax - 3.f) * progress) + 3.f;
+        ctx.traffic = (((ContextCount / 2) - (i / 2)) * 100) - static_cast<std::int32_t>(32.f * (1.f - progress));
     }
 }
 
@@ -590,7 +592,7 @@ void EndlessDrivingState::createRoad()
 
     //create a constant start/end segment DrawDistance in size
     //TODO decorate with clubhouse
-    m_road.addSegment(10, DrawDistance + 250, 10, 0.f, 0.f);
+    m_road.addSegment(10, DrawDistance + 250, 10, 0.f, 0.f, 1.f);
 
     //lap line
     for (auto i = 0u; i < 8u; ++i)
@@ -603,21 +605,68 @@ void EndlessDrivingState::createRoad()
     //offset the start frame of animations so not all in sync (looks weird)
     std::array<std::size_t, TrackSprite::Animation::Count> animationFrameOffsets = {};
 
-    //inital collectibles (more sparse than main track)
+    //remember this has to be the same each time to cover the swap
     float offsetMultiplier = 1.f;
-    for (auto i = pendingSegs.size() / 3; i < pendingSegs.size(); ++i)
+    std::int32_t bushCounter = 0;
+    for (auto i = 0; i < pendingSegs.size(); ++i)
     {
-        if (i % 16 == 0)
+        if ((i > 20)
+            && (i % 18) == 0)
         {
+            auto bushOffset = bushCounter % 2;
+
+            //bushes
             auto& seg = pendingSegs[i];
-            auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::Ball]);
-            spr.position = 0.5f * offsetMultiplier;
-            spr.scale = 1.5f;
-            spr.frameIndex = animationFrameOffsets[spr.animation];
+            auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::TallTree01 + bushOffset]);
+            spr.position = 1.2f;
+            spr.scale = 2.f;
 
-            animationFrameOffsets[spr.animation] = (animationFrameOffsets[spr.animation] + 5) % m_wavetables[spr.animation].size();
+            bushOffset = 1 - bushOffset;
+            auto& spr2 = seg.sprites.emplace_back(m_trackSprites[TrackSprite::TallTree01 + bushOffset]);
+            spr2.position = -1.2f;
+            spr2.scale = 2.f;
 
-            offsetMultiplier *= -1.f;
+            bushCounter++;
+        }
+
+        if (i < pendingSegs.size() / 3)
+        {
+            if (i == 0)
+            {
+                //lamp posts
+                auto& seg = pendingSegs[i];
+                auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::LampPost]);
+                spr.position = 1.25f;
+                spr.scale = 2.5f;
+
+                auto& spr2 = seg.sprites.emplace_back(m_trackSprites[TrackSprite::LampPost]);
+                spr2.position = -1.25f;
+                spr2.scale = 2.5f;
+            }
+            else if (i < 20 && ((i % 3) == 0))
+            {
+                //parked carts
+                auto& seg = pendingSegs[i];
+                auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::CartSide + (i%2)]);
+                spr.position = 1.82f * (i % 5) ? 1.f : -1.f;
+                spr.scale = 2.f;
+            }
+        }
+        else
+        {
+            //inital collectibles (more sparse than main track)
+            if (i % 16 == 0)
+            {
+                auto& seg = pendingSegs[i];
+                auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::Ball]);
+                spr.position = 0.5f * offsetMultiplier;
+                spr.scale = 1.5f;
+                spr.frameIndex = animationFrameOffsets[spr.animation];
+
+                animationFrameOffsets[spr.animation] = (animationFrameOffsets[spr.animation] + 5) % m_wavetables[spr.animation].size();
+
+                offsetMultiplier *= -1.f;
+            }
         }
     }
 
@@ -658,7 +707,7 @@ void EndlessDrivingState::createRoad()
             cro::Util::Random::value(-ctx.hill, ctx.hill) * SegmentLength : cro::Util::Random::value(HillMin, HillMax) * SegmentLength
             : 0.f;
 
-        m_road.addSegment(enter, hold, exit, curve, hill);
+        m_road.addSegment(enter, hold, exit, curve, hill, 0.25f);
 
 
         //add sprites to the new segment
@@ -739,7 +788,7 @@ void EndlessDrivingState::createRoad()
         }
     }
     //tail
-    m_road.addSegment(10, 50, 10, 0.f, 0.f);
+    m_road.addSegment(10, 50, 10, 0.f, 0.f, 1.f);
 
 }
 
@@ -1012,7 +1061,8 @@ void EndlessDrivingState::updatePlayer(float dt)
     }
 
     //is off road
-    if ((m_player.position.x < -1.f || m_player.position.x > 1.f)
+    const float rWidth = m_road[segID].width / RoadWidth;
+    if ((m_player.position.x < -rWidth || m_player.position.x > rWidth)
         && (m_player.speed > Player::OffroadMaxSpeed))
     {
         //slow down
@@ -1061,7 +1111,8 @@ void EndlessDrivingState::updatePlayer(float dt)
     const cro::FloatRect PlayerCollision(p, w);
     const auto testCollision = [&](TrackSprite& spr, const TrackSegment& seg)
         {
-            if (spr.collisionActive)
+            if (spr.collisionActive
+                && m_gameRules.remainingTime > 0)
             {
                 auto [pos, size] = getScreenCoords(spr, seg, false);
 
@@ -1083,12 +1134,17 @@ void EndlessDrivingState::updatePlayer(float dt)
                         m_gameRules.remainingTime += BeefStickTime;
                         break;
                     case TrackSprite::Ball:
-                        m_gameRules.remainingTime += 0.1f + (BallTime * std::min(1.f, m_gameRules.remainingTime / 30.f));
+                        m_gameRules.remainingTime += 0.12f + (BallTime * std::min(1.f, m_gameRules.remainingTime / 30.f));
                         break;
                     case TrackSprite::Bush01:
+                    case TrackSprite::TallTree01:
+                    case TrackSprite::TallTree02:
                         m_player.speed *= 0.5f;
                         break;
                     case TrackSprite::Tree01:
+                    case TrackSprite::CartSide:
+                    case TrackSprite::CartFront:
+                    case TrackSprite::LampPost:
 
                         m_player.speed = 0.f;
                         {
@@ -1152,7 +1208,8 @@ void EndlessDrivingState::updateRoad(float dt)
         m_gameRules.awardLapTime();
         m_road.swap(m_gameScene);
 
-        auto result = std::async(std::launch::async, &EndlessDrivingState::createRoad, this);
+        //auto result = std::async(std::launch::async, &EndlessDrivingState::createRoad, this);
+        createRoad();
     }
 
     const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) - 1;

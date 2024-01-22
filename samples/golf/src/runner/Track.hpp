@@ -72,7 +72,7 @@ public:
 
     std::size_t getSegmentCount() const { return m_segments.size(); }
 
-    void addSegment(std::size_t enter, std::size_t hold, std::size_t exit, float curve, float hill)
+    void addSegment(std::size_t enter, std::size_t hold, std::size_t exit, float curve, float hill, float scale)
     {
         std::scoped_lock lock(m_mutex);
 
@@ -101,14 +101,15 @@ public:
         {
             const float progress = static_cast<float>(i) / enter;
             glm::vec3 pos(0.f, hill * cro::Util::Easing::easeOutSine(progress), z + (i * SegmentLength));
-            setColour(m_pendingSegments.emplace_back(pos, SegmentLength, RoadWidth, curve * cro::Util::Easing::easeInSine(progress)));
+            scale = glm::mix(1.f, scale, progress);
+            setColour(m_pendingSegments.emplace_back(pos, SegmentLength, RoadWidth * scale, curve * cro::Util::Easing::easeInSine(progress)));
         }
 
         end += hold;
         for (; i < end; ++i)
         {
             glm::vec3 pos(0.f, hill, z + (i * SegmentLength));
-            setColour(m_pendingSegments.emplace_back(pos, SegmentLength, RoadWidth, curve));
+            setColour(m_pendingSegments.emplace_back(pos, SegmentLength, RoadWidth * scale, curve));
         }
 
         end += exit;
@@ -116,7 +117,8 @@ public:
         {
             const float progress = static_cast<float>(i - enter - hold) / exit;
             glm::vec3 pos(0.f, hill * (cro::Util::Easing::easeOutSine(1.f - progress)), z + (i * SegmentLength));
-            setColour(m_pendingSegments.emplace_back(pos, SegmentLength, RoadWidth, curve * (cro::Util::Easing::easeOutSine(1.f - progress))));
+            scale = glm::mix(scale, 1.f, progress);
+            setColour(m_pendingSegments.emplace_back(pos, SegmentLength, RoadWidth * scale, curve * (cro::Util::Easing::easeOutSine(1.f - progress))));
         }
     }
 
