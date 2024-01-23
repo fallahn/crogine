@@ -70,12 +70,80 @@ source distribution.
 
 namespace
 {
+    struct ShaderID final
+    {
+        enum
+        {
+            Cel,
+            Brake,
+
+            Count
+        };
+    };
+
+    struct MaterialID final
+    {
+        enum
+        {
+            Cel,
+            Brake,
+
+            Count
+        };
+    };
+
+    const std::string CelShader = 
+        R"(
+        uniform sampler2D u_diffuseMap;
+        uniform vec3 u_lightDirection = vec3(0.0, -1.0, 0.0);
+        
+        VARYING_IN vec3 v_normalVector;
+        VARYING_IN vec2 v_texCoord0;
+
+        OUTPUT
+
+#define COLOUR_LEVELS 2.0
+#define AMOUNT_MIN 0.6
+#define AMOUNT_MAX 0.4
+
+
+        void main()
+        {
+            vec3 c = TEXTURE(u_diffuseMap, v_texCoord0).rgb;
+            
+            vec3 normal = normalize(v_normalVector);
+            vec3 lightDirection = normalize(-u_lightDirection);
+            float amount = dot(normal, lightDirection);
+
+            amount *= COLOUR_LEVELS;
+            amount = round(amount);
+            amount /= COLOUR_LEVELS;
+            amount = (amount * AMOUNT_MAX) + AMOUNT_MIN;
+
+            c *= amount;
+
+            FRAG_OUT = vec4(c, 1.0);
+        })";
+    
+    const std::string BrakeShader = 
+        R"(
+        uniform sampler2D u_diffuseMap;
+        uniform float u_brightness = 1.0;
+
+        VARYING_IN vec2 v_texCoord0;
+
+        OUTPUT
+
+        void main()
+        {
+            vec3 c = TEXTURE(u_diffuseMap, v_texCoord0).rgb * u_brightness;
+            FRAG_OUT = vec4(c, 1.0);
+        })";
+
     struct Debug final
     {
         float maxY = 0.f;
         float segmentProgress = 0.f;
-
-
     }debug;
 }
 
@@ -106,6 +174,13 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
         {
             if (ImGui::Begin("Player"))
             {
+                /*static float r = 0.f;
+                if (ImGui::SliderFloat("Light", &r, -1.f, 1.f))
+                {
+                    m_playerScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI * r);
+                }*/
+
+
                 const auto vol = m_gameEntity.getComponent<cro::AudioEmitter>().getVolume();
                 const auto pitch = m_gameEntity.getComponent<cro::AudioEmitter>().getPitch();
                 ImGui::Text("Vol %3.3f", vol);
@@ -427,6 +502,22 @@ void EndlessDrivingState::loadAssets()
     }
     m_wavetables[TrackSprite::Animation::Float] = cro::Util::Wavetable::sine(0.5f, 20.f);
 
+
+    m_resources.shaders.loadFromString(ShaderID::Cel, 
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit),
+        CelShader,
+        "#define TEXTURED\n");
+    m_resources.materials.add(MaterialID::Cel, m_resources.shaders.get(ShaderID::Cel));
+
+    m_resources.shaders.loadFromString(ShaderID::Brake,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit),
+        BrakeShader,
+        "#define TEXTURED\n");
+    m_resources.materials.add(MaterialID::Brake, m_resources.shaders.get(ShaderID::Brake));
+
+    m_brakeShader.id = m_resources.shaders.get(ShaderID::Brake).getGLHandle();
+    m_brakeShader.uniform = m_resources.shaders.get(ShaderID::Brake).getUniformID("u_brightness");
+
     //everything needs to be in a single sprite sheet as we're
     //relying on draw order for depth sorting.
     cro::SpriteSheet spriteSheet;
@@ -500,6 +591,16 @@ void EndlessDrivingState::createPlayer()
     if (md.loadFromFile("assets/golf/models/cart_v2.cmt"))
     {
         md.createModel(entity);
+
+        auto* m = md.getMaterial(0);
+        if (m->properties.count("u_diffuseMap"))
+        {
+            m_resources.materials.get(MaterialID::Brake).setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+            m_resources.materials.get(MaterialID::Cel).setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+
+            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(MaterialID::Cel));
+            entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(MaterialID::Brake));
+        }
     }
     m_playerEntity = entity;
 
@@ -516,7 +617,8 @@ void EndlessDrivingState::createPlayer()
 
     //this has to look straight ahead, as that's what we're supposing in the 2D projection
     m_playerScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 3.1f, 5.146f });
-    m_playerScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
+    m_playerScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f);
+    m_playerScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
 }
 
 void EndlessDrivingState::createScene()
@@ -1086,16 +1188,25 @@ void EndlessDrivingState::updatePlayer(float dt)
     {
         //free wheel decel
         m_player.speed += Player::Deceleration * dt;
+
+        glUseProgram(m_brakeShader.id);
+        glUniform1f(m_brakeShader.uniform, 1.f);
     }
     else
     {
         if (m_inputFlags.flags & InputFlags::Up)
         {
             m_player.speed += Player::Acceleration * dt * m_inputFlags.accelerateMultiplier;
+
+            glUseProgram(m_brakeShader.id);
+            glUniform1f(m_brakeShader.uniform, 1.f);
         }
         if (m_inputFlags.flags & InputFlags::Down)
         {
             m_player.speed += Player::Braking * dt *  m_inputFlags.brakeMultiplier;
+
+            glUseProgram(m_brakeShader.id);
+            glUniform1f(m_brakeShader.uniform, 2.f);
         }
     }
 

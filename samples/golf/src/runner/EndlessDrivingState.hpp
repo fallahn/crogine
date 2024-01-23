@@ -99,6 +99,12 @@ private:
     cro::Entity m_playerSprite;
     cro::Entity m_roadEntity;
 
+    struct BrakeLightShader final
+    {
+        std::uint32_t id = 0;
+        std::int32_t uniform = -1;
+    }m_brakeShader;
+
     cro::Entity m_debugEntity;
 
     //texture is fixed size and game is rendered to this

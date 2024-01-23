@@ -86,8 +86,21 @@ public:
             [&](TrackSegment& seg)
             {
                 seg.roadColour = CD32::Colours[CD32::GreyDark];
-                seg.grassColour = CD32::Colours[CD32::GreenMid];
-                seg.rumbleColour = (((start + i) / 9) % 2) ? CD32::Colours[CD32::Red] : CD32::Colours[CD32::BeigeLight];
+
+                if (((start + i) / 9) % 2)
+                {
+                    seg.rumbleColour = CD32::Colours[CD32::Red];
+                    
+                    auto c = CD32::Colours[CD32::GreenMid].getVec4();
+                    c *= 0.93f;
+                    c.a = 1.f;
+                    seg.grassColour = c;
+                }
+                else
+                {
+                    seg.rumbleColour = CD32::Colours[CD32::BeigeLight];
+                    seg.grassColour = CD32::Colours[CD32::GreenMid];
+                }
 
                 seg.roadMarking = (((start + i) / 6) % 2);
 
