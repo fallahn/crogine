@@ -163,6 +163,8 @@ private:
             };
         };
         std::int32_t state = State::CountIn;
+
+        std::int32_t flagstickMultiplier = 1;
     }m_gameRules;
 
 

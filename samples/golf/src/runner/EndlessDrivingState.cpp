@@ -1059,6 +1059,22 @@ void EndlessDrivingState::createUI()
         };
     m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //flag stick multiplier
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(RenderSizeFloat.x - 220.f, std::floor(RenderSizeFloat.y * 0.95f), 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Text>().setString("Flag Bonus " + std::to_string(m_gameRules.flagstickMultiplier) + "x");
+        };
+    m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     auto resize = 
         [&](cro::Camera& cam)
     {
@@ -1281,7 +1297,8 @@ void EndlessDrivingState::updatePlayer(float dt)
                     {
                     default:break;
                     case TrackSprite::Flag:
-                        m_gameRules.remainingTime += BeefStickTime;
+                        m_gameRules.remainingTime += BeefStickTime * m_gameRules.flagstickMultiplier;
+                        m_gameRules.flagstickMultiplier++;
                         break;
                     case TrackSprite::Ball:
                         m_gameRules.remainingTime += 0.12f + (BallTime * std::min(1.f, m_gameRules.remainingTime / 30.f));
@@ -1345,7 +1362,7 @@ void EndlessDrivingState::updatePlayer(float dt)
 
 void EndlessDrivingState::updateRoad(float dt)
 {
-    const float s = m_player.speed /*Player::MaxSpeed*/;
+    const float s = m_player.speed;
     
     m_trackCamera.move(glm::vec3(0.f, 0.f, s * dt));
 
@@ -1382,6 +1399,17 @@ void EndlessDrivingState::updateRoad(float dt)
     if (!prev->sprites.empty() || !prev->cars.empty())
     {
         spriteSegments.push_back(prevIndex);
+
+        //check if we missed a flag
+        for (auto& s : prev->sprites)
+        {
+            if (s.id == TrackSprite::Flag
+                && s.collisionActive)
+            {
+                m_gameRules.flagstickMultiplier = 1;
+                break;
+            }
+        }
     }
 
     if (start - 1 >= m_road.getSegmentCount())
