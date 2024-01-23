@@ -50,10 +50,23 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 
+namespace
+{
+    constexpr std::array CyclePositions =
+    {
+        glm::vec2(0.f),
+        glm::vec2(-RenderSizeFloat.x, 0.f),
+        glm::vec2(-RenderSizeFloat.x * 2.f, 0.f)
+    };
+
+    const cro::Time CycleTime = cro::seconds(8.f);
+}
+
 EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
-    m_uiScene       (context.appInstance.getMessageBus())
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_cycleIndex    (0)
 {
     addSystems();
     loadAssets();
@@ -188,6 +201,44 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::Transform>();
     m_rootNode = entity;
 
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(RenderSizeFloat.x, 0.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::int32_t>(1);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& state = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+            if (state)
+            {
+                static constexpr float Speed = -700.f;
+
+                //scroll
+                e.getComponent<cro::Transform>().move(glm::vec2(Speed * dt, 0.f));
+                auto pos = e.getComponent<cro::Transform>().getPosition().x;
+                
+                if (pos < -RenderSizeFloat.x * CyclePositions.size())
+                {
+                    e.getComponent<cro::Transform>().setPosition(glm::vec2(RenderSizeFloat.x, 0.f));
+                }
+                
+                if (std::abs(CyclePositions[m_cycleIndex].x - pos) < 2.f)
+                {
+                    e.getComponent<cro::Transform>().setPosition(CyclePositions[m_cycleIndex]);
+                    state = 0;
+                }
+            }
+
+            if (m_cycleClock.elapsed() > CycleTime)
+            {
+                m_cycleClock.restart();
+                m_cycleIndex = (m_cycleIndex + 1) % CyclePositions.size();
+                state = 1; //start scroll
+            }
+        };
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_cycleNode = entity;
+
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //text prompt to start
@@ -224,19 +275,49 @@ void EndlessAttractState::createUI()
     m_quitTextPrompt = entity;
 
 
-    //TODO create a proper set of nodes to cycle through title, leaderboards, rules, and Game Over
+    //Game Over
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition(RenderSizeFloat / 2.f);
+    entity.getComponent<cro::Transform>().move(glm::vec2(0.f, 160.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("GAME\nOVER");
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 10);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 80.f };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
-    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    //entity.getComponent<UIElement>().absolutePosition = { 0.f, 80.f };
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    m_cycleNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //high scores
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(std::round(RenderSizeFloat.x * 1.5f), RenderSizeFloat.y / 2.f));
+    entity.getComponent<cro::Transform>().move(glm::vec2(0.f, 180.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("High Scores");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //entity.addComponent<UIElement>().relativePosition = { 1.f, 0.5f };
+    //entity.getComponent<UIElement>().absolutePosition = { 0.f, 380.f };
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    m_cycleNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //how to play
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(std::round(RenderSizeFloat.x * 2.5f), RenderSizeFloat.y / 2.f));
+    entity.getComponent<cro::Transform>().move(glm::vec2(0.f, 180.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("How To Play");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //entity.addComponent<UIElement>().relativePosition = { 1.5f, 0.5f };
+    //entity.getComponent<UIElement>().absolutePosition = { 0.f, 380.f };
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    m_cycleNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
 

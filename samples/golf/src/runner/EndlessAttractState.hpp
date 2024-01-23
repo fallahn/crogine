@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -56,8 +57,12 @@ private:
     cro::ResourceCollection m_resources;
 
     cro::Entity m_rootNode;
+    cro::Entity m_cycleNode;
     cro::Entity m_startTextPrompt;
     cro::Entity m_quitTextPrompt;
+
+    std::size_t m_cycleIndex;
+    cro::Clock m_cycleClock;
 
     void addSystems();
     void loadAssets();
