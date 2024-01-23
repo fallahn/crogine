@@ -36,7 +36,10 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 #include "TrackCamera.hpp"
 #include "TrackSprite.hpp"
 #include "Track.hpp"
+#include "Player.hpp"
 
+
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -70,6 +73,7 @@ private:
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+    cro::AudioScape m_audioscape;
 
     struct BackgroundLayer final
     {
@@ -109,41 +113,7 @@ private:
     std::vector<Track::GenerationContext> m_trackContexts;
     std::size_t m_contextIndex; //NOTE this is usually accessed from another thread BUT IS UNGUARDED as there should be no concurrent access
 
-    struct Player final
-    {
-        //float x = 0.f; //+/- 1 from X centre
-        //float y = 0.f;
-        //float z = 0.f; //rel distance from camera
-        glm::vec3 position = glm::vec3(0.f);
-        float speed = 0.f;
-
-        static inline constexpr float MaxSpeed = SegmentLength * 120.f; //60 is our frame time
-        static inline constexpr float Acceleration = MaxSpeed / 3.f;
-        static inline constexpr float Braking = -MaxSpeed;
-        static inline constexpr float Deceleration = -Acceleration;
-        static inline constexpr float OffroadDeceleration = -MaxSpeed / 2.f;
-        static inline constexpr float OffroadMaxSpeed = MaxSpeed / 4.f;
-        static inline constexpr float Centrifuge = 530.f; // "pull" on cornering
-
-        struct Model final
-        {
-            float targetRotationX = 0.f;
-            float rotationX = 0.f;
-            float rotationY = 0.f;
-
-            static constexpr float MaxX = 0.1f;
-            static constexpr float MaxY = 0.2f;
-        }model;
-
-        struct State final
-        {
-            enum
-            {
-                Normal, Reset
-            };
-        };
-        std::int32_t state = 0;
-    }m_player;
+    Player m_player;
 
     struct InputFlags final
     {

@@ -49,7 +49,9 @@ private:
     {
         enum
         {
-            Flag, Ball,
+            Flag, FlagVoice,
+            
+            Ball,
             Tree, Cart,
 
             Count
@@ -57,5 +59,6 @@ private:
     };
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
 
-    void playSound(std::int32_t, float = 1.f);
+    cro::Entity playSound(std::int32_t, float volume = 1.f);
+    void playSoundDelayed(std::int32_t, float delay, float volume = 1.f);
 };

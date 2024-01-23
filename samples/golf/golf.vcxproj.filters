@@ -896,6 +896,9 @@
     <ClInclude Include="src\runner\EndlessSoundDirector.hpp">
       <Filter>Header Files\endless</Filter>
     </ClInclude>
+    <ClInclude Include="src\runner\Player.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

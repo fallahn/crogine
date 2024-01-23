@@ -29,11 +29,15 @@ source distribution.
 
 #include "CarSystem.hpp"
 #include "Track.hpp"
+#include "TrackCamera.hpp"
 #include "EndlessConsts.hpp"
 
-CarSystem::CarSystem(cro::MessageBus& mb, Track& track)
+#include <crogine/ecs/components/AudioEmitter.hpp>
+
+CarSystem::CarSystem(cro::MessageBus& mb, Track& track, const TrackCamera& cam)
     : cro::System   (mb, typeid(CarSystem)),
-    m_track         (track)
+    m_track         (track),
+    m_camera        (cam)
 {
     requireComponent<Car>();
 }
@@ -42,6 +46,7 @@ CarSystem::CarSystem(cro::MessageBus& mb, Track& track)
 void CarSystem::process(float dt)
 {
     const auto TrackLength = m_track.getSegmentCount() * SegmentLength;
+    const auto CamPos = m_camera.getPosition().x + TrackLength; //offset wrap-around
 
     auto& entities = getEntities();
     for (auto e : entities)
@@ -114,6 +119,31 @@ void CarSystem::process(float dt)
         //        car.sprite.uv = car.frames[Car::Frame::Straight];
         //    }
         //}
+
+
+        //set audio volume based on distance to player
+        static constexpr float MaxDistance = static_cast<float>(DrawDistance / 10);
+        const float pos = car.z + TrackLength; //take care of any wrap-around
+        const float dist = std::abs( pos - CamPos);
+        if (dist > MaxDistance)
+        {
+            if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
+            {
+                e.getComponent<cro::AudioEmitter>().stop();
+            }
+        }
+        else
+        {
+            const float vol = (dist / MaxDistance);
+            e.getComponent<cro::AudioEmitter>().setVolume((vol * vol) * car.baseVolume);
+            
+            if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+            {
+                e.getComponent<cro::AudioEmitter>().play();
+            }
+            //TODO we could combine cart speed with player speed to calc an
+            //approx doppler effect and set the emitter's pitch
+        }
     }
 }
 

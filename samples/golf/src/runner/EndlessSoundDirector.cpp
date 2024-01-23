@@ -38,6 +38,7 @@ source distribution.
 
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/util/Random.hpp>
 
@@ -46,10 +47,11 @@ EndlessSoundDirector::EndlessSoundDirector(cro::AudioResource& ar)
     //this must match with AudioID enum
     static const std::array<std::string, AudioID::Count> FilePaths =
     {
-        "assets/golf/sound/ball/holed.wav",
-        "assets/golf/sound/ball/drop.wav",
-        "assets/golf/sound/ball/drop.wav",
-        "assets/golf/sound/ball/drop.wav",
+        "assets/golf/sound/ball/pole.wav",
+        "assets/golf/sound/kudos/flag_pole.wav",
+        "assets/golf/sound/tutorial_appear.wav",
+        "assets/golf/sound/ball/scrub.wav",
+        "assets/golf/sound/bad.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -83,20 +85,22 @@ void EndlessSoundDirector::handleMessage(const cro::Message& msg)
             {
             default: break;
             case TrackSprite::Ball:
-
+                playSound(AudioID::Ball).getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.1f));
                 break;
             case TrackSprite::Flag:
-
+                playSound(AudioID::Flag);
+                playSoundDelayed(AudioID::FlagVoice, 1.f);
                 break;
             case TrackSprite::Bush01:
             case TrackSprite::TallTree01:
             case TrackSprite::TallTree02:
-
+                playSound(AudioID::Tree);
                 break;
             case TrackSprite::CartAway:
             case TrackSprite::CartFront:
             case TrackSprite::CartSide:
-
+            case TrackSprite::LampPost:
+                playSound(AudioID::Cart);
                 break;
             }
         }
@@ -107,11 +111,33 @@ void EndlessSoundDirector::handleMessage(const cro::Message& msg)
 }
 
 //private
-void EndlessSoundDirector::playSound(std::int32_t id, float vol)
+cro::Entity EndlessSoundDirector::playSound(std::int32_t id, float vol)
 {
     auto ent = getNextEntity();
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
     ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
     ent.getComponent<cro::AudioEmitter>().setVolume(vol);
     ent.getComponent<cro::AudioEmitter>().play();
+
+    return ent;
+}
+
+void EndlessSoundDirector::playSoundDelayed(std::int32_t id, float delay, float volume)
+{
+    auto entity = getScene().createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(delay);
+    entity.getComponent<cro::Callback>().function =
+        [&, id, volume](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime -= dt;
+
+            if (currTime < 0)
+            {
+                playSound(id, volume);
+                e.getComponent<cro::Callback>().active = false;
+                getScene().destroyEntity(e);
+            }
+        };
 }

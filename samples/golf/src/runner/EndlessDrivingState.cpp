@@ -106,6 +106,11 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
         {
             if (ImGui::Begin("Player"))
             {
+                const auto vol = m_gameEntity.getComponent<cro::AudioEmitter>().getVolume();
+                const auto pitch = m_gameEntity.getComponent<cro::AudioEmitter>().getPitch();
+                ImGui::Text("Vol %3.3f", vol);
+                ImGui::Text("Pitch %3.3f", pitch);
+
                 /*cro::FloatRect textureBounds = m_playerSprite.getComponent<cro::Sprite>().getTextureRect();
                 if (ImGui::SliderFloat("Width", &textureBounds.width, 10.f, RenderSizeFloat.x))
                 {
@@ -393,11 +398,12 @@ void EndlessDrivingState::addSystems()
     m_playerScene.addSystem<cro::CameraSystem>(mb);
     m_playerScene.addSystem<cro::ModelRenderer>(mb);
 
-    m_gameScene.addSystem<CarSystem>(mb, m_road);
+    m_gameScene.addSystem<CarSystem>(mb, m_road, m_trackCamera);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SpriteSystem2D>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::RenderSystem2D>(mb);
+    m_gameScene.addSystem<cro::AudioPlayerSystem>(mb); //simplifies adding vehicle sounds
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -411,6 +417,8 @@ void EndlessDrivingState::addSystems()
 
 void EndlessDrivingState::loadAssets()
 {
+    m_audioscape.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+
     m_wavetables[TrackSprite::Animation::Rotate] = cro::Util::Wavetable::sine(1.5f);// used to animate sprites
     for (auto& f : m_wavetables[TrackSprite::Animation::Rotate])
     {
@@ -494,6 +502,7 @@ void EndlessDrivingState::createPlayer()
         md.createModel(entity);
     }
     m_playerEntity = entity;
+
 
     auto resize = [&](cro::Camera& cam)
         {
@@ -745,12 +754,15 @@ void EndlessDrivingState::createRoad()
                 }
 
                 auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("cart");
                 auto& car = entity.addComponent<Car>();
                 car.sprite = m_trackSprites[TrackSprite::CartAway];
                 car.sprite.position = pos;
                 car.sprite.scale = 2.f;
                 car.z = seg.position.z;
                 car.speed += cro::Util::Random::value(-4.f, 4.f);
+                car.baseVolume = entity.getComponent<cro::AudioEmitter>().getVolume();
+                entity.getComponent<cro::AudioEmitter>().setPitch(entity.getComponent<cro::AudioEmitter>().getPitch()* (car.speed / 14.f));
                 seg.cars.push_back(entity);
             }
 
@@ -806,6 +818,27 @@ void EndlessDrivingState::createUI()
     entity.addComponent<cro::Transform>().setOrigin(glm::vec2(RenderSize / 2u));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_gameTexture.getTexture());
+    
+    //audio system is in ui scene so we'll put the player audio on here
+    entity.addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("cart");
+    const float BaseVolume = entity.getComponent<cro::AudioEmitter>().getVolume();
+    const float BasePitch = entity.getComponent<cro::AudioEmitter>().getPitch();
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.f);
+    entity.getComponent<cro::AudioEmitter>().play();
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, BaseVolume, BasePitch](cro::Entity e, float)
+        {
+            static constexpr float VolumeSpeed = Player::MaxSpeed / 8.f;
+
+            const float vol = std::min(1.f, m_player.speed / VolumeSpeed) * BaseVolume;
+            e.getComponent<cro::AudioEmitter>().setVolume(vol);
+
+            const float pitch = 0.2f + ((BasePitch - 0.2f) * m_player.speed / Player::MaxSpeed);
+            e.getComponent<cro::AudioEmitter>().setPitch(pitch);
+        };
+    
     m_gameEntity = entity;
 
     //TODO add border overlay
