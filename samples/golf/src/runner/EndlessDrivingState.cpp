@@ -1057,7 +1057,7 @@ void EndlessDrivingState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(12.f, std::floor(RenderSizeFloat.y * 0.95f), 0.1f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(1.f, 1.f);
@@ -1102,15 +1102,23 @@ void EndlessDrivingState::createUI()
 
     //flag stick multiplier
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(RenderSizeFloat.x - 220.f, std::floor(RenderSizeFloat.y * 0.95f), 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(RenderSizeFloat.x - 120.f, std::floor(RenderSizeFloat.y * 0.95f), 0.1f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
-            e.getComponent<cro::Text>().setString("Flag Bonus " + std::to_string(m_gameRules.flagstickMultiplier) + "x");
+            if (m_gameRules.flagstickMultiplier)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Text>().setString("Flag Streak " + std::to_string(m_gameRules.flagstickMultiplier) + "x");
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
         };
     m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1141,8 +1149,8 @@ void EndlessDrivingState::floatingText(const std::string& str)
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(str);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
-    centreText(entity);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 3);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
     entity.addComponent<FloatingText>().basePos = entity.getComponent<cro::Transform>().getPosition();
     entity.getComponent<FloatingText>().colour = CD32::Colours[CD32::Red];
@@ -1355,11 +1363,21 @@ void EndlessDrivingState::updatePlayer(float dt)
                     default:break;
                     case TrackSprite::Flag:
                     {
-                        const float bonus = BeefStickTime * m_gameRules.flagstickMultiplier;
-                        m_gameRules.remainingTime += bonus;
-                        m_gameRules.flagstickMultiplier++;
+                        if (m_gameRules.flagstickMultiplier == 4)
+                        {
+                            m_gameRules.totalTime += 1.f;
+                            m_gameRules.remainingTime = 30.f;
+                            m_gameRules.flagstickMultiplier = 0;
 
-                        floatingText("+" + std::to_string(std::int32_t(bonus)));
+                            floatingText("FLAG STICK BONUS");
+                        }
+                        else
+                        {
+                            m_gameRules.remainingTime = std::min(30.f, m_gameRules.remainingTime + BeefStickTime);
+                            m_gameRules.flagstickMultiplier++;
+
+                            floatingText("+" + std::to_string(std::int32_t(BeefStickTime)));
+                        }
                     }
                         break;
                     case TrackSprite::Ball:
@@ -1478,9 +1496,9 @@ void EndlessDrivingState::updateRoad(float dt)
             {
                 if (m_gameRules.flagstickMultiplier != 0)
                 {
-                    floatingText("Flag Streak Broken!");
+                    floatingText("Flag Streak\nBroken!");
                 }
-                m_gameRules.flagstickMultiplier = 1;
+                m_gameRules.flagstickMultiplier = 0;
                 break;
             }
         }
