@@ -44,6 +44,8 @@ struct Player final
     glm::vec3 position = glm::vec3(0.f);
     float speed = 0.f;
 
+    bool offTrack = false;
+
     static inline constexpr float MaxSpeed = SegmentLength * 120.f; //60 is our frame time
     static inline constexpr float Acceleration = MaxSpeed / 3.f;
     static inline constexpr float Braking = -MaxSpeed;

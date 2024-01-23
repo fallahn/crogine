@@ -181,6 +181,18 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
                     m_playerScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -cro::Util::Const::PI * r);
                 }*/
 
+                static std::int32_t l = 0;
+                ImGui::SliderInt("Low", &l, 0, 65335);
+                static std::int32_t h = 0;
+                ImGui::SliderInt("High", &h, 0, 65335);
+                static std::int32_t d = 0;
+                ImGui::SliderInt("Duration", &d, 0, 3000);
+
+                if (ImGui::Button("Rumble"))
+                {
+                    cro::GameController::rumbleStart(0, l, h, d);
+                }
+
 
                 const auto vol = m_gameEntity.getComponent<cro::AudioEmitter>().getVolume();
                 const auto pitch = m_gameEntity.getComponent<cro::AudioEmitter>().getPitch();
@@ -382,7 +394,11 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        cro::App::getWindow().setMouseCaptured(true);
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
+            || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
     }
 
     m_playerScene.forwardEvent(evt);
@@ -432,6 +448,8 @@ bool EndlessDrivingState::simulate(float dt)
 //#ifndef CRO_DEBUG_
             if(m_gameRules.remainingTime == 0)
             {
+                cro::GameController::rumbleStop(0);
+
                 //push game over state
                 requestStackPush(StateID::EndlessAttract);
 
@@ -896,7 +914,7 @@ void EndlessDrivingState::createRoad()
                 }
 
                 auto entity = m_gameScene.createEntity();
-                entity.addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("cart");
+                entity.addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("cart_2d");
                 auto& car = entity.addComponent<Car>();
                 car.sprite = m_trackSprites[TrackSprite::CartAway];
                 car.sprite.position = pos;
@@ -962,7 +980,7 @@ void EndlessDrivingState::createUI()
     entity.addComponent<cro::Sprite>(m_gameTexture.getTexture());
     
     //audio system is in ui scene so we'll put the player audio on here
-    entity.addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("cart");
+    entity.addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("cart_2d");
     const float BaseVolume = entity.getComponent<cro::AudioEmitter>().getVolume();
     const float BasePitch = entity.getComponent<cro::AudioEmitter>().getPitch();
     entity.getComponent<cro::AudioEmitter>().setVolume(0.f);
@@ -1216,6 +1234,8 @@ void EndlessDrivingState::updatePlayer(float dt)
 {
     if (m_player.state == Player::State::Reset)
     {
+        cro::GameController::rumbleStop(0);
+        
         //play reset animation
         glm::quat r = glm::toQuat(glm::orientate3(glm::vec3(0.f, 0.f, m_player.model.rotationY)));
         //glm::quat s = glm::toQuat(glm::orientate3(glm::vec3(m_player.model.rotationX, 0.f, 0.f)));
@@ -1293,11 +1313,29 @@ void EndlessDrivingState::updatePlayer(float dt)
 
     //is off road
     const float rWidth = m_road[segID].width / RoadWidth;
-    if ((m_player.position.x < -rWidth || m_player.position.x > rWidth)
-        && (m_player.speed > Player::OffroadMaxSpeed))
+    if ((m_player.position.x < -rWidth || m_player.position.x > rWidth))
     {
         //slow down
-        m_player.speed += Player::OffroadDeceleration * dt;
+        if (m_player.speed > Player::OffroadMaxSpeed)
+        {
+            m_player.speed += Player::OffroadDeceleration * dt;
+        }
+
+        if (!m_player.offTrack)
+        {
+            //start rumble
+            cro::GameController::rumbleStart(0, 10000, 10000, 10000);
+        }
+        m_player.offTrack = true;
+    }
+    else
+    {
+        if (m_player.offTrack)
+        {
+            cro::GameController::rumbleStop(0);
+        }
+
+        m_player.offTrack = false;
     }
 
     m_player.position.x = std::clamp(m_player.position.x, -2.f, 2.f);
@@ -1378,10 +1416,12 @@ void EndlessDrivingState::updatePlayer(float dt)
 
                             floatingText("+" + std::to_string(std::int32_t(BeefStickTime)));
                         }
+                        cro::GameController::rumbleStart(0, 290, 0, 50);
                     }
                         break;
                     case TrackSprite::Ball:
                         m_gameRules.remainingTime += 0.12f + (BallTime * std::min(1.f, m_gameRules.remainingTime / 30.f));
+                        cro::GameController::rumbleStart(0, 290, 0, 50);
                         break;
                     case TrackSprite::Bush01:
                     case TrackSprite::Bush02:
@@ -1389,6 +1429,8 @@ void EndlessDrivingState::updatePlayer(float dt)
                     case TrackSprite::TallTree01:
                     case TrackSprite::TallTree02:
                         m_player.speed *= 0.5f;
+
+                        cro::GameController::rumbleStart(0, 0, 65000, 800);
                         break;
                     case TrackSprite::Tree01:
                     case TrackSprite::Tree02:
@@ -1398,7 +1440,7 @@ void EndlessDrivingState::updatePlayer(float dt)
                     case TrackSprite::LampPost:
                     case TrackSprite::Platform:
                     case TrackSprite::PhoneBox:
-
+                        cro::GameController::rumbleStart(0, 19330, 65000, 240);
                         m_player.speed = 0.f;
                         {
                             m_player.state = Player::State::Reset;
@@ -1421,6 +1463,7 @@ void EndlessDrivingState::updatePlayer(float dt)
                         }
                         break;
                     case TrackSprite::CartAway:
+                        cro::GameController::rumbleStart(0, 10000, 65000, 100);
                         m_player.speed *= 0.1f;
                         break;
                     }
@@ -1455,7 +1498,7 @@ void EndlessDrivingState::updateRoad(float dt)
     const float maxLen = m_road.getSegmentCount() * SegmentLength;
     if (m_trackCamera.getPosition().z > maxLen)
     {
-        m_trackCamera.move(glm::vec3(0.f, 0.f, - maxLen));
+        m_trackCamera.move(glm::vec3(0.f, 0.f, -maxLen));
 
         //we did a lap so update the track
         auto award = m_gameRules.awardLapTime();
@@ -1465,6 +1508,7 @@ void EndlessDrivingState::updateRoad(float dt)
         createRoad();
 
         floatingText("+" + std::to_string(award));
+        cro::GameController::rumbleStart(0, 40000, 10000, 500);
     }
 
     const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) - 1;

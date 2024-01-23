@@ -85,11 +85,11 @@ void EndlessSoundDirector::handleMessage(const cro::Message& msg)
             {
             default: break;
             case TrackSprite::Ball:
-                playSound(AudioID::Ball).getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.1f));
+                playSound(AudioID::Ball, 0.2f).getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.1f));
                 break;
             case TrackSprite::Flag:
                 playSound(AudioID::Flag);
-                playSoundDelayed(AudioID::FlagVoice, 1.f);
+                playSoundDelayed(AudioID::FlagVoice, 0.6f);
                 break;
             case TrackSprite::Bush01:
             case TrackSprite::Bush02:
@@ -124,6 +124,7 @@ cro::Entity EndlessSoundDirector::playSound(std::int32_t id, float vol)
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
     ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
     ent.getComponent<cro::AudioEmitter>().setVolume(vol);
+    ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
     ent.getComponent<cro::AudioEmitter>().play();
 
     return ent;

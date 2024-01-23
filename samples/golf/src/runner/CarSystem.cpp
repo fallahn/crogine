@@ -134,7 +134,7 @@ void CarSystem::process(float dt)
         }
         else
         {
-            const float vol = (dist / MaxDistance);
+            const float vol = 1.f - (dist / MaxDistance);
             e.getComponent<cro::AudioEmitter>().setVolume((vol * vol) * car.baseVolume);
             
             if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
