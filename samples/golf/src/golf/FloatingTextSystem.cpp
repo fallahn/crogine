@@ -67,7 +67,7 @@ void FloatingTextSystem::process(float dt)
         }
 
         float alpha = cro::Util::Easing::easeInCubic(progress);
-        auto c = TextNormalColour;
+        auto c = floatingText.colour;
         c.setAlpha(1.f - alpha);
         e.getComponent<cro::Text>().setFillColour(c);
 

@@ -46,11 +46,18 @@ struct TrackSprite final
     enum
     {
         Tree01,
+        Tree02,
+        Tree03,
         Bush01,
+        Bush02,
+        Bush03,
+
+        Platform,
 
         TallTree01,
         TallTree02,
         LampPost,
+        PhoneBox,
         CartSide,
         CartFront,
 

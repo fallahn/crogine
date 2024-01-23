@@ -149,10 +149,14 @@ private:
         //awarded on lap line, reduced by 10
         //until < 10 in which case *= 0.5
         float lapAward = 10.f;
-        void awardLapTime()
+        std::int32_t awardLapTime()
         {
+            auto oldTime = remainingTime;
             remainingTime = std::min(30.f, remainingTime + lapAward);
+            std::int32_t award = static_cast<std::int32_t>(std::ceil(remainingTime - oldTime));
+
             lapAward *= 0.9f;
+            return award; //used purely for notification
         }
 
         struct State final
@@ -176,6 +180,8 @@ private:
     void createScene();
     void createRoad();
     void createUI();
+
+    void floatingText(const std::string&);
 
     void updateControllerInput();
     void updatePlayer(float dt);

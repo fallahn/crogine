@@ -29,6 +29,7 @@ source distribution.
 
 #include "../golf/SharedStateData.hpp"
 #include "../golf/MenuConsts.hpp"
+#include "../golf/FloatingTextSystem.hpp"
 
 #include "CarSystem.hpp"
 #include "EndlessDrivingState.hpp"
@@ -480,6 +481,7 @@ void EndlessDrivingState::addSystems()
     m_gameScene.addSystem<cro::RenderSystem2D>(mb);
     m_gameScene.addSystem<cro::AudioPlayerSystem>(mb); //simplifies adding vehicle sounds
 
+    m_uiScene.addSystem<FloatingTextSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
@@ -536,10 +538,16 @@ void EndlessDrivingState::loadAssets()
     parseSprite(spriteSheet.getSprite("tall_tree01"), TrackSprite::TallTree01, 0);
     parseSprite(spriteSheet.getSprite("tall_tree01"), TrackSprite::TallTree02, 0);
     parseSprite(spriteSheet.getSprite("lamp_post"), TrackSprite::LampPost, 0);
+    parseSprite(spriteSheet.getSprite("platform"), TrackSprite::Platform, 0);
+    parseSprite(spriteSheet.getSprite("phone_box"), TrackSprite::PhoneBox, 0);
     parseSprite(spriteSheet.getSprite("cart_side"), TrackSprite::CartSide, 0);
     parseSprite(spriteSheet.getSprite("cart_front"), TrackSprite::CartFront, 0);
     parseSprite(spriteSheet.getSprite("tree01"), TrackSprite::Tree01, 0);
+    parseSprite(spriteSheet.getSprite("tree02"), TrackSprite::Tree02, 0);
+    parseSprite(spriteSheet.getSprite("tree03"), TrackSprite::Tree03, 0);
     parseSprite(spriteSheet.getSprite("bush01"), TrackSprite::Bush01, 0);
+    parseSprite(spriteSheet.getSprite("bush02"), TrackSprite::Bush02, 0);
+    parseSprite(spriteSheet.getSprite("bush03"), TrackSprite::Bush03, 0);
     parseSprite(spriteSheet.getSprite("cart_away"), TrackSprite::CartAway, 0);
     parseSprite(spriteSheet.getSprite("ball"), TrackSprite::Ball, TrackSprite::Animation::Rotate);
     parseSprite(spriteSheet.getSprite("flag"), TrackSprite::Flag, TrackSprite::Animation::Float);
@@ -547,7 +555,8 @@ void EndlessDrivingState::loadAssets()
     
     //TODO just calc the hitbox once and set it here
     m_trackSprites[TrackSprite::Tree01].hitboxMultiplier = 0.2f;
-    m_trackSprites[TrackSprite::CartAway].hitboxMultiplier = 0.65f;
+    m_trackSprites[TrackSprite::Tree03].hitboxMultiplier = 0.2f;
+    //m_trackSprites[TrackSprite::CartAway].hitboxMultiplier = 0.65f;
 
     //vertex array contains all visible sprites
     auto entity = m_gameScene.createEntity();
@@ -717,7 +726,20 @@ void EndlessDrivingState::createRoad()
         auto& seg = pendingSegs[i];
         seg.roadColour = (i % 2) ? cro::Colour::LightGrey : cro::Colour::White;
         seg.rumbleColour = (i % 2) ? cro::Colour::DarkGrey : cro::Colour::Blue;
+        seg.grassColour = CD32::Colours[CD32::GreyDark];
     }
+
+    for (auto i = 8; i < 20; ++i)
+    {
+        auto& seg = pendingSegs[i];
+        seg.grassColour = CD32::Colours[CD32::GreyDark];
+    }
+
+    //phone box - TODO park bench
+    auto& seg = pendingSegs[22];
+    auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::PhoneBox]);
+    spr.position = -1.35f;
+    spr.scale = 1.6f;
 
     //offset the start frame of animations so not all in sync (looks weird)
     std::array<std::size_t, TrackSprite::Animation::Count> animationFrameOffsets = {};
@@ -787,6 +809,7 @@ void EndlessDrivingState::createRoad()
         }
     }
 
+
     
     const std::vector<std::int32_t> SwapPattern =
     {
@@ -802,6 +825,8 @@ void EndlessDrivingState::createRoad()
 
     const auto& ctx = m_trackContexts[m_contextIndex];
     m_contextIndex = std::min(m_trackContexts.size() - 1, m_contextIndex + 1);
+
+    const auto bushOffset = m_contextIndex % 3;
 
     auto segmentCount = cro::Util::Random::value(8, 10);
     for (auto i = 0; i < segmentCount; ++i)
@@ -836,14 +861,29 @@ void EndlessDrivingState::createRoad()
             auto count = cro::Util::Random::value(0, 2) == 0 ? 1 : 0;
             for (auto k = 0; k < count; ++k)
             {
-                auto spriteID = cro::Util::Random::value(TrackSprite::Tree01, TrackSprite::Bush01);
-                auto pos = -1.75f - cro::Util::Random::value(0.15f, 0.3f);
+                auto spriteID = cro::Util::Random::value(0, 1) ? TrackSprite::Tree01 + bushOffset : TrackSprite::Bush01 + bushOffset;
+                auto pos = -1.55f - cro::Util::Random::value(0.25f, 0.4f);
                 if (cro::Util::Random::value(0, 1) == 0)
                 {
                     pos *= -1.f;
                 }
                 seg.sprites.emplace_back(m_trackSprites[spriteID]).position = pos;
                 seg.sprites.back().scale *= cro::Util::Random::value(0.9f, 1.8f) * RenderScale;
+            }
+
+            //occasional platform
+            if (j % 250 == 0)
+            {
+                if (cro::Util::Random::value(0, 4) == 0)
+                {
+                    auto pos = -2.25f - cro::Util::Random::value(0.15f, 0.3f);
+                    if (cro::Util::Random::value(0, 1) == 0)
+                    {
+                        pos *= -1.f;
+                    }
+                    seg.sprites.emplace_back(m_trackSprites[TrackSprite::Platform]).position = pos;
+                    seg.sprites.back().scale = 2.f;
+                }
             }
 
             //vehicles
@@ -1092,6 +1132,23 @@ void EndlessDrivingState::createUI()
     resize(cam);
 }
 
+void EndlessDrivingState::floatingText(const std::string& str)
+{
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({RenderSizeFloat.x / 2.f, RenderSizeFloat.y - 54.f, 0.1f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(str);
+    entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    centreText(entity);
+
+    entity.addComponent<FloatingText>().basePos = entity.getComponent<cro::Transform>().getPosition();
+    entity.getComponent<FloatingText>().colour = CD32::Colours[CD32::Red];
+    m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
 void EndlessDrivingState::updateControllerInput()
 {
     m_inputFlags.steerMultiplier = 1.f;
@@ -1297,21 +1354,32 @@ void EndlessDrivingState::updatePlayer(float dt)
                     {
                     default:break;
                     case TrackSprite::Flag:
-                        m_gameRules.remainingTime += BeefStickTime * m_gameRules.flagstickMultiplier;
+                    {
+                        const float bonus = BeefStickTime * m_gameRules.flagstickMultiplier;
+                        m_gameRules.remainingTime += bonus;
                         m_gameRules.flagstickMultiplier++;
+
+                        floatingText("+" + std::to_string(std::int32_t(bonus)));
+                    }
                         break;
                     case TrackSprite::Ball:
                         m_gameRules.remainingTime += 0.12f + (BallTime * std::min(1.f, m_gameRules.remainingTime / 30.f));
                         break;
                     case TrackSprite::Bush01:
+                    case TrackSprite::Bush02:
+                    case TrackSprite::Bush03:
                     case TrackSprite::TallTree01:
                     case TrackSprite::TallTree02:
                         m_player.speed *= 0.5f;
                         break;
                     case TrackSprite::Tree01:
+                    case TrackSprite::Tree02:
+                    case TrackSprite::Tree03:
                     case TrackSprite::CartSide:
                     case TrackSprite::CartFront:
                     case TrackSprite::LampPost:
+                    case TrackSprite::Platform:
+                    case TrackSprite::PhoneBox:
 
                         m_player.speed = 0.f;
                         {
@@ -1372,11 +1440,13 @@ void EndlessDrivingState::updateRoad(float dt)
         m_trackCamera.move(glm::vec3(0.f, 0.f, - maxLen));
 
         //we did a lap so update the track
-        m_gameRules.awardLapTime();
+        auto award = m_gameRules.awardLapTime();
         m_road.swap(m_gameScene);
 
         //auto result = std::async(std::launch::async, &EndlessDrivingState::createRoad, this);
         createRoad();
+
+        floatingText("+" + std::to_string(award));
     }
 
     const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) - 1;
@@ -1406,6 +1476,10 @@ void EndlessDrivingState::updateRoad(float dt)
             if (s.id == TrackSprite::Flag
                 && s.collisionActive)
             {
+                if (m_gameRules.flagstickMultiplier != 0)
+                {
+                    floatingText("Flag Streak Broken!");
+                }
                 m_gameRules.flagstickMultiplier = 1;
                 break;
             }

@@ -29,12 +29,15 @@ source distribution.
 
 #pragma once
 
+#include "../Colordome-32.hpp"
+
 #include <crogine/ecs/System.hpp>
 
 struct FloatingText final
 {
     float currTime = 0.f;
     glm::vec3 basePos = glm::vec3(0.f);
+    cro::Colour colour = CD32::Colours[CD32::BeigeLight];
 
     static constexpr float MaxMove = 40.f;
     static constexpr float MaxTime = 3.f;
