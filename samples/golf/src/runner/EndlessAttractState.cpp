@@ -50,6 +50,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
 
 namespace
@@ -60,7 +61,7 @@ namespace
     {
         void operator() (cro::Entity e, float dt)
         {
-            static constexpr float Speed = 400.f;
+            static constexpr float Speed = 700.f;
             auto origin = e.getComponent<cro::Transform>().getOrigin();
             if (origin.x < 0)
             {
@@ -112,6 +113,15 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Clubhouse);
         };
 
+    const auto nextPage = [&]()
+        {
+            refreshCycle((m_cycleIndex + 1) % CycleEnt::Count);
+        };
+    const auto prevPage = [&]()
+        {
+            refreshCycle((m_cycleIndex + (CycleEnt::Count - 1)) % CycleEnt::Count);        
+        };
+
     const auto updateTextPrompt = [&](bool controller)
         {
             auto old = m_sharedGameData.lastInput;
@@ -128,6 +138,7 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
             if (old != m_sharedGameData.lastInput)
             {
                 //do actual update
+                refreshPrompt();
             }
 
             cro::App::getWindow().setMouseCaptured(true);
@@ -138,6 +149,12 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
+        case SDLK_LEFT:
+            prevPage();
+            break;
+        case SDLK_RIGHT:
+            nextPage();
+            break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
 #ifndef CRO_DEBUG_
@@ -159,10 +176,10 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case cro::GameController::ButtonLeftShoulder:
-            //TODO goto prev page
+            prevPage();
             break;
         case cro::GameController::ButtonRightShoulder:
-            //TODO goto next page
+            nextPage();
             break;
         case cro::GameController::ButtonA:
             startGame();
@@ -193,20 +210,13 @@ void EndlessAttractState::handleMessage(const cro::Message& msg)
         if (data.action == cro::Message::StateEvent::Pushed
             && data.id == StateID::EndlessAttract)
         {
-            //TODO update controller icons/text
-
+            //update controller icons/text
+            refreshPrompt();
 
             refreshHighScores();
 
             //reset to game over message
-            m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-
-            m_cycleClock.restart();
-            m_cycleIndex = 0;
-
-            m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-            m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setOrigin({ -RenderSizeFloat.x, 0.f, 0.f });
-            m_cycleEnts[m_cycleIndex].getComponent<cro::Callback>().active = true;
+            refreshCycle(0);
         }
     }
 
@@ -251,38 +261,84 @@ void EndlessAttractState::createUI()
         {
             if (m_cycleClock.elapsed() > CycleTime)
             {
-                m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                
-                m_cycleClock.restart();
-                m_cycleIndex = (m_cycleIndex + 1) % m_cycleEnts.size();
-                
-                m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setOrigin({ -RenderSizeFloat.x, 0.f, 0.f });
-                m_cycleEnts[m_cycleIndex].getComponent<cro::Callback>().active = true;
+                refreshCycle((m_cycleIndex + 1) % m_cycleEnts.size());
             }
         };
     m_rootNode = entity;
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/runner_menu.spt", m_resources.textures);
 
     //text prompt to start
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Press Space to Start");
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -16.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = TextFlashCallback();
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_startTextPrompt = entity;
+    auto startTextPrompt = entity;
+
+    
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Start");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    startTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_startPrompts[PromptID::Keyboard] = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Press  to Start");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    startTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_startPrompts[PromptID::Xbox] = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(2.f));
+    entity.getComponent<cro::Transform>().setPosition(glm::vec2(-38.f, -22.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("xbox_a");
+    m_startPrompts[PromptID::Xbox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Press  to Start");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    startTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_startPrompts[PromptID::PS] = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(2.f));
+    entity.getComponent<cro::Transform>().setPosition(glm::vec2(-38.f, -22.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ps_x");
+    m_startPrompts[PromptID::PS].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //text prompt to quit
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 32.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = TextFlashCallback();
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto quitTextPrompt = entity;
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -290,14 +346,42 @@ void EndlessAttractState::createUI()
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 32.f };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function = TextFlashCallback();
-    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_quitTextPrompt = entity;
+    quitTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_quitPrompts[PromptID::Keyboard] = entity;
 
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Press  to Quit");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    quitTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_quitPrompts[PromptID::Xbox] = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(2.f));
+    entity.getComponent<cro::Transform>().setPosition(glm::vec2(-30.f, -24.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("xbox_b");
+    m_quitPrompts[PromptID::Xbox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Press  to Quit");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    quitTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_quitPrompts[PromptID::PS] = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(2.f));
+    entity.getComponent<cro::Transform>().setPosition(glm::vec2(-30.f, -24.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ps_o");
+    m_quitPrompts[PromptID::PS].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //Game Over
     entity = m_uiScene.createEntity();
@@ -431,4 +515,31 @@ void EndlessAttractState::refreshHighScores()
         m_cycleEnts[CycleEnt::HighScore].getComponent<cro::Text>().setString(ss.str());
     }
     //else{//fetchSteam();}
+}
+
+void EndlessAttractState::refreshCycle(std::size_t newIndex)
+{
+    m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+    m_cycleClock.restart();
+    m_cycleIndex = newIndex;
+
+    m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setOrigin({ -RenderSizeFloat.x, 0.f, 0.f });
+    m_cycleEnts[m_cycleIndex].getComponent<cro::Callback>().active = true;
+}
+
+void EndlessAttractState::refreshPrompt()
+{
+    for (auto e : m_startPrompts)
+    {
+        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
+    m_startPrompts[m_sharedGameData.lastInput].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+    for (auto e : m_quitPrompts)
+    {
+        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
+    m_quitPrompts[m_sharedGameData.lastInput].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 }

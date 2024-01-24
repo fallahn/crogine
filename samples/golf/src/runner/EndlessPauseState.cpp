@@ -49,6 +49,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
 
 EndlessPauseState::EndlessPauseState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, els::SharedStateData& esd)
@@ -105,7 +106,11 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
 
             if (old != m_sharedGameData.lastInput)
             {
-                //do actual update
+                for (auto e : m_textPrompt)
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
+                m_textPrompt[m_sharedGameData.lastInput].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
 
             cro::App::getWindow().setMouseCaptured(true);
@@ -172,7 +177,12 @@ void EndlessPauseState::handleMessage(const cro::Message& msg)
             //refresh the text cos edge cases cause it to garble
             m_pausedText.getComponent<cro::Text>().setString("PAUSED");
 
-            //TODO update controller icons/text
+            //update controller icons/text
+            for (auto e : m_textPrompt)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+            m_textPrompt[m_sharedGameData.lastInput].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         }
     }
 
@@ -229,11 +239,14 @@ void EndlessPauseState::createUI()
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_pausedText = entity;
 
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/runner_menu.spt", m_resources.textures);
+
     //text prompt
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Esc: Continue\nQ: Quit to menu\nC: Quit to clubhouse");
+    entity.addComponent<cro::Text>(font).setString("Esc: Continue\nQ: Quit to Menu\nC: Quit to Clubhouse");
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -242,8 +255,45 @@ void EndlessPauseState::createUI()
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -48.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_textPrompt = entity;
+    m_textPrompt[PromptID::Keyboard] = entity;
 
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Continue\nQuit to Menu\nQuit to Clubhouse");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { -84.f, -48.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_textPrompt[PromptID::Xbox] = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -24.f, -64.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("pause_xbox");
+    m_textPrompt[PromptID::Xbox].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Continue\nQuit to Menu\nQuit to Clubhouse");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { -84.f, -48.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_textPrompt[PromptID::PS] = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -24.f, -64.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("pause_ps");
+    m_textPrompt[PromptID::PS].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //scaled independently of root node (see callback, below)

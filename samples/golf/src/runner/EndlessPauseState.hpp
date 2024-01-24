@@ -61,8 +61,17 @@ private:
     cro::ResourceCollection m_resources;
 
     cro::Entity m_rootNode;
-    cro::Entity m_textPrompt;
     cro::Entity m_pausedText;
+    
+    struct PromptID final
+    {
+        enum
+        {
+            Keyboard, Xbox, PS,
+            Count
+        };
+    };
+    std::array<cro::Entity, PromptID::Count> m_textPrompt = {};
 
     void addSystems();
     void loadAssets();

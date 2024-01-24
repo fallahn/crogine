@@ -63,8 +63,17 @@ private:
     cro::ResourceCollection m_resources;
 
     cro::Entity m_rootNode;
-    cro::Entity m_startTextPrompt;
-    cro::Entity m_quitTextPrompt;
+    
+    struct PromptID final
+    {
+        enum
+        {
+            Keyboard, Xbox, PS,
+            Count
+        };
+    };
+    std::array<cro::Entity, PromptID::Count> m_startPrompts = {};
+    std::array<cro::Entity, PromptID::Count> m_quitPrompts = {};
 
     std::size_t m_cycleIndex;
     cro::Clock m_cycleClock;
@@ -85,4 +94,6 @@ private:
     void createUI();
 
     void refreshHighScores();
+    void refreshCycle(std::size_t);
+    void refreshPrompt();
 };
