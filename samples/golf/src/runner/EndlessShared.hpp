@@ -34,6 +34,7 @@ namespace els
     struct SharedStateData final
     {
         float lastScore = 0.f;
+        float bestScore = 0.f;
 
         enum
         {

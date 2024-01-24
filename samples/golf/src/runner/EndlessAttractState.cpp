@@ -29,6 +29,7 @@ source distribution.
 
 #include "../golf/SharedStateData.hpp"
 #include "../golf/MenuConsts.hpp"
+#include "Social.hpp"
 
 #include "EndlessAttractState.hpp"
 #include "EndlessConsts.hpp"
@@ -195,7 +196,7 @@ void EndlessAttractState::handleMessage(const cro::Message& msg)
             //TODO update controller icons/text
 
 
-
+            refreshHighScores();
 
             //reset to game over message
             m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -300,7 +301,7 @@ void EndlessAttractState::createUI()
 
     //Game Over
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("GAME\nOVER");
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
@@ -311,7 +312,7 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
     entity.addComponent<cro::Callback>().function = CycleCallback();
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_cycleEnts[0] = entity;
+    m_cycleEnts[CycleEnt::GameOver] = entity;
 
     //high scores
     entity = m_uiScene.createEntity();
@@ -326,8 +327,8 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
     entity.addComponent<cro::Callback>().function = CycleCallback();
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_cycleEnts[1] = entity;
-
+    m_cycleEnts[CycleEnt::HighScore] = entity;
+    refreshHighScores();
 
     //how to play
     entity = m_uiScene.createEntity();
@@ -342,7 +343,7 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
     entity.addComponent<cro::Callback>().function = CycleCallback();
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_cycleEnts[2] = entity;
+    m_cycleEnts[CycleEnt::Rules] = entity;
 
 
     //scaled independently of root node (see callback, below)
@@ -390,4 +391,44 @@ void EndlessAttractState::createUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
+}
+
+void EndlessAttractState::refreshHighScores()
+{
+    CRO_ASSERT(m_cycleEnts[CycleEnt::HighScore].isValid(), "");
+
+    const auto toTimeFormat = [](float score)
+        {
+            std::int32_t mins = static_cast<std::int32_t>(std::floor(score / 60.f));
+            auto sec = score - (mins * 60);
+
+            return std::make_pair(mins, sec);
+        };
+
+    //TODO fetch steam scores if available
+    //if (!Social::isAvailable())
+    {
+        auto [mins, sec] = toTimeFormat(m_sharedGameData.lastScore);
+        auto [mins2, sec2] = toTimeFormat(m_sharedGameData.bestScore);
+
+        std::stringstream ss;
+        ss << "High Scores\n";
+        ss << std::fixed << std::setprecision(2);
+
+        if (m_sharedGameData.lastScore != 0)
+        {
+            ss << "Your Score: " << mins << "m " << sec << "s\n";
+        }
+        else
+        {
+            ss << "...";
+        }
+
+        if (m_sharedGameData.bestScore != 0)
+        {
+            ss << "All Time Best: " << mins2 << "m " << sec2 << "s";
+        }
+        m_cycleEnts[CycleEnt::HighScore].getComponent<cro::Text>().setString(ss.str());
+    }
+    //else{//fetchSteam();}
 }

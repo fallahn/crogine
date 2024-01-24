@@ -537,6 +537,11 @@ bool EndlessDrivingState::simulate(float dt)
                 cro::GameController::rumbleStop(0);
                 m_sharedGameData.lastScore = m_gameRules.totalTime;
 
+                if (m_sharedGameData.lastScore > m_sharedGameData.bestScore)
+                {
+                    m_sharedGameData.bestScore = m_sharedGameData.lastScore;
+                }
+
                 //push game over state
                 requestStackPush(StateID::EndlessAttract);
             }
@@ -1641,7 +1646,7 @@ void EndlessDrivingState::updatePlayer(float dt)
 void EndlessDrivingState::updateRoad(float dt)
 {
     const float s = m_player.speed;
-    
+
     m_trackCamera.move(glm::vec3(0.f, 0.f, s * dt));
 
     const float maxLen = m_road.getSegmentCount() * SegmentLength;
@@ -1671,6 +1676,27 @@ void EndlessDrivingState::updateRoad(float dt)
     const auto trackHeight = m_road[start % m_road.getSegmentCount()].position.y;
     m_trackCamera.move(glm::vec3(0.f, trackHeight, 0.f));
 
+
+
+    const auto& checkFlag = [&](TrackSegment& seg)
+        {
+            for (auto& s : seg.sprites)
+            {
+                if (s.id == TrackSprite::Flag
+                    && s.collisionActive)
+                {
+                    if (m_gameRules.flagstickMultiplier != 0)
+                    {
+                        floatingText("Flag Streak\nBroken!");
+                    }
+                    m_gameRules.flagstickMultiplier = 0;
+                    s.collisionActive = false; //prevents double positives
+                    break;
+                }
+            }
+        };
+
+
     //keep this because we need to reverse the draw order
     std::vector<std::size_t> spriteSegments;
 
@@ -1682,21 +1708,14 @@ void EndlessDrivingState::updateRoad(float dt)
         spriteSegments.push_back(prevIndex);
 
         //check if we missed a flag
-        for (auto& s : prev->sprites)
-        {
-            if (s.id == TrackSprite::Flag
-                && s.collisionActive)
-            {
-                if (m_gameRules.flagstickMultiplier != 0)
-                {
-                    floatingText("Flag Streak\nBroken!");
-                }
-                m_gameRules.flagstickMultiplier = 0;
-                break;
-            }
-        }
+        checkFlag(*prev);
     }
+    //attempt to mitigate cases where we 'tunnel' through flag segments
+    auto& next = m_road[start % m_road.getSegmentCount()];
+    checkFlag(next);
 
+
+    //hmm we handled this already above - surely it only needs to be done here?
     if (start - 1 >= m_road.getSegmentCount())
     {
         m_trackCamera.setZ(camPos.z - (m_road.getSegmentCount() * SegmentLength));

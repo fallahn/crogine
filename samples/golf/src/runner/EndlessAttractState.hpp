@@ -68,10 +68,21 @@ private:
 
     std::size_t m_cycleIndex;
     cro::Clock m_cycleClock;
-    std::array<cro::Entity, 3u> m_cycleEnts;
+
+    struct CycleEnt final
+    {
+        enum
+        {
+            GameOver, HighScore, Rules,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, CycleEnt::Count> m_cycleEnts = {};
 
     void addSystems();
     void loadAssets();
     void createUI();
 
+    void refreshHighScores();
 };
