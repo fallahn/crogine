@@ -773,7 +773,7 @@ void EndlessDrivingState::createScene()
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Sky].entity = entity;
     m_background[BackgroundLayer::Sky].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
-    m_background[BackgroundLayer::Sky].speed = 40.f;
+    m_background[BackgroundLayer::Sky].speed = 400.f;
 
     tex = &m_resources.textures.get("assets/golf/images/skybox/layers/02.png");
     tex->setRepeated(true);
@@ -784,7 +784,7 @@ void EndlessDrivingState::createScene()
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Hills].entity = entity;
     m_background[BackgroundLayer::Hills].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
-    m_background[BackgroundLayer::Hills].speed = 80.f;
+    m_background[BackgroundLayer::Hills].speed = 800.f;
     m_background[BackgroundLayer::Hills].verticalSpeed = 40.f;
 
     tex = &m_resources.textures.get("assets/golf/images/skybox/layers/03.png");
@@ -796,7 +796,7 @@ void EndlessDrivingState::createScene()
     entity.addComponent<cro::Sprite>(*tex);
     m_background[BackgroundLayer::Trees].entity = entity;
     m_background[BackgroundLayer::Trees].textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
-    m_background[BackgroundLayer::Trees].speed = 160.f;
+    m_background[BackgroundLayer::Trees].speed = 1600.f;
     m_background[BackgroundLayer::Trees].verticalSpeed = 60.f;
 
     //player

@@ -57,12 +57,12 @@ private:
     cro::ResourceCollection m_resources;
 
     cro::Entity m_rootNode;
-    cro::Entity m_cycleNode;
     cro::Entity m_startTextPrompt;
     cro::Entity m_quitTextPrompt;
 
     std::size_t m_cycleIndex;
     cro::Clock m_cycleClock;
+    std::array<cro::Entity, 3u> m_cycleEnts;
 
     void addSystems();
     void loadAssets();
