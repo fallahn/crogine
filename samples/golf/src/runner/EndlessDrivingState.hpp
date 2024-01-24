@@ -183,6 +183,15 @@ private:
 
     void floatingText(const std::string&);
 
+    struct HapticType final
+    {
+        enum
+        {
+            Soft, Foliage, Medium, Hard, Rumble, Lap
+        };
+    };
+    void applyHapticEffect(std::int32_t);
+
     void updateControllerInput();
     void updatePlayer(float dt);
     void updateRoad(float dt);

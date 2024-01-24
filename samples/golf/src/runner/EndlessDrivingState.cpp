@@ -1175,6 +1175,36 @@ void EndlessDrivingState::floatingText(const std::string& str)
     m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
+void EndlessDrivingState::applyHapticEffect(std::int32_t type)
+{
+    if (m_sharedData.enableRumble
+        && cro::GameController::isConnected(0))
+    {
+        switch (type)
+        {
+        default: break;
+        case HapticType::Foliage:
+            cro::GameController::rumbleStart(0, 0, 65000, 800);
+            break;
+        case HapticType::Hard:
+            cro::GameController::rumbleStart(0, 19330, 65000, 240);
+            break;
+        case HapticType::Lap:
+            cro::GameController::rumbleStart(0, 40000, 10000, 500);
+            break;
+        case HapticType::Medium:
+            cro::GameController::rumbleStart(0, 10000, 65000, 100);
+            break;
+        case HapticType::Rumble:
+            cro::GameController::rumbleStart(0, 10000, 10000, 10000);
+            break;
+        case HapticType::Soft:
+            cro::GameController::rumbleStart(0, 290, 0, 50);
+            break;
+        }
+    }
+}
+
 void EndlessDrivingState::updateControllerInput()
 {
     m_inputFlags.steerMultiplier = 1.f;
@@ -1324,7 +1354,7 @@ void EndlessDrivingState::updatePlayer(float dt)
         if (!m_player.offTrack)
         {
             //start rumble
-            cro::GameController::rumbleStart(0, 10000, 10000, 10000);
+            applyHapticEffect(HapticType::Rumble);
         }
         m_player.offTrack = true;
     }
@@ -1416,12 +1446,12 @@ void EndlessDrivingState::updatePlayer(float dt)
 
                             floatingText("+" + std::to_string(std::int32_t(BeefStickTime)));
                         }
-                        cro::GameController::rumbleStart(0, 290, 0, 50);
+                        applyHapticEffect(HapticType::Soft);
                     }
                         break;
                     case TrackSprite::Ball:
                         m_gameRules.remainingTime += 0.12f + (BallTime * std::min(1.f, m_gameRules.remainingTime / 30.f));
-                        cro::GameController::rumbleStart(0, 290, 0, 50);
+                        applyHapticEffect(HapticType::Soft);
                         break;
                     case TrackSprite::Bush01:
                     case TrackSprite::Bush02:
@@ -1429,8 +1459,7 @@ void EndlessDrivingState::updatePlayer(float dt)
                     case TrackSprite::TallTree01:
                     case TrackSprite::TallTree02:
                         m_player.speed *= 0.5f;
-
-                        cro::GameController::rumbleStart(0, 0, 65000, 800);
+                        applyHapticEffect(HapticType::Foliage);
                         break;
                     case TrackSprite::Tree01:
                     case TrackSprite::Tree02:
@@ -1440,7 +1469,7 @@ void EndlessDrivingState::updatePlayer(float dt)
                     case TrackSprite::LampPost:
                     case TrackSprite::Platform:
                     case TrackSprite::PhoneBox:
-                        cro::GameController::rumbleStart(0, 19330, 65000, 240);
+                        applyHapticEffect(HapticType::Hard);
                         m_player.speed = 0.f;
                         {
                             m_player.state = Player::State::Reset;
@@ -1463,7 +1492,7 @@ void EndlessDrivingState::updatePlayer(float dt)
                         }
                         break;
                     case TrackSprite::CartAway:
-                        cro::GameController::rumbleStart(0, 10000, 65000, 100);
+                        applyHapticEffect(HapticType::Medium);
                         m_player.speed *= 0.1f;
                         break;
                     }
@@ -1508,7 +1537,7 @@ void EndlessDrivingState::updateRoad(float dt)
         createRoad();
 
         floatingText("+" + std::to_string(award));
-        cro::GameController::rumbleStart(0, 40000, 10000, 500);
+        applyHapticEffect(HapticType::Lap);
     }
 
     const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) - 1;
