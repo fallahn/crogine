@@ -71,11 +71,75 @@ source distribution.
 
 namespace
 {
+    //ugh this is duped from GameConsts.hpp
+    static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::Material::Data& dest, std::size_t matID)
+    {
+        if (auto* m = modelDef.getMaterial(matID); m != nullptr)
+        {
+            //skip over materials with alpha blend as they are
+            //probably shadow materials if not explicitly glass
+            if (m->blendMode == cro::Material::BlendMode::Alpha
+                && !modelDef.hasTag(matID, "glass"))
+            {
+                dest = *m;
+                return;
+            }
+            else
+            {
+                dest.blendMode = m->blendMode;
+            }
+
+            if (m->properties.count("u_diffuseMap"))
+            {
+                dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+            }
+
+            if (m->properties.count("u_maskMap"))
+            {
+                dest.setProperty("u_maskMap", cro::TextureID(m->properties.at("u_maskMap").second.textureID));
+            }
+
+            if (m->properties.count("u_colour")
+                && dest.properties.count("u_colour"))
+            {
+                const auto* c = m->properties.at("u_colour").second.vecValue;
+                glm::vec4 colour(c[0], c[1], c[2], c[3]);
+
+                dest.setProperty("u_colour", colour);
+            }
+
+            if (m->properties.count("u_maskColour")
+                && dest.properties.count("u_maskColour"))
+            {
+                const auto* c = m->properties.at("u_maskColour").second.vecValue;
+                glm::vec4 colour(c[0], c[1], c[2], c[3]);
+
+                dest.setProperty("u_maskColour", colour);
+            }
+
+            if (m->properties.count("u_subrect"))
+            {
+                const float* v = m->properties.at("u_subrect").second.vecValue;
+                glm::vec4 subrect(v[0], v[1], v[2], v[3]);
+                dest.setProperty("u_subrect", subrect);
+            }
+            else if (dest.properties.count("u_subrect"))
+            {
+                dest.setProperty("u_subrect", glm::vec4(0.f, 0.f, 1.f, 1.f));
+            }
+
+            dest.doubleSided = m->doubleSided;
+            dest.animation = m->animation;
+            dest.name = m->name;
+        }
+    }
+
     struct ShaderID final
     {
         enum
         {
             Cel,
+            Driver,
             Brake,
 
             Count
@@ -87,6 +151,7 @@ namespace
         enum
         {
             Cel,
+            Driver,
             Brake,
 
             Count
@@ -97,7 +162,11 @@ namespace
         R"(
         uniform sampler2D u_diffuseMap;
         uniform vec3 u_lightDirection = vec3(0.0, -1.0, 0.0);
-        
+
+#if defined(SUBRECT)
+        uniform vec4 u_subrect = vec4(0.0, 0.0, 1.0, 1.0);
+#endif
+
         VARYING_IN vec3 v_normalVector;
         VARYING_IN vec2 v_texCoord0;
 
@@ -110,7 +179,14 @@ namespace
 
         void main()
         {
-            vec3 c = TEXTURE(u_diffuseMap, v_texCoord0).rgb;
+            vec2 coord = v_texCoord0;
+
+#if defined(SUBRECT)
+            coord *= u_subrect.ba;
+            coord += u_subrect.rg;
+#endif
+
+            vec3 c = TEXTURE(u_diffuseMap, coord).rgb;
             
             vec3 normal = normalize(v_normalVector);
             vec3 lightDirection = normalize(-u_lightDirection);
@@ -529,6 +605,12 @@ void EndlessDrivingState::loadAssets()
         "#define TEXTURED\n");
     m_resources.materials.add(MaterialID::Cel, m_resources.shaders.get(ShaderID::Cel));
 
+    m_resources.shaders.loadFromString(ShaderID::Driver,
+    cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit),
+        CelShader,
+        "#define TEXTURED\n#define SUBRECT\n");
+        m_resources.materials.add(MaterialID::Driver, m_resources.shaders.get(ShaderID::Driver));
+
     m_resources.shaders.loadFromString(ShaderID::Brake,
         cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit),
         BrakeShader,
@@ -619,17 +701,46 @@ void EndlessDrivingState::createPlayer()
     {
         md.createModel(entity);
 
-        auto* m = md.getMaterial(0);
-        if (m->properties.count("u_diffuseMap"))
-        {
-            m_resources.materials.get(MaterialID::Brake).setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
-            m_resources.materials.get(MaterialID::Cel).setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+        auto celMat = m_resources.materials.get(MaterialID::Cel);
+        applyMaterialData(md,celMat, 0);
 
-            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(MaterialID::Cel));
-            entity.getComponent<cro::Model>().setMaterial(1, m_resources.materials.get(MaterialID::Brake));
-        }
+        auto brakeMat = m_resources.materials.get(MaterialID::Brake);
+        applyMaterialData(md, brakeMat, 1);
+
+        entity.getComponent<cro::Model>().setMaterial(0, celMat);
+        entity.getComponent<cro::Model>().setMaterial(1, brakeMat);
     }
     m_playerEntity = entity;
+
+
+    std::string driverPath = cro::Util::Random::value(0, 1) ? "assets/golf/models/driver01.cmt" : "assets/golf/models/driver02.cmt";
+    if (md.loadFromFile(driverPath))
+    {
+        entity = m_playerScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        auto mat = m_resources.materials.get(MaterialID::Driver);
+        applyMaterialData(md, mat, 0);
+
+        glm::vec4 rect(0.f, 0.f, 0.33333f, 1.f);
+        switch (cro::Util::Random::value(0, 2))
+        {
+        default:break;
+        case 1:
+            rect.x = 0.33333f;
+            break;
+        case 2:
+            rect.x = 0.666666f;
+            break;
+        }
+        mat.setProperty("u_subrect", rect);
+
+        entity.getComponent<cro::Model>().setMaterial(0, mat);
+
+        m_playerEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
 
 
     auto resize = [&](cro::Camera& cam)
