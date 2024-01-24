@@ -50,11 +50,16 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 
 #include <array>
 
+namespace els
+{
+    struct SharedStateData;
+}
+
 struct SharedStateData;
 class EndlessDrivingState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
-    EndlessDrivingState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    EndlessDrivingState(cro::StateStack&, cro::State::Context, SharedStateData&, els::SharedStateData&);
 
     cro::StateID getStateID() const override { return StateID::EndlessRunner; }
 
@@ -66,6 +71,7 @@ public:
 private:
 
     SharedStateData& m_sharedData;
+    els::SharedStateData& m_sharedGameData;
 
     //vehicle is a 3D model in its own scene
     //rendered to a buffer to use as a sprite

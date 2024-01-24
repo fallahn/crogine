@@ -29,43 +29,15 @@ source distribution.
 
 #pragma once
 
-#include "../StateIDs.hpp"
-
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
-
 namespace els
 {
-    struct SharedStateData;
+    struct SharedStateData final
+    {
+        float lastScore = 0.f;
+
+        enum
+        {
+            Keyboard, Xbox, PS
+        }lastInput = Keyboard;
+    };
 }
-
-struct SharedStateData;
-class EndlessPauseState final : public cro::State
-{
-public:
-    EndlessPauseState(cro::StateStack&, cro::State::Context, SharedStateData&, els::SharedStateData&);
-
-    cro::StateID getStateID() const override { return StateID::EndlessPause; }
-
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
-
-private:
-    SharedStateData& m_sharedData;
-    els::SharedStateData& m_sharedGameData;
-
-    cro::Scene m_uiScene;
-    cro::ResourceCollection m_resources;
-
-    cro::Entity m_rootNode;
-    cro::Entity m_textPrompt;
-    cro::Entity m_pausedText;
-
-    void addSystems();
-    void loadAssets();
-    void createUI();
-
-};

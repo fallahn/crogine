@@ -35,6 +35,7 @@ source distribution.
 #include "EndlessDrivingState.hpp"
 #include "EndlessConsts.hpp"
 #include "EndlessMessages.hpp"
+#include "EndlessShared.hpp"
 #include "EndlessSoundDirector.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -224,14 +225,17 @@ namespace
     }debug;
 }
 
-EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
+EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, els::SharedStateData& esd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
+    m_sharedGameData(esd),
     m_playerScene   (context.appInstance.getMessageBus()),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
     m_contextIndex  (0)
 {
+    esd.lastScore = 0.f;
+    
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
@@ -398,6 +402,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYDOWN)
     {
+        m_sharedGameData.lastInput = els::SharedStateData::Keyboard;
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.key.keysym.sym)
         {
@@ -459,6 +464,9 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
+        m_sharedGameData.lastInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) 
+            ? els::SharedStateData::PS : els::SharedStateData::Xbox;
+
         switch (evt.cbutton.button)
         {
         default: break;
@@ -473,6 +481,8 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
             || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
         {
+            m_sharedGameData.lastInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which))
+                ? els::SharedStateData::PS : els::SharedStateData::Xbox;
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
@@ -525,11 +535,10 @@ bool EndlessDrivingState::simulate(float dt)
             if(m_gameRules.remainingTime == 0)
             {
                 cro::GameController::rumbleStop(0);
+                m_sharedGameData.lastScore = m_gameRules.totalTime;
 
                 //push game over state
                 requestStackPush(StateID::EndlessAttract);
-
-                //TODO update the leaderboard
             }
 //#endif
         }
@@ -1796,7 +1805,8 @@ void EndlessDrivingState::updateRoad(float dt)
     m_trackSpriteEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
 
     //reset the collision on sprites which came back into view
-    if (!spriteSegments.empty())
+    //doesn't need this now as we're not loopig the track segments.
+    /*if (!spriteSegments.empty())
     {
         for (auto& spr : m_road[spriteSegments.back()].sprites)
         {
@@ -1807,7 +1817,7 @@ void EndlessDrivingState::updateRoad(float dt)
         {
             e.getComponent<Car>().sprite.collisionActive = true;
         }
-    }
+    }*/
 
     //update the background
     const float speedRatio = s / Player::MaxSpeed;

@@ -36,11 +36,16 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
+namespace els
+{
+    struct SharedStateData;
+}
+
 struct SharedStateData;
 class EndlessAttractState final : public cro::State
 {
 public:
-    EndlessAttractState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    EndlessAttractState(cro::StateStack&, cro::State::Context, SharedStateData&, els::SharedStateData&);
 
     cro::StateID getStateID() const override { return StateID::EndlessAttract; }
 
@@ -52,6 +57,7 @@ public:
 private:
 
     SharedStateData& m_sharedData;
+    els::SharedStateData& m_sharedGameData;
 
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;

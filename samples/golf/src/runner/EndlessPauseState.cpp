@@ -32,6 +32,7 @@ source distribution.
 
 #include "EndlessPauseState.hpp"
 #include "EndlessConsts.hpp"
+#include "EndlessShared.hpp"
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -50,9 +51,10 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 
-EndlessPauseState::EndlessPauseState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
+EndlessPauseState::EndlessPauseState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, els::SharedStateData& esd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
+    m_sharedGameData(esd),
     m_uiScene       (context.appInstance.getMessageBus())
 {
     context.mainWindow.loadResources([this]() {
@@ -88,12 +90,22 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::EndlessAttract);
         };
     const auto updateTextPrompt =
-        [](bool controller)
+        [&](bool controller)
         {
-            static bool prevController = false;
-            if (prevController != controller)
+            auto old = m_sharedGameData.lastInput;
+            if (controller)
             {
-                //TODO update prompt text with correct icons
+                m_sharedGameData.lastInput = cro::GameController::hasPSLayout(0)
+                    ? els::SharedStateData::PS : els::SharedStateData::Xbox;
+            }
+            else
+            {
+                m_sharedGameData.lastInput = els::SharedStateData::Keyboard;
+            }
+
+            if (old != m_sharedGameData.lastInput)
+            {
+                //do actual update
             }
 
             cro::App::getWindow().setMouseCaptured(true);
@@ -145,7 +157,7 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
 
 
     m_uiScene.forwardEvent(evt);
-    return true;
+    return false;
 }
 
 void EndlessPauseState::handleMessage(const cro::Message& msg)
@@ -159,6 +171,8 @@ void EndlessPauseState::handleMessage(const cro::Message& msg)
             //HAX
             //refresh the text cos edge cases cause it to garble
             m_pausedText.getComponent<cro::Text>().setString("PAUSED");
+
+            //TODO update controller icons/text
         }
     }
 

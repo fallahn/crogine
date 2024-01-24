@@ -63,6 +63,7 @@ source distribution.
 #include "runner/EndlessAttractState.hpp"
 #include "runner/EndlessDrivingState.hpp"
 #include "runner/EndlessPauseState.hpp"
+#include "runner/EndlessShared.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
@@ -109,6 +110,8 @@ namespace
 #include "golf/shaders/PostProcess.inl"
 #include "golf/shaders/ShaderIncludes.inl"
 #include "golf/RandNames.hpp"
+
+    els::SharedStateData elsShared;
 
     struct ShaderDescription final
     {
@@ -196,9 +199,9 @@ GolfGame::GolfGame()
     m_stateStack.registerState<LeagueState>(StateID::League, m_sharedData);
     m_stateStack.registerState<MapOverviewState>(StateID::MapOverview, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
-    m_stateStack.registerState<EndlessAttractState>(StateID::EndlessAttract, m_sharedData);
-    m_stateStack.registerState<EndlessDrivingState>(StateID::EndlessRunner, m_sharedData);
-    m_stateStack.registerState<EndlessPauseState>(StateID::EndlessPause, m_sharedData);
+    m_stateStack.registerState<EndlessAttractState>(StateID::EndlessAttract, m_sharedData, elsShared);
+    m_stateStack.registerState<EndlessDrivingState>(StateID::EndlessRunner, m_sharedData, elsShared);
+    m_stateStack.registerState<EndlessPauseState>(StateID::EndlessPause, m_sharedData, elsShared);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);

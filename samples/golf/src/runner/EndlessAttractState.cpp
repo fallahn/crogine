@@ -32,6 +32,7 @@ source distribution.
 
 #include "EndlessAttractState.hpp"
 #include "EndlessConsts.hpp"
+#include "EndlessShared.hpp"
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -74,9 +75,10 @@ namespace
     };
 }
 
-EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
+EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, els::SharedStateData& esd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
+    m_sharedGameData(esd),
     m_uiScene       (context.appInstance.getMessageBus()),
     m_cycleIndex    (0)
 {
@@ -111,12 +113,20 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
 
     const auto updateTextPrompt = [&](bool controller)
         {
-            static bool prevController = false;
-            if (controller != prevController)
+            auto old = m_sharedGameData.lastInput;
+            if (controller)
             {
-                prevController = controller;
+                m_sharedGameData.lastInput = cro::GameController::hasPSLayout(0)
+                    ? els::SharedStateData::PS : els::SharedStateData::Xbox;
+            }
+            else
+            {
+                m_sharedGameData.lastInput = els::SharedStateData::Keyboard;
+            }
 
-                //TODO actual update
+            if (old != m_sharedGameData.lastInput)
+            {
+                //do actual update
             }
 
             cro::App::getWindow().setMouseCaptured(true);
@@ -171,11 +181,34 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
     }
 
     m_uiScene.forwardEvent(evt);
-    return true;
+    return false;
 }
 
 void EndlessAttractState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Pushed
+            && data.id == StateID::EndlessAttract)
+        {
+            //TODO update controller icons/text
+
+
+
+
+            //reset to game over message
+            m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+            m_cycleClock.restart();
+            m_cycleIndex = 0;
+
+            m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_cycleEnts[m_cycleIndex].getComponent<cro::Transform>().setOrigin({ -RenderSizeFloat.x, 0.f, 0.f });
+            m_cycleEnts[m_cycleIndex].getComponent<cro::Callback>().active = true;
+        }
+    }
+
     m_uiScene.forwardMessage(msg);
 }
 
