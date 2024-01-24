@@ -1000,6 +1000,17 @@ void MenuState::handleMessage(const cro::Message& msg)
         case MatchMaking::Message::LobbyCreated:
             //broadcast the lobby ID to clients. This will also join ourselves.
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::NewLobbyReady, data.hostID, net::NetFlag::Reliable);
+
+            if (m_sharedData.hosting)
+            {
+                //restore the lobby publicity setting
+                m_matchMaking.setFriendsOnly(m_matchMaking.getFriendsOnly());
+                m_matchMaking.setGamePlayerCount(m_sharedData.localConnectionData.playerCount); //assume we're the only client at this point
+
+                //and trigger packets to update lobby info
+                auto data = serialiseString(m_sharedData.mapDirectory);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+            }
             break;
         case MatchMaking::Message::LobbyJoined:
             finaliseGameJoin(data);
@@ -2399,9 +2410,6 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-        //if we're returning from an existing game apply the friends filter
-        m_matchMaking.setFriendsOnly(m_matchMaking.getFriendsOnly());
     }
 }
 
