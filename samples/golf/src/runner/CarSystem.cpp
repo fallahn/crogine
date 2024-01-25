@@ -29,15 +29,18 @@ source distribution.
 
 #include "CarSystem.hpp"
 #include "Track.hpp"
+#include "Player.hpp"
 #include "TrackCamera.hpp"
 #include "EndlessConsts.hpp"
 
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/util/Maths.hpp>
 
-CarSystem::CarSystem(cro::MessageBus& mb, Track& track, const TrackCamera& cam)
+CarSystem::CarSystem(cro::MessageBus& mb, Track& track, const TrackCamera& cam, const Player& p)
     : cro::System   (mb, typeid(CarSystem)),
     m_track         (track),
-    m_camera        (cam)
+    m_camera        (cam),
+    m_player        (p)
 {
     requireComponent<Car>();
 }
@@ -120,8 +123,22 @@ void CarSystem::process(float dt)
             {
                 e.getComponent<cro::AudioEmitter>().play();
             }
-            //TODO we could combine cart speed with player speed to calc an
-            //approx doppler effect and set the emitter's pitch
+
+
+            //calc an approx doppler effect and set the emitter's pitch
+            auto relVel = m_player.speed - car.speed;
+            auto dopplerSign = cro::Util::Maths::sgn(distSigned * relVel); //effectively single component of dot prod
+
+            //if doppler sign > 0 we're moving towards
+            auto shift = vol;
+            if (dopplerSign < 0)
+            {
+                shift = 1.f - shift;
+            }
+            shift = (shift * shift) * dopplerSign;
+            
+            auto pitch = (car.basePitch * 0.5f) + ((car.basePitch * 0.5f) * shift);
+            e.getComponent<cro::AudioEmitter>().setPitch(pitch);
         }
     }
 }

@@ -89,7 +89,7 @@ void EndlessSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             case TrackSprite::Flag:
                 playSound(AudioID::Flag);
-                playSoundDelayed(AudioID::FlagVoice, 0.4f);
+                playSoundDelayed(AudioID::FlagVoice, 0.4f, MixerChannel::Voice);
                 break;
             case TrackSprite::Bush01:
             case TrackSprite::Bush02:
@@ -132,20 +132,20 @@ cro::Entity EndlessSoundDirector::playSound(std::int32_t id, float vol)
     return ent;
 }
 
-void EndlessSoundDirector::playSoundDelayed(std::int32_t id, float delay, float volume)
+void EndlessSoundDirector::playSoundDelayed(std::int32_t id, float delay, float volume, std::uint8_t channel)
 {
     auto entity = getScene().createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(delay);
     entity.getComponent<cro::Callback>().function =
-        [&, id, volume](cro::Entity e, float dt)
+        [&, id, volume, channel](cro::Entity e, float dt)
         {
             auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
             currTime -= dt;
 
             if (currTime < 0)
             {
-                playSound(id, volume);
+                playSound(id, volume).getComponent<cro::AudioEmitter>().setMixerChannel(channel);
                 e.getComponent<cro::Callback>().active = false;
                 getScene().destroyEntity(e);
             }

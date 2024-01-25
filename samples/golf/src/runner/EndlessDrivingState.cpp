@@ -582,7 +582,7 @@ void EndlessDrivingState::addSystems()
     m_playerScene.addSystem<cro::CameraSystem>(mb);
     m_playerScene.addSystem<cro::ModelRenderer>(mb);
 
-    m_gameScene.addSystem<CarSystem>(mb, m_road, m_trackCamera);
+    m_gameScene.addSystem<CarSystem>(mb, m_road, m_trackCamera, m_player);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SpriteSystem2D>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
@@ -976,7 +976,7 @@ void EndlessDrivingState::createRoad()
 
     const auto bushOffset = m_contextIndex % 3;
 
-    auto segmentCount = cro::Util::Random::value(8, 10);
+    auto segmentCount = cro::Util::Random::value(3, 5) + (m_contextIndex / 2);
     for (auto i = 0; i < segmentCount; ++i)
     {
         const std::size_t first = m_road.getPendingSegments().size();
@@ -1037,7 +1037,7 @@ void EndlessDrivingState::createRoad()
             //vehicles
             if (cro::Util::Random::value(0, ctx.traffic) == 0)
             {
-                auto pos = -0.5f - cro::Util::Random::value(0.15f, 0.3f);
+                auto pos = -0.49f - cro::Util::Random::value(0.1f, 0.15f);
                 if (cro::Util::Random::value(0, 1) == 0)
                 {
                     pos *= -1.f;
@@ -1052,14 +1052,14 @@ void EndlessDrivingState::createRoad()
                 car.z = seg.position.z;
                 car.speed += cro::Util::Random::value(-4.f, 4.f);
                 car.baseVolume = entity.getComponent<cro::AudioEmitter>().getVolume();
-                entity.getComponent<cro::AudioEmitter>().setPitch(entity.getComponent<cro::AudioEmitter>().getPitch()* (car.speed / 14.f));
+                car.basePitch = entity.getComponent<cro::AudioEmitter>().getPitch() * (car.speed / (Car::DefaultSpeed + 4.f));
                 seg.cars.push_back(entity);
             }
 
             //debris
             if (cro::Util::Random::value(0, 1499) < ctx.debris)
             {
-                auto pos = -0.25f - cro::Util::Random::value(0.1f, 0.2f);
+                auto pos = -0.1f - cro::Util::Random::value(0.05f, 0.1f);
                 if (cro::Util::Random::value(0, 1) == 0)
                 {
                     pos *= -1.f;
@@ -1077,7 +1077,7 @@ void EndlessDrivingState::createRoad()
                 if (j % 16 == 0)
                 {
                     auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::Ball]);
-                    spr.position = 0.5f * offsetMultiplier;
+                    spr.position = 0.48f * offsetMultiplier;
                     spr.scale = 1.5f;
                     spr.frameIndex = animationFrameOffsets[spr.animation];
 
@@ -1100,7 +1100,7 @@ void EndlessDrivingState::createRoad()
             if ((j == last - exit) && (i % 5) == 4)
             {
                 auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::Flag]);
-                spr.position = -0.5f * offsetMultiplier;
+                spr.position = -0.48f * offsetMultiplier;
                 spr.scale = 3.5f;
                 spr.frameIndex = animationFrameOffsets[spr.animation];
 
@@ -1427,7 +1427,7 @@ void EndlessDrivingState::updatePlayer(float dt)
     }
 
     //else normal input
-    const float speedRatio = (m_player.speed / Player::MaxSpeed);
+    const float speedRatio = std::clamp((m_player.speed / Player::MaxSpeed), 0.f, 1.f); //might be 'turbo' mode
     const float dx = dt * 2.f * speedRatio;
     const float dxSteer = dt * 2.f * cro::Util::Easing::easeOutQuad(speedRatio);
 
@@ -1458,7 +1458,8 @@ void EndlessDrivingState::updatePlayer(float dt)
 
    
 
-    if ((m_inputFlags.flags & (InputFlags::Up | InputFlags::Down)) == 0)
+    if (((m_inputFlags.flags & (InputFlags::Up | InputFlags::Down)) == 0)
+        || m_player.speed > Player::MaxSpeed) //speed boost
     {
         //free wheel decel
         m_player.speed += Player::Deceleration * dt;
@@ -1470,8 +1471,10 @@ void EndlessDrivingState::updatePlayer(float dt)
     {
         if (m_inputFlags.flags & InputFlags::Up)
         {
-            m_player.speed += Player::Acceleration * dt * m_inputFlags.accelerateMultiplier;
-
+            if (m_player.speed < Player::MaxSpeed)
+            {
+                m_player.speed += Player::Acceleration * dt * m_inputFlags.accelerateMultiplier;
+            }
             glUseProgram(m_brakeShader.id);
             glUniform1f(m_brakeShader.uniform, 1.f);
         }
@@ -1512,7 +1515,7 @@ void EndlessDrivingState::updatePlayer(float dt)
     }
 
     m_player.position.x = std::clamp(m_player.position.x, -2.f, 2.f);
-    m_player.speed = std::clamp(m_player.speed, 0.f, Player::MaxSpeed);
+    m_player.speed = std::clamp(m_player.speed, 0.f, Player::MaxSpeed * 2.f); //clamp at 0 else we 'decelerate' backwards...
 
     m_player.position.z = m_trackCamera.getDepth() * m_trackCamera.getPosition().y;
 
@@ -1580,16 +1583,19 @@ void EndlessDrivingState::updatePlayer(float dt)
                             m_gameRules.remainingTime = 30.f;
                             m_gameRules.flagstickMultiplier = 0;
 
+                            m_player.speed = Player::MaxSpeed * 2.f;
+
                             floatingText("FLAG STICK BONUS");
+                            applyHapticEffect(HapticType::Lap);
                         }
                         else
                         {
                             m_gameRules.remainingTime = std::min(30.f, m_gameRules.remainingTime + BeefStickTime);
                             m_gameRules.flagstickMultiplier++;
 
-                            floatingText("+" + std::to_string(std::int32_t(BeefStickTime)));
+                            floatingText("+" + std::to_string(std::int32_t(BeefStickTime)) + "s");
+                            applyHapticEffect(HapticType::Soft);
                         }
-                        applyHapticEffect(HapticType::Soft);
                     }
                         break;
                     case TrackSprite::Ball:
@@ -1683,7 +1689,7 @@ void EndlessDrivingState::updateRoad(float dt)
             //auto result = std::async(std::launch::async, &EndlessDrivingState::createRoad, this);
             createRoad();
 
-            floatingText("+" + std::to_string(award));
+            floatingText("+" + std::to_string(award) + "s");
             applyHapticEffect(HapticType::Lap);
         }
     }

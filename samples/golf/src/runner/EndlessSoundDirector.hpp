@@ -60,5 +60,5 @@ private:
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
 
     cro::Entity playSound(std::int32_t, float volume = 1.f);
-    void playSoundDelayed(std::int32_t, float delay, float volume = 1.f);
+    void playSoundDelayed(std::int32_t, float delay, float volume = 1.f, std::uint8_t channel = 1);
 };

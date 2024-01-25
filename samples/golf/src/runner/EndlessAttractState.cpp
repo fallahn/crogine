@@ -415,6 +415,16 @@ void EndlessAttractState::createUI()
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_cycleEnts[CycleEnt::GameOver] = entity;
 
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -180.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Your Score:");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_cycleEnts[CycleEnt::GameOver].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_gameOverScore = entity;
+
     //high scores
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -528,6 +538,22 @@ void EndlessAttractState::refreshHighScores()
 
             return std::make_pair(mins, sec);
         };
+
+
+    if (m_sharedGameData.lastScore != 0)
+    {
+        auto [mins, sec] = toTimeFormat(m_sharedGameData.lastScore);
+        std::stringstream ss;
+        ss << std::fixed << std::setprecision(2);
+        ss << "Your Score: " << mins << "m " << sec << "s\n";
+        m_gameOverScore.getComponent<cro::Text>().setString(ss.str());
+    }
+    else
+    {
+        m_gameOverScore.getComponent<cro::Text>().setString(" ");
+    }
+
+
 
     //TODO fetch steam scores if available
     //if (!Social::isAvailable())

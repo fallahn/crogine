@@ -88,6 +88,7 @@ private:
         };
     };
     std::array<cro::Entity, CycleEnt::Count> m_cycleEnts = {};
+    cro::Entity m_gameOverScore;
 
     void addSystems();
     void loadAssets();

@@ -33,11 +33,13 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+struct Player;
 class TrackCamera;
 struct Car final
 {
+    static constexpr float DefaultSpeed = 15.f;
     TrackSprite sprite;
-    float speed = 10.f;
+    float speed = DefaultSpeed;
     float z = 0.f;
 
     //don't update vehicles in a pending piece of track
@@ -47,6 +49,7 @@ struct Car final
 
     //base audio volume when fading with distance
     float baseVolume = 1.f;
+    float basePitch = 1.f;
 
     struct Frame final
     {
@@ -66,13 +69,14 @@ class Track;
 class CarSystem final : public cro::System
 {
 public:
-    CarSystem(cro::MessageBus&, Track&, const TrackCamera&);
+    CarSystem(cro::MessageBus&, Track&, const TrackCamera&, const Player&);
 
     void process(float) override;
 
 private:
     Track& m_track;
     const TrackCamera& m_camera;
+    const Player& m_player;
 
     void onEntityAdded(cro::Entity) override;
 };
