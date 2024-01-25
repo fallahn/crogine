@@ -130,14 +130,13 @@ void CarSystem::process(float dt)
             auto dopplerSign = cro::Util::Maths::sgn(distSigned * relVel); //effectively single component of dot prod
 
             //if doppler sign > 0 we're moving towards
-            auto shift = vol;
+            auto shift = 0.5f + (0.5f * vol);
             if (dopplerSign < 0)
             {
-                shift = 1.f - shift;
+                shift = 1.f - (0.5f * (1.f - vol));
             }
-            shift = (shift * shift) * dopplerSign;
             
-            auto pitch = (car.basePitch * 0.5f) + ((car.basePitch * 0.5f) * shift);
+            auto pitch = car.basePitch + (0.2f * cro::Util::Easing::easeInQuint(shift));
             e.getComponent<cro::AudioEmitter>().setPitch(pitch);
         }
     }

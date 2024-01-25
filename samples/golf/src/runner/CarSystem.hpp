@@ -37,7 +37,7 @@ struct Player;
 class TrackCamera;
 struct Car final
 {
-    static constexpr float DefaultSpeed = 15.f;
+    static constexpr float DefaultSpeed = 18.f;
     TrackSprite sprite;
     float speed = DefaultSpeed;
     float z = 0.f;
