@@ -68,6 +68,7 @@ public:
         float hill = 0.f;
         float curve = 0.f;
         std::int32_t traffic = 0;
+        std::int32_t debris = 0;
     };
 
     std::size_t getSegmentCount() const { return m_segments.size(); }

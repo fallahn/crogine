@@ -656,6 +656,8 @@ void EndlessDrivingState::loadAssets()
     parseSprite(spriteSheet.getSprite("phone_box"), TrackSprite::PhoneBox, 0);
     parseSprite(spriteSheet.getSprite("cart_side"), TrackSprite::CartSide, 0);
     parseSprite(spriteSheet.getSprite("cart_front"), TrackSprite::CartFront, 0);
+    parseSprite(spriteSheet.getSprite("rock"), TrackSprite::Rock, 0);
+    parseSprite(spriteSheet.getSprite("log"), TrackSprite::Log, 0);
     parseSprite(spriteSheet.getSprite("tree01"), TrackSprite::Tree01, 0);
     parseSprite(spriteSheet.getSprite("tree02"), TrackSprite::Tree02, 0);
     parseSprite(spriteSheet.getSprite("tree03"), TrackSprite::Tree03, 0);
@@ -700,6 +702,7 @@ void EndlessDrivingState::loadAssets()
         ctx.curve = (CurveMax * progress) + 0.00001f;
         ctx.hill = ((HillMax - 3.f) * progress) + 3.f;
         ctx.traffic = (((ContextCount / 2) - (i / 2)) * 100) - static_cast<std::int32_t>(32.f * (1.f - progress));
+        ctx.debris = std::max(i - 3, 0);
     }
 }
 
@@ -1051,6 +1054,19 @@ void EndlessDrivingState::createRoad()
                 seg.cars.push_back(entity);
             }
 
+            //debris
+            if (cro::Util::Random::value(0, 1499) < ctx.debris)
+            {
+                auto pos = -0.25f - cro::Util::Random::value(0.1f, 0.2f);
+                if (cro::Util::Random::value(0, 1) == 0)
+                {
+                    pos *= -1.f;
+                }
+
+                auto spriteID = TrackSprite::Rock + cro::Util::Random::value(0, 1);
+                seg.sprites.emplace_back(m_trackSprites[spriteID]).position = pos;
+                seg.sprites.back().scale = spriteID == TrackSprite::Log ? 2.4f : 1.4f;
+            }
 
             //collectibles
             if (j - first > enter
@@ -1594,6 +1610,8 @@ void EndlessDrivingState::updatePlayer(float dt)
                     case TrackSprite::LampPost:
                     case TrackSprite::Platform:
                     case TrackSprite::PhoneBox:
+                    case TrackSprite::Rock:
+                    case TrackSprite::Log:
                         applyHapticEffect(HapticType::Hard);
                         m_player.speed = 0.f;
                         {

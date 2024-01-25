@@ -54,6 +54,9 @@ struct TrackSprite final
 
         Platform,
 
+        Rock,
+        Log,
+
         TallTree01,
         TallTree02,
         LampPost,
