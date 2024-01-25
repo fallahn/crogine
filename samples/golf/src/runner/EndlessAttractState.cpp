@@ -35,6 +35,8 @@ source distribution.
 #include "EndlessConsts.hpp"
 #include "EndlessShared.hpp"
 
+#include <crogine/core/ConfigFile.hpp>
+
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -55,6 +57,7 @@ source distribution.
 
 namespace
 {
+    const std::string ScoreFile = "endless.scores";
     const cro::Time CycleTime = cro::seconds(8.f);
 
     struct CycleCallback final
@@ -84,6 +87,20 @@ EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Con
     m_uiScene       (context.appInstance.getMessageBus()),
     m_cycleIndex    (0)
 {
+    const auto path = Social::getBaseContentPath() + ScoreFile;
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(path))
+    {
+        if (auto* p = cfg.findProperty("best"); p)
+        {
+            float best = p->getValue<float>();
+            if (best > m_sharedGameData.bestScore)
+            {
+                m_sharedGameData.bestScore = best;
+            }
+        }
+    }
+    
     addSystems();
     loadAssets();
     createUI();
@@ -405,6 +422,7 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::Text>(font).setString("High Scores");
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().absolutePosition = { 0.f, 80.f };
@@ -418,17 +436,33 @@ void EndlessAttractState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("How To Play");
+    entity.addComponent<cro::Text>(font).setString("How To Play\n\n\n\n\n\n\n\n\nDrive For As Long As Possible!");
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 140.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 110.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
     entity.addComponent<cro::Callback>().function = CycleCallback();
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_cycleEnts[CycleEnt::Rules] = entity;
 
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(-80.f, -60.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Collect These\nAvoid These");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
+    m_cycleEnts[CycleEnt::Rules].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto textEnt = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -50.f, -36.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("how_to");
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //scaled independently of root node (see callback, below)
     cro::Colour bgColour(0.f, 0.f, 0.f, BackgroundAlpha);
@@ -479,6 +513,12 @@ void EndlessAttractState::createUI()
 
 void EndlessAttractState::refreshHighScores()
 {
+    const auto path = Social::getBaseContentPath() + ScoreFile;
+    cro::ConfigFile cfg;
+    cfg.addProperty("best").setValue(m_sharedGameData.bestScore);
+    cfg.save(path);
+
+    
     CRO_ASSERT(m_cycleEnts[CycleEnt::HighScore].isValid(), "");
 
     const auto toTimeFormat = [](float score)
@@ -501,11 +541,11 @@ void EndlessAttractState::refreshHighScores()
 
         if (m_sharedGameData.lastScore != 0)
         {
-            ss << "Your Score: " << mins << "m " << sec << "s\n";
+            ss << "\nYour Score: " << mins << "m " << sec << "s\n";
         }
         else
         {
-            ss << "...";
+            ss << "...\n\n";
         }
 
         if (m_sharedGameData.bestScore != 0)

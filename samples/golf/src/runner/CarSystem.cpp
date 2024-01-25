@@ -102,7 +102,8 @@ void CarSystem::process(float dt)
 
         //set audio volume based on distance to player
         static constexpr float MaxDistance = static_cast<float>(DrawDistance / 10);
-        if (dist > MaxDistance)
+        if (dist > MaxDistance
+            || !car.sprite.collisionActive)
         {
             if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
             {
@@ -114,7 +115,8 @@ void CarSystem::process(float dt)
             const float vol = 1.f - (dist / MaxDistance);
             e.getComponent<cro::AudioEmitter>().setVolume((vol * vol) * car.baseVolume);
             
-            if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+            if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped
+                && car.sprite.collisionActive)
             {
                 e.getComponent<cro::AudioEmitter>().play();
             }

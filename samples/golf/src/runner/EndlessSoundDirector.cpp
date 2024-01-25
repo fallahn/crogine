@@ -89,7 +89,7 @@ void EndlessSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             case TrackSprite::Flag:
                 playSound(AudioID::Flag);
-                playSoundDelayed(AudioID::FlagVoice, 0.6f);
+                playSoundDelayed(AudioID::FlagVoice, 0.4f);
                 break;
             case TrackSprite::Bush01:
             case TrackSprite::Bush02:
@@ -107,6 +107,8 @@ void EndlessSoundDirector::handleMessage(const cro::Message& msg)
             case TrackSprite::Tree01:
             case TrackSprite::Tree02:
             case TrackSprite::Tree03:
+            case TrackSprite::Log:
+            case TrackSprite::Rock:
                 playSound(AudioID::Cart);
                 break;
             }

@@ -231,7 +231,7 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
     m_sharedGameData(esd),
     m_playerScene   (context.appInstance.getMessageBus()),
     m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus()),
+    m_uiScene       (context.appInstance.getMessageBus(), 384),
     m_contextIndex  (0)
 {
     esd.lastScore = 0.f;
@@ -702,8 +702,10 @@ void EndlessDrivingState::loadAssets()
         ctx.curve = (CurveMax * progress) + 0.00001f;
         ctx.hill = ((HillMax - 3.f) * progress) + 3.f;
         ctx.traffic = (((ContextCount / 2) - (i / 2)) * 100) - static_cast<std::int32_t>(32.f * (1.f - progress));
-        ctx.debris = std::max(i - 3, 0);
+        ctx.debris = std::max(i - 3, 0) + 1;
     }
+    m_trackContexts[0].debris = 0; //hax.
+    m_trackContexts[6].debris++;
 }
 
 void EndlessDrivingState::createPlayer()
@@ -1065,7 +1067,7 @@ void EndlessDrivingState::createRoad()
 
                 auto spriteID = TrackSprite::Rock + cro::Util::Random::value(0, 1);
                 seg.sprites.emplace_back(m_trackSprites[spriteID]).position = pos;
-                seg.sprites.back().scale = spriteID == TrackSprite::Log ? 2.4f : 1.4f;
+                seg.sprites.back().scale = spriteID == TrackSprite::Log ? 2.4f : 2.f;
             }
 
             //collectibles
@@ -1672,15 +1674,18 @@ void EndlessDrivingState::updateRoad(float dt)
     {
         m_trackCamera.move(glm::vec3(0.f, 0.f, -maxLen));
 
-        //we did a lap so update the track
-        auto award = m_gameRules.awardLapTime();
-        m_road.swap(m_gameScene);
+        if (getStateCount() == 1)
+        {
+            //we did a lap so update the track
+            auto award = m_gameRules.awardLapTime();
+            m_road.swap(m_gameScene);
 
-        //auto result = std::async(std::launch::async, &EndlessDrivingState::createRoad, this);
-        createRoad();
+            //auto result = std::async(std::launch::async, &EndlessDrivingState::createRoad, this);
+            createRoad();
 
-        floatingText("+" + std::to_string(award));
-        applyHapticEffect(HapticType::Lap);
+            floatingText("+" + std::to_string(award));
+            applyHapticEffect(HapticType::Lap);
+        }
     }
 
     const std::size_t start = static_cast<std::size_t>((m_trackCamera.getPosition().z + m_player.position.z) / SegmentLength) - 1;
