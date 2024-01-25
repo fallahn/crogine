@@ -1048,9 +1048,10 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             //show flight cam if not putting
             cmd.targetFlags = CommandID::UI::MiniGreen;
-            cmd.action = [&](cro::Entity e, float)
+            cmd.action = [&, isCPU](cro::Entity e, float)
                 {
-                    if (m_currentPlayer.terrain != TerrainID::Green)
+                    if (m_currentPlayer.terrain != TerrainID::Green
+                        && (!isCPU || (isCPU && !m_sharedData.fastCPU)))
                     {
                         e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
                         e.getComponent<cro::Callback>().active = true;
@@ -1343,7 +1344,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     cmd.targetFlags = CommandID::UI::MiniGreen;
                     cmd.action = [&](cro::Entity en, float)
                         {
-                            if (m_currentPlayer.terrain != TerrainID::Green)
+                            //if (m_currentPlayer.terrain != TerrainID::Green)
                             {
                                 en.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
                                 en.getComponent<cro::Callback>().active = true;
