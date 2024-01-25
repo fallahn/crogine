@@ -1748,7 +1748,8 @@ void EndlessDrivingState::updateRoad(float dt)
         //stash the sprites - these might poke out from
         //behind a hill so we'll draw them anyway regardless
         //of segment culling
-        if (!curr.sprites.empty() || !curr.cars.empty())
+        if (!curr.sprites.empty() || !curr.cars.empty()
+            && i < (start + (DrawDistance - 1))) //sprites are interpolated, so we don't want to interpolate into a segment whose projection is not yet updated
         {
             spriteSegments.push_back(currIndex);
         }
@@ -1818,7 +1819,10 @@ void EndlessDrivingState::updateRoad(float dt)
 
         for (auto e : seg.cars)
         {
-            addRoadSprite(e.getComponent<Car>().sprite, seg, verts);
+            if (e.getComponent<Car>().visible)
+            {
+                addRoadSprite(e.getComponent<Car>().sprite, seg, verts);
+            }
         }
     }
     m_trackSpriteEntity.getComponent<cro::Drawable2D>().getVertexData().swap(verts);
@@ -1912,8 +1916,8 @@ void EndlessDrivingState::addRoadSprite(TrackSprite& sprite, const TrackSegment&
 std::pair<glm::vec2, glm::vec2> EndlessDrivingState::getScreenCoords(TrackSprite& sprite, const TrackSegment& seg, bool animate)
 {
     const auto& nextSeg = m_road[(seg.index + 1) % m_road.getSegmentCount()];  
-    float segmentScale = glm::mix(seg.projection.scale, nextSeg.projection.scale, sprite.segmentInterp);
-
+    float segmentScale = std::min(seg.projection.scale, glm::mix(seg.projection.scale, nextSeg.projection.scale, sprite.segmentInterp));
+    //CRO_ASSERT(seg.projection.scale > nextSeg.projection.scale, "");
     auto pos = glm::mix(seg.projection.position, nextSeg.projection.position, sprite.segmentInterp);
     pos.x += segmentScale * sprite.position * RoadWidth * ScreenHalfWidth;
 

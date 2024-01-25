@@ -42,6 +42,8 @@ struct Car final
 
     //don't update vehicles in a pending piece of track
     bool active = false;
+    //don't draw if out of draw distance
+    bool visible = false;
 
     //base audio volume when fading with distance
     float baseVolume = 1.f;

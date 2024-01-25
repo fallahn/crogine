@@ -66,7 +66,7 @@ struct TrackSegment final
     {
         glm::vec2 position = glm::vec2(0.f); //rel to centre of the screen on x
         float width = 0.f; //+/- the position
-        float scale = 1.f;
+        float scale = 0.f; //assume if not yet projected we're infintely far
     }projection;
 
     //for applying ground texture
