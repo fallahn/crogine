@@ -54,6 +54,10 @@ private:
             Ball,
             Tree, Cart,
 
+            LapLine,
+            StreakLost,
+            Toot,
+
             Count
         };
     };

@@ -46,10 +46,10 @@ Based on articles: http://www.extentofthejam.com/pseudo/
 static inline constexpr float SegmentLength = 0.25f;
 static inline constexpr float RoadWidth = 2.5f;
 
-static inline constexpr std::size_t EnterMin = 70;
-static inline constexpr std::size_t EnterMax = 100;
+static inline constexpr std::size_t EnterMin = 60;
+static inline constexpr std::size_t EnterMax = 90;
 static inline constexpr std::size_t HoldMin = 150;
-static inline constexpr std::size_t HoldMax = 500;
+static inline constexpr std::size_t HoldMax = 400;
 static inline constexpr std::size_t ExitMin = EnterMin;
 static inline constexpr std::size_t ExitMax = EnterMax;
 

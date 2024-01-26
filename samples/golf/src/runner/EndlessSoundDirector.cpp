@@ -52,6 +52,10 @@ EndlessSoundDirector::EndlessSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/tutorial_appear.wav",
         "assets/golf/sound/ball/scrub.wav",
         "assets/golf/sound/bad.wav",
+
+        "assets/golf/sound/menu/star.wav",
+        "assets/golf/sound/menu/no_streak.wav",
+        "assets/golf/sound/menu/toot.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -78,6 +82,24 @@ void EndlessSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case els::MessageID::GameMessage:
+        {
+            const auto& data = msg.getData<els::GameEvent>();
+            switch (data.type)
+            {
+            default: break;
+            case els::GameEvent::CrossedLine:
+                playSound(AudioID::LapLine, 0.5f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case els::GameEvent::LostStreak:
+                playSound(AudioID::StreakLost, 0.5f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                break;
+            case els::GameEvent::Toot:
+                playSound(AudioID::Toot, 0.5f).getComponent<cro::AudioEmitter>();
+                break;
+            }
+        }
+        break;
         case els::MessageID::CollisionMessage:
         {
             const auto& data = msg.getData<els::CollisionEvent>();

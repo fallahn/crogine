@@ -38,6 +38,7 @@ source distribution.
 #include "EndlessShared.hpp"
 #include "EndlessSoundDirector.hpp"
 
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
@@ -421,20 +422,25 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
                 m_inputFlags.flags |= InputFlags::Up;
                 m_inputFlags.keyCount++;
             }
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
             {
                 m_inputFlags.flags |= InputFlags::Down;
                 m_inputFlags.keyCount++;
             }
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
             {
                 m_inputFlags.flags |= InputFlags::Left;
                 m_inputFlags.keyCount++;
             }
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
             {
                 m_inputFlags.flags |= InputFlags::Right;
                 m_inputFlags.keyCount++;
+            }
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+            {
+                auto* msg = postMessage<els::GameEvent>(els::MessageID::GameMessage);
+                msg->type = els::GameEvent::Toot;
             }
         }
     }
@@ -473,6 +479,12 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonStart:
             pauseGame();
             break;
+        case cro::GameController::ButtonA:
+        {
+            auto* msg = postMessage<els::GameEvent>(els::MessageID::GameMessage);
+            msg->type = els::GameEvent::Toot;
+        }
+        break;
         }
     }
 
@@ -602,7 +614,28 @@ void EndlessDrivingState::addSystems()
 
 void EndlessDrivingState::loadAssets()
 {
-    m_audioscape.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+    m_audioscape.loadFromFile("assets/golf/sound/endless.xas", m_resources.audio);
+
+    m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("music");
+    m_gameScene.getActiveCamera().getComponent<cro::AudioEmitter>().play();
+
+    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
+    auto fadeEnt = m_gameScene.createEntity();
+    fadeEnt.addComponent<cro::Callback>().active = true;
+    fadeEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            float v = cro::AudioMixer::getPrefadeVolume(MixerChannel::Music);
+            v = std::min(1.f, v + dt);
+            cro::AudioMixer::setPrefadeVolume(v, MixerChannel::Music);
+
+            if (v == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
+
 
     m_wavetables[TrackSprite::Animation::Rotate] = cro::Util::Wavetable::sine(1.5f);// used to animate sprites
     for (auto& f : m_wavetables[TrackSprite::Animation::Rotate])
@@ -692,6 +725,7 @@ void EndlessDrivingState::loadAssets()
     entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D() });
     m_debugEntity = entity;
 #endif
+
 
     //contexts used to increase difficulty when generating the track
     static constexpr std::int32_t ContextCount = 8;
@@ -977,7 +1011,7 @@ void EndlessDrivingState::createRoad()
     const auto bushOffset = m_contextIndex % 3;
     const float contextPercent = static_cast<float>(m_contextIndex) / m_trackContexts.size();
 
-    auto segmentCount = cro::Util::Random::value(3, 5) + (m_contextIndex / 2);
+    auto segmentCount = cro::Util::Random::value(3, 5) + (m_contextIndex / 3);
     for (auto i = 0; i < segmentCount; ++i)
     {
         const std::size_t first = m_road.getPendingSegments().size();
@@ -1146,8 +1180,6 @@ void EndlessDrivingState::createUI()
     
     m_gameEntity = entity;
 
-    //TODO add border overlay
-
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
@@ -1155,13 +1187,13 @@ void EndlessDrivingState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(RenderSizeFloat.x / 2.f, std::floor(RenderSizeFloat.y * 0.75f), 0.1f));
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f)); //hide until menu popped
+    entity.addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("start");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("3");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 10);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(1.f, 3);
+    entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(1.f, 3);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
@@ -1206,24 +1238,58 @@ void EndlessDrivingState::createUI()
                         }
 
                         e.getComponent<cro::Text>().setString("GO!");
+                        e.getComponent<cro::AudioEmitter>().setPitch(1.2f);
                         m_gameRules.state = GameRules::State::Running;
                     }
+                    e.getComponent<cro::AudioEmitter>().play();
                 }
-                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                //e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
         };
 
     m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto countEnt = entity;
 
+    //fudge ent to delay the count in
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, countEnt](cro::Entity e, float dt) mutable
+        {
+            if (getStateCount() == 1)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
 
+                if (currTime < 0)
+                {
+                    countEnt.getComponent<cro::Callback>().active = true;
+                    countEnt.getComponent<cro::AudioEmitter>().play();
+                    countEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            }
+        };
+
+    
+    struct TimeCallbackData final
+    {
+        float scale = 1.f;
+        float currTime = 1.f;
+        bool audioPlayed = false;
+    };
     //time display
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(12.f, std::floor(RenderSizeFloat.y * 0.95f), 0.1f));
+    entity.addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("warning");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<std::pair<float, float>>(1.f, 1.f);
+    entity.getComponent<cro::Callback>().setUserData<TimeCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
@@ -1239,7 +1305,7 @@ void EndlessDrivingState::createUI()
             e.getComponent<cro::Text>().setString(str);
 
 
-            auto& [s, t] = e.getComponent<cro::Callback>().getUserData<std::pair<float, float>>();
+            auto& [s, t, warned] = e.getComponent<cro::Callback>().getUserData<TimeCallbackData>();
             t -= (dt * 4.f);
             if (t < 0)
             {
@@ -1255,7 +1321,11 @@ void EndlessDrivingState::createUI()
 
                 if (scale == 0)
                 {
-                    //TODO play some sort of sound attached to the entity
+                    if (!warned)
+                    {
+                        warned = true;
+                        e.getComponent<cro::AudioEmitter>().play();
+                    }
                 }
             }
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
@@ -1693,6 +1763,9 @@ void EndlessDrivingState::updateRoad(float dt)
 
             floatingText("+" + std::to_string(award) + "s");
             applyHapticEffect(HapticType::Lap);
+
+            auto* msg = postMessage<els::GameEvent>(els::MessageID::GameMessage);
+            msg->type = els::GameEvent::CrossedLine;
         }
     }
 
@@ -1719,6 +1792,9 @@ void EndlessDrivingState::updateRoad(float dt)
                     if (m_gameRules.flagstickMultiplier != 0)
                     {
                         floatingText("Flag Streak\nBroken!");
+                        
+                        auto* msg = postMessage<els::GameEvent>(els::MessageID::GameMessage);
+                        msg->type = els::GameEvent::LostStreak;
                     }
                     m_gameRules.flagstickMultiplier = 0;
                     s.collisionActive = false; //prevents double positives

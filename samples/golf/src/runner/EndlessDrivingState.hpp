@@ -123,7 +123,7 @@ private:
     Track m_road;
 
     std::vector<Track::GenerationContext> m_trackContexts;
-    std::size_t m_contextIndex; //NOTE this is usually accessed from another thread BUT IS UNGUARDED as there should be no concurrent access
+    std::size_t m_contextIndex;
 
     Player m_player;
 

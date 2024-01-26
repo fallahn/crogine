@@ -38,12 +38,24 @@ namespace els
     {
         enum
         {
-            CollisionMessage = cl::MessageID::Count
+            CollisionMessage = cl::MessageID::Count * 100,
+            GameMessage
         };
     };
 
     struct CollisionEvent final
     {
         std::int32_t id = 0;
+    };
+
+    struct GameEvent final
+    {
+        enum
+        {
+            CrossedLine,
+            LostStreak,
+            Skid,
+            Toot
+        }type = CrossedLine;
     };
 }
