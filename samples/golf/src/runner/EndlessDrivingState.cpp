@@ -38,6 +38,8 @@ source distribution.
 #include "EndlessShared.hpp"
 #include "EndlessSoundDirector.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/gui/Gui.hpp>
 
@@ -248,8 +250,17 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
         cacheState(StateID::EndlessPause);
 
         cro::Clock c;
-        while (c.elapsed().asSeconds() < 2) {}
+        while (c.elapsed().asSeconds() < 1) {}
     });
+    
+
+    //such unicode
+    cro::String s(std::uint32_t(0x26D0));
+    auto uc = s.toUtf8();
+    std::vector<const char*> v;
+    v.push_back(reinterpret_cast<const char*>(uc.data()));
+
+    Social::setStatus(Social::InfoID::Menu, v);
 
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
@@ -398,6 +409,13 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
             if (getStateCount() == 1)
             {
                 requestStackPush(StateID::EndlessPause);
+
+                for (auto i = 0u; i < MixerChannel::Count; ++i)
+                {
+                    cro::AudioMixer::setPrefadeVolume(0.f, i);
+                }
+                m_gameScene.simulate(0.f);
+                m_uiScene.simulate(0.f);
             }
         };
 
@@ -523,6 +541,17 @@ void EndlessDrivingState::handleMessage(const cro::Message& msg)
         if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
         {
             m_uiScene.simulate(0.f);
+        }
+    }
+    else if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped)
+        {
+            for (auto i = 0u; i < MixerChannel::Count; ++i)
+            {
+                cro::AudioMixer::setPrefadeVolume(1.f, i);
+            }
         }
     }
 }

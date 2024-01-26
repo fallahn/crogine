@@ -248,6 +248,14 @@ void EndlessAttractState::handleMessage(const cro::Message& msg)
 
             //reset to game over message
             refreshCycle(0);
+
+            //such unicode
+            cro::String s(std::uint32_t(0x26D0));
+            auto uc = s.toUtf8();
+            std::vector<const char*> v;
+            v.push_back(reinterpret_cast<const char*>(uc.data()));
+
+            Social::setStatus(Social::InfoID::Menu, v);
         }
     }
 #ifdef USE_GNS
@@ -322,12 +330,13 @@ void EndlessAttractState::createUI()
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto startTextPrompt = entity;
 
-    
+    const auto TextColour = TextHighlightColour;
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Start");
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setFillColour(TextColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     startTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -337,7 +346,7 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Press  to Start");
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setFillColour(TextColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     startTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -355,7 +364,7 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Press  to Start");
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setFillColour(TextColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     startTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -384,7 +393,7 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Press Escape to Quit");
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setFillColour(TextColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     quitTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -394,7 +403,7 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Press  to Quit");
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setFillColour(TextColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     quitTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -411,7 +420,7 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Press  to Quit");
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setFillColour(TextColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     quitTextPrompt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

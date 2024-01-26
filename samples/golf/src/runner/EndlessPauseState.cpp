@@ -51,6 +51,7 @@ source distribution.
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
@@ -86,14 +87,12 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
         {
             requestStackClear();
             requestStackPush(StateID::Clubhouse);
-            unmute();
         };
     const auto restartGame = 
         [&]()
         {
             requestStackPop();
             requestStackPush(StateID::EndlessAttract);
-            unmute();
         };
     const auto updateTextPrompt =
         [&](bool controller)
@@ -130,7 +129,6 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
         case SDLK_p:
             requestStackPop();
-            unmute();
             break;
         case SDLK_c:
             quitGame();
@@ -149,7 +147,6 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonStart:
         case cro::GameController::ButtonA:
             requestStackPop();
-            unmute();
             break;
         case cro::GameController::ButtonB:
             restartGame();
@@ -194,8 +191,6 @@ void EndlessPauseState::handleMessage(const cro::Message& msg)
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
             m_textPrompt[m_sharedGameData.lastInput].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-
-            mute();
         }
     }
 
@@ -224,6 +219,7 @@ void EndlessPauseState::addSystems()
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::AudioSystem>(mb);
 }
 
 void EndlessPauseState::loadAssets()
@@ -354,20 +350,4 @@ void EndlessPauseState::createUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
-}
-
-void EndlessPauseState::mute()
-{
-    for (auto i = 0u; i < MixerChannel::Count; ++i)
-    {
-        cro::AudioMixer::setPrefadeVolume(0.f, i);
-    }
-}
-
-void EndlessPauseState::unmute()
-{
-    for (auto i = 0u; i < MixerChannel::Count; ++i)
-    {
-        cro::AudioMixer::setPrefadeVolume(1.f, i);
-    }
 }
