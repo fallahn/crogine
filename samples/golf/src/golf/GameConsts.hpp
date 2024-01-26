@@ -209,20 +209,6 @@ struct SpriteAnimID final
     };
 };
 
-
-struct MixerChannel final
-{
-    enum
-    {
-        Music, Effects, Menu,
-        Voice, Vehicles, Environment,
-        UserMusic,
-
-        Count
-    };
-};
-
-
 //data blocks for uniform buffer
 struct WindData final
 {

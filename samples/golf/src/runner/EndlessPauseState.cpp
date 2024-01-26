@@ -29,10 +29,13 @@ source distribution.
 
 #include "../golf/SharedStateData.hpp"
 #include "../golf/MenuConsts.hpp"
+#include "../golf/CommonConsts.hpp"
 
 #include "EndlessPauseState.hpp"
 #include "EndlessConsts.hpp"
 #include "EndlessShared.hpp"
+
+#include <crogine/audio/AudioMixer.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -83,12 +86,14 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
         {
             requestStackClear();
             requestStackPush(StateID::Clubhouse);
+            unmute();
         };
     const auto restartGame = 
         [&]()
         {
             requestStackPop();
             requestStackPush(StateID::EndlessAttract);
+            unmute();
         };
     const auto updateTextPrompt =
         [&](bool controller)
@@ -125,6 +130,7 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
         case SDLK_p:
             requestStackPop();
+            unmute();
             break;
         case SDLK_c:
             quitGame();
@@ -143,6 +149,7 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonStart:
         case cro::GameController::ButtonA:
             requestStackPop();
+            unmute();
             break;
         case cro::GameController::ButtonB:
             restartGame();
@@ -157,7 +164,11 @@ bool EndlessPauseState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        updateTextPrompt(true);
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
+            || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
+        {
+            updateTextPrompt(true);
+        }
     }
 
 
@@ -183,6 +194,8 @@ void EndlessPauseState::handleMessage(const cro::Message& msg)
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
             m_textPrompt[m_sharedGameData.lastInput].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+            mute();
         }
     }
 
@@ -341,4 +354,20 @@ void EndlessPauseState::createUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
+}
+
+void EndlessPauseState::mute()
+{
+    for (auto i = 0u; i < MixerChannel::Count; ++i)
+    {
+        cro::AudioMixer::setPrefadeVolume(0.f, i);
+    }
+}
+
+void EndlessPauseState::unmute()
+{
+    for (auto i = 0u; i < MixerChannel::Count; ++i)
+    {
+        cro::AudioMixer::setPrefadeVolume(1.f, i);
+    }
 }

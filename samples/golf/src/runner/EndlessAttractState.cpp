@@ -31,6 +31,10 @@ source distribution.
 #include "../golf/MenuConsts.hpp"
 #include "Social.hpp"
 
+#ifdef USE_GNS
+#include "ArcadeLeaderboard.hpp"
+#endif
+
 #include "EndlessAttractState.hpp"
 #include "EndlessConsts.hpp"
 #include "EndlessShared.hpp"
@@ -54,6 +58,8 @@ source distribution.
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
+
+#include <iomanip>
 
 namespace
 {
@@ -212,7 +218,11 @@ bool EndlessAttractState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        updateTextPrompt(true);
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone
+            || evt.caxis.value < -cro::GameController::LeftThumbDeadZone)
+        {
+            updateTextPrompt(true);
+        }
     }
 
     m_uiScene.forwardEvent(evt);
@@ -227,6 +237,10 @@ void EndlessAttractState::handleMessage(const cro::Message& msg)
         if (data.action == cro::Message::StateEvent::Pushed
             && data.id == StateID::EndlessAttract)
         {
+#ifdef USE_GNS
+            ArcadeLeaderboard::insertScore(m_sharedGameData.bestScore, "cart");
+#endif
+
             //update controller icons/text
             refreshPrompt();
 
@@ -236,6 +250,16 @@ void EndlessAttractState::handleMessage(const cro::Message& msg)
             refreshCycle(0);
         }
     }
+#ifdef USE_GNS
+    else if (msg.id == Social::MessageID::StatsMessage)
+    {
+        const auto& data = msg.getData<Social::StatEvent>();
+        if (data.type == Social::StatEvent::ArcadeScoreReceived)
+        {
+            refreshHighScores();
+        }
+    }
+#endif
 
     m_uiScene.forwardMessage(msg);
 }
@@ -291,7 +315,7 @@ void EndlessAttractState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, -16.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -26.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = TextFlashCallback();
@@ -349,7 +373,7 @@ void EndlessAttractState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 32.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 42.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = TextFlashCallback();
@@ -435,12 +459,46 @@ void EndlessAttractState::createUI()
     entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 80.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 120.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
     entity.addComponent<cro::Callback>().function = CycleCallback();
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_cycleEnts[CycleEnt::HighScore] = entity;
-    refreshHighScores();
+    
+    
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -200.f, -30.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font);// .setString("asd\nasd\nasdsadasd\nasdsad\nwqweqw\nweq\nasddf\nrtytg\nefwerg\ndertg");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
+    m_cycleEnts[CycleEnt::HighScore].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_highScoreEnts[0] = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 200.f, -30.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font);// .setString("12321\n12313\n12313\n1231313\n123313\n12313\n121313\n231313\n123321\n123213");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+    m_cycleEnts[CycleEnt::HighScore].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_highScoreEnts[1] = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -200.f, 0.f });;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font);// .setString("3. sadsfsdfd  - 3m45s");
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+    entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_cycleEnts[CycleEnt::HighScore].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_highScoreEnts[2] = entity;
+
+    //refreshHighScores();
 
     //how to play
     entity = m_uiScene.createEntity();
@@ -473,6 +531,22 @@ void EndlessAttractState::createUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("how_to");
     textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //music credits
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Music By retroindiejosh");
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().absolutePosition = { 4.f, -8.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.f, 1.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UIElement;
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //scaled independently of root node (see callback, below)
     cro::Colour bgColour(0.f, 0.f, 0.f, BackgroundAlpha);
@@ -553,11 +627,26 @@ void EndlessAttractState::refreshHighScores()
         m_gameOverScore.getComponent<cro::Text>().setString(" ");
     }
 
+    
 
-
-    //TODO fetch steam scores if available
-    //if (!Social::isAvailable())
+#ifdef USE_GNS
+    const auto& scores = ArcadeLeaderboard::getScores("cart");
+    if (!scores[0].empty())
     {
+        m_cycleEnts[CycleEnt::HighScore].getComponent<cro::Text>().setString("High Scores");
+        for (auto i = 0u; i < scores.size(); ++i)
+        {
+            m_highScoreEnts[i].getComponent<cro::Text>().setString(scores[i]);
+        }
+    }
+    else
+#endif
+    {
+        for (auto e : m_highScoreEnts)
+        {
+            e.getComponent<cro::Text>().setString(" ");
+        }
+
         auto [mins, sec] = toTimeFormat(m_sharedGameData.lastScore);
         auto [mins2, sec2] = toTimeFormat(m_sharedGameData.bestScore);
 
@@ -580,7 +669,6 @@ void EndlessAttractState::refreshHighScores()
         }
         m_cycleEnts[CycleEnt::HighScore].getComponent<cro::Text>().setString(ss.str());
     }
-    //else{//fetchSteam();}
 }
 
 void EndlessAttractState::refreshCycle(std::size_t newIndex)

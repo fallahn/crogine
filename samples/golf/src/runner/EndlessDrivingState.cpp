@@ -230,7 +230,7 @@ EndlessDrivingState::EndlessDrivingState(cro::StateStack& stack, cro::State::Con
     m_sharedData    (sd),
     m_sharedGameData(esd),
     m_playerScene   (context.appInstance.getMessageBus()),
-    m_gameScene     (context.appInstance.getMessageBus()),
+    m_gameScene     (context.appInstance.getMessageBus(), 384),
     m_uiScene       (context.appInstance.getMessageBus(), 384),
     m_contextIndex  (0)
 {
@@ -975,6 +975,7 @@ void EndlessDrivingState::createRoad()
     m_contextIndex = std::min(m_trackContexts.size() - 1, m_contextIndex + 1);
 
     const auto bushOffset = m_contextIndex % 3;
+    const float contextPercent = static_cast<float>(m_contextIndex) / m_trackContexts.size();
 
     auto segmentCount = cro::Util::Random::value(3, 5) + (m_contextIndex / 2);
     for (auto i = 0; i < segmentCount; ++i)
@@ -1050,6 +1051,7 @@ void EndlessDrivingState::createRoad()
                 car.sprite.position = pos;
                 car.sprite.scale = 2.f;
                 car.z = seg.position.z;
+                car.speed = (Car::DefaultSpeed * 0.6f) + ((Car::DefaultSpeed * 0.4f) * contextPercent);
                 car.speed += cro::Util::Random::value(-4.f, 4.f);
                 car.baseVolume = entity.getComponent<cro::AudioEmitter>().getVolume();
                 car.basePitch = entity.getComponent<cro::AudioEmitter>().getPitch() * (car.speed / (Car::DefaultSpeed + 4.f));

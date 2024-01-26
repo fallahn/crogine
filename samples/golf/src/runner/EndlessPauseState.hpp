@@ -77,4 +77,6 @@ private:
     void loadAssets();
     void createUI();
 
+    void mute();
+    void unmute();
 };
