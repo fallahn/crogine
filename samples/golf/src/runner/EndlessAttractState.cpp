@@ -330,7 +330,7 @@ void EndlessAttractState::createUI()
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto startTextPrompt = entity;
 
-    const auto TextColour = TextHighlightColour;
+    const auto TextColour = TextNormalColour;
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();

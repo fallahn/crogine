@@ -92,7 +92,7 @@ void EndlessSoundDirector::handleMessage(const cro::Message& msg)
                 playSound(AudioID::LapLine, 0.5f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                 break;
             case els::GameEvent::LostStreak:
-                playSound(AudioID::StreakLost, 0.5f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                playSound(AudioID::StreakLost, 0.2f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                 break;
             case els::GameEvent::Toot:
                 playSound(AudioID::Toot, 0.5f).getComponent<cro::AudioEmitter>();

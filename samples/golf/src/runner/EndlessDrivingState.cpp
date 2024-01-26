@@ -517,6 +517,11 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
         }
     }
 
+    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        pauseGame();
+    }
+
     m_playerScene.forwardEvent(evt);
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
@@ -1256,6 +1261,7 @@ void EndlessDrivingState::createUI()
                         else
                         {
                             e.getComponent<cro::Text>().setString(std::to_string(count));
+                            e.getComponent<cro::AudioEmitter>().play();
                         }
                     }
                     else
@@ -1269,10 +1275,9 @@ void EndlessDrivingState::createUI()
                         e.getComponent<cro::Text>().setString("GO!");
                         e.getComponent<cro::AudioEmitter>().setPitch(1.2f);
                         m_gameRules.state = GameRules::State::Running;
+                        e.getComponent<cro::AudioEmitter>().play();
                     }
-                    e.getComponent<cro::AudioEmitter>().play();
                 }
-                //e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
         };
 
