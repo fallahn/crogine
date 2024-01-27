@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <crogine/core/MessageBus.hpp>
 
-MatchMaking::MatchMaking(cro::MessageBus& mb)
+MatchMaking::MatchMaking(cro::MessageBus& mb, bool)
     : m_messageBus(mb)
 {
 

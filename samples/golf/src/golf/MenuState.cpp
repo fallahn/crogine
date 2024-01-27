@@ -106,6 +106,8 @@ namespace
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 
+    bool checkCommandLine = true;
+
     ImVec4 C(1.f, 1.f, 1.f, 1.f);
     float strength = 0.f;
 
@@ -155,7 +157,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_connectedClientCount  (0),
     m_connectedPlayerCount  (0),
     m_textChat              (m_uiScene, sd),
-    m_matchMaking           (context.appInstance.getMessageBus()),
+    m_matchMaking           (context.appInstance.getMessageBus(), checkCommandLine),
     m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene               (context.appInstance.getMessageBus(), 512),
     m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
@@ -169,6 +171,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_prevMenu              (MenuID::Main),
     m_viewScale             (1.f)
 {
+    checkCommandLine = false;
     sd.baseState = StateID::Menu;
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);
@@ -1016,6 +1019,7 @@ void MenuState::handleMessage(const cro::Message& msg)
             finaliseGameJoin(data);
             break;
         case MatchMaking::Message::LobbyJoinFailed:
+            m_matchMaking.leaveGame();
             m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
             updateLobbyList();
             m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
@@ -2424,9 +2428,9 @@ void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
     if (!m_sharedData.clientConnection.connected)
     {
         m_sharedData.clientConnection.hostID = 0;
+        m_sharedData.lobbyID = 0;
         m_sharedData.errorMessage = "Could not connect to server";
         requestStackPush(StateID::Error);
-
         m_matchMaking.leaveGame();
         return;
     }
