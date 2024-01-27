@@ -2126,6 +2126,7 @@ void GolfState::createScoreboard()
         e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f });
     };
 
+    //title
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -2140,6 +2141,7 @@ void GolfState::createScoreboard()
     centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //course leader if available
     if (!m_courseTitle.empty())
     {
         auto str = m_courseTitle;

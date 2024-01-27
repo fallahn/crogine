@@ -1700,7 +1700,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto bgEnt = entity;
     auto bgBounds = bounds;
 
-//#ifdef USE_GNS
+#ifdef USE_GNS
     //scrolls info about the selected course
     auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
@@ -1743,7 +1743,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyWindowEntities[LobbyEntityID::CourseTicker] = entity;
-//#endif
+#endif
 
     //display the score type
     entity = m_uiScene.createEntity();
@@ -3139,48 +3139,16 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
 #endif
     }
 
-
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::Menu::ChatHint;
-
     if (m_sharedData.hosting)
     {
-        std::int32_t clientCount = 0;
         std::int32_t playerCount = 0;
         for (const auto& c : m_sharedData.connectionData)
         {
             playerCount += c.playerCount;
-
-            if (c.playerCount)
-            {
-                clientCount++;
-            }
         }
 
         m_matchMaking.setGamePlayerCount(playerCount);
-
-        //hide the chat hint if we're the only connection
-        cmd.action = [clientCount](cro::Entity e, float)
-            {
-                if (e.hasComponent<cro::Text>())
-                {
-                    glm::vec2 scale(clientCount > 1 ? 1.f : 0.f);
-                    e.getComponent<cro::Transform>().setScale(scale);
-                }
-            };
     }
-    else
-    {
-        //assume there are multiple players, else how would we be here?
-        cmd.action = [](cro::Entity e, float)
-            {
-                if (e.hasComponent<cro::Text>())
-                {
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                }
-            };
-    }
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //new players won't have other levels
     std::uint16_t xp = (Social::getLevel() << 8) | m_sharedData.clientConnection.connectionID;
