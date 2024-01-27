@@ -2426,6 +2426,9 @@ void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
         m_sharedData.clientConnection.hostID = 0;
         m_sharedData.errorMessage = "Could not connect to server";
         requestStackPush(StateID::Error);
+
+        m_matchMaking.leaveGame();
+        return;
     }
 
     cro::Command cmd;
