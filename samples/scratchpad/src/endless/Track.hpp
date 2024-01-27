@@ -75,11 +75,14 @@ public:
         const auto setColour =
             [&](TrackSegment& seg)
             {
-                seg.roadColour = CD32::Colours[CD32::GreyDark];// (((start + i) / 3) % 2) ? CD32::Colours[CD32::GreyDark] : CD32::Colours[CD32::GreyMid];
-                seg.grassColour = CD32::Colours[CD32::GreenMid];// (((start + i) / 3) % 2) ? CD32::Colours[CD32::GreenDark] : CD32::Colours[CD32::GreenMid];
+                seg.roadColour = CD32::Colours[CD32::GreyDark];
+                seg.grassColour = CD32::Colours[CD32::GreenMid];
                 seg.rumbleColour = (((start + i) / 9) % 2) ? CD32::Colours[CD32::Red] : CD32::Colours[CD32::BeigeLight];
 
                 seg.roadMarking = (((start + i) / 6) % 2);
+
+                seg.uv.x = 0.f;
+                seg.uv.y = seg.position.z / (1.f / SegmentLength);
             };
 
         for (; i < end; ++i)

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -43,7 +43,7 @@ namespace cro
 class MatchMaking final
 {
 public:
-    explicit MatchMaking(cro::MessageBus&);
+    explicit MatchMaking(cro::MessageBus&, bool checkCommandLine = false);
     ~MatchMaking() = default;
 
     MatchMaking(const MatchMaking&) = delete;

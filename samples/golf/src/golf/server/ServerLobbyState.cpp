@@ -95,7 +95,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
             m_sharedData.host.broadcastPacket(PacketID::LobbyReady, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-            broadcastRules();
+            //broadcastRules();
         }
             break;
         case PacketID::MapInfo:

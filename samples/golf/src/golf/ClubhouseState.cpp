@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -129,7 +129,11 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_arcadeIndexJoy    (0)
 {
     //if we were returning from arcade this tidies up, else does nothing
-    gg.unloadPlugin();
+    //gg.unloadPlugin();
+    for (auto i = 0u; i < MixerChannel::Count; ++i)
+    {
+        cro::AudioMixer::setPrefadeVolume(1.f, i);
+    }
 
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     

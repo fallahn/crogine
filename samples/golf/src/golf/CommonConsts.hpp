@@ -37,6 +37,18 @@ source distribution.
 #include <array>
 #include <string>
 
+struct MixerChannel final
+{
+    enum
+    {
+        Music, Effects, Menu,
+        Voice, Vehicles, Environment,
+        UserMusic,
+
+        Count
+    };
+};
+
 namespace ConstVal
 {
     static constexpr float MinMouseSpeed = 0.5f;

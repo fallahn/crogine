@@ -1564,54 +1564,54 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
 
 
 #ifdef USE_GNS
-    struct ListData final
-    {
-        float refreshTime = 5.f;
-        std::vector<cro::Entity> listItems;
-    };
+    //struct ListData final
+    //{
+    //    float refreshTime = 5.f;
+    //    std::vector<cro::Entity> listItems;
+    //};
 
-    //list of friends currently in a lobby
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<ListData>();
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Join)
-        {
-            auto& [currTime, listItems] = e.getComponent<cro::Callback>().getUserData<ListData>();
-            currTime -= dt;
-            if (currTime < 0)
-            {
-                for (auto e : listItems)
-                {
-                    m_uiScene.destroyEntity(e);
-                }
-                listItems.clear();
+    ////list of friends currently in a lobby
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>();
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<ListData>();
+    //entity.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float dt)
+    //{
+    //    if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Join)
+    //    {
+    //        auto& [currTime, listItems] = e.getComponent<cro::Callback>().getUserData<ListData>();
+    //        currTime -= dt;
+    //        if (currTime < 0)
+    //        {
+    //            for (auto e : listItems)
+    //            {
+    //                m_uiScene.destroyEntity(e);
+    //            }
+    //            listItems.clear();
 
-                const auto newList = m_matchMaking.getFriendGames();
-                for (const auto& game : newList)
-                {
-                    //TODO create a button ent to join the lobby
-                    //TODO rather than create a background drawable for
-                    //each button use a single repeated texture on the
-                    //parent entity
-                    auto ent = m_uiScene.createEntity();
-                    ent.addComponent<cro::Transform>();
+    //            const auto newList = m_matchMaking.getFriendGames();
+    //            for (const auto& game : newList)
+    //            {
+    //                //TODO create a button ent to join the lobby
+    //                //TODO rather than create a background drawable for
+    //                //each button use a single repeated texture on the
+    //                //parent entity
+    //                auto ent = m_uiScene.createEntity();
+    //                ent.addComponent<cro::Transform>();
 
 
 
-                    listItems.push_back(ent);
-                    e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-                }
+    //                listItems.push_back(ent);
+    //                e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    //            }
 
-                currTime += 5.f;
-            }
-        }
-    };
+    //            currTime += 5.f;
+    //        }
+    //    }
+    //};
 
-    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    //menuTransform.addChild(entity.getComponent<cro::Transform>());
 #endif
 
     updateLobbyList();
@@ -1700,7 +1700,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto bgEnt = entity;
     auto bgBounds = bounds;
 
-//#ifdef USE_GNS
+#ifdef USE_GNS
     //scrolls info about the selected course
     auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
@@ -1743,7 +1743,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyWindowEntities[LobbyEntityID::CourseTicker] = entity;
-//#endif
+#endif
 
     //display the score type
     entity = m_uiScene.createEntity();

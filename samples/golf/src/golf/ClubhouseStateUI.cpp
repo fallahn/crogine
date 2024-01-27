@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -473,57 +473,74 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
             });
 
     //arcade
-    bool hasArcade = false;
-    if (hasArcade = cro::FileSystem::directoryExists("plugins"); hasArcade)
-    {
-        auto pluginList = cro::FileSystem::listDirectories("plugins");
-        if (!pluginList.empty())
-        {
-            std::string pluginPath = "plugins/";
-            for (const auto& pluginDir : pluginList)
+    entity = createButton("Arcade");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
-#ifdef _WIN32
-                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/croplug.dll"))
-#else
-#ifdef __linux__
-                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/libcroplug.so"))
-#else
-                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/libcroplug.dylib"))
-#endif
-#endif
+                if (activated(evt))
                 {
-                    pluginPath += pluginDir;
-                    break;
+                    requestStackClear();
+                    requestStackPush(StateID::EndlessRunner);
+                    requestStackPush(StateID::EndlessAttract);
                 }
-            }
+            });
 
-            if (pluginPath != "plugins/")
-            {
-                entity = createButton("Arcade");
-                entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-                    m_uiScene.getSystem<cro::UISystem>()->addCallback([&, pluginPath](cro::Entity, const cro::ButtonEvent& evt)
-                        {
-                            if (activated(evt))
-                            {
-                                m_golfGame.loadPlugin(pluginPath);
-                            }
-                        });
+    entity.getComponent<cro::UIInput>().enabled = false;
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_arcadeEnt = entity;
 
-                entity.getComponent<cro::UIInput>().enabled = false;
-                entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                m_arcadeEnt = entity;
 
-            }
-            else
-            {
-                hasArcade = false;
-            }
-        }
-    }
-    if (!hasArcade)
-    {
-        textPos.y -= LineSpacing; //remove this when adding back arcade
-    }
+//    bool hasArcade = false;
+//    if (hasArcade = cro::FileSystem::directoryExists("plugins"); hasArcade)
+//    {
+//        auto pluginList = cro::FileSystem::listDirectories("plugins");
+//        if (!pluginList.empty())
+//        {
+//            std::string pluginPath = "plugins/";
+//            for (const auto& pluginDir : pluginList)
+//            {
+//#ifdef _WIN32
+//                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/croplug.dll"))
+//#else
+//#ifdef __linux__
+//                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/libcroplug.so"))
+//#else
+//                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/libcroplug.dylib"))
+//#endif
+//#endif
+//                {
+//                    pluginPath += pluginDir;
+//                    break;
+//                }
+//            }
+//
+//            if (pluginPath != "plugins/")
+//            {
+//                entity = createButton("Arcade");
+//                entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+//                    m_uiScene.getSystem<cro::UISystem>()->addCallback([&, pluginPath](cro::Entity, const cro::ButtonEvent& evt)
+//                        {
+//                            if (activated(evt))
+//                            {
+//                                m_golfGame.loadPlugin(pluginPath);
+//                            }
+//                        });
+//
+//                entity.getComponent<cro::UIInput>().enabled = false;
+//                entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+//                m_arcadeEnt = entity;
+//
+//            }
+//            else
+//            {
+//                hasArcade = false;
+//            }
+//        }
+//    }
+//    if (!hasArcade)
+//    {
+//        textPos.y -= LineSpacing; //remove this when adding back arcade
+//    }
 
     //leave button
     entity = createButton("Leave");

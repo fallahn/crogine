@@ -140,7 +140,7 @@ R"(
         gl_Position = u_viewProjectionMatrix * worldPos;
 
         v_heightData.x = a_colour.a * alpha;
-        v_heightData.y = worldPos.y;
+        v_heightData.y = a_position.y;//worldPos.y;
 
         v_normal = a_normal;
         v_texCoord = a_texCoord0;
@@ -158,13 +158,14 @@ R"(
     #include WIND_BUFFER
 
     uniform float u_alpha;
+//uniform float u_value = 1.0;
 
     VARYING_IN vec3 v_normal;
     VARYING_IN vec2 v_texCoord;
     VARYING_IN vec2 v_heightData;
 
     const vec3 DotColour = vec3(1.0, 0.85, 0.6);
-    const vec3 BaseColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
+    const vec3 BaseColour = vec3(0.627, 0.699, 0.94); //stored as HSV to save on a conversion
 
     #include HSV
 
@@ -173,21 +174,22 @@ R"(
         //float strength = 1.0 - dot(normalize(v_normal), vec3(0.0, 1.0, 0.0));
         //strength = smoothstep(0.0, 0.05, strength);
 
-float strength = 1.0; //apparently superfluous?
+//float strength = 1.0; //apparently superfluous?
 
-        float alpha = (sin(v_texCoord.x - ((u_windData.w * 5.0 * strength) * v_texCoord.y)) + 1.0) * 0.5;
+        float alpha = (sin(v_texCoord.x - ((u_windData.w * 5.0 /** strength*/) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.1, alpha);
 
         vec3 c = BaseColour;
-        c.x += mod(v_heightData.y * 3.0, 1.0);
+        c.x += mod(v_heightData.y * 2.5/* * u_value*/, 1.0);
         c = hsv2rgb(c);
 
         c.g *= 0.7; //reduce the green to increase contrast with the background
 
+
         vec4 colour = vec4(c, v_heightData.x);
 
         colour.a *= u_alpha;
-        colour = mix(vec4(DotColour, (0.5 + (0.5 * u_alpha)) * v_heightData.x * step(0.0001, alpha)), colour, alpha);
+        colour = mix(vec4(DotColour, (0.35 + (0.5 * u_alpha)) * v_heightData.x /** step(0.0001, alpha)*/), colour, alpha);
 
 //colour.rgb *= 0.1; //additive blending
 //colour.rgb *= colour.a; //additive blending

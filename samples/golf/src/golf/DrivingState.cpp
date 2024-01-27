@@ -1936,7 +1936,7 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
 
 
 #ifdef CRO_DEBUG_
-    m_debugHeightmap.loadFromImage(normalMapImage);
+    //m_debugHeightmap.loadFromImage(normalMapImage);
 #endif
 
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y)

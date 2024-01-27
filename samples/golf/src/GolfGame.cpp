@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -60,6 +60,10 @@ source distribution.
 #include "golf/UnlockItems.hpp"
 #include "editor/BushState.hpp"
 #include "sqlite/SqliteState.hpp"
+#include "runner/EndlessAttractState.hpp"
+#include "runner/EndlessDrivingState.hpp"
+#include "runner/EndlessPauseState.hpp"
+#include "runner/EndlessShared.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
@@ -106,6 +110,8 @@ namespace
 #include "golf/shaders/PostProcess.inl"
 #include "golf/shaders/ShaderIncludes.inl"
 #include "golf/RandNames.hpp"
+
+    els::SharedStateData elsShared;
 
     struct ShaderDescription final
     {
@@ -193,6 +199,9 @@ GolfGame::GolfGame()
     m_stateStack.registerState<LeagueState>(StateID::League, m_sharedData);
     m_stateStack.registerState<MapOverviewState>(StateID::MapOverview, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
+    m_stateStack.registerState<EndlessAttractState>(StateID::EndlessAttract, m_sharedData, elsShared);
+    m_stateStack.registerState<EndlessDrivingState>(StateID::EndlessRunner, m_sharedData, elsShared);
+    m_stateStack.registerState<EndlessPauseState>(StateID::EndlessPause, m_sharedData, elsShared);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
@@ -826,13 +835,15 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::Bush);
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
-    m_stateStack.pushState(StateID::Menu);
+    //m_stateStack.pushState(StateID::Menu);
+    m_stateStack.pushState(StateID::EndlessRunner);
+    m_stateStack.pushState(StateID::EndlessAttract);
     //m_stateStack.pushState(StateID::Workshop);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
 
-    applyImGuiStyle();
+    applyImGuiStyle(m_sharedData);
 
     return true;
 }

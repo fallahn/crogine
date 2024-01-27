@@ -112,6 +112,7 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
     {
         retVal.height = res.m_hitPointWorld.y();
         retVal.terrain = (res.m_collisionType >> 24);
+        retVal.trigger = ((res.m_collisionType & 0x00ff0000) >> 16);
         retVal.normal = { res.m_hitNormalWorld.getX(), res.m_hitNormalWorld.getY(), res.m_hitNormalWorld.getZ() };
         retVal.wasRayHit = true;
     }
@@ -133,6 +134,7 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 rayStart, glm::vec3 rayDir) co
     {
         retVal.height = res.m_hitPointWorld.y();
         retVal.terrain = (res.m_collisionType >> 24);
+        retVal.trigger = ((res.m_collisionType & 0x00ff0000) >> 16);
         retVal.normal = { res.m_hitNormalWorld.getX(), res.m_hitNormalWorld.getY(), res.m_hitNormalWorld.getZ() };
         retVal.wasRayHit = true;
     }

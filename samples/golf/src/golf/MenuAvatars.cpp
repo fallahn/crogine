@@ -2254,6 +2254,8 @@ void MenuState::updateLobbyAvatars()
         }
         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
+
+        //delayed entities to refresh/redraw the UI
         auto temp = m_uiScene.createEntity();
         temp.addComponent<cro::Callback>().active = true;
         temp.getComponent<cro::Callback>().function = [&](cro::Entity e, float)
@@ -2273,5 +2275,34 @@ void MenuState::updateLobbyAvatars()
             };
         };
     };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+    //show or hide the chat hint depending on number of clients
+    cmd.targetFlags = CommandID::Menu::ChatHint;
+    if (m_sharedData.hosting)
+    {
+        //hide the chat hint if we're the only connection
+        //this assumes the above command has already updated the client count
+        cmd.action = [&](cro::Entity e, float)
+            {
+                if (e.hasComponent<cro::Text>())
+                {
+                    glm::vec2 scale(m_connectedClientCount > 1 ? 1.f : 0.f);
+                    e.getComponent<cro::Transform>().setScale(scale);
+                }
+            };
+    }
+    else
+    {
+        //assume there are multiple players, else how would we be here?
+        cmd.action = [](cro::Entity e, float)
+            {
+                if (e.hasComponent<cro::Text>())
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                }
+            };
+    }
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

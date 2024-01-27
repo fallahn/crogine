@@ -82,6 +82,12 @@
     <Filter Include="Source Files\sqlite">
       <UniqueIdentifier>{db65c6dd-34b6-4bd9-91b7-166a75834bb0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\endless">
+      <UniqueIdentifier>{28c29afc-eb94-4e79-8538-3b4cf9430775}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\endless">
+      <UniqueIdentifier>{3a86c79e-897c-4491-86c6-22f4eb59f43d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -416,6 +422,24 @@
     </ClCompile>
     <ClCompile Include="src\golf\ChunkVisSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\runner\EndlessDrivingState.cpp">
+      <Filter>Source Files\endless</Filter>
+    </ClCompile>
+    <ClCompile Include="src\runner\EndlessAttractState.cpp">
+      <Filter>Source Files\endless</Filter>
+    </ClCompile>
+    <ClCompile Include="src\runner\EndlessPauseState.cpp">
+      <Filter>Source Files\endless</Filter>
+    </ClCompile>
+    <ClCompile Include="src\runner\CarSystem.cpp">
+      <Filter>Source Files\endless</Filter>
+    </ClCompile>
+    <ClCompile Include="src\runner\Track.cpp">
+      <Filter>Source Files\endless</Filter>
+    </ClCompile>
+    <ClCompile Include="src\runner\EndlessSoundDirector.cpp">
+      <Filter>Source Files\endless</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -838,6 +862,45 @@
     </ClInclude>
     <ClInclude Include="src\golf\ChunkVisSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\EndlessDrivingState.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\EndlessAttractState.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\EndlessPauseState.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\Track.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\TrackCamera.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\TrackSegment.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\TrackSprite.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\EndlessConsts.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\CarSystem.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\EndlessMessages.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\EndlessSoundDirector.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\Player.hpp">
+      <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\runner\EndlessShared.hpp">
+      <Filter>Header Files\endless</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

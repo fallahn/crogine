@@ -172,8 +172,8 @@ bool MyApp::initialise()
     m_stateStack.registerState<EndlessDrivingState>(States::ScratchPad::EndlessDriving);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::EndlessDriving);
-    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::EndlessDriving);
+    m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -38,6 +38,7 @@ source distribution.
 
 #include <crogine/core/String.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -51,6 +52,12 @@ namespace cro
 {
     class MultiRenderTexture;
 }
+
+struct ChatFonts final
+{
+    ImFont* buttonLarge = nullptr;
+    float buttonHeight = 26.f;
+};
 
 struct ConnectionData final
 {
@@ -73,6 +80,8 @@ static constexpr float MaxFOV = 90.f;
 
 struct SharedStateData final
 {
+    ChatFonts chatFonts;
+
     bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
     cro::String OSKBuffer;
 

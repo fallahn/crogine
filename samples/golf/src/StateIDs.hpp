@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -61,6 +61,9 @@ struct StateID final
         GC,
         League,
         PlayerManagement,
+        EndlessAttract,
+        EndlessRunner,
+        EndlessPause,
 
         SQLite, //used for testing SQLite features
         Workshop = 1100

@@ -27,6 +27,8 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "../Colordome-32.hpp"
+
 #include "OptionsState.hpp"
 #include "SharedStateData.hpp"
 #include "CommonConsts.hpp"
@@ -2276,6 +2278,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //prev/next grid transparency
     entity = createHighlight(glm::vec2(263.f, 41.f));
+    entity.setLabel("Sets the transparency of the grid on the green when putting.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVGridL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVGridR, AVTreeL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVVertSnap, AVUnits);
@@ -2291,6 +2294,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     entity = createHighlight(glm::vec2(378.f, 41.f));
+    entity.setLabel("Sets the transparency of the grid on the green when putting.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVGridR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVVertSnap, AVTreeR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVGridL, AVPostR);
@@ -3937,7 +3941,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
 
-    //advanced
+    //credits
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(2.f, 1.f));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -3947,41 +3951,16 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().setGroup(menuID);
     entity.getComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(WindowAdvanced);
-    entity.getComponent<cro::UIInput>().setPrevIndex(WindowClose, upLeftA);
-    entity.getComponent<cro::UIInput>().setNextIndex(WindowCredits, downLeftA);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&](cro::Entity e, cro::ButtonEvent evt)
-        {
-            if (activated(evt))
-            {
-                cro::Console::show();
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
-        });
-
-    //hack to stop multiple instances covering each other when not active
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function = textHideCallback;
-
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //credits
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(78.f, 1.f));
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("large_highlight");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::UIInput>().setGroup(menuID);
-    entity.getComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(WindowCredits);
-    entity.getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, upLeftB);
-    entity.getComponent<cro::UIInput>().setNextIndex(WindowApply, downLeftB);
+    entity.getComponent<cro::UIInput>().setPrevIndex(WindowClose, upLeftA);
+    if (Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(WindowApply, downLeftA);
+    }
+    else
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(WindowAdvanced, downLeftA);
+    }
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
@@ -4001,6 +3980,52 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //advanced
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(78.f, 1.f));
+    entity.addComponent<cro::Drawable2D>();
+    
+    if (Social::isSteamdeck())
+    {
+        entity.getComponent<cro::Drawable2D>().setVertexData(
+            {
+            cro::Vertex2D(glm::vec2(0.f, 18.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(75.f, 18.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(75.f, 0.f), CD32::Colours[CD32::Brown]),
+            
+            });
+    }
+    else
+    {
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("large_highlight");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.addComponent<cro::UIInput>().setGroup(menuID);
+        entity.getComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setSelectionIndex(WindowAdvanced);
+        entity.getComponent<cro::UIInput>().setPrevIndex(WindowCredits, upLeftB);
+        entity.getComponent<cro::UIInput>().setNextIndex(WindowApply, downLeftB);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+            [&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    cro::Console::show();
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+        //hack to stop multiple instances covering each other when not active
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = textHideCallback;
+    }
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //apply
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(297.f, 1.f));
@@ -4012,7 +4037,14 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     entity.addComponent<cro::UIInput>().setGroup(menuID);
     entity.getComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(WindowApply);
-    entity.getComponent<cro::UIInput>().setPrevIndex(WindowCredits, upRightA);
+    if (Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setPrevIndex(WindowCredits, upRightA);
+    }
+    else
+    {
+        entity.getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, upRightA);
+    }
     entity.getComponent<cro::UIInput>().setNextIndex(WindowClose, downRightA);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
@@ -4052,7 +4084,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     entity.getComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(WindowClose);
     entity.getComponent<cro::UIInput>().setPrevIndex(WindowApply, upRightB);
-    entity.getComponent<cro::UIInput>().setNextIndex(WindowAdvanced, downRightB);
+    entity.getComponent<cro::UIInput>().setNextIndex(WindowCredits, downRightB);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(

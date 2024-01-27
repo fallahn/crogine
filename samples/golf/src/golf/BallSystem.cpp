@@ -1043,6 +1043,13 @@ void BallSystem::doCollision(cro::Entity entity)
         case TerrainID::Scrub:
         case TerrainID::Bunker:
             ball.velocity *= Restitution[terrainResult.terrain];
+
+            if (m_processFlags == 0)
+            {
+                auto* msg2 = postMessage<TriggerEvent>(sv::MessageID::TriggerMessage);
+                msg2->triggerID = terrainResult.trigger;
+            }
+
             break;
         case TerrainID::Fairway:
         case TerrainID::Stone: //bouncy :)
@@ -1111,7 +1118,8 @@ void BallSystem::doCollision(cro::Entity entity)
         //this stops repeated events if the ball is moving slowly
         //so eg we don't raise a lot of sound requests
         if (len2 > 0.05f
-            || terrainResult.terrain == TerrainID::Scrub) //vel will be 0 in this case
+            || terrainResult.terrain == TerrainID::Scrub
+            || terrainResult.terrain == TerrainID::Water) //vel will be 0 in this case
         {
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->terrain = terrainResult.terrain;

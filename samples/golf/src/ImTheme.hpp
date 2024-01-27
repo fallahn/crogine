@@ -1,6 +1,11 @@
+#pragma once
+
+#include "golf/SharedStateData.hpp"
+
 #include <crogine/gui/Gui.hpp>
 
-static inline void applyImGuiStyle()
+
+static inline void applyImGuiStyle(SharedStateData& sd)
 {
     //golf style
     ImGuiStyle& style = ImGui::GetStyle();
@@ -101,7 +106,7 @@ static inline void applyImGuiStyle()
     //config.OversampleH = config.OversampleV = 1;
 
     //expands the default glyph set - default is 32-255
-    std::vector<ImWchar> rangesA = { 0x1, 0xFFFF, 0 }; //TODO what's the third number? Plane? Terminator?
+    static const std::vector<ImWchar> rangesA = { 0x1, 0xFFFF, 0 }; //TODO what's the third number? Plane? Terminator?
     fonts->AddFontFromFileTTF("assets/golf/fonts/ProggyClean.ttf", 13.f, &config, rangesA.data());
     
     fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesCyrillic());
@@ -115,17 +120,23 @@ static inline void applyImGuiStyle()
     fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansTC-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesChineseFull());
     //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-zh_cn.ttf", 10.f, &config, fonts->GetGlyphRangesChineseFull());
     
-    std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
+    static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
+    ImFontConfig configB;
+    configB.FontBuilderFlags |= (1 << 8) | (1 << 9);
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
     if (cro::FileSystem::fileExists(winPath))
     {
-        fonts->AddFontFromFileTTF(winPath.c_str(), 10.0f, &config, rangesB.data());
+        fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(winPath.c_str(), 16.f, &configB, rangesB.data());
+        sd.chatFonts.buttonHeight = 28.f;
     }
     else
 #endif
     {
-        fonts->AddFontFromFileTTF("assets/golf/fonts/NotoEmoji-Regular.ttf", 13.0f, &config, rangesB.data());
+        fonts->AddFontFromFileTTF("assets/golf/fonts/NotoEmoji-Regular.ttf", 13.f, &config, rangesB.data());
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF("assets/golf/fonts/NotoEmoji-Regular.ttf", 18.0f, &configB, rangesB.data());
+        sd.chatFonts.buttonHeight = 30.f;
     }
 
     fonts->Build();

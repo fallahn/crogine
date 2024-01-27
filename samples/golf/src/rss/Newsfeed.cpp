@@ -103,7 +103,7 @@ bool RSSFeed::parseFeed(const std::vector<std::uint8_t>& src)
 {
     if (src.empty())
     {
-        LogE << "RSS source is empty" << std::endl;
+        LogW << "RSS source is empty" << std::endl;
         m_fetchComplete = true;
         return false;
     }
@@ -138,6 +138,9 @@ bool RSSFeed::parseFeed(const std::vector<std::uint8_t>& src)
             cro::Util::String::replace(i.description, "<p>", "");
             cro::Util::String::replace(i.description, "</p>", "");
             cro::Util::String::replace(i.description, "<br>", " ");
+            cro::Util::String::replace(i.description, "<ul class=\"bb_ul\">", " "); //sigh... wish this didn't have to be so specific...
+            cro::Util::String::replace(i.description, "<li>", "\n - ");
+            cro::Util::String::replace(i.description, "</li>", " ");
         }
     }
     m_fetchComplete = true;

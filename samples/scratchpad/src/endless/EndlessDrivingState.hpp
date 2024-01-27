@@ -61,6 +61,8 @@ private:
     cro::Entity m_playerSprite;
     cro::Entity m_roadEntity;
 
+    cro::Entity m_debugEntity;
+
     //texture is fixed size and game is rendered to this
     //the ui scene then scales this to the current output
     cro::RenderTexture m_gameTexture;
@@ -117,15 +119,36 @@ private:
     }m_inputFlags;
 
 
+    struct GameRules final
+    {
+        float remainingTime = 30.f;
+        float totalTime = 0.f;
+
+        struct State final
+        {
+            enum
+            {
+                CountIn, Running
+            };
+        };
+        std::int32_t state = State::CountIn;
+    }m_gameRules;
+
+
+    std::array<std::vector<float>, TrackSprite::Animation::Count> m_wavetables = {};
+
     void addSystems();
     void loadAssets();
     void createPlayer();
     void createScene();
+    void createRoad();
     void createUI();
 
     void updateControllerInput();
     void updatePlayer(float dt);
     void updateRoad(float dt);
-    void addRoadQuad(float x1, float x2, float y1, float y2, float w1, float w2, cro::Colour, std::vector<cro::Vertex2D>&);
-    void addRoadSprite(const TrackSprite&, glm::vec2, float scale, float clip, float fogAmount, std::vector<cro::Vertex2D>&);
+    void addRoadQuad(const TrackSegment& s1, const TrackSegment& s2, float widthMultiplier, cro::Colour, std::vector<cro::Vertex2D>&);
+    void addRoadSprite(TrackSprite&, const TrackSegment&, std::vector<cro::Vertex2D>&);
+
+    std::pair<glm::vec2, glm::vec2> getScreenCoords(TrackSprite&, const TrackSegment&, bool animate);
 };

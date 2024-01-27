@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -691,7 +691,6 @@ void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player, 
     m_newHole = false;
 }
 
-//private
 cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, float volume)
 {
     const auto playDefault = [&, id, volume, position]()
@@ -782,6 +781,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
     m_soundTimers[id].restart();
 }
 
+//private
 void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, float delay, float volume, std::uint8_t channel)
 {
     auto entity = getScene().createEntity();
