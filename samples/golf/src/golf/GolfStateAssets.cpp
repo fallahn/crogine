@@ -1929,7 +1929,7 @@ void GolfState::loadModels()
     {
         md.createModel(m_clubModels[ClubModel::Wood]);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
         m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
@@ -1958,7 +1958,7 @@ void GolfState::loadModels()
     {
         md.createModel(m_clubModels[ClubModel::Iron]);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,7 +41,7 @@ inline cro::String ConfigProperty::getValue<cro::String>() const
         return m_value;
     }
 
-    auto cp = cro::Util::String::getCodepoints(m_value);
+    //auto cp = cro::Util::String::getCodepoints(m_value);
     return cro::String::fromUtf8(m_value.begin(), m_value.end());
 }
 

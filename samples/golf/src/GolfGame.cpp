@@ -833,9 +833,9 @@ bool GolfGame::initialise()
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
     //m_stateStack.pushState(StateID::Bush);
-    m_stateStack.pushState(StateID::Clubhouse);
+    //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
-    //m_stateStack.pushState(StateID::Menu);
+    m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::EndlessRunner);
     //m_stateStack.pushState(StateID::EndlessAttract);
     //m_stateStack.pushState(StateID::Workshop);
