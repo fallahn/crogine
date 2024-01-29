@@ -4889,7 +4889,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         break;
     }
 
-    const auto title = m_sharedData.tutorial ? cro::String("Tutorial").toUtf8() : courseTitle.toUtf8()/*.substr(0, MaxTitleLen)*/;
+    const auto title = m_sharedData.tutorial ? cro::String("Tutorial").toUtf8() : courseTitle.toUtf8();
     const auto holeNumber = std::to_string(m_currentHole + 1);
     const auto holeTotal = std::to_string(m_holeData.size());
     //well... this is awful.

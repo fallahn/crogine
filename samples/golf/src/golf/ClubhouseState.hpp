@@ -167,6 +167,7 @@ private:
     cro::CubemapTexture m_reflectionMap;
     cro::VideoPlayer m_arcadeVideo;
     cro::VideoPlayer m_arcadeVideo2;
+    cro::VideoPlayer m_arcadeVideo3;
     cro::RenderTexture m_pictureTexture;
     cro::SimpleQuad m_pictureQuad;
 

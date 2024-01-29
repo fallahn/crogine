@@ -833,11 +833,11 @@ bool GolfGame::initialise()
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
     //m_stateStack.pushState(StateID::Bush);
-    //m_stateStack.pushState(StateID::Clubhouse);
+    m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
     //m_stateStack.pushState(StateID::Menu);
-    m_stateStack.pushState(StateID::EndlessRunner);
-    m_stateStack.pushState(StateID::EndlessAttract);
+    //m_stateStack.pushState(StateID::EndlessRunner);
+    //m_stateStack.pushState(StateID::EndlessAttract);
     //m_stateStack.pushState(StateID::Workshop);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
@@ -1204,7 +1204,7 @@ void GolfGame::loadPreferences()
                 }
                 else if (name == "clubset")
                 {
-                    m_sharedData.clubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                    m_sharedData.preferredClubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
                 }
                 else if (name == "press_hold")
                 {
@@ -1303,7 +1303,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_trail").setValue(m_sharedData.showBallTrail);
     cfg.addProperty("use_beacon_colour").setValue(m_sharedData.trailBeaconColour);
     cfg.addProperty("fast_cpu").setValue(m_sharedData.fastCPU);
-    cfg.addProperty("clubset").setValue(m_sharedData.clubSet);
+    cfg.addProperty("clubset").setValue(m_sharedData.preferredClubSet);
     cfg.addProperty("press_hold").setValue(m_sharedData.pressHold);
     cfg.save(path);
 

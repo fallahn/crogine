@@ -238,7 +238,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     prevBillBox = false;
     noiseTable = cro::Util::Wavetable::noise(2.f, 10.f);
     
-    sd.clubSet = std::clamp(sd.clubSet, 0, 2);
+    sd.clubSet = std::clamp(sd.preferredClubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);
 
     std::fill(m_topScores.begin(), m_topScores.end(), 0.f);

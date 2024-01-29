@@ -173,8 +173,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 {
     checkCommandLine = false;
     sd.baseState = StateID::Menu;
-    sd.clubSet = std::clamp(sd.clubSet, 0, 2);
-    Club::setClubLevel(sd.clubSet);
+    sd.preferredClubSet = std::clamp(sd.preferredClubSet, 0, 2);
+    sd.clubSet = sd.preferredClubSet;
+    Club::setClubLevel(sd.preferredClubSet);
 
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     sd.minimapData = {};
@@ -1993,7 +1994,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::LobbyReady:
         {
             std::uint16_t data = evt.packet.as<std::uint16_t>();
-            m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
+            auto idx = std::clamp(((data & 0xff00) >> 8), 0, static_cast<std::int32_t>(m_readyState.size() - 1));
+            m_readyState[idx] = (data & 0x00ff) ? true : false;
         }
             break;
         case PacketID::MapInfo:
@@ -2274,17 +2276,26 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
             //reply with our level so server knows which limit to set
             {
-                std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.clubSet);
+                std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.preferredClubSet);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+
+            if (!m_sharedData.clubLimit)
+            {
+                m_sharedData.clubSet = m_sharedData.preferredClubSet;
             }
             break;
         case PacketID::MaxClubs:
         {
             std::uint8_t clubSet = evt.packet.as<std::uint8_t>();
-            if (clubSet < m_sharedData.clubSet)
+            if (clubSet < m_sharedData.preferredClubSet)
             {
                 m_sharedData.clubSet = clubSet;
                 Club::setClubLevel(clubSet);
+            }
+            else
+            {
+                m_sharedData.clubSet = m_sharedData.preferredClubSet;
             }
         }
             break;

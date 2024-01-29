@@ -48,11 +48,11 @@ source distribution.
 //(player avatar data format changed 1110 -> 1120)
 //(ball started sending wind effect 1120 -> 1124)
 //(added night mode/weather 1141 -> 1150)
-static constexpr std::uint16_t CURRENT_VER = 1152;
+static constexpr std::uint16_t CURRENT_VER = 1153;
 #ifdef __APPLE__
-static const std::string StringVer("1.15.2 (macOS beta)");
+static const std::string StringVer("1.15.3 (macOS beta)");
 #else
-static const std::string StringVer("1.15.2");
+static const std::string StringVer("1.15.3");
 #endif
 
 struct HallEntry final
