@@ -227,6 +227,9 @@ App::App(std::uint32_t styleFlags)
 #ifndef __APPLE__ //mac actually gives a decent stack dump
     //register custom abort which prints the call stack
     signal(SIGABRT, &winAbort);
+    signal(SIGSEGV, &winAbort); //TODO make sure to tag which of these was called
+    signal(SIGILL, &winAbort);
+    signal(SIGFPE, &winAbort);
 #endif
 #endif
 
