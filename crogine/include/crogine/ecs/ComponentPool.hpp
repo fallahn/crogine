@@ -71,7 +71,14 @@ namespace cro
                 if (size > m_pool.size())
                 {
                     m_pool.resize(size);
-                    LOG("Warning component pool " + std::string(typeid(T).name()) + " has been resized to " + std::to_string(m_pool.size()) + " - existing component references may be invalidated", cro::Logger::Type::Warning);
+
+                    //just surpress this if we're of a type which reserves
+                    //max size, else the message is confusing
+                    if constexpr (std::is_copy_assignable_v<T>
+                        || !std::is_base_of_v<NonResizeable, T>)
+                    {
+                        LOG("Warning component pool " + std::string(typeid(T).name()) + " has been resized to " + std::to_string(m_pool.size()) + " - existing component references may be invalidated", cro::Logger::Type::Warning);
+                    }
                 }
             }
             void clear() override { m_pool.clear(); }
