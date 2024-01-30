@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/Detail.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/NoResize.hpp>
 
@@ -58,8 +59,8 @@ namespace cro
                 if constexpr (!std::is_copy_assignable_v<T>
                     || std::is_base_of_v<NonResizeable, T>)
                 {
-                    m_pool.reserve(1024);
-                    LOG("Reserved maximum pool size of 1024 for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
+                    m_pool.reserve(MinFreeIDs);
+                    LOG("Reserved maximum pool size of " + std::to_string(MinFreeIDs) + " for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
                 }
             }
 

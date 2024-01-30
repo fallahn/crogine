@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,23 +29,16 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/Types.hpp>
+#include <cstdint>
+#include <limits>
 
 namespace cro::Detail
 {
-    /*!
-    \brief Declares pooled resources which inherit this not have their component
-    pools resized in cases where it will harmfully invalidate references. For 
-    example a component which contains a transform that has pointers to it should
-    not be moved during reallocation of the component pool, else those references
-    will become invalidated.
-
-    Classes inheriting this should be components in the ECS (else this base class
-    will have no effect), and will have the maximum memory pool size of MaxGenerations
-    components reserved for any potential pool resize events.
-    */
-    class CRO_EXPORT_API NonResizeable
+    enum
     {
-    public: virtual ~NonResizeable() {};
+        MaxComponents = 64, //this is max number of types on a single entity
+        IndexBits = 24,
+        GenerationBits = 8,
+        MinFreeIDs = std::numeric_limits<std::int16_t>::max() //after this generation is incremented and we go back to zero
     };
 }

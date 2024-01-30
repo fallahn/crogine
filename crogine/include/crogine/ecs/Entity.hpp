@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/Detail.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/Config.hpp>
@@ -42,18 +43,7 @@ source distribution.
 #include <memory>
 
 namespace cro
-{
-    namespace Detail
-    {
-        enum
-        {
-            MaxComponents = 64, //this is max number of types on a single entity
-            IndexBits = 24,
-            GenerationBits = 8,
-            MinFreeIDs = std::numeric_limits<std::int16_t>::max() //after this generation is incremented and we go back to zero
-        };
-    }
-    
+{  
     using ComponentMask = std::bitset<Detail::MaxComponents>;
     class EntityManager;
 
