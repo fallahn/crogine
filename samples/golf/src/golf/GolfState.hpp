@@ -246,6 +246,7 @@ private:
             ShadowMapSkinned,
             Leaderboard,
             Player,
+            PlayerMasked,
             Hair,
             Course,
             Ball,

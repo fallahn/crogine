@@ -530,14 +530,6 @@ inline const std::string CelFragmentShader = R"(
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, waterDither * 0.5 * step(WaterLevel, v_worldPosition.y));
 #endif
 
-#define NOCHEX
-#if !defined(NOCHEX)
-        float pixelScale = u_pixelScale;
-        float check = mod(floor(gl_FragCoord.x / pixelScale) + floor(gl_FragCoord.y / pixelScale), 2.0) * checkAmount;
-        amount = (1.0 - check) + (check * amount);
-        colour.rgb *= amount;
-#endif
-
 #if defined (SPECULAR)
         vec3 reflectDirection = reflect(-lightDirection, normal);
         float spec = pow(max(dot(viewDirection, reflectDirection), 0.50), 256.0);
