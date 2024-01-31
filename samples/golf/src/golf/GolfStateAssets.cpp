@@ -70,8 +70,10 @@ void GolfState::loadAssets()
     {
         m_lightVolumeDefinition.loadFromFile("assets/golf/models/light_sphere.cmt");
     }
-    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
-
+    if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm"))
+    {
+        m_reflectionMap.generateMipMaps();
+    }
 
     loadMaterials();
 
@@ -1390,6 +1392,7 @@ void GolfState::loadMaterials()
     shader = &m_resources.shaders.get(ShaderID::PlayerMasked);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::PlayerMasked] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::PlayerMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
 
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Hair);

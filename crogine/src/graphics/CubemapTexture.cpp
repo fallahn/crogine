@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/Log.hpp>
 
 #include "../detail/GLCheck.hpp"
 
@@ -278,6 +279,28 @@ bool CubemapTexture::loadFromFiles(const std::vector<std::string>& paths)
     glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
 
     return m_cubemapCount != 0;
+}
+
+void CubemapTexture::generateMipMaps()
+{
+    if (m_handle)
+    {
+        glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_handle));
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+        auto err = glGetError();
+        if (err == GL_INVALID_OPERATION || err == GL_INVALID_ENUM)
+        {
+            LOG("Failed to create Mipmaps", Logger::Type::Warning);
+        }
+        else
+        {
+            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+        }
+    }
+    else
+    {
+        LOG("Cubemap texture: no mipmaps generated, texture not loaded.", Logger::Type::Warning);
+    }
 }
 
 //private

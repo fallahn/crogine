@@ -1257,7 +1257,10 @@ void MenuState::loadAssets()
 {
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
     m_backgroundScene.setSkyboxColours(cro::Colour(0.2f, 0.31f, 0.612f, 1.f), cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
-    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
+    if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm"))
+    {
+        m_reflectionMap.generateMipMaps();
+    }
 
     std::string wobble;
     if (m_sharedData.vertexSnap)
