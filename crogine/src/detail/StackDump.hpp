@@ -33,5 +33,10 @@ source distribution.
 class StackDump final
 {
 public:
-    static void dump();
+    static void dump(int);
+
+    enum
+    {
+        ABRT, SEG, ILL, FPE
+    };
 };

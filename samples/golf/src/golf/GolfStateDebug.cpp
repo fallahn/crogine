@@ -469,7 +469,7 @@ void GolfState::registerDebugCommands()
                             for (auto n = 0u; n < items.size(); ++n)
                             {
                                 const bool selected = (idx == n);
-                                if (ImGui::Selectable(reinterpret_cast<char*>(items[n].name->toUtf8().data()), selected))
+                                if (ImGui::Selectable(reinterpret_cast<const char*>(items[n].name->toUtf8().c_str()), selected))
                                 {
                                     idx = n;
                                 }

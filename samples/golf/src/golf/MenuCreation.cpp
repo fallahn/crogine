@@ -738,6 +738,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     if (activated(evt))
                     {
                         m_sharedData.hosting = true;
+                        m_sharedData.clubSet = m_sharedData.preferredClubSet;
 
                         m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
@@ -756,6 +757,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     if (activated(evt))
                     {
                         m_sharedData.hosting = false;
+                        m_sharedData.clubSet = m_sharedData.preferredClubSet;
 
                         m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
@@ -1809,7 +1811,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     //clubset selection
     if (Social::getClubLevel())
     {
-        m_sharedData.clubSet %= (Social::getClubLevel() + 1);
+        m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
 
         //button icon
         entity = m_uiScene.createEntity();
@@ -1818,7 +1820,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity.addComponent<UIElement>().absolutePosition = { 306.f, 48.f };
         entity.getComponent<UIElement>().depth = 0.1f;
         entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("clubset_button");
-        entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.clubSet);
+        entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         auto buttonEnt = entity;
@@ -1849,14 +1851,16 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 if (activated(evt))
                 {
-                    m_sharedData.clubSet = (m_sharedData.clubSet + 1) % (Social::getClubLevel() + 1);
-                    buttonEnt.getComponent<cro::SpriteAnimation>().play(m_sharedData.clubSet);
+                    m_sharedData.preferredClubSet = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
+                    buttonEnt.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     //make sure the server knows what we request so it can be considered
                     //when choosing a club set limit in MP games
-                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.clubSet);
+                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.preferredClubSet);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    m_sharedData.clubSet = m_sharedData.clubLimit ? m_sharedData.clubSet : m_sharedData.preferredClubSet;
                 }
             });
 

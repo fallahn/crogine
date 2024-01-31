@@ -96,6 +96,7 @@ namespace cro
 
         //sets the property's value
         void setValue(const std::string& v);
+        void setValue(const cro::String& v);
         void setValue(std::int32_t v);
         void setValue(std::uint32_t v);
         void setValue(float v);

@@ -30,9 +30,24 @@ source distribution.
 #ifndef __APPLE__
 #include "../detail/StackDump.hpp"
 #include <signal.h>
-void winAbort(int)
+static void winAbort(int)
 {
-    StackDump::dump();
+    StackDump::dump(StackDump::ABRT);
+}
+
+static void winSeg(int)
+{
+    StackDump::dump(StackDump::SEG);
+}
+
+static void winIll(int)
+{
+    StackDump::dump(StackDump::ILL);
+}
+
+static void winFPE(int)
+{
+    StackDump::dump(StackDump::FPE);
 }
 
 #endif
@@ -227,6 +242,9 @@ App::App(std::uint32_t styleFlags)
 #ifndef __APPLE__ //mac actually gives a decent stack dump
     //register custom abort which prints the call stack
     signal(SIGABRT, &winAbort);
+    signal(SIGSEGV, &winSeg);
+    signal(SIGILL, &winIll);
+    signal(SIGFPE, &winFPE);
 #endif
 #endif
 

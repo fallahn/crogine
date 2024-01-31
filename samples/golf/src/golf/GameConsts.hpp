@@ -253,6 +253,7 @@ struct ShaderID final
         CloudRing,
         Leaderboard,
         Player,
+        PlayerMasked,
         Hair,
         Course,
         CourseGreen,

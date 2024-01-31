@@ -687,6 +687,7 @@ bool ClubhouseState::simulate(float dt)
 
     m_arcadeVideo.update(dt);
     m_arcadeVideo2.update(dt);
+    m_arcadeVideo3.update(dt);
 
     m_tvTopFive.update(dt);
 
@@ -800,13 +801,13 @@ void ClubhouseState::loadResources()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
 
     //ball material in table preview
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define NOCHEX\n#define TEXTURED\n#define SUBRECT\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define TEXTURED\n#define SUBRECT\n");
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1132,10 +1133,28 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo.getTexture().getGLHandle()));
     }
 
-    if (md.loadFromFile("assets/golf/models/arcade_machine.cmt"))
+    if (md.loadFromFile("assets/golf/models/arcade_machine02.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.6f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        entity.getComponent<cro::Transform>().setScale({ 0.8f, 1.f, 1.f });
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Cel);
+        //applyMaterial(entity, MaterialID::TV, 1);
+
+        m_arcadeVideo3.loadFromFile("assets/golf/video/arcade3.mpg");
+        m_arcadeVideo3.setLooped(true);
+        m_arcadeVideo3.play();
+
+        entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo3.getTexture().getGLHandle()));
+    }
+
+    if (md.loadFromFile("assets/golf/models/arcade_machine.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -4.2f });
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         entity.getComponent<cro::Transform>().setScale({ 0.8f, 1.f, 1.f });
         md.createModel(entity);

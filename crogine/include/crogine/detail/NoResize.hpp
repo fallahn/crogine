@@ -41,7 +41,7 @@ namespace cro::Detail
     will become invalidated.
 
     Classes inheriting this should be components in the ECS (else this base class
-    will have no effect), and will have the maximum memory pool size of 1024
+    will have no effect), and will have the maximum memory pool size of MaxGenerations
     components reserved for any potential pool resize events.
     */
     class CRO_EXPORT_API NonResizeable

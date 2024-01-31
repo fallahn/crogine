@@ -137,12 +137,12 @@ namespace cro
 
         Mesh::IndexData::Pass m_pass;
 
-        Detail::BalancedTree m_tree;
-        bool m_useTreeQueries;
+        /*Detail::BalancedTree m_tree;
+        bool m_useTreeQueries;*/
 
         void updateDrawListDefault(Entity);
         void updateDrawListBalancedTree(Entity);
-        std::vector<Entity> queryTree(Box) const;
+        //std::vector<Entity> queryTree(Box) const;
 
         friend class DeferredRenderSystem;
         //these funcs are shared with above system - should probably be free funcs somewhere?

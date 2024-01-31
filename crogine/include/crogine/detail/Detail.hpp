@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,40 +27,18 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#pragma once
 
-#ifdef _MSC_VER
-#include <Windows.h>
-#endif
+#include <cstdint>
+#include <limits>
 
-#include "StackDump.hpp"
-#include "ust.hpp"
-#include <iostream>
-#include <ctime>
-
-void StackDump::dump(int type)
+namespace cro::Detail
 {
-//#ifdef _MSC_VER
-    auto t = std::time(nullptr);
-    //auto* tm = std::localtime(&t);
-    auto str = std::to_string(t);
-
-    std::ofstream file("stack_dump_" + str + ".txt");
-    switch (type)
+    enum
     {
-    default: break;
-    case StackDump::ABRT:
-        file << "ABORT\n";
-        break;
-    case StackDump::FPE:
-        file << "Floating Point Exception\n";
-        break;
-    case StackDump::ILL:
-        file << "Illegal op\n";
-        break;
-    case StackDump::SEG:
-        file << "Segment Fault\n";
-        break;
-    }
-    file << "Call Stack:\n" << ust::generate() << std::endl;
-//#endif
+        MaxComponents = 64, //this is max number of types on a single entity
+        IndexBits = 24,
+        GenerationBits = 8,
+        MinFreeIDs = std::numeric_limits<std::int16_t>::max() //after this generation is incremented and we go back to zero
+    };
 }

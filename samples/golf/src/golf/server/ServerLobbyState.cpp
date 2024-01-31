@@ -92,7 +92,8 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         case PacketID::LobbyReady:
         {
             std::uint16_t data = evt.packet.as<std::uint16_t>();
-            m_readyState[((data & 0xff00) >> 8)] = (data & 0x00ff) ? true : false;
+            auto idx = std::clamp(((data & 0xff00) >> 8), 0, ConstVal::MaxClients - 1);
+            m_readyState[idx] = (data & 0x00ff) ? true : false;
             m_sharedData.host.broadcastPacket(PacketID::LobbyReady, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             //broadcastRules();

@@ -61,7 +61,7 @@ namespace
 
     const cro::Time ResendTime = cro::seconds(1.5f);
 
-    const std::array<std::string, 12u> ApplaudStrings =
+    const std::array<std::string, 13u> ApplaudStrings =
     {
         "/me applauds",
         "/me nods in appreciation",
@@ -74,7 +74,8 @@ namespace
         "/me feels a bit star-struck",
         "/me ovates (which means applauding.)",
         "/me raises a glass of Fizz",
-        "/me now knows what a true hero looks like"
+        "/me now knows what a true hero looks like",
+        "/me hops on the 8:45 to Hassocks"
     };
 
     const std::array<std::string, 17u> HappyStrings =

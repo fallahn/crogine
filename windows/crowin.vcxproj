@@ -69,6 +69,7 @@
     <ClInclude Include="..\crogine\include\crogine\core\Window.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Assert.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\BalancedTree.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\Detail.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\GlobalConsts.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\ModelBinary.hpp" />

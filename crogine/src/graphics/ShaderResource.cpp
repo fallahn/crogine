@@ -342,6 +342,11 @@ std::string ShaderResource::parseIncludes(const std::string& src) const
 
     for (std::string line; std::getline(ss, line);)
     {
+        if (auto pos = line.find("//"); pos != std::string::npos)
+        {
+            line = line.substr(0, pos);
+        }
+
         if (line.find("#include") != std::string::npos)
         {
             auto separator = line.find_last_of(' ');

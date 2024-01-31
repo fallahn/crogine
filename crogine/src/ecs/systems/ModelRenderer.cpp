@@ -59,9 +59,9 @@ namespace
 ModelRenderer::ModelRenderer(MessageBus& mb)
     : System        (mb, typeid(ModelRenderer)),
     m_drawLists     (1),
-    m_pass          (Mesh::IndexData::Final),
+    m_pass          (Mesh::IndexData::Final)/*,
     m_tree          (1.f),
-    m_useTreeQueries(false)
+    m_useTreeQueries(false)*/
 {
     requireComponent<Transform>();
     requireComponent<Model>();
@@ -76,11 +76,11 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         m_drawLists.resize(camComponent.getDrawListIndex() + 1);
     }
 
-    if (m_useTreeQueries)
+    /*if (m_useTreeQueries)
     {
         updateDrawListBalancedTree(cameraEnt);
     }
-    else
+    else*/
     {
         updateDrawListDefault(cameraEnt);
     }
@@ -113,7 +113,7 @@ void ModelRenderer::process(float dt)
         auto& model = entity.getComponent<Model>();
         model.updateMaterialAnimations(dt);
 
-        if (m_useTreeQueries)
+        /*if (m_useTreeQueries)
         {
             if (!entity.destroyed())
             {
@@ -128,7 +128,7 @@ void ModelRenderer::process(float dt)
 
                 model.m_lastWorldPosition = worldPosition;
             }
-        }
+        }*/
     }
 }
 
@@ -303,12 +303,12 @@ void ModelRenderer::onEntityAdded(Entity entity)
     auto& model = entity.getComponent<Model>();
     model.updateBounds();
 
-    model.m_treeID = m_tree.addToTree(entity, model.getAABB());
+    //model.m_treeID = m_tree.addToTree(entity, model.getAABB());
 }
 
 void ModelRenderer::onEntityRemoved(Entity entity)
 {
-    m_tree.removeFromTree(entity.getComponent<Model>().m_treeID);
+    //m_tree.removeFromTree(entity.getComponent<Model>().m_treeID);
 }
 
 //private
@@ -437,146 +437,146 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 
 void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
 {
-    const auto& camComponent = cameraEnt.getComponent<Camera>();
-    auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
+    //const auto& camComponent = cameraEnt.getComponent<Camera>();
+    //auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
 
-    auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
+    //auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
 
-    for (auto& list : drawList)
-    {
-        list.clear();
-    }
+    //for (auto& list : drawList)
+    //{
+    //    list.clear();
+    //}
 
-    auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
+    //auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
-    for (auto p = 0; p < passCount; ++p)
-    {
-        const auto& frustumBounds = camComponent.getPass(p).getAABB();
-        auto entities = queryTree(frustumBounds);
+    //for (auto p = 0; p < passCount; ++p)
+    //{
+    //    const auto& frustumBounds = camComponent.getPass(p).getAABB();
+    //    auto entities = queryTree(frustumBounds);
 
-        for (auto entity : entities)
-        {
-            auto& model = entity.getComponent<Model>();
-            if (model.isHidden())
-            {
-                continue;
-            }
+    //    for (auto entity : entities)
+    //    {
+    //        auto& model = entity.getComponent<Model>();
+    //        if (model.isHidden())
+    //        {
+    //            continue;
+    //        }
 
-            if ((model.m_renderFlags & camComponent.getPass(p).renderFlags) == 0)
-            {
-                continue;
-            }
+    //        if ((model.m_renderFlags & camComponent.getPass(p).renderFlags) == 0)
+    //        {
+    //            continue;
+    //        }
 
-            if (model.m_meshBox != model.m_meshData.boundingBox)
-            {
-                model.updateBounds();
-            }
+    //        if (model.m_meshBox != model.m_meshData.boundingBox)
+    //        {
+    //            model.updateBounds();
+    //        }
 
-            //use the bounding sphere for depth testing
-            auto sphere = model.getBoundingSphere();
-            const auto& tx = entity.getComponent<Transform>();
+    //        //use the bounding sphere for depth testing
+    //        auto sphere = model.getBoundingSphere();
+    //        const auto& tx = entity.getComponent<Transform>();
 
-            sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
-            auto scale = tx.getScale();
-            sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+    //        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
+    //        auto scale = tx.getScale();
+    //        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-            auto direction = (sphere.centre - cameraPos);
-            float distance = glm::dot(camComponent.getPass(p).forwardVector, direction);
+    //        auto direction = (sphere.centre - cameraPos);
+    //        float distance = glm::dot(camComponent.getPass(p).forwardVector, direction);
 
-            if (distance < -sphere.radius)
-            {
-                //model is behind the camera
-                continue;
-            }
+    //        if (distance < -sphere.radius)
+    //        {
+    //            //model is behind the camera
+    //            continue;
+    //        }
 
-            //frustum test
-            bool visible = true;
-            //if (camComponent.isOrthographic())
-            {
-                const auto& frustum = camComponent.getPass(p).getFrustum();
+    //        //frustum test
+    //        bool visible = true;
+    //        //if (camComponent.isOrthographic())
+    //        {
+    //            const auto& frustum = camComponent.getPass(p).getFrustum();
 
-                visible = true;
-                std::size_t j = 0;
-                while (visible && j < frustum.size())
-                {
-                    visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
-                }
-            }
-            /*else
-            {
-                model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
-            }*/
+    //            visible = true;
+    //            std::size_t j = 0;
+    //            while (visible && j < frustum.size())
+    //            {
+    //                visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+    //            }
+    //        }
+    //        /*else
+    //        {
+    //            model.m_visible = cro::Util::Frustum::visible(camComponent.getFrustumData(), camComponent.getPass(p).viewMatrix * tx.getWorldTransform(), model.getAABB());
+    //        }*/
 
-            //add visible ents to lists for depth sorting
-            if (visible)
-            {
-                auto opaque = std::make_pair(entity, SortData());
-                auto transparent = std::make_pair(entity, SortData());
+    //        //add visible ents to lists for depth sorting
+    //        if (visible)
+    //        {
+    //            auto opaque = std::make_pair(entity, SortData());
+    //            auto transparent = std::make_pair(entity, SortData());
 
-                //foreach material
-                //add ent/index pair to alpha or opaque list
-                for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
-                {
-                    if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
-                    {
-                        transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                        transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
-                        transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
-                    }
-                    else
-                    {
-                        opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
-                        opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
-                    }
-                }
+    //            //foreach material
+    //            //add ent/index pair to alpha or opaque list
+    //            for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
+    //            {
+    //                if (model.m_materials[Mesh::IndexData::Final][i].blendMode != Material::BlendMode::None)
+    //                {
+    //                    transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
+    //                    transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
+    //                    transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+    //                }
+    //                else
+    //                {
+    //                    opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
+    //                    opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
+    //                }
+    //            }
 
-                if (!opaque.second.matIDs.empty())
-                {
-                    drawList[p].push_back(opaque);
-                }
+    //            if (!opaque.second.matIDs.empty())
+    //            {
+    //                drawList[p].push_back(opaque);
+    //            }
 
-                if (!transparent.second.matIDs.empty())
-                {
-                    drawList[p].push_back(transparent);
-                }
-            }
-        }
-    }
+    //            if (!transparent.second.matIDs.empty())
+    //            {
+    //                drawList[p].push_back(transparent);
+    //            }
+    //        }
+    //    }
+    //}
 }
 
-std::vector<Entity> ModelRenderer::queryTree(Box area) const
-{
-    Detail::FixedStack<std::int32_t, 256> stack;
-    stack.push(m_tree.getRoot());
-
-    std::vector<Entity> retVal;
-    retVal.reserve(256);
-
-    while (stack.size() > 0)
-    {
-        auto treeID = stack.pop();
-        if (treeID == Detail::TreeNode::Null)
-        {
-            continue;
-        }
-
-        const auto& node = m_tree.getNodes()[treeID];
-        if (area.intersects(node.fatBounds))
-        {
-            if (node.isLeaf() && node.entity.isValid())
-            {
-                //we have a candidate, stash
-                retVal.push_back(node.entity);
-            }
-            else
-            {
-                stack.push(node.childA);
-                stack.push(node.childB);
-            }
-        }
-    }
-    return retVal;
-}
+//std::vector<Entity> ModelRenderer::queryTree(Box area) const
+//{
+//    Detail::FixedStack<std::int32_t, 256> stack;
+//    stack.push(m_tree.getRoot());
+//
+//    std::vector<Entity> retVal;
+//    retVal.reserve(256);
+//
+//    while (stack.size() > 0)
+//    {
+//        auto treeID = stack.pop();
+//        if (treeID == Detail::TreeNode::Null)
+//        {
+//            continue;
+//        }
+//
+//        const auto& node = m_tree.getNodes()[treeID];
+//        if (area.intersects(node.fatBounds))
+//        {
+//            if (node.isLeaf() && node.entity.isValid())
+//            {
+//                //we have a candidate, stash
+//                retVal.push_back(node.entity);
+//            }
+//            else
+//            {
+//                stack.push(node.childA);
+//                stack.push(node.childB);
+//            }
+//        }
+//    }
+//    return retVal;
+//}
 
 void ModelRenderer::applyProperties(const Material::Data& material, const Model& model, const Scene& scene, const Camera& camera)
 {

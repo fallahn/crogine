@@ -71,6 +71,12 @@ void ConfigProperty::setValue(const std::string& value)
     m_value = value;
     m_isStringValue = true;
 }
+void ConfigProperty::setValue(const cro::String& value)
+{
+    auto utf = value.toUtf8();
+    m_value = std::string(utf.begin(), utf.end());
+    m_isStringValue = true;
+}
 
 void ConfigProperty::setValue(std::int32_t value)
 {

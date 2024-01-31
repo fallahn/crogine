@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -326,7 +326,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Get 2 Eagles and 3 Birdies in one round", false),
     std::make_pair("Finish all 18 holes with a Gimme", false),
     std::make_pair("Land on the flag on the Driving Range", false),
-    std::make_pair("Unlock the arcade", false),
+    std::make_pair("Discover the arcade in the clubhouse", false),
     std::make_pair("Hit the tennis court then land on the fairway of Course 5, Hole 18", false),
     std::make_pair("Complete at least one monthly challenge", false),
     std::make_pair("Get an Albatross", false),
