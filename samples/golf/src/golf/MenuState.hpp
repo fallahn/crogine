@@ -109,13 +109,13 @@ private:
 
     TextChat m_textChat;
     MatchMaking m_matchMaking;
-    cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;
 
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
     cro::Scene m_avatarScene;
     cro::CubemapTexture m_reflectionMap;
+    cro::Texture m_defaultMaskMap;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final

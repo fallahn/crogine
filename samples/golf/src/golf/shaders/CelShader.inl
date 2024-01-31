@@ -650,15 +650,18 @@ inline const std::string CelFragmentShader = R"(
 
 #if defined(TERRAIN_CLIP)
     FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118) * u_lightColour.rgb, FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
-
-//if(v_worldPosition.y < WaterLevel) discard;//don't do this, it reveals the hidden trees.
 #endif
 
 #if defined (MASK_MAP)
     vec3 mask = TEXTURE(u_maskMap, texCoord).rgb;
 
 #if !defined(REFLECTIONS)
-    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, (TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25) + FRAG_OUT.rgb, mask.r);
+
+    //we assume 12 LODs for a 1024 texture as textureQueryLevels() requires GLSL 4.3 :(
+    float lod = clamp(((1.0 - mask.r) * 2.0), 0.0, 1.0) * 11.0;
+    vec3 reflectColour = textureLod(u_reflectMap, reflect(-viewDirection, normal), lod).rgb * 0.25;
+
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, reflectColour + FRAG_OUT.rgb, mask.r);
 #endif
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, emissionColour, mask.g);

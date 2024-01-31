@@ -1383,16 +1383,17 @@ void GolfState::loadMaterials()
     glassMat.blendMode = cro::Material::BlendMode::Alpha;
 
 
-    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Player);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::PlayerMasked, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
-    shader = &m_resources.shaders.get(ShaderID::PlayerMasked);
-    m_resolutionBuffer.addShader(*shader);
-    m_materialIDs[MaterialID::PlayerMasked] = m_resources.materials.add(*shader);
-    m_resources.materials.get(m_materialIDs[MaterialID::PlayerMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    cro::Image defaultMask;
+    defaultMask.create(2, 2, cro::Colour::Black);
+    m_defaultMaskMap.loadFromImage(defaultMask);
+    m_resources.materials.get(m_materialIDs[MaterialID::Player]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    m_resources.materials.get(m_materialIDs[MaterialID::Player]).setProperty("u_maskMap", m_defaultMaskMap);
+
 
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Hair);
@@ -1806,6 +1807,7 @@ void GolfState::loadModels()
                 md.createModel(entity);
 
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
+                applyMaterialData(md, material); //apply mask map if it exists
                 material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[i][j]);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
 

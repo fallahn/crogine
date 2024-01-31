@@ -129,6 +129,7 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
     TerrainDepthmap m_depthMap;
+    cro::Texture m_defaultMaskMap;
 
     TextChat m_textChat;
 
@@ -246,7 +247,6 @@ private:
             ShadowMapSkinned,
             Leaderboard,
             Player,
-            PlayerMasked,
             Hair,
             Course,
             Ball,
