@@ -73,19 +73,24 @@ Texture& TextureResource::get(std::uint32_t id)
     if (m_textures.count(id) == 0)
     {
         //find the fallback
-        if (m_fallbackTextures.count(m_fallbackColour) == 0)
-        {
-            Image img;
-            img.create(32, 32, m_fallbackColour);
-            std::unique_ptr<Texture> fbTex = std::make_unique<Texture>();
-            fbTex->create(32, 32);
-            fbTex->update(img.getPixelData());
-
-            m_fallbackTextures.insert(std::make_pair(m_fallbackColour, std::move(fbTex)));
-        }
-        return *m_fallbackTextures.at(m_fallbackColour);
+        return getFallbackTexture();
     }
     return *m_textures.at(id).second;
+}
+
+Texture& TextureResource::getByHandle(std::uint32_t handle)
+{
+    CRO_ASSERT(handle != 0, "");
+    auto result = std::find_if(m_textures.begin(), m_textures.end(), 
+        [handle](const auto& p)
+        {
+            return p.second.second->getGLHandle() == handle;
+        });
+    if (result != m_textures.end())
+    {
+        return *result->second.second;
+    }
+    return getFallbackTexture();
 }
 
 Texture& TextureResource::get(const std::string& path, bool useMipMaps)
@@ -101,17 +106,7 @@ Texture& TextureResource::get(const std::string& path, bool useMipMaps)
         auto tex = std::make_unique<Texture>();
         if (!tex->loadFromFile(path, useMipMaps))
         {
-            if (m_fallbackTextures.count(m_fallbackColour) == 0)
-            {
-                Image img;
-                img.create(32, 32, m_fallbackColour);
-                std::unique_ptr<Texture> fbTex = std::make_unique<Texture>();
-                fbTex->create(32, 32);
-                fbTex->update(img.getPixelData());
-
-                m_fallbackTextures.insert(std::make_pair(m_fallbackColour, std::move(fbTex)));
-            }
-            return *m_fallbackTextures.at(m_fallbackColour);
+            return getFallbackTexture();
         }
 
         auto id = fallbackID--;
@@ -129,4 +124,20 @@ void TextureResource::setFallbackColour(Colour colour)
 Colour TextureResource::getFallbackColour() const
 {
     return m_fallbackColour;
+}
+
+//provate
+Texture& TextureResource::getFallbackTexture()
+{
+    if (m_fallbackTextures.count(m_fallbackColour) == 0)
+    {
+        Image img;
+        img.create(32, 32, m_fallbackColour);
+        std::unique_ptr<Texture> fbTex = std::make_unique<Texture>();
+        fbTex->create(32, 32);
+        fbTex->update(img.getPixelData());
+
+        m_fallbackTextures.insert(std::make_pair(m_fallbackColour, std::move(fbTex)));
+    }
+    return *m_fallbackTextures.at(m_fallbackColour);
 }
