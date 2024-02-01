@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -662,7 +662,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //prev profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 86.f, 104.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 70.f, 104.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
@@ -770,7 +770,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //profile flyout button
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 107.f, 101.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 91.f, 101.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_flyout");
@@ -801,7 +801,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //next profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 148.f, 104.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 132.f, 104.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
@@ -830,7 +830,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //reset stats
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 158.f, 25.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 160.f, 101.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_select");
