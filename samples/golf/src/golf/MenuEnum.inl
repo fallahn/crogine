@@ -53,6 +53,7 @@ enum MenuIndex
     PlayerNextProf,
 
     PlayerReset,
+    PlayerClubs,
     PlayerCreate,
     PlayerEdit,
     PlayerDelete,

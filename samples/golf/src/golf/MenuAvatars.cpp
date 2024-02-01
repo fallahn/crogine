@@ -840,7 +840,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerReset);
-    entity.getComponent<cro::UIInput>().setNextIndex(PlayerEdit, PlayerEdit);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerCreate, PlayerClubs);
     entity.getComponent<cro::UIInput>().setPrevIndex(PlayerNextProf, PlayerNextProf);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
@@ -857,6 +857,66 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //select club set
+    if (Social::getClubLevel())
+    {
+        m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
+     
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 194.f, 40.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
+        entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+        avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        auto buttonEnt = entity;
+
+        const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -32.f, 9.f, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("Clubs:");
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, 0.f });
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_highlight");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        entity.addComponent<cro::Callback>().function = MenuTextCallback();
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerClubs);
+        entity.getComponent<cro::UIInput>().setNextIndex(PlayerEdit, PlayerNextMenu);
+        entity.getComponent<cro::UIInput>().setPrevIndex(PlayerEdit, PlayerReset);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    //we're not connected yet so we have to rely on joining the server to send tis
+                    m_sharedData.preferredClubSet = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    m_clubsetButtons.lobby.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                    m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                }
+            });
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+        buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_clubsetButtons.roster = buttonEnt;
+    }
 
 
     //create profile
@@ -942,7 +1002,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerEdit);
     entity.getComponent<cro::UIInput>().setNextIndex(PlayerDelete, PlayerDelete);
-    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerReset, PlayerCreate);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerClubs, PlayerCreate);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(

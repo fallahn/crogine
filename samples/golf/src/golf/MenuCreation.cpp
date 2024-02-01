@@ -1823,7 +1823,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        auto buttonEnt = entity;
+        m_clubsetButtons.lobby = entity;
 
         //button actual
         entity = m_uiScene.createEntity();
@@ -1847,12 +1847,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, buttonEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
                     m_sharedData.preferredClubSet = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
-                    buttonEnt.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     //make sure the server knows what we request so it can be considered
@@ -1861,9 +1860,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                     m_sharedData.clubSet = m_sharedData.clubLimit ? m_sharedData.clubSet : m_sharedData.preferredClubSet;
+
+                    m_clubsetButtons.lobby.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                    m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                 }
             });
-
+        
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = ruleButtonEnable;
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

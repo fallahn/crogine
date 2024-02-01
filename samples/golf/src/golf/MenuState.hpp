@@ -287,8 +287,8 @@ private:
     PlayerAvatar represents each one of the avatar models and its texture. (size n where n is number of models available)
     ProfileTexture represents the texture and mugshot texture for each avatar used when previewing profiles in the
     roster menu, so is size 1-MaxPlayers
-    HOWEVER as each profile requres a uniqe texture, but multiple profiles may use the SAME avatar then m_playerAvatars
-    (holding the avatar textures) is update with colour settings, but those colours are then applied to m_profileTextures[x]
+    HOWEVER as each profile requres a unique texture, but multiple profiles may use the SAME avatar then m_playerAvatars
+    (holding the avatar textures) is updated with colour settings, but those colours are then applied to m_profileTextures[x]
 
     On the face of it, it would seem a simple refactor to remove the unused image/colour information from ProfileTexture
     and the unused texture from PlayerAvatar - if it weren't for the fact PlayerAvatar *inherits* ProfileTexture
@@ -320,6 +320,14 @@ private:
     }m_rosterMenu;
 
     FlyoutMenu m_profileFlyout;
+
+    //these appear in 2 menus so we have to use
+    //this hack to keep them in sync
+    struct ClubsetButtons final
+    {
+        cro::Entity roster;
+        cro::Entity lobby;
+    }m_clubsetButtons;
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
