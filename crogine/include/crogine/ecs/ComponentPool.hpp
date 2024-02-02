@@ -48,7 +48,11 @@ namespace cro
         };
 
         /*!
-        \brief memory pooling for components - TODO map component to ID
+        \brief memory pooling for components
+
+        Note: components which inherit NoResize or have no copy assignment
+        (eg move-only types such as Model or AudioEmitter) reserve MinFreeID
+        slots in a pool, to prevent resizing and invalidating components.
         */
         template <class T>
         class ComponentPool final : public Pool

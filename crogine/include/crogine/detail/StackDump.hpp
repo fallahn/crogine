@@ -29,14 +29,21 @@ source distribution.
 
 #pragma once
 
-/*Wraps UST because complicated includes.*/
-class StackDump final
-{
-public:
-    static void dump(int);
+#include <crogine/Config.hpp>
 
-    enum
+/*Wraps UST because complicated includes.*/
+namespace cro
+{
+    class CRO_EXPORT_API StackDump final
     {
-        ABRT, SEG, ILL, FPE
+    public:
+        static void dump(int);
+
+        enum
+        {
+            ABRT, SEG, ILL, FPE,
+
+            Generic
+        };
     };
-};
+}

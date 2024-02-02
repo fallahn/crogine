@@ -76,6 +76,7 @@
     <ClInclude Include="..\crogine\include\crogine\detail\NoResize.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\QuadTree.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\SDLResource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\StackDump.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\ComponentPool.hpp" />
@@ -217,7 +218,6 @@
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\crogine\src\detail\HiResTimer.hpp" />
     <ClInclude Include="..\crogine\src\detail\SDLImageRead.hpp" />
-    <ClInclude Include="..\crogine\src\detail\StackDump.hpp" />
     <ClInclude Include="..\crogine\src\detail\StaticMeshFile.hpp" />
     <ClInclude Include="..\crogine\src\detail\TextConstruction.hpp" />
     <ClInclude Include="..\crogine\src\detail\ust.hpp" />

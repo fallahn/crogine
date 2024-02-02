@@ -32,10 +32,14 @@ source distribution.
 #include <Windows.h>
 #endif
 
-#include "StackDump.hpp"
 #include "ust.hpp"
+
+#include <crogine/detail/StackDump.hpp>
+
 #include <iostream>
 #include <ctime>
+
+using namespace cro;
 
 void StackDump::dump(int type)
 {
@@ -47,6 +51,7 @@ void StackDump::dump(int type)
     std::ofstream file("stack_dump_" + str + ".txt");
     switch (type)
     {
+    case StackDump::Generic:
     default: break;
     case StackDump::ABRT:
         file << "ABORT\n";
