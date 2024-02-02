@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -50,6 +50,8 @@ UISystem::UISystem(MessageBus& mb)
     m_scrollNavigation  (true),
     m_columnCount       (1),
     m_selectedIndex     (0),
+    m_prevDirection     (-1),
+    m_previousIndex     (0),
     m_groups            (1),
     m_activeGroup       (0)
 {
@@ -592,9 +594,17 @@ void UISystem::selectNext(std::size_t stride, std::int32_t direction)
     auto old = m_selectedIndex;
 
     auto targetSelection = entities[m_selectedIndex].getComponent<UIInput>().m_neighbourIndices[direction];
+
+    //check if we're moving back to a previous entry and prefer that
+    if ((direction == UIInput::Index::Down && m_prevDirection == UIInput::Index::Up)
+        || (direction == UIInput::Index::Right && m_prevDirection == UIInput::Index::Left))
+    {
+        targetSelection = m_previousIndex;
+    }
+
     if (targetSelection != std::numeric_limits<std::size_t>::max())
     {
-        //check if any of the entities in this groupd have the requested index
+        //check if any of the entities in this group have the requested index
         auto result = std::find_if(entities.cbegin(), entities.cend(),
             [targetSelection](const Entity& e)
             {
@@ -605,6 +615,10 @@ void UISystem::selectNext(std::size_t stride, std::int32_t direction)
             /*&& result->getComponent<cro::UIInput>().enabled*/)
         {
             m_selectedIndex = std::distance(entities.cbegin(), result);
+        }
+        else
+        {
+            m_selectedIndex = targetSelection;
         }
     }
 
@@ -624,6 +638,9 @@ void UISystem::selectNext(std::size_t stride, std::int32_t direction)
     {
         unselect(old);
         select(m_selectedIndex);
+
+        m_previousIndex = old;
+        m_prevDirection = direction;
     }
 }
 
@@ -634,9 +651,17 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
     auto old = m_selectedIndex;
 
     auto targetSelection = entities[m_selectedIndex].getComponent<UIInput>().m_neighbourIndices[direction];
+
+    //check if we're moving back to a previous entry and prefer that
+    if ((direction == UIInput::Index::Up && m_prevDirection == UIInput::Index::Down)
+        || (direction == UIInput::Index::Left && m_prevDirection == UIInput::Index::Right))
+    {
+        targetSelection = m_previousIndex;
+    }
+
     if (targetSelection != std::numeric_limits<std::size_t>::max())
     {
-        //check if any of the entities in this groupd have the requested index
+        //check if any of the entities in this group have the requested index
         auto result = std::find_if(entities.cbegin(), entities.cend(),
             [targetSelection](const Entity& e)
             {
@@ -647,6 +672,10 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
             /*&& result->getComponent<cro::UIInput>().enabled*/)
         {
             m_selectedIndex = std::distance(entities.cbegin(), result);
+        }
+        else
+        {
+            m_selectedIndex = targetSelection;
         }
     }
 
@@ -666,6 +695,9 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
     {
         unselect(old);
         select(m_selectedIndex);
+
+        m_previousIndex = old;
+        m_prevDirection = direction;
     }
 }
 

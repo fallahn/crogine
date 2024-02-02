@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -256,6 +256,10 @@ namespace cro
         bool m_scrollNavigation;
         std::size_t m_columnCount;
         std::size_t m_selectedIndex;
+
+        std::int32_t m_prevDirection;
+        std::size_t m_previousIndex;
+
         void selectNext(std::size_t, std::int32_t = UIInput::Index::Right);
         void selectPrev(std::size_t, std::int32_t = UIInput::Index::Left);
 

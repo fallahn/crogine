@@ -810,7 +810,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerNextProf);
-    entity.getComponent<cro::UIInput>().setNextIndex(PlayerReset, PlayerReset);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerReset, PlayerAdd);
     entity.getComponent<cro::UIInput>().setPrevIndex(PlayerProfile, Player01);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
@@ -894,7 +894,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
         entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerClubs);
-        entity.getComponent<cro::UIInput>().setNextIndex(PlayerEdit, PlayerNextMenu);
+        entity.getComponent<cro::UIInput>().setNextIndex(PlayerEdit, PlayerAdd);
         entity.getComponent<cro::UIInput>().setPrevIndex(PlayerEdit, PlayerReset);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
@@ -1158,6 +1158,12 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().setNextIndex(PlayerRemove, Player01);
     entity.getComponent<cro::UIInput>().setPrevIndex(PlayerLeaveMenu, PlayerProfile);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [cursorEnt](cro::Entity ) mutable
+            {
+                cursorEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&](cro::Entity, const cro::ButtonEvent& evt) mutable
