@@ -72,7 +72,7 @@ namespace
     constexpr glm::vec2 ChunkSize(static_cast<float>(MapSize.x) / ChunkVisSystem::ColCount, static_cast<float>(MapSize.y) / ChunkVisSystem::RowCount);
 
     //params for poisson disk samples
-    static constexpr float GrassDensity = 1.7f; //radius for PD sampler
+    static constexpr float GrassDensity = 1.4f;// 1.7f; //radius for PD sampler
     static constexpr float TreeDensity = 4.f;
 
     static constexpr std::array MinBounds = { 0.f, 0.f };

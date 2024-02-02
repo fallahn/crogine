@@ -102,6 +102,14 @@ void GolfState::loadMap()
                 float density = 1.f;
                 constexpr CrowdContext(std::array<float, 2u> s, std::array<float, 2u> e, float d)
                     : start(s), end(e), density(d) {}
+
+                float checkpoint(const std::array<float, 2u>& point) const
+                {
+                    const float p = ((point[0] * point[0]) / (end[0] * end[0]))
+                                + ((point[1] * point[1]) / (end[1] * end[1]));
+
+                    return p;
+                }
             };
             constexpr std::array<CrowdContext, 4u> Contexts =
             {
@@ -114,39 +122,36 @@ void GolfState::loadMap()
             const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
 
             //used by terrain builder to create instanced geom
-            //glm::vec3 offsetPos(-8.f, 0.f, 0.f);
             const glm::mat4 rotMat = glm::rotate(glm::mat4(1.f), rotation * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
 
-            //for (auto i = 0; i < 16; ++i)
             for (const auto& p : dist)
             {
-                //auto offset = glm::vec3(rotMat * glm::vec4(offsetPos, 1.f));
-                //TODO add some value which reduces (and culls) the Y value as we reach
-                //either end of the X value
-                //eg y = pow(x/width, 2); if ((p[1]/height) < y) cullPos()
-                auto offset = glm::vec3(rotMat * glm::vec4(p[0], 0.f, p[1], 1.f));
-
-                auto tx = glm::translate(glm::mat4(1.f), position - MapOrigin);
-                tx = glm::translate(tx, offset);
-
-                auto lookDir = lookAt - (glm::vec3(tx[3]) + MapOrigin);
-                if (float len = glm::length2(lookDir); len < 1600.f)
+                if (Contexts[crowdIdx].checkpoint(p) < 1.f)
                 {
-                    rotation = std::atan2(-lookDir.z, lookDir.x) + (90.f * cro::Util::Const::degToRad);
-                    tx = glm::rotate(tx, rotation, glm::vec3(0.f, 1.f, 0.f));
+                    auto offset = glm::vec3(rotMat * glm::vec4(p[0], 0.f, p[1], 1.f));
+                    offset.x += 0.3f + (static_cast<float>(cro::Util::Random::value(2, 5)) / 100.f);
+                    offset.z += static_cast<float>(cro::Util::Random::value(-10, 10)) / 100.f;
+
+
+                    auto tx = glm::translate(glm::mat4(1.f), position - MapOrigin);
+                    tx = glm::translate(tx, offset);
+
+                    auto lookDir = lookAt - (glm::vec3(tx[3]) + MapOrigin);
+                    if (float len = glm::length2(lookDir); len < 1600.f)
+                    {
+                        rotation = std::atan2(-lookDir.z, lookDir.x) + (90.f * cro::Util::Const::degToRad);
+                        tx = glm::rotate(tx, rotation, glm::vec3(0.f, 1.f, 0.f));
+                    }
+                    else
+                    {
+                        tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f) + (rotation * cro::Util::Const::degToRad), glm::vec3(0.f, 1.f, 0.f));
+                    }
+
+                    float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;
+                    tx = glm::scale(tx, glm::vec3(scale));
+
+                    holeData.crowdPositions.push_back(tx);
                 }
-                else
-                {
-                    tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f) + (rotation * cro::Util::Const::degToRad), glm::vec3(0.f, 1.f, 0.f));
-                }
-
-                float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;
-                tx = glm::scale(tx, glm::vec3(scale));
-
-                holeData.crowdPositions.push_back(tx);
-
-                //offsetPos.x += 0.3f + (static_cast<float>(cro::Util::Random::value(2, 5)) / 10.f);
-                //offsetPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
             }
         };
 
@@ -1153,7 +1158,7 @@ void GolfState::loadMap()
                 pos.z -= MapSize.y / 2;
 
                 auto result = m_collisionMesh.getTerrain(pos);
-                return result.terrain != TerrainID::Rough && result.terrain != TerrainID::Scrub && result.terrain != TerrainID::Stone;
+                return (result.terrain != TerrainID::Rough && result.terrain != TerrainID::Scrub && result.terrain != TerrainID::Stone) || !result.wasRayHit;
             }),
             hole.crowdPositions.end());
 
