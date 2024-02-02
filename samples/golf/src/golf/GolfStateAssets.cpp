@@ -33,6 +33,7 @@ source distribution.
 #include "SpectatorSystem.hpp"
 #include "SpectatorAnimCallback.hpp"
 #include "PropFollowSystem.hpp"
+#include "PoissonDisk.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -44,6 +45,8 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 #include "../ErrorCheck.hpp"
+
+namespace pd = thinks;
 
 namespace
 {
@@ -90,14 +93,38 @@ void GolfState::loadMap()
     const auto addCrowd = [&](HoleData& holeData, glm::vec3 position, glm::vec3 lookAt, float rotation)
         {
             constexpr auto MapOrigin = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
+            static std::int32_t seed = 0;
+
+            struct CrowdContext final
+            {
+                std::array<float, 2u> start = {};
+                std::array<float, 2u> end = {};
+                float density = 1.f;
+                constexpr CrowdContext(std::array<float, 2u> s, std::array<float, 2u> e, float d)
+                    : start(s), end(e), density(d) {}
+            };
+            constexpr std::array<CrowdContext, 4u> Contexts =
+            {
+                CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 1.75f),
+                CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 0.75f),
+                CrowdContext({ -16.f, -3.5f }, { 16.f, 3.5f }, 0.75f),
+                CrowdContext({ -18.f, -6.5f }, { 18.f, 6.5f }, 0.95f)
+            };
+            auto crowdIdx = 3; //TODO read this from options
+            const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
 
             //used by terrain builder to create instanced geom
-            glm::vec3 offsetPos(-8.f, 0.f, 0.f);
+            //glm::vec3 offsetPos(-8.f, 0.f, 0.f);
             const glm::mat4 rotMat = glm::rotate(glm::mat4(1.f), rotation * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
 
-            for (auto i = 0; i < 16; ++i)
+            //for (auto i = 0; i < 16; ++i)
+            for (const auto& p : dist)
             {
-                auto offset = glm::vec3(rotMat * glm::vec4(offsetPos, 1.f));
+                //auto offset = glm::vec3(rotMat * glm::vec4(offsetPos, 1.f));
+                //TODO add some value which reduces (and culls) the Y value as we reach
+                //either end of the X value
+                //eg y = pow(x/width, 2); if ((p[1]/height) < y) cullPos()
+                auto offset = glm::vec3(rotMat * glm::vec4(p[0], 0.f, p[1], 1.f));
 
                 auto tx = glm::translate(glm::mat4(1.f), position - MapOrigin);
                 tx = glm::translate(tx, offset);
@@ -118,8 +145,8 @@ void GolfState::loadMap()
 
                 holeData.crowdPositions.push_back(tx);
 
-                offsetPos.x += 0.3f + (static_cast<float>(cro::Util::Random::value(2, 5)) / 10.f);
-                offsetPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
+                //offsetPos.x += 0.3f + (static_cast<float>(cro::Util::Random::value(2, 5)) / 10.f);
+                //offsetPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
             }
         };
 
@@ -1117,6 +1144,21 @@ void GolfState::loadMap()
     {
         m_collisionMesh.updateCollisionMesh(hole.modelEntity.getComponent<cro::Model>().getMeshData());
 
+        //remove spectators on the fairway or green
+        hole.crowdPositions.erase(std::remove_if(hole.crowdPositions.begin(), hole.crowdPositions.end(),
+            [&](const glm::mat4& m)
+            {
+                glm::vec3 pos = m[3];
+                pos.x += MapSize.x / 2;
+                pos.z -= MapSize.y / 2;
+
+                auto result = m_collisionMesh.getTerrain(pos);
+                return result.terrain != TerrainID::Rough && result.terrain != TerrainID::Scrub && result.terrain != TerrainID::Stone;
+            }),
+            hole.crowdPositions.end());
+
+        //make sure remaining positions are on the ground plane
+        //TODO would this be sensible to do in the predicate above?
         for (auto& m : hole.crowdPositions)
         {
             glm::vec3 pos = m[3];
