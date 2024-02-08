@@ -1747,6 +1747,44 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_lobbyWindowEntities[LobbyEntityID::CourseTicker] = entity;
 #endif
 
+    //options button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 484.f, 243.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("options_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(LobbyOptions);
+    entity.getComponent<cro::UIInput>().setNextIndex(LobbyStart, LobbyStart);
+    entity.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyStart);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces a visibility refresh
+
+                requestStackPush(StateID::Options);
+
+                if (!m_sharedData.hosting)
+                {
+                    //unready ourself so the host can't start when we're in the options menu
+                    m_readyState[m_sharedData.clientConnection.connectionID] = 0;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
+                        std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | 0),
+                        net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
+        }
+    );
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //display the score type
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -2439,7 +2477,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(InfoLeague);
     entity.getComponent<cro::UIInput>().setNextIndex(LobbyRulesB, LobbyRulesB);
-    entity.getComponent<cro::UIInput>().setPrevIndex(InfoLeaderboards, LobbyCourseB);
+    entity.getComponent<cro::UIInput>().setPrevIndex(InfoLeaderboards, LobbyOptions);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2807,7 +2845,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::ReadyUp].getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(LobbyStart);
-    entity.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, LobbyQuit);
+    entity.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, LobbyOptions);
     entity.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyInfoB); //TODO dynamically update these with active menu
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
@@ -3441,7 +3479,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(RulesNext);
     buttonEnt.getComponent<cro::UIInput>().setNextIndex(RulesPrevious, RulesGimmeNext);
-    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(RulesPrevious, LobbyStart);
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(RulesPrevious, LobbyOptions);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_courseSelectCallbacks.nextRules;
@@ -3584,7 +3622,7 @@ void MenuState::addCourseSelectButtons()
     checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseReverse);
     checkboxEnt.getComponent<cro::UIInput>().setNextIndex(CoursePrev, hasUserCourses ? CourseUser : CourseCPUSkip);
-    checkboxEnt.getComponent<cro::UIInput>().setPrevIndex(CourseNext, LobbyStart);
+    checkboxEnt.getComponent<cro::UIInput>().setPrevIndex(CourseNext, LobbyOptions);
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_courseSelectCallbacks.toggleReverseCourse;

@@ -68,6 +68,7 @@ enum MenuIndex
     LobbyRulesB,
     LobbyInfoA,
     LobbyInfoB,
+    LobbyOptions,
     PlayerManagement,
 
     CoursePrev,
