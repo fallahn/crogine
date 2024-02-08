@@ -1205,10 +1205,15 @@ void GolfGame::loadPreferences()
                 else if (name == "clubset")
                 {
                     m_sharedData.preferredClubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                    m_sharedData.clubSet = m_sharedData.preferredClubSet;
                 }
                 else if (name == "press_hold")
                 {
                     m_sharedData.pressHold = prop.getValue<bool>();
+                }
+                else if (name == "crowd_density")
+                {
+                    m_sharedData.crowdDensity = std::clamp(prop.getValue<std::int32_t>(), 0, CrowdDensityCount - 1);
                 }
             }
         }
@@ -1305,6 +1310,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("fast_cpu").setValue(m_sharedData.fastCPU);
     cfg.addProperty("clubset").setValue(m_sharedData.preferredClubSet);
     cfg.addProperty("press_hold").setValue(m_sharedData.pressHold);
+    cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
     cfg.save(path);
 
 

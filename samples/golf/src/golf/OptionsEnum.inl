@@ -69,6 +69,8 @@ enum OptionsIndex
     AVTreeR,
     AVShadowL,
     AVShadowR,
+    AVCrowdL,
+    AVCrowdR,
 
 
     Controls = 300,

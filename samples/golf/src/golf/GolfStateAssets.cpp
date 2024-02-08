@@ -118,7 +118,7 @@ void GolfState::loadMap()
                 CrowdContext({ -16.f, -3.5f }, { 16.f, 3.5f }, 0.75f),
                 CrowdContext({ -18.f, -6.5f }, { 18.f, 6.5f }, 0.95f)
             };
-            auto crowdIdx = 3; //TODO read this from options
+            auto crowdIdx = m_sharedData.crowdDensity;
             const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
 
             //used by terrain builder to create instanced geom
