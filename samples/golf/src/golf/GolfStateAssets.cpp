@@ -118,7 +118,9 @@ void GolfState::loadMap()
                 CrowdContext({ -16.f, -3.5f }, { 16.f, 3.5f }, 0.75f),
                 CrowdContext({ -18.f, -6.5f }, { 18.f, 6.5f }, 0.95f)
             };
-            auto crowdIdx = m_sharedData.crowdDensity;
+
+            //hmm, the putt from tee property isn't yet set at this point
+            auto crowdIdx = holeData.puttFromTee ? std::min(1,  m_sharedData.crowdDensity) : m_sharedData.crowdDensity;
             const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
 
             //used by terrain builder to create instanced geom
@@ -882,6 +884,7 @@ void GolfState::loadMap()
                                 glm::vec3 position(0.f);
                                 float rotation = 0.f;
                                 glm::vec3 lookAt = holeData.pin;
+                                std::int32_t minDensity = 0;
 
                                 for (const auto& modelProp : modelProps)
                                 {
@@ -897,6 +900,10 @@ void GolfState::loadMap()
                                     else if (propName == "lookat")
                                     {
                                         lookAt = modelProp.getValue<glm::vec3>();
+                                    }
+                                    else if (propName == "min_density")
+                                    {
+                                        minDensity = std::clamp(modelProp.getValue<std::int32_t>(), 0, CrowdDensityCount - 1);
                                     }
                                 }
 
@@ -921,7 +928,10 @@ void GolfState::loadMap()
 
                                 if (curve.size() < 4)
                                 {
-                                    addCrowd(holeData, position, lookAt, rotation);
+                                    if (minDensity <= m_sharedData.crowdDensity)
+                                    {
+                                        addCrowd(holeData, position, lookAt, rotation);
+                                    }
                                 }
                                 else
                                 {
@@ -1158,7 +1168,7 @@ void GolfState::loadMap()
                 pos.z -= MapSize.y / 2;
 
                 auto result = m_collisionMesh.getTerrain(pos);
-                return (result.terrain != TerrainID::Rough && result.terrain != TerrainID::Scrub && result.terrain != TerrainID::Stone) || !result.wasRayHit;
+                return (result.terrain != TerrainID::Rough && result.terrain != TerrainID::Scrub && result.terrain != TerrainID::Stone) || !result.wasRayHit || result.height <= 0;
             }),
             hole.crowdPositions.end());
 
