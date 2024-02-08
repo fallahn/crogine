@@ -865,7 +865,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
      
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 194.f, 40.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 195.f, 39.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
@@ -880,6 +880,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         entity.addComponent<cro::Text>(smallFont).setString("Clubs:");
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -1803,7 +1805,7 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
 
     //streak info
     labelEnt = m_uiScene.createEntity();
-    labelEnt.addComponent<cro::Transform>().setPosition({ 22.f, 48.f, 0.1f });
+    labelEnt.addComponent<cro::Transform>().setPosition({ 25.f, 47.f, 0.1f });
     labelEnt.addComponent<cro::Drawable2D>();
     labelEnt.addComponent<cro::Text>(font).setString("Current Streak: " + std::to_string(Social::getCurrentStreak()) 
                                             + " Days\nLongest Streak: " + std::to_string(Social::getLongestStreak()) + " Days");
