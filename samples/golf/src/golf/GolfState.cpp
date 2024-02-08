@@ -2262,6 +2262,7 @@ void GolfState::buildScene()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Beacon | CommandID::BeaconColour;
     entity.addComponent<cro::Callback>().active = m_sharedData.showBeacon;
     entity.getComponent<cro::Callback>().function = BeaconCallback(m_gameScene);
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f); //used for debug - remove me
     md.createModel(entity);
 
     auto beaconMat = m_resources.materials.get(m_materialIDs[MaterialID::Beacon]);
@@ -2272,6 +2273,18 @@ void GolfState::buildScene()
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
     auto beaconEntity = entity;
+
+    //registerWindow([&, beaconEntity]()
+    //    {
+    //        if (ImGui::Begin("Beacon"))
+    //        {
+    //            std::string active = beaconEntity.getComponent<cro::Callback>().active ? "Active" : "Not Active";
+    //            float amount = beaconEntity.getComponent<cro::Callback>().getUserData<float>();
+    //            ImGui::Text("%s, Amount: %3.1f", active.c_str(), amount);
+    //        }
+    //        ImGui::End();
+    //    
+    //    });
 
 #ifdef CRO_DEBUG_
     //entity = m_gameScene.createEntity();

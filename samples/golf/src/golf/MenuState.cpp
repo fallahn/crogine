@@ -216,7 +216,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         context.mainWindow.setMouseCaptured(false);
 
         //sd.inputBinding.controllerID = 0;
-        sd.mapDirectory = "course_01";
+        sd.mapDirectory = m_courseData[courseOfTheMonth()].directory;
 
         sd.clientConnection.ready = false;
 
@@ -246,7 +246,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             sd.clientConnection.ready = false;
             sd.clientConnection.netClient.disconnect();
 
-            sd.mapDirectory = "course_01";
+            sd.mapDirectory = m_courseData[courseOfTheMonth()].directory;
         }
 
 
@@ -532,6 +532,23 @@ MenuState::~MenuState()
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
+    const auto showOptions = [&]()
+        {
+            if (m_currentMenu == MenuID::Lobby)
+            {
+                requestStackPush(StateID::Options);
+
+                if (!m_sharedData.hosting)
+                {
+                    //unready ourself so the host can't start when we're in the options menu
+                    m_readyState[m_sharedData.clientConnection.connectionID] = 0;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
+                        std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | 0),
+                        net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
+        };
+
     const auto showPlayerManagement = 
         [&]()
         {
@@ -815,6 +832,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 m_textChat.toggleWindow(false, false);
             }
             break;
+        case SDLK_p:
+            showOptions();
+            break;
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
@@ -834,6 +854,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         default: 
             //cro::Console::show();
             
+            break;
+        case cro::GameController::ButtonBack:
+            showOptions();
             break;
         case cro::GameController::ButtonStart:
             showPlayerManagement();

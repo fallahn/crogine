@@ -2864,6 +2864,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         //toggle readyness but only if the selected course is locally available
                         if (!m_sharedData.mapDirectory.empty())
                         {
+                            //this waits for the ready state to come back from the server
+                            //to set m_readyState to our request.
                             std::uint8_t ready = m_readyState[m_sharedData.clientConnection.connectionID] ? 0 : 1;
                             m_sharedData.clientConnection.netClient.sendPacket(PacketID::LobbyReady,
                                 std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | ready),

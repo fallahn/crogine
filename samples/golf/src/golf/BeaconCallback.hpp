@@ -65,12 +65,14 @@ public:
 
             e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
         }
+
+        e.getComponent<cro::Callback>().getUserData<float>() = amount; //used in debugging
     }
 
 private:
 
     const cro::Scene& m_scene;
 
-    static constexpr float MaxDist = 120.f;
-    static constexpr float MinDist = 20.f;
+    static constexpr float MaxDist = 100.f;
+    static constexpr float MinDist = 16.f;
 };

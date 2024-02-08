@@ -552,7 +552,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                     quitLobby();
 
                     //reset this else we might put course data out of range
-                    m_sharedData.courseIndex = 0;
+                    m_sharedData.courseIndex = courseOfTheMonth();
                     m_sharedData.localConnectionData.playerCount = 1;
 
                     requestStackClear();
