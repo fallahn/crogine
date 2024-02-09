@@ -2430,14 +2430,14 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
 
     entity = createHighlight(glm::vec2(286.f, 10.f));
-    entity.setLabel("High density crowds may cause a drop in performance");
+    entity.setLabel("Very high density crowds may cause a drop in performance");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVCrowdL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdR, WindowApply);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdR, AVShadowL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = crowdChanged;
 
     entity = createHighlight(glm::vec2(355.f, 10.f));
-    entity.setLabel("High density crowds may cause a drop in performance");
+    entity.setLabel("Very high density crowds may cause a drop in performance");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVCrowdR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdL, WindowClose);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdL, AVShadowR);

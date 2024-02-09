@@ -1749,7 +1749,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //options button
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 484.f, 243.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 461.f, 241.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("options_highlight");
