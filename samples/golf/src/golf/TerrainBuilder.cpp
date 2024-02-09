@@ -736,10 +736,11 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
                 //crowd instances
                 //TODO can we move some of this to the thread func (can't set transforms in it though)
+                auto density = m_holeData[m_currentHole].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
                 std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
-                for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions.size(); ++i)
+                for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions[density].size(); ++i)
                 {
-                    positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[i]);
+                    positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[density][i]);
                 }
 
                 for (auto i = 0u; i < m_crowdEntities[first].size(); ++i)

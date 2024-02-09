@@ -90,7 +90,7 @@ void GolfState::loadAssets()
 void GolfState::loadMap()
 {
     //used when parsing holes
-    const auto addCrowd = [&](HoleData& holeData, glm::vec3 position, glm::vec3 lookAt, float rotation)
+    const auto addCrowd = [&](HoleData& holeData, glm::vec3 position, glm::vec3 lookAt, float rotation, std::int32_t crowdIdx)
         {
             constexpr auto MapOrigin = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
             static std::int32_t seed = 0;
@@ -120,7 +120,7 @@ void GolfState::loadMap()
             };
 
             //hmm, the putt from tee property isn't yet set at this point
-            auto crowdIdx = holeData.puttFromTee ? std::min(1,  m_sharedData.crowdDensity) : m_sharedData.crowdDensity;
+            //auto crowdIdx = holeData.puttFromTee ? std::min(1,  m_sharedData.crowdDensity) : m_sharedData.crowdDensity;
             const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
 
             //used by terrain builder to create instanced geom
@@ -152,7 +152,7 @@ void GolfState::loadMap()
                     float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;
                     tx = glm::scale(tx, glm::vec3(scale));
 
-                    holeData.crowdPositions.push_back(tx);
+                    holeData.crowdPositions[crowdIdx].push_back(tx);
                 }
             }
         };
@@ -928,9 +928,12 @@ void GolfState::loadMap()
 
                                 if (curve.size() < 4)
                                 {
-                                    if (minDensity <= m_sharedData.crowdDensity)
+                                    for (auto i = 0; i < CrowdDensityCount; ++i)
                                     {
-                                        addCrowd(holeData, position, lookAt, rotation);
+                                        if (minDensity <= /*m_sharedData.crowdDensity*/i)
+                                        {
+                                            addCrowd(holeData, position, lookAt, rotation, i);
+                                        }
                                     }
                                 }
                                 else
@@ -1066,7 +1069,6 @@ void GolfState::loadMap()
                 holeData.distanceToPin = glm::length(holeData.pin - holeData.tee);
             }
         }
-        std::shuffle(holeData.crowdPositions.begin(), holeData.crowdPositions.end(), cro::Util::Random::rndEngine);
     }
 
     //add the dynamically updated model to any leaderboard props
@@ -1159,29 +1161,34 @@ void GolfState::loadMap()
     {
         m_collisionMesh.updateCollisionMesh(hole.modelEntity.getComponent<cro::Model>().getMeshData());
 
-        //remove spectators on the fairway or green
-        hole.crowdPositions.erase(std::remove_if(hole.crowdPositions.begin(), hole.crowdPositions.end(),
-            [&](const glm::mat4& m)
+        for (auto& positions : hole.crowdPositions)
+        {
+            //remove spectators on the fairway or green
+            positions.erase(std::remove_if(positions.begin(), positions.end(),
+                [&](const glm::mat4& m)
+                {
+                    glm::vec3 pos = m[3];
+                    pos.x += MapSize.x / 2;
+                    pos.z -= MapSize.y / 2;
+
+                    auto result = m_collisionMesh.getTerrain(pos);
+                    return (result.terrain != TerrainID::Rough && result.terrain != TerrainID::Scrub && result.terrain != TerrainID::Stone) || !result.wasRayHit || result.height <= 0;
+                }),
+                positions.end());
+
+            //make sure remaining positions are on the ground plane
+            //TODO would this be sensible to do in the predicate above?
+            for (auto& m : positions)
             {
                 glm::vec3 pos = m[3];
                 pos.x += MapSize.x / 2;
                 pos.z -= MapSize.y / 2;
 
                 auto result = m_collisionMesh.getTerrain(pos);
-                return (result.terrain != TerrainID::Rough && result.terrain != TerrainID::Scrub && result.terrain != TerrainID::Stone) || !result.wasRayHit || result.height <= 0;
-            }),
-            hole.crowdPositions.end());
+                m[3][1] = result.height;
+            }
 
-        //make sure remaining positions are on the ground plane
-        //TODO would this be sensible to do in the predicate above?
-        for (auto& m : hole.crowdPositions)
-        {
-            glm::vec3 pos = m[3];
-            pos.x += MapSize.x / 2;
-            pos.z -= MapSize.y / 2;
-
-            auto result = m_collisionMesh.getTerrain(pos);
-            m[3][1] = result.height;
+            std::shuffle(positions.begin(), positions.end(), cro::Util::Random::rndEngine);
         }
 
         for (auto& c : hole.crowdCurves)

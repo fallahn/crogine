@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "Path.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/util/Spline.hpp>
@@ -89,7 +90,7 @@ struct HoleData final
     std::vector<cro::Entity> propEntities;
     std::vector<cro::Entity> particleEntities;
     std::vector<cro::Entity> audioEntities;
-    std::vector<glm::mat4> crowdPositions;
+    std::array<std::vector<glm::mat4>, CrowdDensityCount> crowdPositions = {};
     std::vector<Path> crowdCurves;
     std::vector<Path> propCurves;
 };

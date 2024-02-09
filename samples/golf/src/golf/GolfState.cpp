@@ -4950,7 +4950,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     std::int32_t offset = m_sharedData.reverseCourse ? 0 : 2;
     m_sharedData.minimapData.courseName += "\nHole: " + std::to_string(m_sharedData.minimapData.holeNumber + offset); //this isn't updated until the map texture is 
     m_sharedData.minimapData.courseName += "\nPar: " + std::to_string(m_holeData[m_currentHole].par);
-    m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions);
+    m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions[m_sharedData.crowdDensity]);
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
