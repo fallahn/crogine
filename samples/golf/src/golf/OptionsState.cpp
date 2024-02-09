@@ -1417,13 +1417,13 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     createLabel({ 204.f, 35.f }, "Shadow Quality");
  
     //crowd density
-    auto crowdLabel = createLabel({ 204, 19.f }, "Crowd Density");
-    crowdLabel.addComponent<cro::Callback>().active = true;
-    crowdLabel.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-        {
-            updateToolTip(e, ToolTipID::NeedsRestart);
-        };
+    /*auto crowdLabel =*/ createLabel({ 204, 19.f }, "Crowd Density");
+    //crowdLabel.addComponent<cro::Callback>().active = true;
+    //crowdLabel.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float)
+    //    {
+    //        updateToolTip(e, ToolTipID::NeedsRestart);
+    //    };
 
 
     auto createSlider = [&](glm::vec2 position)
@@ -2423,18 +2423,21 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 crowdDensityText.getComponent<cro::Text>().setString(CrowdLabels[m_sharedData.crowdDensity]);
                 centreText(crowdDensityText);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                msg->type = SystemEvent::CrowdDensityChanged;
             }
         });
 
     entity = createHighlight(glm::vec2(286.f, 10.f));
-    entity.setLabel("Changes are applied the next time a course is loaded.\nHigh density crowds may cause a drop in performance");
+    entity.setLabel("High density crowds may cause a drop in performance");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVCrowdL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdR, WindowApply);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdR, AVShadowL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = crowdChanged;
 
     entity = createHighlight(glm::vec2(355.f, 10.f));
-    entity.setLabel("Changes are applied the next time a course is loaded.\nHigh density crowds may cause a drop in performance");
+    entity.setLabel("High density crowds may cause a drop in performance");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVCrowdR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdL, WindowClose);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdL, AVShadowR);

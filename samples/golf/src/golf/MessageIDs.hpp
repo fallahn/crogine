@@ -149,6 +149,7 @@ struct SystemEvent final
         InputActivated,
         ShadowQualityChanged,
         TreeQualityChanged,
+        CrowdDensityChanged,
         MenuChanged,
         RestartActiveMode, //currently just driving range, but might apply somewhere else one day :)
         RequestOSK,

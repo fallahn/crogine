@@ -92,6 +92,8 @@ public:
 
     void applyTreeQuality();
 
+    void applyCrowdDensity();
+
 private:
     SharedStateData& m_sharedData;
     const std::vector<HoleData>& m_holeData;

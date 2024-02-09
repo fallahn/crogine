@@ -886,6 +886,10 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_terrainBuilder.applyTreeQuality();
             m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::High);
         }
+        else if (data.type == SystemEvent::CrowdDensityChanged)
+        {
+            m_terrainBuilder.applyCrowdDensity();
+        }
     }
         break;
     case cro::Message::SkeletalAnimationMessage:

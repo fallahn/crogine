@@ -832,6 +832,28 @@ void TerrainBuilder::applyTreeQuality()
     }
 }
 
+void TerrainBuilder::applyCrowdDensity()
+{
+    auto crowdIndex = m_swapIndex % 2;
+    auto holeIdx = std::clamp(m_currentHole - 1, std::size_t(0), std::size_t(17));
+
+    auto density = m_holeData[holeIdx].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
+    std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[crowdIndex].size());
+    for (auto i = 0u; i < m_holeData[holeIdx].crowdPositions[density].size(); ++i)
+    {
+        positions[i % positions.size()].push_back(m_holeData[holeIdx].crowdPositions[density][i]);
+    }
+
+    for (auto i = 0u; i < m_crowdEntities[crowdIndex].size(); ++i)
+    {
+        if (m_crowdEntities[crowdIndex][i].isValid()
+            && !positions[i].empty())
+        {
+            m_crowdEntities[crowdIndex][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
+        }
+    }
+}
+
 //private
 void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunks)
 {
