@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -231,6 +231,7 @@ void PauseState::buildScene()
             currTime = std::min(1.f, currTime + (dt * 2.f));
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
 
+            if (m_restartButton.isValid())
             {
                 auto reset = (m_sharedData.baseState == StateID::DrivingRange);
                 m_restartButton.getComponent<cro::UIInput>().enabled = reset;
@@ -402,24 +403,26 @@ void PauseState::buildScene()
 
 
     //restart button
-    entity = createItem(glm::vec2(0.f, 6.f), "Restart Round", menuEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
+    if (m_sharedData.baseState == StateID::DrivingRange)
+    {
+        entity = createItem(glm::vec2(0.f, 6.f), "Restart Round", menuEntity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
                 {
-                    confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-                    menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+                    if (activated(evt))
+                    {
+                        confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+                        menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
 
-                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
-                    m_confirmationType = ConfirmType::Restart;
-                }
-            });
-    entity.getComponent<cro::UIInput>().enabled = (m_sharedData.baseState == StateID::DrivingRange);
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    m_restartButton = entity;
-
+                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
+                        m_confirmationType = ConfirmType::Restart;
+                    }
+                });
+        entity.getComponent<cro::UIInput>().enabled = (m_sharedData.baseState == StateID::DrivingRange);
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        m_restartButton = entity;
+    }
 
     //minimap button
     entity = createItem(glm::vec2(0.f, 6.f), "Hole Overview", menuEntity);
