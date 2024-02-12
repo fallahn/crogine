@@ -629,7 +629,7 @@ std::int32_t Social::getMonth()
 
 
 
-void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score)
+void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t)
 {
 #ifdef USE_GJS
     //GJ::insertScore(course, hole, score);

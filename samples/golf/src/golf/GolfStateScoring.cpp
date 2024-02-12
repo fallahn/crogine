@@ -115,7 +115,15 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
                     }
                 }
 
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score);
+                //calculate the player's stableford score
+                std::int32_t stableford = 0;
+                for (auto i = 0u; i < m_holeData.size(); ++i)
+                {
+                    std::int32_t holeScore = static_cast<std::int32_t>(connectionData.playerData[k].holeScores[i]) - m_holeData[i].par;
+                    stableford += std::max(0, 2 - holeScore);
+                }
+
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford);
                 break;
             }
         }

@@ -119,8 +119,6 @@ void GolfState::loadMap()
                 CrowdContext({ -18.f, -6.5f }, { 18.f, 6.5f }, 0.95f)
             };
 
-            //hmm, the putt from tee property isn't yet set at this point
-            //auto crowdIdx = holeData.puttFromTee ? std::min(1,  m_sharedData.crowdDensity) : m_sharedData.crowdDensity;
             const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
 
             //used by terrain builder to create instanced geom
