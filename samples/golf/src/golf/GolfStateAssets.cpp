@@ -1174,8 +1174,8 @@ void GolfState::loadMap()
                 }),
                 positions.end());
 
+
             //make sure remaining positions are on the ground plane
-            //TODO would this be sensible to do in the predicate above?
             for (auto& m : positions)
             {
                 glm::vec3 pos = m[3];
@@ -1184,6 +1184,25 @@ void GolfState::loadMap()
 
                 auto result = m_collisionMesh.getTerrain(pos);
                 m[3][1] = result.height;
+            }
+
+
+            //remove spectators which intersect the bounding sphere of props
+            for (auto pe : hole.propEntities)
+            {
+                auto sphere = pe.getComponent<cro::Model>().getBoundingSphere();
+                sphere.centre += pe.getComponent<cro::Transform>().getPosition();
+
+                positions.erase(std::remove_if(positions.begin(), positions.end(),
+                    [sphere](const glm::mat4& m)
+                    {
+                        glm::vec3 pos = m[3];
+                        pos.x += MapSize.x / 2;
+                        pos.z -= MapSize.y / 2;
+
+                        return sphere.contains(pos);
+                    }),
+                    positions.end());
             }
 
             std::shuffle(positions.begin(), positions.end(), cro::Util::Random::rndEngine);
