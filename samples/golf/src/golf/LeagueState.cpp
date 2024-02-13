@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -238,6 +238,27 @@ bool LeagueState::handleEvent(const cro::Event& evt)
 
 void LeagueState::handleMessage(const cro::Message& msg)
 {
+#ifdef USE_GNS
+    if (msg.id == Social::MessageID::StatsMessage)
+    {
+        const auto& data = msg.getData<Social::StatEvent>();
+        if (data.type == Social::StatEvent::LeagueReceived)
+        {
+            updateLeagueText();
+        }
+    }
+    else if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Pushed
+            && data.id == StateID::League)
+        {
+            updateLeagueText();
+        }
+    }
+
+#endif
+
     m_scene.forwardMessage(msg);
 }
 
@@ -442,6 +463,10 @@ void LeagueState::buildScene()
     }
 
     createLeagueTab(bgNode, spriteSheet);
+#ifdef USE_GNS
+    createGlobalLeagueTab(bgNode, spriteSheet);
+    m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+#endif
     createInfoTab(bgNode);
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
@@ -491,6 +516,9 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     m_tabNodes[TabID::League].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
     parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::League].getComponent<cro::Transform>());
 
+    m_leagueNodes[LeagueID::Club] = m_scene.createEntity();
+    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(m_leagueNodes[LeagueID::Club].addComponent<cro::Transform>());
+
     const auto centre = parent.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
 
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -504,7 +532,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     centreText(entity);
-    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //stripes
     entity = m_scene.createEntity();
@@ -513,7 +541,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stripes");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
-    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto stripeEnt = entity;
 
@@ -531,7 +559,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     centreText(entity);
-    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto table = league.getTable();
     struct TableEntry final
@@ -609,7 +637,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = shieldSprites.getSprite("rank_badge");
         entity.addComponent<cro::SpriteAnimation>().play(level);
-        m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         spritePos.y -= VerticalSpacing;
         z++;
@@ -666,7 +694,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     entity.addComponent<cro::Text>(smallFont).setString(str);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     str.clear();
     for (const auto& e : entries)
@@ -688,7 +716,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     entity.addComponent<cro::Text>(smallFont).setString(str);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //check if a previous season exists and scroll the results
@@ -745,26 +773,36 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
                 entity.getComponent<cro::Callback>().function =
                     [&, bounds](cro::Entity e, float dt)
                 {
-                    float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
-                    xPos -= (dt * 50.f);
-
-                    static constexpr float BGWidth = 494.f;
-
-                    if (xPos < (-bounds.width))
+                    float scale = m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().getScale().x;
+                    if (scale == 0)
                     {
-                        xPos = BGWidth;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                     }
+                    else
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
-                    auto pos = e.getComponent<cro::Transform>().getPosition();
-                    pos.x = std::round(xPos);
-                    
-                    e.getComponent<cro::Transform>().setPosition(pos);
+                        float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
+                        xPos -= (dt * 50.f);
 
-                    auto cropping = bounds;
-                    cropping.left = -pos.x;
-                    cropping.left += 6.f;
-                    cropping.width = BGWidth;
-                    e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+                        static constexpr float BGWidth = 494.f;
+
+                        if (xPos < (-bounds.width))
+                        {
+                            xPos = BGWidth;
+                        }
+
+                        auto pos = e.getComponent<cro::Transform>().getPosition();
+                        pos.x = std::round(xPos);
+
+                        e.getComponent<cro::Transform>().setPosition(pos);
+
+                        auto cropping = bounds;
+                        cropping.left = -pos.x;
+                        cropping.left += 6.f;
+                        cropping.width = BGWidth;
+                        e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+                    }
                 };
             }
         }
@@ -785,7 +823,11 @@ void LeagueState::createInfoTab(cro::Entity parent)
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
+#ifdef USE_GNS
+    entity.addComponent<cro::Text>(largeFont).setString("About The Leagues");
+#else
     entity.addComponent<cro::Text>(largeFont).setString("The Club League");
+#endif
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -794,6 +836,31 @@ void LeagueState::createInfoTab(cro::Entity parent)
     m_tabNodes[TabID::Info].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+#ifdef USE_GNS
+    constexpr float vertPos = 282.f;
+    std::string desc = R"(
+Every Stroke Play or Stableford round you play contributes to the Club League. The league
+is split into seasons, with 24 rounds played for each season. At the end of a season the
+top three players win an award.
+
+Every Monthly Best score on the Leaderboards contributes to the Global League.
+
+At the end of a round your scores are converted using the Stableford scoring system with
+par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for
+each round are summed to give the total score for the current season.
+
+In the Club League other player scores are automatically calculated based on their own
+stats, randomly generated when the first season begins. Think of it as something like a
+fantasy football league. At the end of each season these stats are re-evaluated based
+on the previous season's performance. Some players will increase in skill, others will
+decrease. The Club League is reset if you reset your player progress at any time.
+
+The Global League is created from the sum of all players Monthly Best Scores and resets
+at the beginning of each month. Beating a previous Monthly Best will also update your
+league score.
+)";
+#else
+    constexpr float vertPos = 258.f;
     std::string desc = R"(
 Every Stroke Play or Stableford round you play contributes to the club league. The league
 is split into seasons, with 24 rounds played for each season. At the end of a season the
@@ -813,11 +880,11 @@ Can you top the league table by the end of the season? Good luck!
 
 (Note: the league is reset if you reset your player progress at any time.)
 )";
-
+#endif
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ centre, 258.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ centre, vertPos, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(desc);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -825,6 +892,58 @@ Can you top the league table by the end of the season? Good luck!
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_tabNodes[TabID::Info].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
+
+#ifdef USE_GNS
+void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
+{
+    m_leagueNodes[LeagueID::Global] = m_scene.createEntity();
+    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(m_leagueNodes[LeagueID::Global].addComponent<cro::Transform>());
+
+    const auto centre = parent.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
+
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Global League");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    centreText(entity);
+    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //stripes
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 61.f, 0.05f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stripes");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto stripeEnt = entity;
+
+
+    auto statusString = "PLAYER SCORE HERE";
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 52.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString(statusString);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    centreText(entity);
+    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+void LeagueState::updateLeagueText()
+{
+
+}
+#endif
 
 void LeagueState::activateTab(std::int32_t tabID)
 {
@@ -848,75 +967,6 @@ void LeagueState::activateTab(std::int32_t tabID)
 
         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
     }
-
-    //for reasons I've given up trying to understand, we need to
-    //delay the selection by one frame.
-    // const auto selectNext = [&](std::int32_t idx)
-    // {
-    //     auto e = m_scene.createEntity();
-    //     e.addComponent<cro::Callback>().active = true;
-    //     e.getComponent<cro::Callback>().function =
-    //         [&, idx](cro::Entity f, float)
-    //     {
-    //         m_scene.getSystem<cro::UISystem>()->selectByIndex(idx);
-    //         f.getComponent<cro::Callback>().active = false;
-    //         m_scene.destroyEntity(f);
-    //     };
-    // };
-
-    //update the selection order depending on which page we're on
-    /*switch (tabID)
-    {
-    default: break;
-    case TabID::ClubStats:
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, ButtonHistory);
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonAwards);
-
-        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonAwards);
-        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, ButtonPerformance);
-
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonHistory);
-
-        selectNext(ButtonPerformance);
-        break;
-    case TabID::Performance:
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, Perf01);
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, PerfCPU);
-
-        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, PerfNextCourse);
-        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, PerfNextProf);
-
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, PerfDate);
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, PerfDate);
-        
-        selectNext(ButtonHistory);
-        break;
-    case TabID::History:
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonAwards);
-
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonAwards);
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, ButtonClubset);
-
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, ButtonClubset);
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, ButtonPerformance);
-
-        selectNext(ButtonAwards);
-        break;
-    case TabID::Awards:
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonHistory);
-        
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, AwardPrevious);
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, AwardPrevious);
-
-        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, AwardNext);
-        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, AwardNext);
-
-        selectNext(ButtonClubset);
-        break;
-    }*/
 }
 
 void LeagueState::quitState()

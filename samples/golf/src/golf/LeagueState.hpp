@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -90,10 +90,26 @@ private:
     std::array<cro::Entity, TabID::Count> m_tabButtons = {};   
     std::array<cro::Entity, TabID::Count> m_tabNodes = {};   
 
+    struct LeagueID final
+    {
+        enum
+        {
+            Club, Global,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, LeagueID::Count> m_leagueNodes = {};
 
     void buildScene();
     void createLeagueTab(cro::Entity, const cro::SpriteSheet&);
     void createInfoTab(cro::Entity);
+
+#ifdef USE_GNS
+    void createGlobalLeagueTab(cro::Entity, const cro::SpriteSheet&);
+    void updateLeagueText();
+#endif
+
     void activateTab(std::int32_t);
     void quitState();
 };

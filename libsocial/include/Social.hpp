@@ -95,7 +95,8 @@ public:
             StatsReceived,
             HOFReceived,
             AwardsReceived,
-            RequestRestart
+            RequestRestart,
+            LeagueReceived
         }type = StatsReceived;
         std::int32_t index = -1;
         std::int32_t page = -1;
