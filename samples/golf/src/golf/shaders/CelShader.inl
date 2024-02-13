@@ -267,6 +267,10 @@ inline const std::string CelFragmentShader = R"(
     uniform vec4 u_darkColour = vec4(0.5);
 #endif
 
+#if defined (BALL_COLOUR)
+    uniform vec4 u_ballColour = vec4(1.0);
+#endif
+
 #if defined (MASK_MAP)
     uniform sampler2D u_maskMap;
 #if !defined(REFLECTIONS)
@@ -429,6 +433,9 @@ inline const std::string CelFragmentShader = R"(
 #endif
 #if defined (VERTEX_COLOURED)
         colour *= v_colour;
+#endif
+#if defined (BALL_COLOUR)
+        colour *= u_ballColour;
 #endif
 
 #if defined (NORMAL_MAP)

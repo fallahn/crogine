@@ -1337,11 +1337,12 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Flag] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Ball);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Ball]).setProperty("u_ballColour", cro::Colour::White);
 
 
     if (m_sharedData.nightTime)
