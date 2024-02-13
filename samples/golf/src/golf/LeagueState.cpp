@@ -545,6 +545,14 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
     auto stripeEnt = entity;
 
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, 219.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Rank");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    stripeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     League league;
     auto season = league.getCurrentSeason();
     auto gamesPlayed = league.getCurrentIteration();
@@ -839,25 +847,25 @@ void LeagueState::createInfoTab(cro::Entity parent)
 #ifdef USE_GNS
     constexpr float vertPos = 282.f;
     std::string desc = R"(
-Every Stroke Play or Stableford round you play contributes to the Club League. The league
-is split into seasons, with 24 rounds played for each season. At the end of a season the
-top three players win an award.
+Every Monthly Best score on the Steam Leaderboards contributes to the Global League.
 
-Every Monthly Best score on the Leaderboards contributes to the Global League.
+Every Stroke Play or Stableford round you play contributes to the Club League. The Club 
+League is split into seasons, with 24 rounds played for each season. At the end of a 
+season the top three players win an award. Club League results are entirely offline.
 
 At the end of a round your scores are converted using the Stableford scoring system with
 par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for
 each round are summed to give the total score for the current season.
+
+The Global League is created from the sum of all Steam players Monthly Best Scores and
+resets at the beginning of each month. Beating a personal Monthly Best will also improve
+your league score.
 
 In the Club League other player scores are automatically calculated based on their own
 stats, randomly generated when the first season begins. Think of it as something like a
 fantasy football league. At the end of each season these stats are re-evaluated based
 on the previous season's performance. Some players will increase in skill, others will
 decrease. The Club League is reset if you reset your player progress at any time.
-
-The Global League is created from the sum of all players Monthly Best Scores and resets
-at the beginning of each month. Beating a previous Monthly Best will also update your
-league score.
 )";
 #else
     constexpr float vertPos = 258.f;
@@ -906,7 +914,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Global League");
+    entity.addComponent<cro::Text>(largeFont).setString("Global League for <insert month>");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -924,7 +932,13 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto stripeEnt = entity;
-
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, 219.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("P/Cm");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    stripeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto statusString = "PLAYER SCORE HERE";
     entity = m_scene.createEntity();
