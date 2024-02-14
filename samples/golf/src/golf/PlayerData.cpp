@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -47,6 +47,7 @@ bool PlayerData::saveProfile() const
         const auto s = name.toUtf8();
         cfg.addProperty("name", std::string(s.c_str(), s.c_str() + s.length()));
     }
+    cfg.addProperty("ball_colour").setValue(ballColourIndex);
     cfg.addProperty("ball_id").setValue(ballID);
     cfg.addProperty("hair_id").setValue(hairID);
     cfg.addProperty("skin_id").setValue(skinID);
@@ -102,6 +103,18 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             if (n == "name")
             {
                 name = prop.getValue<cro::String>();
+            }
+            else if (n == "ball_colour")
+            {
+                ballColourIndex = (prop.getValue<std::uint32_t>() & 0xff);
+                if (ballColourIndex < pc::Palette.size())
+                {
+                    ballColour = pc::Palette[ballColourIndex];
+                }
+                else
+                {
+                    ballColour = cro::Colour::White;
+                }
             }
             else if (n == "ball_id")
             {

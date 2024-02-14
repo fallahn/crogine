@@ -56,6 +56,7 @@ struct PlayerData final
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[4] - 1)),
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[5] - 1))    
     }; //indices into colours
+    std::uint8_t ballColourIndex = 2;// 255; //ignore the palette if no in range and set to white
     std::uint32_t ballID = 0;
     std::uint32_t hairID = 0;
     std::uint32_t skinID = 0; //uid as loaded from the avatar data file
@@ -73,6 +74,7 @@ struct PlayerData final
     std::int32_t parScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
+    cro::Colour ballColour;
 
     //this is client side profile specific data
     cro::ImageArray<std::uint8_t> mugshotData; //pixel data of the mugshot for avatar icon

@@ -59,6 +59,7 @@ R"(
 #include OUTPUT_LOCATION
 
 uniform vec3 u_cameraWorldPosition;
+uniform vec4 u_ballColour = vec4(1.0);
 
 VARYING_IN vec4 v_colour;
 VARYING_IN vec3 v_normal;
@@ -80,7 +81,7 @@ void main()
     float outer = smoothstep(0.25, 0.8, dot(normal, eyeDirection));
     float inner = 1.0 - outer;
 
-    vec3 colour = rgb2hsv(v_colour.rgb);
+    vec3 colour = rgb2hsv(v_colour.rgb * u_ballColour.rgb);
     colour.g *= (0.4 * outer) + 0.6;
     colour.g *= (inner * 0.3) + 1.0;
 

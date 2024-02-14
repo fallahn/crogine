@@ -2947,11 +2947,13 @@ void GolfState::createDrone()
 void GolfState::spawnBall(const ActorInfo& info)
 {
     auto ballID = m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballID;
+    auto ballUserColour = m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballColour;
 
     //render the ball as a point so no perspective is applied to the scale
     cro::Colour miniBallColour;
     bool rollAnimation = true;
     auto material = m_resources.materials.get(m_ballResources.materialID);
+
     auto ball = std::find_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
         {
@@ -2959,15 +2961,17 @@ void GolfState::spawnBall(const ActorInfo& info)
         });
     if (ball != m_sharedData.ballInfo.end())
     {
-        material.setProperty("u_colour", ball->tint);
-        miniBallColour = ball->tint;
+        miniBallColour = ball->tint.getVec4() * ballUserColour.getVec4();
+
+        material.setProperty("u_colour", miniBallColour);
         rollAnimation = ball->rollAnimation;
     }
     else
     {
+        miniBallColour = m_sharedData.ballInfo.cbegin()->tint.getVec4() * ballUserColour.getVec4();
+
         //this should at least line up with the fallback model
-        material.setProperty("u_colour", m_sharedData.ballInfo.cbegin()->tint);
-        miniBallColour = m_sharedData.ballInfo.cbegin()->tint;
+        material.setProperty("u_colour", miniBallColour);
     }
 
     auto entity = m_gameScene.createEntity();
@@ -3159,6 +3163,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     const auto matID = m_sharedData.nightTime ? MaterialID::BallNight : MaterialID::Ball;
 
     material = m_resources.materials.get(m_materialIDs[matID]);
+    material.setProperty("u_ballColour", ballUserColour);
     if (m_ballModels.count(ballID) != 0
         && ball != m_sharedData.ballInfo.end())
     {
