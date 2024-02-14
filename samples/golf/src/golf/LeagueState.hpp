@@ -106,8 +106,18 @@ private:
     void createInfoTab(cro::Entity);
 
 #ifdef USE_GNS
+
+    struct LeagueText final
+    {
+        cro::Entity games;
+        cro::Entity names;
+        cro::Entity scores;
+        cro::Entity personal;
+    }m_leagueText;
+
     void createGlobalLeagueTab(cro::Entity, const cro::SpriteSheet&);
     void updateLeagueText();
+    void addLeagueButtons(const cro::SpriteSheet&);
 #endif
 
     void activateTab(std::int32_t);

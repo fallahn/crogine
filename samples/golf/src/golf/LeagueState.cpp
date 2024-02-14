@@ -83,7 +83,40 @@ namespace
 {
 #ifdef USE_GNS
     std::vector<ScoreSet> scoreSet;
+
+    const std::array MonthStrings =
+    {
+        cro::String("January"),
+        cro::String("February"),
+        cro::String("March"),
+        cro::String("April"),
+        cro::String("May"),
+        cro::String("June"),
+        cro::String("July"),
+        cro::String("August"),
+        cro::String("September"),
+        cro::String("October"),
+        cro::String("November"),
+        cro::String("December"),
+    };
 #endif
+
+    static constexpr float VerticalSpacing = 13.f;
+    static constexpr float TextTop = 268.f;
+
+    constexpr std::size_t LeagueButtonIndex = 0;
+    constexpr std::size_t InfoButtonIndex = 1;
+    constexpr std::size_t RightButtonIndex = 2;
+    constexpr std::size_t LeftButtonIndex = 3;
+
+    struct MenuID final
+    {
+        enum
+        {
+            League, Info
+        };
+    };
+
     std::size_t courseIndex = 0;
 
     bool showStats = false;
@@ -442,6 +475,7 @@ void LeagueState::buildScene()
 
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().enabled = i != m_currentTab;
+        entity.getComponent<cro::UIInput>().setSelectionIndex(i);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 
@@ -461,11 +495,20 @@ void LeagueState::buildScene()
 
         m_tabButtons[i] = entity;
     }
+    m_tabButtons[InfoButtonIndex].getComponent<cro::Sprite>().setColour(cro::Colour::White);
+    m_tabButtons[LeagueButtonIndex].getComponent<cro::UIInput>().setGroup(MenuID::Info);
 
     createLeagueTab(bgNode, spriteSheet);
 #ifdef USE_GNS
     createGlobalLeagueTab(bgNode, spriteSheet);
     m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    addLeagueButtons(spriteSheet);
+
+    m_tabButtons[LeagueButtonIndex].getComponent<cro::UIInput>().setNextIndex(InfoButtonIndex, InfoButtonIndex);
+    m_tabButtons[LeagueButtonIndex].getComponent<cro::UIInput>().setPrevIndex(InfoButtonIndex, InfoButtonIndex);
+
+    m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setNextIndex(RightButtonIndex, RightButtonIndex);
+    m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(RightButtonIndex, RightButtonIndex);
 #endif
     createInfoTab(bgNode);
 
@@ -597,8 +640,6 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
     //column of rank badges representing psuedo-level (handicap * 2)
     //or the player's current level.
-    static constexpr float VerticalSpacing = 13.f;
-    static constexpr float TextTop = 268.f;
     float stripePos = 0.f;
 
     cro::SpriteSheet shieldSprites;
@@ -719,7 +760,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     }
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 328.f, TextTop + 1.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 368.f, TextTop + 1.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(str);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -914,7 +955,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Global League for <insert month>");
+    entity.addComponent<cro::Text>(largeFont).setString("Global League for " + MonthStrings[Social::getMonth()]);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -940,22 +981,169 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     stripeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto statusString = "PLAYER SCORE HERE";
+
+    //cro::String str(" 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36");
+    const auto& str = Social::getMonthlyLeague();
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 68.f, TextTop + 1.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(str[2]);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueText.games = entity;
+
+
+    //str = "Big\nJim\nBeef\nFrank\nSteve\nMelissa\nJean\nSavoury\nRegina Philange Banana Hammock";
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 114.f, TextTop + 1.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(str[0]);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueText.names = entity;
+
+    //str = "  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n123 Points";
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 368.f, TextTop + 1.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(str[1]);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueText.scores = entity;
+
+    //auto statusString = "PLAYER SCORE HERE";
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 52.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString(statusString);
+    entity.addComponent<cro::Text>(largeFont).setString(str[3]);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     centreText(entity);
     m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueText.personal = entity;
 }
 
 void LeagueState::updateLeagueText()
 {
+    const auto& str = Social::getMonthlyLeague();
+    m_leagueText.games.getComponent<cro::Text>().setString(str[2]);
+    m_leagueText.names.getComponent<cro::Text>().setString(str[0]);
+    m_leagueText.scores.getComponent<cro::Text>().setString(str[1]);
+    m_leagueText.personal.getComponent<cro::Text>().setString(str[3]);
+}
 
+void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
+{
+    cro::Entity buttonRight = m_scene.createEntity();
+    buttonRight.addComponent<cro::Transform>().setPosition({ 370.f, 286.f, 0.1f });
+    buttonRight.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    buttonRight.addComponent<cro::Drawable2D>();
+    buttonRight.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_right");
+
+    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(buttonRight.getComponent<cro::Transform>());
+
+
+    cro::Entity buttonLeft = m_scene.createEntity();
+    buttonLeft.addComponent<cro::Transform>().setPosition({ 128.f, 286.f, 0.1f });
+    buttonLeft.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    buttonLeft.addComponent<cro::Drawable2D>();
+    buttonLeft.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_left");
+
+    m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().addChild(buttonLeft.getComponent<cro::Transform>());
+
+
+    auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
+    auto selected = uiSystem.addCallback([](cro::Entity e)
+        {
+            auto bounds = e.getComponent<cro::Sprite>().getTextureRect();
+            bounds.bottom += 16.f;
+            e.getComponent<cro::Sprite>().setTextureRect(bounds);
+
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    auto unselected = uiSystem.addCallback([](cro::Entity e) 
+        {
+            auto bounds = e.getComponent<cro::Sprite>().getTextureRect();
+            bounds.bottom -= 16.f;
+            e.getComponent<cro::Sprite>().setTextureRect(bounds);        
+        });
+
+    buttonRight.addComponent<cro::UIInput>().area = buttonRight.getComponent<cro::Sprite>().getTextureBounds();
+    buttonRight.getComponent<cro::UIInput>().setSelectionIndex(RightButtonIndex);
+    buttonRight.getComponent<cro::UIInput>().setNextIndex(InfoButtonIndex, InfoButtonIndex);
+    buttonRight.getComponent<cro::UIInput>().setPrevIndex(InfoButtonIndex, InfoButtonIndex);
+    buttonRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+    buttonRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+    buttonRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
+        [&, buttonLeft](cro::Entity e, const cro::ButtonEvent& evt) mutable 
+        {
+            if (activated(evt))
+            {
+                e.getComponent<cro::UIInput>().enabled = false;
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                //this has to be delayed by a frame
+                cro::Entity ent = m_scene.createEntity();
+                ent.addComponent<cro::Callback>().active = true;
+                ent.getComponent<cro::Callback>().function =
+                    [&, buttonLeft](cro::Entity f, float) mutable
+                    {
+                    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        buttonLeft.getComponent<cro::UIInput>().enabled = true;
+
+                        m_scene.getSystem<cro::UISystem>()->selectByIndex(LeftButtonIndex);
+
+                        m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setNextIndex(LeftButtonIndex, LeftButtonIndex);
+                        m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(LeftButtonIndex, LeftButtonIndex);
+
+                        f.getComponent<cro::Callback>().active = false;
+                        m_scene.destroyEntity(f);
+                    };
+            }        
+        });
+
+
+    buttonLeft.addComponent<cro::UIInput>().area = buttonLeft.getComponent<cro::Sprite>().getTextureBounds();
+    buttonLeft.getComponent<cro::UIInput>().setSelectionIndex(LeftButtonIndex);
+    buttonLeft.getComponent<cro::UIInput>().setNextIndex(InfoButtonIndex, InfoButtonIndex);
+    buttonLeft.getComponent<cro::UIInput>().setPrevIndex(InfoButtonIndex, InfoButtonIndex);
+    buttonLeft.getComponent<cro::UIInput>().enabled = false;
+    buttonLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+    buttonLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+    buttonLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
+        [&, buttonRight](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        {
+            if (activated(evt))
+            {
+                e.getComponent<cro::UIInput>().enabled = false;
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                cro::Entity ent = m_scene.createEntity();
+                ent.addComponent<cro::Callback>().active = true;
+                ent.getComponent<cro::Callback>().function =
+                    [&, buttonRight](cro::Entity f, float) mutable
+                    {
+                        m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        buttonRight.getComponent<cro::UIInput>().enabled = true;
+
+                        m_scene.getSystem<cro::UISystem>()->selectByIndex(RightButtonIndex);
+
+                        m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setNextIndex(RightButtonIndex, RightButtonIndex);
+                        m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(RightButtonIndex, RightButtonIndex);
+
+                        f.getComponent<cro::Callback>().active = false;
+                        m_scene.destroyEntity(f);
+                    };
+            }
+        });
 }
 #endif
 
@@ -980,6 +1168,8 @@ void LeagueState::activateTab(std::int32_t tabID)
         m_tabEntity.getComponent<cro::Sprite>().setTextureRect(bounds);
 
         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+        m_scene.getSystem<cro::UISystem>()->setActiveGroup(tabID);
     }
 }
 

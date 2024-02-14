@@ -261,7 +261,7 @@ void UISystem::handleEvent(const Event& evt)
         if (m_activeControllerID == ActiveControllerAll ||
             evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone;// 15000;
+            static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
             switch (evt.caxis.axis)
             {
             default: break;
@@ -616,7 +616,8 @@ void UISystem::selectNext(std::size_t stride, std::int32_t direction)
         {
             m_selectedIndex = std::distance(entities.cbegin(), result);
         }
-        else
+        else if (targetSelection < entities.size() &&
+            entities[targetSelection].getComponent<cro::UIInput>().enabled)
         {
             m_selectedIndex = targetSelection;
         }
@@ -665,7 +666,8 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
         auto result = std::find_if(entities.cbegin(), entities.cend(),
             [targetSelection](const Entity& e)
             {
-                return e.getComponent<UIInput>().getSelectionIndex() == targetSelection;
+                return e.getComponent<UIInput>().getSelectionIndex() == targetSelection
+                    && e.getComponent<UIInput>().enabled;
             });
 
         if (result != entities.cend()
@@ -673,7 +675,8 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
         {
             m_selectedIndex = std::distance(entities.cbegin(), result);
         }
-        else
+        else if (targetSelection < entities.size() &&
+            entities[targetSelection].getComponent<cro::UIInput>().enabled)
         {
             m_selectedIndex = targetSelection;
         }
