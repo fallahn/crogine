@@ -151,6 +151,7 @@ private:
         };
     };
     std::array<FlyoutMenu, PaletteID::Count> m_flyouts = {};
+    FlyoutMenu m_ballColourFlyout;
     std::size_t m_lastSelected;
 
     void addSystems();
@@ -161,6 +162,9 @@ private:
     void createBallFlyout(cro::Entity);
     void createBallThumbs();
     void quitState();
+
+    cro::Entity createPaletteBackground(cro::Entity parent, FlyoutMenu& target, std::uint32_t palleteIndex);
+    void createPaletteButtons(FlyoutMenu& target, std::uint32_t palleteIndex, std::uint32_t menuID, std::size_t indexOffset);
 
     std::size_t indexFromAvatarID(std::uint32_t) const;
     std::size_t indexFromBallID(std::uint32_t) const;

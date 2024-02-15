@@ -54,6 +54,8 @@ enum ProfileButton
     ButtonPrevBall,
     ButtonBallSelect,
     ButtonNextBall,
+    ButtonBallColour,
+    ButtonBallColourReset,
 
     ButtonDescUp,
     ButtonDescDown,
