@@ -873,7 +873,7 @@ void LeagueState::createInfoTab(cro::Entity parent)
     entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
 #ifdef USE_GNS
-    entity.addComponent<cro::Text>(largeFont).setString("About The Leagues");
+    entity.addComponent<cro::Text>(largeFont).setString("League Rules");
 #else
     entity.addComponent<cro::Text>(largeFont).setString("The Club League");
 #endif
@@ -890,17 +890,17 @@ void LeagueState::createInfoTab(cro::Entity parent)
     std::string desc = R"(
 Every Monthly Best score on the Steam Leaderboards contributes to the Global League.
 
+The Global League is created from the sum of all Steam players Monthly Best Scores and
+the season lasts one calendar month, composed of 36 rounds. Beating an existing personal
+Monthly Best (for the current month) will also improve your existing league score.
+
 Every Stroke Play or Stableford round you play contributes to the Club League. The Club 
-League is split into seasons, with 24 rounds played for each season. At the end of a 
-season the top three players win an award. Club League results are entirely offline.
+League is split into seasons, with 24 rounds played for each season. Unlike the Global
+League, the Club League results are entirely offline, and opponents are fictional.
 
 At the end of a round your scores are converted using the Stableford scoring system with
 par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for
 each round are summed to give the total score for the current season.
-
-The Global League is created from the sum of all Steam players Monthly Best Scores and
-resets at the beginning of each month. Beating a personal Monthly Best will also improve
-your league score.
 
 In the Club League other player scores are automatically calculated based on their own
 stats, randomly generated when the first season begins. Think of it as something like a
@@ -1036,6 +1036,7 @@ void LeagueState::updateLeagueText()
     m_leagueText.names.getComponent<cro::Text>().setString(str[0]);
     m_leagueText.scores.getComponent<cro::Text>().setString(str[1]);
     m_leagueText.personal.getComponent<cro::Text>().setString(str[3]);
+    centreText(m_leagueText.personal);
 }
 
 void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)

@@ -1833,7 +1833,7 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
     labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
 
     //*sigh* leaderboards are not necessarily up to date because of the time it takes to fetch
-    //(we should really be using a stat) so we have to fudge this in here
+    //(we should really be using a stat, or at least a callback signal) so we have to fudge this in here
 #ifdef USE_GNS
     labelEnt.addComponent<cro::Callback>().active = true;
     labelEnt.getComponent<cro::Callback>().function =
@@ -1844,8 +1844,11 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
             auto current = Social::getCurrentStreak();
             auto longest = std::max(current, Social::getLongestStreak());
 
+            cro::String currentDays = current == 1 ? " Day" : " Days";
+            cro::String longestDays = longest == 1 ? " Day" : " Days";
+
             e.getComponent<cro::Text>().setString("Current Streak: " + std::to_string(current)
-                                        + " Days\nLongest Streak: " + std::to_string(longest) + " Days");
+                                        + currentDays + "\nLongest Streak: " + std::to_string(longest) + longestDays);
         }
     };
 #endif
