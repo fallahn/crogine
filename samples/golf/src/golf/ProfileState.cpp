@@ -917,6 +917,15 @@ void ProfileState::buildScene()
     bottomDarkColour.getComponent<cro::UIInput>().setPrevIndex(ButtonBottomLight, ButtonTopDark);
 
 
+    const auto expandHitbox = 
+        [](cro::Entity e)
+        {
+            auto bounds = e.getComponent<cro::UIInput>().area;
+            bounds.bottom -= 8.f;
+            bounds.height += 16.f;
+            e.getComponent<cro::UIInput>().area = bounds;
+        };
+
     //avatar arrow buttons
     auto hairLeft = createButton("arrow_left", glm::vec2(87.f, 156.f), ButtonPrevHair);
     hairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -932,7 +941,8 @@ void ProfileState::buildScene()
             });
     hairLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextHair, ButtonPrevBody);
     hairLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonHairColour, ButtonPrevBody);
-    
+    expandHitbox(hairLeft);
+
     auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f), ButtonNextHair);
     hairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -946,7 +956,8 @@ void ProfileState::buildScene()
             });
     hairRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextBody);
     hairRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevHair, ButtonNextBody);
-    
+    expandHitbox(hairRight);
+
     auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 110.f), ButtonPrevBody);
     avatarLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -959,7 +970,8 @@ void ProfileState::buildScene()
             });
     avatarLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonPrevHair);
     avatarLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonTopDark, ButtonPrevHair);
-    
+    expandHitbox(avatarLeft);
+
     auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 110.f), ButtonNextBody);
     avatarRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -972,7 +984,7 @@ void ProfileState::buildScene()
             });
     avatarRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextHair);
     avatarRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevBody, ButtonNextHair);
-
+    expandHitbox(avatarRight);
 
     //checkbox
     auto southPaw = createButton("check_highlight", glm::vec2(17.f, 50.f), ButtonSouthPaw);
@@ -1108,7 +1120,7 @@ void ProfileState::buildScene()
             });
     ballLeft.getComponent<cro::UIInput>().setNextIndex(ButtonBallSelect, ButtonUpdateIcon);
     ballLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonName);
-
+    expandHitbox(ballLeft);
 
     //toggles the preview to display ball thumbs
     auto ballThumb = createButton("ballthumb_highlight", { 279.f , 83.f }, ButtonBallSelect);
@@ -1145,6 +1157,7 @@ void ProfileState::buildScene()
             });
     ballRight.getComponent<cro::UIInput>().setNextIndex(ButtonDescUp, ButtonUpdateIcon);
     ballRight.getComponent<cro::UIInput>().setPrevIndex(ButtonBallSelect, ButtonName);
+    expandHitbox(ballRight);
 
     //updates the profile icon
     auto profileIcon = createButton("button_highlight", glm::vec2(269.f, 55.f), ButtonUpdateIcon);
@@ -2226,6 +2239,7 @@ void ProfileState::setBallIndex(std::size_t idx)
         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
     }
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.ballColour);
 
     m_ballModels[m_ballIndex].root.getComponent<cro::ParticleEmitter>().start();
 
