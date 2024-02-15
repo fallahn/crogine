@@ -56,7 +56,7 @@ struct PlayerData final
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[4] - 1)),
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[5] - 1))    
     }; //indices into colours
-    std::uint8_t ballColourIndex = static_cast<std::uint8_t>(cro::Util::Random::value(0, 39));// 255; //ignore the palette if not in range and set to white
+    std::uint8_t ballColourIndex = 255; //ignore the palette if not in range and set to white
     std::uint32_t ballID = 0;
     std::uint32_t hairID = 0;
     std::uint32_t skinID = 0; //uid as loaded from the avatar data file

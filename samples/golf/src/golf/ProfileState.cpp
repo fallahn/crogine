@@ -1177,24 +1177,51 @@ void ProfileState::buildScene()
     ballColour.getComponent<cro::UIInput>().setNextIndex(ButtonBallColourReset, ButtonUpdateIcon);
     ballColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBody, ButtonBallSelect);
     ballColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    
                     applyTextEdit();
 
-                    /*m_ballColourFlyout.background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    m_ballColourFlyout.background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::BallColour);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.ballIndex, pc::ColourKey::BottomDark));*/
+
+                    if (m_activeProfile.ballColourIndex < pc::Palette.size())
+                    {
+                        m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.ballColourIndex, pc::ColourKey::Hair));
+                    }
+                    else
+                    {
+                        m_uiScene.getSystem<cro::UISystem>()->selectAt(0);
+                    }
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 316.f, 78.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 10.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(10.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(10.f, 0.f), cro::Colour::White)
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            for (auto& v : verts)
+            {
+                v.colour = m_activeProfile.ballColour;
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //ball colour reset button
@@ -1862,6 +1889,48 @@ void ProfileState::createPalettes(cro::Entity parent)
         const std::size_t IndexOffset = (i * 100) + 200;
         createPaletteButtons(m_flyouts[i], i, menuID, IndexOffset);
     }
+
+    auto entity = createPaletteBackground(parent, m_ballColourFlyout, PaletteID::Hair);
+    m_ballColourFlyout.background.getComponent<cro::Transform>().setPosition(glm::vec2(320.f, 12.f));
+
+    //activate and select callbacks
+    m_ballColourFlyout.activateCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        {
+            auto quitMenu = [&]()
+                {
+                    m_ballColourFlyout.background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+                    m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
+
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.ballColour);
+                };
+
+            if (activated(evt))
+            {
+                m_activeProfile.ballColourIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                m_activeProfile.ballColour = pc::Palette[m_activeProfile.ballColourIndex];
+                quitMenu();
+            }
+            else if (deactivated(evt))
+            {
+                quitMenu();
+            }
+        });
+
+    m_ballColourFlyout.selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&, entity](cro::Entity e) mutable
+        {
+            m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", pc::Palette[e.getComponent<cro::Callback>().getUserData<std::uint8_t>()]);
+
+
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+            m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
+        });
+
+    createPaletteButtons(m_ballColourFlyout, PaletteID::Hair, MenuID::BallColour, (PaletteID::Count * 100) + 200);
 }
 
 void ProfileState::createBallFlyout(cro::Entity parent)

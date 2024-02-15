@@ -163,6 +163,7 @@ private:
     void createBallThumbs();
     void quitState();
 
+    //returns the highlight entity
     cro::Entity createPaletteBackground(cro::Entity parent, FlyoutMenu& target, std::uint32_t palleteIndex);
     void createPaletteButtons(FlyoutMenu& target, std::uint32_t palleteIndex, std::uint32_t menuID, std::size_t indexOffset);
 
