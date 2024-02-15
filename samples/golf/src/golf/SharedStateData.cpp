@@ -109,8 +109,6 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         auto stringSize = playerData[i].name.size() * sizeof(std::uint32_t);
         std::memcpy(&buffer[offset], playerData[i].name.data(), stringSize);
         offset += stringSize;
-
-        LogI << "Serialise " << (int)playerData[i].ballColourIndex << std::endl;
     }
 
     return buffer;
@@ -222,7 +220,6 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         {
             playerData[i].ballColour = cro::Colour::White;
         }
-        LogI << "Ball Index is " << (int)playerData[i].ballColourIndex << std::endl;
     }
 
     return true;

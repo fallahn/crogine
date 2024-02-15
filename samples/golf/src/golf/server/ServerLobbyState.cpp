@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -252,6 +252,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
                 {
                     m_sharedData.clients[connectionID].playerData[i].name = cd.playerData[i].name;
                     m_sharedData.clients[connectionID].playerData[i].avatarFlags = cd.playerData[i].avatarFlags;
+                    m_sharedData.clients[connectionID].playerData[i].ballColourIndex = cd.playerData[i].ballColourIndex;
                     m_sharedData.clients[connectionID].playerData[i].ballID = cd.playerData[i].ballID;
                     m_sharedData.clients[connectionID].playerData[i].hairID = cd.playerData[i].hairID;
                     m_sharedData.clients[connectionID].playerData[i].skinID = cd.playerData[i].skinID;
@@ -286,6 +287,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
             {
                 cd.playerData[j].name = c.playerData[j].name;
                 cd.playerData[j].avatarFlags = c.playerData[j].avatarFlags;
+                cd.playerData[j].ballColourIndex = c.playerData[j].ballColourIndex;
                 cd.playerData[j].ballID = c.playerData[j].ballID;
                 cd.playerData[j].hairID = c.playerData[j].hairID;
                 cd.playerData[j].skinID = c.playerData[j].skinID;

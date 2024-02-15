@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -46,6 +46,7 @@ namespace sv
     {
         cro::String name;
         std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = {}; //not really flags per se, but let's at least keep naming consistent
+        std::uint8_t ballColourIndex = 255;
         std::uint32_t ballID = 0;
         std::uint32_t hairID = 0;
         std::uint32_t skinID = 0;
