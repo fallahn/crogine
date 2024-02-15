@@ -465,8 +465,10 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         nameLabel.getComponent<cro::Text>().setString(m_profileData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
         centreText(nameLabel);
 
-        auto idx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = indexFromBallID(m_profileData.playerProfiles[idx].ballID);
+        const auto idx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+        const auto ballIdx = indexFromBallID(m_profileData.playerProfiles[idx].ballID);
+        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = ballIdx;
+        m_ballModels[ballIdx].getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_profileData.playerProfiles[idx].ballColour);
 
         showAvatar(idx);
     };

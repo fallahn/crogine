@@ -135,6 +135,7 @@ private:
     {
         enum
         {
+            Ball,
             Cel,
             CelTextured,
             CelTexturedSkinned,
@@ -279,6 +280,7 @@ private:
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
     cro::Entity m_ballCam;
     cro::RenderTexture m_ballTexture;
+    std::vector<cro::Entity> m_ballModels;
     void createBallScene();
     std::int32_t indexFromBallID(std::uint32_t);
 

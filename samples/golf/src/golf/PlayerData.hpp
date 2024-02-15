@@ -74,7 +74,7 @@ struct PlayerData final
     std::int32_t parScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
-    cro::Colour ballColour;
+    cro::Colour ballColour = cro::Colour::White;
 
     //this is client side profile specific data
     cro::ImageArray<std::uint8_t> mugshotData; //pixel data of the mugshot for avatar icon

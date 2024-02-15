@@ -376,7 +376,7 @@ void MenuState::createBallScene()
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             //allow for double sided balls.
-            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
             applyMaterialData(ballDef, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
             if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
@@ -409,6 +409,8 @@ void MenuState::createBallScene()
                 };
             }
 
+            //hmmm - we index this base on m_sharedData.ballinfo - though this might not necessarily be the same size??
+            m_ballModels.push_back(entity);
             m_profileData.ballDefs.push_back(ballDef); //store this for faster loading in profile editor
           
             if (shadow)

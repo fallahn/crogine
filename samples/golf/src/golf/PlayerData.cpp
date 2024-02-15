@@ -93,6 +93,16 @@ bool PlayerData::saveProfile() const
 
 bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 {
+    //profiles may not yet have the colour index property, so set to a default
+    if (ballColourIndex < pc::Palette.size())
+    {
+        ballColour = pc::Palette[ballColourIndex];
+    }
+    else
+    {
+        ballColour = cro::Colour::White;
+    }
+
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path, false))
     {
