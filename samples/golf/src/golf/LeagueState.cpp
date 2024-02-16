@@ -145,7 +145,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
             {
                 if (ImGui::Begin("League", &showStats))
                 {
-                    static League league;
+                    static League league(LeagueRoundID::Club);
 
                     const auto& entries = league.getTable();
                     for (const auto& e : entries)
@@ -596,7 +596,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     stripeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    League league;
+    League league(LeagueRoundID::Club);
     auto season = league.getCurrentSeason();
     auto gamesPlayed = league.getCurrentIteration();
 
@@ -769,92 +769,58 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
 
     //check if a previous season exists and scroll the results
-    const auto path = Social::getBaseContentPath() + PrevFileName;
-    if (cro::FileSystem::fileExists(path))
+    str = league.getPreviousResults(playerName);
+    if (!str.empty())
     {
-        cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
-        if (file.file)
-        {
-            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
-            if (size % sizeof(PreviousEntry) == 0)
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString(str);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+
+        entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        bounds = cro::Text::getLocalBounds(entity);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+        entity.getComponent<cro::Callback>().function =
+            [&, bounds](cro::Entity e, float dt)
             {
-                auto count = size / sizeof(PreviousEntry);
-                std::vector<PreviousEntry> buff(count);
-
-                SDL_RWseek(file.file, 0, RW_SEEK_SET);
-                SDL_RWread(file.file, buff.data(), sizeof(PreviousEntry), count);
-
-                //this assumes everything was sorted correctly when it was saved
-                cro::String str = "Previous Season's Results";
-                for (auto i = 0u; i < buff.size(); ++i)
+                float scale = m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().getScale().x;
+                if (scale == 0)
                 {
-                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(RandomNames.size()) - 1);
-
-                    str += " -~- ";
-                    str += std::to_string(i + 1);
-                    if (buff[i].nameIndex > -1)
-                    {
-                        str += ". " + RandomNames[buff[i].nameIndex];
-                    }
-                    else
-                    {
-                        str += ". " + playerName;
-                    }
-                    str += " " + std::to_string(buff[i].score);
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 }
-
-
-                entity = m_scene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.1f });
-                entity.addComponent<cro::Drawable2D>();
-                entity.addComponent<cro::Text>(smallFont).setString(str);
-                entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-                entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-            
-                entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-                parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-                bounds = cro::Text::getLocalBounds(entity);
-                entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-                entity.getComponent<cro::Callback>().function =
-                    [&, bounds](cro::Entity e, float dt)
+                else
                 {
-                    float scale = m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().getScale().x;
-                    if (scale == 0)
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                    float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
+                    xPos -= (dt * 50.f);
+
+                    static constexpr float BGWidth = 494.f;
+
+                    if (xPos < (-bounds.width))
                     {
-                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        xPos = BGWidth;
                     }
-                    else
-                    {
-                        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
-                        float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
-                        xPos -= (dt * 50.f);
+                    auto pos = e.getComponent<cro::Transform>().getPosition();
+                    pos.x = std::round(xPos);
 
-                        static constexpr float BGWidth = 494.f;
+                    e.getComponent<cro::Transform>().setPosition(pos);
 
-                        if (xPos < (-bounds.width))
-                        {
-                            xPos = BGWidth;
-                        }
-
-                        auto pos = e.getComponent<cro::Transform>().getPosition();
-                        pos.x = std::round(xPos);
-
-                        e.getComponent<cro::Transform>().setPosition(pos);
-
-                        auto cropping = bounds;
-                        cropping.left = -pos.x;
-                        cropping.left += 6.f;
-                        cropping.width = BGWidth;
-                        e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
-                    }
-                };
-            }
-        }
+                    auto cropping = bounds;
+                    cropping.left = -pos.x;
+                    cropping.left += 6.f;
+                    cropping.width = BGWidth;
+                    e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+                }
+            };
     }
 }
 

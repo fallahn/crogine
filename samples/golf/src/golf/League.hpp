@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/String.hpp>
+
 #include <cstdint>
 #include <array>
 #include <vector>
@@ -55,13 +57,29 @@ struct PreviousEntry final
 using SortData = PreviousEntry;
 static const std::string PrevFileName("last.gue");
 
+struct LeagueRoundID final
+{
+    enum
+    {
+        Club,
+        RoundOne,
+        RoundTwo,
+        RoundThree,
+        RoundFour,
+        RoundFive,
+        RoundSix,
+
+        Count
+    };
+};
+
 class League final
 {
 public:
     static constexpr std::size_t PlayerCount = 15u;
     static constexpr std::int32_t MaxIterations = 24;
 
-    League();
+    explicit League(std::int32_t leagueID);
 
     void reset();
     void iterate(const std::array<std::int32_t, 18>&, const std::vector<std::uint8_t>& playerScores, std::size_t holeCount);
@@ -72,12 +90,21 @@ public:
 
     const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
 
+    const cro::String& getPreviousResults(const cro::String& playerName) const;
+
 private:
+    const std::int32_t m_id;
+    const std::int32_t m_maxIterations;
+    
     std::array<LeaguePlayer, PlayerCount> m_players = {};
     std::int32_t m_playerScore;
     std::int32_t m_currentIteration;
     std::int32_t m_currentSeason;
     std::int32_t m_increaseCount;
+
+    mutable cro::String m_previousResults;
+
+    std::string getFilePath(const std::string& fileName) const;
 
     void read();
     void write();

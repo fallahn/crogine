@@ -192,7 +192,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scoreColumnCount      (2),
     m_readyQuitFlags        (0),
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
-    m_emoteWheel            (sd, m_currentPlayer, m_textChat)
+    m_emoteWheel            (sd, m_currentPlayer, m_textChat),
+    m_league                (LeagueRoundID::Club)
 {
     if (sd.weatherType == WeatherType::Random)
     {

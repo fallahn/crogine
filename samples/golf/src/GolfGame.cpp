@@ -658,7 +658,7 @@ bool GolfGame::initialise()
     registerCommand("reset_league", 
         [](const std::string&)
         {
-            League l;
+            League l(LeagueRoundID::Club);
             l.reset();
             cro::Console::print("League tables are reset");
         });

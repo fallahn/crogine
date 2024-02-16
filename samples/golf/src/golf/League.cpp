@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 #include "Social.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
+#include "RandNames.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/App.hpp>
@@ -83,12 +84,16 @@ namespace
     constexpr std::int32_t SkillRoof = 10; //after this many increments the skills stop getting better - just shift around
 }
 
-League::League()
-    : m_playerScore     (0),
+League::League(std::int32_t id)
+    : m_id              (id),
+    m_maxIterations     (id == LeagueRoundID::Club ? MaxIterations : MaxIterations / 2),
+    m_playerScore       (0),
     m_currentIteration  (0),
     m_currentSeason     (1),
     m_increaseCount     (0)
 {
+    CRO_ASSERT(id < LeagueID::Count, "");
+
     read();
 }
 
@@ -217,16 +222,20 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     }
 
     m_currentIteration++;
-    Achievements::incrementStat(StatStrings[StatID::LeagueRounds]);
+    
+    if (m_id == LeagueRoundID::Club)
+    {
+        Achievements::incrementStat(StatStrings[StatID::LeagueRounds]);
 
-    //displays the notification overlay
-    auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
-    msg->type = Social::SocialEvent::MonthlyProgress;
-    msg->challengeID = -1;
-    msg->level = m_currentIteration;
-    msg->reason = MaxIterations;
+        //displays the notification overlay
+        auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+        msg->type = Social::SocialEvent::MonthlyProgress;
+        msg->challengeID = -1;
+        msg->level = m_currentIteration;
+        msg->reason = m_maxIterations;
+    }
 
-    if (m_currentIteration == MaxIterations)
+    if (m_currentIteration == m_maxIterations)
     {
         //calculate our final place and update our stats
         std::vector<SortData> sortData;
@@ -270,7 +279,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         }
 
         //write the data to a file
-        const auto path = Social::getBaseContentPath() + PrevFileName;
+        const auto path = getFilePath(PrevFileName);
         cro::RaiiRWops file;
         file.file = SDL_RWFromFile(path.c_str(), "wb");
         if (file.file)
@@ -336,10 +345,111 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     write();
 }
 
+const cro::String& League::getPreviousResults(const cro::String& playerName) const
+{
+    const auto path = getFilePath(PrevFileName);
+    if ((m_currentIteration == 0 || m_previousResults.empty())
+        && cro::FileSystem::fileExists(path))
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
+            if (size % sizeof(PreviousEntry) == 0)
+            {
+                auto count = size / sizeof(PreviousEntry);
+                std::vector<PreviousEntry> buff(count);
+
+                SDL_RWseek(file.file, 0, RW_SEEK_SET);
+                SDL_RWread(file.file, buff.data(), sizeof(PreviousEntry), count);
+
+                //this assumes everything was sorted correctly when it was saved
+                m_previousResults = "Previous Season's Results";
+                for (auto i = 0u; i < buff.size(); ++i)
+                {
+                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(RandomNames.size()) - 1);
+
+                    m_previousResults += " -~- ";
+                    m_previousResults += std::to_string(i + 1);
+                    if (buff[i].nameIndex > -1)
+                    {
+                        m_previousResults += ". " + RandomNames[buff[i].nameIndex];
+                    }
+                    else
+                    {
+                        m_previousResults += ". " + playerName;
+                    }
+                    m_previousResults += " " + std::to_string(buff[i].score);
+                }
+            }
+        }
+    }
+
+    return m_previousResults;
+}
+
 //private
+std::string League::getFilePath(const std::string& fn) const
+{
+    std::string basePath = Social::getBaseContentPath();
+    
+    const auto assertPath = 
+        [&]()
+        {
+            if (!cro::FileSystem::directoryExists(basePath))
+            {
+                cro::FileSystem::createDirectory(basePath);
+            }
+        };
+    
+    switch (m_id)
+    {
+    default: break;
+    case LeagueRoundID::RoundOne:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_01/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundTwo:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_02/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundThree:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_03/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundFour:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_04/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundFive:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_05/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundSix:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_06/";
+        assertPath();
+        break;
+    }
+
+    return basePath + fn;
+}
+
 void League::read()
 {
-    const auto path = Social::getBaseContentPath() + FileName;
+    const auto path = getFilePath(FileName);
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
@@ -371,7 +481,7 @@ void League::read()
 
 
         //validate the loaded data and clamp to sane values
-        m_currentIteration %= MaxIterations;
+        m_currentIteration %= m_maxIterations;
 
         //static constexpr std::int32_t MaxScore = 5 * 18 * MaxIterations;
 
@@ -395,7 +505,7 @@ void League::read()
 
 void League::write()
 {
-    const auto path = Social::getBaseContentPath() + FileName;
+    const auto path = getFilePath(FileName);
 
     cro::RaiiRWops file;
     file.file = SDL_RWFromFile(path.c_str(), "wb");
