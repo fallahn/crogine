@@ -321,6 +321,23 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             }
         }
             break;
+        case MenuID::BallColour:
+        {
+            auto bounds = m_ballColourFlyout.background.getComponent<cro::Drawable2D>().getLocalBounds();
+            bounds = m_ballColourFlyout.background.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+            if (!bounds.contains(m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition())))
+            {
+                m_ballColourFlyout.background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+                m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
+                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
+
+                m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.ballColour);
+                return false;
+            }
+        }
+            break;
         case MenuID::BallThumb:
         {
             auto bounds = m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Drawable2D>().getLocalBounds();
@@ -1199,6 +1216,7 @@ void ProfileState::buildScene()
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
+                    LogI << "Last selected set to " << m_lastSelected << std::endl;
                 }
             });
 

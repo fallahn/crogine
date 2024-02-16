@@ -529,6 +529,21 @@ void UISystem::selectAt(std::size_t index)
         m_selectedIndex = (m_selectedIndex + 1) % entities.size();
     } while (m_selectedIndex != index && m_selectedIndex != old);
 
+    //if we didn't find anything check the specific selection ID
+    if (m_selectedIndex == old)
+    {
+        auto res = std::find_if(entities.begin(), entities.end(), 
+            [index](cro::Entity e)
+            {
+                return e.getComponent<cro::UIInput>().getSelectionIndex() == index;
+            });
+
+        if (res != entities.end())
+        {
+            m_selectedIndex = std::distance(entities.begin(), res);
+        }
+    }
+
     //and do selected callback
     if (m_selectedIndex != old
         && entities[m_selectedIndex].getComponent<UIInput>().enabled)
