@@ -40,10 +40,14 @@ source distribution.
 #include <array>
 #include <atomic>
 
+struct PlayerData;
 namespace sv
 {
     struct PlayerInfo final
     {
+        //as this takes info from an incoming PlayerData struct
+        //remember to update the duplicated *sigh* fields here
+        //if PlayerData is modified
         cro::String name;
         std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = {}; //not really flags per se, but let's at least keep naming consistent
         std::uint8_t ballColourIndex = 255;
@@ -52,6 +56,8 @@ namespace sv
         std::uint32_t skinID = 0;
         bool flipped = false; //we don't really care about this on the server, but we do need to forward it to clients.
         bool isCPU = false; //only allow CPU players to request predictions
+
+        PlayerInfo& operator = (const PlayerData&);
     };
 
     struct ClientConnection final

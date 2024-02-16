@@ -44,8 +44,22 @@ source distribution.
 #include <array>
 #include <memory>
 
+namespace sv
+{
+    struct PlayerInfo;
+}
+
 struct PlayerData final
 {
+    /*
+    SIGH this is partially duplicated in sv::PlayerInfo (the serialised
+    parts at least) so REMEMBER if we add a new field here it probably
+    needs duplicating in sv::PlayerInfo too. We'll use the assignment
+    overload to try and contain this somewhat (though both structs will
+    still need updating)
+    */
+    PlayerData& operator = (const sv::PlayerInfo&);
+
     cro::String name;
     std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = 
     { 

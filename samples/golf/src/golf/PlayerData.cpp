@@ -31,12 +31,27 @@ source distribution.
 #include "PlayerColours.hpp"
 #include "GameConsts.hpp"
 #include "spooky2.hpp"
+#include "server/ServerState.hpp"
 
 #include <Social.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/graphics/ImageArray.hpp>
+
+PlayerData& PlayerData::operator=(const sv::PlayerInfo& pi)
+{
+    name = pi.name;
+    avatarFlags = pi.avatarFlags;
+    ballColourIndex = pi.ballColourIndex;
+    ballID = pi.ballID;
+    hairID = pi.hairID;
+    skinID = pi.skinID;
+    flipped = pi.flipped;
+    isCPU = pi.isCPU;
+
+    return *this;
+}
 
 bool PlayerData::saveProfile() const
 {   
