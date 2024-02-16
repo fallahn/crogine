@@ -86,13 +86,13 @@ namespace
 
 League::League(std::int32_t id)
     : m_id              (id),
-    m_maxIterations     (id == LeagueRoundID::Club ? MaxIterations : MaxIterations / 2),
+    m_maxIterations     (id == LeagueRoundID::Club ? MaxIterations : MaxIterations / 4),
     m_playerScore       (0),
     m_currentIteration  (0),
     m_currentSeason     (1),
     m_increaseCount     (0)
 {
-    CRO_ASSERT(id < LeagueID::Count, "");
+    CRO_ASSERT(id < LeagueRoundID::Count, "");
 
     read();
 }
@@ -117,6 +117,35 @@ void League::reset()
         //player level is increased
         player.quality = 0.87f - (0.01f * (player.nameIndex / 2));
     }
+
+    //for career leagues we want to increase the initial difficulty
+    //as it remains at that level between seasons
+    std::int32_t maxIncrease = 0;
+    switch (m_id)
+    {
+    default: break;
+    case LeagueRoundID::RoundTwo:
+        maxIncrease = 2;
+        break;
+    case LeagueRoundID::RoundThree:
+        maxIncrease = 4;
+        break;
+    case LeagueRoundID::RoundFour:
+        maxIncrease = 6;
+        break;
+    case LeagueRoundID::RoundFive:
+        maxIncrease = 8;
+        break;
+    case LeagueRoundID::RoundSix:
+        maxIncrease = 10;
+        break;
+    }
+
+    for (auto i = 0; i < maxIncrease; ++i)
+    {
+        increaseDifficulty();
+    }
+
     m_currentIteration = 0;
     m_currentSeason = 1;
     m_playerScore = 0;
@@ -290,52 +319,33 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 
 
         //evaluate all players and adjust skills if we came in the top 2
-        if (playerPos < 2
-            && m_increaseCount < SkillRoof)
+        //if (m_id == LeagueRoundID::Club)
         {
-            //increase ALL player quality, but show a bigger improvement near the bottom
-            for (auto i = 0u; i < PlayerCount; ++i)
+            if (m_id == LeagueRoundID::Club //this is the club league - else skills remain fixed
+                && playerPos < 2
+                && m_increaseCount < SkillRoof)
             {
-                m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
-
-                //modify chance of making mistake 
-                auto outlier = m_players[i].outlier;
-                if (i < PlayerCount / 2)
-                {
-                    outlier = std::clamp(outlier + cro::Util::Random::value(0, 1), 1, 10);
-
-                    //modify curve for top 3rd
-                    //if (1 < PlayerCount < 3)
-                    //{
-                    //    auto curve = m_players[i].curve;
-                    //    curve = std::max(0, curve - cro::Util::Random::value(0, 1));
-
-                    //    //wait... I've forgotten what I was doing here - though this clearly does nothing.
-                    //}
-                }
-                else
-                {
-                    outlier = std::clamp(outlier + cro::Util::Random::value(-1, 0), 1, 10);
-                }
-                m_players[i].outlier = outlier;
+                increaseDifficulty();
+                m_increaseCount++;
             }
-            m_increaseCount++;
-        }
-        else
-        {
-            for (auto& player : m_players)
+            else
             {
-                auto rVal = cro::Util::Random::value(0.f, 0.11f);
-                if (player.quality > 0.89f)
+                //add some small variance
+                for (auto& player : m_players)
                 {
-                    player.quality -= rVal;
-                }
-                else
-                {
-                    player.quality += rVal;
+                    auto rVal = cro::Util::Random::value(0.f, 0.11f);
+                    if (player.quality > 0.89f)
+                    {
+                        player.quality -= rVal;
+                    }
+                    else
+                    {
+                        player.quality += rVal;
+                    }
                 }
             }
         }
+
 
         //start a new season
         m_currentIteration = 0;
@@ -390,6 +400,36 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
 }
 
 //private
+void League::increaseDifficulty()
+{
+    //increase ALL player quality, but show a bigger improvement near the bottom
+    for (auto i = 0u; i < PlayerCount; ++i)
+    {
+        m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
+
+        //modify chance of making mistake 
+        auto outlier = m_players[i].outlier;
+        if (i < PlayerCount / 2)
+        {
+            outlier = std::clamp(outlier + cro::Util::Random::value(0, 1), 1, 10);
+
+            //modify curve for top 3rd
+            //if (1 < PlayerCount < 3)
+            //{
+            //    auto curve = m_players[i].curve;
+            //    curve = std::max(0, curve - cro::Util::Random::value(0, 1));
+
+            //    //wait... I've forgotten what I was doing here - though this clearly does nothing.
+            //}
+        }
+        else
+        {
+            outlier = std::clamp(outlier + cro::Util::Random::value(-1, 0), 1, 10);
+        }
+        m_players[i].outlier = outlier;
+    }
+}
+
 std::string League::getFilePath(const std::string& fn) const
 {
     std::string basePath = Social::getBaseContentPath();

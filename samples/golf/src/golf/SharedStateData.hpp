@@ -176,6 +176,7 @@ struct SharedStateData final
     std::uint8_t clubLimit = 0; //limit game to lowest player's clubs
     std::uint8_t nightTime = 0; //bool
     std::uint8_t weatherType = 0;
+    std::int32_t leagueRoundID = 0; //which league we're playing in
 
     //counts the number of holes actually played in elimination
     std::uint8_t holesPlayed = 0;

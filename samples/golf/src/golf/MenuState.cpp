@@ -44,6 +44,7 @@ source distribution.
 #include "spooky2.hpp"
 #include "Clubs.hpp"
 #include "HoleData.hpp"
+#include "League.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -172,6 +173,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 {
     checkCommandLine = false;
     sd.baseState = StateID::Menu;
+    sd.leagueRoundID = LeagueRoundID::Club;
     sd.preferredClubSet = std::clamp(sd.preferredClubSet, 0, 2);
     sd.clubSet = sd.preferredClubSet;
     Club::setClubLevel(sd.preferredClubSet);

@@ -80,7 +80,8 @@ public:
     static constexpr std::int32_t MaxIterations = 24;
 
     explicit League(std::int32_t leagueID);
-
+    //hmmm given that there should only be once instance of any table at a time
+    //should we not at least make this move-only? Or even a dreaded singleton???
     void reset();
     void iterate(const std::array<std::int32_t, 18>&, const std::vector<std::uint8_t>& playerScores, std::size_t holeCount);
 
@@ -104,6 +105,7 @@ private:
 
     mutable cro::String m_previousResults;
 
+    void increaseDifficulty();
     std::string getFilePath(const std::string& fileName) const;
 
     void read();

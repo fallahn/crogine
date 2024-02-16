@@ -441,6 +441,9 @@
     <ClCompile Include="src\runner\EndlessSoundDirector.cpp">
       <Filter>Source Files\endless</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\Career.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -901,6 +904,9 @@
     </ClInclude>
     <ClInclude Include="src\runner\EndlessShared.hpp">
       <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Career.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

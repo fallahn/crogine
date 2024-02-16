@@ -610,6 +610,7 @@
     <ClCompile Include="src\golf\BilliardsSystem.cpp" />
     <ClCompile Include="src\golf\BilliardsSystemReact.cpp" />
     <ClCompile Include="src\golf\CameraFollowSystem.cpp" />
+    <ClCompile Include="src\golf\Career.cpp" />
     <ClCompile Include="src\golf\ChunkVisSystem.cpp" />
     <ClCompile Include="src\golf\ClientCollisionSystem.cpp" />
     <ClCompile Include="src\golf\CloudSystem.cpp" />
@@ -733,6 +734,7 @@
     <ClInclude Include="src\golf\BilliardsSystemReact.hpp" />
     <ClInclude Include="src\golf\CallbackData.hpp" />
     <ClInclude Include="src\golf\CameraFollowSystem.hpp" />
+    <ClInclude Include="src\golf\Career.hpp" />
     <ClInclude Include="src\golf\ChunkVisSystem.hpp" />
     <ClInclude Include="src\golf\CircularBuffer.hpp" />
     <ClInclude Include="src\golf\ClientCollisionSystem.hpp" />

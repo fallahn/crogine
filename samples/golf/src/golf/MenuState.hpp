@@ -38,6 +38,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "MenuCallbacks.hpp"
 #include "TextChat.hpp"
+#include "Career.hpp"
 
 #include <MatchMaking.hpp>
 
@@ -106,6 +107,8 @@ private:
     SharedProfileData& m_profileData;
     std::int32_t m_connectedClientCount;
     std::int32_t m_connectedPlayerCount;
+
+    Career m_career;
 
     TextChat m_textChat;
     MatchMaking m_matchMaking;
