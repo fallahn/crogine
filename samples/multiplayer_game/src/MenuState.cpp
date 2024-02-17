@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2024
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -75,6 +75,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         loadAssets();
         //create some entities
         createScene();
+        //register ImGui windows
+        registerUI();
     });
 
     context.mainWindow.setMouseCaptured(false);
@@ -176,6 +178,10 @@ bool MenuState::simulate(float dt)
         }
     }
 
+    std::int32_t packetCount = 0;
+    m_soundRecorder.getEncodedPackets(&packetCount);
+
+
     m_scene.simulate(dt);
     return true;
 }
@@ -208,116 +214,6 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
-#ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            ImGui::SetNextWindowSize({ 400.f, 400.f });
-            if (ImGui::Begin("Main Menu"))
-            {
-                if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == GroupID::Main)
-                {
-                    if (ImGui::Button("Host"))
-                    {
-                        if (!m_sharedData.clientConnection.connected)
-                        {
-                            m_sharedData.serverInstance.launch();
-
-                            //small delay for server to get ready
-                            cro::Clock clock;
-                            while (clock.elapsed().asMilliseconds() < 500) {}
-
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
-
-                            if (!m_sharedData.clientConnection.connected)
-                            {
-                                m_sharedData.serverInstance.stop();
-                                cro::Logger::log("Failed to connect to local server", cro::Logger::Type::Error);
-                            }
-                        }
-                    }
-
-                    if (ImGui::Button("Join"))
-                    {
-                        if (!m_sharedData.clientConnection.connected
-                            && !m_sharedData.serverInstance.running())
-                        {
-                            cro::Command cmd;
-                            cmd.targetFlags = MenuCommandID::RootNode;
-                            cmd.action = [&](cro::Entity e, float)
-                            {
-                                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Join]);
-                                m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Join);
-                            };
-                            m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-                        }
-                    }
-                }
-                else if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == GroupID::Join)
-                {
-                    static char buffer[20] = "127.0.0.1";
-                    ImGui::InputText("Address", buffer, 20);
-                    if (ImGui::Button("Connect"))
-                    {
-                        if (!m_sharedData.clientConnection.connected)
-                        {
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(buffer, ConstVal::GamePort);
-                            if (!m_sharedData.clientConnection.connected)
-                            {
-                                cro::Logger::log("Could not connect to server", cro::Logger::Type::Error);
-                            }
-                        }
-                    }
-
-                    if (ImGui::Button("Back"))
-                    {
-                        m_sharedData.clientConnection.netClient.disconnect();
-                        m_sharedData.serverInstance.stop();
-                        m_sharedData.clientConnection.connected = false;
-                        
-                        cro::Command cmd;
-                        cmd.targetFlags = MenuCommandID::RootNode;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
-                            m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
-                        };
-                        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-                    }
-                }
-                else
-                {
-                    //lobby
-                    if (ImGui::Button("Start"))
-                    {
-                        if (m_sharedData.clientConnection.connected
-                            && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
-                        {
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                        }
-                    }
-
-                    if (ImGui::Button("Back"))
-                    {
-                        m_sharedData.clientConnection.netClient.disconnect();
-                        m_sharedData.serverInstance.stop();
-                        m_sharedData.clientConnection.connected = false;
-                        
-                        cro::Command cmd;
-                        cmd.targetFlags = MenuCommandID::RootNode;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
-                            m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
-                        };
-                        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-                    }
-                }
-
-            }
-            ImGui::End();        
-        });
-#endif //CRO_DEBUG_
-
     auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
@@ -352,6 +248,179 @@ void MenuState::createScene()
     entity.addComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
     m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+}
+
+void MenuState::registerUI()
+{
+#ifdef CRO_DEBUG_
+    registerWindow([&]()
+        {
+            ImGui::SetNextWindowSize({ 400.f, 400.f });
+            if (ImGui::Begin("Main Menu"))
+            {
+                if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == GroupID::Main)
+                {
+                    if (ImGui::Button("Host"))
+                    {
+                        if (!m_sharedData.clientConnection.connected)
+                        {
+                            m_sharedData.serverInstance.launch();
+
+                            //small delay for server to get ready
+                            cro::Clock clock;
+                            while (clock.elapsed().asMilliseconds() < 500) {}
+
+                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+
+                            if (!m_sharedData.clientConnection.connected)
+                            {
+                                m_sharedData.serverInstance.stop();
+                                cro::Logger::log("Failed to connect to local server", cro::Logger::Type::Error);
+                            }
+                        }
+                    }
+
+                    if (ImGui::Button("Join"))
+                    {
+                        if (!m_sharedData.clientConnection.connected
+                            && !m_sharedData.serverInstance.running())
+                        {
+                            cro::Command cmd;
+                            cmd.targetFlags = MenuCommandID::RootNode;
+                            cmd.action = [&](cro::Entity e, float)
+                                {
+                                    e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Join]);
+                                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Join);
+                                };
+                            m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                        }
+                    }
+                }
+                else if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == GroupID::Join)
+                {
+                    static char buffer[20] = "127.0.0.1";
+                    ImGui::InputText("Address", buffer, 20);
+                    if (ImGui::Button("Connect"))
+                    {
+                        if (!m_sharedData.clientConnection.connected)
+                        {
+                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(buffer, ConstVal::GamePort);
+                            if (!m_sharedData.clientConnection.connected)
+                            {
+                                cro::Logger::log("Could not connect to server", cro::Logger::Type::Error);
+                            }
+                        }
+                    }
+
+                    if (ImGui::Button("Back"))
+                    {
+                        m_sharedData.clientConnection.netClient.disconnect();
+                        m_sharedData.serverInstance.stop();
+                        m_sharedData.clientConnection.connected = false;
+
+                        cro::Command cmd;
+                        cmd.targetFlags = MenuCommandID::RootNode;
+                        cmd.action = [&](cro::Entity e, float)
+                            {
+                                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
+                                m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
+                            };
+                        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    }
+                }
+                else
+                {
+                    //lobby
+                    if (ImGui::Button("Start"))
+                    {
+                        if (m_sharedData.clientConnection.connected
+                            && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
+                        {
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        }
+                    }
+
+                    if (ImGui::Button("Back"))
+                    {
+                        m_sharedData.clientConnection.netClient.disconnect();
+                        m_sharedData.serverInstance.stop();
+                        m_sharedData.clientConnection.connected = false;
+
+                        cro::Command cmd;
+                        cmd.targetFlags = MenuCommandID::RootNode;
+                        cmd.action = [&](cro::Entity e, float)
+                            {
+                                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
+                                m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
+                            };
+                        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    }
+                }
+
+            }
+            ImGui::End();
+        });
+#endif //CRO_DEBUG_
+
+        registerWindow([&]() 
+            {
+                if (ImGui::Begin("Sound Recorder"))
+                {
+                    const auto& devices = m_soundRecorder.listDevices();
+
+                    std::vector<const char*> items; //lol.
+                    for (const auto& d : devices)
+                    {
+                        items.push_back(d.c_str());
+                    }
+
+                    static std::int32_t idx = 0;
+                    if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
+                    {
+                        for (auto n = 0u; n < items.size(); ++n)
+                        {
+                            const bool selected = (idx == n);
+                            if (ImGui::Selectable(items[n], selected))
+                            {
+                                idx = n;
+                            }
+
+                            if (selected)
+                            {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndListBox();
+                    }
+
+
+                    if (ImGui::Button("Open Device"))
+                    {
+                        m_soundRecorder.openDevice(devices[idx]);
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("Close Device"))
+                    {
+                        m_soundRecorder.closeDevice();
+                    }
+
+
+
+                    if (ImGui::Button("Start Recording"))
+                    {
+                        m_soundRecorder.start();
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("Stop Recording"))
+                    {
+                        m_soundRecorder.stop();
+                    }
+                }
+                ImGui::End();
+            
+            });
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)
