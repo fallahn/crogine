@@ -71,6 +71,7 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 find_package(SDL2 REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(Opus REQUIRED)
 
 if(USE_OPENAL)
 #use mojo AL on mac
@@ -91,6 +92,7 @@ endif()
 include_directories(
   ${SDL2_INCLUDE_DIR}  
   ${FREETYPE_INCLUDE_DIRS} 
+  ${OPUS_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/crogine/include)
   
 if(MSVC)
@@ -140,6 +142,7 @@ if(NOT TARGET crogine)
   target_link_libraries(${PROJECT_NAME}
     ${SDL2_LIBRARY} 
     ${FREETYPE_LIBRARIES}
+    ${OPUS_LIBRARIES}
     ${OPENGL_LIBRARIES})
 
   if(USE_OPENAL)

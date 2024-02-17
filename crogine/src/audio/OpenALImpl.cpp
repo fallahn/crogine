@@ -785,6 +785,8 @@ OpenALStream& OpenALImpl::getNextFreeStream()
     auto& stream = m_streams[streamID];
     CRO_ASSERT(!stream.thread, "this shouldn't be running yet!");
     stream.streamID = streamID;
+
+    return stream;
 }
 
 bool OpenALImpl::initStream(OpenALStream& stream)
