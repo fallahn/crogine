@@ -71,7 +71,7 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 find_package(SDL2 REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(Opus REQUIRED)
+find_package(OPUS REQUIRED)
 
 if(USE_OPENAL)
 #use mojo AL on mac
