@@ -112,9 +112,11 @@ namespace cro
         void* m_recordingDevice;
         bool m_active;
 
+        void* m_encoder;
 
         //buffer for PCM captured from device
         mutable std::vector<std::uint8_t> m_pcmBuffer;
+        mutable std::uint32_t m_pcmBufferOffset;
 
 
         void enumerateDevices();

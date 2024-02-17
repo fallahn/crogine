@@ -32,6 +32,7 @@ source distribution.
 #include "WavLoader.hpp"
 #include "VorbisLoader.hpp"
 #include "Mp3Loader.hpp"
+#include "BufferedStreamLoader.hpp"
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/String.hpp>
@@ -258,12 +259,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
         return -1;
     }
 
-    //we shouldn't have to lock here as the stream's thread has not yet been created
-    auto streamID = m_streamIDs[m_nextFreeStream];
-
-    //attempt to open the file
-    auto& stream = m_streams[streamID];
-    CRO_ASSERT(!stream.thread, "this shouldn't be running yet!");
+    auto& stream = getNextFreeStream();
 
     auto filePath = cro::FileSystem::getResourcePath() + path;
 
@@ -300,29 +296,39 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     }
     else
     {
+        stream.streamID = -1;
         Logger::log(ext + ": Unsupported file type.", Logger::Type::Error);
         return -1;
     }
     
-    alCheck(alGenBuffers(static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
-
-    if (stream.buffers[0])
+    if (initStream(stream))
     {
-        //fill buffers from file - first buffer is queued when the source is attached
-        for (auto b : stream.buffers)
-        {
-            auto& audioData = stream.audioFile->getData(STREAM_CHUNK_SIZE);
-            alCheck(alBufferData(b, getFormatFromData(audioData), audioData.data, audioData.size, audioData.frequency));
-        }
-
-        stream.running = true;
-        stream.thread = std::make_unique<std::thread>(&OpenALStream::updateStream, &stream);
-
-        //hurrah we has stream
-        m_nextFreeStream++;
-
-        return streamID;
+        return stream.streamID;
     }
+    
+    return -1;
+}
+
+std::int32_t OpenALImpl::requestNewBufferableStream(BufferedStreamLoader** dstPtr)
+{
+    if (m_nextFreeStream >= m_streams.size())
+    {
+        Logger::log("Maximum number of streams has been reached!", Logger::Type::Warning);
+        return -1;
+    }
+
+    auto& stream = getNextFreeStream();
+    stream.audioFile = std::make_unique<BufferedStreamLoader>();
+    *dstPtr = dynamic_cast<BufferedStreamLoader*>(stream.audioFile.get());
+
+    if (initStream(stream))
+    {
+        return stream.streamID;
+    }
+
+    stream.audioFile.reset();
+    *dstPtr = nullptr;
+
     return -1;
 }
 
@@ -768,6 +774,41 @@ void OpenALImpl::enumerateDevices()
             }
         }
     }
+}
+
+OpenALStream& OpenALImpl::getNextFreeStream()
+{
+    //we shouldn't have to lock here as the stream's thread has not yet been created
+    auto streamID = m_streamIDs[m_nextFreeStream];
+
+    //attempt to open the file
+    auto& stream = m_streams[streamID];
+    CRO_ASSERT(!stream.thread, "this shouldn't be running yet!");
+    stream.streamID = streamID;
+}
+
+bool OpenALImpl::initStream(OpenALStream& stream)
+{
+    alCheck(alGenBuffers(static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
+
+    if (stream.buffers[0])
+    {
+        //fill buffers from file - first buffer is queued when the source is attached
+        for (auto b : stream.buffers)
+        {
+            auto& audioData = stream.audioFile->getData(STREAM_CHUNK_SIZE);
+            alCheck(alBufferData(b, getFormatFromData(audioData), audioData.data, audioData.size, audioData.frequency));
+        }
+
+        stream.running = true;
+        stream.thread = std::make_unique<std::thread>(&OpenALStream::updateStream, &stream);
+
+        //hurrah we has stream
+        m_nextFreeStream++;
+
+        return true;
+    }
+    return false;
 }
 
 //stream thread function

@@ -43,15 +43,20 @@ source distribution.
 #include <AL/alc.h>
 #endif
 
+#include <opus.h>
+
 #define RECORDING_DEVICE static_cast<ALCdevice*>(m_recordingDevice)
+#define OPUS_ENCODER static_cast<OpusEncoder*>(m_encoder)
 
 using namespace cro;
 
 namespace
 {
     constexpr ALCsizei RECORD_BUFFER_SIZE = 2048;
-    constexpr std::uint32_t PCMBufferSize = 1024;
+    constexpr std::uint32_t PCMBufferSize = 16384; //testing shows we cap either 220 or 441 frames at a time (@60hz)
+    constexpr std::uint32_t PCMBufferWrapSize = PCMBufferSize - (PCMBufferSize / 10); //so we want to wrap our pointer with enough room to spare
     constexpr std::uint32_t SAMPLE_RATE = 22050;
+    constexpr std::uint32_t SAMPLE_SIZE = sizeof(std::uint16_t);
 
     const std::string MissingDevice("No Device Active");
     const std::string DefaultDevice("Default");
@@ -66,7 +71,9 @@ SoundRecorder::SoundRecorder()
     : m_deviceIndex     (-1),
     m_recordingDevice   (nullptr),
     m_active            (false),
-    m_pcmBuffer         (PCMBufferSize)
+    m_encoder           (nullptr),
+    m_pcmBuffer         (PCMBufferSize),
+    m_pcmBufferOffset   (0)
 {
     enumerateDevices();
 
@@ -130,7 +137,7 @@ void SoundRecorder::closeDevice()
 {
     if (m_recordingDevice)
     {
-        alcCaptureCloseDevice(static_cast<ALCdevice*>(m_recordingDevice));
+        alcCaptureCloseDevice(RECORDING_DEVICE);
     }
     m_recordingDevice = nullptr;
 }
@@ -157,6 +164,7 @@ bool SoundRecorder::start()
 
     alcCaptureStart(RECORDING_DEVICE);
     m_active = true;
+    m_pcmBufferOffset = 0;
 
     return true;
 }
@@ -181,8 +189,14 @@ const std::uint8_t* SoundRecorder::getEncodedPackets(std::int32_t* count) const
     {
         ALCint sampleCount = 0;
 
-        alcGetIntegerv(RECORDING_DEVICE, ALC_CAPTURE_SAMPLES, sizeof(ALint), &sampleCount);
-        alcCaptureSamples(RECORDING_DEVICE, m_pcmBuffer.data(), sampleCount);
+        alcGetIntegerv(RECORDING_DEVICE, ALC_CAPTURE_SAMPLES, 1, &sampleCount);
+        alcCaptureSamples(RECORDING_DEVICE, m_pcmBuffer.data() + m_pcmBufferOffset, sampleCount);
+
+        m_pcmBufferOffset = (m_pcmBufferOffset + (sampleCount * SAMPLE_SIZE)) % PCMBufferWrapSize;
+
+
+        //TODO once the pcm buffer reaches an encodable size
+        //encode the buffer and reset the buffer offset
 
 #ifdef CRO_DEBUG_
         pcmBufferCaptureSize = sampleCount;

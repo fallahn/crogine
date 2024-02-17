@@ -67,7 +67,7 @@ namespace cro
         /*!
         \brief Attempts to load the file at the given path.
         */
-        virtual bool loadFromFile(const std::string&) = 0;
+        virtual bool loadFromFile(const std::string&) { return false; };
 
     protected:
         void setID(std::int32_t id) { m_id = id; }

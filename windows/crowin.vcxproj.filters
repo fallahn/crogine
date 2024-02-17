@@ -732,6 +732,12 @@
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundRecorder.hpp">
       <Filter>Header Files\audio\sound system</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\BufferedStreamLoader.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\DynamicAudioStream.hpp">
+      <Filter>Header Files\audio\ecs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1231,6 +1237,12 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundRecorder.cpp">
       <Filter>Source Files\audio\sound system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\BufferedStreamLoader.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\DynamicAudioStream.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
