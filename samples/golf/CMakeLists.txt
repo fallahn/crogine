@@ -39,6 +39,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   endif()
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
+endif()
+
 SET(CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 
@@ -125,10 +129,10 @@ include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
 SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SQLITE_SRC})
-#if(USE_NEWSFEED)
+if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
-#endif()
+endif()
 
 if(USE_GNS)
   #include source of workshop, libgns

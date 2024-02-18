@@ -6,7 +6,13 @@ if(APPLE)
   SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 
   #force macOS to use homebrew installed libs, eg OpenAL
-  SET(CMAKE_PREFIX_PATH "/opt/homebrew" "/usr/local" "/usr/local/opt/openal-soft/include" "/usr/local/opt/openal-soft/lib")
+  SET(CMAKE_PREFIX_PATH 
+	"/opt/homebrew"
+	"/opt/homebrew/opt/openal-soft/include"
+	"/opt/homebrew/opt/openal-soft/lib"
+	"/usr/local"
+	"/usr/local/opt/openal-soft/include"
+	"/usr/local/opt/openal-soft/lib")
   SET(CMAKE_FIND_FRAMEWORK LAST)
 endif()
 
@@ -35,6 +41,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   else()
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
   endif()
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
 endif()
 
 if(USE_OPENAL)
