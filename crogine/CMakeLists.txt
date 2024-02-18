@@ -6,8 +6,8 @@ if(APPLE)
   SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
 
   #force macOS to use homebrew installed libs, eg OpenAL
-  SET(CMAKE_PREFIX_PATH "/opt/homebrew" "/usr/local" "/usr/local/include" "/usr/local/lib")
-  SET(CMAKE_FIND_FRAMEWORK NEVER)
+  SET(CMAKE_PREFIX_PATH "/opt/homebrew" "/usr/local" "/usr/local/opt/openal-soft/include" "/usr/local/opt/openal-soft/lib")
+  SET(CMAKE_FIND_FRAMEWORK LAST)
 endif()
 
 project(crogine)
@@ -105,8 +105,8 @@ if(MSVC)
 elseif(LINUX)
   include_directories(${LIBUNWIND_INCLUDE_DIRS})
 elseif(APPLE)
-  include_directories(/usr/local/include)
-  link_directories(/usr/local/lib)
+  include_directories(/usr/local/opt/openal-soft/include)
+  link_directories(/usr/local/opt/openal-soft/lib)
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
