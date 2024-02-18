@@ -195,7 +195,7 @@ SET(project_src_nix
   )
 
 SET(project_src_macos
-  ${PROJECT_DIR}/audio/mojoal.c
+  #${PROJECT_DIR}/audio/mojoal.c
   ${PROJECT_DIR}/detail/ResourcePath.mm 
   ${PROJECT_DIR}/detail/41/glad.c
   )
