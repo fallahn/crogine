@@ -22,6 +22,8 @@ SET(SEARCH_PATHS
     /opt/csw # Blastwave
     /opt
     ../extlibs/opus
+    ../extlibs/opus/include
+    ../extlibs/opus/lib/x64
 )
 
 
