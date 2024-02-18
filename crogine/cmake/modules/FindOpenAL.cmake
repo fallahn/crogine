@@ -60,6 +60,7 @@ find_path(OPENAL_INCLUDE_DIR al.h
     ENV OPENALDIR
   PATHS
     /opt/homebrew
+    /usr/local
     ~/Library/Frameworks
     /Library/Frameworks
     /opt
@@ -80,6 +81,7 @@ find_library(OPENAL_LIBRARY
     ENV OPENALDIR
   PATHS
     /opt/homebrew
+    /usr/local
     ~/Library/Frameworks
     /Library/Frameworks
     /opt

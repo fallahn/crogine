@@ -317,10 +317,22 @@ namespace cro
         static void setSpeedOfSound(float speed);
 
         /*!
-        \brief Prints any debug info available to the current ImGiu window
+        \brief Prints any debug info available to the current ImGui window
         EG call this within your own window begin/end
         */
         static void printDebug();
+
+
+        /*!
+        \brief Returns a pointer to the active implementation cast to type T
+        */
+        template <typename T>
+        static T* getImpl()
+        {
+            static_assert(std::is_base_of<AudioRendererImpl, T>);
+            CRO_ASSERT(m_impl, "Not initialised!");
+            return dynamic_cast<T*> (m_impl.get());
+        }
 
     private:
         static std::unique_ptr<AudioRendererImpl> m_impl;
