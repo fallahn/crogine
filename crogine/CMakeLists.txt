@@ -7,7 +7,7 @@ if(APPLE)
 
   #force macOS to use homebrew installed libs, eg OpenAL
   SET(CMAKE_PREFIX_PATH "/opt/homebrew" "/usr/local" "/usr/local/include" "/usr/local/lib")
-  SET(CMAKE_FIND_FRAMEWORK LAST)
+  SET(CMAKE_FIND_FRAMEWORK NEVER)
 endif()
 
 project(crogine)

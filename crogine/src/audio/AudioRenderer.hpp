@@ -329,7 +329,7 @@ namespace cro
         template <typename T>
         static T* getImpl()
         {
-            static_assert(std::is_base_of<AudioRendererImpl, T>);
+            static_assert(std::is_base_of<AudioRendererImpl, T>::value);
             CRO_ASSERT(m_impl, "Not initialised!");
             return dynamic_cast<T*> (m_impl.get());
         }

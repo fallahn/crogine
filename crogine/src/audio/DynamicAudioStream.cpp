@@ -29,14 +29,19 @@ source distribution.
 
 #include "BufferedStreamLoader.hpp"
 #include "AudioRenderer.hpp"
+#include "OpenALImpl.hpp"
 
 #include <crogine/audio/DynamicAudioStream.hpp>
 
 using namespace cro;
 
 DynamicAudioStream::DynamicAudioStream()
+    : m_bufferedStream(nullptr)
 {
-    //TODO setID(AudioRenderer::requestNewBufferableStream(&m_bufferedStream);
+    if (AudioRenderer::isValid())
+    {
+        setID(AudioRenderer::getImpl<Detail::OpenALImpl>()->requestNewBufferableStream(&m_bufferedStream));
+    }
 }
 
 DynamicAudioStream::~DynamicAudioStream()
@@ -51,10 +56,14 @@ DynamicAudioStream::~DynamicAudioStream()
 }
 
 DynamicAudioStream::DynamicAudioStream(DynamicAudioStream&& other) noexcept
+    : m_bufferedStream(nullptr)
 {
     auto id = getID();
     setID(other.getID());
     other.setID(id);
+
+    m_bufferedStream = other.m_bufferedStream;
+    other.m_bufferedStream = nullptr;
 }
 
 DynamicAudioStream& DynamicAudioStream::operator=(DynamicAudioStream&& other) noexcept
@@ -64,6 +73,9 @@ DynamicAudioStream& DynamicAudioStream::operator=(DynamicAudioStream&& other) no
         auto id = getID();
         setID(other.getID());
         other.setID(id);
+
+        m_bufferedStream = other.m_bufferedStream;
+        other.m_bufferedStream = nullptr;
     }
     return *this;
 }
