@@ -6,25 +6,38 @@
 # OPUS_FOUND - True if libopus found.
 
 if(OPUS_INCLUDE_DIR AND OPUS_LIBRARY)
-# AND OPUSFILE_LIBRARY)
     # Already in cache, be silent
     set(OPUS_FIND_QUIETLY TRUE)
 endif(OPUS_INCLUDE_DIR AND OPUS_LIBRARY)
-# AND OPUSFILE_LIBRARY)
+
+
+SET(SEARCH_PATHS
+    ~/Library/Frameworks
+    /Library/Frameworks
+    /usr/local
+    /usr
+    /sw # Fink
+    /opt/homebrew
+    /opt/local # DarwinPorts
+    /opt/csw # Blastwave
+    /opt
+    ../extlibs/opus
+)
+
 
 find_path(OPUS_INCLUDE_DIR
     NAMES opus.h
     PATH_SUFFIXES opus
+    PATHS ${SEARCH_PATHS}
 )
 
 # MSVC built opus may be named opus_static
 # The provided project files name the library with the lib prefix.
 find_library(OPUS_LIBRARY
     NAMES opus opus_static libopus libopus_static
+    PATHS ${SEARCH_PATHS}
 )
-#find_library(OPUSFILE_LIBRARY
-#    NAMES opusfile opusfile_static libopusfile libopusfile_static
-#)
+
 
 # Handle the QUIETLY and REQUIRED arguments and set OPUS_FOUND
 # to TRUE if all listed variables are TRUE.
@@ -35,6 +48,5 @@ find_package_handle_standard_args(OPUS DEFAULT_MSG
 
 if(OPUS_FOUND)
     set(OPUS_LIBRARIES ${OPUS_LIBRARY})
-    #${OPUSFILE_LIBRARY}
     set(OPUS_INCLUDE_DIRS ${OPUS_INCLUDE_DIR})
 endif(OPUS_FOUND)
