@@ -29,6 +29,8 @@ source distribution.
 
 #include "BufferedStreamLoader.hpp"
 
+#include <cstring>
+
 using namespace cro;
 using namespace cro::Detail;
 
@@ -60,7 +62,7 @@ bool BufferedStreamLoader::open(const std::string&)
 
 const PCMData& BufferedStreamLoader::getData(std::size_t, bool) const
 {
-    if (m_doubleBuffer.size() < 11025)
+    if (m_doubleBuffer.empty())
     {
         m_dataChunk.data = silentBuffer.data();
         m_dataChunk.size = silentBuffer.size() * sizeof(std::uint16_t);
