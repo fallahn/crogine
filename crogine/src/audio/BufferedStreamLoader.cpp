@@ -32,9 +32,19 @@ source distribution.
 using namespace cro;
 using namespace cro::Detail;
 
-BufferedStreamLoader::BufferedStreamLoader()
+namespace
 {
+    std::vector<std::int16_t> silentBuffer(2048);
+}
 
+BufferedStreamLoader::BufferedStreamLoader()
+    : m_channelCount(1),
+    m_sampleCount   (0)
+{
+    m_dataChunk.format = PCMData::Format::MONO16;
+    m_dataChunk.frequency = 22050;
+
+    std::fill(silentBuffer.begin(), silentBuffer.end(), 0);
 }
 
 BufferedStreamLoader::~BufferedStreamLoader()
@@ -50,10 +60,28 @@ bool BufferedStreamLoader::open(const std::string&)
 
 const PCMData& BufferedStreamLoader::getData(std::size_t, bool) const
 {
+    if (m_doubleBuffer.size() < 11025)
+    {
+        m_dataChunk.data = silentBuffer.data();
+        m_dataChunk.size = silentBuffer.size() * sizeof(std::uint16_t);
+
+        return m_dataChunk;
+    }
+
+    std::scoped_lock l(m_mutex);
+    m_buffer.swap(m_doubleBuffer);
+    m_doubleBuffer.clear();
+
+    m_dataChunk.data = m_buffer.data();
+    m_dataChunk.size = m_buffer.size() * sizeof(std::uint16_t);
+    
     return m_dataChunk;
 }
 
-void BufferedStreamLoader::updateBuffer(const std::vector<std::uint8_t>&)
+void BufferedStreamLoader::updateBuffer(const std::vector<std::uint8_t>& b)
 {
-
+    std::scoped_lock l(m_mutex);
+    auto oldSize = m_doubleBuffer.size();
+    m_doubleBuffer.resize((b.size() / sizeof(std::int16_t)) + oldSize);
+    std::memcpy(&m_doubleBuffer[oldSize], b.data(), b.size());
 }

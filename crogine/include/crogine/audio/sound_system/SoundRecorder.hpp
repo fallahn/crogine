@@ -115,7 +115,8 @@ namespace cro
         void* m_encoder;
 
         //buffer for PCM captured from device
-        mutable std::vector<std::uint8_t> m_pcmBuffer;
+        mutable std::vector<std::int16_t> m_pcmBuffer;
+        mutable std::vector<std::int16_t> m_pcmDoubleBuffer;
         mutable std::uint32_t m_pcmBufferOffset;
 
 

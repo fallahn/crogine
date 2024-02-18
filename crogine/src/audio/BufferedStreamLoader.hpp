@@ -31,6 +31,8 @@ source distribution.
 
 #include "AudioFile.hpp"
 
+#include <mutex>
+
 namespace cro::Detail
 {
     /*!
@@ -70,5 +72,8 @@ namespace cro::Detail
 
         mutable PCMData m_dataChunk;
         mutable std::vector<std::int16_t> m_buffer;
+        mutable std::vector<std::int16_t> m_doubleBuffer;
+
+        mutable std::mutex m_mutex;
     };
 }

@@ -86,15 +86,3 @@ void DynamicAudioStream::updateBuffer(const std::vector<std::uint8_t>& data)
     CRO_ASSERT(m_bufferedStream, "");
     m_bufferedStream->updateBuffer(data);
 }
- 
-//bool DynamicAudioStream::loadFromFile(const std::string& path)
-//{
-//    if (getID() > 0)
-//    {
-//        AudioRenderer::deleteStream(getID());
-//        setID(-1);
-//    }
-//
-//    setID(AudioRenderer::requestNewStream(path));
-//    return getID() != -1;
-//}

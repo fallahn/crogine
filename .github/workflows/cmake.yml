@@ -28,7 +28,7 @@ jobs:
         - { name: Static, flags: -DBUILD_SHARED_LIBS=OFF }
         
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install linux Dependencies
       if: runner.os == 'Linux'
