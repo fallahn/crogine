@@ -66,8 +66,6 @@ namespace
     std::int32_t pcmBufferCaptureSize = 0;
 
 #endif
-
-    bool bufferReady = false;
 }
 
 SoundRecorder::SoundRecorder()
@@ -77,7 +75,8 @@ SoundRecorder::SoundRecorder()
     m_encoder           (nullptr),
     m_pcmBuffer         (PCMBufferSize),
     m_pcmDoubleBuffer   (PCMBufferSize),
-    m_pcmBufferOffset   (0)
+    m_pcmBufferOffset   (0),
+    m_pcmBufferReady    (false)
 {
     enumerateDevices();
 
@@ -180,7 +179,7 @@ void SoundRecorder::stop()
         alcCaptureStop(RECORDING_DEVICE);
     }
     m_active = false;
-    bufferReady = false;
+    m_pcmBufferReady = false;
 }
 
 bool SoundRecorder::isActive() const
@@ -203,7 +202,7 @@ const std::uint8_t* SoundRecorder::getEncodedPackets(std::int32_t* count) const
         if (m_pcmBufferOffset < lastOffset)
         {
             //we wrapped around so we must have a reasonable amount buffered
-            bufferReady = true;
+            m_pcmBufferReady = true;
 
             //return the largest initial buffer
             m_pcmDoubleBuffer.swap(m_pcmBuffer);
@@ -212,7 +211,7 @@ const std::uint8_t* SoundRecorder::getEncodedPackets(std::int32_t* count) const
             return reinterpret_cast<std::uint8_t*>(m_pcmDoubleBuffer.data());
         }
 
-        if (bufferReady)
+        if (m_pcmBufferReady)
         {
             //otherwise return whatever we have available to prevent drop outs
             m_pcmDoubleBuffer.swap(m_pcmBuffer);

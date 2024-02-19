@@ -95,7 +95,7 @@ EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Con
 {
     const auto path = Social::getBaseContentPath() + ScoreFile;
     cro::ConfigFile cfg;
-    if (cfg.loadFromFile(path))
+    if (cfg.loadFromFile(path, false))
     {
         if (auto* p = cfg.findProperty("best"); p)
         {

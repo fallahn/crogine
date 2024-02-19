@@ -118,7 +118,7 @@ namespace cro
         mutable std::vector<std::int16_t> m_pcmBuffer;
         mutable std::vector<std::int16_t> m_pcmDoubleBuffer;
         mutable std::uint32_t m_pcmBufferOffset;
-
+        mutable bool m_pcmBufferReady;
 
         void enumerateDevices();
         bool openSelectedDevice();

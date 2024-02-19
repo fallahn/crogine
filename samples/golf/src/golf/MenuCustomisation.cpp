@@ -357,13 +357,15 @@ void MenuState::createBallScene()
     auto grass = m_profileData.grassDef->loadFromFile("assets/golf/models/ball_plane.cmt");
 
     std::vector<std::uint32_t> invalidBalls;
+    float spacing = 0.f;
 
     for (auto i = 0u; i < m_sharedData.ballInfo.size(); ++i)
     {
         if (ballDef.loadFromFile(m_sharedData.ballInfo[i].modelPath))
         {
             auto entity = m_backgroundScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
+            entity.addComponent<cro::Transform>().setPosition({ spacing + RootPoint, 0.f, 0.f });
+            spacing += BallSpacing;
 
             auto baseEnt = entity;
 
@@ -436,7 +438,10 @@ void MenuState::createBallScene()
         {
             //probably should remove from the ball models vector so that it's completely vetted
             invalidBalls.push_back(m_sharedData.ballInfo[i].uid);
-            i--; //spacing is based on this and we don't want a gap from a bad ball
+            
+            
+            //what the..? NO this just creates an infinite loop
+            //i--; //spacing is based on this and we don't want a gap from a bad ball
         }
     }
 
