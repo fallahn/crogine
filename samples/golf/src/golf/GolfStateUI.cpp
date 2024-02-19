@@ -1616,6 +1616,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_roundEnded = true;
     Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
 
+#ifdef USE_GNS
+    Social::incCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
+#endif
+
     if (m_achievementTracker.eagles > 1
         && m_achievementTracker.birdies > 2)
     {

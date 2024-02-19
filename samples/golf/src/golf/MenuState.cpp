@@ -2121,6 +2121,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     {
                         m_sharedData.mapDirectory = course;
                         m_sharedData.courseIndex = std::distance(m_courseData.cbegin(), data);
+                        updateCompletionString();
 
                         //update UI
                         cro::Command cmd;
@@ -2292,6 +2293,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::HoleCount:
         {
             m_sharedData.holeCount = evt.packet.as<std::uint8_t>();
+            updateCompletionString();
 
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::CourseHoles;

@@ -338,6 +338,22 @@ void MenuState::hideToolTip()
     m_toolTip.getComponent<cro::Transform>().setPosition(glm::vec3(10000.f));
 }
 
+void MenuState::updateCompletionString()
+{
+#ifdef USE_GNS
+    auto count = Social::getCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
+    if (count == 0)
+    {
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
+    else
+    {
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent < cro::Text>().setString("Completed " + std::to_string(count) + "x this month!");
+    }
+#endif
+}
+
 void MenuState::createUI()
 {
     m_currentRange = Range::Official;
@@ -2046,17 +2062,33 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyWindowEntities[LobbyEntityID::HoleThumb] = entity;
 
-    /*entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 85.f, 140.f, 0.4f });
+#ifdef USE_GNS
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 85.f, 62.f, 0.4f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("Course of the Month!");
+    entity.addComponent<cro::Text>(smallFont).setString("Completed 100x this month!");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse] = entity;*/
+    m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse] = entity;
+
+    const float w = (thumbBgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 4.f) + 2.f;
+
+    cro::Colour c(0.f, 0.f, 0.f, BackgroundAlpha / 2.f);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, -0.05f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-w, 6.f),c),
+            cro::Vertex2D(glm::vec2(-w, -6.f),c),
+            cro::Vertex2D(glm::vec2(w, 6.f),c),
+            cro::Vertex2D(glm::vec2(w, -6.f),c)
+        });
+    m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+#endif
 
     //hole count
     entity = m_uiScene.createEntity();

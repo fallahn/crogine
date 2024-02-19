@@ -279,6 +279,7 @@ private:
     void showToolTip(const std::string&);
     void hideToolTip();
 
+    void updateCompletionString();
 
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
     cro::Entity m_ballCam;
