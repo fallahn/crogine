@@ -113,6 +113,7 @@ private:
         cro::Entity names;
         cro::Entity scores;
         cro::Entity personal;
+        cro::Entity previous;
     }m_leagueText;
 
     void createGlobalLeagueTab(cro::Entity, const cro::SpriteSheet&);

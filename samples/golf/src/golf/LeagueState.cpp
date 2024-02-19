@@ -366,6 +366,9 @@ void LeagueState::buildScene()
                 {
                     Social::setStatus(Social::InfoID::Menu, { "Browsing League Table" });
                 }
+#ifdef USE_GNS
+                updateLeagueText();
+#endif
             }
             break;
         case RootCallbackData::FadeOut:
@@ -772,7 +775,6 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     str = league.getPreviousResults(playerName);
     if (!str.empty())
     {
-
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
@@ -993,6 +995,60 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     centreText(entity);
     m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueText.personal = entity;
+
+
+    //text scroller
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.25f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("-~-");// .setString("this is a test string. nothing to see here people, move along.");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            const auto bounds = cro::Text::getLocalBounds(e);
+            float scale = m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().getScale().x;
+            if (scale == 0)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
+                xPos -= (dt * 50.f);
+
+                static constexpr float BGWidth = 494.f;
+
+                if (xPos < (-bounds.width))
+                {
+                    xPos = BGWidth;
+                }
+
+                auto pos = e.getComponent<cro::Transform>().getPosition();
+                pos.x = std::round(xPos);
+
+                e.getComponent<cro::Transform>().setPosition(pos);
+
+                auto cropping = bounds;
+                cropping.left = -pos.x;
+                cropping.left += 6.f;
+                cropping.width = BGWidth;
+                e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+            }
+        };
+
+    m_leagueText.previous = entity;
 }
 
 void LeagueState::updateLeagueText()
@@ -1002,6 +1058,7 @@ void LeagueState::updateLeagueText()
     m_leagueText.names.getComponent<cro::Text>().setString(str[0]);
     m_leagueText.scores.getComponent<cro::Text>().setString(str[1]);
     m_leagueText.personal.getComponent<cro::Text>().setString(str[3]);
+    m_leagueText.previous.getComponent<cro::Text>().setString(str[4]);
     centreText(m_leagueText.personal);
 }
 
