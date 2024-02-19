@@ -1683,13 +1683,13 @@ void ClubhouseState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-
+#ifndef USE_GNS
                     if (!m_sharedData.targetIP.empty() &&
                         !m_sharedData.clientConnection.connected)
                     {
                         m_matchMaking.joinGame(0);
                     }
-
+#endif
                     auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
                     e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 0;
 

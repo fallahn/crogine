@@ -1134,13 +1134,13 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     refreshUI();
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
+#ifndef USE_GNS
                     if (!m_sharedData.targetIP.empty() &&
                         !m_sharedData.clientConnection.connected)
                     {
                         m_matchMaking.joinGame(0);
                     }
-
+#endif
                     auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
                     e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 0;
 
@@ -3316,6 +3316,9 @@ void MenuState::quitLobby()
     m_sharedData.clientConnection.netClient.disconnect();
 
     m_matchMaking.leaveGame();
+    m_sharedData.lobbyID = 0;
+    m_sharedData.inviteID = 0;
+    m_sharedData.clientConnection.hostID = 0;
 
     if (m_sharedData.hosting)
     {

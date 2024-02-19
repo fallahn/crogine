@@ -1048,6 +1048,10 @@ void MenuState::handleMessage(const cro::Message& msg)
             finaliseGameJoin(data);
             break;
         case MatchMaking::Message::LobbyJoinFailed:
+            m_sharedData.lobbyID = 0;
+            m_sharedData.inviteID = 0;
+            m_sharedData.clientConnection.hostID = 0;
+            
             m_matchMaking.leaveGame();
             m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
             updateLobbyList();
@@ -1916,6 +1920,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::NewLobbyReady:
             m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
+            LogI << "New lobby ready, joining lobby" << std::endl;
             break;
         case PacketID::PingTime:
         {
@@ -1934,6 +1939,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 //updated results are downloaded once the game ends
                 Social::invalidateTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
 #endif
+                m_sharedData.lobbyID = 0;
+                m_sharedData.inviteID = 0;
 
                 m_matchMaking.leaveGame(); //doesn't really leave the game, it quits the lobby
                 requestStackClear();
@@ -2377,6 +2384,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
     else if (evt.type == net::NetEvent::ClientDisconnect)
     {
         m_sharedData.errorMessage = "Lost Connection To Host";
+        m_sharedData.lobbyID = 0;
+        m_sharedData.inviteID = 0;
+
         m_matchMaking.leaveGame();
         requestStackPush(StateID::Error);
     }
@@ -2484,6 +2494,7 @@ void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
     {
         m_sharedData.clientConnection.hostID = 0;
         m_sharedData.lobbyID = 0;
+        m_sharedData.inviteID = 0;
         m_sharedData.errorMessage = "Could not connect to server";
         requestStackPush(StateID::Error);
         m_matchMaking.leaveGame();
