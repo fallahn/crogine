@@ -352,7 +352,7 @@ void PracticeState::buildScene()
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     m_sharedData.hosting = true;
-                    m_sharedData.tutorial = true;
+                    m_sharedData.gameMode = GameMode::Tutorial;
                     m_sharedData.localConnectionData.playerCount = 1;
                     m_sharedData.localConnectionData.playerData[0].isCPU = false;
 

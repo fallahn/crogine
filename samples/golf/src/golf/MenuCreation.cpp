@@ -757,7 +757,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 {
                     if (activated(evt))
                     {
-
+                        requestStackPush(StateID::Career);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
@@ -3017,7 +3017,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //only tally scores if we returned from a previous game
     //rather than quitting one, or completing the tutorial
-    if (!m_sharedData.tutorial) //at this point (when the menu is built) this will be set if we're returning from a tutorial or quit menu
+    if (m_sharedData.gameMode == GameMode::FreePlay) //at this point (when the menu is built) this will be set if we're returning from a tutorial or quit menu
     {
         for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
         {
@@ -4102,7 +4102,7 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
 
 //#ifdef USE_GNS
     //update ticker
-    if (!m_sharedData.tutorial && //data will be courseData.cend()
+    if (m_sharedData.gameMode == GameMode::FreePlay && //data will be courseData.cend()
         m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
     {
         if (!data->isUser)

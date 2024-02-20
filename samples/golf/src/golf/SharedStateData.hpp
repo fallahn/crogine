@@ -78,6 +78,11 @@ struct ConnectionData final
 static constexpr float MinFOV = 60.f;
 static constexpr float MaxFOV = 90.f;
 
+enum class GameMode
+{
+    Career, FreePlay, Tutorial, Clubhouse
+};
+
 struct SharedStateData final
 {
     ChatFonts chatFonts;
@@ -185,7 +190,7 @@ struct SharedStateData final
     std::string errorMessage;
 
     bool hosting = false;
-    bool tutorial = false;
+    GameMode gameMode = GameMode::FreePlay;
     std::size_t tutorialIndex = 0; //set in tutorial mode to decide which part to display
     std::size_t courseIndex = 0; //if hosting which course/billiard table we last chose.
     std::int32_t ballSkinIndex = 0; //billiards balls

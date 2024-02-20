@@ -209,6 +209,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Options);
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
+        cacheState(StateID::Career);
         cacheState(StateID::FreePlay);
         cacheState(StateID::Keyboard);
         cacheState(StateID::Leaderboard);
@@ -238,12 +239,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
         //reset the state if we came from the tutorial (this is
         //also set if the player quit the game from the pause menu)
-        if (sd.tutorial)
+        if (sd.gameMode != GameMode::FreePlay)
         {
             sd.serverInstance.stop();
             sd.hosting = false;
 
-            sd.tutorial = false;
+            sd.gameMode = GameMode::FreePlay;
             sd.clientConnection.connected = false;
             sd.clientConnection.connectionID = ConstVal::NullValue;
             sd.clientConnection.ready = false;
@@ -253,7 +254,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
 
 
-        //we returned from a previous game
+        //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
         {
             updateLobbyAvatars();
@@ -374,7 +375,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 && m_currentMenu == MenuID::Main)
             {
                 //forces clubhouse state to clear any existing net connection
-                m_sharedData.tutorial = true;
+                m_sharedData.gameMode = GameMode::FreePlay;
 
                 m_sharedData.courseIndex = 0;
 
@@ -1108,9 +1109,12 @@ void MenuState::handleMessage(const cro::Message& msg)
             && m_currentMenu == MenuID::Main)
         {
             //freeplay menu wants to start somewhere (hosting state is set by menu)
+            m_sharedData.gameMode = GameMode::FreePlay;
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[MenuID::Main].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
             m_menuEntities[MenuID::Main].getComponent<cro::Callback>().active = true;
+
+            Club::setClubLevel(m_sharedData.preferredClubSet);
         }
     }
 #ifdef USE_GNS
@@ -1972,7 +1976,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 std::uint16_t xp = (Social::getLevel() << 8) | m_sharedData.clientConnection.connectionID;
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerXP, xp, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-                if (m_sharedData.tutorial)
+                if (m_sharedData.gameMode == GameMode::Tutorial)
                 {
                     //hmmm is this going to get in soon enough?
                     m_sharedData.gimmeRadius = GimmeSize::None;
@@ -1982,6 +1986,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+                else if (m_sharedData.gameMode == GameMode::Career)
+                {
+                    //TODO apply the current league settings
                 }
                 else
                 {

@@ -447,6 +447,9 @@
     <ClCompile Include="src\golf\FreePlayState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\CareerState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -912,6 +915,9 @@
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\FreePlayState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CareerState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>

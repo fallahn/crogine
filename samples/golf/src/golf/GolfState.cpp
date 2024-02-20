@@ -1876,7 +1876,7 @@ bool GolfState::simulate(float dt)
 
 #ifndef CAMERA_TRACK
     //play avatar sound if player idles
-    if (!m_sharedData.tutorial
+    if (m_sharedData.gameMode != GameMode::Tutorial
         && !m_roundEnded)
     {
         if (m_idleTimer.elapsed() > m_idleTime)
@@ -2152,7 +2152,7 @@ void GolfState::addSystems()
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio, m_sharedData);
 
 
-    if (m_sharedData.tutorial)
+    if (m_sharedData.gameMode == GameMode::Tutorial)
     {
         m_gameScene.addDirector<TutorialDirector>(m_sharedData, m_inputParser);
     }
@@ -2184,7 +2184,7 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
-    Club::setClubLevel(m_sharedData.tutorial ? 0 : m_sharedData.clubSet);
+    Club::setClubLevel(m_sharedData.gameMode == GameMode::Tutorial ? 0 : m_sharedData.clubSet);
 
     m_achievementTracker.noGimmeUsed = (m_sharedData.gimmeRadius != 0);
     m_achievementTracker.noHolesOverPar = (m_sharedData.scoreType == ScoreType::Stroke);
@@ -3861,7 +3861,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
                 break;
             case TerrainID::Hole:
-                if (m_sharedData.tutorial)
+                if (m_sharedData.gameMode == GameMode::Tutorial)
                 {
                     Achievements::setActive(true);
                     Achievements::awardAchievement(AchievementStrings[AchievementID::CluedUp]);
@@ -4305,7 +4305,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
 
     //if this is the final hole repeated then we're in skins sudden death
-    if (!m_sharedData.tutorial
+    if (m_sharedData.gameMode != GameMode::Tutorial
         && m_sharedData.scoreType == ScoreType::Skins)
     {
         //TODO this will show if we're playing a custom course with
@@ -4912,7 +4912,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         break;
     }
 
-    const auto title = m_sharedData.tutorial ? cro::String("Tutorial").toUtf8() : courseTitle.toUtf8();
+    const auto title = m_sharedData.gameMode == GameMode::Tutorial ? cro::String("Tutorial").toUtf8() : courseTitle.toUtf8();
     const auto holeNumber = std::to_string(m_currentHole + 1);
     const auto holeTotal = std::to_string(m_holeData.size());
     //well... this is awful.
@@ -5039,11 +5039,9 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
 void GolfState::requestNextPlayer(const ActivePlayer& player)
 {
-    if (!m_sharedData.tutorial)
+    if (m_sharedData.gameMode == GameMode::Tutorial)
     {
         m_currentPlayer = player;
-        //Club::setClubLevel(0); //always use the default set for the tutorial
-        //setCurrentPlayer() is called when the sign closes
 
         setActiveCamera(CameraID::Player);
         showMessageBoard(MessageBoardID::PlayerName);
@@ -6132,7 +6130,7 @@ void GolfState::startFlyBy()
                 data.speeds[2] *= 1.f / SpeedMultiplier;
 
                 //play the transition music
-                if (m_sharedData.tutorial)
+                if (m_sharedData.gameMode == GameMode::Tutorial)
                 {
                     m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
                 }
@@ -6146,7 +6144,7 @@ void GolfState::startFlyBy()
                 m_gameScene.getSystem<CameraFollowSystem>()->resetCamera();
                 setActiveCamera(CameraID::Player);
             {
-                if (m_sharedData.tutorial)
+                if (m_sharedData.gameMode == GameMode::Tutorial)
                 {
                     auto* msg = cro::App::getInstance().getMessageBus().post<SceneEvent>(MessageID::SceneMessage);
                     msg->type = SceneEvent::TransitionComplete;

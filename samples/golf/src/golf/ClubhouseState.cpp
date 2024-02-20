@@ -172,12 +172,12 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     //this is actually set as a flag from the pause menu
     //to say we want to quit
-    if (sd.tutorial)
+    if (sd.gameMode != GameMode::Clubhouse)
     {
         sd.serverInstance.stop();
         sd.hosting = false;
 
-        sd.tutorial = false;
+        sd.gameMode = GameMode::Clubhouse;
         sd.clientConnection.connected = false;
         sd.clientConnection.connectionID = ConstVal::NullValue;
         sd.clientConnection.ready = false;
@@ -1696,7 +1696,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
             auto buffer = m_sharedData.localConnectionData.serialise();
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-            if (m_sharedData.tutorial)
+            if (m_sharedData.gameMode == GameMode::Tutorial)
             {
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }

@@ -1913,7 +1913,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
             sec--;
         }
 
-        if (m_sharedData.tutorial)
+        if (m_sharedData.gameMode == GameMode::Tutorial)
         {
             e.getComponent<cro::Text>().setString("Returning to menu in: " + std::to_string(sec));
         }
@@ -4549,7 +4549,7 @@ glm::vec2 MinimapZoom::toMapCoords(glm::vec3 worldCoord) const
 //------emote wheel-----//
 void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::TextureResource& textures)
 {
-    if (sharedData.tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial)
     {
         //don't need this.
         return;
@@ -4693,7 +4693,7 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
 
 bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 {
-    if (sharedData.tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial)
     {
         return false;
     }
@@ -4948,7 +4948,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 
 void GolfState::EmoteWheel::update(float dt)
 {
-    if (sharedData.tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial)
     {
         return;
     }
@@ -4971,7 +4971,7 @@ void GolfState::EmoteWheel::update(float dt)
 
 void GolfState::EmoteWheel::refreshLabels()
 {
-    if (sharedData.tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial)
     {
         //these won't exist
         return;
