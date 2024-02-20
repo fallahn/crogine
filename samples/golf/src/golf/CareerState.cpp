@@ -37,6 +37,7 @@ source distribution.
 #include "Utility.hpp"
 #include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
+#include "../Colordome-32.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -68,6 +69,7 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
@@ -231,7 +233,12 @@ void CareerState::buildScene()
                 e.getComponent<cro::Callback>().active = false;
 
                 m_scene.setSystemActive<cro::UISystem>(true);
-                Social::setStatus(Social::InfoID::Menu, { "Making Career Choices" });
+                Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
+
+                if (!m_sharedData.unlockedItems.empty())
+                {
+                    requestStackPush(StateID::Unlock);
+                }
             }
             break;
         case RootCallbackData::FadeOut:
@@ -283,144 +290,57 @@ void CareerState::buildScene()
 
    
     //background
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
-
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
-
-    auto menuEntity = m_scene.createEntity();
-    menuEntity.addComponent<cro::Transform>();
-    rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
-
-    auto helpText = m_scene.createEntity();
-    helpText.addComponent<cro::Transform>().setOrigin({0.f, 0.f, -0.2f});
-    helpText.addComponent<cro::Drawable2D>();
-    helpText.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info));
-    helpText.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    helpText.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    helpText.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    menuEntity.getComponent<cro::Transform>().addChild(helpText.getComponent<cro::Transform>());
-
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
-
-    auto selectedID = uiSystem.addCallback(
-        [helpText](cro::Entity e) mutable
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
-            e.getComponent<cro::AudioEmitter>().play();
-            e.getComponent<cro::Callback>().active = true;
+            cro::Vertex2D(glm::vec2(-253.f, 129.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(-253.f, -129.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(253.f, 129.f), CD32::Colours[CD32::Brown]),
 
-            switch (e.getComponent<cro::UIInput>().getSelectionIndex())
-            {
-            default:
-                helpText.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                break;
-            case 1:
-                helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                helpText.getComponent<cro::Text>().setString("Host a new game to play solo,\nagainst CPU or with friends");
-                break;
-            case 2:
-                helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                helpText.getComponent<cro::Text>().setString("Join an existing network game");
-                break;
-            case 3:
-                helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                helpText.getComponent<cro::Text>().setString("Return to Main Menu");
-                break;
-            }
-        });
-    auto unselectedID = uiSystem.addCallback(
-        [](cro::Entity e)
-        {
-            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        });
+            cro::Vertex2D(glm::vec2(253.f, 129.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(-253.f, -129.f), CD32::Colours[CD32::Brown]),
+            cro::Vertex2D(glm::vec2(253.f, -129.f), CD32::Colours[CD32::Brown]),
 
-    
-    auto createItem = [&](glm::vec2 position, const std::string& label, cro::Entity parent) 
+            cro::Vertex2D(glm::vec2(1.f, 128.f), CD32::Colours[CD32::GreyMid]),
+            cro::Vertex2D(glm::vec2(1.f, -128.f), CD32::Colours[CD32::GreyMid]),
+            cro::Vertex2D(glm::vec2(252.f, 128.f), CD32::Colours[CD32::GreyMid]),
+
+            cro::Vertex2D(glm::vec2(252.f, 128.f), CD32::Colours[CD32::GreyMid]),
+            cro::Vertex2D(glm::vec2(1.f, -128.f), CD32::Colours[CD32::GreyMid]),
+            cro::Vertex2D(glm::vec2(252.f, -128.f), CD32::Colours[CD32::GreyMid]),
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto bgEnt = entity;
+
+    //league items
+    for (auto i = 0u; i < Career::MaxLeagues; ++i)
     {
-        auto e = m_scene.createEntity();
-        e.addComponent<cro::Transform>().setPosition(position);
-        e.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        e.addComponent<cro::Drawable2D>();
-        e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-        e.getComponent<cro::Text>().setString(label);
-        e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        centreText(e);
-        e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
-        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+        //league titles, listed on left
+        //if unlocked white text with UI input to start playing
+        //else red text, probably padlock icon?
 
-        e.addComponent<cro::Callback>().function = MenuTextCallback();
+        //activating updates preview
+    }
+    
+    //right box
+    //info entities - round x/6, course title, hole count, current league position, best finishing position, lock status(?)
+    //probably course thumbnail
+    //maybe weather selection/gimme selection
+    //probably want to be able to reset the career too
 
-        parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
-        return e;
-    };
+    //entity with confirmation for starting round
 
 
-    glm::vec2 position(0.f, 23.f);
-    static constexpr float ItemHeight = 10.f;
-    //tutorial button
-    entity = createItem(position, "Create Game", menuEntity);
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
-            {
-                if (activated(evt))
-                {
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                    m_sharedData.hosting = true;
-                    m_sharedData.clubSet = m_sharedData.preferredClubSet;
-
-                    auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
-                    msg->type = SystemEvent::MenuRequest;
-
-                    quitState();
-                }            
-            });
-    position.y -= ItemHeight;
-
-    //driving range
-    entity = createItem(position, "Join Game", menuEntity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
-            {
-                if (activated(evt))
-                {
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                    m_sharedData.hosting = false;
-                    m_sharedData.clubSet = m_sharedData.preferredClubSet;
-
-                    auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
-                    msg->type = SystemEvent::MenuRequest;
-
-                    quitState();
-                }
-            });
-
-    position.y -= ItemHeight;
-    position.y -= 3.f;
-    helpText.getComponent<cro::Transform>().setPosition(position);
 
 
-    //back button
-    entity = createItem(glm::vec2(0.f, -28.f), "Back", menuEntity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
-                {
-                    quitState();
-                }
-            });
+    //banner across bottom
+
+    //banner buttons - quit, options, profile editor, club set, league browser, start
+
+
 
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable

@@ -237,6 +237,23 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         }
 
+        //if we returned from a career game create a delayed
+        //entity to push the career state
+        if (sd.gameMode == GameMode::Career)
+        {
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+
+                    requestStackPush(StateID::Career);
+                };
+        }
+
+
         //reset the state if we came from the tutorial (this is
         //also set if the player quit the game from the pause menu)
         if (sd.gameMode != GameMode::FreePlay)
