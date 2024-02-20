@@ -51,6 +51,7 @@ source distribution.
 #include "golf/ProfileState.hpp"
 #include "golf/LeaderboardState.hpp"
 #include "golf/StatsState.hpp"
+#include "golf/FreePlayState.hpp"
 #include "golf/MapOverviewState.hpp"
 #include "golf/EventOverlay.hpp"
 #include "golf/MenuConsts.hpp"
@@ -189,6 +190,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PlayerManagementState>(StateID::PlayerManagement, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
+    m_stateStack.registerState<FreePlayState>(StateID::FreePlay, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData, *this);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);

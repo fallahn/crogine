@@ -746,19 +746,17 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         && !m_sharedData.ballInfo.empty()
         && ! m_sharedData.avatarInfo.empty())
     {
+        std::string temp = u8"™";
+        cro::String str("Coming Soon");
+        str += cro::String::fromUtf8(temp.begin(), temp.end());
         //host
-        entity = createButton("Create Game");
+        entity = createButton("Career Mode");
+        entity.getComponent<cro::Text>().setString(str);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
-                        m_sharedData.hosting = true;
-                        m_sharedData.clubSet = m_sharedData.preferredClubSet;
-
-                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                        menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
-                        menuEntity.getComponent<cro::Callback>().active = true;
 
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
@@ -766,19 +764,13 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
 
         //join
-        entity = createButton("Join Game");
+        entity = createButton("Free Play");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
-                        m_sharedData.hosting = false;
-                        m_sharedData.clubSet = m_sharedData.preferredClubSet;
-
-                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                        menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
-                        menuEntity.getComponent<cro::Callback>().active = true;
-
+                        requestStackPush(StateID::FreePlay);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });

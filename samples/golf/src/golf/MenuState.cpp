@@ -209,6 +209,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Options);
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
+        cacheState(StateID::FreePlay);
         cacheState(StateID::Keyboard);
         cacheState(StateID::Leaderboard);
         cacheState(StateID::League);
@@ -1102,6 +1103,14 @@ void MenuState::handleMessage(const cro::Message& msg)
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = false;
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
             }*/
+        }
+        else if (data.type == SystemEvent::MenuRequest
+            && m_currentMenu == MenuID::Main)
+        {
+            //freeplay menu wants to start somewhere (hosting state is set by menu)
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            m_menuEntities[MenuID::Main].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
+            m_menuEntities[MenuID::Main].getComponent<cro::Callback>().active = true;
         }
     }
 #ifdef USE_GNS

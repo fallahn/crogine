@@ -151,6 +151,7 @@ struct SystemEvent final
         TreeQualityChanged,
         CrowdDensityChanged,
         MenuChanged,
+        MenuRequest, //freeplay menu wants to do something
         RestartActiveMode, //currently just driving range, but might apply somewhere else one day :)
         RequestOSK,
         SubmitOSK, //OSK was closed and there's data in the buffer to be read
