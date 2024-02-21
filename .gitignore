@@ -12,3 +12,6 @@ imgui.ini
 
 build/
 bundle/
+install/
+
+assets
