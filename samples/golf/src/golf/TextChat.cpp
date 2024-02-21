@@ -27,6 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <sapi.h>
+#endif
+
 #include "TextChat.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
@@ -173,6 +178,24 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_screenChatActiveCount (0),
     m_showShortcuts         (false)
 {
+    registerCommand("use_tts", [&](const std::string& str)
+        {
+            if (str == "1" || str == "true")
+            {
+                m_sharedData.useTTS = true;
+                cro::Console::print("use_tts set to " + str);
+            }
+            else if (str == "0" || str == "false")
+            {
+                m_sharedData.useTTS = false;
+                cro::Console::print("use_tts set to " + str);
+            }
+            else
+            {
+                cro::Console::print("Usage: use_tts <0|1>");
+            }
+        });
+
     //use cro string to construct the utf8 strings
     cro::String str(std::uint32_t(0x1F44F));
 
@@ -415,6 +438,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     else
     {
         outStr += ": " + msgText;
+        speak(msgText);
     }
     m_displayBuffer.emplace_back(outStr, ImVec4(chatColour));
 
@@ -664,4 +688,53 @@ void TextChat::sendTextChat()
 
         endChat();
     }
+}
+
+void TextChat::speak(const cro::String& str) const
+{
+#ifdef _WIN32
+    if (m_sharedData.useTTS)
+    {
+        struct TTSSpeaker final
+        {
+            ISpVoice* voice = nullptr;
+            bool initOK = false;
+
+            TTSSpeaker()
+            {
+                //init com interface - must only do this once!!
+                if (SUCCEEDED(CoInitialize(NULL)))
+                {
+                    initOK = true;
+
+                    if (FAILED(CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void**)&voice)))
+                    {
+                        voice = nullptr;
+                    }
+                }
+            }
+
+            ~TTSSpeaker()
+            {
+                if (voice)
+                {
+                    voice->Release();
+                }
+
+                //we may still have the com interface init even
+                //if the voice fails.
+                if (initOK)
+                {
+                    CoUninitialize();
+                }
+            }
+        };
+
+        static TTSSpeaker speaker;
+        if (speaker.voice != nullptr)
+        {
+            speaker.voice->Speak((LPCWSTR)(str.toUtf16().c_str()), SPF_ASYNC, nullptr);
+        }
+    }
+#endif
 }

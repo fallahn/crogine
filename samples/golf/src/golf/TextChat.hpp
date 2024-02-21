@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,13 +32,14 @@ source distribution.
 #include "SharedStateData.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <deque>
 
-class TextChat final : public cro::GuiClient
+class TextChat final : public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     TextChat(cro::Scene&, SharedStateData&);
@@ -108,4 +109,6 @@ private:
     void endChat();
 
     void sendTextChat();
+
+    void speak(const cro::String&) const;
 };

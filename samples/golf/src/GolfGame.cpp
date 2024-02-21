@@ -1215,6 +1215,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.pressHold = prop.getValue<bool>();
                 }
+                else if (name == "use_tts")
+                {
+                    m_sharedData.useTTS = prop.getValue<bool>();
+                }
                 else if (name == "crowd_density")
                 {
                     m_sharedData.crowdDensity = std::clamp(prop.getValue<std::int32_t>(), 0, CrowdDensityCount - 1);
@@ -1314,6 +1318,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("fast_cpu").setValue(m_sharedData.fastCPU);
     cfg.addProperty("clubset").setValue(m_sharedData.preferredClubSet);
     cfg.addProperty("press_hold").setValue(m_sharedData.pressHold);
+    cfg.addProperty("use_tts").setValue(m_sharedData.useTTS);
     cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
     cfg.save(path);
 
