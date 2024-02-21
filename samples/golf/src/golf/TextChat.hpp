@@ -29,6 +29,11 @@ source distribution.
 
 #pragma once
 
+#ifdef _WIN32
+#define NOMINMAX
+#include <sapi.h>
+#endif
+
 #include "SharedStateData.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -47,7 +52,7 @@ public:
 
     void handleMessage(const cro::Message&);
 
-    void handlePacket(const net::NetEvent::Packet&);
+    bool handlePacket(const net::NetEvent::Packet&); //returns true if a notification sound should play
 
     void toggleWindow(bool showOSK, bool showQuickEmote);
 
@@ -110,5 +115,41 @@ private:
 
     void sendTextChat();
 
-    void speak(const cro::String&) const;
+#ifdef _WIN32
+    struct TTSSpeaker final
+    {
+        ISpVoice* voice = nullptr;
+        bool initOK = false;
+
+        TTSSpeaker()
+        {
+            //init com interface - must only do this once!!
+            if (SUCCEEDED(CoInitialize(NULL)))
+            {
+                initOK = true;
+
+                if (FAILED(CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void**)&voice)))
+                {
+                    voice = nullptr;
+                }
+            }
+        }
+
+        ~TTSSpeaker()
+        {
+            if (voice)
+            {
+                voice->Release();
+            }
+
+            //we may still have the com interface init even
+            //if the voice fails.
+            if (initOK)
+            {
+                CoUninitialize();
+            }
+        }
+    }m_speaker;
+#endif
+    bool speak(const cro::String&) const; //returns true if speech was initiated
 };

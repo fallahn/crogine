@@ -27,11 +27,6 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifdef _WIN32
-#define NOMINMAX
-#include <sapi.h>
-#endif
-
 #include "TextChat.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
@@ -412,7 +407,7 @@ void TextChat::handleMessage(const cro::Message& msg)
     }
 }
 
-void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
+bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 {
     const auto msg = pkt.as<TextMessage>();
     //only one person can type on a connected computer anyway
@@ -427,6 +422,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 #endif
 
     cro::Colour chatColour = TextNormalColour;
+    bool playSound = true;
 
     //process any emotes such as /me and choose colour
     if (auto p = msgText.find("/me"); p == 0
@@ -438,7 +434,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     else
     {
         outStr += ": " + msgText;
-        speak(msgText);
+        playSound = !speak(msgText);
     }
     m_displayBuffer.emplace_back(outStr, ImVec4(chatColour));
 
@@ -560,6 +556,8 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     m_screenChatIndex = (m_screenChatIndex + 1) % m_screenChatBuffer.size();
 
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+    return playSound;
 }
 
 void TextChat::toggleWindow(bool showOSK, bool showQuickEmote)
@@ -690,51 +688,17 @@ void TextChat::sendTextChat()
     }
 }
 
-void TextChat::speak(const cro::String& str) const
+bool TextChat::speak(const cro::String& str) const
 {
 #ifdef _WIN32
     if (m_sharedData.useTTS)
     {
-        struct TTSSpeaker final
+        if (m_speaker.voice != nullptr)
         {
-            ISpVoice* voice = nullptr;
-            bool initOK = false;
-
-            TTSSpeaker()
-            {
-                //init com interface - must only do this once!!
-                if (SUCCEEDED(CoInitialize(NULL)))
-                {
-                    initOK = true;
-
-                    if (FAILED(CoCreateInstance(CLSID_SpVoice, NULL, CLSCTX_ALL, IID_ISpVoice, (void**)&voice)))
-                    {
-                        voice = nullptr;
-                    }
-                }
-            }
-
-            ~TTSSpeaker()
-            {
-                if (voice)
-                {
-                    voice->Release();
-                }
-
-                //we may still have the com interface init even
-                //if the voice fails.
-                if (initOK)
-                {
-                    CoUninitialize();
-                }
-            }
-        };
-
-        static TTSSpeaker speaker;
-        if (speaker.voice != nullptr)
-        {
-            speaker.voice->Speak((LPCWSTR)(str.toUtf16().c_str()), SPF_ASYNC, nullptr);
+            m_speaker.voice->Speak((LPCWSTR)(str.toUtf16().c_str()), SPF_ASYNC, nullptr);
+            return true;
         }
     }
 #endif
+    return false;
 }

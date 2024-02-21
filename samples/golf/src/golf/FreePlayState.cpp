@@ -294,6 +294,7 @@ void FreePlayState::buildScene()
     helpText.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     helpText.getComponent<cro::Text>().setFillColour(TextNormalColour);
     helpText.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    helpText.getComponent<cro::Text>().setString("Host a new game to play solo,\nagainst CPU or with friends");
     menuEntity.getComponent<cro::Transform>().addChild(helpText.getComponent<cro::Transform>());
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);

@@ -1921,8 +1921,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             m_audioEnts[AudioID::Poke].getComponent<cro::AudioEmitter>().play();
             break;
         case PacketID::ChatMessage:
-            m_textChat.handlePacket(evt.packet);
-
+            if (m_textChat.handlePacket(evt.packet))
             {
                 float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
                 auto& e = m_audioEnts[AudioID::Message].getComponent<cro::AudioEmitter>();
