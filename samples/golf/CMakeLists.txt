@@ -1,108 +1,51 @@
-cmake_minimum_required(VERSION 3.5.2)
 
+add_executable(golf WIN32 MACOSX_BUNDLE)
 
-#Xcode 10 will default to Mojave (must be done BEFORE project())
-if (APPLE)
- SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
- SET(MACOS_BUNDLE False CACHE BOOL "")
+option(USE_NEWSFEED "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl" TRUE)
+option(USE_GNS "Use game networking services library. Cannot be used with newsfeed" FALSE)
 
-  if(MACOS_BUNDLE)
-    SET(BUNDLE_NAME "Super Video Golf")
-  endif()
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 
-endif()
-
-
-project(golf)
-SET(PROJECT_NAME golf)
-
-
-if(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
-endif()
-
-if(APPLE)
-SET(USE_NEWSFEED False CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
-else()
-SET(USE_NEWSFEED True CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
-endif()
-
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
-SET (PROJECT_STATIC_RUNTIME FALSE)
-SET (USE_GNS FALSE CACHE STRING "Can't use newsfeed with this")
-
-if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
-  if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -std=c++17 -static")
-  else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -std=c++17")
-  endif()
-endif()
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
-endif()
-
-SET(CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_")
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-
-if(USE_NEWSFEED)
-  #add_definitions(-DUSE_RSS) #doesn't work?
-  add_compile_definitions(USE_RSS)
-  #add_compile_definitions(-DUSE_RSS) #can't find a definitive answer on this...
-endif()
-
-
+# Todo: Set this as a public property of crogine, or just use the standard NDEBUG
+target_compile_definitions(golf PRIVATE $<$<CONFIG:Debug>:CRO_DEBUG_>)
 
 # We're using c++17
-SET(CMAKE_CXX_STANDARD 17)
-SET(CMAKE_CXX_STANDARD_REQUIRED ON)
+target_compile_features(golf PRIVATE cxx_std_17)
 
-SET(OpenGL_GL_PREFERENCE "GLVND")
+set(OpenGL_GL_PREFERENCE "GLVND")
 
-find_package(CROGINE REQUIRED)
+# Todo: Specify versions
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
-#TODO specify version 2.83
 find_package(Bullet REQUIRED)
 find_package(SQLite3 REQUIRED)
 
-if(USE_NEWSFEED)
-find_package(CURL REQUIRED)
-endif()
-
-if(NOT CROGINE_FOUND)
-  #build it from source
-  add_subdirectory(../../crogine)
-
-  #SET (CROGINE_INCLUDE_DIR ../../crogine/include)
-  #SET (CROGINE_LIBRARIES TODO set lib output dir)
-
-endif()
-
-
 if(USE_GNS)
   if(USE_NEWSFEED)
-  message(FATAL_ERROR "Can't use newsfeed with GNS builds. Set USE_NEWSFEED to false")
+    message(FATAL_ERROR "Can't use newsfeed with GNS builds. Set USE_NEWSFEED to false")
   endif()
 
-  add_compile_definitions(USE_GNS)
+  target_compile_definitions(golf PRIVATE USE_GNS)
 
 
-  SET(GNS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../libgns)
-  SET(SOCIAL_DIR ${GNS_DIR}/golf_ach/src)
-  SET(SOCIAL_INCLUDE_DIR ${GNS_DIR}/golf_ach/include)
-  SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${GNS_DIR}/cmake/modules/")
+  set(GNS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../libgns)
+  set(SOCIAL_DIR ${GNS_DIR}/golf_ach/src)
+  set(SOCIAL_INCLUDE_DIR ${GNS_DIR}/golf_ach/include)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${GNS_DIR}/cmake/modules/")
   find_package(STEAMWORKS REQUIRED)
 
+  target_include_directories(golf PRIVATE 
+    ${STEAMWORKS_INCLUDE_DIR} 
+    ${GNS_DIR}/golf_workshop/include
+    ${GNS_DIR}/libgns/include)
+
 else()
-  SET(SOCIAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/src)
-  SET(SOCIAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include)
+  set(SOCIAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/src)
+  set(SOCIAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include)
 endif()
 
 
-include_directories(
-  ${CROGINE_INCLUDE_DIR}
+target_include_directories(golf PRIVATE
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
@@ -111,16 +54,12 @@ include_directories(
   src)
 
 if(USE_NEWSFEED)
-  include_directories(${CURL_INCLUDE_DIR})
+  target_compile_definitions(golf PRIVATE USE_RSS)
+  find_package(CURL REQUIRED)
+  target_include_directories(golf PRIVATE ${CURL_INCLUDE_DIR})
 endif()
 
-if(USE_GNS)
-  include_directories(${STEAMWORKS_INCLUDE_DIR})
-  include_directories(${GNS_DIR}/golf_workshop/include)
-  include_directories(${GNS_DIR}/libgns/include)
-endif()
-
-SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/golf/CMakeLists.txt)
 include(${PROJECT_DIR}/editor/CMakeLists.txt)
@@ -128,98 +67,31 @@ include(${PROJECT_DIR}/runner/CMakeLists.txt)
 include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
-SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SQLITE_SRC})
-#if(USE_NEWSFEED) #we actually use this in steam version now too
-  include(${PROJECT_DIR}/rss/CMakeLists.txt)
-  SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
-#endif()
+set(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SQLITE_SRC})
+include(${PROJECT_DIR}/rss/CMakeLists.txt)
+set(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
 
 if(USE_GNS)
   #include source of workshop, libgns
   include(${GNS_DIR}/golf_workshop/src/CMakeLists.txt)
   include(${GNS_DIR}/libgns/src/CMakeLists.txt)
 
-  SET(GOLF_SRC ${GOLF_SRC} ${GNS_SRC} ${WORKSHOP_SRC})
+  set(GOLF_SRC ${GOLF_SRC} ${GNS_SRC} ${WORKSHOP_SRC})
 endif()
 
+target_sources(golf PRIVATE ${PROJECT_SRC} ${GOLF_SRC})
 
-# If on apple, create a nice bundle
-if(APPLE AND MACOS_BUNDLE)
-
-  # use, i.e. don't skip the full RPATH for the build tree
-  SET(CMAKE_SKIP_BUILD_RPATH FALSE)
-
-  # when building, don't use the install RPATH already
-  # (but later on when installing)
-  SET(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
-
-  SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-
-  # add the automatically determined parts of the RPATH
-  # which point to directories outside the build tree to the install RPATH
-  SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-  # the RPATH to be used when installing, but only if it's not a system directory
-  LIST(FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/lib" isSystemDir)
-  IF("${isSystemDir}" STREQUAL "-1")
-     SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-  ENDIF("${isSystemDir}" STREQUAL "-1")
-
-  set_source_files_properties( 
-      ${CMAKE_SOURCE_DIR}/assets PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
-  set_source_files_properties(
-      ${CMAKE_SOURCE_DIR}/icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
-  add_executable(${PROJECT_NAME} MACOSX_BUNDLE 
-                 ${PROJECT_SRC} 
-                 ${GOLF_SRC} 
-                 ${CMAKE_SOURCE_DIR}/assets 
-                 ${CMAKE_SOURCE_DIR}/macOS/icon.icns)
-
-
-  set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE icon.icns)
-
-
-
-else()
-
-
-  #regular make files
-  add_executable(${PROJECT_NAME}
-                 ${PROJECT_SRC}
-                 ${GOLF_SRC})
-endif()
-
-
-
-
-target_link_libraries(${PROJECT_NAME}
-  ${CROGINE_LIBRARIES}
+target_link_libraries(golf PRIVATE
+  crogine
   ${SDL2_LIBRARY}
   ${BULLET_LIBRARIES}
   ${SQLite3_LIBRARIES}  
   ${OPENGL_LIBRARIES})
 
 if(USE_NEWSFEED)
-  target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARIES})
+  target_link_libraries(golf PRIVATE ${CURL_LIBRARIES})
 endif()
 
 if(USE_GNS)
-  target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
-endif()
-
-# install to the bundle
-if(APPLE AND MACOS_BUNDLE)
-
-  install(TARGETS ${PROJECT_NAME}
-    RUNTIME DESTINATION .
-    BUNDLE DESTINATION ${CMAKE_SOURCE_DIR}/bundle)
-
-
-  install(CODE " include(BundleUtilities)
-    fixup_bundle(${CMAKE_SOURCE_DIR}/bundle/${PROJECT_NAME}.app \"\" \"/Library/Frameworks\")
-    verify_app(${CMAKE_SOURCE_DIR}/bundle/${PROJECT_NAME}.app)")
-    SET(CPACK_GENERATOR "DragNDrop")
-
-  include(CPack)
-
+  target_link_libraries(golf PRIVATE ${STEAMWORKS_LIBRARIES})
 endif()
