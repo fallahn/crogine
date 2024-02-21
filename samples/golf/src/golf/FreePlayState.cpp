@@ -371,6 +371,7 @@ void FreePlayState::buildScene()
 
                     auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                     msg->type = SystemEvent::MenuRequest;
+                    msg->data = StateID::FreePlay;
 
                     quitState();
                 }            
@@ -391,6 +392,7 @@ void FreePlayState::buildScene()
 
                     auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                     msg->type = SystemEvent::MenuRequest;
+                    msg->data = StateID::FreePlay;
 
                     quitState();
                 }

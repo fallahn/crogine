@@ -73,7 +73,10 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
+    
+    void addSystems();
     void buildScene();
+    void createConfirmMenu();
 
     void quitState();
 };

@@ -749,7 +749,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         std::string temp = u8"™";
         cro::String str("Coming Soon");
         str += cro::String::fromUtf8(temp.begin(), temp.end());
-        //host
+        //career mode
         entity = createButton("Career Mode");
         entity.getComponent<cro::Text>().setString(str);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -759,11 +759,31 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     {
                         requestStackPush(StateID::Career);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                        //scales down main menu
+                        auto ent = m_uiScene.createEntity();
+                        ent.addComponent<cro::Callback>().active = true;
+                        ent.getComponent<cro::Callback>().setUserData<float>(1.f);
+                        ent.getComponent<cro::Callback>().function =
+                            [&](cro::Entity e, float dt)
+                            {
+                                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                                currTime = std::max(0.f, currTime - (dt * 2.f));
+
+                                const float scale = cro::Util::Easing::easeInCubic(currTime);
+                                m_menuEntities[MenuID::Main].getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+
+                                if (currTime == 0)
+                                {
+                                    e.getComponent<cro::Callback>().active = false;
+                                    m_uiScene.destroyEntity(e);
+                                }
+                            };
                     }
                 });
 
 
-        //join
+        //freeplay
         entity = createButton("Free Play");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
@@ -2841,7 +2861,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(LobbyQuit);
     entity.getComponent<cro::UIInput>().setNextIndex(LobbyStart, LobbyStart);
-    entity.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyRulesA); //TODO dynamically update these with active menu
+    entity.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyRulesA);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =

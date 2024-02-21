@@ -1125,13 +1125,38 @@ void MenuState::handleMessage(const cro::Message& msg)
         else if (data.type == SystemEvent::MenuRequest
             && m_currentMenu == MenuID::Main)
         {
-            //freeplay menu wants to start somewhere (hosting state is set by menu)
-            m_sharedData.gameMode = GameMode::FreePlay;
-            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-            m_menuEntities[MenuID::Main].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
-            m_menuEntities[MenuID::Main].getComponent<cro::Callback>().active = true;
+            if (data.data == StateID::FreePlay)
+            {
+                //freeplay menu wants to start somewhere (hosting state is set by menu)
+                m_sharedData.gameMode = GameMode::FreePlay;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                m_menuEntities[MenuID::Main].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
+                m_menuEntities[MenuID::Main].getComponent<cro::Callback>().active = true;
 
-            Club::setClubLevel(m_sharedData.preferredClubSet);
+                Club::setClubLevel(m_sharedData.preferredClubSet);
+            }
+            else if (data.data == StateID::Career)
+            {
+                //scales up main menu
+                auto ent = m_uiScene.createEntity();
+                ent.addComponent<cro::Callback>().active = true;
+                ent.getComponent<cro::Callback>().setUserData<float>(0.f);
+                ent.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
+                    {
+                        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                        currTime = std::min(1.f, currTime + (dt* 2.f));
+
+                        const float scale = cro::Util::Easing::easeInCubic(currTime);
+                        m_menuEntities[MenuID::Main].getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+
+                        if (currTime == 1)
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(e);
+                        }
+                    };
+            }
         }
     }
 #ifdef USE_GNS
