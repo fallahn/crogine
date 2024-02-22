@@ -221,7 +221,7 @@ public:
         enum
         {
             Ball, Hair, Course,
-            Profile, Avatar
+            Profile, Avatar, Career
         };
     };
     static std::string getBaseContentPath();

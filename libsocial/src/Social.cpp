@@ -420,6 +420,8 @@ std::string Social::getUserContentPath(std::int32_t contentType)
         return getBaseContentPath() + "hair/";
     case Social::UserContent::Profile:
         return getBaseContentPath() + "profiles/";
+    case Social::UserContent::Career:
+        return getBaseContentPath() + "career/";
     case Social::UserContent::Avatar:
         return getBaseContentPath() + "avatars/";
     }
