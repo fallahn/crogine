@@ -902,18 +902,6 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
         auto buttonEnt = entity;
 
-        const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -32.f, 9.f, 0.f });
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString("Clubs:");
-        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-        buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, 0.f });
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");

@@ -91,6 +91,7 @@ namespace
     enum
     {
         CareerOptions = 10,
+        CareerClubStats,
         CareerClubs,
         CareerQuit,
         CareerProfile,
@@ -417,6 +418,7 @@ void CareerState::buildScene()
     );
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
     auto quitPrevious = CareerOptions;
     auto profilePrevious = CareerStart;
 
@@ -459,7 +461,7 @@ void CareerState::buildScene()
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
         entity.getComponent<cro::UIInput>().setSelectionIndex(CareerClubs);
-        entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerProfile);
+        entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerClubStats);
         entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerProfile);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
@@ -484,9 +486,33 @@ void CareerState::buildScene()
     }
 
 
+    //club stats button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 5.f, 23.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("clubinfo_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerClubStats);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerProfile);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, CareerClubs);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = false; //don't update menu when there's another state active
 
-
-
+                requestStackPush(StateID::Stats);
+            }
+        }
+    );
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //entity with confirmation for starting round
@@ -559,7 +585,7 @@ void CareerState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerProfile);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerLeagueBrowser, profilePrevious);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, profilePrevious);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerClubStats);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
