@@ -91,6 +91,8 @@ namespace
     {
         CareerOptions = 10,
         CareerQuit,
+        CareerProfile,
+        CareerLeagueBrowser,
         CareerStart
     };
 }
@@ -249,7 +251,7 @@ void CareerState::buildScene()
         default: break;
         case RootCallbackData::FadeIn:
             currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale({ 1.f, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
+            e.getComponent<cro::Transform>().setScale({ m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
             if (currTime == 1)
             {
                 state = RootCallbackData::FadeOut;
@@ -267,7 +269,7 @@ void CareerState::buildScene()
             break;
         case RootCallbackData::FadeOut:
             currTime = std::max(0.f, currTime - (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale({ 1.f, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
+            e.getComponent<cro::Transform>().setScale({ m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
             if (currTime == 0)
             {
                 requestStackPop();            
@@ -290,6 +292,7 @@ void CareerState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 10.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -302,10 +305,32 @@ void CareerState::buildScene()
     //TODO Title
 
 
-
+    //dummy menu ent for transitions
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
+
+    //cursor
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({ 23.f, -3.f, -0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cursor");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+
+    auto selectCursor = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [entity](cro::Entity e) mutable
+        {
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    auto unselectCursor = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [entity](cro::Entity e) mutable
+        {
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        });
 
     auto selectHighlight = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
@@ -318,6 +343,23 @@ void CareerState::buildScene()
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
+
+    auto selectOffset = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            auto bounds = e.getComponent<cro::Sprite>().getTextureRect();
+            bounds.bottom += bounds.height;
+            e.getComponent<cro::Sprite>().setTextureRect(bounds);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    auto unselectOffset = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            auto bounds = e.getComponent<cro::Sprite>().getTextureRect();
+            bounds.bottom -= bounds.height;
+            e.getComponent<cro::Sprite>().setTextureRect(bounds);
+        });
+
 
 
     //league items
@@ -397,26 +439,26 @@ void CareerState::buildScene()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 20.f, 5.f };
+    entity.addComponent<UIElement>().absolutePosition = { 20.f, 2.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("exit");
-    /*entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerQuit);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerStart);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, CareerStart);*/
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterHighlight;
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitHighlight;
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-    //    m_scene.getSystem<cro::UISystem>()->addCallback(
-    //        [&](cro::Entity, const cro::ButtonEvent& evt) mutable
-    //        {
-    //            if (activated(evt))
-    //            {
-    //                quitState()
-    //            }
-    //        });
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerStart);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, CareerStart);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectOffset;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectOffset;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    quitState();
+                }
+            });
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -426,15 +468,41 @@ void CareerState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_icon");
+    entity.addComponent<UIElement>().absolutePosition = { -80.f, 5.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.3334f, 0.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerProfile);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerLeagueBrowser, CareerStart);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerStart);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = false;
+                    requestStackPush(StateID::Profile);
+                }
+            });
+    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto iconEnt = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 16.f, 10.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Edit Profile");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    entity.addComponent<UIElement>().absolutePosition = { -40.f, 15.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.3334f, 0.f };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    iconEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    iconEnt.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(entity).width;
+
 
     //rank icon
     if (Social::getLevel() > 0)
@@ -456,16 +524,40 @@ void CareerState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_icon");
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 5.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.6667f, 0.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerLeagueBrowser);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerStart);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerProfile, CareerStart);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = false;
+                    requestStackPush(StateID::League);
+                }
+            });
+    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    iconEnt = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 16.f, 10.f, 0.1f });;
+    entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("View Leagues");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, 15.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.6667f, 0.f };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    iconEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    iconEnt.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(entity).width;
 
     //start
     entity = m_scene.createEntity();
@@ -474,33 +566,29 @@ void CareerState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { -16.f, 5.f };
     entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("start");
-    //entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::ReadyUp].getTextureBounds();
-    //entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-    //entity.getComponent<cro::UIInput>().setSelectionIndex(LobbyStart);
-    //entity.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, LobbyOptions);
-    //entity.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyInfoB);
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-    //    m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
-    //        {
-    //            if (activated(evt))
-    //            {
-    //                //TODO show confirmation
-    //            }
-    //        });
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.left -= 3.f;
+    bounds.width += 6.f;
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerStart);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerQuit, CareerOptions);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerLeagueBrowser, CareerOptions);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    //TODO show confirmation
+                }
+            });
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto startEnt = entity;
-
-    //cursor
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -23.f, 2.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("cursor");
-    entity.addComponent<cro::SpriteAnimation>().play(0);
-    startEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     auto updateView = [&, rootNode, bannerEnt](cro::Camera& cam) mutable
@@ -813,7 +901,6 @@ void CareerState::createConfirmMenu()
     //        });
     //menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
-
 
 void CareerState::quitState()
 {

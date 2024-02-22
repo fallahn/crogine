@@ -641,7 +641,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
                 //write profile with updated settings
                 m_profileData.playerProfiles[m_rosterMenu.profileIndices[index]].isCPU = isCPU;
-                m_profileData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].saveProfile();
+                m_profileData.playerProfiles[m_rosterMenu.profileIndices[index]].saveProfile();
 
                 //update roster
                 m_rosterMenu.selectionEntities[index].getComponent<cro::SpriteAnimation>().play(isCPU ? 5 : 0);

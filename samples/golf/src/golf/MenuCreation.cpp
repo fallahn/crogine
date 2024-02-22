@@ -757,6 +757,14 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 {
                     if (activated(evt))
                     {
+                        //make sure to always play career with default profile
+                        m_rosterMenu.activeIndex = 0;
+                        setProfileIndex(0);
+                        m_profileData.activeProfileIndex = 0;
+                        m_sharedData.localConnectionData.playerData[0].isCPU = false;
+                        m_profileData.playerProfiles[0].isCPU = false;
+                        m_profileData.playerProfiles[0].saveProfile();
+
                         requestStackPush(StateID::Career);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
