@@ -36,6 +36,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "Utility.hpp"
 #include "TextAnimCallback.hpp"
+#include "Clubs.hpp"
 #include "../GolfGame.hpp"
 #include "../Colordome-32.hpp"
 
@@ -90,6 +91,7 @@ namespace
     enum
     {
         CareerOptions = 10,
+        CareerClubs,
         CareerQuit,
         CareerProfile,
         CareerLeagueBrowser,
@@ -259,7 +261,13 @@ void CareerState::buildScene()
 
                 m_scene.setSystemActive<cro::UISystem>(true);
                 m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
+                m_scene.getSystem<cro::UISystem>()->selectAt(CareerQuit);
                 Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
+
+                if (m_clubsetButton.isValid())
+                {
+                    m_clubsetButton.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                }
 
                 if (!m_sharedData.unlockedItems.empty())
                 {
@@ -300,7 +308,7 @@ void CareerState::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto bgEnt = entity;
-
+    createProfileLayout(bgEnt, spriteSheet);
 
     //TODO Title
 
@@ -367,17 +375,19 @@ void CareerState::buildScene()
     {
         //league titles, listed on left
         //if unlocked white text with UI input to start playing
-        //else red text, probably padlock icon?
+        //else red text
+        //left of name has trophy if complete or padlock is locked
 
         //activating updates preview
     }
-    
+    //put player name on bottom row of the box
+
     //right box
     //info entities - round x/6, course title, hole count, current league position, best finishing position, lock status(?)
     //probably course thumbnail
     //maybe weather selection/gimme selection
     //probably want to be able to reset the career too
-    //club set selection
+
 
     //options button
     entity = m_scene.createEntity();
@@ -406,6 +416,78 @@ void CareerState::buildScene()
         }
     );
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto quitPrevious = CareerOptions;
+    auto profilePrevious = CareerStart;
+
+    //select club set
+    if (Social::getClubLevel())
+    {
+        quitPrevious = CareerClubs;
+        profilePrevious = CareerClubs;
+        m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 42.f, 68.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
+        entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        auto buttonEnt = entity;
+
+        const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -32.f, 9.f, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("Clubs:");
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -2.f, -3.f, 0.f });
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_highlight");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        entity.addComponent<cro::Callback>().function = MenuTextCallback();
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(CareerClubs);
+        entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerProfile);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerProfile);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 
+            m_scene.getSystem<cro::UISystem>()->addCallback(
+            [&, buttonEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    //we're not connected yet so we have to rely on joining the server to send tis
+                    m_sharedData.preferredClubSet = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    buttonEnt.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                }
+            });
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+        buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_clubsetButton = buttonEnt;
+    }
+
+
+
+
+
+
 
     //entity with confirmation for starting round
     createConfirmMenu();
@@ -447,7 +529,7 @@ void CareerState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerQuit);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerStart);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, CareerStart);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, quitPrevious);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectOffset;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectOffset;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -476,8 +558,8 @@ void CareerState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerProfile);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerLeagueBrowser, CareerStart);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerStart);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerLeagueBrowser, profilePrevious);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, profilePrevious);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -900,6 +982,118 @@ void CareerState::createConfirmMenu()
     //            }
     //        });
     //menuTransform.addChild(entity.getComponent<cro::Transform>());
+}
+
+void CareerState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet& spriteSheet)
+{
+    //XP info
+    const float xPos = bgEnt.getComponent<cro::Sprite>().getTextureRect().width / 2.f;
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ xPos, 10.f, 0.1f });
+
+    const auto progress = Social::getLevelProgress();
+    constexpr float BarWidth = 80.f;
+
+    entity.addComponent<cro::Drawable2D>().setVertexData(createXPBar(BarWidth, progress.progress));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto labelEnt = m_scene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ (-BarWidth / 2.f) + 2.f, 4.f, 0.1f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(font).setString("Level " + std::to_string(Social::getLevel()));
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+    labelEnt = m_scene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(-xPos * 0.6f), 4.f, 0.1f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(font).setString(std::to_string(progress.currentXP) + "/" + std::to_string(progress.levelXP) + " XP");
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    centreText(labelEnt);
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+    labelEnt = m_scene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(xPos * 0.6f), 4.f, 0.1f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(font).setString("Total: " + std::to_string(Social::getXP()) + " XP");
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    centreText(labelEnt);
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+    //club status - render to a texture to save rendering
+    //a whole bunch of different text entities
+    if (m_clubTexture.create(210, 36, false))
+    {
+        auto clubEnt = m_scene.createEntity();
+        clubEnt.addComponent<cro::Transform>().setPosition({ 8.f, 26.f, 0.1f });
+        clubEnt.addComponent<cro::Drawable2D>();
+        clubEnt.addComponent<cro::Sprite>(m_clubTexture.getTexture());
+        bgEnt.getComponent<cro::Transform>().addChild(clubEnt.getComponent<cro::Transform>());
+
+        cro::SimpleText text(font);
+        text.setFillColour(TextNormalColour);
+        text.setShadowColour(LeaderboardTextDark);
+        text.setShadowOffset({ 1.f, -1.f });
+        text.setCharacterSize(InfoTextSize);
+
+        glm::vec2 position(2.f, 28.f);
+
+        m_clubTexture.clear(cro::Colour::Transparent);
+
+        static constexpr std::int32_t Col = 4;
+        static constexpr std::int32_t Row = 3;
+
+        const auto flags = Social::getUnlockStatus(Social::UnlockType::Club);
+
+        for (auto i = 0; i < Row; ++i)
+        {
+            for (auto j = 0; j < Col; ++j)
+            {
+                auto idx = i + (j * Row);
+                text.setString(Clubs[idx].getLabel() + " ");
+                text.setPosition(position);
+
+                if (flags & (1 << idx))
+                {
+                    if (ClubID::DefaultSet & (1 << idx))
+                    {
+                        text.setFillColour(TextNormalColour);
+                    }
+                    else
+                    {
+                        text.setFillColour(TextGoldColour);
+                    }
+                }
+                else
+                {
+                    text.setFillColour(TextHighlightColour);
+                }
+
+                text.draw();
+                position.x += 49.f;
+            }
+            position.x = 2.f;
+            position.y -= 12.f;
+        }
+
+        m_clubTexture.display();
+
+
+        //TODO make this a button which deactivates the scene camera
+        //and pushes the stats state on top so we can view the club data
+    }
 }
 
 void CareerState::quitState()

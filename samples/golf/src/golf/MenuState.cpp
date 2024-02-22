@@ -215,6 +215,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Leaderboard);
         cacheState(StateID::League);
         cacheState(StateID::News);
+        cacheState(StateID::Stats);
         cacheState(StateID::PlayerManagement);
 
         context.mainWindow.setMouseCaptured(false);
@@ -1156,6 +1157,14 @@ void MenuState::handleMessage(const cro::Message& msg)
                             m_uiScene.destroyEntity(e);
                         }
                     };
+
+                //make sure to update clubset buttons if the set was changed in career menu
+                //remember these aren't always added
+                if (m_clubsetButtons.lobby.isValid())
+                {
+                    m_clubsetButtons.lobby.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                    m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                }
             }
         }
     }

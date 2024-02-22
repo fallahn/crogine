@@ -356,6 +356,67 @@ static inline std::vector<cro::Vertex2D> createMenuHighlight(glm::vec2 size, cro
     };
 }
 
+static inline std::vector<cro::Vertex2D> createXPBar(float width, float progress)
+{
+    const float BarWidth = width;
+    constexpr float BarHeight = 10.f;
+    constexpr auto CornerColour = cro::Colour(std::uint8_t(101), 67, 47);
+
+    std::vector<cro::Vertex2D> verts =
+    {
+        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), TextHighlightColour),
+        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), BarHeight / 2.f), TextHighlightColour),
+
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), BarHeight / 2.f), TextHighlightColour),
+        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), -BarHeight / 2.f), TextHighlightColour),
+
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), BarHeight / 2.f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), -BarHeight / 2.f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), -BarHeight / 2.f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), LeaderboardTextDark),
+
+        //corners
+        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, BarHeight / 2.f), CornerColour),
+
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, BarHeight / 2.f), CornerColour),
+        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+
+        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, -BarHeight / 2.f), CornerColour),
+
+
+        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, BarHeight / 2.f), CornerColour),
+        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+
+        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+        cro::Vertex2D(glm::vec2(BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+
+        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, -BarHeight / 2.f), CornerColour),
+        cro::Vertex2D(glm::vec2(BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+
+        cro::Vertex2D(glm::vec2(BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, -BarHeight / 2.f), CornerColour),
+        cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), CornerColour)
+    };
+    return verts;
+}
+
 static constexpr float ProfileItemHeight = 14.f;
 struct FlyoutMenu final
 {

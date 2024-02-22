@@ -35,6 +35,12 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+
+namespace cro
+{
+    class SpriteSheet;
+}
 
 struct SharedStateData;
 
@@ -73,10 +79,13 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    
+    cro::RenderTexture m_clubTexture;
+    cro::Entity m_clubsetButton;
+
     void addSystems();
     void buildScene();
     void createConfirmMenu();
+    void createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&);
 
     void quitState();
 };
