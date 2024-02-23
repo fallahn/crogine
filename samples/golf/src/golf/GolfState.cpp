@@ -3886,8 +3886,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         //just completed the course
                         if (m_currentHole == 17) //full round
                         {
+                            auto old = Achievements::getActive();
+                            Achievements::setActive(m_allowAchievements);
                             Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
                             Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+                            Achievements::setActive(old);
                         }
 
                         if (m_sharedData.scoreType != ScoreType::Skins)
