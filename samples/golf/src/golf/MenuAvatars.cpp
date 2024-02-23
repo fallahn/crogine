@@ -664,7 +664,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //prev profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 87.f, 104.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 85.f, 104.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
@@ -772,7 +772,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //profile flyout button
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 108.f, 101.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 106.f, 101.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_flyout");
@@ -803,7 +803,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //next profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 149.f, 104.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 147.f, 104.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];

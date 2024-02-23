@@ -134,7 +134,8 @@ private:
     std::int32_t m_currentTab;
     cro::Entity m_tabEntity;
     std::array<cro::Entity, TabID::Count> m_tabButtons = {};   
-    std::array<cro::Entity, TabID::Count> m_tabNodes = {};   
+    std::array<cro::Entity, TabID::Count> m_tabNodes = {};
+    cro::Entity m_closeButton;
 
     bool m_imperialMeasurements;
     std::array<PieChart, 2u> m_pieCharts = {};

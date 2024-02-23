@@ -509,7 +509,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         const auto offset = -bounds.height * (1.f - alpha);
         e.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
 
-        //move the next ent down (so this happens recursivelyand we get a nice stack)
+        //move the next ent down (so this happens recursively and we get a nice stack)
         auto nextEnt = (currIdx + 1) % m_screenChatBuffer.size();
         if (m_screenChatBuffer[nextEnt].isValid())
         {
@@ -691,7 +691,8 @@ void TextChat::sendTextChat()
 bool TextChat::speak(const cro::String& str) const
 {
 #ifdef _WIN32
-    if (m_sharedData.useTTS)
+    if (!Social::isSteamdeck() &&
+        m_sharedData.useTTS)
     {
         if (m_speaker.voice != nullptr)
         {

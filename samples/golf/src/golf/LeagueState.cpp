@@ -108,6 +108,7 @@ namespace
     constexpr std::size_t InfoButtonIndex = 1;
     constexpr std::size_t RightButtonIndex = 2;
     constexpr std::size_t LeftButtonIndex = 3;
+    constexpr std::size_t CloseButtonIndex = 4;
 
     struct MenuID final
     {
@@ -437,6 +438,7 @@ void LeagueState::buildScene()
 
     auto bgNode = entity;
 
+
     //tab buttons
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
@@ -458,15 +460,42 @@ void LeagueState::buildScene()
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
+    auto closeCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                quitState();
+            }
+        });
 
 
     const float stride = 102.f;
     auto sprite = spriteSheet.getSprite("button_highlight");
-    bounds = sprite.getTextureBounds();
+    
     const float offset = 153.f;
 
     for (auto i = 0; i < TabID::Max; ++i)
     {
+        //close button (we have one for each menu group)
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 463.f, 326.f, 0.1f });
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("close_highlight");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().enabled = i != m_currentTab;
+        entity.getComponent<cro::UIInput>().setSelectionIndex(CloseButtonIndex + i);
+        entity.getComponent<cro::UIInput>().setGroup(i);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = closeCallback;
+        entity.addComponent<cro::Callback>().function = MenuTextCallback();
+        bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        //tab button
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ (stride * i) + offset, 19.f, 0.5f });
         entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
@@ -476,6 +505,7 @@ void LeagueState::buildScene()
         entity.addComponent<cro::Sprite>() = sprite;
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
 
+        bounds = sprite.getTextureBounds();
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().enabled = i != m_currentTab;
         entity.getComponent<cro::UIInput>().setSelectionIndex(i);
@@ -510,7 +540,7 @@ void LeagueState::buildScene()
     m_tabButtons[LeagueButtonIndex].getComponent<cro::UIInput>().setNextIndex(InfoButtonIndex, InfoButtonIndex);
     m_tabButtons[LeagueButtonIndex].getComponent<cro::UIInput>().setPrevIndex(InfoButtonIndex, InfoButtonIndex);
 
-    m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setNextIndex(RightButtonIndex, RightButtonIndex);
+    m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setNextIndex(RightButtonIndex, CloseButtonIndex);
     m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(RightButtonIndex, RightButtonIndex);
 #endif
     createInfoTab(bgNode);
@@ -1101,7 +1131,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
     buttonRight.addComponent<cro::UIInput>().area = buttonRight.getComponent<cro::Sprite>().getTextureBounds();
     buttonRight.getComponent<cro::UIInput>().setSelectionIndex(RightButtonIndex);
     buttonRight.getComponent<cro::UIInput>().setNextIndex(InfoButtonIndex, InfoButtonIndex);
-    buttonRight.getComponent<cro::UIInput>().setPrevIndex(InfoButtonIndex, InfoButtonIndex);
+    buttonRight.getComponent<cro::UIInput>().setPrevIndex(InfoButtonIndex, CloseButtonIndex);
     buttonRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     buttonRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
     buttonRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
@@ -1118,14 +1148,14 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                 ent.getComponent<cro::Callback>().function =
                     [&, buttonLeft](cro::Entity f, float) mutable
                     {
-                    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                         m_leagueNodes[LeagueID::Club].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                         buttonLeft.getComponent<cro::UIInput>().enabled = true;
 
                         m_scene.getSystem<cro::UISystem>()->selectByIndex(LeftButtonIndex);
 
                         m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setNextIndex(LeftButtonIndex, LeftButtonIndex);
-                        m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(LeftButtonIndex, LeftButtonIndex);
+                        m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(LeftButtonIndex, CloseButtonIndex);
 
                         f.getComponent<cro::Callback>().active = false;
                         m_scene.destroyEntity(f);
@@ -1137,7 +1167,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
     buttonLeft.addComponent<cro::UIInput>().area = buttonLeft.getComponent<cro::Sprite>().getTextureBounds();
     buttonLeft.getComponent<cro::UIInput>().setSelectionIndex(LeftButtonIndex);
     buttonLeft.getComponent<cro::UIInput>().setNextIndex(InfoButtonIndex, InfoButtonIndex);
-    buttonLeft.getComponent<cro::UIInput>().setPrevIndex(InfoButtonIndex, InfoButtonIndex);
+    buttonLeft.getComponent<cro::UIInput>().setPrevIndex(InfoButtonIndex, CloseButtonIndex);
     buttonLeft.getComponent<cro::UIInput>().enabled = false;
     buttonLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
     buttonLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
@@ -1161,7 +1191,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                         m_scene.getSystem<cro::UISystem>()->selectByIndex(RightButtonIndex);
 
                         m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setNextIndex(RightButtonIndex, RightButtonIndex);
-                        m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(RightButtonIndex, RightButtonIndex);
+                        m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(RightButtonIndex, CloseButtonIndex);
 
                         f.getComponent<cro::Callback>().active = false;
                         m_scene.destroyEntity(f);

@@ -35,6 +35,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "Utility.hpp"
+#include "MenuCallbacks.hpp"
 #include "TextAnimCallback.hpp"
 #include "Clubs.hpp"
 #include "../GolfGame.hpp"
@@ -221,6 +222,7 @@ void CareerState::addSystems()
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
     m_scene.setSystemActive<cro::UISystem>(false);
+    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
 }
 
 void CareerState::buildScene()
@@ -260,6 +262,8 @@ void CareerState::buildScene()
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
 
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
+
                 m_scene.setSystemActive<cro::UISystem>(true);
                 m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
                 m_scene.getSystem<cro::UISystem>()->selectAt(CareerQuit);
@@ -274,17 +278,38 @@ void CareerState::buildScene()
                 {
                     requestStackPush(StateID::Unlock);
                 }
+
+                //start title animation
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::TitleText;
+                cmd.action = [](cro::Entity t, float)
+                    {
+                        t.getComponent<cro::Callback>().setUserData<float>(0.f);
+                        t.getComponent<cro::Callback>().active = true;
+                    };
+                m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
             break;
         case RootCallbackData::FadeOut:
             currTime = std::max(0.f, currTime - (dt * 2.f));
             e.getComponent<cro::Transform>().setScale({ m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
+            
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::TitleText;
+            cmd.action = 
+                [currTime](cro::Entity t, float)
+                {
+                    t.getComponent<cro::Transform>().setScale(glm::vec2(currTime));
+                };
+            m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            
+            
             if (currTime == 0)
             {
                 requestStackPop();            
 
                 state = RootCallbackData::FadeIn;
-
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
             }
             break;
         }
@@ -311,7 +336,19 @@ void CareerState::buildScene()
     auto bgEnt = entity;
     createProfileLayout(bgEnt, spriteSheet);
 
-    //TODO Title
+    //title
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
+    entity.getComponent<UIElement>().depth = 1.6f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function = TitleTextCallback();
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //dummy menu ent for transitions
@@ -1124,6 +1161,14 @@ void CareerState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&
 
 void CareerState::quitState()
 {
+    //cro::Command cmd;
+    //cmd.targetFlags = CommandID::Menu::TitleText;
+    //cmd.action = [](cro::Entity t, float)
+    //    {
+    //        t.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    //    };
+    //m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
 
     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
