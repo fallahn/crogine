@@ -759,7 +759,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     {
                         //make sure to always play career with default profile
                         m_rosterMenu.activeIndex = 0;
-                        setProfileIndex(0);
+                        setProfileIndex(0, false);
                         m_profileData.activeProfileIndex = 0;
                         m_sharedData.localConnectionData.playerData[0].isCPU = false;
                         m_profileData.playerProfiles[0].isCPU = false;

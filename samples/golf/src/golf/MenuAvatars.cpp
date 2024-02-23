@@ -832,6 +832,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     //button to open club stats
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 20.f, 54.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("clubinfo_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -1863,7 +1864,7 @@ void MenuState::eraseCurrentProfile()
     }
 }
 
-void MenuState::setProfileIndex(std::size_t i)
+void MenuState::setProfileIndex(std::size_t i, bool playSound)
 {
     m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = i;
 
@@ -1871,16 +1872,19 @@ void MenuState::setProfileIndex(std::size_t i)
 
     updateRoster();
 
-    auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
-    auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
-    if (soundSize != 0)
+    if (playSound)
     {
-        auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
-        m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
-    }
-    else
-    {
-        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
+        auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
+        if (soundSize != 0)
+        {
+            auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+            m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+        }
+        else
+        {
+            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        }
     }
 }
 

@@ -585,7 +585,7 @@ void CareerState::buildScene()
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 20.f, 2.f };
-    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("exit");
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -612,10 +612,12 @@ void CareerState::buildScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_icon");
     entity.addComponent<UIElement>().absolutePosition = { -80.f, 5.f };
     entity.getComponent<UIElement>().relativePosition = { 0.3334f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
@@ -630,6 +632,7 @@ void CareerState::buildScene()
             {
                 if (activated(evt))
                 {
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_scene.getActiveCamera().getComponent<cro::Camera>().active = false;
                     requestStackPush(StateID::Profile);
                 }
@@ -661,6 +664,7 @@ void CareerState::buildScene()
         iconEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
         iconEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
         iconEnt.getComponent<UIElement>().absolutePosition = { 0.f, 11.f };
+        iconEnt.getComponent<UIElement>().depth = 0.2f;
         iconEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
         bannerEnt.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
     }
@@ -668,10 +672,12 @@ void CareerState::buildScene()
     //league browser
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_icon");
     entity.addComponent<UIElement>().absolutePosition = { 0.f, 5.f };
     entity.getComponent<UIElement>().relativePosition = { 0.6667f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
@@ -686,6 +692,7 @@ void CareerState::buildScene()
             {
                 if (activated(evt))
                 {
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_scene.getActiveCamera().getComponent<cro::Camera>().active = false;
                     requestStackPush(StateID::League);
                 }
@@ -711,7 +718,7 @@ void CareerState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { -16.f, 5.f };
     entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
-    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("start");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();

@@ -341,7 +341,7 @@ private:
     void createMenuCallbacks();
     void createProfileLayout(cro::Entity, cro::Transform&, const cro::SpriteSheet&);//display XP, clubs, streak etc on avatar menu
     void eraseCurrentProfile();
-    void setProfileIndex(std::size_t);
+    void setProfileIndex(std::size_t, bool playSound = true);
     void refreshProfileFlyout();
 
     //allows updating the target indices
