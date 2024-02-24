@@ -5042,7 +5042,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
 void GolfState::requestNextPlayer(const ActivePlayer& player)
 {
-    if (m_sharedData.gameMode == GameMode::Tutorial)
+    if (m_sharedData.gameMode != GameMode::Tutorial)
     {
         m_currentPlayer = player;
 

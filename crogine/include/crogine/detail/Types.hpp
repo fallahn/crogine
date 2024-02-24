@@ -56,10 +56,7 @@ namespace cro
         SDL_RWops* file;
         ~RaiiRWops()
         {
-            if (file)
-            {
-                SDL_RWclose(file);
-            }
+            close();
         }
         RaiiRWops() : file(nullptr) {}
         RaiiRWops(const RaiiRWops&) = delete;
@@ -67,5 +64,17 @@ namespace cro
         
         RaiiRWops(RaiiRWops&&) = default;
         RaiiRWops& operator = (RaiiRWops&&) = default;
+
+        void close()
+        {
+            if (file)
+            {
+                if (file)
+                {
+                    SDL_RWclose(file);
+                    file = nullptr;
+                }
+            }
+        }
     };
 }
