@@ -1227,6 +1227,99 @@ void GolfGame::loadPreferences()
         }
     }
 
+    //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
+    path = Social::getBaseContentPath() + "user_prefs.cfg";
+    if (cro::FileSystem::fileExists(path))
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(path, false))
+        {
+            const auto& properties = cfg.getProperties();
+            for (const auto& prop : properties)
+            {
+                const auto& name = prop.getName();
+                if (name == "pixel_scale")
+                {
+                    m_sharedData.pixelScale = prop.getValue<bool>();
+                }
+                else if (name == "fov")
+                {
+                    m_sharedData.fov = std::max(MinFOV, std::min(MaxFOV, prop.getValue<float>()));
+                }
+                else if (name == "vertex_snap")
+                {
+                    m_sharedData.vertexSnap = prop.getValue<bool>();
+                }
+                else if (name == "mouse_speed")
+                {
+                    m_sharedData.mouseSpeed = std::max(ConstVal::MinMouseSpeed, std::min(ConstVal::MaxMouseSpeed, prop.getValue<float>()));
+                }
+                else if (name == "invert_x")
+                {
+                    m_sharedData.invertX = prop.getValue<bool>();
+                }
+                else if (name == "invert_y")
+                {
+                    m_sharedData.invertY = prop.getValue<bool>();
+                }
+                else if (name == "show_beacon")
+                {
+                    m_sharedData.showBeacon = prop.getValue<bool>();
+                }
+                else if (name == "beacon_colour")
+                {
+                    m_sharedData.beaconColour = std::fmod(prop.getValue<float>(), 1.f);
+                }
+                else if (name == "imperial_measurements")
+                {
+                    m_sharedData.imperialMeasurements = prop.getValue<bool>();
+                }
+                else if (name == "grid_transparency")
+                {
+                    m_sharedData.gridTransparency = std::max(0.f, std::min(1.f, prop.getValue<float>()));
+                }
+                else if (name == "show_tutorial")
+                {
+                    m_sharedData.showTutorialTip = prop.getValue<bool>();
+                }
+                else if (name == "putting_power")
+                {
+                    m_sharedData.showPuttingPower = prop.getValue<bool>();
+                }
+                else if (name == "use_vibration")
+                {
+                    m_sharedData.enableRumble = prop.getValue<bool>() ? 1 : 0;
+                }
+                else if (name == "use_trail")
+                {
+                    m_sharedData.showBallTrail = prop.getValue<bool>();
+                }
+                else if (name == "use_beacon_colour")
+                {
+                    m_sharedData.trailBeaconColour = prop.getValue<bool>();
+                }
+                else if (name == "fast_cpu")
+                {
+                    m_sharedData.fastCPU = prop.getValue<bool>();
+                }
+                else if (name == "clubset")
+                {
+                    m_sharedData.preferredClubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                    m_sharedData.clubSet = m_sharedData.preferredClubSet;
+                }
+                else if (name == "press_hold")
+                {
+                    m_sharedData.pressHold = prop.getValue<bool>();
+                }
+                else if (name == "use_tts")
+                {
+                    m_sharedData.useTTS = prop.getValue<bool>();
+                }
+            }
+        }
+    }
+
+
     //read keybind bin
     path = Social::getBaseContentPath() + "keys.bind";
 
@@ -1294,21 +1387,28 @@ void GolfGame::savePreferences()
         cfg.addProperty("custom_shader").setValue(m_sharedData.customShaderPath);
     }
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
+    cfg.addProperty("swingput_threshold").setValue(m_sharedData.swingputThreshold);
+    cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
+    cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
+    cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
+    cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
+    cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
+    cfg.save(path);
+
+
+    //per-user options
+    path = Social::getBaseContentPath() + "user_prefs.cfg";
+    cfg = cro::ConfigFile("user_preferences");
     cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
     cfg.addProperty("fov").setValue(m_sharedData.fov);
     cfg.addProperty("vertex_snap").setValue(m_sharedData.vertexSnap);
     cfg.addProperty("mouse_speed").setValue(m_sharedData.mouseSpeed);
-    cfg.addProperty("swingput_threshold").setValue(m_sharedData.swingputThreshold);
     cfg.addProperty("invert_x").setValue(m_sharedData.invertX);
     cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
     cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);
     cfg.addProperty("beacon_colour").setValue(m_sharedData.beaconColour);
     cfg.addProperty("imperial_measurements").setValue(m_sharedData.imperialMeasurements);
     cfg.addProperty("grid_transparency").setValue(m_sharedData.gridTransparency);
-    cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
-    cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
-    cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
-    cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("show_tutorial").setValue(m_sharedData.showTutorialTip);
     cfg.addProperty("putting_power").setValue(m_sharedData.showPuttingPower);
     cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
@@ -1319,7 +1419,6 @@ void GolfGame::savePreferences()
     cfg.addProperty("clubset").setValue(m_sharedData.preferredClubSet);
     cfg.addProperty("press_hold").setValue(m_sharedData.pressHold);
     cfg.addProperty("use_tts").setValue(m_sharedData.useTTS);
-    cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
     cfg.save(path);
 
 
