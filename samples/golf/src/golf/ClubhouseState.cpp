@@ -1665,7 +1665,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Billiards)
             {
                 //leave the lobby
-                m_matchMaking.leaveGame();
+                m_matchMaking.leaveLobby();
 
                 m_sharedData.ballSkinIndex = m_tableData[m_tableIndex].ballSkinIndex;
                 m_sharedData.tableSkinIndex = m_tableData[m_tableIndex].tableSkinIndex;
@@ -1884,7 +1884,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
     }
     else if (evt.type == net::NetEvent::ClientDisconnect)
     {
-        m_matchMaking.leaveGame();
+        m_matchMaking.leaveLobby();
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(StateID::Error);
     }

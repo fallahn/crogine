@@ -1327,15 +1327,17 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
                 std::size_t idx = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
                 idx += (LobbyPager::ItemsPerPage * m_lobbyPager.currentPage);
 
-                if (idx < m_lobbyPager.lobbyIDs.size())
+                if (idx < m_lobbyPager.serverIDs.size())
                 {
                     //this will be reset next time the page is scrolled, and prevents double presses
                     e.getComponent<cro::UIInput>().enabled = false;
 
                     m_audioEnts[AudioID::Start].getComponent<cro::AudioEmitter>().play();
 
-                    m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
-                    m_sharedData.lobbyID = m_lobbyPager.lobbyIDs[idx];
+                    /*m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
+                    m_sharedData.lobbyID = m_lobbyPager.lobbyIDs[idx];*/
+
+                    finaliseGameJoin(m_lobbyPager.serverIDs[idx]);
                 }
 
                 refreshUI();
@@ -1377,7 +1379,7 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
 
         for (auto i = start; i < end; ++i)
         {
-            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.lobbyIDs.size());
+            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.serverIDs.size());
         }
     };
 
@@ -3264,7 +3266,7 @@ void MenuState::updateLobbyList()
     }
 
     m_lobbyPager.pages.clear();
-    m_lobbyPager.lobbyIDs.clear();
+    m_lobbyPager.serverIDs.clear();
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     const auto& lobbyData = m_matchMaking.getLobbies();
@@ -3302,7 +3304,7 @@ void MenuState::updateLobbyList()
                 pageString += ss.str();
                 pageString += lobbyData[j].title + "\n";
 
-                m_lobbyPager.lobbyIDs.push_back(lobbyData[j].ID);
+                m_lobbyPager.serverIDs.push_back(lobbyData[j].serverID);
             }
 
             auto entity = m_uiScene.createEntity();
@@ -3326,7 +3328,7 @@ void MenuState::updateLobbyList()
 
         for (auto i = start; i < end; ++i)
         {
-            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.lobbyIDs.size());
+            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.serverIDs.size());
         }
     }
 
@@ -3367,7 +3369,7 @@ void MenuState::quitLobby()
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
 
-    m_matchMaking.leaveGame();
+    m_matchMaking.leaveLobby();
     m_sharedData.lobbyID = 0;
     m_sharedData.inviteID = 0;
     m_sharedData.clientConnection.hostID = 0;

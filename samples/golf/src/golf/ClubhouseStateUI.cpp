@@ -1840,15 +1840,15 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
                 std::size_t idx = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
                 idx += (LobbyPager::ItemsPerPage * m_lobbyPager.currentPage);
 
-                if (idx < m_lobbyPager.lobbyIDs.size())
+                if (idx < m_lobbyPager.serverIDs.size())
                 {
                     //this will be reset next time the page is scrolled, and prevents double presses
                     e.getComponent<cro::UIInput>().enabled = false;
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                    m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
-                    m_sharedData.lobbyID = m_lobbyPager.lobbyIDs[idx];
+                    m_matchMaking.joinGame(m_lobbyPager.serverIDs[idx]);
+                    m_sharedData.lobbyID = m_lobbyPager.serverIDs[idx];
                 }
             }
         });
@@ -1888,7 +1888,7 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
 
         for (auto i = start; i < end; ++i)
         {
-            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.lobbyIDs.size());
+            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.serverIDs.size());
         }
     };
 
@@ -2841,7 +2841,7 @@ void ClubhouseState::updateLobbyList()
     }
 
     m_lobbyPager.pages.clear();
-    m_lobbyPager.lobbyIDs.clear();
+    m_lobbyPager.serverIDs.clear();
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     const auto& lobbyData = m_matchMaking.getLobbies();
@@ -2879,7 +2879,7 @@ void ClubhouseState::updateLobbyList()
                 pageString += ss.str();
                 pageString += lobbyData[j].title + "\n";
 
-                m_lobbyPager.lobbyIDs.push_back(lobbyData[j].ID);
+                m_lobbyPager.serverIDs.push_back(lobbyData[j].ID);
             }
 
             auto entity = m_uiScene.createEntity();
@@ -2903,7 +2903,7 @@ void ClubhouseState::updateLobbyList()
 
         for (auto i = start; i < end; ++i)
         {
-            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.lobbyIDs.size());
+            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.serverIDs.size());
         }
     }
 
@@ -2944,7 +2944,7 @@ void ClubhouseState::quitLobby()
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
 
-    m_matchMaking.leaveGame();
+    m_matchMaking.leaveLobby();
 
     if (m_sharedData.hosting)
     {

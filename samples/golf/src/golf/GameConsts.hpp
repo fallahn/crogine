@@ -189,7 +189,7 @@ struct LobbyPager final
     cro::Entity rootNode;
     std::vector<cro::Entity> pages;
     std::vector<cro::Entity> slots;
-    std::vector<std::uint64_t> lobbyIDs;
+    std::vector<std::uint64_t> serverIDs;
 
     std::array<cro::Entity, 2u> buttonLeft;
     std::array<cro::Entity, 2u> buttonRight;

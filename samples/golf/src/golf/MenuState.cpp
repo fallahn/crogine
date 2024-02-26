@@ -331,6 +331,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
                 //create a new lobby - message handler makes sure everyone joins it
+                //TODO - if the updated method works, note that clients other than the
+                //host don't actually join the steam lobby
                 m_matchMaking.createLobby(ConstVal::MaxClients, Server::GameMode::Golf);
             }
             else
@@ -1065,14 +1067,23 @@ void MenuState::handleMessage(const cro::Message& msg)
             }
             break;
         case MatchMaking::Message::LobbyJoined:
-            finaliseGameJoin(data);
+            if (data.gameType == Server::GameMode::Golf)
+            {
+                finaliseGameJoin(data.hostID);
+            }
+            else
+            {
+                m_sharedData.inviteID = data.hostID;
+                requestStackClear();
+                requestStackPush(StateID::Clubhouse);
+            }
             break;
         case MatchMaking::Message::LobbyJoinFailed:
             m_sharedData.lobbyID = 0;
             m_sharedData.inviteID = 0;
             m_sharedData.clientConnection.hostID = 0;
             
-            m_matchMaking.leaveGame();
+            m_matchMaking.leaveLobby();
             m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
             updateLobbyList();
             m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
@@ -1982,8 +1993,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         }
             break;
         case PacketID::NewLobbyReady:
-            m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
-            LogI << "New lobby ready, joining lobby" << std::endl;
+            if (m_sharedData.hosting)
+            {
+                m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
+                LogI << "New lobby ready, joining lobby" << std::endl;
+            }
             break;
         case PacketID::PingTime:
         {
@@ -2005,7 +2019,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 m_sharedData.lobbyID = 0;
                 m_sharedData.inviteID = 0;
 
-                m_matchMaking.leaveGame(); //doesn't really leave the game, it quits the lobby
+                m_matchMaking.leaveLobby(); //doesn't really leave the game, it quits the lobby
                 requestStackClear();
                 requestStackPush(StateID::Golf);
             }
@@ -2456,7 +2470,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         m_sharedData.lobbyID = 0;
         m_sharedData.inviteID = 0;
 
-        m_matchMaking.leaveGame();
+        m_matchMaking.leaveLobby();
         requestStackPush(StateID::Error);
     }
 }
@@ -2551,11 +2565,11 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
     }
 }
 
-void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
+void MenuState::finaliseGameJoin(/*const MatchMaking::Message& data*/std::uint64_t hostID)
 {
 #ifdef USE_GNS
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(data.hostID)));
-    m_sharedData.clientConnection.hostID = data.hostID;
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(hostID)));
+    m_sharedData.clientConnection.hostID = hostID;
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
 #endif
@@ -2566,7 +2580,7 @@ void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
         m_sharedData.inviteID = 0;
         m_sharedData.errorMessage = "Could not connect to server";
         requestStackPush(StateID::Error);
-        m_matchMaking.leaveGame();
+        m_matchMaking.leaveLobby();
         return;
     }
 
