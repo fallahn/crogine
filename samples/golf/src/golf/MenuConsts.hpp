@@ -156,6 +156,8 @@ static constexpr float UIBarHeight = 16.f;
 static constexpr float UITextPosV = 12.f;
 static constexpr glm::vec3 CursorOffset(-20.f, 4.f, 0.f);
 
+static constexpr glm::vec2 CourseThumbnailSize(138.f, 104.f);
+
 //ui components are laid out as a normalised value
 //relative to the window size.
 struct UIElement final

@@ -36,6 +36,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "Utility.hpp"
 #include "MenuCallbacks.hpp"
+#include "MenuConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "Clubs.hpp"
 #include "../GolfGame.hpp"
@@ -512,8 +513,7 @@ void CareerState::buildScene()
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         position.y -= LineSpacing;
     }
-    //select default entry - should always be the most recent/active
-    selectLeague(buttons.size() - 1);
+    //correct selection indices for first / last
     CRO_ASSERT(!buttons.empty(), "");
     buttons.front().getComponent<cro::UIInput>().setPrevIndex(CareerProfile, CareerProfile);
     buttons.back().getComponent<cro::UIInput>().setNextIndex(CareerClubs, CareerClubs);
@@ -530,11 +530,63 @@ void CareerState::buildScene()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //right box - if we do this sooner we can capture the relative entities in the button callbacks
-    //info entities - round x/6, course title, hole count, current league position, best finishing position, lock status(?)
-    //probably course thumbnail
-    //maybe weather selection/gimme selection
-    //probably want to be able to reset the career too
+    //TODO gimme, night and weather selection below league list
+
+
+
+    //right box - updated by selectLeague()
+    static constexpr float CentrePos = 364.f;
+    //course title, description, hole count, round number and current league position and best finishing position, course thumbnail
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 226.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Course Title Goes Here");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueDetails.courseTitle = entity;
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 214.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("This is where the longer description will be");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueDetails.courseDescription = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 202.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("All 18 Holes");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueDetails.holeCount = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 66.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Round 3/6\nCurrent Position: 14th\nPrevious Best: 5th");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueDetails.leagueDetails = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 64.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>();//138x104
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueDetails.thumbnail = entity;
+
+    //select the most recent league
+    selectLeague(buttons.size() - 1);
 
 
     //options button
@@ -722,8 +774,6 @@ void CareerState::buildScene()
 
 
     //profile editor
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1282,7 +1332,11 @@ void CareerState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&
 
 void CareerState::selectLeague(std::size_t)
 {
+    //hmmm we need to feed in m_courseData and m_courseThumbs from the MenuState
 
+    /*m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_courseThumbs.at(course));
+    auto scale = CourseThumbnailSize / glm::vec2(m_courseThumbs.at(course)->getSize());
+    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);*/
 }
 
 void CareerState::quitState()

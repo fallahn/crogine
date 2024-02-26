@@ -82,6 +82,15 @@ private:
     cro::RenderTexture m_clubTexture;
     cro::Entity m_clubsetButton;
 
+    struct LeagueDetails final
+    {
+        cro::Entity courseTitle;
+        cro::Entity courseDescription;
+        cro::Entity holeCount;
+        cro::Entity leagueDetails; //round number, current position and previous best
+        cro::Entity thumbnail;
+    }m_leagueDetails;
+
     void addSystems();
     void buildScene();
     void createConfirmMenu();

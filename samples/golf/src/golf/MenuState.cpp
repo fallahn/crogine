@@ -2256,8 +2256,6 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 }
                 updateCourseRuleString(true);
 
-                static constexpr glm::vec2 ThumbnailSize(138.f, 104.f);
-
                 const auto delayRefresh = [&]()
                 {
                     auto e = m_uiScene.createEntity();
@@ -2285,7 +2283,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_videoPlayer.update(1.f/30.f);
 
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(m_videoPlayer.getTexture());
-                    auto scale = ThumbnailSize / glm::vec2(m_videoPlayer.getTexture().getSize());
+                    auto scale = CourseThumbnailSize / glm::vec2(m_videoPlayer.getTexture().getSize());
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
 
                     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2296,7 +2294,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 else if (m_courseThumbs.count(course) != 0)
                 {
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_courseThumbs.at(course));
-                    auto scale = ThumbnailSize / glm::vec2(m_courseThumbs.at(course)->getSize());
+                    auto scale = CourseThumbnailSize / glm::vec2(m_courseThumbs.at(course)->getSize());
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
                     
                     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
