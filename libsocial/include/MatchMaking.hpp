@@ -74,7 +74,7 @@ public:
     };
     const std::vector<LobbyData>& getLobbies() const { static std::vector<LobbyData> d;  return d; }
 
-    void leaveGame() {}
+    void leaveLobby() {}
 
     const char* getUserName() const { return nullptr; }
 
