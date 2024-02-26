@@ -87,5 +87,7 @@ private:
     void createConfirmMenu();
     void createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&);
 
+    void selectLeague(std::size_t);
+
     void quitState();
 };

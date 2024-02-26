@@ -90,7 +90,8 @@ League::League(std::int32_t id)
     m_playerScore       (0),
     m_currentIteration  (0),
     m_currentSeason     (1),
-    m_increaseCount     (0)
+    m_increaseCount     (0),
+    m_previousPosition  (16)
 {
     CRO_ASSERT(id < LeagueRoundID::Count, "");
 
@@ -389,6 +390,7 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
                     else
                     {
                         m_previousResults += ". " + playerName;
+                        m_previousPosition = i + 1;
                     }
                     m_previousResults += " " + std::to_string(buff[i].score);
                 }

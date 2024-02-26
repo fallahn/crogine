@@ -78,8 +78,6 @@ source distribution.
 
 namespace
 {
-    constexpr float PadlockOffset = 58.f;
-
     struct MenuID final
     {
         enum
@@ -92,12 +90,15 @@ namespace
     enum
     {
         CareerOptions = 10,
-        CareerClubStats,
         CareerClubs,
+        CareerClubStats,
         CareerQuit,
         CareerProfile,
         CareerLeagueBrowser,
-        CareerStart
+        CareerStart,
+
+
+        CareerSeason = 100
     };
 }
 
@@ -248,73 +249,73 @@ void CareerState::buildScene()
     rootNode.getComponent<cro::Callback>().setUserData<RootCallbackData>();
     rootNode.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
-    {
-        auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<RootCallbackData>();
-
-        switch (state)
         {
-        default: break;
-        case RootCallbackData::FadeIn:
-            currTime = std::min(1.f, currTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale({ m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
-            if (currTime == 1)
+            auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<RootCallbackData>();
+
+            switch (state)
             {
-                state = RootCallbackData::FadeOut;
-                e.getComponent<cro::Callback>().active = false;
-
-                m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
-
-                m_scene.setSystemActive<cro::UISystem>(true);
-                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
-                m_scene.getSystem<cro::UISystem>()->selectAt(CareerQuit);
-                Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
-
-                if (m_clubsetButton.isValid())
+            default: break;
+            case RootCallbackData::FadeIn:
+                currTime = std::min(1.f, currTime + (dt * 2.f));
+                e.getComponent<cro::Transform>().setScale({ m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
+                if (currTime == 1)
                 {
-                    m_clubsetButton.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
-                }
+                    state = RootCallbackData::FadeOut;
+                    e.getComponent<cro::Callback>().active = false;
 
-                if (!m_sharedData.unlockedItems.empty())
-                {
-                    requestStackPush(StateID::Unlock);
-                }
+                    m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
 
-                //start title animation
+                    m_scene.setSystemActive<cro::UISystem>(true);
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
+                    m_scene.getSystem<cro::UISystem>()->selectAt(CareerQuit);
+                    Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
+
+                    if (m_clubsetButton.isValid())
+                    {
+                        m_clubsetButton.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                    }
+
+                    if (!m_sharedData.unlockedItems.empty())
+                    {
+                        requestStackPush(StateID::Unlock);
+                    }
+
+                    //start title animation
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::Menu::TitleText;
+                    cmd.action = [](cro::Entity t, float)
+                        {
+                            t.getComponent<cro::Callback>().setUserData<float>(0.f);
+                            t.getComponent<cro::Callback>().active = true;
+                        };
+                    m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                }
+                break;
+            case RootCallbackData::FadeOut:
+                currTime = std::max(0.f, currTime - (dt * 2.f));
+                e.getComponent<cro::Transform>().setScale({ m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
+
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Menu::TitleText;
-                cmd.action = [](cro::Entity t, float)
+                cmd.action =
+                    [currTime](cro::Entity t, float)
                     {
-                        t.getComponent<cro::Callback>().setUserData<float>(0.f);
-                        t.getComponent<cro::Callback>().active = true;
+                        t.getComponent<cro::Transform>().setScale(glm::vec2(currTime));
                     };
                 m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-            }
-            break;
-        case RootCallbackData::FadeOut:
-            currTime = std::max(0.f, currTime - (dt * 2.f));
-            e.getComponent<cro::Transform>().setScale({ m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
-            
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::Menu::TitleText;
-            cmd.action = 
-                [currTime](cro::Entity t, float)
+
+
+                if (currTime == 0)
                 {
-                    t.getComponent<cro::Transform>().setScale(glm::vec2(currTime));
-                };
-            m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-            
-            
-            if (currTime == 0)
-            {
-                requestStackPop();            
+                    requestStackPop();
 
-                state = RootCallbackData::FadeIn;
-                m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
+                    state = RootCallbackData::FadeIn;
+                    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
+                }
+                break;
             }
-            break;
-        }
 
-    };
+        };
 
     m_rootNode = rootNode;
 
@@ -381,6 +382,7 @@ void CareerState::buildScene()
     auto selectHighlight = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
+            e.getComponent<cro::Callback>().active = true;
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
         });
@@ -407,20 +409,128 @@ void CareerState::buildScene()
         });
 
 
+    cro::String playerName;
+    if (Social::isAvailable())
+    {
+        playerName = Social::getPlayerName();
+    }
+    else
+    {
+        playerName = m_sharedData.localConnectionData.playerData[0].name;
+    }
+
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    std::vector<cro::Entity> buttons; //temp store these here so we can correct button indices
+
 
     //league items
+    const auto& leagueData = m_career.getLeagueData();
+    const auto& leagueTables = m_career.getLeagueTables();
+    glm::vec3 position = glm::vec3(119.f, 216.f, 0.1f);
+    static constexpr float LineSpacing = 14.f;
     for (auto i = 0u; i < Career::MaxLeagues; ++i)
     {
+        //this just builds up the string if needed, and finds the previous result (if any)
+        leagueTables[i].getPreviousResults(playerName);
+
+        bool unlocked = (i == 0 || (i > 0) && (leagueTables[i - 1].getPreviousPosition() < 4));
+
         //league titles, listed on left
-        //if unlocked white text with UI input to start playing
-        //else red text
-        //left of name has trophy if complete or padlock is locked
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(largeFont).setString(leagueData[i].title);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+
+        const auto addButton = [&](cro::Entity parent, std::uint32_t index)
+            {
+                auto buttonEntity = m_scene.createEntity();
+                buttonEntity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, 0.1f });
+                buttonEntity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+                buttonEntity.addComponent<cro::Drawable2D>();
+                buttonEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_highlight");
+                buttonEntity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+                buttonEntity.addComponent<cro::Callback>().function = MenuTextCallback();
+                auto b = buttonEntity.getComponent<cro::Sprite>().getTextureBounds();
+                buttonEntity.addComponent<cro::UIInput>().area = b;
+                buttonEntity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+                buttonEntity.getComponent<cro::UIInput>().setSelectionIndex(CareerSeason + index);
+                buttonEntity.getComponent<cro::UIInput>().setNextIndex(CareerSeason + index + 1, CareerSeason + index + 1);
+                buttonEntity.getComponent<cro::UIInput>().setPrevIndex(CareerSeason + index - 1, CareerSeason + index - 1);
+                buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
+                buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
+                buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+                    m_scene.getSystem<cro::UISystem>()->addCallback(
+                        [&, i](cro::Entity e, const cro::ButtonEvent& evt)
+                        {
+                            if (activated(evt))
+                            {
+                                selectLeague(i);
+                            }
+                        });
+                buttonEntity.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
+                parent.getComponent<cro::Transform>().addChild(buttonEntity.getComponent<cro::Transform>());
+
+                return buttonEntity;
+            };
+
 
         //activating updates preview
-    }
-    //put player name on bottom row of the box
+        if (unlocked)
+        {
+            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
 
-    //right box
+            //add a trophy if previously complete
+            if (leagueTables[i].getPreviousPosition() < 4)
+            {
+                auto statusEnt = m_scene.createEntity();
+                statusEnt.addComponent<cro::Transform>().setPosition({ 5.f, position.y - 9.f, 0.1f });
+                statusEnt.addComponent<cro::Drawable2D>();
+                statusEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_status");
+                statusEnt.addComponent<cro::SpriteAnimation>().play(leagueTables[i].getPreviousPosition() - 1);
+                bgEnt.getComponent<cro::Transform>().addChild(statusEnt.getComponent<cro::Transform>());
+            }
+
+            //add a button - include index as metadata so we know which info to display when selected
+            auto button = addButton(entity, i);
+            buttons.push_back(button);
+        }
+        else
+        {
+            //padlock
+            auto statusEnt = m_scene.createEntity();
+            statusEnt.addComponent<cro::Transform>().setPosition({ 5.f, position.y - 9.f, 0.1f });
+            statusEnt.addComponent<cro::Drawable2D>();
+            statusEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_status");
+            statusEnt.addComponent<cro::SpriteAnimation>().play(3);
+            bgEnt.getComponent<cro::Transform>().addChild(statusEnt.getComponent<cro::Transform>());
+        }
+
+
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        position.y -= LineSpacing;
+    }
+    //select default entry - should always be the most recent/active
+    selectLeague(buttons.size() - 1);
+    CRO_ASSERT(!buttons.empty(), "");
+    buttons.front().getComponent<cro::UIInput>().setPrevIndex(CareerProfile, CareerProfile);
+    buttons.back().getComponent<cro::UIInput>().setNextIndex(CareerClubs, CareerClubs);
+
+    //put player name on bottom row of the box
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString(playerName);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //right box - if we do this sooner we can capture the relative entities in the button callbacks
     //info entities - round x/6, course title, hole count, current league position, best finishing position, lock status(?)
     //probably course thumbnail
     //maybe weather selection/gimme selection
@@ -432,6 +542,7 @@ void CareerState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ 461.f, 241.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("options_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -453,17 +564,16 @@ void CareerState::buildScene()
             }
         }
     );
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    auto quitPrevious = CareerOptions;
-    auto profilePrevious = CareerStart;
 
     //select club set
     if (Social::getClubLevel())
     {
-        quitPrevious = CareerClubs;
-        profilePrevious = CareerClubs;
         m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
 
         entity = m_scene.createEntity();
@@ -499,7 +609,7 @@ void CareerState::buildScene()
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
         entity.getComponent<cro::UIInput>().setSelectionIndex(CareerClubs);
         entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerClubStats);
-        entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerProfile);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 
@@ -528,13 +638,14 @@ void CareerState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ 5.f, 23.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("clubinfo_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerClubStats);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerProfile);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, CareerClubs);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, Social::getClubLevel() ? CareerClubs : buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_scene.getSystem<cro::UISystem>()->addCallback(
@@ -549,6 +660,9 @@ void CareerState::buildScene()
             }
         }
     );
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -592,7 +706,7 @@ void CareerState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerQuit);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerStart);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, quitPrevious);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, CareerClubStats);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectOffset;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectOffset;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -623,7 +737,7 @@ void CareerState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerProfile);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerLeagueBrowser, profilePrevious);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerLeagueBrowser, CareerSeason);
     entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerClubStats);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
@@ -1164,6 +1278,11 @@ void CareerState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&
         //TODO make this a button which deactivates the scene camera
         //and pushes the stats state on top so we can view the club data
     }
+}
+
+void CareerState::selectLeague(std::size_t)
+{
+
 }
 
 void CareerState::quitState()

@@ -63,6 +63,9 @@ public:
     Career& operator = (Career&&) = delete;
 
     static constexpr std::uint32_t MaxLeagues = 6;
+
+    const auto& getLeagueData() const { return m_leagues; }
+    const auto& getLeagueTables() const { return m_leagueTables; }
 private:
     std::array<CareerLeague, MaxLeagues> m_leagues = {};
     std::vector<League> m_leagueTables;

@@ -92,6 +92,7 @@ public:
     const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
 
     const cro::String& getPreviousResults(const cro::String& playerName) const;
+    std::int32_t getPreviousPosition() const { return m_previousPosition; }
 
 private:
     const std::int32_t m_id;
@@ -104,6 +105,7 @@ private:
     std::int32_t m_increaseCount;
 
     mutable cro::String m_previousResults;
+    mutable std::int32_t m_previousPosition;
 
     void increaseDifficulty();
     std::string getFilePath(const std::string& fileName) const;
