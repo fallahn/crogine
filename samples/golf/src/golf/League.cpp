@@ -528,6 +528,8 @@ void League::read()
 
         //static constexpr std::int32_t MaxScore = 5 * 18 * MaxIterations;
 
+        std::vector<std::int32_t> currScores;
+
         //TODO what do we consider sane values for each player?
         for (auto& player : m_players)
         {
@@ -537,6 +539,19 @@ void League::read()
             player.nameIndex = std::clamp(player.nameIndex, 0, std::int32_t(PlayerCount) - 1);
 
             //player.currentScore = std::clamp(player.currentScore, 0, MaxScore);
+
+            currScores.push_back(player.currentScore);
+        }
+        currScores.push_back(m_playerScore);
+
+        if (m_playerScore == 0)
+        {
+            m_currentPosition = 16;
+        }
+        else
+        {
+            std::sort(currScores.begin(), currScores.end(), [](std::int32_t a, std::int32_t b) {return a > b; });
+            m_currentPosition = static_cast<std::int32_t>(std::distance(currScores.cbegin(), std::find(currScores.cbegin(), currScores.cend(), m_playerScore))) + 1;
         }
     }
     else

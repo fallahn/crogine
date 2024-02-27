@@ -6284,7 +6284,8 @@ std::int32_t GolfState::getClub() const
 
 void GolfState::gamepadNotify(std::int32_t type)
 {
-    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID
+        && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
     {
         struct CallbackData final
         {
