@@ -91,7 +91,8 @@ League::League(std::int32_t id)
     m_currentIteration  (0),
     m_currentSeason     (1),
     m_increaseCount     (0),
-    m_previousPosition  (16)
+    m_currentPosition   (16),
+    m_previousPosition  (17)
 {
     CRO_ASSERT(id < LeagueRoundID::Count, "");
 

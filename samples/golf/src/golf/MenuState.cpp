@@ -2297,8 +2297,6 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
                     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
                     delayRefresh();
-
-
                 }
                 else if (m_sharedCourseData.courseThumbs.count(course) != 0)
                 {

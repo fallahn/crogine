@@ -29,6 +29,7 @@ source distribution.
 
 #include "CareerState.hpp"
 #include "SharedStateData.hpp"
+#include "SharedCourseData.hpp"
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
@@ -434,7 +435,7 @@ void CareerState::buildScene()
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
 
-        bool unlocked = (i == 0 || (i > 0) && (leagueTables[i - 1].getPreviousPosition() < 4));
+        bool unlocked = true;;// (i == 0 || (i > 0) && (leagueTables[i - 1].getPreviousPosition() < 4));
 
         //league titles, listed on left
         entity = m_scene.createEntity();
@@ -535,8 +536,8 @@ void CareerState::buildScene()
 
 
     //right box - updated by selectLeague()
-    static constexpr float CentrePos = 364.f;
-    //course title, description, hole count, round number and current league position and best finishing position, course thumbnail
+    static constexpr float CentrePos = 366.f;
+    //title
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ CentrePos, 226.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
@@ -546,7 +547,7 @@ void CareerState::buildScene()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueDetails.courseTitle = entity;
-
+    //desc
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ CentrePos, 214.f, 0.1f });
@@ -557,9 +558,9 @@ void CareerState::buildScene()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueDetails.courseDescription = entity;
-
+    //hole count
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 202.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 82.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("All 18 Holes");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -567,7 +568,7 @@ void CareerState::buildScene()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueDetails.holeCount = entity;
-
+    //league info
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ CentrePos, 66.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
@@ -577,11 +578,16 @@ void CareerState::buildScene()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueDetails.leagueDetails = entity;
-
+    //thumb
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 64.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 296, 90.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>();//138x104
+    if (!m_sharedData.courseData->courseThumbs.empty())
+    {
+        entity.getComponent<cro::Sprite>().setTexture(*m_sharedData.courseData->courseThumbs.begin()->second);
+        entity.getComponent<cro::Transform>().setScale(CourseThumbnailSize / glm::vec2(entity.getComponent<cro::Sprite>().getTexture()->getSize()));
+    }
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueDetails.thumbnail = entity;
 
@@ -1330,13 +1336,94 @@ void CareerState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&
     }
 }
 
-void CareerState::selectLeague(std::size_t)
+void CareerState::selectLeague(std::size_t idx)
 {
-    //hmmm we need to feed in m_courseData and m_courseThumbs from the MenuState
+    const auto& leagueData = m_career.getLeagueData()[idx];
+    const auto& league = m_career.getLeagueTables()[idx];
 
-    /*m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_courseThumbs.at(course));
-    auto scale = CourseThumbnailSize / glm::vec2(m_courseThumbs.at(course)->getSize());
-    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);*/
+    const auto playlistIdx = league.getCurrentIteration() % Career::MaxLeagues;
+    const auto& courseData = m_sharedData.courseData->courseData[leagueData.playlist[playlistIdx].courseID];
+
+    //course title, description, hole count, round number and current league position and best finishing position, course thumbnail
+    m_leagueDetails.courseTitle.getComponent<cro::Text>().setString(courseData.title);
+    m_leagueDetails.courseDescription.getComponent<cro::Text>().setString(courseData.description);
+    
+    cro::String str = "All 18 Holes";
+    switch (leagueData.playlist[playlistIdx].holeCount)
+    {
+    default: break;
+    case 1:
+        str = "Front 9";
+        break;
+    case 2:
+        str = "Back 9";
+        break;
+    }
+    m_leagueDetails.holeCount.getComponent<cro::Text>().setString(str);
+
+
+    str = "Round " + std::to_string(playlistIdx + 1) + "/6\n";
+    str += "Current Position: " + std::to_string(league.getCurrentPosition());
+    switch (league.getCurrentPosition())
+    {
+    default:
+        str += "th";
+        break;
+    case 1:
+        str += "st";
+        break;
+    case 2:
+        str += "nd";
+        break;
+    case 3:
+        str += "rd";
+        break;
+    }
+
+    if (league.getCurrentSeason() > 1)
+    {
+        str += "\nPrevious Best: " + std::to_string(league.getPreviousPosition());
+
+        switch (league.getPreviousPosition())
+        {
+        default:
+            str += "th";
+            break;
+        case 1:
+            str += "st";
+            break;
+        case 2:
+            str += "nd";
+            break;
+        case 3:
+            str += "rd";
+            break;
+        }
+    }
+    m_leagueDetails.leagueDetails.getComponent<cro::Text>().setString(str);
+
+    auto& sharedCourseData = *m_sharedData.courseData;
+    if (sharedCourseData.videoPaths.count(courseData.directory) != 0
+        && sharedCourseData.videoPlayer.loadFromFile(sharedCourseData.videoPaths.at(courseData.directory)))
+    {
+        sharedCourseData.videoPlayer.setLooped(true);
+        sharedCourseData.videoPlayer.play();
+        sharedCourseData.videoPlayer.update(1.f / 30.f);
+
+        m_leagueDetails.thumbnail.getComponent<cro::Sprite>().setTexture(sharedCourseData.videoPlayer.getTexture());
+        auto scale = CourseThumbnailSize / glm::vec2(sharedCourseData.videoPlayer.getTexture().getSize());
+        m_leagueDetails.thumbnail.getComponent<cro::Transform>().setScale(scale);
+    }
+    else if (sharedCourseData.courseThumbs.count(courseData.directory) != 0)
+    {
+        m_leagueDetails.thumbnail.getComponent<cro::Sprite>().setTexture(*m_sharedData.courseData->courseThumbs.at(courseData.directory));
+        auto scale = CourseThumbnailSize / glm::vec2(m_sharedData.courseData->courseThumbs.at(courseData.directory)->getSize());
+        m_leagueDetails.thumbnail.getComponent<cro::Transform>().setScale(scale);
+    }
+    else
+    {
+        m_leagueDetails.thumbnail.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
 }
 
 void CareerState::quitState()

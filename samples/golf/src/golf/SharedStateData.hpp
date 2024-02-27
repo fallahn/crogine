@@ -86,7 +86,7 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
-    const SharedCourseData* courseData = nullptr; //only valid when MenuState is active
+    SharedCourseData* courseData = nullptr; //only valid when MenuState is active
 
     ChatFonts chatFonts;
 

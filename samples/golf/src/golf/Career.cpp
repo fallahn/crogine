@@ -43,7 +43,7 @@ namespace
 
     const std::array<cro::String, Career::MaxLeagues> LeagueNames =
     {
-        cro::String("Country Club"),
+        cro::String("Country Clubbing"),
         "All-Star Oasis Cup",
         "Beach Combe Challenge",
         "Up Hill and Down Vale",
@@ -61,7 +61,7 @@ Career::Career()
 
         for (auto j = 0u; j < CareerLeague::MaxRounds; ++j)
         {
-            m_leagues[i].playlist[j].holeCount = static_cast<std::uint8_t>(j % 3);
+            m_leagues[i].playlist[j].holeCount = static_cast<std::uint8_t>((j+1) % 3); //we want 1,2,0
             m_leagues[i].playlist[j].courseID = static_cast<std::uint8_t>(CourseIDs[i][j / 3]);
         }
 
