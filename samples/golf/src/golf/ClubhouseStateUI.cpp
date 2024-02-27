@@ -1847,8 +1847,9 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                    m_matchMaking.joinGame(m_lobbyPager.serverIDs[idx]);
-                    m_sharedData.lobbyID = m_lobbyPager.serverIDs[idx];
+                    /*m_matchMaking.joinGame(m_lobbyPager.serverIDs[idx]);
+                    m_sharedData.lobbyID = m_lobbyPager.serverIDs[idx];*/
+                    finaliseGameJoin(m_lobbyPager.serverIDs[idx]);
                 }
             }
         });

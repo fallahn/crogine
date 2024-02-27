@@ -1334,9 +1334,6 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
 
                     m_audioEnts[AudioID::Start].getComponent<cro::AudioEmitter>().play();
 
-                    /*m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
-                    m_sharedData.lobbyID = m_lobbyPager.lobbyIDs[idx];*/
-
                     finaliseGameJoin(m_lobbyPager.serverIDs[idx]);
                 }
 
@@ -3242,12 +3239,18 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     if (m_sharedData.hosting)
     {
         std::int32_t playerCount = 0;
+        std::int32_t connectionCount = 0;
         for (const auto& c : m_sharedData.connectionData)
         {
             playerCount += c.playerCount;
+            if (c.playerCount)
+            {
+                connectionCount++;
+            }
         }
 
         m_matchMaking.setGamePlayerCount(playerCount);
+        m_matchMaking.setGameConnectionCount(connectionCount);
     }
 
     //new players won't have other levels

@@ -1033,8 +1033,9 @@ void MenuState::handleMessage(const cro::Message& msg)
             {
                 if (data.gameType == Server::GameMode::Golf)
                 {
-                    m_matchMaking.joinGame(data.hostID);
-                    m_sharedData.lobbyID = data.hostID;
+                    /*m_matchMaking.joinGame(data.hostID);
+                    m_sharedData.lobbyID = data.hostID;*/
+                    finaliseGameJoin(data.hostID);
                 }
                 else
                 {
@@ -1053,6 +1054,8 @@ void MenuState::handleMessage(const cro::Message& msg)
         break;
         case MatchMaking::Message::LobbyCreated:
             //broadcast the lobby ID to clients. This will also join ourselves.
+            //actually this does nothing - hosts are auto-joined to lobbies
+            //and clients bypass Steam lobbies and connect directly to a host
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::NewLobbyReady, data.hostID, net::NetFlag::Reliable);
 
             if (m_sharedData.hosting)
@@ -1060,6 +1063,7 @@ void MenuState::handleMessage(const cro::Message& msg)
                 //restore the lobby publicity setting
                 m_matchMaking.setFriendsOnly(m_matchMaking.getFriendsOnly());
                 m_matchMaking.setGamePlayerCount(m_sharedData.localConnectionData.playerCount); //assume we're the only client at this point
+                m_matchMaking.setGameConnectionCount(1);
 
                 //and trigger packets to update lobby info
                 auto data = serialiseString(m_sharedData.mapDirectory);
@@ -1993,11 +1997,13 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         }
             break;
         case PacketID::NewLobbyReady:
-            if (m_sharedData.hosting)
+            //we don't actually need this now as we pull the server ID
+            //from the lobby and connect directly without joining the lobby
+            /*if (m_sharedData.hosting)
             {
                 m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
                 LogI << "New lobby ready, joining lobby" << std::endl;
-            }
+            }*/
             break;
         case PacketID::PingTime:
         {
@@ -2563,7 +2569,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
     }
 }
 
-void MenuState::finaliseGameJoin(/*const MatchMaking::Message& data*/std::uint64_t hostID)
+void MenuState::finaliseGameJoin(std::uint64_t hostID)
 {
 #ifdef USE_GNS
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(hostID)));

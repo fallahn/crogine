@@ -55,6 +55,7 @@ public:
     void createGame(std::int32_t maxPlayers, std::int32_t gameType = 0);
     void setGameTitle(const cro::String&) {};
     void setGamePlayerCount(std::int32_t) {};
+    void setGameConnectionCount(std::int32_t) {};
     void setFriendsOnly(bool) {};
     bool getFriendsOnly() const { return false; }
     void createLobby(std::int32_t, std::int32_t) {}
