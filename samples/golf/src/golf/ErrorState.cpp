@@ -211,13 +211,10 @@ void ErrorState::buildScene()
 
 
     //background
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_sharedData.sharedResources->textures);
-
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("border");
+    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/news_background.png"));
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());

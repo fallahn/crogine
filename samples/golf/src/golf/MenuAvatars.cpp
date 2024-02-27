@@ -1782,11 +1782,11 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
     cro::String longest = "Longest Streak: " + std::to_string(Social::getLongestStreak());
     if (Social::getLongestStreak() > 1)
     {
-        current += " Days";
+        longest += " Days";
     }
     else
     {
-        current += " Day";
+        longest += " Day";
     }
 
     labelEnt = m_uiScene.createEntity();

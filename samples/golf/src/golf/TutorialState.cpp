@@ -2379,7 +2379,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
 
     if (cro::GameController::getControllerCount() != 0)
     {
-        entity.getComponent<cro::Text>().setString("Hold    to show the Spin icon");
+        entity.getComponent<cro::Text>().setString("Hold    to show the Spin Icon");
         centreText(entity);
 
         auto buttonEnt = m_scene.createEntity();
@@ -2407,7 +2407,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     }
     else
     {
-        cro::String str = "Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]) + " to show the Spin icon";
+        cro::String str = "Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]) + " to show the Spin Icon";
         entity.getComponent<cro::Text>().setString(str);
         centreText(entity);
     }
