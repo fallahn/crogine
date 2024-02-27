@@ -89,6 +89,7 @@ private:
         cro::Entity holeCount;
         cro::Entity leagueDetails; //round number, current position and previous best
         cro::Entity thumbnail;
+        cro::Entity highlight;
     }m_leagueDetails;
 
     void addSystems();

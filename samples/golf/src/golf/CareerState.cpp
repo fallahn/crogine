@@ -102,6 +102,9 @@ namespace
 
         CareerSeason = 100
     };
+
+    constexpr glm::vec3 LeagueListPosition = glm::vec3(119.f, 216.f, 0.2f);
+    constexpr float LeagueLineSpacing = 14.f;
 }
 
 CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -411,6 +414,7 @@ void CareerState::buildScene()
         });
 
 
+
     cro::String playerName;
     if (Social::isAvailable())
     {
@@ -428,14 +432,28 @@ void CareerState::buildScene()
     //league items
     const auto& leagueData = m_career.getLeagueData();
     const auto& leagueTables = m_career.getLeagueTables();
-    glm::vec3 position = glm::vec3(119.f, 216.f, 0.1f);
-    static constexpr float LineSpacing = 14.f;
+    glm::vec3 position = LeagueListPosition;
+
+    //active league highlight
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f, 3.f, 0.1f));
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-99.f, 7.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(-99.f, -7.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(99.f, 7.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(99.f, -7.f), TextGoldColour)
+        });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_leagueDetails.highlight = entity;
+
     for (auto i = 0u; i < Career::MaxLeagues; ++i)
     {
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
 
-        bool unlocked = true;;// (i == 0 || (i > 0) && (leagueTables[i - 1].getPreviousPosition() < 4));
+        bool unlocked = (i == 0 || (i > 0) && (leagueTables[i - 1].getPreviousPosition() < 4));
 
         //league titles, listed on left
         entity = m_scene.createEntity();
@@ -449,7 +467,7 @@ void CareerState::buildScene()
         const auto addButton = [&](cro::Entity parent, std::uint32_t index)
             {
                 auto buttonEntity = m_scene.createEntity();
-                buttonEntity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, 0.1f });
+                buttonEntity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, 0.5f });
                 buttonEntity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
                 buttonEntity.addComponent<cro::Drawable2D>();
                 buttonEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_highlight");
@@ -469,6 +487,7 @@ void CareerState::buildScene()
                         {
                             if (activated(evt))
                             {
+                                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                                 selectLeague(i);
                             }
                         });
@@ -512,7 +531,7 @@ void CareerState::buildScene()
 
 
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        position.y -= LineSpacing;
+        position.y -= LeagueLineSpacing;
     }
     //correct selection indices for first / last
     CRO_ASSERT(!buttons.empty(), "");
@@ -1399,6 +1418,8 @@ void CareerState::selectLeague(std::size_t idx)
             str += "rd";
             break;
         }
+
+        str += " - Completed " + std::to_string(league.getCurrentSeason() - 1) + " times.";
     }
     m_leagueDetails.leagueDetails.getComponent<cro::Text>().setString(str);
 
@@ -1424,6 +1445,10 @@ void CareerState::selectLeague(std::size_t idx)
     {
         m_leagueDetails.thumbnail.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
+
+    auto pos = LeagueListPosition;
+    pos.y -= idx * LeagueLineSpacing;
+    m_leagueDetails.highlight.getComponent<cro::Transform>().setPosition(pos);
 }
 
 void CareerState::quitState()
