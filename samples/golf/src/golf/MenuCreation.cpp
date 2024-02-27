@@ -165,7 +165,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
     //at least be consistent across platforms
     std::sort(directories.begin(), directories.end(), [](const  std::string& a, const std::string& b) {return a < b; });
 
-    m_courseIndices[m_currentRange].start = m_courseData.size();
+    m_courseIndices[m_currentRange].start = m_sharedCourseData.courseData.size();
 
     std::int32_t courseNumber = 1;
     for (const auto& dir : directories)
@@ -228,7 +228,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 
             if (holeCount > 0)
             {
-                auto& data = m_courseData.emplace_back();
+                auto& data = m_sharedCourseData.courseData.emplace_back();
                 if (!title.empty())
                 {
                     data.title = title;
@@ -263,7 +263,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
         if (cro::FileSystem::fileExists(testPath) &&
             t->loadFromFile(courseFile))
         {
-            m_courseThumbs.insert(std::make_pair(dir, std::move(t)));
+            m_sharedCourseData.courseThumbs.insert(std::make_pair(dir, std::move(t)));
         }
 
         //and video thumbnail
@@ -276,7 +276,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 
         if (cro::FileSystem::fileExists(testPath))
         {
-            m_videoPaths.insert(std::make_pair(dir, courseFile));
+            m_sharedCourseData.videoPaths.insert(std::make_pair(dir, courseFile));
         }
 
         //TODO remove me - this prevents parsing the incomplete course for now
@@ -368,9 +368,9 @@ void MenuState::createUI()
         m_currentRange = Range::Custom;
     }
 
-    if (!m_courseData.empty())
+    if (!m_sharedCourseData.courseData.empty())
     {
-        m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_courseData.size() - 1);
+        m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_sharedCourseData.courseData.size() - 1);
     }
 
     parseAvatarDirectory();
@@ -742,7 +742,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     auto validData = Social::isValid();
     if (validData
-        &&!m_courseData.empty()
+        &&!m_sharedCourseData.courseData.empty()
         && !m_sharedData.ballInfo.empty()
         && ! m_sharedData.avatarInfo.empty())
     {
@@ -822,7 +822,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         {
             str += "Invalid Course Data\n";
         }
-        if (m_courseData.empty())
+        if (m_sharedCourseData.courseData.empty())
         {
             str += "No course data found\n";
         }
@@ -3039,7 +3039,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
 
     std::vector<ScoreInfo> scoreInfo;
-    const auto& courseData = m_courseData[m_sharedData.courseIndex];
+    const auto& courseData = m_sharedCourseData.courseData[m_sharedData.courseIndex];
     cro::String str = "Welcome To Super Video Golf!";
 
     //only tally scores if we returned from a previous game
@@ -3664,7 +3664,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
-    const bool hasUserCourses = m_courseData.size() > m_courseIndices[Range::Official].count;
+    const bool hasUserCourses = m_sharedCourseData.courseData.size() > m_courseIndices[Range::Official].count;
 
     //toggle course reverse
     auto checkboxEnt = m_uiScene.createEntity();
@@ -4039,7 +4039,7 @@ void MenuState::prevCourse()
 
     m_sharedData.courseIndex = m_courseIndices[m_currentRange].start + idx;
 
-    m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
+    m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
     auto data = serialiseString(m_sharedData.mapDirectory);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
@@ -4053,7 +4053,7 @@ void MenuState::nextCourse()
 
     m_sharedData.courseIndex = m_courseIndices[m_currentRange].start + idx;
 
-    m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
+    m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
     auto data = serialiseString(m_sharedData.mapDirectory);
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
@@ -4100,8 +4100,8 @@ void MenuState::refreshUI()
 
 void MenuState::updateCourseRuleString(bool updateScoreboard)
 {
-    const auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
-        [&](const CourseData& cd)
+    const auto data = std::find_if(m_sharedCourseData.courseData.cbegin(), m_sharedCourseData.courseData.cend(),
+        [&](const SharedCourseData::CourseData& cd)
         {
             return cd.directory == m_sharedData.mapDirectory;
         });
@@ -4111,7 +4111,7 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
     cmd.action = [&, data](cro::Entity e, float)
     {
         std::string str;
-        if (data != m_courseData.end()
+        if (data != m_sharedCourseData.courseData.end()
             && !data->isUser)
         {
             str = "Course " + std::to_string(data->courseNumber) + "\n";
@@ -4124,7 +4124,7 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
         str += ScoreTypes[m_sharedData.scoreType];
         str += "\n" + GimmeString[m_sharedData.gimmeRadius];
 
-        if (data != m_courseData.end())
+        if (data != m_sharedCourseData.courseData.end())
         {
             str += "\n" + data->holeCount[m_sharedData.holeCount];
         }
@@ -4429,7 +4429,7 @@ void MenuState::createPreviousScoreCard()
 
     //this should still be set from the last round (it'll be modified if the
     //host changes settings but we'll already have built this by now)
-    auto courseData = m_courseData[m_sharedData.courseIndex];
+    auto courseData = m_sharedCourseData.courseData[m_sharedData.courseIndex];
     if (m_sharedData.reverseCourse)
     {
         std::reverse(courseData.parVals.begin(), courseData.parVals.end());

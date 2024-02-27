@@ -172,6 +172,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f)
 {
     checkCommandLine = false;
+    sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;
     sd.leagueRoundID = LeagueRoundID::Club;
     sd.preferredClubSet = std::clamp(sd.preferredClubSet, 0, 2);
@@ -221,7 +222,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         context.mainWindow.setMouseCaptured(false);
 
         //sd.inputBinding.controllerID = 0;
-        sd.mapDirectory = m_courseData[courseOfTheMonth()].directory;
+        sd.mapDirectory = m_sharedCourseData.courseData[courseOfTheMonth()].directory;
 
         sd.clientConnection.ready = false;
 
@@ -268,7 +269,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             sd.clientConnection.ready = false;
             sd.clientConnection.netClient.disconnect();
 
-            sd.mapDirectory = m_courseData[courseOfTheMonth()].directory;
+            sd.mapDirectory = m_sharedCourseData.courseData[courseOfTheMonth()].directory;
         }
 
 
@@ -326,7 +327,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
 
                 //send the initially selected map/course
-                m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
+                m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
                 auto data = serialiseString(m_sharedData.mapDirectory);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
@@ -551,6 +552,8 @@ MenuState::~MenuState()
     m_profileData.avatarDefs.clear();
 
     m_profileData.profileMaterials.reset();
+
+    m_sharedData.courseData = nullptr;
 }
 
 //public
@@ -1287,7 +1290,7 @@ bool MenuState::simulate(float dt)
         m_uiScene.simulate(dt);
     }
 
-    m_videoPlayer.update(dt);
+    m_sharedCourseData.videoPlayer.update(dt);
 
     return true;
 }
@@ -2197,17 +2200,17 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     }
                 };
 
-                if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
-                    [&course](const CourseData& cd)
+                if (auto data = std::find_if(m_sharedCourseData.courseData.cbegin(), m_sharedCourseData.courseData.cend(),
+                    [&course](const SharedCourseData::CourseData& cd)
                     {
                         return cd.directory == course;
-                    }); data != m_courseData.cend())
+                    }); data != m_sharedCourseData.courseData.cend())
                 {
                     if (!data->isUser
                         || (data->isUser && m_sharedData.hosting))
                     {
                         m_sharedData.mapDirectory = course;
-                        m_sharedData.courseIndex = std::distance(m_courseData.cbegin(), data);
+                        m_sharedData.courseIndex = std::distance(m_sharedCourseData.courseData.cbegin(), data);
                         updateCompletionString();
 
                         //update UI
@@ -2281,15 +2284,15 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     };
                 };
 
-                if (m_videoPaths.count(course) != 0
-                    && m_videoPlayer.loadFromFile(m_videoPaths.at(course)))
+                if (m_sharedCourseData.videoPaths.count(course) != 0
+                    && m_sharedCourseData.videoPlayer.loadFromFile(m_sharedCourseData.videoPaths.at(course)))
                 {
-                    m_videoPlayer.setLooped(true);
-                    m_videoPlayer.play();
-                    m_videoPlayer.update(1.f/30.f);
+                    m_sharedCourseData.videoPlayer.setLooped(true);
+                    m_sharedCourseData.videoPlayer.play();
+                    m_sharedCourseData.videoPlayer.update(1.f/30.f);
 
-                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(m_videoPlayer.getTexture());
-                    auto scale = CourseThumbnailSize / glm::vec2(m_videoPlayer.getTexture().getSize());
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(m_sharedCourseData.videoPlayer.getTexture());
+                    auto scale = CourseThumbnailSize / glm::vec2(m_sharedCourseData.videoPlayer.getTexture().getSize());
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
 
                     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2297,10 +2300,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
 
                 }
-                else if (m_courseThumbs.count(course) != 0)
+                else if (m_sharedCourseData.courseThumbs.count(course) != 0)
                 {
-                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_courseThumbs.at(course));
-                    auto scale = CourseThumbnailSize / glm::vec2(m_courseThumbs.at(course)->getSize());
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_sharedCourseData.courseThumbs.at(course));
+                    auto scale = CourseThumbnailSize / glm::vec2(m_sharedCourseData.courseThumbs.at(course)->getSize());
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
                     
                     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2382,11 +2385,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::CourseHoles;
-            if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
-                [&](const CourseData& cd)
+            if (auto data = std::find_if(m_sharedCourseData.courseData.cbegin(), m_sharedCourseData.courseData.cend(),
+                [&](const SharedCourseData::CourseData& cd)
                 {
                     return cd.directory == m_sharedData.mapDirectory;
-                }); data != m_courseData.cend())
+                }); data != m_sharedCourseData.courseData.cend())
             {
                 cmd.action = [&, data](cro::Entity e, float)
                 {
@@ -2552,7 +2555,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 
 
         //send the initially selected map/course
-        m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
+        m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
         auto data = serialiseString(m_sharedData.mapDirectory);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 

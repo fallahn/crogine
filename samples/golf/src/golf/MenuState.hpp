@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "SharedCourseData.hpp"
 #include "CommonConsts.hpp"
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
@@ -240,20 +241,7 @@ private:
     void createScene();
     void createClouds();
 
-    struct CourseData final
-    {
-        cro::String directory;
-        cro::String title = "Untitled";
-        cro::String description = "No Description";
-        std::int32_t courseNumber = 0; //base 1
-        std::array<cro::String, 3u> holeCount = {};
-        std::vector<std::int32_t> parVals;
-        bool isUser = false;
-    };
-    std::vector<CourseData> m_courseData;
-    std::unordered_map<std::string, std::unique_ptr<cro::Texture>> m_courseThumbs;
-    std::unordered_map<std::string, std::string> m_videoPaths;
-    cro::VideoPlayer m_videoPlayer;
+    SharedCourseData m_sharedCourseData;
     
     struct Range final
     {

@@ -920,6 +920,9 @@
     <ClInclude Include="src\golf\CareerState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\SharedCourseData.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

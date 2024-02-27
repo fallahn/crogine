@@ -83,8 +83,11 @@ enum class GameMode
     Career, FreePlay, Tutorial, Clubhouse
 };
 
+struct SharedCourseData;
 struct SharedStateData final
 {
+    const SharedCourseData* courseData = nullptr; //only valid when MenuState is active
+
     ChatFonts chatFonts;
 
     bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
