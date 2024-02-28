@@ -37,6 +37,8 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 
+#include <functional>
+
 namespace cro
 {
     class SpriteSheet;
@@ -98,9 +100,13 @@ private:
         cro::Entity clubset;
     }m_settingsDetails;
 
+    std::size_t m_currentMenu;
+    std::function<void()> enterConfirmCallback;
+    std::function<void()> quitConfirmCallback;
+
     void addSystems();
     void buildScene();
-    void createConfirmMenu();
+    void createConfirmMenu(cro::Entity);
     void createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&);
 
     void selectLeague(std::size_t);
