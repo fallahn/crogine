@@ -39,6 +39,7 @@ source distribution.
 #include "MenuCallbacks.hpp"
 #include "MenuConsts.hpp"
 #include "TextAnimCallback.hpp"
+#include "PacketIDs.hpp"
 #include "Clubs.hpp"
 #include "../GolfGame.hpp"
 #include "../Colordome-32.hpp"
@@ -115,6 +116,7 @@ CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     : cro::State    (ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus()),
     m_sharedData    (sd),
+    m_maxLeagueIndex(0),
     m_viewScale     (2.f),
     m_currentMenu   (MenuID::Career)
 {
@@ -281,6 +283,7 @@ void CareerState::buildScene()
                     Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
 
                     applySettingsValues();
+                    selectLeague(m_maxLeagueIndex);
 
                     if (!m_sharedData.unlockedItems.empty())
                     {
@@ -771,7 +774,8 @@ void CareerState::buildScene()
     m_leagueDetails.thumbnail = entity;
 
     //select the most recent league
-    selectLeague(buttons.size() - 1);
+    m_maxLeagueIndex = buttons.size() - 1;
+    selectLeague(m_maxLeagueIndex); //this is done each time the menu is shown, so prob not necessary here
 
 
     //options button
@@ -1305,12 +1309,53 @@ void CareerState::createConfirmMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>()->addCallback(
-            [&, confirmEnt, shadeEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    //TODO start the game
-                    LogI << "Start game here." << std::endl;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    m_sharedData.hosting = true;
+                    m_sharedData.gameMode = GameMode::Career;
+                    m_sharedData.localConnectionData.playerCount = 1;
+                    m_sharedData.localConnectionData.playerData[0].isCPU = false;
+
+                    //start a local server and connect
+                    if (!m_sharedData.clientConnection.connected)
+                    {
+                        m_sharedData.serverInstance.launch(1, Server::GameMode::Golf, m_sharedData.fastCPU);
+
+                        //small delay for server to get ready
+                        cro::Clock clock;
+                        while (clock.elapsed().asMilliseconds() < 500) {}
+
+#ifdef USE_GNS
+                        m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
+#else
+                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+#endif
+
+                        if (!m_sharedData.clientConnection.connected)
+                        {
+                            m_sharedData.serverInstance.stop();
+                            m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
+                                + std::to_string(ConstVal::GamePort)
+                                + " is allowed through\nany firewalls or NAT";
+                            requestStackPush(StateID::Error); //error makes sure to reset any connection
+                        }
+                        else
+                        {
+                            m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+                            
+                            //set the course - map directory and hole count is set in selectLeague()
+                            auto data = serialiseString(m_sharedData.mapDirectory);
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+                            //now we wait for the server to send us the map name so we know the
+                            //know the course has been set. Then the network event handler 
+                            //sends the game rules and launches the game.
+                        }
+                    }
                 }
             });
     centreText(entity);
@@ -1456,11 +1501,15 @@ void CareerState::selectLeague(std::size_t idx)
     cro::String str = "All 18 Holes";
     switch (leagueData.playlist[playlistIdx].holeCount)
     {
-    default: break;
+    default: 
+        m_sharedData.holeCount = 0;
+        break;
     case 1:
+        m_sharedData.holeCount = 1;
         str = "Front 9";
         break;
     case 2:
+        m_sharedData.holeCount = 2;
         str = "Back 9";
         break;
     }
@@ -1535,6 +1584,11 @@ void CareerState::selectLeague(std::size_t idx)
     auto pos = LeagueListPosition;
     pos.y -= idx * LeagueLineSpacing;
     m_leagueDetails.highlight.getComponent<cro::Transform>().setPosition(pos);
+
+
+    //set this in shared data so it gets sent to the server when we start
+    m_sharedData.mapDirectory = courseData.directory;
+    m_sharedData.leagueRoundID = LeagueRoundID::RoundOne + idx;
 }
 
 void CareerState::applySettingsValues()

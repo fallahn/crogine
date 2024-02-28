@@ -39,7 +39,8 @@ class ProgressIcon final : public cro::Transformable2D
 public:
     explicit ProgressIcon(const cro::Font&);
 
-    void show(std::int32_t index, std::int32_t progress, std::int32_t total);
+    void showChallenge(std::int32_t index, std::int32_t progress, std::int32_t total);
+    void showLeague(std::int32_t index, std::int32_t progress, std::int32_t total);
     void update(float);
     void draw();
 

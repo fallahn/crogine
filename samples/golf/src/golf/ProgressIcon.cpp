@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ProgressIcon.hpp"
+#include "League.hpp"
 
 #include <MonthlyChallenge.hpp>
 
@@ -124,7 +125,7 @@ ProgressIcon::ProgressIcon(const cro::Font& font)
 }
 
 //public
-void ProgressIcon::show(std::int32_t index, std::int32_t progress, std::int32_t total)
+void ProgressIcon::showChallenge(std::int32_t index, std::int32_t progress, std::int32_t total)
 {
     //rare, but we don't want, say, a league notification clobbering an active challenge
     if (!m_active)
@@ -139,21 +140,7 @@ void ProgressIcon::show(std::int32_t index, std::int32_t progress, std::int32_t 
         m_background.setVertexData(m_vertexData);
 
         //update text - TODO this should be enumerated proper, like
-        if (index == -1)
-        {
-            m_titleText.setString("CLUB LEAGUE UPDATED");
-
-            if (progress == total)
-            {
-                m_text.setString("Season Complete!");
-            }
-            else
-            {
-                auto str = std::to_string(progress) + "/" + std::to_string(total);
-                m_text.setString("Season Progress " + str);
-            }
-        }
-        else if (index == -2)
+        if (index == -2)
         {
             m_titleText.setString("COME RAIN OR SHINE");
             auto str = std::to_string(progress) + "/" + std::to_string(total);
@@ -173,6 +160,53 @@ void ProgressIcon::show(std::int32_t index, std::int32_t progress, std::int32_t 
                 str = std::to_string(progress) + "/" + std::to_string(total);
                 m_titleText.setString("CHALLENGE PROGRESS " + str);
             }
+        }
+
+        m_active = true;
+        m_state = ScrollIn;
+        m_pauseTime = PauseTime;
+
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - IconSize.x, windowSize.y });
+    }
+}
+
+void ProgressIcon::showLeague(std::int32_t index, std::int32_t progress, std::int32_t total)
+{
+    //rare, but we don't want, say, a league notification clobbering an active challenge
+    if (!m_active)
+    {
+        //update progress bar verts
+        float pc = static_cast<float>(progress) / total;
+        auto idx = m_vertexData.size() - 1;
+        const auto pos = (BarSize.x * pc) + BarPos.x;
+        m_vertexData[idx].position.x = pos;
+        m_vertexData[idx - 1].position.x = pos;
+        m_vertexData[idx - 3].position.x = pos;
+        m_background.setVertexData(m_vertexData);
+
+        static const std::array<std::string, LeagueRoundID::Count> Strings =
+        {
+            "CLUB LEAGUE UPDATED",
+            "LEAGUE ONE UPDATED",
+            "LEAGUE TWO UPDATED",
+            "LEAGUE THREE UPDATED",
+            "LEAGUE FOUR UPDATED",
+            "LEAGUE FIVE UPDATED",
+            "LEAGUE SIX UPDATED",
+        };
+
+
+        m_titleText.setString(Strings[index]);
+
+        if (progress == total)
+        {
+            m_text.setString("Season Complete!");
+        }
+        else
+        {
+            auto str = std::to_string(progress) + "/" + std::to_string(total);
+            m_text.setString("Season Progress " + str);
         }
 
         m_active = true;

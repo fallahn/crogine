@@ -509,9 +509,12 @@ void MessageOverlayState::buildScene()
                     if (activated(evt))
                     {
                         Social::resetProfile();
-                        League league(LeagueRoundID::Club);
-                        league.reset();
 
+                        for (auto i = 0; i < LeagueRoundID::Count; ++i)
+                        {
+                            League league(i);
+                            league.reset();
+                        }
                         requestStackClear();
                         requestStackPush(StateID::SplashScreen);
                     }

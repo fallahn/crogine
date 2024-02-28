@@ -42,10 +42,11 @@ source distribution.
 #include "UnlockItems.hpp"
 #include "MenuEnum.inl"
 #include "TextAnimCallback.hpp"
+#include "League.hpp"
 #include "../ErrorCheck.hpp"
-#include "server/ServerPacketData.hpp"
 #include "../../buildnumber.h"
 #include "../version/VersionNumber.hpp"
+#include "server/ServerPacketData.hpp"
 
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
@@ -794,6 +795,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 {
                     if (activated(evt))
                     {
+                        m_sharedData.leagueRoundID = LeagueRoundID::Club;
                         requestStackPush(StateID::FreePlay);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }

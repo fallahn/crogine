@@ -114,6 +114,7 @@ public:
             OverlayActivated,
             PlayerAchievement, //as in we should cheer, not an actual achievement
             MonthlyProgress,
+            LeagueProgress,
             LobbyUpdated
         }type = LevelUp;
         std::int32_t level = 0; //if monthly progress then current value

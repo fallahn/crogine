@@ -392,14 +392,19 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::MonthlyProgress)
         {
-            m_progressIcon->show(data.challengeID, data.level, data.reason);
+            m_progressIcon->showChallenge(data.challengeID, data.level, data.reason);
 
-            if (data.challengeID != -1 &&
+            if (data.challengeID > -1 &&
                 data.level == data.reason)
             {
                 Social::awardXP(500, XPStringID::ChallengeComplete);
                 Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
             }
+        }
+        else if (data.type == Social::SocialEvent::LeagueProgress)
+        {
+            m_progressIcon->showLeague(data.challengeID, data.level, data.reason);
+            //achievement is awarded by League class on completion
         }
     }
 

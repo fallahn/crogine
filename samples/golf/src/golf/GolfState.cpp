@@ -195,6 +195,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_emoteWheel            (sd, m_currentPlayer, m_textChat),
     m_league                (sd.leagueRoundID)
 {
+    LogI << "playing with league ID " << sd.leagueRoundID << std::endl;
+    LogI << "game mode is " << (int)sd.gameMode << std::endl;
+
     if (sd.weatherType == WeatherType::Random)
     {
         sd.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
@@ -4255,6 +4258,12 @@ void GolfState::handleMaxStrokes(std::uint8_t reason)
             //do nothing, this is integral behavior
             return;
         }
+
+        {
+            auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+            msg->type = Social::SocialEvent::PlayerAchievement;
+            msg->level = 1; //sad sound
+        }
         break;
     case MaxStrokeID::HostPunishment:
         showNotification("Host Penalised Your Turn");
@@ -4263,10 +4272,6 @@ void GolfState::handleMaxStrokes(std::uint8_t reason)
         showNotification("AFK Timeout");
         break;
     }
-
-    auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
-    msg->type = Social::SocialEvent::PlayerAchievement;
-    msg->level = 1; //sad sound
 }
 
 void GolfState::removeClient(std::uint8_t clientID)

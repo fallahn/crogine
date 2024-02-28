@@ -66,6 +66,7 @@ private:
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
     Career m_career;
+    std::size_t m_maxLeagueIndex;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final

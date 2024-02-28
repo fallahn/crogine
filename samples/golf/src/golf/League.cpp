@@ -257,14 +257,14 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     if (m_id == LeagueRoundID::Club)
     {
         Achievements::incrementStat(StatStrings[StatID::LeagueRounds]);
-
-        //displays the notification overlay
-        auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
-        msg->type = Social::SocialEvent::MonthlyProgress;
-        msg->challengeID = -1;
-        msg->level = m_currentIteration;
-        msg->reason = m_maxIterations;
     }
+    //displays the notification overlay
+    auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+    msg->type = Social::SocialEvent::LeagueProgress;
+    msg->challengeID = m_id;
+    msg->level = m_currentIteration;
+    msg->reason = m_maxIterations;
+   
 
     if (m_currentIteration == m_maxIterations)
     {
@@ -299,9 +299,17 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             if (sortData[i].nameIndex == -1)
             {
                 //this is us
-                Achievements::incrementStat(StatStrings[StatID::LeagueFirst + i]);
-                Achievements::awardAchievement(AchievementStrings[AchievementID::LeagueChampion]);
-
+                switch (m_id)
+                {
+                case LeagueRoundID::Club:
+                    Achievements::incrementStat(StatStrings[StatID::LeagueFirst + i]);
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::LeagueChampion]);
+                    break;
+                default:
+                    //TODO award XP for each slot above 4th
+                    //TODO award achievement for completion
+                    break;
+                }
                 playerPos = i;
 
                 //TODO raise a message to notify somewhere?
