@@ -1074,15 +1074,18 @@ void MenuState::handleMessage(const cro::Message& msg)
             }
             break;
         case MatchMaking::Message::LobbyJoined:
-            if (data.gameType == Server::GameMode::Golf)
+            if (!m_sharedData.clientConnection.connected)
             {
-                finaliseGameJoin(data.hostID);
-            }
-            else
-            {
-                m_sharedData.inviteID = data.hostID;
-                requestStackClear();
-                requestStackPush(StateID::Clubhouse);
+                if (data.gameType == Server::GameMode::Golf)
+                {
+                    finaliseGameJoin(data.hostID);
+                }
+                else
+                {
+                    m_sharedData.inviteID = data.hostID;
+                    requestStackClear();
+                    requestStackPush(StateID::Clubhouse);
+                }
             }
             break;
         case MatchMaking::Message::LobbyJoinFailed:

@@ -577,15 +577,18 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::NewLobbyReady, data.hostID, net::NetFlag::Reliable);
             break;
         case MatchMaking::Message::LobbyJoined:
-            if (data.gameType == Server::GameMode::Billiards)
+            if (!m_sharedData.clientConnection.connected)
             {
-                finaliseGameJoin(data.hostID);
-            }
-            else
-            {
-                m_sharedData.inviteID = data.hostID;
-                requestStackClear();
-                requestStackPush(StateID::Menu);
+                if (data.gameType == Server::GameMode::Billiards)
+                {
+                    finaliseGameJoin(data.hostID);
+                }
+                else
+                {
+                    m_sharedData.inviteID = data.hostID;
+                    requestStackClear();
+                    requestStackPush(StateID::Menu);
+                }
             }
             break;
         case MatchMaking::Message::LobbyJoinFailed:

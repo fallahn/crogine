@@ -470,6 +470,8 @@ std::int32_t GolfState::process(float dt)
                     m_playerInfo[0].distanceToHole = 0.f;
                     m_playerInfo[0].terrain = TerrainID::Green;
                     setNextPlayer(); //resets the timer
+
+                    m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::IdleTimeout), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
         }
@@ -1419,6 +1421,8 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
                     m_playerInfo[0].distanceToHole = 0.f;
                     m_playerInfo[0].terrain = TerrainID::Green;
                     setNextPlayer();
+
+                    m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::HostPunishment), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
             break;

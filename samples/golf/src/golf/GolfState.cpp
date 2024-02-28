@@ -4226,26 +4226,42 @@ void GolfState::handleBullHit(const BullHit& bh)
 
 void GolfState::handleMaxStrokes(std::uint8_t reason)
 {
+    //we may have never reached the green, so we don't
+    //want a forfeit contributing to the achievement...
+    m_achievementTracker.twoShotsSpare = false;
+
     m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
-    switch (m_sharedData.scoreType)
+    
+    switch (reason)
     {
     default:
-        showNotification("Stroke Limit Reached.");
-        break;
-    case ScoreType::MultiTarget:
-        if (reason == MaxStrokeID::Forfeit)
+        switch (m_sharedData.scoreType)
         {
-            showNotification("Hole Forfeit: No Target Hit.");
-        }
-        else
-        {
+        default:
             showNotification("Stroke Limit Reached.");
+            break;
+        case ScoreType::MultiTarget:
+            if (reason == MaxStrokeID::Forfeit)
+            {
+                showNotification("Hole Forfeit: No Target Hit.");
+            }
+            else
+            {
+                showNotification("Stroke Limit Reached.");
+            }
+            break;
+        case ScoreType::LongestDrive:
+        case ScoreType::NearestThePin:
+            //do nothing, this is integral behavior
+            return;
         }
         break;
-    case ScoreType::LongestDrive:
-    case ScoreType::NearestThePin:
-        //do nothing, this is integral behavior
-        return;
+    case MaxStrokeID::HostPunishment:
+        showNotification("Host Penalised Your Turn");
+        break;
+    case MaxStrokeID::IdleTimeout:
+        showNotification("AFK Timeout");
+        break;
     }
 
     auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);

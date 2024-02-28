@@ -61,7 +61,9 @@ namespace MaxStrokeID
     enum
     {
         Default = 0,
-        Forfeit
+        Forfeit,
+        IdleTimeout,
+        HostPunishment
     };
 }
 
