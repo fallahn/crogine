@@ -847,7 +847,7 @@ void CareerState::buildScene()
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
         entity.getComponent<cro::UIInput>().setSelectionIndex(CareerClubs);
-        entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerClubStats);
+        entity.getComponent<cro::UIInput>().setNextIndex(CareerNight, CareerClubStats);
         entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerGimme);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;

@@ -747,6 +747,19 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         && !m_sharedData.ballInfo.empty()
         && ! m_sharedData.avatarInfo.empty())
     {
+        //freeplay
+        entity = createButton("Free Play");
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        m_sharedData.leagueRoundID = LeagueRoundID::Club;
+                        requestStackPush(StateID::FreePlay);
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    }
+                });
+        
         //career mode
         entity = createButton("Career");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -787,19 +800,6 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     }
                 });
 
-
-        //freeplay
-        entity = createButton("Free Play");
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
-                {
-                    if (activated(evt))
-                    {
-                        m_sharedData.leagueRoundID = LeagueRoundID::Club;
-                        requestStackPush(StateID::FreePlay);
-                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                    }
-                });
 
         //facilities menu
         entity = createButton("19th Hole");

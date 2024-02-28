@@ -253,6 +253,26 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
                     requestStackPush(StateID::Career);
                 };
+
+            //scales down main menu
+            auto ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Callback>().active = true;
+            ent.getComponent<cro::Callback>().setUserData<float>(1.f);
+            ent.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+                {
+                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                    currTime = std::max(0.f, currTime - (dt * 2.f));
+
+                    const float scale = cro::Util::Easing::easeInCubic(currTime);
+                    m_menuEntities[MenuID::Main].getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+
+                    if (currTime == 0)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                    }
+                };
         }
 
 
