@@ -92,7 +92,11 @@ namespace
     enum
     {
         CareerOptions = 10,
+        
+        CareerGimme,
+        CareerWeather,
         CareerClubs,
+        CareerNight,
         CareerClubStats,
         CareerQuit,
         CareerProfile,
@@ -275,10 +279,7 @@ void CareerState::buildScene()
                     m_scene.getSystem<cro::UISystem>()->selectAt(CareerQuit);
                     Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
 
-                    if (m_clubsetButton.isValid())
-                    {
-                        m_clubsetButton.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
-                    }
+                    applySettingsValues();
 
                     if (!m_sharedData.unlockedItems.empty())
                     {
@@ -536,9 +537,10 @@ void CareerState::buildScene()
     //correct selection indices for first / last
     CRO_ASSERT(!buttons.empty(), "");
     buttons.front().getComponent<cro::UIInput>().setPrevIndex(CareerProfile, CareerProfile);
-    buttons.back().getComponent<cro::UIInput>().setNextIndex(CareerClubs, CareerClubs);
+    buttons.back().getComponent<cro::UIInput>().setNextIndex(CareerGimme, CareerGimme);
 
     //put player name on bottom row of the box
+    position.y -= LeagueLineSpacing;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
     entity.addComponent<cro::Drawable2D>();
@@ -550,8 +552,166 @@ void CareerState::buildScene()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //TODO gimme, night and weather selection below league list
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    //gimme
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 72.f, 96.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("No Gimme");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_settingsDetails.gimme = entity;
 
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 72.f, 92.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("gimme_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerGimme);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerWeather, CareerClubs);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerWeather, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_sharedData.gimmeRadius = (m_sharedData.gimmeRadius + 1) % 3;
+                m_settingsDetails.gimme.getComponent<cro::Text>().setString(GimmeString[m_sharedData.gimmeRadius]);
+            }
+        }
+    );
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, std::floor(bounds.height / 2.f) });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //weather icon
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("weather_icon");
+    auto iconEnt = entity;
+    bounds = entity.getComponent<cro::Sprite>().getTextureRect();
+
+    //text for current weather type
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 174.f, 96.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setString(WeatherStrings[m_sharedData.weatherType]);
+    centreText(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::uint32_t>(WeatherType::Count);
+    entity.getComponent<cro::Callback>().function =
+        [&, iconEnt, bounds](cro::Entity e, float) mutable
+        {
+            auto& lastType = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
+            if (lastType != m_sharedData.weatherType)
+            {
+                e.getComponent<cro::Text>().setString(WeatherStrings[m_sharedData.weatherType]);
+                centreText(e);
+
+                auto x = std::round(cro::Text::getLocalBounds(e).width) + 2.f;
+                iconEnt.getComponent<cro::Transform>().setPosition(glm::vec3(x, -9.f, 0.1f));
+
+                auto rect = bounds;
+                rect.left += bounds.width * m_sharedData.weatherType;
+                iconEnt.getComponent<cro::Sprite>().setTextureRect(rect);
+            }
+            lastType = m_sharedData.weatherType;
+        };
+
+    entity.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 179.f, 92.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("weather_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerWeather);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerGimme, CareerNight);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerGimme, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_sharedData.weatherType = (m_sharedData.weatherType + 1) % WeatherType::Count;
+            }
+        }
+    );
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, std::floor(bounds.height / 2.f) });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //checkbox to show night time status
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 150.f, 72.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("square");
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_settingsDetails.night = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 148.f, 70.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.width += 60.f;
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerNight);
+    entity.getComponent<cro::UIInput>().setNextIndex(Social::isAvailable() ? CareerClubs : CareerClubStats, CareerClubStats);
+    entity.getComponent<cro::UIInput>().setPrevIndex(Social::isAvailable() ? CareerClubs : CareerWeather, CareerWeather);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e) 
+        {
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+        });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.nightTime = m_sharedData.nightTime ? 0 : 1;
+                    const float scale = m_sharedData.nightTime ? 1.f : 0.f;
+                    m_settingsDetails.night.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                }
+            });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //right box - updated by selectLeague()
@@ -567,7 +727,6 @@ void CareerState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueDetails.courseTitle = entity;
     //desc
-    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ CentrePos, 214.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
@@ -622,7 +781,8 @@ void CareerState::buildScene()
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("options_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerOptions);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerStart);
@@ -641,7 +801,6 @@ void CareerState::buildScene()
             }
         }
     );
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -654,15 +813,13 @@ void CareerState::buildScene()
         m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 42.f, 68.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 69.f, 69.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         auto buttonEnt = entity;
-
-        const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ -32.f, 9.f, 0.f });
         entity.addComponent<cro::Drawable2D>();
@@ -686,7 +843,7 @@ void CareerState::buildScene()
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
         entity.getComponent<cro::UIInput>().setSelectionIndex(CareerClubs);
         entity.getComponent<cro::UIInput>().setNextIndex(CareerProfile, CareerClubStats);
-        entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
+        entity.getComponent<cro::UIInput>().setPrevIndex(CareerQuit, CareerGimme);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 
@@ -706,7 +863,7 @@ void CareerState::buildScene()
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
         entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        m_clubsetButton = buttonEnt;
+        m_settingsDetails.clubset = buttonEnt;
     }
 
 
@@ -722,7 +879,7 @@ void CareerState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerClubStats);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerProfile);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, Social::getClubLevel() ? CareerClubs : buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerStart, Social::getClubLevel() ? CareerClubs : CareerGimme);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_scene.getSystem<cro::UISystem>()->addCallback(
@@ -827,7 +984,7 @@ void CareerState::buildScene()
                 }
             });
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto iconEnt = entity;
+    iconEnt = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 16.f, 10.f, 0.1f });
@@ -1449,6 +1606,17 @@ void CareerState::selectLeague(std::size_t idx)
     auto pos = LeagueListPosition;
     pos.y -= idx * LeagueLineSpacing;
     m_leagueDetails.highlight.getComponent<cro::Transform>().setPosition(pos);
+}
+
+void CareerState::applySettingsValues()
+{
+    if (m_settingsDetails.clubset.isValid())
+    {
+        m_settingsDetails.clubset.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+    }
+    m_settingsDetails.gimme.getComponent<cro::Text>().setString(GimmeString[m_sharedData.gimmeRadius]);
+    const float scale = m_sharedData.nightTime ? 1.f : 0.f;
+    m_settingsDetails.night.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 }
 
 void CareerState::quitState()

@@ -80,7 +80,6 @@ private:
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     cro::RenderTexture m_clubTexture;
-    cro::Entity m_clubsetButton;
 
     struct LeagueDetails final
     {
@@ -92,12 +91,20 @@ private:
         cro::Entity highlight;
     }m_leagueDetails;
 
+    struct SettingsDetails final
+    {
+        cro::Entity gimme;
+        cro::Entity night;
+        cro::Entity clubset;
+    }m_settingsDetails;
+
     void addSystems();
     void buildScene();
     void createConfirmMenu();
     void createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&);
 
     void selectLeague(std::size_t);
+    void applySettingsValues();
 
     void quitState();
 };

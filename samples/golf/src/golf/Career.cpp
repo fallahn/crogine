@@ -43,11 +43,11 @@ namespace
 
     const std::array<cro::String, Career::MaxLeagues> LeagueNames =
     {
-        cro::String("Country Clubbing"),
-        "All-Star Oasis Cup",
-        "Beach Combe Challenge",
-        "Up Hill and Down Vale",
-        "Pitch 'n' Putt Parade",
+        cro::String("Country Club Tour"),
+        "Badlands Cup",
+        "Links Challenge",
+        "Hill and Hole Valley Run",
+        "Chippers Pitch 'n' Putt",
         "The Woodlands League"
     };
 }

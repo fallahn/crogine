@@ -746,12 +746,8 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         && !m_sharedData.ballInfo.empty()
         && ! m_sharedData.avatarInfo.empty())
     {
-        std::string temp = u8"™";
-        cro::String str("Coming Soon");
-        str += cro::String::fromUtf8(temp.begin(), temp.end());
         //career mode
-        entity = createButton("Career Mode");
-        entity.getComponent<cro::Text>().setString(str);
+        entity = createButton("Career");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
