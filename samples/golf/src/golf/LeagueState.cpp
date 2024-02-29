@@ -556,7 +556,6 @@ void LeagueState::buildScene()
     m_tabButtons[InfoButtonIndex] = createTabButton(MenuID::League, MenuID::Info);
     m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setNextIndex(RightButtonIndex, CloseButtonIndex);
     m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(RightButtonIndex, RightButtonIndex );
-    m_tabButtons[InfoButtonIndex].getComponent<cro::Sprite>().setColour(cro::Colour::White);
 
     m_tabButtons[LeagueButtonIndex] = createTabButton(MenuID::Info, MenuID::League);
     m_tabButtons[LeagueButtonIndex].getComponent<cro::UIInput>().setNextIndex(InfoButtonIndex, CloseButtonIndex);
@@ -928,34 +927,36 @@ void LeagueState::createInfoTab(cro::Entity parent)
 
 
 #ifdef USE_GNS
-    constexpr float vertPos = 282.f;
+    constexpr float vertPos = 292.f;
     std::string desc = R"(
 Every Monthly Best score on the Steam Leaderboards contributes to the Global League.
 
-The Global League is created from the sum of all Steam players Monthly Best Scores and
+The Global League is created from the sum of all Steam players Monthly Best scores and
 the season lasts one calendar month, composed of 36 rounds. Beating an existing personal
 Monthly Best (for the current month) will also improve your existing league score.
 
-Every Stroke Play or Stableford round you play contributes to the Club League. The Club 
-League is split into seasons, with 24 rounds played for each season. Unlike the Global
-League, the Club League results are entirely offline, and opponents are fictional.
+Every Stroke Play or Stableford round you play contributes to the Club League. Each Career
+round you play contributes to the selected Career League. These leagues are split into 
+seasons, with 24 rounds played for each Club season, and 6 rounds for each Career season.
+The Club and Career results are entirely offline, and opponents are fictional.
 
 At the end of a round your scores are converted using the Stableford scoring system with
 par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for
 each round are summed to give the total score for the current season.
 
-In the Club League other player scores are automatically calculated based on their own
+In the offline leagues other player scores are automatically calculated based on their own
 stats, randomly generated when the first season begins. Think of it as something like a
 fantasy football league. At the end of each season these stats are re-evaluated based
 on the previous season's performance. Some players will increase in skill, others will
-decrease. The Club League is reset if you reset your player progress at any time.
+decrease. The offline leagues are reset if you reset your player progress at any time.
 )";
 #else
-    constexpr float vertPos = 258.f;
+    constexpr float vertPos = 284.f;
     std::string desc = R"(
-Every Stroke Play or Stableford round you play contributes to the club league. The league
-is split into seasons, with 24 rounds played for each season. At the end of a season the
-top three players win an award.
+Every Stroke Play or Stableford round you play contributes to the Club League. Each
+Career round you play contributes to the selected Career League. The leagues are split
+into seasons, with 24 rounds played for each Club season, and 6 rounds for each Career
+season. At the end of a season the top three players win an award.
 
 At the end of a round your scores are converted using the Stableford scoring system with
 par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for
@@ -966,10 +967,9 @@ generated when the first season begins. Think of it as something like a fantasy 
 league. At the end of each season these stats are re-evaluated based on the previous
 season's performance. Some players will increase in skill, others will decrease.
 
-Can you top the league table by the end of the season? Good luck!
+Can you top the every league table by the end of the season? Good luck!
 
-
-(Note: the league is reset if you reset your player progress at any time.)
+(Note: the leagues are reset if you reset your player progress at any time.)
 )";
 #endif
 
