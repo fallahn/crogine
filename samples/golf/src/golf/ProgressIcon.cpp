@@ -188,12 +188,12 @@ void ProgressIcon::showLeague(std::int32_t index, std::int32_t progress, std::in
         static const std::array<std::string, LeagueRoundID::Count> Strings =
         {
             "CLUB LEAGUE UPDATED",
-            "CAREER SEASON ONE",
-            "CAREER SEASON TWO",
-            "CAREER SEASON THREE",
-            "CAREER SEASON FOUR",
-            "CAREER SEASON FIVE",
-            "CAREER SEASON SIX",
+            "CAREER LEAGUE ONE",
+            "CAREER LEAGUE TWO",
+            "CAREER LEAGUE THREE",
+            "CAREER LEAGUE FOUR",
+            "CAREER LEAGUE FIVE",
+            "CAREER LEAGUE SIX",
         };
 
 

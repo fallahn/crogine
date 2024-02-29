@@ -86,6 +86,7 @@ private:
         static constexpr std::int32_t Max = 2;
     };
     std::int32_t m_currentTab;
+    std::int32_t m_currentLeague;
     cro::Entity m_tabEntity;
     std::array<cro::Entity, TabID::Count> m_tabButtons = {};   
     std::array<cro::Entity, TabID::Count> m_tabNodes = {};   
@@ -94,7 +95,14 @@ private:
     {
         enum
         {
-            Club, Global,
+            Club,
+            S01,
+            S02,
+            S03,
+            S04,
+            S05,
+            S06,
+            Global,
 
             Count
         };
@@ -102,7 +110,7 @@ private:
     std::array<cro::Entity, LeagueID::Count> m_leagueNodes = {};
 
     void buildScene();
-    void createLeagueTab(cro::Entity, const cro::SpriteSheet&);
+    bool createLeagueTab(cro::Entity, const cro::SpriteSheet&, std::int32_t);
     void createInfoTab(cro::Entity);
 
 #ifdef USE_GNS
@@ -116,10 +124,10 @@ private:
         cro::Entity previous;
     }m_leagueText;
 
-    void createGlobalLeagueTab(cro::Entity, const cro::SpriteSheet&);
+    void createGlobalLeagueTab(cro::Entity,const cro::SpriteSheet&);
     void updateLeagueText();
-    void addLeagueButtons(const cro::SpriteSheet&);
 #endif
+    void addLeagueButtons(const cro::SpriteSheet&);
 
     void activateTab(std::int32_t);
     void quitState();
