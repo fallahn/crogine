@@ -713,6 +713,8 @@ void CareerState::buildScene()
                     m_sharedData.nightTime = m_sharedData.nightTime ? 0 : 1;
                     const float scale = m_sharedData.nightTime ? 1.f : 0.f;
                     m_settingsDetails.night.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

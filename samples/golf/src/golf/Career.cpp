@@ -29,6 +29,8 @@ source distribution.
 
 #include "Career.hpp"
 
+#include <crogine/core/Log.hpp>
+
 namespace
 {
     constexpr std::array<std::array<std::int32_t, 2u>, Career::MaxLeagues> CourseIDs =
@@ -61,8 +63,8 @@ Career::Career()
 
         for (auto j = 0u; j < CareerLeague::MaxRounds; ++j)
         {
-            m_leagues[i].playlist[j].holeCount = static_cast<std::uint8_t>((j+1) % 3); //we want 1,2,0
-            m_leagues[i].playlist[j].courseID = static_cast<std::uint8_t>(CourseIDs[i][j / 3]);
+            m_leagues[i].playlist[j].holeCount = static_cast<std::uint8_t>(((j + 2) % CareerLeague::MaxRounds) / 2); //we want 1,1,2,2,0,0
+            m_leagues[i].playlist[j].courseID = static_cast<std::uint8_t>(CourseIDs[i][j % 2]); //alternate courses
         }
 
         m_leagueTables.emplace_back(m_leagues[i].leagueID);

@@ -1717,11 +1717,11 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
             auto buffer = m_sharedData.localConnectionData.serialise();
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-            if (m_sharedData.gameMode == GameMode::Tutorial)
+            /*if (m_sharedData.gameMode == GameMode::Tutorial)
             {
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
-            else
+            else*/
             {
                 //switch to lobby view
                 cro::Command cmd;

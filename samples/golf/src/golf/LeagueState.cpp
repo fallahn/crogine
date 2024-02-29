@@ -499,8 +499,6 @@ void LeagueState::buildScene()
         //tab button
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ (stride * i) + offset, 19.f, 0.5f });
-        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
-        entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = sprite;
@@ -524,7 +522,8 @@ void LeagueState::buildScene()
                 });
 
         entity.addComponent<cro::Callback>().function = MenuTextCallback();
-
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+        entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         bgNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
         m_tabButtons[i] = entity;
