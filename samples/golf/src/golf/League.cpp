@@ -91,6 +91,7 @@ League::League(std::int32_t id)
     m_currentIteration  (0),
     m_currentSeason     (1),
     m_increaseCount     (0),
+    m_currentBest       (15),
     m_currentPosition   (16),
     m_previousPosition  (17)
 {
@@ -317,6 +318,11 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             }
         }
 
+        if (playerPos < m_currentBest)
+        {
+            m_currentBest = playerPos;
+        }
+
         //write the data to a file
         const auto path = getFilePath(PrevFileName);
         cro::RaiiRWops file;
@@ -512,8 +518,13 @@ void League::read()
             return;
         }
 
-        static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 4) + (sizeof(LeaguePlayer) * PlayerCount);
-        if (auto size = file.file->seek(file.file, 0, RW_SEEK_END); size != ExpectedSize)
+        //since 1.16 we padded out 4 extra ints to reserve some for future use (and attempt not to break existing)
+        static constexpr std::size_t OldExpectedSize = (sizeof(std::int32_t) * 4) + (sizeof(LeaguePlayer) * PlayerCount);
+        static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 8) + (sizeof(LeaguePlayer) * PlayerCount);
+        
+        const auto size = file.file->seek(file.file, 0, RW_SEEK_END);
+
+        if (size != ExpectedSize && size != OldExpectedSize)
         {
             file.file->close(file.file);
 
@@ -521,12 +532,26 @@ void League::read()
             reset();
             return;
         }
+        /*if (size == OldExpectedSize)
+        {
+            LogI << "found old style league... updating" << std::endl;
+        }*/
 
         file.file->seek(file.file, 0, RW_SEEK_SET);
         file.file->read(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
         file.file->read(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
         file.file->read(file.file, &m_playerScore, sizeof(std::int32_t), 1);
         file.file->read(file.file, &m_increaseCount, sizeof(std::int32_t), 1);
+
+        if (size == ExpectedSize)
+        {
+            //read the personal best, and skip padding
+            std::int32_t padding = 0;
+            file.file->read(file.file, &m_currentBest, sizeof(std::int32_t), 1);
+            file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
+            file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
+            file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
+        }
 
         file.file->read(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
 
@@ -581,6 +606,12 @@ void League::write()
         file.file->write(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
         file.file->write(file.file, &m_playerScore, sizeof(std::int32_t), 1);
         file.file->write(file.file, &m_increaseCount, sizeof(std::int32_t), 1);
+
+        const std::int32_t padding = 0;
+        file.file->write(file.file, &m_currentBest, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
 
         file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
     }

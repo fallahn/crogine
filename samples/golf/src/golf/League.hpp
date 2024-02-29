@@ -89,6 +89,7 @@ public:
     std::int32_t getCurrentSeason() const { return m_currentSeason; }
     std::int32_t getCurrentScore() const { return m_playerScore; }
     std::int32_t getCurrentPosition() const { return m_currentPosition; }
+    std::int32_t getCurrentBest() const { return m_currentBest + 1; /*convert from index to position*/ }
 
     const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
 
@@ -105,6 +106,8 @@ private:
     std::int32_t m_currentSeason;
     std::int32_t m_increaseCount;
     std::int32_t m_currentPosition;
+
+    std::int32_t m_currentBest;
 
     mutable cro::String m_previousResults;
     mutable std::int32_t m_previousPosition;

@@ -458,7 +458,7 @@ void CareerState::buildScene()
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
 
-        bool unlocked = (i == 0 || (i > 0) && (leagueTables[i - 1].getPreviousPosition() < 4));
+        bool unlocked = (i == 0 || (i > 0) && (leagueTables[i - 1].getCurrentBest() < 4));
 
         //league titles, listed on left
         entity = m_scene.createEntity();
@@ -509,13 +509,13 @@ void CareerState::buildScene()
             entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
 
             //add a trophy if previously complete
-            if (leagueTables[i].getPreviousPosition() < 4)
+            if (leagueTables[i].getCurrentBest() < 4)
             {
                 auto statusEnt = m_scene.createEntity();
                 statusEnt.addComponent<cro::Transform>().setPosition({ 5.f, position.y - 9.f, 0.1f });
                 statusEnt.addComponent<cro::Drawable2D>();
                 statusEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_status");
-                statusEnt.addComponent<cro::SpriteAnimation>().play(leagueTables[i].getPreviousPosition() - 1);
+                statusEnt.addComponent<cro::SpriteAnimation>().play(leagueTables[i].getCurrentBest() - 1);
                 bgEnt.getComponent<cro::Transform>().addChild(statusEnt.getComponent<cro::Transform>());
             }
 
@@ -1538,9 +1538,9 @@ void CareerState::selectLeague(std::size_t idx)
 
     if (league.getCurrentSeason() > 1)
     {
-        str += "\nPrevious Best: " + std::to_string(league.getPreviousPosition());
+        str += "\nPrevious Best: " + std::to_string(league.getCurrentBest());
 
-        switch (league.getPreviousPosition())
+        switch (league.getCurrentBest())
         {
         default:
             str += "th";

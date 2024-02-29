@@ -476,7 +476,7 @@ std::int32_t MenuState::indexFromBallID(std::uint32_t ballID)
         return static_cast<std::int32_t>(std::distance(m_sharedData.ballInfo.begin(), ball));
     }
 
-    return 0;
+    return 0;// static_cast<std::int32_t>(cro::Util::Random::value(0u, m_sharedData.ballInfo.size() - 1));
 }
 
 void MenuState::updateProfileTextures(std::size_t start, std::size_t count)
@@ -962,7 +962,7 @@ std::int32_t MenuState::indexFromAvatarID(std::uint32_t id)
         return static_cast<std::int32_t>(std::distance(m_sharedData.avatarInfo.begin(), avatar));
     }
 
-    return 0;
+    return 0;// static_cast<std::int32_t>(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size()));
 }
 
 void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
@@ -1086,5 +1086,5 @@ std::int32_t MenuState::indexFromHairID(std::uint32_t id)
         return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
     }
 
-    return 0;
+    return 0;// static_cast<std::int32_t>(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1);
 }
