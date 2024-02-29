@@ -372,6 +372,11 @@ void LeagueState::buildScene()
 #ifdef USE_GNS
                 updateLeagueText();
 #endif
+
+                activateTab(TabID::League);
+                m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_currentLeague = m_sharedData.leagueTable;
+                m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             }
             break;
         case RootCallbackData::FadeOut:

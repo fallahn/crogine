@@ -1045,6 +1045,7 @@ void CareerState::buildScene()
             {
                 if (activated(evt))
                 {
+                    m_sharedData.leagueTable = m_sharedData.leagueRoundID;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_scene.getActiveCamera().getComponent<cro::Camera>().active = false;
                     requestStackPush(StateID::League);

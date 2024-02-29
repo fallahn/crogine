@@ -2534,6 +2534,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         {
             if (activated(evt))
             {
+#ifdef USE_GNS
+                m_sharedData.leagueTable = 7;
+#else
+                m_sharedData.leagueTable = 0;
+#endif
                 requestStackPush(StateID::League);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }

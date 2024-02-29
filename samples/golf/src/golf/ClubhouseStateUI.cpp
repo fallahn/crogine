@@ -2697,6 +2697,7 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
             {
                 if (activated(evt))
                 {
+                    m_sharedData.leagueTable = 0;
                     requestStackPush(StateID::League);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
