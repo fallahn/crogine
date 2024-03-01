@@ -130,5 +130,14 @@ private:
     void addLeagueButtons(const cro::SpriteSheet&);
 
     void activateTab(std::int32_t);
+
+    struct Page final
+    {
+        enum
+        {
+            Forward, Back
+        };
+    };
+    void switchLeague(std::int32_t);
     void quitState();
 };

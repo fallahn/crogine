@@ -240,10 +240,16 @@ bool LeagueState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         case cro::GameController::ButtonRightShoulder:
-            activateTab((m_currentTab + 1) % TabID::Max);
+            if (m_currentTab == TabID::League)
+            {
+                switchLeague(Page::Forward);
+            }
             break;
         case cro::GameController::ButtonLeftShoulder:
-            activateTab((m_currentTab + (TabID::Max - 1)) % TabID::Max);
+            if (m_currentTab == TabID::League)
+            {
+                switchLeague(Page::Back);
+            }
             break;
         }
     }
@@ -1175,25 +1181,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
             {
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                auto next = (m_currentLeague + 1) % LeagueID::Count;
-                while (next != m_currentLeague && !m_leagueNodes[next].isValid())
-                {
-                    next = (next + 1) % LeagueID::Count;
-                }
-
-                //this has to be delayed by a frame
-                cro::Entity ent = m_scene.createEntity();
-                ent.addComponent<cro::Callback>().active = true;
-                ent.getComponent<cro::Callback>().function =
-                    [&, next](cro::Entity f, float) mutable
-                    {
-                        m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                        m_leagueNodes[next].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                        m_currentLeague = next;
-
-                        f.getComponent<cro::Callback>().active = false;
-                        m_scene.destroyEntity(f);
-                    };
+                switchLeague(Page::Forward);
             }
         });
 
@@ -1212,24 +1200,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
             {
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                auto next = (m_currentLeague + (LeagueID::Count - 1)) % LeagueID::Count;
-                while (next != m_currentLeague && !m_leagueNodes[next].isValid())
-                {
-                    next = (next + (LeagueID::Count - 1)) % LeagueID::Count;
-                }
-
-                cro::Entity ent = m_scene.createEntity();
-                ent.addComponent<cro::Callback>().active = true;
-                ent.getComponent<cro::Callback>().function =
-                    [&, next](cro::Entity f, float) mutable
-                    {
-                        m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                        m_leagueNodes[next].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                        m_currentLeague = next;
-
-                        f.getComponent<cro::Callback>().active = false;
-                        m_scene.destroyEntity(f);
-                    };
+                switchLeague(Page::Back);
             }
         });
 }
@@ -1256,6 +1227,40 @@ void LeagueState::activateTab(std::int32_t tabID)
 
         m_scene.getSystem<cro::UISystem>()->setActiveGroup(tabID);
     }
+}
+
+void LeagueState::switchLeague(std::int32_t forward)
+{
+    std::int32_t next = 0;
+    if (forward == Page::Forward)
+    {
+        next = (m_currentLeague + 1) % LeagueID::Count;
+        while (next != m_currentLeague && !m_leagueNodes[next].isValid())
+        {
+            next = (next + 1) % LeagueID::Count;
+        }
+    }
+    else
+    {
+        next = (m_currentLeague + (LeagueID::Count - 1)) % LeagueID::Count;
+        while (next != m_currentLeague && !m_leagueNodes[next].isValid())
+        {
+            next = (next + (LeagueID::Count - 1)) % LeagueID::Count;
+        }
+    }
+
+    cro::Entity ent = m_scene.createEntity();
+    ent.addComponent<cro::Callback>().active = true;
+    ent.getComponent<cro::Callback>().function =
+        [&, next](cro::Entity f, float) mutable
+        {
+            m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_leagueNodes[next].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_currentLeague = next;
+
+            f.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(f);
+        };
 }
 
 void LeagueState::quitState()

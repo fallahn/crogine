@@ -1392,6 +1392,7 @@ void GolfGame::savePreferences()
         cfg.addProperty("custom_shader").setValue(m_sharedData.customShaderPath);
     }
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
+    cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
     cfg.addProperty("swingput_threshold").setValue(m_sharedData.swingputThreshold);
     cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
     cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
@@ -1416,7 +1417,6 @@ void GolfGame::savePreferences()
     cfg.addProperty("grid_transparency").setValue(m_sharedData.gridTransparency);
     cfg.addProperty("show_tutorial").setValue(m_sharedData.showTutorialTip);
     cfg.addProperty("putting_power").setValue(m_sharedData.showPuttingPower);
-    cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
     cfg.addProperty("use_vibration").setValue(m_sharedData.enableRumble == 0 ? false : true);
     cfg.addProperty("use_trail").setValue(m_sharedData.showBallTrail);
     cfg.addProperty("use_beacon_colour").setValue(m_sharedData.trailBeaconColour);
