@@ -696,30 +696,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     centreText(entity);
     m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto table = league.getTable();
-    struct TableEntry final
-    {
-        std::int32_t score = 0;
-        std::int32_t handicap = 0;
-        std::int32_t name = -1;
-        TableEntry(std::int32_t s, std::int32_t h, std::int32_t n)
-            :score(s), handicap(h), name(n) {}
-    };
-    std::vector<TableEntry> entries;
-    for (const auto& p : table)
-    {
-        entries.emplace_back(p.currentScore, p.outlier + p.curve, p.nameIndex);
-    }
-    //we'll fake our handicap (it's not a real golf one anyway) with our current level
-    entries.emplace_back(league.getCurrentScore(), Social::getLevel() / 2, -1);
-
-    std::sort(entries.begin(), entries.end(),
-        [](const TableEntry& a, const TableEntry& b)
-        {
-            return a.score == b.score ?
-                a.handicap > b.handicap :
-                a.score > b.score;
-        });
+    const auto& entries = league.getSortedTable();
 
 
     //column of rank badges representing psuedo-level (handicap * 2)

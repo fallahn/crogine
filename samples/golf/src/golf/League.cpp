@@ -149,6 +149,8 @@ void League::reset()
         increaseDifficulty();
     }
 
+    createSortedTable();
+
     m_currentIteration = 0;
     m_currentSeason = 1;
     m_playerScore = 0;
@@ -159,14 +161,15 @@ void League::reset()
 void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vector<std::uint8_t>& playerScores, std::size_t holeCount)
 {
     //reset the scores if this is the first iteration of a new season
-    if (m_currentIteration == 0)
+    //moved to end of func when resetting iter
+    /*if (m_currentIteration == 0)
     {
         m_playerScore = 0;
         for (auto& player : m_players)
         {
             player.currentScore = 0;
         }
-    }
+    }*/
 
     CRO_ASSERT(holeCount == 6 || holeCount == 9 || holeCount == 12 || holeCount == 18, "");
 
@@ -241,7 +244,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     std::sort(m_players.begin(), m_players.end(), 
         [](const LeaguePlayer& a, const LeaguePlayer& b)
         {
-            return a.currentScore == b.currentScore ? 
+            return a.currentScore == b.currentScore ?
                 (a.curve + a.outlier) > (b.curve + b.outlier) : //roughly the handicap
                 a.currentScore > b.currentScore;
         });
@@ -337,8 +340,8 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         //evaluate all players and adjust skills if we came in the top 2
         //if (m_id == LeagueRoundID::Club)
         {
-            if (m_id == LeagueRoundID::Club //this is the club league - else skills remain fixed
-                && playerPos < 2
+            if (/*m_id == LeagueRoundID::Club
+                && */playerPos < 2
                 && m_increaseCount < SkillRoof)
             {
                 increaseDifficulty();
@@ -363,11 +366,20 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         }
 
 
-        //start a new season
+        //start a new season - this should be ok here as we saved the previous results
+        //out to a file to scroll at the bottom
         m_currentIteration = 0;
+        m_playerScore = 0;
+
+        for (auto& player : m_players)
+        {
+            player.currentScore = 0;
+        }
+
         m_currentSeason++;
     }
 
+    createSortedTable();
     write();
 }
 
@@ -504,6 +516,40 @@ std::string League::getFilePath(const std::string& fn) const
     return basePath + fn;
 }
 
+void League::createSortedTable()
+{
+    std::vector<TableEntry> entries;
+    for (const auto& p : m_players)
+    {
+        entries.emplace_back(p.currentScore, p.outlier + p.curve, p.nameIndex);
+    }
+    //we'll fake our handicap (it's not a real golf one anyway) with our current level
+    entries.emplace_back(m_playerScore, Social::getLevel() / 2, -1);
+
+    std::sort(entries.begin(), entries.end(),
+        [](const TableEntry& a, const TableEntry& b)
+        {
+            if (a.score == b.score)
+            {
+                if (a.name > -1)
+                {
+                    return a.handicap > b.handicap;
+                }
+                return false;
+            }
+            return a.score > b.score;
+        });
+
+    entries.swap(m_sortedTable);
+
+    m_currentPosition = static_cast<std::int32_t>(std::distance(m_sortedTable.begin(),
+        std::find_if(m_sortedTable.begin(), m_sortedTable.end(),
+            [](const TableEntry& te)
+            {
+                return te.name == -1;
+            })));
+}
+
 void League::read()
 {
     const auto path = getFilePath(FileName);
@@ -577,15 +623,9 @@ void League::read()
         }
         currScores.push_back(m_playerScore);
 
-        if (m_playerScore == 0)
-        {
-            m_currentPosition = 16;
-        }
-        else
-        {
-            std::sort(currScores.begin(), currScores.end(), [](std::int32_t a, std::int32_t b) {return a > b; });
-            m_currentPosition = static_cast<std::int32_t>(std::distance(currScores.cbegin(), std::find(currScores.cbegin(), currScores.cend(), m_playerScore))) + 1;
-        }
+        //creates a table which includes player data, ready for display
+        //and finds the current player position in the table
+        createSortedTable();
     }
     else
     {

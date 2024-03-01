@@ -57,6 +57,15 @@ struct PreviousEntry final
 using SortData = PreviousEntry;
 static const std::string PrevFileName("last.gue");
 
+struct TableEntry final
+{
+    std::int32_t score = 0;
+    std::int32_t handicap = 0;
+    std::int32_t name = -1;
+    TableEntry(std::int32_t s, std::int32_t h, std::int32_t n)
+        :score(s), handicap(h), name(n) {}
+};
+
 struct LeagueRoundID final
 {
     enum
@@ -88,10 +97,11 @@ public:
     std::int32_t getCurrentIteration() const { return m_currentIteration; }
     std::int32_t getCurrentSeason() const { return m_currentSeason; }
     std::int32_t getCurrentScore() const { return m_playerScore; }
-    std::int32_t getCurrentPosition() const { return m_currentPosition; }
+    std::int32_t getCurrentPosition() const { return m_currentPosition + 1; /*convert from index to position*/ }
     std::int32_t getCurrentBest() const { return m_currentBest + 1; /*convert from index to position*/ }
 
     const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
+    const std::vector<TableEntry>& getSortedTable() const { return m_sortedTable; } //used for display
 
     const cro::String& getPreviousResults(const cro::String& playerName) const;
     std::int32_t getPreviousPosition() const { return m_previousPosition; }
@@ -116,6 +126,9 @@ private:
 
     void increaseDifficulty();
     std::string getFilePath(const std::string& fileName) const;
+
+    std::vector<TableEntry> m_sortedTable = {};
+    void createSortedTable();
 
     void read();
     void write();

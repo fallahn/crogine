@@ -1557,7 +1557,12 @@ void CareerState::selectLeague(std::size_t idx)
             break;
         }
 
-        str += " - Completed " + std::to_string(league.getCurrentSeason() - 1) + " times.";
+        str += " - Completed " + std::to_string(league.getCurrentSeason() - 1) + " time";
+
+        if (league.getCurrentSeason() > 2)
+        {
+            str += "s";
+        }
     }
     m_leagueDetails.leagueDetails.getComponent<cro::Text>().setString(str);
 
