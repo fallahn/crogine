@@ -509,7 +509,7 @@ std::int32_t GolfState::process(float dt)
                         && (progress.value != progress.target)
                         && m_sharedData.scoreType == ScoreType::Stroke)
                     {
-                        if (cro::Util::Random::value(0, 9) == 0)
+                        if (cro::Util::Random::value(0, 4) == 0)
                         {
                             return m_randomTargetCount++ < MaxRandomTargets;
                         }

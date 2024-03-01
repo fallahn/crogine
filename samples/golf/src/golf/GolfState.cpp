@@ -4190,7 +4190,8 @@ void GolfState::handleBullHit(const BullHit& bh)
     cmd.targetFlags = CommandID::BullsEye;
     cmd.action = [](cro::Entity e, float)
         {
-            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = AnimDirection::Shrink;
+            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = 
+                Social::getMonth() == 2 ? AnimDirection::Destroy : AnimDirection::Shrink;
             e.getComponent<cro::Callback>().active = true;
         };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -5229,7 +5230,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.targetFlags = CommandID::BullsEye;
     cmd.action = [isMultiTarget](cro::Entity e, float)
         {
-            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = isMultiTarget ? AnimDirection::Grow : AnimDirection::Shrink;
+            auto multiTarget = isMultiTarget || Social::getMonth() == 2;
+            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = multiTarget ? AnimDirection::Grow : AnimDirection::Shrink;
             e.getComponent<cro::Callback>().active = true;
         };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
