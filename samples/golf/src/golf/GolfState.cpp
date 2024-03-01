@@ -5265,7 +5265,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto midTarget = findTargetPos(player.position);
 
     //set this separately because target might not necessarily be the pin.
-    bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
+    bool isMultiTarget = ((m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) //challenge month
         && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
     auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
     m_inputParser.setClub(glm::length(clubTarget - player.position));

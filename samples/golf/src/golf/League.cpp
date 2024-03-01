@@ -45,6 +45,11 @@ source distribution.
 
 namespace
 {
+    constexpr std::array XPAmount =
+    {
+        500, 250, 125
+    };
+
     const std::string FileName("lea.gue");
 
     constexpr std::int32_t MaxCurve = 5;
@@ -310,7 +315,9 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
                     Achievements::awardAchievement(AchievementStrings[AchievementID::LeagueChampion]);
                     break;
                 default:
-                    //TODO award XP for each slot above 4th
+                    //award XP for each slot above 4th
+                    Social::awardXP(XPAmount[i]);
+
                     //TODO award achievement for completion
                     break;
                 }
