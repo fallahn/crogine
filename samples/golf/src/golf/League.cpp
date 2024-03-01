@@ -32,6 +32,7 @@ source distribution.
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
 #include "RandNames.hpp"
+#include "XPAwardStrings.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/App.hpp>
@@ -47,7 +48,12 @@ namespace
 {
     constexpr std::array XPAmount =
     {
-        500, 250, 125
+        400, 200, 100
+    };
+
+    constexpr std::array XPMultiplier =
+    {
+        100, 50, 25
     };
 
     const std::string FileName("lea.gue");
@@ -316,8 +322,8 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
                     break;
                 default:
                     //award XP for each slot above 4th
-                    Social::awardXP(XPAmount[i]);
-
+                    Social::awardXP(XPAmount[i] + (m_id * XPMultiplier[i]), XPStringID::CareerSeasonComplete);
+                    
                     //TODO award achievement for completion
                     break;
                 }

@@ -195,9 +195,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_emoteWheel            (sd, m_currentPlayer, m_textChat),
     m_league                (sd.leagueRoundID)
 {
-    LogI << "playing with league ID " << sd.leagueRoundID << std::endl;
-    LogI << "game mode is " << (int)sd.gameMode << std::endl;
-
     if (sd.weatherType == WeatherType::Random)
     {
         sd.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
@@ -4219,7 +4216,8 @@ void GolfState::handleBullHit(const BullHit& bh)
     cmd.targetFlags = CommandID::BullsEye;
     cmd.action = [](cro::Entity e, float)
         {
-            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = AnimDirection::Shrink;
+            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = 
+                Social::getMonth() == 2 ? AnimDirection::Destroy : AnimDirection::Shrink;
             e.getComponent<cro::Callback>().active = true;
         };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -5265,16 +5263,17 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto midTarget = findTargetPos(player.position);
 
     //set this separately because target might not necessarily be the pin.
-    bool isMultiTarget = ((m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) //challenge month
+    bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
         && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
     auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
     m_inputParser.setClub(glm::length(clubTarget - player.position));
 
 
     cmd.targetFlags = CommandID::BullsEye;
-    cmd.action = [isMultiTarget](cro::Entity e, float)
+    cmd.action = [&,isMultiTarget](cro::Entity e, float)
         {
-            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = isMultiTarget ? AnimDirection::Grow : AnimDirection::Shrink;
+            bool multiTarget = isMultiTarget || Social::getMonth() == 2; //challenge month
+            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = multiTarget ? AnimDirection::Grow : AnimDirection::Shrink;
             e.getComponent<cro::Callback>().active = true;
         };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

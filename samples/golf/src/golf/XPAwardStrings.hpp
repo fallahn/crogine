@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -65,6 +65,8 @@ struct XPStringID final
         BullsEyeHit,
         Survivor,
 
+        CareerSeasonComplete,
+
         Count
     };
 };
@@ -99,5 +101,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
 
     "Challenge Completed",
     "Target Hit",
-    "Survivor"
+    "Survivor",
+
+    "Career Season Complete"
 };
