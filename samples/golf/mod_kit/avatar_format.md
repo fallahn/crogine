@@ -32,14 +32,14 @@ Hair models are untextured, and have their colour set by the avatar customisatio
 
 
 #### Key Colours
-When texturing avatars these colours in RGB, eg 0,0,0 or 30,30,30 will be used to key the coloursin the texture with the in-game palette. Other colours are left as they are and will appear unmodified on the model in game.
+When texturing avatars these colours in RGB, eg 0,0,0 or 30,30,30 will be used to key the colours in the texture with the in-game palette. Other colours are left as they are and will appear unmodified on the model in game.
 
 Avatar colour keys are:
 
             Dark  Light
     Bottom - 0     10
     Top    - 30    40
-    Skin   - 60    70
-    Hair   - 90    100
+    Skin   - 70 (0.275)
+    Hair   - 90 (0.392)
 
 In RGB linear space - although textures MUST be RGBA

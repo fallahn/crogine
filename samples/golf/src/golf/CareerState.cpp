@@ -279,7 +279,7 @@ void CareerState::buildScene()
 
                     m_scene.setSystemActive<cro::UISystem>(true);
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
-                    m_scene.getSystem<cro::UISystem>()->selectAt(CareerQuit);
+                    m_scene.getSystem<cro::UISystem>()->selectAt(CareerStart);
                     Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
 
                     applySettingsValues();
