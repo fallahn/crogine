@@ -243,12 +243,14 @@ bool LeagueState::handleEvent(const cro::Event& evt)
             if (m_currentTab == TabID::League)
             {
                 switchLeague(Page::Forward);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
             break;
         case cro::GameController::ButtonLeftShoulder:
             if (m_currentTab == TabID::League)
             {
                 switchLeague(Page::Back);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
             break;
         }

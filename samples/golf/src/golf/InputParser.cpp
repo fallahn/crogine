@@ -321,6 +321,14 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CancelShot])
                 {
                     m_inputFlags &= ~InputFlag::Cancel;
+
+                    if (m_state == State::Drone)
+                    {
+                        m_state = State::Aim;
+                        auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                        msg->type = SceneEvent::RequestSwitchCamera;
+                        msg->data = CameraID::Player;
+                    }
                 }
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::SpinMenu])
                 {

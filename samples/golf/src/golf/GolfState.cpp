@@ -3930,6 +3930,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::TopSpinSkill);
                         }
                     }
+
+                    //really we want to do this in any mode if holed without a gimme
+                    //however there's no real way to distinguish atm
+                    if (m_sharedData.gimmeRadius == 0)
+                    {
+                        Social::awardXP(25, XPStringID::NoGimme);
+                    }
                 }
 
                 showMessageBoard(MessageBoardID::HoleScore, special);

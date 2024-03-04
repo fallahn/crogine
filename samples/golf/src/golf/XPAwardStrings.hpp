@@ -50,6 +50,7 @@ struct XPStringID final
         FirstPlace,
         SecondPlace,
         ThirdPlace,
+        NoGimme,
 
         HIO,
         Albatross,
@@ -65,6 +66,7 @@ struct XPStringID final
         BullsEyeHit,
         Survivor,
 
+        CareerRoundComplete,
         CareerSeasonComplete,
 
         Count
@@ -88,6 +90,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     "First Place!",
     "Second Place",
     "Third Place",
+    "No Gimme",
 
     "Hole In One!!",
     "Albatross (No Assist)",
@@ -103,5 +106,6 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     "Target Hit",
     "Survivor",
 
-    "Career Season Complete"
+    "Career Round Complete",
+    "Career Season Complete",
 };

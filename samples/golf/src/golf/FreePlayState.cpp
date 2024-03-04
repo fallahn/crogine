@@ -368,10 +368,13 @@ void FreePlayState::buildScene()
 
                     m_sharedData.hosting = true;
                     m_sharedData.clubSet = m_sharedData.preferredClubSet;
+                    m_sharedData.courseIndex = courseOfTheMonth();
+                    m_sharedData.holeCount = 0;
 
                     auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                     msg->type = SystemEvent::MenuRequest;
                     msg->data = StateID::FreePlay;
+
 
                     quitState();
                 }            

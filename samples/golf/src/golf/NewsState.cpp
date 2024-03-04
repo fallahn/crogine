@@ -385,7 +385,7 @@ void NewsState::buildScene()
     spriteSheet.loadFromFile("assets/golf/sprites/connect_menu.spt", m_sharedData.sharedResources->textures);
 
     auto balls = m_scene.createEntity();
-    balls.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    balls.addComponent<cro::Transform>().setPosition({ 0.f, 32.f, 0.1f });
     balls.addComponent<cro::Drawable2D>();
     balls.addComponent<cro::Sprite>() = spriteSheet.getSprite("bounce");
     balls.addComponent<cro::SpriteAnimation>().play(0);

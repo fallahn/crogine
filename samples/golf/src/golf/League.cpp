@@ -391,6 +391,11 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 
         m_currentSeason++;
     }
+    else if (m_id != LeagueRoundID::Club)
+    {
+        //award some XP for completing a career round
+        Social::awardXP(100 + (m_id * 50), XPStringID::CareerRoundComplete);
+    }
 
     createSortedTable();
     write();
