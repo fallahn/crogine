@@ -34,6 +34,7 @@ source distribution.
 #include "spooky2.hpp"
 #include "BallSystem.hpp"
 #include "CallbackData.hpp"
+#include "League.hpp"
 #include "MenuEnum.inl"
 
 #include <Social.hpp>
@@ -347,6 +348,53 @@ void MenuState::createBallScene()
         }
     }
 
+    const std::array<League, 6u> Leagues =
+    {
+        League(LeagueRoundID::RoundOne),
+        League(LeagueRoundID::RoundTwo),
+        League(LeagueRoundID::RoundThree),
+        League(LeagueRoundID::RoundFour),
+        League(LeagueRoundID::RoundFive),
+        League(LeagueRoundID::RoundSix)
+    };
+    const std::array<std::string, 6u> LeaguePaths =
+    {
+        "assets/golf/models/career/tier0/01.ball",
+        "assets/golf/models/career/tier0/02.ball",
+        "assets/golf/models/career/tier0/03.ball",
+        "assets/golf/models/career/tier0/04.ball",
+        "assets/golf/models/career/tier0/05.ball",
+        "assets/golf/models/career/tier0/06.ball"
+    };
+    //unlockable balls for league placements
+    for (auto i = 0u; i < LeaguePaths.size(); ++i)
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(LeaguePaths[i]))
+        {
+            auto info = readBallCfg(cfg);
+
+            //if we didn't find a UID create one from the file name and save it to the cfg
+            if (info.uid == 0)
+            {
+                info.uid = SpookyHash::Hash32(LeaguePaths[i].data(), LeaguePaths[i].size(), 0);
+                cfg.addProperty("uid").setValue(info.uid);
+                cfg.save(LeaguePaths[i]);
+            }
+
+            if (Leagues[i].getCurrentBest() > 4)
+            {
+                insertInfo(info, m_sharedData.ballInfo, true);
+            }
+            else
+            {
+                info.locked = true;
+                delayedEntries.push_back(info);
+            }
+        }
+    }
+
+
 
     //load each model for the preview in the player menu
     cro::ModelDefinition ballDef(m_resources);
@@ -602,6 +650,61 @@ void MenuState::parseAvatarDirectory()
         }
     }
 
+
+    //unlockable hair from career. We load each file and if it's
+    //unlocked parse it immediately so it's available in the browser
+    //else delay the loading so it's still available to display if
+    //a remote player in a network game is using one.
+    const std::array<League, 6u> Leagues =
+    {
+        League(LeagueRoundID::RoundOne),
+        League(LeagueRoundID::RoundTwo),
+        League(LeagueRoundID::RoundThree),
+        League(LeagueRoundID::RoundFour),
+        League(LeagueRoundID::RoundFive),
+        League(LeagueRoundID::RoundSix)
+    };
+    const std::array<std::string, 6u> LeaguePaths =
+    {
+        "assets/golf/models/career/tier1/01.hct",
+        "assets/golf/models/career/tier1/02.hct",
+        "assets/golf/models/career/tier1/03.hct",
+        "assets/golf/models/career/tier1/04.hct",
+        "assets/golf/models/career/tier1/05.hct",
+        "assets/golf/models/career/tier1/06.hct"
+    };
+    std::vector<SharedStateData::HairInfo> delayedEntries;
+    //unlockable hair for league placements
+    for (auto i = 0u; i < LeaguePaths.size(); ++i)
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(LeaguePaths[i]))
+        {
+            auto info = readHairCfg(cfg);
+
+            //if we didn't find a UID create one from the file name and save it to the cfg
+            if (info.uid == 0)
+            {
+                info.uid = SpookyHash::Hash32(LeaguePaths[i].data(), LeaguePaths[i].size(), 0);
+                cfg.addProperty("uid").setValue(info.uid);
+                cfg.save(LeaguePaths[i]);
+            }
+
+            if (Leagues[i].getCurrentBest() > 3)
+            {
+                insertInfo(info, m_sharedData.hairInfo, true);
+            }
+            else
+            {
+                info.locked = true;
+                delayedEntries.push_back(info);
+            }
+        }
+    }
+
+
+
+
     //these are just used in the player preview window
     //not in game.
     if (!m_playerAvatars.empty())
@@ -628,6 +731,12 @@ void MenuState::parseAvatarDirectory()
                 m_profileData.hairDefs.push_back(md);
             }
         }
+    }
+
+    //now load extra hair so it's available in-game
+    for (const auto& info : delayedEntries)
+    {
+        insertInfo(info, m_sharedData.hairInfo, true);
     }
 
 

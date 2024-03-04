@@ -155,6 +155,7 @@ struct SharedStateData final
         std::uint32_t uid = 0;
         std::string modelPath;
         std::uint64_t workshopID = 0;
+        bool locked = false;
         HairInfo() = default;
         HairInfo(std::uint32_t i, const std::string& str)
             :uid(i), modelPath(str) {}
