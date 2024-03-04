@@ -264,8 +264,10 @@ void UnlockState::addSystems()
     m_cubemap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
     m_materials[0].setShader(m_celShader);
+    m_materials[0].doubleSided = true;
     m_materials[1].setShader(m_reflectionShader);
     m_materials[1].setProperty("u_reflectMap", cro::CubemapID(m_cubemap));
+    m_materials[1].doubleSided = true;
 }
 
 void UnlockState::buildScene()
@@ -576,7 +578,7 @@ void UnlockState::buildUI()
         collection.modelSprite = entity;
 
 
-        //note the model is n a different scene...
+        //note the model is in a different scene...
         entity = m_modelScene.createEntity();
         entity.addComponent<cro::Transform>();
         if (md.loadFromFile(ul::ModelPaths[ul::Items[unlockID].modelID]))
@@ -591,6 +593,13 @@ void UnlockState::buildUI()
             //scale all models to more or less the same size
             auto sphere = entity.getComponent<cro::Model>().getBoundingSphere();
             float scale = 1.6f / sphere.radius;
+
+            //hack to shrink balls a bit
+            if (unlockID >= ul::UnlockID::Ball01)
+            {
+                scale *= 0.84f;
+            }
+
             collection.modelScale = scale;
             entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             entity.getComponent<cro::Transform>().setOrigin(sphere.centre);

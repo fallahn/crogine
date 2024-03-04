@@ -359,12 +359,12 @@ void MenuState::createBallScene()
     };
     const std::array<std::string, 6u> LeaguePaths =
     {
-        "assets/golf/models/career/tier0/01.ball",
-        "assets/golf/models/career/tier0/02.ball",
-        "assets/golf/models/career/tier0/03.ball",
-        "assets/golf/models/career/tier0/04.ball",
-        "assets/golf/models/career/tier0/05.ball",
-        "assets/golf/models/career/tier0/06.ball"
+        "assets/golf/career/tier0/01.ball",
+        "assets/golf/career/tier0/02.ball",
+        "assets/golf/career/tier0/03.ball",
+        "assets/golf/career/tier0/04.ball",
+        "assets/golf/career/tier0/05.ball",
+        "assets/golf/career/tier0/06.ball"
     };
     //unlockable balls for league placements
     for (auto i = 0u; i < LeaguePaths.size(); ++i)
@@ -375,14 +375,14 @@ void MenuState::createBallScene()
             auto info = readBallCfg(cfg);
 
             //if we didn't find a UID create one from the file name and save it to the cfg
-            if (info.uid == 0)
+            /*if (info.uid == 0)
             {
                 info.uid = SpookyHash::Hash32(LeaguePaths[i].data(), LeaguePaths[i].size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
                 cfg.save(LeaguePaths[i]);
-            }
+            }*/
 
-            if (Leagues[i].getCurrentBest() > 4)
+            if (Leagues[i].getCurrentBest() < 4)
             {
                 insertInfo(info, m_sharedData.ballInfo, true);
             }
@@ -666,12 +666,12 @@ void MenuState::parseAvatarDirectory()
     };
     const std::array<std::string, 6u> LeaguePaths =
     {
-        "assets/golf/models/career/tier1/01.hct",
-        "assets/golf/models/career/tier1/02.hct",
-        "assets/golf/models/career/tier1/03.hct",
-        "assets/golf/models/career/tier1/04.hct",
-        "assets/golf/models/career/tier1/05.hct",
-        "assets/golf/models/career/tier1/06.hct"
+        "assets/golf/career/tier1/01.hct",
+        "assets/golf/career/tier1/02.hct",
+        "assets/golf/career/tier1/03.hct",
+        "assets/golf/career/tier1/04.hct",
+        "assets/golf/career/tier1/05.hct",
+        "assets/golf/career/tier1/06.hct"
     };
     std::vector<SharedStateData::HairInfo> delayedEntries;
     //unlockable hair for league placements
@@ -683,14 +683,14 @@ void MenuState::parseAvatarDirectory()
             auto info = readHairCfg(cfg);
 
             //if we didn't find a UID create one from the file name and save it to the cfg
-            if (info.uid == 0)
+            /*if (info.uid == 0)
             {
                 info.uid = SpookyHash::Hash32(LeaguePaths[i].data(), LeaguePaths[i].size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
                 cfg.save(LeaguePaths[i]);
-            }
+            }*/
 
-            if (Leagues[i].getCurrentBest() > 3)
+            if (Leagues[i].getCurrentBest() < 3)
             {
                 insertInfo(info, m_sharedData.hairInfo, true);
             }

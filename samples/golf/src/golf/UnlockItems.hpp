@@ -80,6 +80,20 @@ namespace ul
             GolfBag01,
             GolfBag02,
 
+            CareerBall01,
+            CareerBall02,
+            CareerBall03,
+            CareerBall04,
+            CareerBall05,
+            CareerBall06,
+
+            CareerHair01,
+            CareerHair02,
+            CareerHair03,
+            CareerHair04,
+            CareerHair05,
+            CareerHair06,
+
             Count
         };
     };
@@ -111,6 +125,20 @@ namespace ul
         std::string("assets/golf/models/trophies/streak07.cmt"),
         std::string("assets/golf/models/golfbag01.cmt"),
         std::string("assets/golf/models/golfbag02.cmt"),
+
+        std::string("assets/golf/models/career/tier0/01.cmt"),
+        std::string("assets/golf/models/career/tier0/02.cmt"),
+        std::string("assets/golf/models/career/tier0/03.cmt"),
+        std::string("assets/golf/models/career/tier0/04.cmt"),
+        std::string("assets/golf/models/career/tier0/05.cmt"),
+        std::string("assets/golf/models/career/tier0/06.cmt"),
+
+        std::string("assets/golf/models/career/tier1/01.cmt"),
+        std::string("assets/golf/models/career/tier1/02.cmt"),
+        std::string("assets/golf/models/career/tier1/03.cmt"),
+        std::string("assets/golf/models/career/tier1/04.cmt"),
+        std::string("assets/golf/models/career/tier1/05.cmt"),
+        std::string("assets/golf/models/career/tier1/06.cmt")
     };
 
     //these MUST be in the correct order for unlocking
@@ -152,6 +180,20 @@ namespace ul
             Streak06,
             Streak07,
 
+            Ball01,
+            Ball02,
+            Ball03,
+            Ball04,
+            Ball05,
+            Ball06,
+
+            Hair01,
+            Hair02,
+            Hair03,
+            Hair04,
+            Hair05,
+            Hair06,
+
             Count
         };
     };
@@ -181,9 +223,9 @@ namespace ul
         { ModelID::LevelBadge100, "Centenary",     "New Level Badge!" },
 
         { ModelID::GolfBag01,  "Expert Clubs Available!",   "Club Range Extended" },
-        { ModelID::GolfBag02,  "Pro Clubs Available!",   "Club Range Extended" },
-        { ModelID::Padlock,  "Socialiser",  "Clubhouse Unlocked" },
-        { ModelID::Padlock,  "Designer",    "Course Editor Unlocked" },
+        { ModelID::GolfBag02,  "Pro Clubs Available!",      "Club Range Extended" },
+        { ModelID::Padlock,    "Socialiser",                "Clubhouse Unlocked" },
+        { ModelID::Padlock,    "Designer",                  "Course Editor Unlocked" },
 
         { ModelID::Streak01,  "1 Day Streak",    "+5XP" },
         { ModelID::Streak02,  "2 Day Streak",    "+11XP" },
@@ -192,5 +234,19 @@ namespace ul
         { ModelID::Streak05,  "5 Day Streak",    "+36XP" },
         { ModelID::Streak06,  "6 Day Streak",    "+50XP" },
         { ModelID::Streak07,  "7 Day Streak",    "+100XP" },
+
+        { ModelID::CareerBall01,  "Tennis",          "New Golf Ball!" },
+        { ModelID::CareerBall02,  "Cocktail Olive",  "New Golf Ball!" },
+        { ModelID::CareerBall03,  "Smiley",          "New Golf Ball!" },
+        { ModelID::CareerBall04,  "Toybox",          "New Golf Ball!" },
+        { ModelID::CareerBall05,  "Jingle Bell",     "New Golf Ball!" },
+        { ModelID::CareerBall06,  "Fortune Teller",  "New Golf Ball!" },
+
+        { ModelID::CareerHair01,  "Mutton Chops",    "New Headwear!" },
+        { ModelID::CareerHair02,  "Princess",        "New Headwear!" },
+        { ModelID::CareerHair03,  "Fizz! Lite",      "New Headwear!" },
+        { ModelID::CareerHair04,  "Bun",             "New Headwear!" },
+        { ModelID::CareerHair05,  "Fizz!",           "New Headwear!" },
+        { ModelID::CareerHair06,  "Head of State",   "New Headwear!" },
     };
 }

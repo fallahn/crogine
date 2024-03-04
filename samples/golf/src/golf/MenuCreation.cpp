@@ -4234,6 +4234,50 @@ void MenuState::updateUnlockedItems()
     Social::setUnlockStatus(Social::UnlockType::Ball, ballFlags);
 
 
+    //career balls
+    const std::array<League, 6u> Leagues =
+    {
+        League(LeagueRoundID::RoundOne),
+        League(LeagueRoundID::RoundTwo),
+        League(LeagueRoundID::RoundThree),
+        League(LeagueRoundID::RoundFour),
+        League(LeagueRoundID::RoundFive),
+        League(LeagueRoundID::RoundSix),
+    };
+    ballFlags = 0; //Social::getCareerFlags(Balls);
+    for (auto i = 0u; i < Leagues.size(); ++i)
+    {
+        if (Leagues[i].getCurrentBest() < 4)
+        {
+            auto flag = (1 << i);
+            if ((ballFlags & flag) == 0)
+            {
+                ballFlags |= flag;
+                m_sharedData.unlockedItems.push_back(ul::UnlockID::Ball01 + i);
+            }
+        }
+    }
+    //Social::setCareerFlags(Balls, ballFlags);
+
+
+    //career hair
+    auto hairFlags = 0; //Social::getCareerFlags(Hair);
+    for (auto i = 0u; i < Leagues.size(); ++i)
+    {
+        if (Leagues[i].getCurrentBest() < 3)
+        {
+            auto flag = (1 << i);
+            if ((hairFlags & flag) == 0)
+            {
+                hairFlags |= flag;
+                m_sharedData.unlockedItems.push_back(ul::UnlockID::Hair01 + i);
+            }
+        }
+    }
+    //Social::setCareerFlags(Hair, hairFlags);
+
+
+
     //level up
     if (level > 0)
     {
