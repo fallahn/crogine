@@ -1935,7 +1935,16 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity = createHighlight(glm::vec2(81.f, 26.f));
     entity.setLabel("Displays a beacon on the course at the pin position.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVBeacon);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVBeaconL, WindowCredits);
+#ifdef _WIN32
+    if (!Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVBeaconL, AVTextToSpeech);
+    }
+    else
+#endif
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVBeaconL, WindowCredits);
+    }
     entity.getComponent<cro::UIInput>().setPrevIndex(AVShadowR, AVFullScreen);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -2246,7 +2255,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //imperial measurements
     entity = createHighlight(glm::vec2(246.f, 74.f));
-    entity.setLabel("Enables imperial measurements in yards, feet and inches.\nDefault is metric (metres and centimetres)");
+    entity.setLabel("Enables imperial measurements in yards, feet and inches.\nDefault is metric (metres and centimetres).");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVUnits);
     entity.getComponent<cro::UIInput>().setNextIndex(AVPixelScale, AVGridL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVPixelScale, AVPost);
@@ -2406,7 +2415,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto crowdDensityText = createLabel({ 325.f, 19.f }, CrowdLabels[m_sharedData.crowdDensity]);
     centreText(crowdDensityText);
 
-   const auto crowdChanged = uiSystem.addCallback([&, crowdDensityText](cro::Entity e, cro::ButtonEvent evt) mutable
+    const auto crowdChanged = uiSystem.addCallback([&, crowdDensityText](cro::Entity e, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
@@ -2430,18 +2439,81 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
 
     entity = createHighlight(glm::vec2(286.f, 10.f));
-    entity.setLabel("Very high density crowds may cause a drop in performance");
+    entity.setLabel("Very high density crowds may cause a drop in performance.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVCrowdL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdR, WindowApply);
+#ifdef _WIN32
+    if (!Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVTextToSpeech, AVShadowL);
+    }
+    else
+#endif
     entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdR, AVShadowL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = crowdChanged;
 
     entity = createHighlight(glm::vec2(355.f, 10.f));
-    entity.setLabel("Very high density crowds may cause a drop in performance");
+    entity.setLabel("Very high density crowds may cause a drop in performance.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVCrowdR);
+#ifdef _WIN32
+    if (!Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVTextToSpeech, WindowClose);
+    }
+    else
+#endif
     entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdL, WindowClose);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdL, AVShadowR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = crowdChanged;
+
+#ifdef _WIN32
+    if (!Social::isSteamdeck())
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 12.f, 11.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("use_tts");
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        auto optEnt = entity;
+
+        //checkbox centre
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(71.f, 1.f, HighlightOffset));
+        entity.addComponent<cro::Drawable2D>().getVertexData() =
+        {
+            cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+        };
+        entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+            {
+                float scale = m_sharedData.useTTS ? 1.f : 0.f;
+                e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+            };
+        optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        entity = createHighlight(glm::vec2(69.f, -1.f));
+        entity.setLabel("Enables text-to-speech for in game text chat.\nUse the Speech option in Windows Control Panel to set advanced options.");
+        entity.getComponent<cro::UIInput>().setSelectionIndex(AVTextToSpeech);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdL, WindowAdvanced);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdR, AVBeacon);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        m_sharedData.useTTS = !m_sharedData.useTTS;
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                        m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                    }
+                });
+        optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+#endif
 }
 
 void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -3949,6 +4021,13 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         downLeftB = TabController;
         downRightA = TabAchievements;
         downRightB = TabStats;
+#ifdef _WIN32
+        if (!Social::isSteamdeck())
+        {
+            upLeftA = AVTextToSpeech;
+        }
+        else
+#endif
         upLeftA = AVBeacon;
         upLeftB = AVBeaconL;
         upRightA = AVCrowdL;

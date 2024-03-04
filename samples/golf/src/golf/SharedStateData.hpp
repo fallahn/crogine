@@ -239,7 +239,7 @@ struct SharedStateData final
     std::int32_t preferredClubSet = 0; //this is what the player chooses, may be overridden by game rules
     std::int32_t crowdDensity = 1;
     bool pressHold = false; //press and hold the action button to select power
-    bool useTTS = true;
+    bool useTTS = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

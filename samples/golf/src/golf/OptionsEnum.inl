@@ -55,6 +55,7 @@ enum OptionsIndex
     AVBeacon,
     AVBeaconL,
     AVBeaconR,
+    AVTextToSpeech,
     AVTrail,
     AVTrailL,
     AVTrailR,
