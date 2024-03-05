@@ -116,7 +116,7 @@ void GolfState::loadMap()
                 CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 1.75f),
                 CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 0.75f),
                 CrowdContext({ -16.f, -3.5f }, { 16.f, 3.5f }, 0.75f),
-                CrowdContext({ -18.f, -6.5f }, { 18.f, 6.5f }, 0.95f)
+                CrowdContext({ -18.f, -5.5f }, { 18.f, 5.5f }, 0.85f)
             };
 
             const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
@@ -137,14 +137,14 @@ void GolfState::loadMap()
                     tx = glm::translate(tx, offset);
 
                     auto lookDir = lookAt - (glm::vec3(tx[3]) + MapOrigin);
-                    if (float len = glm::length2(lookDir); len < 1600.f)
+                    if (float len = glm::length2(lookDir); len < 3600.f)
                     {
                         rotation = std::atan2(-lookDir.z, lookDir.x) + (90.f * cro::Util::Const::degToRad);
-                        tx = glm::rotate(tx, rotation, glm::vec3(0.f, 1.f, 0.f));
+                        tx = glm::rotate(tx, rotation, cro::Transform::Y_AXIS);
                     }
                     else
                     {
-                        tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f) + (rotation * cro::Util::Const::degToRad), glm::vec3(0.f, 1.f, 0.f));
+                        tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f), cro::Transform::Y_AXIS);
                     }
 
                     float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;

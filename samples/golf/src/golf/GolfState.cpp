@@ -3943,7 +3943,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     //however there's no real way to distinguish atm
                     if (m_sharedData.gimmeRadius == 0)
                     {
-                        Social::awardXP(25, XPStringID::NoGimme);
+                        Social::awardXP(15, XPStringID::NoGimme);
                     }
                 }
 
