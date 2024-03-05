@@ -1814,7 +1814,7 @@ void GolfState::loadModels()
             {
                 return std::distance(m_sharedData.avatarInfo.begin(), result);
             }
-            return 0;
+            return cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1);
         };
 
     const auto indexFromHairID = [&](std::uint32_t hairID)
@@ -1826,7 +1826,7 @@ void GolfState::loadModels()
                 return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
             }
 
-            return 0;
+            return static_cast<std::int32_t>(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1));
         };
 
     //player avatars
@@ -1837,6 +1837,9 @@ void GolfState::loadModels()
         {
             auto skinID = m_sharedData.connectionData[i].playerData[j].skinID;
             auto avatarIndex = indexFromSkinID(skinID);
+
+            //if this returned a random index because the skinID wasn't found, correct the skinID
+            skinID = m_sharedData.avatarInfo[avatarIndex].uid;
 
             m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(avatarIndex));
             m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
@@ -1958,6 +1961,7 @@ void GolfState::loadModels()
                     {
                         //look to see if we have a hair model to attach
                         auto hairID = indexFromHairID(m_sharedData.connectionData[i].playerData[j].hairID);
+
                         if (hairID != 0
                             && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
                         {

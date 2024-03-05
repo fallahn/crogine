@@ -2960,6 +2960,14 @@ void GolfState::spawnBall(const ActorInfo& info)
         {
             return ballPair.uid == ballID;
         });
+
+    //pick a ball at random if model is missing
+    if (ball == m_sharedData.ballInfo.end())
+    {
+        ball = m_sharedData.ballInfo.begin() + cro::Util::Random::value(0u, m_sharedData.ballInfo.size() - 1);
+        ballID = ball->uid;
+    }
+    //the above now makes this superfluous - but hey let's try avoiding butterflies
     if (ball != m_sharedData.ballInfo.end())
     {
         miniBallColour = ball->tint.getVec4() * ballUserColour.getVec4();
