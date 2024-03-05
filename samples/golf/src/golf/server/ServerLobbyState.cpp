@@ -190,7 +190,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 //is this true for other connections?
                 if (idx < ConstVal::MaxClients)
                 {
-                    m_sharedData.clubLevels[idx] = (data & 0xff);
+                    m_sharedData.clubLevels[idx] = std::clamp((data & 0xff), 0, 2);
                     //LogI << "set club level for client " << (int)idx << std::endl;
                 }
                 /*else

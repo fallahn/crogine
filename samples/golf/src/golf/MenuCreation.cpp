@@ -2908,8 +2908,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 if (activated(evt))
                 {
+                    //make sure we've definitely sent the sever our selected clubset
+                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.preferredClubSet);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
                     if (m_sharedData.hosting)
                     {
+                        //prevents starting the game if a game mode requires a certain number of players
                         if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
                         {
                             m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
@@ -2948,7 +2953,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                                 }
                             }
 
-                            LogI << "Shared Data set to Hosting" << std::endl;
+                            //LogI << "Shared Data set to Hosting" << std::endl;
                         }
                     }
                     else

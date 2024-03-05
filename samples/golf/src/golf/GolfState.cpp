@@ -4551,7 +4551,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
             if (rescale &&
                 !m_holeData[m_currentHole].crowdCurves.empty())
             {
-                auto modelsPerPath = std::min(std::size_t(6), m_spectatorModels.size() / m_holeData[m_currentHole].crowdCurves.size());
+                auto modelsPerPath = std::min(std::size_t(10), m_spectatorModels.size() / m_holeData[m_currentHole].crowdCurves.size());
                 std::size_t assignedModels = 0;
                 for (const auto& curve : m_holeData[m_currentHole].crowdCurves)
                 {
