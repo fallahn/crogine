@@ -4404,6 +4404,12 @@ void MenuState::updateUnlockedItems()
                         auto& item = m_sharedData.unlockedItems.emplace_back();
                         item.id = ul::UnlockID::CareerGold + (position - 1);
                         item.xp = Leagues[i].reward(position);
+
+                        if (i == Leagues.size() - 1)
+                        {
+                            //this was the last league so show the credits
+                            m_sharedData.showCredits = true;
+                        }
                         break;
                     }
                 }

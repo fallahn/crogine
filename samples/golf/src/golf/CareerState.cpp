@@ -203,6 +203,13 @@ void CareerState::handleMessage(const cro::Message& msg)
             && getStateCount() == 2) //hmm we really want to be able to check the top state is this one
         {
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+            if (data.id == StateID::Unlock
+                && m_sharedData.showCredits)
+            {
+                m_sharedData.showCredits = false;
+                requestStackPush(StateID::Credits);
+            }
         }
     }
 

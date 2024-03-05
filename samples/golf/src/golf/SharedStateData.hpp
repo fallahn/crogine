@@ -86,6 +86,7 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
+    bool showCredits = false;
     std::int32_t leagueTable = 0; //which league table to display when opening league browser
     SharedCourseData* courseData = nullptr; //only valid when MenuState is active
 
