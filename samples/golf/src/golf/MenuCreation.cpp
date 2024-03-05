@@ -1927,7 +1927,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
                     //make sure the server knows what we request so it can be considered
                     //when choosing a club set limit in MP games
-                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.preferredClubSet);
+                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(Social::getClubLevel());//std::uint8_t(m_sharedData.preferredClubSet);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                     m_sharedData.clubSet = m_sharedData.clubLimit ? m_sharedData.clubSet : m_sharedData.preferredClubSet;
@@ -2909,7 +2909,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 if (activated(evt))
                 {
                     //make sure we've definitely sent the sever our selected clubset
-                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.preferredClubSet);
+                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(Social::getClubLevel());// std::uint8_t(m_sharedData.preferredClubSet);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                     if (m_sharedData.hosting)
@@ -4320,6 +4320,22 @@ void MenuState::updateUnlockedItems()
         {
             genericFlags |= flag;
             m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::CourseEditor;
+        }
+
+        flag = (1 << (ul::UnlockID::MonthlyComplete - genericBase));
+        const auto progress = Social::getMonthlyChallenge().getProgress();
+        if (progress.value == progress.target)
+        {
+            if ((genericFlags & flag) == 0)
+            {
+                genericFlags |= flag;
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::MonthlyComplete;
+            }
+        }
+        else
+        {
+            //make sure to unflag from any previous month
+            genericFlags &= ~flag;
         }
 
         Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);

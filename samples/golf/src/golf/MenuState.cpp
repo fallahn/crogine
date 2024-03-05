@@ -2455,7 +2455,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
             //reply with our level so server knows which limit to set
             {
-                std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.preferredClubSet);
+                std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(Social::getClubLevel());//std::uint8_t(m_sharedData.preferredClubSet);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
 

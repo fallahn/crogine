@@ -52,12 +52,12 @@ namespace ul
             Wood,
             Iron,
 
-            BronzeCup,
-            SilverCup,
-            GoldCup,
-            PlatinumCup,
-            DiamondCup,
-            AmbassadorCup,
+            BronzeBall,
+            SilverBall,
+            GoldBall,
+            PlatinumBall,
+            DiamondBall,
+            AmbassadorBall,
 
             LevelBadge01,
             LevelBadge10,
@@ -97,6 +97,8 @@ namespace ul
             CareerFirst,
             CareerSecond,
             CareerThird,
+
+            GoldCup,
 
             Count
         };
@@ -147,6 +149,8 @@ namespace ul
         std::string("assets/golf/models/trophies/trophy04.cmt"),
         std::string("assets/golf/models/trophies/trophy05.cmt"),
         std::string("assets/golf/models/trophies/trophy06.cmt"),
+        
+        std::string("assets/golf/models/trophies/trophy01.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
@@ -154,6 +158,8 @@ namespace ul
     {
         enum
         {
+            //---these blocks are ordered specifically---//
+            //---to match the player as they level up ---//
             FiveWood,
             FourIron,
             SixIron,
@@ -175,11 +181,18 @@ namespace ul
             Level50,
             Level100,
 
+            //---ugh this block is used to index flags---//
+            //---in the 'generic' flag set            ---//
             RangeExtend01,
             RangeExtend02,
             Clubhouse,
             CourseEditor,
+            MonthlyComplete,
 
+            //---starting from RangeExtend01----//
+
+
+            //---from here things are a bit more sensible--//
             Streak01,
             Streak02,
             Streak03,
@@ -209,7 +222,7 @@ namespace ul
             Count
         };
     };
-    static_assert(UnlockID::Count - UnlockID::RangeExtend01 < 32, "Max Flags Available");
+    static_assert(UnlockID::Streak01 - UnlockID::RangeExtend01 < 32, "Max Flags Available");
 
     static inline const std::array<UnlockData, UnlockID::Count> Items =
     {
@@ -219,12 +232,12 @@ namespace ul
         { ModelID::Iron, "7 Iron", "New Golf Club!" },
         { ModelID::Iron, "9 Iron", "New Golf Club!" },
 
-        { ModelID::BronzeCup,      "Bronze Ball",        "New Golf Ball!" },
-        { ModelID::SilverCup,      "Silver Ball",        "New Golf Ball!" },
-        { ModelID::GoldCup,        "Gold Ball",          "New Golf Ball!" },
-        { ModelID::PlatinumCup,    "Platinum Ball",      "New Golf Ball!" },
-        { ModelID::DiamondCup,     "Diamond Ball",       "New Golf Ball!" },
-        { ModelID::AmbassadorCup,  "Ambassador's Ball",  "New Golf Ball!" },
+        { ModelID::BronzeBall,      "Bronze Ball",        "New Golf Ball!" },
+        { ModelID::SilverBall,      "Silver Ball",        "New Golf Ball!" },
+        { ModelID::GoldBall,        "Gold Ball",          "New Golf Ball!" },
+        { ModelID::PlatinumBall,    "Platinum Ball",      "New Golf Ball!" },
+        { ModelID::DiamondBall,     "Diamond Ball",       "New Golf Ball!" },
+        { ModelID::AmbassadorBall,  "Ambassador's Ball",  "New Golf Ball!" },
 
         { ModelID::LevelBadge01,  "Level One",     "New Level Badge!" },
         { ModelID::LevelBadge10,  "Level Ten",     "New Level Badge!" },
@@ -238,6 +251,7 @@ namespace ul
         { ModelID::GolfBag02,  "Pro Clubs Available!",      "Club Range Extended" },
         { ModelID::Padlock,    "Socialiser",                "Clubhouse Unlocked" },
         { ModelID::Padlock,    "Designer",                  "Course Editor Unlocked" },
+        { ModelID::GoldCup,    "Monthly Challege Complete", "+500XP" },
 
         { ModelID::Streak01,  "1 Day Streak",    "+5XP" },
         { ModelID::Streak02,  "2 Day Streak",    "+11XP" },
