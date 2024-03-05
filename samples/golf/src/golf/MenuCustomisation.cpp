@@ -374,14 +374,6 @@ void MenuState::createBallScene()
         {
             auto info = readBallCfg(cfg);
 
-            //if we didn't find a UID create one from the file name and save it to the cfg
-            /*if (info.uid == 0)
-            {
-                info.uid = SpookyHash::Hash32(LeaguePaths[i].data(), LeaguePaths[i].size(), 0);
-                cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(LeaguePaths[i]);
-            }*/
-
             if (Leagues[i].getCurrentBest() < 4)
             {
                 insertInfo(info, m_sharedData.ballInfo, true);
@@ -681,14 +673,6 @@ void MenuState::parseAvatarDirectory()
         if (cfg.loadFromFile(LeaguePaths[i]))
         {
             auto info = readHairCfg(cfg);
-
-            //if we didn't find a UID create one from the file name and save it to the cfg
-            /*if (info.uid == 0)
-            {
-                info.uid = SpookyHash::Hash32(LeaguePaths[i].data(), LeaguePaths[i].size(), 0);
-                cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(LeaguePaths[i]);
-            }*/
 
             if (Leagues[i].getCurrentBest() < 3)
             {

@@ -94,11 +94,15 @@ namespace ul
             CareerHair05,
             CareerHair06,
 
+            CareerFirst,
+            CareerSecond,
+            CareerThird,
+
             Count
         };
     };
 
-    static const std::array<std::string, ModelID::Count> ModelPaths = 
+    static inline const std::array<std::string, ModelID::Count> ModelPaths = 
     {
         std::string("assets/golf/models/club_wood.cmt"),
         std::string("assets/golf/models/club_iron.cmt"),
@@ -138,7 +142,11 @@ namespace ul
         std::string("assets/golf/models/career/tier1/03.cmt"),
         std::string("assets/golf/models/career/tier1/04.cmt"),
         std::string("assets/golf/models/career/tier1/05.cmt"),
-        std::string("assets/golf/models/career/tier1/06.cmt")
+        std::string("assets/golf/models/career/tier1/06.cmt"),
+
+        std::string("assets/golf/models/trophies/trophy04.cmt"),
+        std::string("assets/golf/models/trophies/trophy05.cmt"),
+        std::string("assets/golf/models/trophies/trophy06.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
@@ -194,12 +202,16 @@ namespace ul
             Hair05,
             Hair06,
 
+            CareerGold,
+            CareerSilver,
+            CareerBronze,
+
             Count
         };
     };
     static_assert(UnlockID::Count - UnlockID::RangeExtend01 < 32, "Max Flags Available");
 
-    static const std::array<UnlockData, UnlockID::Count> Items =
+    static inline const std::array<UnlockData, UnlockID::Count> Items =
     {
         UnlockData(ModelID::Wood, "5 Wood", "New Golf Club!"),
         { ModelID::Iron, "4 Iron", "New Golf Club!" },
@@ -248,5 +260,9 @@ namespace ul
         { ModelID::CareerHair04,  "Bun",             "New Headwear!" },
         { ModelID::CareerHair05,  "Fizz!",           "New Headwear!" },
         { ModelID::CareerHair06,  "Head of State",   "New Headwear!" },
+
+        { ModelID::CareerFirst,   "First Place!",   "New Headwear!" }, //these get overwritten with XP value
+        { ModelID::CareerSecond,  "Second Place!",  "New Headwear!" },
+        { ModelID::CareerThird,   "Third Place!",   "New Headwear!" },
     };
 }

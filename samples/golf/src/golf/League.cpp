@@ -401,6 +401,18 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     write();
 }
 
+std::int32_t League::reward(std::int32_t position) const
+{
+    switch (position)
+    {
+    default: return 0;
+    case 1:
+    case 2:
+    case 3:
+        return XPAmount[position - 1] + (m_id * XPMultiplier[position - 1]);
+    }
+}
+
 const cro::String& League::getPreviousResults(const cro::String& playerName) const
 {
     const auto path = getFilePath(PrevFileName);

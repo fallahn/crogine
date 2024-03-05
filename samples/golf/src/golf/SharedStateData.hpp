@@ -202,7 +202,13 @@ struct SharedStateData final
     std::int32_t tableSkinIndex = 0; //billiards table
 
     //IDs used by the unlock state to display new unlocks
-    std::vector<std::int32_t> unlockedItems;
+    //and optional XP value to display (0 is ignored)
+    struct Unlock final
+    {
+        std::int32_t id = 0;
+        std::int32_t xp = 0;
+    };
+    std::vector<Unlock> unlockedItems;
 
     //client settings
     bool usePostProcess = false;

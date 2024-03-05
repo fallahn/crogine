@@ -107,6 +107,7 @@ public:
     std::int32_t getPreviousPosition() const { return m_previousPosition; }
 
     std::int32_t getMaxIterations() const { return m_maxIterations; }
+    std::int32_t reward(std::int32_t position) const;
 
 private:
     const std::int32_t m_id;

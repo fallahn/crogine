@@ -4167,7 +4167,7 @@ void MenuState::updateUnlockedItems()
     switch (streak)
     {
     default:
-        m_sharedData.unlockedItems.push_back(ul::UnlockID::Streak01 + (streak - 1));
+        m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Streak01 + (streak - 1);
         break;
     case 0: //do nothing
         break;
@@ -4194,7 +4194,7 @@ void MenuState::updateUnlockedItems()
         if ((clubFlags & ClubID::Flags[clubID]) == 0)
         {
             clubFlags |= ClubID::Flags[clubID];
-            m_sharedData.unlockedItems.push_back(ul::UnlockID::FiveWood + i);
+            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::FiveWood + i;
         }
     }
 
@@ -4216,7 +4216,7 @@ void MenuState::updateUnlockedItems()
         if ((ballFlags & flag) == 0)
         {
             ballFlags |= flag;
-            m_sharedData.unlockedItems.push_back(ul::UnlockID::BronzeBall + i);
+            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::BronzeBall + i;
         }
     }
 
@@ -4227,7 +4227,7 @@ void MenuState::updateUnlockedItems()
         if ((ballFlags & flag) == 0)
         {
             ballFlags |= flag;
-            m_sharedData.unlockedItems.push_back(ul::UnlockID::AmbassadorBall);
+            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::AmbassadorBall;
         }
     }
 
@@ -4253,7 +4253,7 @@ void MenuState::updateUnlockedItems()
             if ((ballFlags & flag) == 0)
             {
                 ballFlags |= flag;
-                m_sharedData.unlockedItems.push_back(ul::UnlockID::Ball01 + i);
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Ball01 + i;
             }
         }
     }
@@ -4270,13 +4270,45 @@ void MenuState::updateUnlockedItems()
             if ((hairFlags & flag) == 0)
             {
                 hairFlags |= flag;
-                m_sharedData.unlockedItems.push_back(ul::UnlockID::Hair01 + i);
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Hair01 + i;
             }
         }
     }
     //Social::setCareerFlags(Hair, hairFlags);
 
+    auto leagueFlags = 0;
+    for (auto i = 0u; i < Leagues.size(); ++i)
+    {
+        auto flag = (1 << i);
 
+        if (Leagues[i].getCurrentSeason() > 0
+            && Leagues[i].getCurrentIteration() == 0)
+        {
+            if ((leagueFlags & flag) == 0)
+            {
+                auto position = Leagues[i].getCurrentBest();
+                switch (position)
+                {
+                default: break;
+                case 1:
+                case 2:
+                case 3:
+                    leagueFlags |= flag;
+                    auto& item = m_sharedData.unlockedItems.emplace_back();
+                    item.id =  ul::UnlockID::CareerGold + (position - 1);
+                    item.xp = Leagues[i].reward(position);
+                    break;
+                }
+            }
+        }
+
+        //else reset the flag so next season we can award again
+        else
+        {
+            leagueFlags &= ~flag;
+        }
+    }
+    //Social::setCareerFlags(Position, leagueFlags);
 
     //level up
     if (level > 0)
@@ -4291,7 +4323,7 @@ void MenuState::updateUnlockedItems()
             if ((levelFlags & flag) == 0)
             {
                 levelFlags |= flag;
-                m_sharedData.unlockedItems.push_back(ul::UnlockID::Level1 + i);
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Level1 + i;
             }
         }
         //centenery is handled separately
@@ -4301,7 +4333,7 @@ void MenuState::updateUnlockedItems()
             if ((levelFlags & flag) == 0)
             {
                 levelFlags |= flag;
-                m_sharedData.unlockedItems.push_back(ul::UnlockID::Level100);
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Level100;
             }
         }
         Social::setUnlockStatus(Social::UnlockType::Level, levelFlags);
@@ -4319,7 +4351,7 @@ void MenuState::updateUnlockedItems()
         if ((genericFlags & flag) == 0)
         {
             genericFlags |= flag;
-            m_sharedData.unlockedItems.push_back(ul::UnlockID::RangeExtend01);
+            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend01;
         }
         else if (level > 29)
         {
@@ -4327,7 +4359,7 @@ void MenuState::updateUnlockedItems()
             if ((genericFlags & flag) == 0)
             {
                 genericFlags |= flag;
-                m_sharedData.unlockedItems.push_back(ul::UnlockID::RangeExtend02);
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend02;
             }
         }
     }
@@ -4337,7 +4369,7 @@ void MenuState::updateUnlockedItems()
         Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
     {
         genericFlags |= flag;
-        m_sharedData.unlockedItems.push_back(ul::UnlockID::Clubhouse);
+        m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Clubhouse;
     }
 
     flag = (1 << (ul::UnlockID::CourseEditor - genericBase));
@@ -4345,7 +4377,7 @@ void MenuState::updateUnlockedItems()
         Achievements::getAchievement(AchievementStrings[AchievementID::GrandTour])->achieved)
     {
         genericFlags |= flag;
-        m_sharedData.unlockedItems.push_back(ul::UnlockID::CourseEditor);
+        m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::CourseEditor;
     }
 
     Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);

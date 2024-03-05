@@ -293,6 +293,10 @@ void UnlockState::buildScene()
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, -0.1f, 3.f });
     camEnt.getComponent<cro::Camera>().resizeCallback = resizeCallback;
     resizeCallback(camEnt.getComponent<cro::Camera>());
+
+    auto light = m_modelScene.getSunlight();
+    light.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 10.f * cro::Util::Const::degToRad);
+    light.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -40.f * cro::Util::Const::degToRad);
 }
 
 void UnlockState::buildUI()
@@ -382,7 +386,7 @@ void UnlockState::buildUI()
 
     cro::ModelDefinition md(*m_sharedData.sharedResources);
 
-    const auto createItem = [&](std::int32_t unlockID)
+    const auto createItem = [&](std::int32_t unlockID, std::int32_t xp)
     {
         auto& collection = m_unlockCollections.emplace_back();
 
@@ -557,7 +561,9 @@ void UnlockState::buildUI()
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 60.f, 0.5f });
         entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(largeFont).setString(ul::Items[unlockID].description);
+        entity.addComponent<cro::Text>(largeFont);
+        entity.getComponent<cro::Text>().setString(ul::Items[unlockID].description);
+        
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
         entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -611,7 +617,15 @@ void UnlockState::buildUI()
         entity.addComponent<cro::Transform>().setPosition({ 0.f, -102.f, 0.5f });
         entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString(ul::Items[unlockID].name);
+        entity.addComponent<cro::Text>(smallFont);
+        if (xp == 0)
+        {
+            entity.getComponent<cro::Text>().setString(ul::Items[unlockID].name);
+        }
+        else
+        {
+            entity.getComponent<cro::Text>().setString("+" + std::to_string(xp) + "XP");
+        }
         entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize * 2);
         entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -622,9 +636,9 @@ void UnlockState::buildUI()
     };
 
 
-    for (auto i : m_sharedData.unlockedItems)
+    for (auto [i, xp] : m_sharedData.unlockedItems)
     {
-        createItem(i);
+        createItem(i, xp);
     }
 
     //small delay
