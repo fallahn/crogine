@@ -4180,26 +4180,30 @@ void MenuState::updateUnlockedItems()
 
 
 
+    const auto level = Social::getLevel();
+
     //clubs
     auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
-    if (clubFlags == 0)
+    if (clubFlags != -1)
     {
-        clubFlags = ClubID::DefaultSet;
-    }
-    auto level = Social::getLevel();
-    auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / 5));
-    for (auto i = 0u; i < clubCount; ++i)
-    {
-        auto clubID = ClubID::LockedSet[i];
-        if ((clubFlags & ClubID::Flags[clubID]) == 0)
+        if (clubFlags == 0)
         {
-            clubFlags |= ClubID::Flags[clubID];
-            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::FiveWood + i;
+            clubFlags = ClubID::DefaultSet;
         }
-    }
+        auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / 5));
+        for (auto i = 0u; i < clubCount; ++i)
+        {
+            auto clubID = ClubID::LockedSet[i];
+            if ((clubFlags & ClubID::Flags[clubID]) == 0)
+            {
+                clubFlags |= ClubID::Flags[clubID];
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::FiveWood + i;
+            }
+        }
 
-    m_sharedData.inputBinding.clubset = clubFlags;
-    Social::setUnlockStatus(Social::UnlockType::Club, clubFlags);
+        m_sharedData.inputBinding.clubset = clubFlags;
+        Social::setUnlockStatus(Social::UnlockType::Club, clubFlags);
+    }
 
     if (m_sharedData.inputBinding.clubset == ClubID::FullSet)
     {
@@ -4207,32 +4211,118 @@ void MenuState::updateUnlockedItems()
     }
 
 
+    const auto ballCount = std::min(5, level / 10);
+
     //ball flags (balls are unlocked every 10 levels)
     auto ballFlags = Social::getUnlockStatus(Social::UnlockType::Ball);
-    auto ballCount = std::min(5, level / 10);
-    for (auto i = 0; i < ballCount; ++i)
+    if (ballFlags != -1)
     {
-        auto flag = (1 << i);
-        if ((ballFlags & flag) == 0)
+        for (auto i = 0; i < ballCount; ++i)
         {
-            ballFlags |= flag;
-            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::BronzeBall + i;
+            auto flag = (1 << i);
+            if ((ballFlags & flag) == 0)
+            {
+                ballFlags |= flag;
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::BronzeBall + i;
+            }
+        }
+
+        //plus a super special one a level 100
+        if ((level / 100) == 1)
+        {
+            auto flag = (1 << 6);
+            if ((ballFlags & flag) == 0)
+            {
+                ballFlags |= flag;
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::AmbassadorBall;
+            }
+        }
+
+        Social::setUnlockStatus(Social::UnlockType::Ball, ballFlags);
+    }
+
+
+    //level up
+    if (level > 0)
+    {
+        //levels are same interval as balls + 1st level
+        const auto levelCount = ballCount + 1; //(note this skips level 100 as it's not sequential)
+        auto levelFlags = Social::getUnlockStatus(Social::UnlockType::Level);
+
+        if (levelFlags != -1)
+        {
+            for (auto i = 0; i < levelCount; ++i)
+            {
+                auto flag = (1 << i);
+                if ((levelFlags & flag) == 0)
+                {
+                    levelFlags |= flag;
+                    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Level1 + i;
+                }
+            }
+            //centenery is handled separately
+            if ((level / 100) == 1)
+            {
+                auto flag = (1 << levelCount);
+                if ((levelFlags & flag) == 0)
+                {
+                    levelFlags |= flag;
+                    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Level100;
+                }
+            }
+            Social::setUnlockStatus(Social::UnlockType::Level, levelFlags);
         }
     }
 
-    //plus a super special one a level 100
-    if ((level / 100) == 1)
+
+    //generic unlocks from achievements etc
+    auto genericFlags = Social::getUnlockStatus(Social::UnlockType::Generic);
+    constexpr std::int32_t genericBase = ul::UnlockID::RangeExtend01;
+
+    if (genericFlags != -1)
     {
-        auto flag = (1 << 6);
-        if ((ballFlags & flag) == 0)
+        if (level > 14)
         {
-            ballFlags |= flag;
-            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::AmbassadorBall;
+            //club range is extended at level 15 and 30
+            auto flag = (1 << 0);
+            if ((genericFlags & flag) == 0)
+            {
+                genericFlags |= flag;
+                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend01;
+            }
+            else if (level > 29)
+            {
+                flag = (1 << (ul::UnlockID::RangeExtend02 - genericBase));
+                if ((genericFlags & flag) == 0)
+                {
+                    genericFlags |= flag;
+                    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend02;
+                }
+            }
         }
+
+        auto flag = (1 << (ul::UnlockID::Clubhouse - genericBase));
+        if ((genericFlags & flag) == 0 &&
+            Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
+        {
+            genericFlags |= flag;
+            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Clubhouse;
+        }
+
+        flag = (1 << (ul::UnlockID::CourseEditor - genericBase));
+        if ((genericFlags & flag) == 0 &&
+            Achievements::getAchievement(AchievementStrings[AchievementID::GrandTour])->achieved)
+        {
+            genericFlags |= flag;
+            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::CourseEditor;
+        }
+
+        Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);
     }
 
-    Social::setUnlockStatus(Social::UnlockType::Ball, ballFlags);
-
+    //career items are driven directly by the league file status
+    //rather than these flags - they're just use to stop the
+    //unlock animation playing every single time.
 
     //career balls
     const std::array<League, 6u> Leagues =
@@ -4244,143 +4334,89 @@ void MenuState::updateUnlockedItems()
         League(LeagueRoundID::RoundFive),
         League(LeagueRoundID::RoundSix),
     };
-    ballFlags = 0; //Social::getCareerFlags(Balls);
-    for (auto i = 0u; i < Leagues.size(); ++i)
+    ballFlags = Social::getUnlockStatus(Social::UnlockType::CareerBalls);
+    if (ballFlags != -1)
     {
-        if (Leagues[i].getCurrentBest() < 4)
+        for (auto i = 0u; i < Leagues.size(); ++i)
         {
-            auto flag = (1 << i);
-            if ((ballFlags & flag) == 0)
+            if (Leagues[i].getCurrentBest() < 4)
             {
-                ballFlags |= flag;
-                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Ball01 + i;
-            }
-        }
-    }
-    //Social::setCareerFlags(Balls, ballFlags);
-
-
-    //career hair
-    auto hairFlags = 0; //Social::getCareerFlags(Hair);
-    for (auto i = 0u; i < Leagues.size(); ++i)
-    {
-        if (Leagues[i].getCurrentBest() < 3)
-        {
-            auto flag = (1 << i);
-            if ((hairFlags & flag) == 0)
-            {
-                hairFlags |= flag;
-                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Hair01 + i;
-            }
-        }
-    }
-    //Social::setCareerFlags(Hair, hairFlags);
-
-    auto leagueFlags = 0;
-    for (auto i = 0u; i < Leagues.size(); ++i)
-    {
-        auto flag = (1 << i);
-
-        if (Leagues[i].getCurrentSeason() > 0
-            && Leagues[i].getCurrentIteration() == 0)
-        {
-            if ((leagueFlags & flag) == 0)
-            {
-                auto position = Leagues[i].getCurrentBest();
-                switch (position)
+                auto flag = (1 << i);
+                if ((ballFlags & flag) == 0)
                 {
-                default: break;
-                case 1:
-                case 2:
-                case 3:
-                    leagueFlags |= flag;
-                    auto& item = m_sharedData.unlockedItems.emplace_back();
-                    item.id =  ul::UnlockID::CareerGold + (position - 1);
-                    item.xp = Leagues[i].reward(position);
-                    break;
+                    ballFlags |= flag;
+                    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Ball01 + i;
                 }
             }
         }
-
-        //else reset the flag so next season we can award again
-        else
-        {
-            leagueFlags &= ~flag;
-        }
+        Social::setUnlockStatus(Social::UnlockType::CareerBalls, ballFlags);
     }
-    //Social::setCareerFlags(Position, leagueFlags);
 
-    //level up
-    if (level > 0)
+    //career hair
+    auto hairFlags = Social::getUnlockStatus(Social::UnlockType::CareerHair);
+    if (hairFlags != -1)
     {
-        //levels are same interval as balls + 1st level
-        auto levelCount = ballCount + 1; //(note this skips level 100 as it's not sequential)
-        auto levelFlags = Social::getUnlockStatus(Social::UnlockType::Level);
+        for (auto i = 0u; i < Leagues.size(); ++i)
+        {
+            if (Leagues[i].getCurrentBest() < 3)
+            {
+                auto flag = (1 << i);
+                if ((hairFlags & flag) == 0)
+                {
+                    hairFlags |= flag;
+                    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Hair01 + i;
+                }
+            }
+        }
+        Social::setUnlockStatus(Social::UnlockType::CareerHair, hairFlags);
+    }
 
-        for (auto i = 0; i < levelCount; ++i)
+    //TODO career avatars
+    auto avatarFlags = Social::getUnlockStatus(Social::UnlockType::CareerAvatar);
+    if (avatarFlags != -1)
+    {
+
+
+        Social::setUnlockStatus(Social::UnlockType::CareerAvatar, avatarFlags);
+    }
+
+    //career positions
+    auto leagueFlags = Social::getUnlockStatus(Social::UnlockType::CareerPosition);
+    if (leagueFlags != -1)
+    {
+        for (auto i = 0u; i < Leagues.size(); ++i)
         {
             auto flag = (1 << i);
-            if ((levelFlags & flag) == 0)
+
+            if (Leagues[i].getCurrentSeason() > 0
+                && Leagues[i].getCurrentIteration() == 0)
             {
-                levelFlags |= flag;
-                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Level1 + i;
+                if ((leagueFlags & flag) == 0)
+                {
+                    auto position = Leagues[i].getCurrentBest();
+                    switch (position)
+                    {
+                    default: break;
+                    case 1:
+                    case 2:
+                    case 3:
+                        leagueFlags |= flag;
+                        auto& item = m_sharedData.unlockedItems.emplace_back();
+                        item.id = ul::UnlockID::CareerGold + (position - 1);
+                        item.xp = Leagues[i].reward(position);
+                        break;
+                    }
+                }
+            }
+
+            //else reset the flag so next season we can award again
+            else
+            {
+                leagueFlags &= ~flag;
             }
         }
-        //centenery is handled separately
-        if ((level / 100) == 1)
-        {
-            auto flag = (1 << levelCount);
-            if ((levelFlags & flag) == 0)
-            {
-                levelFlags |= flag;
-                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Level100;
-            }
-        }
-        Social::setUnlockStatus(Social::UnlockType::Level, levelFlags);
+        Social::setUnlockStatus(Social::UnlockType::CareerPosition, leagueFlags);
     }
-
-
-    //generic unlocks from achievements etc
-    auto genericFlags = Social::getUnlockStatus(Social::UnlockType::Generic);
-    constexpr std::int32_t genericBase = ul::UnlockID::RangeExtend01;
-
-    if (level > 14)
-    {
-        //club range is extended at level 15 and 30
-        auto flag = (1 << 0);
-        if ((genericFlags & flag) == 0)
-        {
-            genericFlags |= flag;
-            m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend01;
-        }
-        else if (level > 29)
-        {
-            flag = (1 << (ul::UnlockID::RangeExtend02 - genericBase));
-            if ((genericFlags & flag) == 0)
-            {
-                genericFlags |= flag;
-                m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend02;
-            }
-        }
-    }
-
-    auto flag = (1 << (ul::UnlockID::Clubhouse - genericBase));
-    if ((genericFlags & flag) == 0 &&
-        Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
-    {
-        genericFlags |= flag;
-        m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Clubhouse;
-    }
-
-    flag = (1 << (ul::UnlockID::CourseEditor - genericBase));
-    if ((genericFlags & flag) == 0 &&
-        Achievements::getAchievement(AchievementStrings[AchievementID::GrandTour])->achieved)
-    {
-        genericFlags |= flag;
-        m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::CourseEditor;
-    }
-
-    Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);
 }
 
 void MenuState::createPreviousScoreCard()

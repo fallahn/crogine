@@ -52,6 +52,10 @@ namespace
     StoredValue lastLog("llg");
     StoredValue dayStreak("dsk");
     StoredValue longestStreak("lsk");
+    StoredValue careerBalls("cba");
+    StoredValue careerAvatar("cav");
+    StoredValue careerPosition("cpo");
+    StoredValue careerHair("cha");
 
     std::vector<Social::Award> awards;
     const std::array<std::string, 12u> MonthStrings =
@@ -373,6 +377,18 @@ std::int32_t Social::getUnlockStatus(UnlockType type)
     case UnlockType::Generic:
         genericUnlock.read();
         return genericUnlock.value;
+    case UnlockType::CareerAvatar:
+        careerAvatar.read();
+        return careerAvatar.value;
+    case UnlockType::CareerBalls:
+        careerBalls.read();
+        return careerBalls.value;
+    case UnlockType::CareerHair:
+        careerHair.read();
+        return careerHair.value;
+    case UnlockType::CareerPosition:
+        careerPosition.read();
+        return careerPosition.value;
     }
 }
 
@@ -396,6 +412,22 @@ void Social::setUnlockStatus(UnlockType type, std::int32_t set)
     case UnlockType::Generic:
         genericUnlock.value = set;
         genericUnlock.write();
+        break;
+    case UnlockType::CareerAvatar:
+        careerAvatar.value = set;
+        careerAvatar.write();
+        break;
+    case UnlockType::CareerBalls:
+        careerBalls.value = set;
+        careerBalls.write();
+        break;
+    case UnlockType::CareerHair:
+        careerHair.value = set;
+        careerHair.write();
+        break;
+    case UnlockType::CareerPosition:
+        careerPosition.value = set;
+        careerPosition.write();
         break;
     }    
 }
