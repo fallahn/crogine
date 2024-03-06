@@ -1380,6 +1380,8 @@ void GolfState::buildWorld()
         {
             m_currentHole = std::min(h, m_holeData.size() - 1);
 
+            scores.resize(m_holeData.size());
+
             //if we're here we *should* only have one player...
             auto& player = m_playerInfo[0];
             player.holeScore.swap(scores);

@@ -167,7 +167,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             const auto& tx = entity.getComponent<Transform>();
             const glm::mat4 worldMat = tx.getWorldTransform();
             const glm::mat4 worldView = pass.viewMatrix * worldMat;
-            //hmm for some reason doning this only once breaks rendering
+            //hmm for some reason doing this only once breaks rendering
             //const glm::mat4 normalMat = glm::inverseTranspose(glm::mat3(worldMat));
 
 #ifndef PLATFORM_DESKTOP

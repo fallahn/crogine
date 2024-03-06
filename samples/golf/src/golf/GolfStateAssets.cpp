@@ -1327,14 +1327,17 @@ void GolfState::loadMap()
     }
     else
     {
+        const auto scoreSize = m_sharedData.connectionData[0].playerData[0].holeScores.size();
+
         std::uint64_t h = 0;
-        std::vector<std::uint8_t> scores(m_sharedData.connectionData[0].playerData[0].holeScores.size());
+        std::vector<std::uint8_t> scores(scoreSize);
         if (Progress::read(m_sharedData.leagueRoundID, h, scores))
         {
             Social::setLeaderboardsEnabled(false);
 
             if (h != 0)
             {
+                scores.resize(scoreSize);
                 m_currentHole = std::min(holeStrings.size() - 1, h);
                 m_sharedData.connectionData[0].playerData[0].holeScores.swap(scores);
                 m_terrainBuilder.applyHoleIndex(m_currentHole);
