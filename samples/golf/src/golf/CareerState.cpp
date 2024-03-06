@@ -1356,6 +1356,7 @@ void CareerState::createConfirmMenu(cro::Entity parent)
                         else
                         {
                             m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+                            m_sharedData.serverInstance.setLeagueID(m_sharedData.leagueRoundID);
                             
                             //set the course - map directory and hole count is set in selectLeague()
                             auto data = serialiseString(m_sharedData.mapDirectory);

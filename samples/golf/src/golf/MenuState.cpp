@@ -2552,6 +2552,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         //make sure the server knows we're the host
         m_sharedData.clientConnection.hostID = m_sharedData.clientConnection.netClient.getPeer().getID();
         m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.hostID);
+        m_sharedData.serverInstance.setLeagueID(m_sharedData.leagueRoundID);
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Menu::ReadyButton;

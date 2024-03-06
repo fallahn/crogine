@@ -382,6 +382,7 @@ void PracticeState::buildScene()
                         else
                         {
                             m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+                            m_sharedData.serverInstance.setLeagueID(0);
                             m_sharedData.mapDirectory = "tutorial";
 
                             //set the course to tutorial

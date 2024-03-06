@@ -125,31 +125,34 @@ namespace Progress
         CRO_ASSERT(!holeScores.empty(), "");
 
         auto path = getFilePath(leagueID);
-        cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
-        if (file.file)
+        if (cro::FileSystem::fileExists(path))
         {
-            std::array<std::uint8_t, sizeof(holeIndex) + 18> buffer = {};
-            std::size_t i = 0u;
-            while (file.file->read(file.file, &buffer[i], 1, 1))
+            cro::RaiiRWops file;
+            file.file = SDL_RWFromFile(path.c_str(), "rb");
+            if (file.file)
             {
-                i++;
+                std::array<std::uint8_t, sizeof(holeIndex) + 18> buffer = {};
+                std::size_t i = 0u;
+                while (file.file->read(file.file, &buffer[i], 1, 1))
+                {
+                    i++;
+                }
+
+                if (i < sizeof(holeIndex))
+                {
+                    std::error_code ec;
+                    std::filesystem::remove(path, ec);
+                    return false;
+                }
+
+                std::memcpy(&holeIndex, buffer.data(), sizeof(holeIndex));
+
+                i -= sizeof(holeIndex);
+                auto holeSize = std::min(i, holeScores.size());
+
+                std::memcpy(holeScores.data(), &buffer[sizeof(holeIndex)], holeSize);
+                return true;
             }
-
-            if (i < sizeof(holeIndex))
-            {
-                std::error_code ec;
-                std::filesystem::remove(path, ec);
-                return false;
-            }
-
-            std::memcpy(&holeIndex, buffer.data(), sizeof(holeIndex));
-
-            i -= sizeof(holeIndex);
-            auto holeSize = std::min(i, holeScores.size());
-
-            std::memcpy(holeScores.data(), &buffer[sizeof(holeIndex)], holeSize);
-            return true;
         }
         return false;
     }

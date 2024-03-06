@@ -91,6 +91,7 @@ namespace sv
         std::array<std::uint8_t, ConstVal::MaxClients> clubLevels = {};
 
         std::atomic_uint64_t hostID = 0;
+        std::atomic_int32_t leagueID = 0;
     };
 
     namespace StateID

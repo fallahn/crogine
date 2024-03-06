@@ -169,6 +169,7 @@ public:
         };
     };
     static void findLeaderboards(std::int32_t) {}
+    static void setLeaderboardsEnabled(bool) {}
     static void insertScore(const std::string&, std::uint8_t, std::int32_t, std::int32_t);
     static cro::String getTopFive(const std::string& course, std::uint8_t holeCount);
     static void invalidateTopFive(const std::string& course, std::uint8_t holeCount);

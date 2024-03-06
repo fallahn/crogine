@@ -670,6 +670,18 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_thread = std::make_unique<std::thread>(&TerrainBuilder::threadFunc, this);
 }
 
+void TerrainBuilder::applyHoleIndex(std::size_t idx)
+{
+    while (m_wantsUpdate) {};
+    if (idx < m_holeData.size()
+        && idx > m_currentHole)
+    {
+        m_currentHole = idx;
+        renderNormalMap();
+        m_wantsUpdate = true;
+    }
+}
+
 void TerrainBuilder::update(std::size_t holeIndex)
 {
     //wait for thread to finish (usually only the first time)

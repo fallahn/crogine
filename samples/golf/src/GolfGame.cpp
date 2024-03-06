@@ -449,7 +449,7 @@ void GolfGame::render()
 #endif
     m_progressIcon->draw();
 }
-
+#include <Input.hpp>
 bool GolfGame::initialise()
 {
     auto path = cro::App::getPreferencePath() + "user/";

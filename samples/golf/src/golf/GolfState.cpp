@@ -64,6 +64,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Input.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -1113,6 +1114,11 @@ void GolfState::handleMessage(const cro::Message& msg)
             break;
         case SceneEvent::TransitionComplete:
         {
+            if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+            {
+                Progress::write(m_sharedData.leagueRoundID, m_currentHole, m_sharedData.connectionData[0].playerData[0].holeScores);
+            }
+
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
@@ -2760,7 +2766,10 @@ void GolfState::buildScene()
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
 
     buildUI(); //put this here because we don't want to do this if the map data didn't load
-    setCurrentHole(4); //need to do this here to make sure everything is loaded for rendering
+    
+    //a save game may have modified the current hole
+    std::uint16_t data = ((m_currentHole & 0xff) << 8) | 4;
+    setCurrentHole(data); //need to do this here to make sure everything is loaded for rendering
 
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
@@ -4135,6 +4144,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::GameEnd:
             showCountdown(evt.packet.as<std::uint8_t>());
+            Progress::clear(m_sharedData.leagueRoundID);
             break;
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Lobby)

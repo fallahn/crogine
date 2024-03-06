@@ -64,6 +64,7 @@ public:
 
     bool addLocalConnection(net::NetClient& client);
     void setHostID(std::uint64_t id);
+    void setLeagueID(std::int32_t id);
 
     //note this is not atomic!
     void setPreferredIP(const std::string& ip) { m_preferredIP = ip; }
