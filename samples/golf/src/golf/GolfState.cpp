@@ -2342,7 +2342,7 @@ void GolfState::buildScene()
     auto arrowEntity = entity;
 
     //displays the stroke direction
-    auto pos = m_holeData[0].tee;
+    auto pos = m_holeData[m_currentHole].tee;
     pos.y += 0.01f;
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
@@ -2552,7 +2552,7 @@ void GolfState::buildScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Hole;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
     entity.getComponent<cro::Transform>().addChild(holeEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(flagEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(beaconEntity.getComponent<cro::Transform>());
@@ -2600,13 +2600,13 @@ void GolfState::buildScene()
     //water plane. Updated by various camera callbacks
     meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(240.f, 30));
     auto waterEnt = m_gameScene.createEntity();
-    waterEnt.addComponent<cro::Transform>().setPosition(m_holeData[0].pin);
+    waterEnt.addComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
     waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });
     waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Water]));
     waterEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::Refraction | RenderFlags::FlightCam));
     waterEnt.addComponent<cro::Callback>().active = true;
-    waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(m_holeData[0].pin);
+    waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(m_holeData[m_currentHole].pin);
     waterEnt.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
@@ -2638,13 +2638,13 @@ void GolfState::buildScene()
         md.loadFromFile("assets/golf/models/tee_balls.cmt");
     }
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
+    entity.addComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     
-    auto targetDir = m_holeData[m_currentHole].target - m_holeData[0].tee;
+    auto targetDir = m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee;
     m_camRotation = std::atan2(-targetDir.z, targetDir.x);
     entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
 
@@ -4782,6 +4782,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
             cmd.action = [&](cro::Entity en, float)
             {
                 en.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
+                en.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation);
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
