@@ -139,14 +139,14 @@ void GolfState::loadMap()
                     tx = glm::translate(tx, offset);
 
                     auto lookDir = lookAt - (glm::vec3(tx[3]) + MapOrigin);
-                    if (float len = glm::length2(lookDir); len < 3600.f)
+                    if (float len = glm::length2(lookDir); len < 1600.f)
                     {
                         rotation = std::atan2(-lookDir.z, lookDir.x) + (90.f * cro::Util::Const::degToRad);
                         tx = glm::rotate(tx, rotation, cro::Transform::Y_AXIS);
                     }
                     else
                     {
-                        tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f), cro::Transform::Y_AXIS);
+                        tx = glm::rotate(tx, cro::Util::Random::value(-0.025f, 0.025f) + (rotation * cro::Util::Const::degToRad), cro::Transform::Y_AXIS);
                     }
 
                     float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;

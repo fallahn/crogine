@@ -342,7 +342,7 @@ void MenuState::hideToolTip()
 void MenuState::updateCompletionString()
 {
 #ifdef USE_GNS
-    auto count = Social::getCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
+    auto count = Social::getMonthlyCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
     if (count == 0)
     {
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -352,6 +352,7 @@ void MenuState::updateCompletionString()
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent < cro::Text>().setString("Completed " + std::to_string(count) + "x this month!");
     }
+    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 #endif
 }
 
