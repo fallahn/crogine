@@ -664,11 +664,14 @@ bool GolfGame::initialise()
             cro::Util::String::parseURL(Social::getBaseContentPath());
         });
 
-    registerCommand("reset_league", 
+    registerCommand("reset_leagues", 
         [](const std::string&)
         {
-            League l(LeagueRoundID::Club);
-            l.reset();
+            for (auto i = 0u; i < LeagueRoundID::Count; ++i)
+            {
+                League l(i);
+                l.reset();
+            }
             cro::Console::print("League tables are reset");
         });
 

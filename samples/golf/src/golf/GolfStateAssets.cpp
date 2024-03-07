@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <Input.hpp>
 
@@ -123,8 +124,10 @@ void GolfState::loadMap()
 
             const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
 
+            rotation *= cro::Util::Const::degToRad;
+
             //used by terrain builder to create instanced geom
-            const glm::mat4 rotMat = glm::rotate(glm::mat4(1.f), rotation * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
+            const glm::mat4 rotMat = glm::rotate(glm::mat4(1.f), rotation, cro::Transform::Y_AXIS);
 
             for (const auto& p : dist)
             {
@@ -134,20 +137,20 @@ void GolfState::loadMap()
                     offset.x += 0.3f + (static_cast<float>(cro::Util::Random::value(2, 5)) / 100.f);
                     offset.z += static_cast<float>(cro::Util::Random::value(-10, 10)) / 100.f;
 
+                    auto r = rotation + cro::Util::Random::value(-0.25f, 0.25f);
 
                     auto tx = glm::translate(glm::mat4(1.f), position - MapOrigin);
                     tx = glm::translate(tx, offset);
 
                     auto lookDir = lookAt - (glm::vec3(tx[3]) + MapOrigin);
-                    if (float len = glm::length2(lookDir); len < 1600.f)
+                    const float len = glm::length2(lookDir);
+                    if (len < 1600.f)
                     {
-                        rotation = std::atan2(-lookDir.z, lookDir.x) + (90.f * cro::Util::Const::degToRad);
-                        tx = glm::rotate(tx, rotation, cro::Transform::Y_AXIS);
+                        r = std::atan2(-lookDir.z, lookDir.x);
+                        r += (90.f * cro::Util::Const::degToRad);
                     }
-                    else
-                    {
-                        tx = glm::rotate(tx, cro::Util::Random::value(-0.025f, 0.025f) + (rotation * cro::Util::Const::degToRad), cro::Transform::Y_AXIS);
-                    }
+                    tx = glm::rotate(tx, r, cro::Transform::Y_AXIS);                      
+
 
                     float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;
                     tx = glm::scale(tx, glm::vec3(scale));
