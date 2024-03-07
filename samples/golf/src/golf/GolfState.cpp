@@ -2921,6 +2921,7 @@ void GolfState::createDrone()
         auto targetEnt = m_gameScene.createEntity();
         targetEnt.addComponent<cro::Transform>().setPosition({ 160.f, 30.f, -100.f });
         targetEnt.addComponent<cro::Callback>().active = true; //also used to make the drone orbit the flag (see showCountdown())
+        targetEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
         targetEnt.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
@@ -2929,7 +2930,7 @@ void GolfState::createDrone()
                 e.getComponent<cro::Callback>().active = false;
                 m_gameScene.destroyEntity(e);
             }
-            else
+            else if(m_sharedData.hosting) //we'll broadcast our pos occasionally so other clients can sync drones
             {
                 auto wind = m_windUpdate.currentWindSpeed * (m_windUpdate.currentWindVector * 0.3f);
                 wind += m_windUpdate.currentWindVector * 0.7f;
@@ -2945,6 +2946,17 @@ void GolfState::createDrone()
                 else
                 {
                     e.getComponent<cro::Transform>().setPosition(resetPos);
+                }
+
+                static constexpr float NetTime = 1.f / 10.f;
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime += dt;
+                if (currTime > NetTime)
+                {
+                    auto data = cro::Util::Net::compressVec3(e.getComponent<cro::Transform>().getPosition(), 480);
+
+                    currTime -= NetTime;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::DronePosition, data, net::NetFlag::Unreliable);
                 }
             }
         };
@@ -3558,6 +3570,18 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::DronePosition:
+        if (!m_sharedData.hosting)
+        {
+            auto data = evt.packet.as<std::array<std::int16_t, 3u>>();
+            auto pos = cro::Util::Net::decompressVec3(data, 480);
+
+            if (m_drone.isValid())
+            {
+                m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target.getComponent<cro::Transform>().setPosition(pos);
+            }
+        }
+            break;
         case PacketID::Poke:
             showNotification("You have been poked!");
             gamepadNotify(GamepadNotify::NewPlayer);

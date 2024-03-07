@@ -75,7 +75,7 @@ namespace ConstVal
     static constexpr std::uint8_t NetChannelReliable = 1;
     static constexpr std::uint8_t NetChannelStrings = 2;
 
-    static constexpr std::uint16_t PositionCompressionRange = 4;
+    static constexpr std::uint16_t PositionCompressionRange = 4; //used in billiards! this is way too small for golf
     static constexpr std::uint16_t VelocityCompressionRange = 8;
 
     //rather than tag each player input with the same

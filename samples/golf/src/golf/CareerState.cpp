@@ -494,8 +494,8 @@ void CareerState::buildScene()
                 buttonEntity.addComponent<cro::UIInput>().area = b;
                 buttonEntity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
                 buttonEntity.getComponent<cro::UIInput>().setSelectionIndex(CareerSeason + index);
-                buttonEntity.getComponent<cro::UIInput>().setNextIndex(CareerSeason + index + 1, CareerSeason + index + 1);
-                buttonEntity.getComponent<cro::UIInput>().setPrevIndex(CareerSeason + index - 1, CareerSeason + index - 1);
+                buttonEntity.getComponent<cro::UIInput>().setNextIndex((CareerSeason + index) + 1, (CareerSeason + index) + 1);
+                buttonEntity.getComponent<cro::UIInput>().setPrevIndex((CareerSeason + index) - 1, (CareerSeason + index) - 1);
                 buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
                 buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
                 buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1562,7 +1562,7 @@ void CareerState::selectLeague(std::size_t idx)
 
     if (league.getCurrentSeason() > 1)
     {
-        str += "\nPrevious Best: " + std::to_string(league.getCurrentBest());
+        str += "\nPrevious Best: " + std::to_string(league.getPreviousPosition());
 
         switch (league.getCurrentBest())
         {
