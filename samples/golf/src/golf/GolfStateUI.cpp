@@ -1937,7 +1937,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
-    if (personalBest)
+    if (personalBest && Social::getLeaderboardsEnabled())
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.8f });
