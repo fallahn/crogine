@@ -46,6 +46,7 @@ source distribution.
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
+#include <Input.hpp>
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -121,6 +122,8 @@ CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_currentMenu   (MenuID::Career)
 {
     ctx.mainWindow.setMouseCaptured(false);
+
+    std::fill(m_progressPositions.begin(), m_progressPositions.end(), 0);
 
     addSystems();
     buildScene();
@@ -460,12 +463,14 @@ void CareerState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueDetails.highlight = entity;
 
+    std::vector<std::uint8_t> temp(18);
+
     for (auto i = 0u; i < Career::MaxLeagues; ++i)
     {
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
 
-        const bool unlocked = (i<5);// (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < 4)));
+        const bool unlocked = (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < 4)));
 
         //league titles, listed on left
         entity = m_scene.createEntity();
@@ -529,6 +534,12 @@ void CareerState::buildScene()
             //add a button - include index as metadata so we know which info to display when selected
             auto button = addButton(entity, i);
             buttons.push_back(button);
+
+            //if there's a save file this will update the current hole
+            if (Progress::read(i + 1, m_progressPositions[i], temp))
+            {
+                m_progressPositions[i] += 1; //convert from index to hole number
+            }
         }
         else
         {
@@ -1527,8 +1538,12 @@ void CareerState::selectLeague(std::size_t idx)
     m_leagueDetails.holeCount.getComponent<cro::Text>().setString(str);
 
 
-    str = "Round " + std::to_string(playlistIdx + 1) + "/6\n";
-    str += "Current Position: " + std::to_string(league.getCurrentPosition());
+    str = "Round " + std::to_string(playlistIdx + 1) + "/6";
+    if (m_progressPositions[idx] != 0)
+    {
+        str += " (Hole " + std::to_string(m_progressPositions[idx]) + ")";
+    }
+    str += "\nCurrent Position: " + std::to_string(league.getCurrentPosition());
     switch (league.getCurrentPosition())
     {
     default:

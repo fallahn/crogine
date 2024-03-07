@@ -67,6 +67,7 @@ private:
     SharedStateData& m_sharedData;
     Career m_career;
     std::size_t m_maxLeagueIndex;
+    std::array<std::uint64_t, Career::MaxLeagues> m_progressPositions = {};
 
     cro::AudioScape m_menuSounds;
     struct AudioID final

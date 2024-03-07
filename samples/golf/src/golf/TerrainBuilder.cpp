@@ -677,7 +677,7 @@ void TerrainBuilder::applyHoleIndex(std::size_t idx)
         && idx > m_currentHole)
     {
         m_currentHole = idx;
-        renderNormalMap();
+        renderNormalMap(true);
         m_wantsUpdate = true;
     }
 }
@@ -1350,10 +1350,10 @@ void TerrainBuilder::threadFunc()
     }
 }
 
-void TerrainBuilder::renderNormalMap()
+void TerrainBuilder::renderNormalMap(bool forceUpdate)
 {
     //skip this if we rendered the model the previous hole
-    if (m_currentHole && 
+    if (m_currentHole && !forceUpdate &&
         m_holeData[m_currentHole].modelEntity == m_holeData[m_currentHole - 1].modelEntity)
     {
         return;

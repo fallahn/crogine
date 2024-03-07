@@ -184,7 +184,7 @@ private:
     cro::Shader m_normalShader;
     std::vector<float> m_normalMapValues;
 
-    void renderNormalMap(); //don't call this from thread!!
+    void renderNormalMap(bool forceUpdate = false); //don't call this from thread!!
 
 
 #ifdef CRO_DEBUG_
