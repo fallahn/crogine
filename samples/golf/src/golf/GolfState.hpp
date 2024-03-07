@@ -222,6 +222,7 @@ private:
     float m_distanceToHole;
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
+    bool m_resumedFromSave;
 
     TerrainBuilder m_terrainBuilder;
 
@@ -322,7 +323,7 @@ private:
     void handleMaxStrokes(std::uint8_t reason);
     void removeClient(std::uint8_t);
 
-    void setCurrentHole(std::uint16_t); //(number << 8) | par
+    void setCurrentHole(std::uint16_t, bool forceTransition = false); //(number << 8) | par
     void setCameraPosition(glm::vec3, float, float);
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);

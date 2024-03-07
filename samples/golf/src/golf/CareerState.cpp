@@ -465,7 +465,7 @@ void CareerState::buildScene()
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
 
-        const bool unlocked = (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < 4)));
+        const bool unlocked = (i<5);// (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < 4)));
 
         //league titles, listed on left
         entity = m_scene.createEntity();

@@ -682,7 +682,7 @@ void TerrainBuilder::applyHoleIndex(std::size_t idx)
     }
 }
 
-void TerrainBuilder::update(std::size_t holeIndex)
+void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
 {
     //wait for thread to finish (usually only the first time)
     //this *shouldn't* ever block unless something goes wrong
@@ -691,7 +691,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
     if (holeIndex == m_currentHole)
     {
-        bool doAnim = holeIndex == 0 || (m_holeData[holeIndex - 1].modelPath != m_holeData[holeIndex].modelPath);
+        bool doAnim = holeIndex == 0 || (m_holeData[holeIndex - 1].modelPath != m_holeData[holeIndex].modelPath) || forceAnim;
 
         if (doAnim)
         {

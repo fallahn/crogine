@@ -178,6 +178,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_holeToModelRatio      (1.f),
     m_currentHole           (0),
     m_distanceToHole        (1.f), //don't init to 0 in case we get div0
+    m_resumedFromSave       (false),
     m_terrainBuilder        (sd, m_holeData),
     m_audioPath             ("assets/golf/sound/ambience.xas"),
     m_currentCamera         (CameraID::Player),
@@ -2769,7 +2770,7 @@ void GolfState::buildScene()
     
     //a save game may have modified the current hole
     std::uint16_t data = ((m_currentHole & 0xff) << 8) | 4;
-    setCurrentHole(data); //need to do this here to make sure everything is loaded for rendering
+    setCurrentHole(data, m_resumedFromSave); //need to do this here to make sure everything is loaded for rendering
 
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
@@ -4325,7 +4326,7 @@ void GolfState::removeClient(std::uint8_t clientID)
     msg->client = clientID;
 }
 
-void GolfState::setCurrentHole(std::uint16_t holeInfo)
+void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
     std::uint8_t hole = (holeInfo & 0xff00) >> 8;
     m_holeData[hole].par = (holeInfo & 0x00ff);
@@ -4367,12 +4368,15 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     }
 
 
-    //update all the total hole times
+    //update all the total hole times - TODO don't do this if loading from save game
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         m_sharedData.timeStats[i].totalTime += m_sharedData.timeStats[i].holeTimes[m_currentHole];
 
-        Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], m_sharedData.timeStats[i].holeTimes[m_currentHole]);
+        if (!m_resumedFromSave)
+        {
+            Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], m_sharedData.timeStats[i].holeTimes[m_currentHole]);
+        }
     }
 
     //update the look-at target in multi-target mode
@@ -4385,13 +4389,14 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     }
 
     updateScoreboard();
-    m_achievementTracker.hadFoul = false;
-    m_achievementTracker.bullseyeChallenge = false;
+    m_achievementTracker.hadFoul = m_resumedFromSave;// false;
+    m_achievementTracker.bullseyeChallenge = m_resumedFromSave;// false;
     m_achievementTracker.puttCount = 0;
 
     //can't get these when putting else it's
     //far too easy (we're technically always on the green)
-    if (m_holeData[hole].puttFromTee)
+    if (m_holeData[hole].puttFromTee
+        || m_resumedFromSave)
     {
         m_achievementTracker.alwaysOnTheCourse = false;
         m_achievementTracker.twoShotsSpare = false;
@@ -4405,7 +4410,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         return;
     }
 
-    m_terrainBuilder.update(hole);
+    m_terrainBuilder.update(hole, forceTransition);
     m_gameScene.getSystem<ClientCollisionSystem>()->setMap(hole);
     m_gameScene.getSystem<ClientCollisionSystem>()->setPinPosition(m_holeData[hole].pin);
     m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
@@ -4415,7 +4420,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     m_gameScene.getSystem<ChunkVisSystem>()->setWorldHeight(height);
 
     //create hole model transition
-    bool rescale = (hole == 0) || (m_holeData[hole - 1].modelPath != m_holeData[hole].modelPath);
+    bool rescale = (hole == 0) || (m_holeData[hole - 1].modelPath != m_holeData[hole].modelPath) || forceTransition;
     auto* propModels = &m_holeData[m_currentHole].propEntities;
     auto* particles = &m_holeData[m_currentHole].particleEntities;
     auto* audio = &m_holeData[m_currentHole].audioEntities;

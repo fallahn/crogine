@@ -1339,8 +1339,18 @@ void GolfState::loadMap()
             {
                 scores.resize(scoreSize);
                 m_currentHole = std::min(holeStrings.size() - 1, h);
-                m_sharedData.connectionData[0].playerData[0].holeScores.swap(scores);
                 m_terrainBuilder.applyHoleIndex(m_currentHole);
+                
+                auto& player = m_sharedData.connectionData[0].playerData[0];
+                player.holeScores.swap(scores);
+                
+                for (auto i = 0u; i < m_currentHole; ++i)
+                {
+                    player.holeComplete[i] = true;
+
+                }
+
+                m_resumedFromSave = true;
             }
         }
         else

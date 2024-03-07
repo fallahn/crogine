@@ -86,7 +86,7 @@ public:
 
     void applyHoleIndex(std::size_t idx); //used to force un update if loading a save game
 
-    void update(std::size_t); //loads the configured data into the existing scene and signals the thread to queue upcoming data
+    void update(std::size_t, bool forceAnim); //loads the configured data into the existing scene and signals the thread to queue upcoming data
 
     void setSlopePosition(glm::vec3);
 
