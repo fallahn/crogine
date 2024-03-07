@@ -600,7 +600,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     static constexpr float BarWidth = 60.f;
     static constexpr float BarHeight = 12.f;
-    auto [value, target, _, flags] = Social::getMonthlyChallenge().getProgress();
+    auto [value, target, _1, flags, _2] = Social::getMonthlyChallenge().getProgress();
     const float progress = static_cast<float>(value) / target;
 
     if (value != target) //don't draw the progress if completed
