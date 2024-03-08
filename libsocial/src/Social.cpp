@@ -44,18 +44,55 @@ source distribution.
 
 namespace
 {
-    StoredValue experience("exp");
-    StoredValue clubset("clb");
-    StoredValue ballset("bls");
-    StoredValue levelTrophies("lvl");
-    StoredValue genericUnlock("gnc");
-    StoredValue lastLog("llg");
-    StoredValue dayStreak("dsk");
-    StoredValue longestStreak("lsk");
-    StoredValue careerBalls("cba");
-    StoredValue careerAvatar("cav");
-    StoredValue careerPosition("cpo");
-    StoredValue careerHair("cha");
+    struct ValueID final
+    {
+        enum
+        {
+            XP,
+            Clubset,
+            Ballset,
+            Level,
+            Generic,
+            LastLog,
+            DayStreak,
+            LongestStreak,
+            CareerBalls,
+            CareerHair,
+            CareerAvatar,
+            CareerPosition,
+
+            Count
+        };
+    };
+    //THESE ALL GET RESET WITH RESET PROFILE
+    std::array<StoredValue, ValueID::Count> StoredValues =
+    {
+        StoredValue("exp"),
+        StoredValue("clb"),
+        StoredValue("bls"),
+        StoredValue("lvl"),
+        StoredValue("gnc"),
+        StoredValue("llg"),
+        StoredValue("dsk"),
+        StoredValue("lsk"),
+        StoredValue("cba"),
+        StoredValue("cha"),
+        StoredValue("cav"),
+        StoredValue("cpo")
+    };
+
+    //StoredValue experience("exp");
+    //StoredValue clubset("clb");
+    //StoredValue ballset("bls");
+    //StoredValue levelTrophies("lvl");
+    //StoredValue genericUnlock("gnc");
+    //StoredValue lastLog("llg");
+    //StoredValue dayStreak("dsk");
+    //StoredValue longestStreak("lsk");
+    //StoredValue careerBalls("cba");
+    //StoredValue careerAvatar("cav");
+    //StoredValue careerPosition("cpo");
+    //StoredValue careerHair("cha");
 
     std::vector<Social::Award> awards;
     const std::array<std::string, 12u> MonthStrings =
@@ -67,6 +104,8 @@ namespace
     //XP curve = (level / x) ^ y
     constexpr float XPx = 0.07f;
     constexpr float XPy = 2.f;
+
+    constexpr std::int32_t DefaultClubSet = 3731;
 
     std::int32_t getLevelFromXP(std::int32_t exp)
     {
@@ -123,10 +162,10 @@ void Social::awardXP(std::int32_t amount, std::int32_t reason)
 {
     if (Achievements::getActive())
     {
-        auto oldLevel = getLevelFromXP(experience.value);
+        auto oldLevel = getLevelFromXP(StoredValues[ValueID::XP].value);
 
-        experience.value += amount;
-        experience.write();
+        StoredValues[ValueID::XP].value += amount;
+        StoredValues[ValueID::XP].write();
 
         //raise event to notify players
         auto* msg = cro::App::postMessage<SocialEvent>(MessageID::SocialMessage);
@@ -134,7 +173,7 @@ void Social::awardXP(std::int32_t amount, std::int32_t reason)
         msg->level = amount;
         msg->reason = reason;
 
-        auto level = getLevelFromXP(experience.value);
+        auto level = getLevelFromXP(StoredValues[ValueID::XP].value);
         if (oldLevel < level)
         {
             auto* msg2 = cro::App::postMessage<SocialEvent>(MessageID::SocialMessage);
@@ -146,14 +185,14 @@ void Social::awardXP(std::int32_t amount, std::int32_t reason)
 
 std::int32_t Social::getXP()
 {
-    experience.read();
-    return experience.value;
+    StoredValues[ValueID::XP].read();
+    return StoredValues[ValueID::XP].value;
 }
 
 std::int32_t Social::getLevel()
 {
-    experience.read();
-    return getLevelFromXP(experience.value);
+    StoredValues[ValueID::XP].read();
+    return getLevelFromXP(StoredValues[ValueID::XP].value);
 }
 
 std::int32_t Social::getClubLevel()
@@ -176,8 +215,8 @@ std::int32_t Social::getClubLevel()
 
 Social::ProgressData Social::getLevelProgress()
 {
-    experience.read();
-    auto currXP = experience.value;
+    StoredValues[ValueID::XP].read();
+    auto currXP = StoredValues[ValueID::XP].value;
     auto currLevel = getLevelFromXP(currXP);
 
     auto startXP = getXPFromLevel(currLevel);
@@ -188,26 +227,26 @@ Social::ProgressData Social::getLevelProgress()
 
 std::uint32_t Social::getCurrentStreak()
 {
-    dayStreak.read();
-    return dayStreak.value;
+    StoredValues[ValueID::DayStreak].read();
+    return StoredValues[ValueID::DayStreak].value;
 }
 
 std::uint32_t Social::updateStreak()
 {
-    lastLog.read();
-    std::int32_t buff = lastLog.value;
+    StoredValues[ValueID::LastLog].read();
+    std::int32_t buff = StoredValues[ValueID::LastLog].value;
 
     std::uint32_t ts = static_cast<std::uint32_t>( cro::SysTime::epoch());
 
     if (buff == 0)
     {
         //first time log
-        lastLog.value = static_cast<std::int32_t>(ts);
-        lastLog.write();
-        dayStreak.value = 1;
-        dayStreak.write();
-        longestStreak.value = 1;
-        longestStreak.write();
+        StoredValues[ValueID::LastLog].value = static_cast<std::int32_t>(ts);
+        StoredValues[ValueID::LastLog].write();
+        StoredValues[ValueID::DayStreak].value = 1;
+        StoredValues[ValueID::DayStreak].write();
+        StoredValues[ValueID::LongestStreak].value = 1;
+        StoredValues[ValueID::LongestStreak].write();
 
         return 1;
     }
@@ -243,31 +282,31 @@ std::uint32_t Social::updateStreak()
 
 
     //this is a fresh log so store the time stamp
-    lastLog.value =  static_cast<std::int32_t>(ts);
-    lastLog.write();
+    StoredValues[ValueID::LastLog].value =  static_cast<std::int32_t>(ts);
+    StoredValues[ValueID::LastLog].write();
 
     //check the streak and increment or reset it
-    dayStreak.read();
-    buff = dayStreak.value;
+    StoredValues[ValueID::DayStreak].read();
+    buff = StoredValues[ValueID::DayStreak].value;
 
     std::uint32_t streak = static_cast<std::uint32_t>(buff);
     if (dayCount == 1)
     {
         streak++;
 
-        longestStreak.read();
-        if (streak > longestStreak.value)
+        StoredValues[ValueID::LongestStreak].read();
+        if (streak > StoredValues[ValueID::LongestStreak].value)
         {
-            longestStreak.value = static_cast<std::int32_t>(streak);
-            longestStreak.write();
+            StoredValues[ValueID::LongestStreak].value = static_cast<std::int32_t>(streak);
+            StoredValues[ValueID::LongestStreak].write();
         }
     }
     else
     {
         streak = 1;
     }
-    dayStreak.value = static_cast<std::int32_t>(streak);
-    dayStreak.write();
+    StoredValues[ValueID::DayStreak].value = static_cast<std::int32_t>(streak);
+    StoredValues[ValueID::DayStreak].write();
 
     auto ret = streak % 7;
     if (ret == 0)
@@ -294,20 +333,44 @@ std::uint32_t Social::updateStreak()
 
 std::uint32_t Social::getLongestStreak()
 {
-    longestStreak.read();
-    return longestStreak.value;
+    StoredValues[ValueID::LongestStreak].read();
+    return StoredValues[ValueID::LongestStreak].value;
 }
 
 void Social::resetProfile()
 {
-    experience.value = 0;
-    experience.write();
+    for (auto& v : StoredValues)
+    {
+        v.value = 0;
+        v.write();
+    }
 
-    ballset.value = 0;
-    ballset.write();
+    //experience.value = 0;
+    //experience.write();
 
-    clubset.value = 0;
-    clubset.write();
+    //ballset.value = 0;
+    //ballset.write();
+
+    //clubset.value = DefaultClubSet;
+    //clubset.write();
+
+    //levelTrophies.value = 0;
+    //levelTrophies.write();
+
+    //genericUnlock.value = 0;
+    //genericUnlock.write();
+
+    //careerAvatar.value = 0;
+    //careerAvatar.write();
+    //
+    //careerBalls.value = 0;
+    //careerBalls.write();
+
+    //careerHair.value = 0;
+    //careerHair.write();
+
+    //careerPosition.value = 0;
+    //careerPosition.write();
 }
 
 void Social::storeDrivingStats(const std::array<float, 3u>& topScores)
@@ -362,33 +425,33 @@ std::int32_t Social::getUnlockStatus(UnlockType type)
     {
     default: return 0;
     case UnlockType::Club:
-        clubset.read();
-        if (clubset.value == 0)
+        StoredValues[ValueID::Clubset].read();
+        if (StoredValues[ValueID::Clubset].value == 0)
         {
-            return 3731; //default set flags
+            return DefaultClubSet; //default set flags
         }
-        return clubset.value;
+        return StoredValues[ValueID::Clubset].value;
     case UnlockType::Ball:
-        ballset.read();
-        return ballset.value;
+        StoredValues[ValueID::Ballset].read();
+        return StoredValues[ValueID::Ballset].value;
     case UnlockType::Level:
-        levelTrophies.read();
-        return levelTrophies.value;
+        StoredValues[ValueID::Level].read();
+        return StoredValues[ValueID::Level].value;
     case UnlockType::Generic:
-        genericUnlock.read();
-        return genericUnlock.value;
+        StoredValues[ValueID::Generic].read();
+        return StoredValues[ValueID::Generic].value;
     case UnlockType::CareerAvatar:
-        careerAvatar.read();
-        return careerAvatar.value;
+        StoredValues[ValueID::CareerAvatar].read();
+        return StoredValues[ValueID::CareerAvatar].value;
     case UnlockType::CareerBalls:
-        careerBalls.read();
-        return careerBalls.value;
+        StoredValues[ValueID::CareerBalls].read();
+        return StoredValues[ValueID::CareerBalls].value;
     case UnlockType::CareerHair:
-        careerHair.read();
-        return careerHair.value;
+        StoredValues[ValueID::CareerHair].read();
+        return StoredValues[ValueID::CareerHair].value;
     case UnlockType::CareerPosition:
-        careerPosition.read();
-        return careerPosition.value;
+        StoredValues[ValueID::CareerPosition].read();
+        return StoredValues[ValueID::CareerPosition].value;
     }
 }
 
@@ -398,36 +461,36 @@ void Social::setUnlockStatus(UnlockType type, std::int32_t set)
     {
     default: break;
     case UnlockType::Ball:
-        ballset.value = set;
-        ballset.write();
+        StoredValues[ValueID::Ballset].value = set;
+        StoredValues[ValueID::Ballset].write();
         break;
     case UnlockType::Club:
-        clubset.value = set;
-        clubset.write();
+        StoredValues[ValueID::Clubset].value = set;
+        StoredValues[ValueID::Clubset].write();
         break;
     case UnlockType::Level:
-        levelTrophies.value = set;
-        levelTrophies.write();
+        StoredValues[ValueID::Level].value = set;
+        StoredValues[ValueID::Level].write();
         break;
     case UnlockType::Generic:
-        genericUnlock.value = set;
-        genericUnlock.write();
+        StoredValues[ValueID::Generic].value = set;
+        StoredValues[ValueID::Generic].write();
         break;
     case UnlockType::CareerAvatar:
-        careerAvatar.value = set;
-        careerAvatar.write();
+        StoredValues[ValueID::CareerAvatar].value = set;
+        StoredValues[ValueID::CareerAvatar].write();
         break;
     case UnlockType::CareerBalls:
-        careerBalls.value = set;
-        careerBalls.write();
+        StoredValues[ValueID::CareerBalls].value = set;
+        StoredValues[ValueID::CareerBalls].write();
         break;
     case UnlockType::CareerHair:
-        careerHair.value = set;
-        careerHair.write();
+        StoredValues[ValueID::CareerHair].value = set;
+        StoredValues[ValueID::CareerHair].write();
         break;
     case UnlockType::CareerPosition:
-        careerPosition.value = set;
-        careerPosition.write();
+        StoredValues[ValueID::CareerPosition].value = set;
+        StoredValues[ValueID::CareerPosition].write();
         break;
     }    
 }
