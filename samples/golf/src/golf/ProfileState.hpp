@@ -44,6 +44,11 @@ source distribution.
 struct SharedStateData;
 struct SharedProfileData;
 
+namespace cro
+{
+    class SpriteSheet;
+}
+
 struct BallPreview final
 {
     cro::Entity root;
@@ -109,6 +114,9 @@ private:
             Swatch, AvatarPreview,
             BioText,
 
+            BallBrowser,
+            HairBrowser,
+
             Count
         };
     };
@@ -161,6 +169,20 @@ private:
     void createPalettes(cro::Entity);
     void createBallFlyout(cro::Entity);
     void createBallThumbs();
+
+    //used to pass menu callbacks between creation functions
+    struct CallbackContext final
+    {
+        std::int32_t arrowSelected = 0;
+        std::int32_t arrowUnselected = 0;
+        std::int32_t closeSelected = 0;
+        std::int32_t closeUnselected = 0;
+    };
+
+    void createBallBrowser(cro::Entity, const CallbackContext&);
+    void createHairBrowser(cro::Entity, const CallbackContext&);
+    cro::Entity createBrowserBackground(const cro::SpriteSheet&, std::int32_t, const CallbackContext&);
+
     void quitState();
 
     //returns the highlight entity

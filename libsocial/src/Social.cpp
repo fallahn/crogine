@@ -81,19 +81,6 @@ namespace
         StoredValue("cpo")
     };
 
-    //StoredValue experience("exp");
-    //StoredValue clubset("clb");
-    //StoredValue ballset("bls");
-    //StoredValue levelTrophies("lvl");
-    //StoredValue genericUnlock("gnc");
-    //StoredValue lastLog("llg");
-    //StoredValue dayStreak("dsk");
-    //StoredValue longestStreak("lsk");
-    //StoredValue careerBalls("cba");
-    //StoredValue careerAvatar("cav");
-    //StoredValue careerPosition("cpo");
-    //StoredValue careerHair("cha");
-
     std::vector<Social::Award> awards;
     const std::array<std::string, 12u> MonthStrings =
     {
@@ -344,33 +331,6 @@ void Social::resetProfile()
         v.value = 0;
         v.write();
     }
-
-    //experience.value = 0;
-    //experience.write();
-
-    //ballset.value = 0;
-    //ballset.write();
-
-    //clubset.value = DefaultClubSet;
-    //clubset.write();
-
-    //levelTrophies.value = 0;
-    //levelTrophies.write();
-
-    //genericUnlock.value = 0;
-    //genericUnlock.write();
-
-    //careerAvatar.value = 0;
-    //careerAvatar.write();
-    //
-    //careerBalls.value = 0;
-    //careerBalls.write();
-
-    //careerHair.value = 0;
-    //careerHair.write();
-
-    //careerPosition.value = 0;
-    //careerPosition.write();
 }
 
 void Social::storeDrivingStats(const std::array<float, 3u>& topScores)
