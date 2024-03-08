@@ -126,6 +126,7 @@ private:
     mutable std::int32_t m_previousPosition;
 
     void increaseDifficulty();
+    void decreaseDifficulty();
     std::string getFilePath(const std::string& fileName) const;
 
     std::vector<TableEntry> m_sortedTable = {};

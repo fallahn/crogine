@@ -210,9 +210,22 @@ void CareerState::handleMessage(const cro::Message& msg)
             if (data.id == StateID::Unlock
                 && m_sharedData.showCredits)
             {
+                Achievements::awardAchievement(AchievementStrings[AchievementID::SemiRetired]);
+
                 m_sharedData.showCredits = false;
                 requestStackPush(StateID::Credits);
             }
+        }
+    }
+    else if (msg.id == cro::Message::WindowMessage)
+    {
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
+        if (data.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+        {
+            //if we have a window over the top (eg profile editor)
+            //we want to activate this on window resize so layout
+            //is correctly updated.
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         }
     }
 

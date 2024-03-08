@@ -45,7 +45,6 @@ source distribution.
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Mouse.hpp>
 #include <crogine/graphics/Image.hpp>
-#include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -877,7 +876,7 @@ void ProfileState::buildScene()
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
-    skinColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonTopLight);
+    skinColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevHair, ButtonTopLight);
     skinColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonHairColour);
 
 
@@ -1178,7 +1177,7 @@ void ProfileState::buildScene()
     ballLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonName);
     expandHitbox(ballLeft);
 
-    //toggles the preview to display ball thumbs
+    //toggles the ball browser
     auto ballThumb = createButton("ballthumb_highlight", { 279.f , 93.f }, ButtonBallSelect);
     ballThumb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
@@ -1571,12 +1570,37 @@ void ProfileState::buildScene()
 
 
     CallbackContext ctx;
+    ctx.spriteSheet.loadFromFile("assets/golf/sprites/avatar_browser.spt", m_resources.textures);
+    ctx.createArrow = 
+        [&](std::int32_t left)
+        {
+            auto ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Transform>();
+            ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            ent.addComponent<cro::Drawable2D>();
+            ent.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite(left ? "arrow_left" : "arrow_right");
+            ent.addComponent<cro::Callback>().setUserData<float>(ent.getComponent<cro::Sprite>().getTextureRect().left);
+            ent.addComponent<cro::UIInput>().area = ent.getComponent<cro::Sprite>().getTextureBounds();
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.arrowSelected;
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.arrowUnselected;
+            return ent;
+        };
     ctx.arrowSelected = uiSystem.addCallback([](cro::Entity e)
         {
             e.getComponent<cro::AudioEmitter>().play();
-            //hmmm we need the base texture rect here...
+            //we hacked in the base pos here
+            const float left = e.getComponent<cro::Callback>().getUserData<float>();
+            auto bounds = e.getComponent<cro::Sprite>().getTextureRect();
+            bounds.left = bounds.width + left;
+            e.getComponent<cro::Sprite>().setTextureRect(bounds);
         });
-    ctx.arrowUnselected = uiSystem.addCallback([](cro::Entity e) {});
+    ctx.arrowUnselected = uiSystem.addCallback([](cro::Entity e)
+        {
+            const float left = e.getComponent<cro::Callback>().getUserData<float>();
+            auto bounds = e.getComponent<cro::Sprite>().getTextureRect();
+            bounds.left = left;
+            e.getComponent<cro::Sprite>().setTextureRect(bounds);
+        });
     ctx.closeSelected = uiSystem.addCallback([](cro::Entity e)
         {
             e.getComponent<cro::AudioEmitter>().play();
@@ -1590,7 +1614,6 @@ void ProfileState::buildScene()
 
 
     createPalettes(bgEnt);
-    //createBallFlyout(bgEnt);
     createBallBrowser(rootNode, ctx);
     createHairBrowser(rootNode, ctx);
 
@@ -1997,7 +2020,7 @@ void ProfileState::createPalettes(cro::Entity parent)
     createPaletteButtons(m_ballColourFlyout, PaletteID::Hair, MenuID::BallColour, (PaletteID::Count * 100) + 200);
 }
 
-void ProfileState::createBallFlyout(cro::Entity parent)
+void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
 {
     static constexpr glm::vec2 IconSize(BallThumbSize);
     static constexpr float IconPadding = 4.f;
@@ -2214,33 +2237,40 @@ void ProfileState::createBallThumbs()
 
 void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/avatar_browser.spt", m_resources.textures);
-
-    auto bgEnt = createBrowserBackground(spriteSheet, MenuID::BallSelect, ctx);
+    auto bgEnt = createBrowserBackground(MenuID::BallSelect, ctx);
     m_menuEntities[EntityID::BallBrowser] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
+    //calc balls per page
 
+    //calc number of pages
 
+    //for each page createPage(page)
+
+    //if page > 1 add arrows
+
+    //TODO if adding arrows remember:
+    //parent to the correct ent
+    //set correct position
+    //set the correct menu group
+    //set the correct selection order
+    //set the activated callback
+    //DONT USE THE CALLBACK FOR ANYTHING AS IT HAS UV OFFSET IN USERDATA
 }
 
 void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/avatar_browser.spt", m_resources.textures);
-
-    auto bgEnt = createBrowserBackground(spriteSheet, MenuID::HairSelect, ctx);
+    auto bgEnt = createBrowserBackground(MenuID::HairSelect, ctx);
     m_menuEntities[EntityID::HairBrowser] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 }
 
-cro::Entity ProfileState::createBrowserBackground(const cro::SpriteSheet& spriteSheet, std::int32_t menuID, const CallbackContext& ctx)
+cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const CallbackContext& ctx)
 {
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setPosition({ -std::floor(bounds.width / 2.f), -std::floor(bounds.height / 2.f), 1.f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -2295,7 +2325,7 @@ cro::Entity ProfileState::createBrowserBackground(const cro::SpriteSheet& sprite
     buttonEnt.addComponent<cro::Transform>().setPosition({ 468.f, 331.f, 0.1f });
     buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonEnt.addComponent<cro::Drawable2D>();
-    buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("close_button");
+    buttonEnt.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("close_button");
     buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     buttonEnt.addComponent<cro::UIInput>().setGroup(menuID);
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();

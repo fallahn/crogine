@@ -142,6 +142,7 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "course_11_par",
     "course12_complete",
     "course_12_par",
+    "semi_retired"
 };
 
 //appears on the notification
@@ -242,6 +243,7 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Master Course 11",
     "Complete Course 12",
     "Master Course 12",
+    "Semi-Retired"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -342,6 +344,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Complete Nguyen Valley with par or under", false),
     std::make_pair("Play a full 18 holes on Hertog Regis", false),
     std::make_pair("Complete Hertog Regis with par or under", false),
+    std::make_pair("Complete Career Mode", false),
 };
 
 //assuming trophies load correctly they are:
@@ -473,6 +476,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldCup,
     TrophyID::BronzeCup,
     TrophyID::GoldCup,
+
+    TrophyID::Platinum
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

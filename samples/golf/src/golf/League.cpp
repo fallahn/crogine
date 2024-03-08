@@ -93,6 +93,8 @@ namespace
     }
 
     constexpr std::int32_t SkillRoof = 10; //after this many increments the skills stop getting better - just shift around
+    constexpr float BaseQuality = 0.87f;
+    constexpr float MinQuality = BaseQuality - 0.07f; //0.01 * PlayerCount/2
 }
 
 League::League(std::int32_t id)
@@ -129,7 +131,7 @@ void League::reset()
 
         //this starts small and increase as
         //player level is increased
-        player.quality = 0.87f - (0.01f * (player.nameIndex / 2));
+        player.quality = BaseQuality - (0.01f * (player.nameIndex / 2));
     }
 
     //for career leagues we want to increase the initial difficulty
@@ -350,34 +352,35 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         }
 
 
-        //evaluate all players and adjust skills if we came in the top 2
-        //if (m_id == LeagueRoundID::Club)
+        //evaluate all players and adjust skills
+
+        if (playerPos < 2 //increase in top 2
+            && m_increaseCount < SkillRoof)
         {
-            if (/*m_id == LeagueRoundID::Club
-                && */playerPos < 2
-                && m_increaseCount < SkillRoof)
+            increaseDifficulty();
+            m_increaseCount++;
+        }
+        else if (m_currentSeason > 1
+            && m_currentBest > 3) //if we played a couple of seasons and still not won, make it easier
+        {
+            decreaseDifficulty();
+        }
+        else
+        {
+            //add some small variance
+            for (auto& player : m_players)
             {
-                increaseDifficulty();
-                m_increaseCount++;
-            }
-            else
-            {
-                //add some small variance
-                for (auto& player : m_players)
+                auto rVal = cro::Util::Random::value(0.f, 0.11f);
+                if (player.quality > 0.89f)
                 {
-                    auto rVal = cro::Util::Random::value(0.f, 0.11f);
-                    if (player.quality > 0.89f)
-                    {
-                        player.quality -= rVal;
-                    }
-                    else
-                    {
-                        player.quality += rVal;
-                    }
+                    player.quality -= rVal;
+                }
+                else
+                {
+                    player.quality += rVal;
                 }
             }
         }
-
 
         //start a new season - this should be ok here as we saved the previous results
         //out to a file to scroll at the bottom
@@ -486,6 +489,14 @@ void League::increaseDifficulty()
             outlier = std::clamp(outlier + cro::Util::Random::value(-1, 0), 1, 10);
         }
         m_players[i].outlier = outlier;
+    }
+}
+
+void League::decreaseDifficulty()
+{
+    for (auto i = 0u; i < PlayerCount; ++i)
+    {
+        m_players[i].quality = std::max(MinQuality, m_players[i].quality - ((0.02f * ((PlayerCount - 1)-i)) / 10.f));
     }
 }
 

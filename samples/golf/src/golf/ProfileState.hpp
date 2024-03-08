@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 struct SharedStateData;
 struct SharedProfileData;
@@ -167,7 +168,7 @@ private:
     void buildScene();
     void buildPreviewScene();
     void createPalettes(cro::Entity);
-    void createBallFlyout(cro::Entity);
+    void createBallPage(cro::Entity, std::int32_t);
     void createBallThumbs();
 
     //used to pass menu callbacks between creation functions
@@ -177,11 +178,13 @@ private:
         std::int32_t arrowUnselected = 0;
         std::int32_t closeSelected = 0;
         std::int32_t closeUnselected = 0;
+        cro::SpriteSheet spriteSheet;
+        std::function<cro::Entity(std::int32_t)> createArrow;
     };
 
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
-    cro::Entity createBrowserBackground(const cro::SpriteSheet&, std::int32_t, const CallbackContext&);
+    cro::Entity createBrowserBackground(std::int32_t, const CallbackContext&);
 
     void quitState();
 

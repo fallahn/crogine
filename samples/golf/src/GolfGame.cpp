@@ -449,7 +449,7 @@ void GolfGame::render()
 #endif
     m_progressIcon->draw();
 }
-#include <Input.hpp>
+
 bool GolfGame::initialise()
 {
     auto path = cro::App::getPreferencePath() + "user/";
@@ -672,7 +672,11 @@ bool GolfGame::initialise()
                 League l(i);
                 l.reset();
             }
-            cro::Console::print("League tables are reset");
+            cro::Console::print("League tables are reset - quitting game...");
+
+            cro::Clock c;
+            while (c.elapsed().asSeconds() < 1.5f) {}
+            cro::App::quit();
         });
 
     cro::Console::addConvar("shuffle_music", "false", "If true then custom music playlists will be shuffled when loaded.");
