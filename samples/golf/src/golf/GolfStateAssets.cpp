@@ -1323,7 +1323,7 @@ void GolfState::loadMap()
         std::fill(data.holeTimes.begin(), data.holeTimes.end(), 0.f);
     }
 
-    //if this is acareer game see if we had a round in progress
+    //if this is a career game see if we had a round in progress
     if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
     {
         Social::setLeaderboardsEnabled(true);

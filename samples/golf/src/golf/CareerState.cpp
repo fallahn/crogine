@@ -293,7 +293,15 @@ void CareerState::buildScene()
                     Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
 
                     applySettingsValues();
-                    selectLeague(m_maxLeagueIndex);
+                    
+                    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+                    {
+                        selectLeague(m_maxLeagueIndex);
+                    }
+                    else
+                    {
+                        selectLeague(m_sharedData.leagueRoundID - 1);
+                    }
 
                     if (!m_sharedData.unlockedItems.empty())
                     {
@@ -795,7 +803,7 @@ void CareerState::buildScene()
 
     //select the most recent league
     m_maxLeagueIndex = buttons.size() - 1;
-    selectLeague(m_maxLeagueIndex); //this is done each time the menu is shown, so prob not necessary here
+    //selectLeague(m_maxLeagueIndex); //this is done each time the menu is shown, so prob not necessary here
 
 
     //options button
