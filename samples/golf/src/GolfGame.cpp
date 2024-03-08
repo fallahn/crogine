@@ -667,16 +667,23 @@ bool GolfGame::initialise()
     registerCommand("reset_leagues", 
         [](const std::string&)
         {
-            for (auto i = 0u; i < LeagueRoundID::Count; ++i)
+            if (cro::FileSystem::showMessageBox("Information", "This will reset the leagues and close the game", cro::FileSystem::ButtonType::OK, cro::FileSystem::IconType::Warning))
             {
-                League l(i);
-                l.reset();
+                for (auto i = 0u; i < LeagueRoundID::Count; ++i)
+                {
+                    League l(i);
+                    l.reset();
+                }
+                
+                Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
+                Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
+                Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);
+                Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);
+                
+                cro::Clock c;
+                while (c.elapsed().asSeconds() < 1.5f) {}
+                cro::App::quit();
             }
-            cro::Console::print("League tables are reset - quitting game...");
-
-            cro::Clock c;
-            while (c.elapsed().asSeconds() < 1.5f) {}
-            cro::App::quit();
         });
 
     cro::Console::addConvar("shuffle_music", "false", "If true then custom music playlists will be shuffled when loaded.");
