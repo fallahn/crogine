@@ -1717,75 +1717,83 @@ void ProfileState::buildPreviewScene()
     m_profileData.grassDef->createModel(entity);
 
     static constexpr glm::vec3 AvatarPos({ CameraBasePosition.x, 0.f, 0.f });
-    for (auto& avatar : m_profileData.avatarDefs)
+
+    for (auto i = 0u; i < m_profileData.avatarDefs.size(); ++i)
     {
-        auto entity = m_modelScene.createEntity();
-        entity.addComponent<cro::Transform>().setOrigin(AvatarPos);
-        entity.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin());
-        avatar.createModel(entity);
-        entity.getComponent<cro::Model>().setHidden(true);
-
-        auto material = m_profileData.profileMaterials.avatar;
-        applyMaterialData(avatar, material);
-        entity.getComponent<cro::Model>().setMaterial(0, material);
-
-        entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>();
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
-        {
-            auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>();
-            const float Speed = dt * 4.f;
-            float rotation = 0.f; //hmm would be nice to rotate in the direction of the index change...
-
-            if (direction == 0)
-            {
-                //grow
-                progress = std::min(1.f, progress + Speed);
-                rotation = -cro::Util::Const::TAU + (cro::Util::Const::TAU * progress);
-
-                if (progress == 1)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                }
-            }
-            else
-            {
-                //shrink
-                progress = std::max(0.f, progress - Speed);
-                rotation = cro::Util::Const::TAU * (1.f - progress);
-
-                if (progress == 0)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                    e.getComponent<cro::Model>().setHidden(true);
-                }
-            }
-
-            glm::vec3 scale(progress, 1.f, progress);
-            e.getComponent<cro::Transform>().setScale(scale);
-
-            //TODO we want to add initial rotation here ideally...
-            //however it's not easily extractable from the orientation.
-            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
-        };
-
+        //need to pad this out regardless for correct indexing
         auto& avt = m_avatarModels.emplace_back();
-        avt.previewModel = entity;
-
-        //these are unique models from the menu so we'll 
-        //need to capture their attachment points once again...
-        if (entity.hasComponent<cro::Skeleton>())
+        if (!m_sharedData.avatarInfo[i].locked)
         {
-            //this should never not be true as the models were validated
-            //in the menu state - but 
-            auto id = entity.getComponent<cro::Skeleton>().getAttachmentIndex("head");
-            if (id > -1)
+            auto& avatar = m_profileData.avatarDefs[i];
+
+            auto entity = m_modelScene.createEntity();
+            entity.addComponent<cro::Transform>().setOrigin(AvatarPos);
+            entity.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin());
+            avatar.createModel(entity);
+            entity.getComponent<cro::Model>().setHidden(true);
+
+            auto material = m_profileData.profileMaterials.avatar;
+            applyMaterialData(avatar, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>();
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+                {
+                    auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>();
+                    const float Speed = dt * 4.f;
+                    float rotation = 0.f; //hmm would be nice to rotate in the direction of the index change...
+
+                    if (direction == 0)
+                    {
+                        //grow
+                        progress = std::min(1.f, progress + Speed);
+                        rotation = -cro::Util::Const::TAU + (cro::Util::Const::TAU * progress);
+
+                        if (progress == 1)
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                        }
+                    }
+                    else
+                    {
+                        //shrink
+                        progress = std::max(0.f, progress - Speed);
+                        rotation = cro::Util::Const::TAU * (1.f - progress);
+
+                        if (progress == 0)
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                            e.getComponent<cro::Model>().setHidden(true);
+                        }
+                    }
+
+                    glm::vec3 scale(progress, 1.f, progress);
+                    e.getComponent<cro::Transform>().setScale(scale);
+
+                    //TODO we want to add initial rotation here ideally...
+                    //however it's not easily extractable from the orientation.
+                    e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+                };
+
+            avt.previewModel = entity;
+
+            //these are unique models from the menu so we'll 
+            //need to capture their attachment points once again...
+            if (entity.hasComponent<cro::Skeleton>())
             {
-                //hair is optional so OK if this doesn't exist
-                avt.hairAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                //this should never not be true as the models were validated
+                //in the menu state - but 
+                auto id = entity.getComponent<cro::Skeleton>().getAttachmentIndex("head");
+                if (id > -1)
+                {
+                    //hair is optional so OK if this doesn't exist
+                    avt.hairAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                }
+
+                entity.getComponent<cro::Skeleton>().play(entity.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing"));
             }
 
-            entity.getComponent<cro::Skeleton>().play(entity.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing"));
         }
     }
 
@@ -1808,30 +1816,33 @@ void ProfileState::buildPreviewScene()
     };
     for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
     {
+        //need to pad out the vector anyway for correct indexing
         auto& t = m_profileTextures.emplace_back(m_sharedData.avatarInfo[i].texturePath);
-
-        for (auto j = 0; j < pc::ColourKey::Count; ++j)
+        
+        if (!m_sharedData.avatarInfo[i].locked)
         {
-            t.setColour(pc::ColourKey::Index(j), m_activeProfile.avatarFlags[j]);
-        }
-        t.apply();
-
-        m_avatarModels[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", t.getTextureID());
-
-
-        cro::AudioScape as;
-        if (!m_sharedData.avatarInfo[i].audioscape.empty() &&
-            as.loadFromFile(m_sharedData.avatarInfo[i].audioscape, m_resources.audio))
-        {
-            for (const auto& name : emitterNames)
+            for (auto j = 0; j < pc::ColourKey::Count; ++j)
             {
-                if (as.hasEmitter(name))
+                t.setColour(pc::ColourKey::Index(j), m_activeProfile.avatarFlags[j]);
+            }
+            t.apply();
+
+            m_avatarModels[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", t.getTextureID());
+
+            cro::AudioScape as;
+            if (!m_sharedData.avatarInfo[i].audioscape.empty() &&
+                as.loadFromFile(m_sharedData.avatarInfo[i].audioscape, m_resources.audio))
+            {
+                for (const auto& name : emitterNames)
                 {
-                    auto entity = m_uiScene.createEntity();
-                    entity.addComponent<cro::Transform>();
-                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(name);
-                    entity.getComponent<cro::AudioEmitter>().setLooped(false);
-                    m_avatarModels[i].previewAudio.push_back(entity);
+                    if (as.hasEmitter(name))
+                    {
+                        auto entity = m_uiScene.createEntity();
+                        entity.addComponent<cro::Transform>();
+                        entity.addComponent<cro::AudioEmitter>() = as.getEmitter(name);
+                        entity.getComponent<cro::AudioEmitter>().setLooped(false);
+                        m_avatarModels[i].previewAudio.push_back(entity);
+                    }
                 }
             }
         }
@@ -2513,6 +2524,24 @@ void ProfileState::setAvatarIndex(std::size_t idx)
 
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
+
+    //we might have blank spots so skip these
+    if (m_avatarIndex == 0 || idx < m_avatarIndex)
+    {
+        while (!m_avatarModels[idx].previewModel.isValid()
+            && idx != m_avatarIndex)
+        {
+            idx = (idx + (m_avatarModels.size() -1)) % m_avatarModels.size();
+        }
+    }
+    else
+    {
+        while (!m_avatarModels[idx].previewModel.isValid()
+            && idx != m_avatarIndex)
+        {
+            idx = (idx + 1) % m_avatarModels.size();
+        }
+    }
 
     m_avatarIndex = idx;
 

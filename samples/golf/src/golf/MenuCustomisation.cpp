@@ -778,7 +778,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
         if (cro::FileSystem::getFileExtension(file) == ".avt")
         {
             cro::ConfigFile cfg;
-            if (cfg.loadFromFile(searchPath + file), resourcePath.empty())
+            if (cfg.loadFromFile(searchPath + file)/*, resourcePath.empty()*/)
             {
                 SharedStateData::AvatarInfo info;
 
@@ -792,7 +792,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
                         if (!info.modelPath.empty())
                         {
                             cro::ConfigFile modelData;
-                            modelData.loadFromFile(info.modelPath, resourcePath.empty());
+                            modelData.loadFromFile(info.modelPath/*, resourcePath.empty()*/);
                             for (const auto& o : modelData.getObjects())
                             {
                                 if (o.getName() == "material")
@@ -898,7 +898,7 @@ void MenuState::createAvatarScene()
     cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
     {
-        if (!m_sharedData.avatarInfo[i].locked &&
+        if (/*!m_sharedData.avatarInfo[i].locked &&*/
             md.loadFromFile(m_sharedData.avatarInfo[i].modelPath))
         {
             auto entity = m_avatarScene.createEntity();
