@@ -247,11 +247,13 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             }
             else if (groupID == MenuID::BallSelect)
             {
-                m_menuEntities[EntityID::BallBrowser].getComponent<cro::Callback>().active = false;
+                m_menuEntities[EntityID::BallBrowser].getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
             else if (groupID == MenuID::HairSelect)
             {
-                m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = false;
+                m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         };
 
@@ -344,9 +346,11 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             break;
         case MenuID::BallSelect:
             m_menuEntities[EntityID::BallBrowser].getComponent<cro::Callback>().active = true;
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             break;
         case MenuID::HairSelect:
             m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             break;
         case MenuID::BallColour:
         {
