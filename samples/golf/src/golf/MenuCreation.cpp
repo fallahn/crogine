@@ -4401,11 +4401,22 @@ void MenuState::updateUnlockedItems()
         Social::setUnlockStatus(Social::UnlockType::CareerHair, hairFlags);
     }
 
-    //TODO career avatars
+    //career avatars
     auto avatarFlags = Social::getUnlockStatus(Social::UnlockType::CareerAvatar);
     if (avatarFlags != -1)
     {
-
+        for (auto i = 0u; i < Leagues.size(); ++i)
+        {
+            if (Leagues[i].getCurrentBest() == 1)
+            {
+                auto flag = (1 << i);
+                if ((avatarFlags & flag) == 0)
+                {
+                    avatarFlags |= flag;
+                    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Avatar;
+                }
+            }
+        }
 
         Social::setUnlockStatus(Social::UnlockType::CareerAvatar, avatarFlags);
     }

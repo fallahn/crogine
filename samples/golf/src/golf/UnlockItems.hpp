@@ -215,6 +215,8 @@ namespace ul
             Hair05,
             Hair06,
 
+            Avatar,
+
             CareerGold,
             CareerSilver,
             CareerBronze,
@@ -274,6 +276,8 @@ namespace ul
         { ModelID::CareerHair04,  "Bun",             "New Headwear!" },
         { ModelID::CareerHair05,  "Fizz!",           "New Headwear!" },
         { ModelID::CareerHair06,  "Head of State",   "New Headwear!" },
+
+        { ModelID::Padlock,  "Unlocked!",   "New Avatar!" },
 
         { ModelID::CareerFirst,   "First Place!",   "New Headwear!" }, //these get overwritten with XP value
         { ModelID::CareerSecond,  "Second Place!",  "New Headwear!" },
