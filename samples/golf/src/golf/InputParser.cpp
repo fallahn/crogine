@@ -1017,8 +1017,12 @@ void InputParser::updateStroke(float dt)
             }
             else
             {
-                float increase = std::min(1.f, static_cast<float>(Social::getLevel()) / 10.f);
-                speed += ((dt * (1.f - MinBarSpeed)) * increase);
+                const auto l = Social::getLevel();
+                if (l > 1)
+                {
+                    float increase = std::min(1.f, static_cast<float>(l) / 10.f);
+                    speed += ((dt * (1.f - MinBarSpeed)) * increase);
+                }
             }
 
             m_hook = std::min(1.f, std::max(0.f, m_hook + ((speed * m_powerbarDirection))));
