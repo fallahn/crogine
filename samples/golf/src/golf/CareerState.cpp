@@ -111,6 +111,8 @@ namespace
 
     constexpr glm::vec3 LeagueListPosition = glm::vec3(119.f, 216.f, 0.2f);
     constexpr float LeagueLineSpacing = 14.f;
+
+    const std::string ConfigFile("career.cfg");
 }
 
 CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -305,7 +307,8 @@ void CareerState::buildScene()
                     m_scene.getSystem<cro::UISystem>()->selectAt(CareerStart);
                     Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
 
-                    applySettingsValues();
+                    applySettingsValues(); //loadConfig() might not load anything
+                    loadConfig();
                     
                     if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
                     {
@@ -1129,6 +1132,8 @@ void CareerState::buildScene()
             {
                 if (activated(evt))
                 {
+                    saveConfig();
+
                     //show confirmation
                     enterConfirmCallback();
                 }
@@ -1656,6 +1661,8 @@ void CareerState::applySettingsValues()
 
 void CareerState::quitState()
 {
+    saveConfig();
+
     if (m_currentMenu == MenuID::ConfirmQuit)
     {
         quitConfirmCallback();
@@ -1674,4 +1681,42 @@ void CareerState::quitState()
         msg->type = SystemEvent::MenuRequest;
         msg->data = StateID::Career;
     }
+}
+
+void CareerState::loadConfig()
+{
+    const auto path = Social::getBaseContentPath() + ConfigFile;
+    if (cro::FileSystem::fileExists(path))
+    {
+        cro::ConfigFile cfg;
+        cfg.loadFromFile(path);
+
+        for (const auto& prop : cfg.getProperties())
+        {
+            const auto& name = prop.getName();
+            if (name == "gimme")
+            {
+                m_sharedData.gimmeRadius = static_cast<std::uint8_t>(std::clamp(prop.getValue<std::int32_t>(), 0, 2));
+            }
+            else if (name == "night")
+            {
+                m_sharedData.nightTime = static_cast<std::uint8_t>(std::clamp(prop.getValue<std::int32_t>(), 0, 1));
+            }
+            else if (name == "weather")
+            {
+                m_sharedData.weatherType = std::clamp(prop.getValue<std::int32_t>(), 0, static_cast<std::int32_t>(WeatherType::Count));
+            }
+        }
+
+        applySettingsValues();
+    }
+}
+
+void CareerState::saveConfig()
+{
+    cro::ConfigFile cfg;
+    cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
+    cfg.addProperty("night").setValue(m_sharedData.nightTime);
+    cfg.addProperty("weather").setValue(m_sharedData.weatherType);
+    cfg.save(Social::getBaseContentPath() + ConfigFile);
 }

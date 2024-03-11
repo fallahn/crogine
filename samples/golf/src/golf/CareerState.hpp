@@ -115,4 +115,7 @@ private:
     void applySettingsValues();
 
     void quitState();
+
+    void loadConfig();
+    void saveConfig();
 };
