@@ -131,6 +131,9 @@ namespace
 
     //updates start/quit buttons with correct navigation indices
     std::function<void(std::int32_t)> navigationUpdate;
+
+    //hack to remember random weather setting between sessions
+    bool randomWeather = false;
 }
 
 constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPositions =
@@ -756,6 +759,10 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     if (activated(evt))
                     {
                         m_sharedData.leagueRoundID = LeagueRoundID::Club;
+                        if (randomWeather)
+                        {
+                            m_sharedData.weatherType = WeatherType::Random;
+                        }
                         requestStackPush(StateID::FreePlay);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
@@ -2805,6 +2812,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 if (activated(evt))
                 {
+                    randomWeather = m_sharedData.weatherType == WeatherType::Random;
                     auto& data = confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>();
 
                     if (!data.startGame)
@@ -3496,10 +3504,6 @@ void MenuState::addCourseSelectButtons()
 
 
 
-
-
-
-
     const auto gameRuleEnable = [&](cro::Entity e, float)
     {
         e.getComponent<cro::UIInput>().enabled =
@@ -3872,6 +3876,10 @@ void MenuState::addCourseSelectButtons()
         m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
 
+    if (randomWeather)
+    {
+        m_sharedData.weatherType = WeatherType::Random;
+    }
 
     //change weather
     buttonEnt = m_uiScene.createEntity();

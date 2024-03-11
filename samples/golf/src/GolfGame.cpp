@@ -495,14 +495,10 @@ bool GolfGame::initialise()
 
     loadAvatars(); //this relies on steam being initialised
 
-//#ifdef USE_WORKSHOP
-//    registerCommand("workshop",
-//        [&](const std::string&)
-//        {
-//            m_stateStack.clearStates();
-//            m_stateStack.pushState(StateID::Workshop);
-//        });
-//#endif
+    if (Social::isSteamdeck())
+    {
+        getWindow().setVsyncEnabled(true);
+    }
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS
