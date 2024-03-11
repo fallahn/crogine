@@ -543,12 +543,38 @@ void MenuState::updateProfileTextures(std::size_t start, std::size_t count)
 
 void MenuState::parseAvatarDirectory()
 {
+    const std::array<League, 6u> Leagues =
+    {
+        League(LeagueRoundID::RoundOne),
+        League(LeagueRoundID::RoundTwo),
+        League(LeagueRoundID::RoundThree),
+        League(LeagueRoundID::RoundFour),
+        League(LeagueRoundID::RoundFive),
+        League(LeagueRoundID::RoundSix)
+    };
+
     m_sharedData.avatarInfo.clear();
 
     const std::string AvatarPath = "assets/golf/avatars/";
     auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + AvatarPath);
-    m_playerAvatars.reserve(files.size());
-    processAvatarList(files, AvatarPath);
+    m_playerAvatars.reserve(files.size() + Leagues.size());
+    processAvatarList(false, files, AvatarPath);
+
+    const std::string CareerPath = "assets/golf/career/tier2/";
+    const std::array<std::string, 6u> CareerAvatars =
+    {
+        "ca01.avt",
+        "ca02.avt",
+        "ca03.avt",
+        "ca04.avt",
+        "ca05.avt",
+        "ca06.avt",
+    };
+
+    for (auto i = 0u; i < CareerAvatars.size(); ++i)
+    {
+        processAvatarList(Leagues[i].getCurrentBest() > 1, {CareerAvatars[i]}, CareerPath);
+    }
 
     //custom avatars
     auto avatarUserDir = Social::getUserContentPath(Social::UserContent::Avatar);
@@ -560,7 +586,7 @@ void MenuState::parseAvatarDirectory()
         {
             auto resourceDir = avatarUserDir + dir + "/";
             files = cro::FileSystem::listFiles(resourceDir);
-            processAvatarList(files, resourceDir, resourceDir);
+            processAvatarList(false, files, resourceDir, resourceDir);
         }
     }
 
@@ -647,15 +673,6 @@ void MenuState::parseAvatarDirectory()
     //unlocked parse it immediately so it's available in the browser
     //else delay the loading so it's still available to display if
     //a remote player in a network game is using one.
-    const std::array<League, 6u> Leagues =
-    {
-        League(LeagueRoundID::RoundOne),
-        League(LeagueRoundID::RoundTwo),
-        League(LeagueRoundID::RoundThree),
-        League(LeagueRoundID::RoundFour),
-        League(LeagueRoundID::RoundFive),
-        League(LeagueRoundID::RoundSix)
-    };
     const std::array<std::string, 6u> LeaguePaths =
     {
         "assets/golf/career/tier1/01.hct",
@@ -753,7 +770,7 @@ void MenuState::parseAvatarDirectory()
     createAvatarScene();
 }
 
-void MenuState::processAvatarList(const std::vector<std::string>& fileList, const std::string& searchPath, const std::string resourcePath)
+void MenuState::processAvatarList(bool locked, const std::vector<std::string>& fileList, const std::string& searchPath, const std::string resourcePath)
 {
     //path strings must include trailing "/"!!
     for (const auto& file : fileList)
@@ -761,7 +778,7 @@ void MenuState::processAvatarList(const std::vector<std::string>& fileList, cons
         if (cro::FileSystem::getFileExtension(file) == ".avt")
         {
             cro::ConfigFile cfg;
-            if (cfg.loadFromFile(searchPath + file))
+            if (cfg.loadFromFile(searchPath + file), resourcePath.empty())
             {
                 SharedStateData::AvatarInfo info;
 
@@ -775,7 +792,7 @@ void MenuState::processAvatarList(const std::vector<std::string>& fileList, cons
                         if (!info.modelPath.empty())
                         {
                             cro::ConfigFile modelData;
-                            modelData.loadFromFile(info.modelPath);
+                            modelData.loadFromFile(info.modelPath, resourcePath.empty());
                             for (const auto& o : modelData.getObjects())
                             {
                                 if (o.getName() == "material")
@@ -824,6 +841,7 @@ void MenuState::processAvatarList(const std::vector<std::string>& fileList, cons
                     if (result == m_sharedData.avatarInfo.end())
                     {
                         info.workshopID = findWorkshopID(searchPath);
+                        info.locked = locked;
                         m_sharedData.avatarInfo.push_back(info);
                         m_playerAvatars.emplace_back(info.texturePath);
                     }
@@ -880,7 +898,8 @@ void MenuState::createAvatarScene()
     cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
     {
-        if (md.loadFromFile(m_sharedData.avatarInfo[i].modelPath))
+        if (!m_sharedData.avatarInfo[i].locked &&
+            md.loadFromFile(m_sharedData.avatarInfo[i].modelPath))
         {
             auto entity = m_avatarScene.createEntity();
             entity.addComponent<cro::Transform>().setOrigin(glm::vec2(-0.34f, 0.f));
@@ -948,7 +967,11 @@ void MenuState::createAvatarScene()
             //list will display an error on the menu and stop
             //the game from being playable.
             m_sharedData.avatarInfo[i].modelPath.clear();
-            LogE << m_sharedData.avatarInfo[i].modelPath << ": model not loaded!" << std::endl;
+
+            if (!m_sharedData.avatarInfo[i].locked)
+            {
+                LogE << m_sharedData.avatarInfo[i].modelPath << ": model not loaded!" << std::endl;
+            }
         }
     }
 
@@ -1140,7 +1163,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         }
 
         auto files = cro::FileSystem::listFiles(avatarPath);
-        processAvatarList(files, avatarPath, avatarPath);
+        processAvatarList(false, files, avatarPath, avatarPath);
         LogI << "Installed remote avatar" << std::endl;
         //this just updates all the textures including the newly acquired
         //avatar data - there's room for optimisation here.

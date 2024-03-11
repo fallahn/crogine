@@ -147,6 +147,7 @@ struct SharedStateData final
         std::string texturePath;
         std::string audioscape;
         std::uint64_t workshopID = 0;
+        bool locked = false;
     };
     std::vector<AvatarInfo> avatarInfo;
 
