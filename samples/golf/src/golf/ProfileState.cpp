@@ -2039,7 +2039,7 @@ void ProfileState::createPalettes(cro::Entity parent)
 
 void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
 {
-    CRO_ASSERT(m_ballPages.size() == page, "");
+    //CRO_ASSERT(m_ballPages.size() == page, "");
     static constexpr glm::vec2 IconSize(BallThumbSize);
     static constexpr float IconPadding = 6.f;
 
@@ -2049,7 +2049,9 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
     const auto RowCount = std::min(BallRowCount, (m_ballModels.size() / BallColCount) + std::min(std::size_t(1), m_ballModels.size() % BallColCount));
     const float ThumbHeight = (RowCount * IconSize.y) + (RowCount * IconPadding) + IconPadding;
 
-
+    const std::size_t RangeStart = page * BallRowCount * BallColCount;
+    const std::size_t RangeEnd = RangeStart + std::min(BallRowCount * BallColCount, m_ballModels.size() - RangeStart);
+    LogI << RangeStart << ", " << RangeEnd << std::endl;
     auto& ballPage = m_ballPages.emplace_back();
     ballPage.background = m_uiScene.createEntity();
     ballPage.background.addComponent<cro::Transform>().setPosition({ (BgWidth - ThumbWidth) / 2.f, 290.f - ThumbHeight, 0.2f});
@@ -2065,12 +2067,12 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
     const glm::vec2 TexSize(m_ballThumbs.getSize());
     cro::FloatRect textureBounds = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / TexSize.x, static_cast<float>(BallThumbSize.y) / TexSize.y };
 
-    for (auto j = 0u; j < m_ballModels.size(); ++j)
+    for (auto j = RangeStart; j < RangeEnd; ++j)
     {
-        std::size_t x = j % BallColCount;
-        std::size_t y = j / BallColCount;
-        textureBounds.left = x * textureBounds.width;
-        textureBounds.bottom = y * textureBounds.height;
+        std::size_t x = (j - RangeStart) % BallColCount;
+        std::size_t y = (j - RangeStart) / BallColCount;
+        textureBounds.left = (j%BallColCount) * textureBounds.width;
+        textureBounds.bottom = (j/BallColCount) * textureBounds.height;
 
         glm::vec2 pos = { x * (IconSize.x + IconPadding), ((RowCount - y) - 1) * (IconSize.y + IconPadding) };
         pos += IconPadding;
@@ -2134,17 +2136,17 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
         });
 
     constexpr std::size_t IndexOffset = 100;
-    for (auto j = 0u; j < m_ballModels.size(); ++j)
+    for (auto j = RangeStart; j < RangeEnd; ++j)
     {
         //the Y order is reversed so that the navigation
         //direction of keys/controller is correct in the grid
-        std::size_t x = j % BallColCount;
-        std::size_t y = (RowCount - 1) - (j / BallColCount);
+        std::size_t x = (j - RangeStart) % BallColCount;
+        std::size_t y = (RowCount - 1) - ((j - RangeStart) / BallColCount);
 
         glm::vec2 pos = { x * (IconSize.x + IconPadding), y * (IconSize.y + IconPadding) };
         pos += IconPadding;
 
-        auto inputIndex = (((RowCount - y) - 1) * BallColCount) + x;
+        auto inputIndex = ((((RowCount - y) - 1) * BallColCount) + x) + RangeStart;
 
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.1f));
@@ -2174,7 +2176,7 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
     }
 
     //pad out missing cols to make column count work
-    const auto PadCount = (BallColCount - (m_ballModels.size() % BallColCount));
+    const auto PadCount = (BallColCount - ((RangeEnd - RangeStart) % BallColCount));
     for (auto j = 0u; j < PadCount; ++j)
     {
         entity = m_uiScene.createEntity();
