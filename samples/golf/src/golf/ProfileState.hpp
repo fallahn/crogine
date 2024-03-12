@@ -160,6 +160,9 @@ private:
         };
     };
     std::array<FlyoutMenu, PaletteID::Count> m_flyouts = {};
+    std::vector<BrowserPage> m_ballPages;
+    std::size_t m_ballPageIndex;
+
     FlyoutMenu m_ballColourFlyout;
     std::size_t m_lastSelected;
 

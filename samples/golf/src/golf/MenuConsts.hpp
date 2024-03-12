@@ -430,6 +430,7 @@ struct FlyoutMenu final
     cro::Entity detail; //could be text, could be colours
     cro::Entity highlight;
 };
+using BrowserPage = FlyoutMenu;
 
 struct HighlightAnimationCallback final
 {

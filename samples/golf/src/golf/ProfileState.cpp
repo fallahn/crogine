@@ -107,7 +107,8 @@ namespace
     constexpr glm::uvec2 AvatarTexSize(130u, 202u);
     constexpr glm::uvec2 MugshotTexSize(192u, 96u);
 
-    constexpr std::size_t BallColCount = 6;
+    constexpr std::size_t BallColCount = 8;
+    constexpr std::size_t BallRowCount = 4;
     constexpr glm::uvec2 BallThumbSize = BallTexSize / 2u;
 
     constexpr glm::vec3 CameraBasePosition({ -0.867f, 1.325f, -1.68f });
@@ -155,6 +156,7 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_ballIndex         (0),
     m_ballHairIndex     (0),
     m_avatarIndex       (0),
+    m_ballPageIndex     (0),
     m_lastSelected      (0),
     m_mugshotUpdated    (false)
 {
@@ -2037,29 +2039,25 @@ void ProfileState::createPalettes(cro::Entity parent)
 
 void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
 {
+    CRO_ASSERT(m_ballPages.size() == page, "");
     static constexpr glm::vec2 IconSize(BallThumbSize);
-    static constexpr float IconPadding = 4.f;
+    static constexpr float IconPadding = 6.f;
 
-    static constexpr float BgWidth = (BallColCount * (IconSize.x + IconPadding)) + IconPadding;
+    static constexpr float ThumbWidth = (BallColCount * (IconSize.x + IconPadding)) + IconPadding;
+    const float BgWidth = parent.getComponent<cro::Sprite>().getTextureBounds().width;
 
-    const auto RowCount = (m_ballModels.size() / BallColCount) + 1;
-    const float BgHeight = (RowCount * IconSize.y) + (RowCount * IconPadding) + IconPadding;
+    const auto RowCount = std::min(BallRowCount, (m_ballModels.size() / BallColCount) + std::min(std::size_t(1), m_ballModels.size() % BallColCount));
+    const float ThumbHeight = (RowCount * IconSize.y) + (RowCount * IconPadding) + IconPadding;
 
-    //background
+
+    auto& ballPage = m_ballPages.emplace_back();
+    ballPage.background = m_uiScene.createEntity();
+    ballPage.background.addComponent<cro::Transform>().setPosition({ (BgWidth - ThumbWidth) / 2.f, 290.f - ThumbHeight, 0.2f});
+    parent.getComponent<cro::Transform>().addChild(ballPage.background.getComponent<cro::Transform>());
+
+    //thumbnails
+    std::vector<cro::Vertex2D> verts;
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(200.f, 46.f, 0.5f));
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-
-    auto verts = createMenuBackground({ BgWidth, BgHeight });
-
-    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
-
-    m_flyouts[PaletteID::BallThumb].background = entity;
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    verts.clear();
-    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     entity.getComponent<cro::Drawable2D>().setTexture(&m_ballThumbs.getTexture());
@@ -2086,32 +2084,34 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
         verts.emplace_back(glm::vec2(pos.x + IconSize.x, pos.y), glm::vec2(textureBounds.left + textureBounds.width, textureBounds.bottom));
     }
     entity.getComponent<cro::Drawable2D>().setVertexData(verts);
-    m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    ballPage.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //highlight
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ IconPadding, IconPadding, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ IconPadding, IconPadding + ((RowCount - 1) * (IconPadding + IconSize.y)), 0.1f});
     entity.addComponent<cro::Drawable2D>().setVertexData(createMenuHighlight(IconSize, TextGoldColour));
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
 
-    m_flyouts[PaletteID::BallThumb].highlight = entity;
-    m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    ballPage.highlight = entity;
+    ballPage.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //buttons
-    auto menuID = MenuID::BallThumb;
+    auto menuID = MenuID::BallSelect;
 
-    m_flyouts[PaletteID::BallThumb].activateCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+    //TODO all pages can use the same activate callback
+    ballPage.activateCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity e, const cro::ButtonEvent& evt)
         {
             auto quitMenu = [&]()
             {
-                m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                /*m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
                 m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
-                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
+                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);*/
+                m_menuEntities[EntityID::BallBrowser].getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             };
 
             if (activated(evt))
@@ -2125,33 +2125,9 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
                 quitMenu();
             }
         });
-    m_flyouts[PaletteID::BallThumb].selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+    ballPage.selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&, entity](cro::Entity e) mutable
         {
-            //test if we intersect the edge of the screen and scroll the flyout vertically
-            auto point = e.getComponent<cro::Transform>().getWorldPosition();
-            auto screenPos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(point);
-            while (screenPos.y < 0)
-            {
-                m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().move({0.f, (IconSize.y + IconPadding)});
-
-                point = e.getComponent<cro::Transform>().getWorldPosition();
-                screenPos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(point);
-            }
-
-            point = e.getComponent<cro::Transform>().getWorldPosition();
-            point.y += IconSize.y;
-            screenPos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(point);
-                
-            while (screenPos.y > cro::App::getWindow().getSize().y)
-            {
-                m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().move({ 0.f, -(IconSize.y + IconPadding) });
-                    
-                point = e.getComponent<cro::Transform>().getWorldPosition();
-                point.y += IconSize.y;
-                screenPos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(point);
-            }
-
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
             m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
             m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
@@ -2190,11 +2166,11 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
             auto nextIndex = inputIndex - ((m_ballModels.size() % BallColCount) - 1);
             entity.getComponent<cro::UIInput>().setNextIndex(IndexOffset + nextIndex);
         }
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_flyouts[PaletteID::BallThumb].selectCallback;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_flyouts[PaletteID::BallThumb].activateCallback;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ballPage.selectCallback;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = ballPage.activateCallback;
         entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(static_cast<std::uint8_t>(inputIndex));
 
-        m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        ballPage.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
     //pad out missing cols to make column count work
@@ -2206,7 +2182,7 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
         entity.addComponent<cro::UIInput>().setGroup(menuID);
         entity.getComponent<cro::UIInput>().enabled = false;
 
-        m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        ballPage.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 }
 
@@ -2255,6 +2231,8 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
     auto bgEnt = createBrowserBackground(MenuID::BallSelect, ctx);
     m_menuEntities[EntityID::BallBrowser] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
+
+    createBallPage(bgEnt, 0);
 
     //calc balls per page
 
