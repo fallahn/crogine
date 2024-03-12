@@ -202,6 +202,9 @@ private:
     void setAvatarIndex(std::size_t);
     void setHairIndex(std::size_t);
     void setBallIndex(std::size_t);
+    void nextBallPage();
+    void prevBallPage();
+    void activateBallPage(std::size_t, bool);
 
     void refreshMugshot();
     void refreshNameString();
