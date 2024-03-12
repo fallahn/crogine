@@ -2178,11 +2178,13 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
         entity.getComponent<cro::UIInput>().setSelectionIndex(IndexOffset + inputIndex);
         if (x == 0)
         {
+            //left hand column
             auto prevIndex = std::min(inputIndex + (BallColCount - 1), m_ballModels.size() - 1);
             entity.getComponent<cro::UIInput>().setPrevIndex(IndexOffset + prevIndex);
         }
         else if (x == (BallColCount - 1))
         {
+            //right hand column
             entity.getComponent<cro::UIInput>().setNextIndex(IndexOffset + (inputIndex - (BallColCount - 1)));
         }
         else if (y == 0 
@@ -2198,19 +2200,6 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
         ballPage.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         ballPage.items.push_back(entity);
     }
-
-    //pad out missing cols to make column count work
-    const auto PadCount = (BallColCount - ((RangeEnd - RangeStart) % BallColCount));
-    for (auto j = 0u; j < PadCount; ++j)
-    {
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::UIInput>().setGroup(menuID);
-        entity.getComponent<cro::UIInput>().enabled = false;
-
-        ballPage.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }
-
 
 
     //hide this page by default
