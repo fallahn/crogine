@@ -127,6 +127,11 @@ struct SharedStateData final
     //available ball models mapped to ID
     struct BallInfo final
     {
+        enum
+        {
+            Regular, Unlock, Custom
+        }type = Regular;
+
         cro::Colour tint;
         std::uint32_t uid = 0;
         std::string modelPath;

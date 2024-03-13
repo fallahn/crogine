@@ -54,6 +54,8 @@ struct BallPreview final
 {
     cro::Entity root;
     cro::Entity ball;
+
+    std::int32_t type = 0;
 };
 
 struct AvatarPreview final

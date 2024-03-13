@@ -1737,14 +1737,16 @@ void ProfileState::buildPreviewScene()
                 e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
             };
         }
-        ++i;
 
         auto& preview = m_ballModels.emplace_back();
         preview.ball = entity;
+        preview.type = m_sharedData.ballInfo[i].type;
         preview.root = m_modelScene.createEntity();
         preview.root.addComponent<cro::Transform>().setPosition(BallPos);
         preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
         preview.root.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
+        
+        ++i;
     }
     
     auto entity = m_modelScene.createEntity();
@@ -2266,18 +2268,46 @@ void ProfileState::createBallThumbs()
     m_modelScene.setActiveCamera(m_cameras[CameraID::Ball]);
     m_modelScene.simulate(0.f);
 
+    const auto& ident = m_resources.textures.get("assets/golf/images/ident.png");
+    cro::SimpleQuad keyIcon(ident);
+    cro::SimpleQuad spannerIcon(ident);
+
+    const auto identSize = glm::vec2(ident.getSize());
+    const cro::FloatRect key(0.f, 0.f, identSize.x / 2.f, identSize.y);
+    const cro::FloatRect spanner(identSize.x / 2.f, 0.f, identSize.x / 2.f, identSize.y);
+    const glm::vec2 iconOffset = glm::vec2(BallThumbSize) - glm::vec2(17.f);
+    keyIcon.setTextureRect(key);
+    spannerIcon.setTextureRect(spanner);
+
     m_ballThumbs.create(TexSize.x, TexSize.y);
     m_ballThumbs.clear(CD32::Colours[CD32::BlueLight]);
 
     for (auto i = 0u; i < m_ballModels.size(); ++i)
     {
-        vp.left = (i % BallColCount) * vp.width;
-        vp.bottom = (i / BallColCount) * vp.height;
+        const auto x = (i % BallColCount);
+        const auto y = (i / BallColCount);
+
+        vp.left = x * vp.width;
+        vp.bottom = y * vp.height;
         cam.viewport = vp;
 
         showBall(i);
+
         m_modelScene.simulate(0.f);
         m_modelScene.render();
+
+        if (m_ballModels[i].type == 1)
+        {
+            //unlocked ball
+            keyIcon.setPosition(glm::vec2(x * BallThumbSize.x, y * BallThumbSize.y) + iconOffset);
+            keyIcon.draw();
+        }
+        else if (m_ballModels[i].type == 2)
+        {
+            //custom model
+            spannerIcon.setPosition(glm::vec2(x * BallThumbSize.x, y * BallThumbSize.y) + iconOffset);
+            spannerIcon.draw();
+        }
     }
 
     m_ballThumbs.display();

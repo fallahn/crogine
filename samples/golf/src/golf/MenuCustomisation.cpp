@@ -252,6 +252,7 @@ void MenuState::createBallScene()
             && cfg.loadFromFile("assets/golf/balls/" + file))
         {
             auto info = readBallCfg(cfg);
+            info.type = SharedStateData::BallInfo::Regular;
 
             //if we didn't find a UID create one from the file name and save it to the cfg
             if (info.uid == 0)
@@ -262,41 +263,6 @@ void MenuState::createBallScene()
             }
 
             insertInfo(info, m_sharedData.ballInfo, true);
-        }
-    }
-
-    //look in the user directory - only do this if the default dir is OK?
-    const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball);
-    if (cro::FileSystem::directoryExists(BallUserPath))
-    {
-        auto dirList = cro::FileSystem::listDirectories(BallUserPath);
-        if (dirList.size() > ConstVal::MaxBalls)
-        {
-            dirList.resize(ConstVal::MaxBalls);
-        }
-
-        for (const auto& dir : dirList)
-        {
-            auto path = BallUserPath + dir + "/" ;
-            auto files = cro::FileSystem::listFiles(path);
-
-            for (const auto& file : files)
-            {
-                if (cro::FileSystem::getFileExtension(file) == ".ball")
-                {
-                    cro::ConfigFile cfg;
-                    if (cfg.loadFromFile(path + file, false))
-                    {
-                        auto info = readBallCfg(cfg);
-                        info.modelPath = path + info.modelPath;
-                        info.workshopID = findWorkshopID(path);
-
-                        insertInfo(info, m_sharedData.ballInfo, false);
-                    }
-
-                    break; //skip the rest of the file list
-                }
-            }
         }
     }
 
@@ -327,6 +293,7 @@ void MenuState::createBallScene()
         if (cfg.loadFromFile(SpecialPaths[i]))
         {
             auto info = readBallCfg(cfg);
+            info.type = SharedStateData::BallInfo::Unlock;
 
             //if we didn't find a UID create one from the file name and save it to the cfg
             if (info.uid == 0)
@@ -373,6 +340,7 @@ void MenuState::createBallScene()
         if (cfg.loadFromFile(LeaguePaths[i]))
         {
             auto info = readBallCfg(cfg);
+            info.type = SharedStateData::BallInfo::Unlock;
 
             if (Leagues[i].getCurrentBest() < 4)
             {
@@ -385,6 +353,47 @@ void MenuState::createBallScene()
             }
         }
     }
+
+
+
+
+
+    //look in the user directory - only do this if the default dir is OK?
+    const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball);
+    if (cro::FileSystem::directoryExists(BallUserPath))
+    {
+        auto dirList = cro::FileSystem::listDirectories(BallUserPath);
+        if (dirList.size() > ConstVal::MaxBalls)
+        {
+            dirList.resize(ConstVal::MaxBalls);
+        }
+
+        for (const auto& dir : dirList)
+        {
+            auto path = BallUserPath + dir + "/";
+            auto files = cro::FileSystem::listFiles(path);
+
+            for (const auto& file : files)
+            {
+                if (cro::FileSystem::getFileExtension(file) == ".ball")
+                {
+                    cro::ConfigFile cfg;
+                    if (cfg.loadFromFile(path + file, false))
+                    {
+                        auto info = readBallCfg(cfg);
+                        info.modelPath = path + info.modelPath;
+                        info.workshopID = findWorkshopID(path);
+                        info.type = SharedStateData::BallInfo::Custom;
+
+                        insertInfo(info, m_sharedData.ballInfo, false);
+                    }
+
+                    break; //skip the rest of the file list
+                }
+            }
+        }
+    }
+
 
 
 
@@ -632,6 +641,43 @@ void MenuState::parseAvatarDirectory()
         }
     }
 
+
+    //unlockable hair from career. We load each file and if it's
+    //unlocked parse it immediately so it's available in the browser
+    //else delay the loading so it's still available to display if
+    //a remote player in a network game is using one.
+    const std::array<std::string, 6u> LeaguePaths =
+    {
+        "assets/golf/career/tier1/01.hct",
+        "assets/golf/career/tier1/02.hct",
+        "assets/golf/career/tier1/03.hct",
+        "assets/golf/career/tier1/04.hct",
+        "assets/golf/career/tier1/05.hct",
+        "assets/golf/career/tier1/06.hct"
+    };
+    std::vector<SharedStateData::HairInfo> delayedEntries;
+
+    for (auto i = 0u; i < LeaguePaths.size(); ++i)
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(LeaguePaths[i]))
+        {
+            auto info = readHairCfg(cfg);
+
+            if (Leagues[i].getCurrentBest() < 3)
+            {
+                insertInfo(info, m_sharedData.hairInfo, true);
+            }
+            else
+            {
+                info.locked = true;
+                delayedEntries.push_back(info);
+            }
+        }
+    }
+
+
+
     const auto userHairPath = Social::getUserContentPath(Social::UserContent::Hair);
     if (cro::FileSystem::directoryExists(userHairPath))
     {
@@ -668,40 +714,6 @@ void MenuState::parseAvatarDirectory()
         }
     }
 
-
-    //unlockable hair from career. We load each file and if it's
-    //unlocked parse it immediately so it's available in the browser
-    //else delay the loading so it's still available to display if
-    //a remote player in a network game is using one.
-    const std::array<std::string, 6u> LeaguePaths =
-    {
-        "assets/golf/career/tier1/01.hct",
-        "assets/golf/career/tier1/02.hct",
-        "assets/golf/career/tier1/03.hct",
-        "assets/golf/career/tier1/04.hct",
-        "assets/golf/career/tier1/05.hct",
-        "assets/golf/career/tier1/06.hct"
-    };
-    std::vector<SharedStateData::HairInfo> delayedEntries;
-    //unlockable hair for league placements
-    for (auto i = 0u; i < LeaguePaths.size(); ++i)
-    {
-        cro::ConfigFile cfg;
-        if (cfg.loadFromFile(LeaguePaths[i]))
-        {
-            auto info = readHairCfg(cfg);
-
-            if (Leagues[i].getCurrentBest() < 3)
-            {
-                insertInfo(info, m_sharedData.hairInfo, true);
-            }
-            else
-            {
-                info.locked = true;
-                delayedEntries.push_back(info);
-            }
-        }
-    }
 
 
 
@@ -1113,6 +1125,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
                     auto info = readBallCfg(cfg);
                     info.modelPath = BallUserPath + info.modelPath;
                     info.workshopID = id;
+                    info.type = SharedStateData::BallInfo::Custom;
 
                     insertInfo(info, m_sharedData.ballInfo, false);
                 }
