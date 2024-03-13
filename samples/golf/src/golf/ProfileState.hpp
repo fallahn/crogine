@@ -60,10 +60,12 @@ struct BallPreview final
 
 struct AvatarPreview final
 {
+    std::int32_t type = 0;
     std::size_t hairIndex = 0; //TODO this doesn't really need to be per model...
     cro::Attachment* hairAttachment = nullptr;
     cro::Entity previewModel;
     std::vector<cro::Entity> previewAudio;
+    std::size_t previewIndex = 0; //actual index may differ because of locked models
 };
 
 class ProfileState final : public cro::State, public cro::GuiClient
@@ -145,6 +147,7 @@ private:
     std::vector<AvatarPreview> m_avatarModels;
     std::vector<cro::Entity> m_avatarHairModels;
     std::size_t m_avatarIndex;
+    std::size_t m_lockedAvatarCount;
 
     std::vector<ProfileTexture> m_profileTextures;
 

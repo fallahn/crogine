@@ -147,6 +147,11 @@ struct SharedStateData final
     //available avatar models mapped to ID
     struct AvatarInfo final
     {
+        enum
+        {
+            Regular, Unlock, Custom
+        }type = Regular;
+
         std::uint32_t uid = 0;
         std::string modelPath;
         std::string texturePath;
@@ -159,6 +164,11 @@ struct SharedStateData final
     //available hair models mapped to ID
     struct HairInfo final
     {
+        enum
+        {
+            Regular, Unlock, Custom
+        }type = Regular;
+
         std::uint32_t uid = 0;
         std::string modelPath;
         std::uint64_t workshopID = 0;

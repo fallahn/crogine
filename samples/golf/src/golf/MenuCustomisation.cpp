@@ -580,10 +580,21 @@ void MenuState::parseAvatarDirectory()
         "ca06.avt",
     };
 
+    auto start = m_sharedData.avatarInfo.size();
     for (auto i = 0u; i < CareerAvatars.size(); ++i)
     {
         processAvatarList(Leagues[i].getCurrentBest() > 1, {CareerAvatars[i]}, CareerPath);
     }
+
+    //if we unlocked any models update the info
+    if (m_sharedData.avatarInfo.size() > start)
+    {
+        for (auto i = start; i < m_sharedData.avatarInfo.size(); ++i)
+        {
+            m_sharedData.avatarInfo[i].type = SharedStateData::AvatarInfo::Unlock;
+        }
+    }
+    start = m_sharedData.avatarInfo.size();
 
     //custom avatars
     auto avatarUserDir = Social::getUserContentPath(Social::UserContent::Avatar);
@@ -598,6 +609,16 @@ void MenuState::parseAvatarDirectory()
             processAvatarList(false, files, resourceDir, resourceDir);
         }
     }
+
+    if (m_sharedData.avatarInfo.size() > start)
+    {
+        for (auto i = start; i < m_sharedData.avatarInfo.size(); ++i)
+        {
+            m_sharedData.avatarInfo[i].type = SharedStateData::AvatarInfo::Custom;
+        }
+    }
+
+
 
 
     //load hair models
@@ -629,6 +650,7 @@ void MenuState::parseAvatarDirectory()
         if (cfg.loadFromFile(HairPath + file))
         {
             auto info = readHairCfg(cfg);
+            info.type = SharedStateData::HairInfo::Regular;
             insertInfo(info, m_sharedData.hairInfo, true);
 
             //if uid is missing write it to cfg - although this doesn't work on apple bundles
@@ -663,6 +685,7 @@ void MenuState::parseAvatarDirectory()
         if (cfg.loadFromFile(LeaguePaths[i]))
         {
             auto info = readHairCfg(cfg);
+            info.type = SharedStateData::HairInfo::Unlock;
 
             if (Leagues[i].getCurrentBest() < 3)
             {
@@ -706,6 +729,7 @@ void MenuState::parseAvatarDirectory()
                     auto info = readHairCfg(cfg);
                     info.modelPath = userPath + info.modelPath;
                     info.workshopID = findWorkshopID(userPath);
+                    info.type = SharedStateData::HairInfo::Custom;
 
                     insertInfo(info, m_sharedData.hairInfo, false);
                     break; //only load one...
@@ -1156,6 +1180,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
                     auto info = readHairCfg(cfg);
                     info.modelPath = HairUserPath + info.modelPath;
                     info.workshopID = id;
+                    info.type = SharedStateData::HairInfo::Custom;
 
                     insertInfo(info, m_sharedData.hairInfo, false);
                 }
@@ -1175,8 +1200,19 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             return;
         }
 
+        auto start = m_sharedData.avatarInfo.size();
         auto files = cro::FileSystem::listFiles(avatarPath);
         processAvatarList(false, files, avatarPath, avatarPath);
+        
+        if (m_sharedData.avatarInfo.size() > start)
+        {
+            for (auto i = start; i < m_sharedData.avatarInfo.size(); ++i)
+            {
+                m_sharedData.avatarInfo[i].type = SharedStateData::AvatarInfo::Custom;
+            }
+        }
+        
+        
         LogI << "Installed remote avatar" << std::endl;
         //this just updates all the textures including the newly acquired
         //avatar data - there's room for optimisation here.

@@ -161,6 +161,7 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_ballIndex         (0),
     m_ballHairIndex     (0),
     m_avatarIndex       (0),
+    m_lockedAvatarCount (0),
     m_ballPageIndex     (0),
     m_lastSelected      (0),
     m_mugshotUpdated    (false)
@@ -1453,6 +1454,78 @@ void ProfileState::buildScene()
     m_menuEntities[EntityID::AvatarPreview] = entity;
     addCorners(bgEnt, entity);
 
+    //displays an icon based on whether the model is custom or built-in etc
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 108.f, 180.f, 0.1f });
+    entity.getComponent<cro::Transform>().setOrigin({ 8.f, 8.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("asset_type");
+    entity.addComponent<cro::SpriteAnimation>();
+
+    struct AnimData final
+    {
+        std::size_t m_lastIndex = 0;
+        float progress = 0.f;
+    };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<AnimData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& [lastIndex, progress] = e.getComponent<cro::Callback>().getUserData<AnimData>();
+            
+            if (m_avatarIndex != lastIndex)
+            {
+                //shrink
+                progress = std::max(0.f, progress - (dt * 6.f));
+                if(progress == 0)
+                {
+                    lastIndex = m_avatarIndex;
+                    e.getComponent<cro::SpriteAnimation>().play(m_avatarModels[m_avatarIndex].type);
+                }
+            }
+            else
+            {
+                if (progress != 1)
+                {
+                    //grow
+                    progress = std::min(1.f, progress + (dt * 6.f));
+                }
+            }
+            const float scale = cro::Util::Easing::easeOutSine(progress);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+        };
+
+    m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //displays the index of the current avatar model
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_avatarTexture.getSize().x / 2, 9.f, 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setString("1/" + std::to_string(m_avatarModels.size() - m_lockedAvatarCount));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::size_t>(0);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            auto& lastIdx = e.getComponent<cro::Callback>().getUserData<std::size_t>();
+            if (m_avatarIndex != lastIdx)
+            {
+                lastIdx = m_avatarIndex;
+                auto str = std::to_string(m_avatarModels[m_avatarIndex].previewIndex) + "/" + std::to_string(m_avatarModels.size() - m_lockedAvatarCount);
+                e.getComponent<cro::Text>().setString(str);
+            }
+        };
+    m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //ball preview
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 279.f, 93.f, 0.1f });
@@ -1547,7 +1620,6 @@ void ProfileState::buildScene()
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonDescUp);
     expandHitbox(entity);
 
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     //bio string
     entity = m_uiScene.createEntity();
@@ -1759,7 +1831,7 @@ void ProfileState::buildPreviewScene()
     m_profileData.grassDef->createModel(entity);
 
     static constexpr glm::vec3 AvatarPos({ CameraBasePosition.x, 0.f, 0.f });
-
+    std::size_t previewIndex = 1;
     for (auto i = 0u; i < m_profileData.avatarDefs.size(); ++i)
     {
         //need to pad this out regardless for correct indexing
@@ -1819,6 +1891,8 @@ void ProfileState::buildPreviewScene()
                 };
 
             avt.previewModel = entity;
+            avt.type = m_sharedData.avatarInfo[i].type;
+            avt.previewIndex = previewIndex++;
 
             //these are unique models from the menu so we'll 
             //need to capture their attachment points once again...
@@ -1835,7 +1909,10 @@ void ProfileState::buildPreviewScene()
 
                 entity.getComponent<cro::Skeleton>().play(entity.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing"));
             }
-
+        }
+        else
+        {
+            m_lockedAvatarCount++;
         }
     }
 
