@@ -202,6 +202,16 @@ private:
     void setAvatarIndex(std::size_t);
     void setHairIndex(std::size_t);
     void setBallIndex(std::size_t);
+
+    struct PageHandles final
+    {
+        cro::Entity prevButton;
+        cro::Entity nextButton;
+        cro::Entity pageCount;
+        std::size_t pageTotal = 1;
+    };
+
+    PageHandles m_ballPageHandles;
     void nextBallPage();
     void prevBallPage();
     void activateBallPage(std::size_t, bool);
