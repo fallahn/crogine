@@ -1538,7 +1538,69 @@ void ProfileState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     addCorners(bgEnt, entity);
+    auto ballEnt = entity;
 
+    //displays an icon based on whether the model is custom or built-in etc
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 74.f, 88.f, 0.1f });
+    entity.getComponent<cro::Transform>().setOrigin({ 8.f, 8.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("asset_type");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<AnimData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& [lastIndex, progress] = e.getComponent<cro::Callback>().getUserData<AnimData>();
+
+            if (m_ballIndex != lastIndex)
+            {
+                //shrink
+                progress = std::max(0.f, progress - (dt * 6.f));
+                if (progress == 0)
+                {
+                    lastIndex = m_ballIndex;
+                    e.getComponent<cro::SpriteAnimation>().play(m_ballModels[m_ballIndex].type);
+                }
+            }
+            else
+            {
+                if (progress != 1)
+                {
+                    //grow
+                    progress = std::min(1.f, progress + (dt * 6.f));
+                }
+            }
+            const float scale = cro::Util::Easing::easeOutSine(progress);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+        };
+    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //displays selected index
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_ballTexture.getSize().x / 2, 9.f, 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setString("1/" + std::to_string(m_ballModels.size()));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::size_t>(0);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            auto& lastIdx = e.getComponent<cro::Callback>().getUserData<std::size_t>();
+            if (m_ballIndex != lastIdx)
+            {
+                lastIdx = m_ballIndex;
+                auto str = std::to_string(m_ballIndex + 1) + "/" + std::to_string(m_ballModels.size());
+                e.getComponent<cro::Text>().setString(str);
+            }
+        };
+    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //mugshot
     entity = m_uiScene.createEntity();
