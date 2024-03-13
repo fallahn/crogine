@@ -4413,7 +4413,7 @@ void MenuState::updateUnlockedItems()
                 if ((avatarFlags & flag) == 0)
                 {
                     avatarFlags |= flag;
-                    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Avatar;
+                    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Avatar01+i;
                 }
             }
         }

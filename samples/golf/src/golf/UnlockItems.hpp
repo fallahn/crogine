@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -94,6 +94,13 @@ namespace ul
             CareerHair05,
             CareerHair06,
 
+            CareerAV01,
+            CareerAV02,
+            CareerAV03,
+            CareerAV04,
+            CareerAV05,
+            CareerAV06,
+
             CareerFirst,
             CareerSecond,
             CareerThird,
@@ -145,6 +152,13 @@ namespace ul
         std::string("assets/golf/models/career/tier1/04.cmt"),
         std::string("assets/golf/models/career/tier1/05.cmt"),
         std::string("assets/golf/models/career/tier1/06.cmt"),
+
+        std::string("assets/golf/models/trophies/c01.cmt"),
+        std::string("assets/golf/models/trophies/c02.cmt"),
+        std::string("assets/golf/models/trophies/c03.cmt"),
+        std::string("assets/golf/models/trophies/c04.cmt"),
+        std::string("assets/golf/models/trophies/c05.cmt"),
+        std::string("assets/golf/models/trophies/c06.cmt"),
 
         std::string("assets/golf/models/trophies/trophy04.cmt"),
         std::string("assets/golf/models/trophies/trophy05.cmt"),
@@ -215,7 +229,12 @@ namespace ul
             Hair05,
             Hair06,
 
-            Avatar,
+            Avatar01,
+            Avatar02,
+            Avatar03,
+            Avatar04,
+            Avatar05,
+            Avatar06,
 
             CareerGold,
             CareerSilver,
@@ -277,7 +296,12 @@ namespace ul
         { ModelID::CareerHair05,  "Fizz!",           "New Headwear!" },
         { ModelID::CareerHair06,  "Head of State",   "New Headwear!" },
 
-        { ModelID::Padlock,  "Unlocked!",   "New Avatar!" },
+        { ModelID::CareerAV01,  "Unlocked!",   "New Avatar!" },
+        { ModelID::CareerAV02,  "Unlocked!",   "New Avatar!" },
+        { ModelID::CareerAV03,  "Unlocked!",   "New Avatar!" },
+        { ModelID::CareerAV04,  "Unlocked!",   "New Avatar!" },
+        { ModelID::CareerAV05,  "Unlocked!",   "New Avatar!" },
+        { ModelID::CareerAV06,  "Unlocked!",   "New Avatar!" },
 
         { ModelID::CareerFirst,   "First Place!",   "New Headwear!" }, //these get overwritten with XP value
         { ModelID::CareerSecond,  "Second Place!",  "New Headwear!" },
