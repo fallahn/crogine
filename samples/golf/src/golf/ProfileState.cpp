@@ -617,6 +617,8 @@ void ProfileState::addSystems()
     m_modelScene.addSystem<cro::CameraSystem>(mb);
     m_modelScene.addSystem<cro::ModelRenderer>(mb);
     m_modelScene.addSystem<cro::ParticleSystem>(mb);
+
+    //m_uiScene.getSystem<cro::UISystem>()->initDebug("Profile UI");
 }
 
 void ProfileState::loadResources()
@@ -2226,11 +2228,12 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
     static constexpr float ThumbWidth = (BallColCount * (IconSize.x + IconPadding)) + IconPadding;
     const float BgWidth = parent.getComponent<cro::Sprite>().getTextureBounds().width;
 
-    const auto RowCount = std::min(BallRowCount, (m_ballModels.size() / BallColCount) + std::min(std::size_t(1), m_ballModels.size() % BallColCount));
-    const float ThumbHeight = (RowCount * IconSize.y) + (RowCount * IconPadding) + IconPadding;
-
     const std::size_t RangeStart = page * BallRowCount * BallColCount;
     const std::size_t RangeEnd = RangeStart + std::min(BallRowCount * BallColCount, m_ballModels.size() - RangeStart);
+    const std::size_t ItemCount = RangeEnd - RangeStart;
+
+    const auto RowCount = std::min(BallRowCount, (ItemCount / BallColCount) + std::min(std::size_t(1), ItemCount % BallColCount));
+    const float ThumbHeight = (RowCount * IconSize.y) + (RowCount * IconPadding) + IconPadding;
 
     auto& ballPage = m_ballPages.emplace_back();
     ballPage.background = m_uiScene.createEntity();
@@ -2341,18 +2344,23 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
         std::size_t upIndex = inputIndex - BallColCount;
         std::size_t downIndex = inputIndex + BallColCount;
 
+        const auto itemsThisRow = std::min(BallColCount, (RangeEnd - RangeStart) - (((RowCount - y) - 1) * BallColCount));
+
         //these might be the same col (eg if there's only 1 entry this page)
         if (x == 0)
         {
             //left hand column
-            leftIndex += BallColCount;
+            leftIndex += itemsThisRow;
         }
-        if (x == (BallColCount - 1))
+        if (x == (itemsThisRow - 1))
         {
             //right hand column
-            rightIndex -= BallColCount;
+            rightIndex -= itemsThisRow;
         }
-        
+        leftIndex += IndexOffset;
+        rightIndex += IndexOffset;
+        upIndex += IndexOffset;
+        downIndex += IndexOffset;
         
         //these might be the same row
         if (y == 0

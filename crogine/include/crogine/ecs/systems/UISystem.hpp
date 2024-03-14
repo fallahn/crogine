@@ -224,8 +224,8 @@ namespace cro
         void selectByIndex(std::size_t index);
 
         /*!
-        \brief Initialised the deug window for this instance if #DEBUG_UI is currently defined
-        \param label unique ID for this instance to identify the debug window
+        \brief Initialise the debug window for this instance if #DEBUG_UI is currently defined
+        \param label unique ID for this instance to identify the debug window (sets the title)
         */
         void initDebug(const std::string& label) const;
 
