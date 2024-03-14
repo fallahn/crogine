@@ -1442,8 +1442,9 @@ void ProfileState::buildScene()
 
 
     //avatar preview
+    glm::vec3 previewPos({ 98.f, 27.f, 0.1f });
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 98.f, 27.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition(previewPos);
     if (!m_sharedData.pixelScale)
     {
         entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f / getViewScale()));
@@ -1456,7 +1457,7 @@ void ProfileState::buildScene()
 
     //displays an icon based on whether the model is custom or built-in etc
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 108.f, 180.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition(previewPos + glm::vec3({ 108.f, 180.f, 0.1f }));
     entity.getComponent<cro::Transform>().setOrigin({ 8.f, 8.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("asset_type");
@@ -1496,16 +1497,16 @@ void ProfileState::buildScene()
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
         };
 
-    m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //displays the index of the current avatar model
     auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_avatarTexture.getSize().x / 2, 9.f, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(previewPos + glm::vec3(65.f, 9.f, 0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -1523,12 +1524,13 @@ void ProfileState::buildScene()
                 e.getComponent<cro::Text>().setString(str);
             }
         };
-    m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //ball preview
+    previewPos = { 279.f, 93.f, 0.1f };
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 279.f, 93.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition(previewPos);
     if (!m_sharedData.pixelScale)
     {
         entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f / getViewScale()));
@@ -1538,11 +1540,10 @@ void ProfileState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     addCorners(bgEnt, entity);
-    auto ballEnt = entity;
 
     //displays an icon based on whether the model is custom or built-in etc
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 74.f, 88.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition(previewPos + glm::vec3({ 74.f, 88.f, 0.1f }));
     entity.getComponent<cro::Transform>().setOrigin({ 8.f, 8.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("asset_type");
@@ -1575,14 +1576,14 @@ void ProfileState::buildScene()
             const float scale = cro::Util::Easing::easeOutSine(progress);
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
         };
-    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //displays selected index
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_ballTexture.getSize().x / 2, 9.f, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(previewPos + glm::vec3(48.f, 9.f, 0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -1600,7 +1601,7 @@ void ProfileState::buildScene()
                 e.getComponent<cro::Text>().setString(str);
             }
         };
-    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //mugshot
     entity = m_uiScene.createEntity();
