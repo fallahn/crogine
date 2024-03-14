@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
 
 #include <functional>
@@ -84,7 +85,7 @@ namespace cro
         static constexpr std::uint32_t CursorExit = CursorEnter - 1; //!< event type when cursor deactivates an input
     };
 
-    class CRO_EXPORT_API UISystem final : public System
+    class CRO_EXPORT_API UISystem final : public System, GuiClient
     {
     public:
         //passes in the entity for whom the callback was triggered and a ButtonEvent
@@ -222,6 +223,12 @@ namespace cro
         */
         void selectByIndex(std::size_t index);
 
+        /*!
+        \brief Initialised the deug window for this instance if #DEBUG_UI is currently defined
+        \param label unique ID for this instance to identify the debug window
+        */
+        void initDebug(const std::string& label) const;
+
     private:
 
         std::vector<ButtonCallback> m_buttonCallbacks;
@@ -274,5 +281,16 @@ namespace cro
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
+
+        struct DebugContext final
+        {
+            std::size_t selectedIndex = 0;
+            std::size_t upIndex = 0;
+            std::size_t downIndex = 0;
+            std::size_t leftIndex = 0;
+            std::size_t rightIndex = 0;
+
+            std::size_t backIndex = 0;
+        }m_debugContext;
     };
 }

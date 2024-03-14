@@ -249,7 +249,7 @@ void CareerState::render()
 void CareerState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);
+    m_scene.addSystem<cro::UISystem>(mb);// ->initDebug("Career UI");
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteAnimator>(mb);
@@ -1078,8 +1078,8 @@ void CareerState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerLeagueBrowser);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerStart);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerProfile, CareerStart);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerStart, CareerOptions);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CareerProfile, CareerOptions);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =

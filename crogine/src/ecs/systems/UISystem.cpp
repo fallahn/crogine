@@ -36,9 +36,18 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+
+#define DEBUG_UI
+
+namespace
+{
+
+}
 
 using namespace cro;
 
@@ -572,6 +581,49 @@ void UISystem::selectByIndex(std::size_t index)
     }
 }
 
+void UISystem::initDebug(const std::string& label) const
+{
+#ifdef DEBUG_UI
+    registerWindow([&, label]()
+        {
+            if (ImGui::Begin(label.c_str()))
+            {
+                if (ImGui::BeginTable("Table", 3))
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text(" ");
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.upIndex);
+                    ImGui::TableNextColumn();
+                    ImGui::Text(" ");
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.leftIndex);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.selectedIndex);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.rightIndex);
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text(" ");
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.downIndex);
+                    ImGui::TableNextColumn();
+                    ImGui::Text(" ");
+
+                    ImGui::EndTable();
+                }
+
+                ImGui::Text("Back: %lu", m_debugContext.backIndex);
+            }
+            ImGui::End();
+        });
+#endif
+}
+
 //private
 glm::vec2 UISystem::toWorldCoords(std::int32_t x, std::int32_t y)
 {
@@ -655,8 +707,12 @@ void UISystem::selectNext(std::size_t stride, std::int32_t direction)
         unselect(old);
         select(m_selectedIndex);
 
-        m_previousIndex = old;
+        m_previousIndex = entities[old].getComponent<UIInput>().getSelectionIndex(); //old;
         m_prevDirection = direction;
+
+#ifdef DEBUG_UI
+        m_debugContext.backIndex = entities[old].getComponent<UIInput>().getSelectionIndex();
+#endif
     }
 }
 
@@ -714,8 +770,12 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
         unselect(old);
         select(m_selectedIndex);
 
-        m_previousIndex = old;
+        m_previousIndex = entities[old].getComponent<UIInput>().getSelectionIndex(); //old;
         m_prevDirection = direction;
+
+#ifdef DEBUG_UI
+        m_debugContext.backIndex = entities[old].getComponent<UIInput>().getSelectionIndex();
+#endif
     }
 }
 
@@ -734,6 +794,18 @@ void UISystem::select(std::size_t entIdx)
     auto& entities = m_groups[m_activeGroup];
     auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Selected];
     m_selectionCallbacks[idx](entities[entIdx]);
+
+#ifdef DEBUG_UI
+    const auto& ui = entities[entIdx].getComponent<UIInput>();
+    m_debugContext.selectedIndex = ui.getSelectionIndex();
+
+    auto [right, down] = ui.getNextIndex();
+    auto [left, up] = ui.getPrevIndex();
+    m_debugContext.downIndex = down;
+    m_debugContext.leftIndex = left;
+    m_debugContext.rightIndex = right;
+    m_debugContext.upIndex = up;
+#endif
 }
 
 void UISystem::updateGroupAssignments()
