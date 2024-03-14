@@ -280,6 +280,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     buildScene();
 
     cacheState(StateID::Credits);
+    //cacheState(StateID::MessageOverlay); //don't cache this else the correct menu isn't created
 }
 
 //public
@@ -3964,13 +3965,13 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
-    auto createHighlight = [&](glm::vec2 pos)
+    auto createHighlight = [&](glm::vec2 pos, const std::string& sprName)
     {
         auto ent = m_scene.createEntity();
         ent.addComponent<cro::Transform>().setPosition(pos);
         ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         ent.addComponent<cro::Drawable2D>();
-        ent.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
+        ent.addComponent<cro::Sprite>() = spriteSheet.getSprite(sprName);
         ent.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         ent.addComponent<cro::UIInput>().setGroup(MenuID::Stats);
         auto bounds = ent.getComponent<cro::Sprite>().getTextureBounds();
@@ -3987,17 +3988,42 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
         return ent;
     };
 
-    auto upHighlight = createHighlight({ cropping.width - 19.f, cropping.height - 19.f });
+    auto upHighlight = createHighlight({ cropping.width - 19.f, cropping.height - 19.f }, "square_highlight");
     upHighlight.getComponent<cro::UIInput>().setSelectionIndex(ScrollUp);
     upHighlight.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollDown);
     upHighlight.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, TabAchievements);
     upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatUp]);
 
-    auto downHighlight = createHighlight({ cropping.width - 19.f, 7.f });
+    auto downHighlight = createHighlight({ cropping.width - 19.f, 7.f }, "square_highlight");
     downHighlight.getComponent<cro::UIInput>().setSelectionIndex(ScrollDown);
-    downHighlight.getComponent<cro::UIInput>().setNextIndex(WindowAdvanced, WindowClose);
-    downHighlight.getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, ScrollUp);
+    downHighlight.getComponent<cro::UIInput>().setNextIndex(WindowAdvanced, ResetStats);
+    downHighlight.getComponent<cro::UIInput>().setPrevIndex(ResetStats, ScrollUp);
     downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatDown]);
+
+    //reset stats button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({cropping.width / 2.f, -16.f, 0.2f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_button");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createHighlight({ cropping.width / 2.f, -16.f }, "reset_button_highlight");
+    entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ResetStats);
+    entity.getComponent<cro::UIInput>().setNextIndex(ScrollDown, WindowApply);
+    entity.getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, ScrollDown);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.errorMessage = "reset_profile";
+                    requestStackPush(StateID::MessageOverlay);
+                }
+            });
+
 }
 
 void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::uint32_t selectedID, std::uint32_t unselectedID, const cro::SpriteSheet& spriteSheet)
@@ -4059,8 +4085,8 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         downRightA = TabAchievements;
         downRightB = ScrollUp;
         upLeftA = TabAV;
-        upLeftB = TabController;
-        upRightA = ScrollDown;
+        upLeftB = ResetStats;
+        upRightA = ResetStats;
         upRightB = ScrollDown;
         break;
     }
