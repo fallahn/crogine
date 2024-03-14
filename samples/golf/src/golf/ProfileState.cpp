@@ -2939,12 +2939,18 @@ void ProfileState::activateBallPage(std::size_t page, bool forceRefresh)
             auto downIndex = m_ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
             m_ballPageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow, downIndex);
 
-            auto rows = m_ballPages[m_ballPageIndex].items.size() / BallColCount;
-            if ((m_ballPages[m_ballPageIndex].items.size() % BallColCount) == 0)
+            itemIndex += BallColCount * 3;
+            while (itemIndex >= m_ballPages[m_ballPageIndex].items.size())
             {
-                rows--;
+                if (itemIndex > BallColCount)
+                {
+                    itemIndex -= BallColCount;
+                }
+                else
+                {
+                    itemIndex = std::min(std::size_t(3), m_ballPages[m_ballPageIndex].items.size() - 1);
+                }
             }
-            itemIndex += (rows * BallColCount);
 
             auto upIndex = m_ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
             m_ballPageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow, upIndex);
@@ -2953,12 +2959,18 @@ void ProfileState::activateBallPage(std::size_t page, bool forceRefresh)
         if (m_ballPageHandles.nextButton.isValid())
         {
             auto itemIndex = std::min(std::size_t(4), m_ballPages[m_ballPageIndex].items.size() - 1);
-            auto rows = m_ballPages[m_ballPageIndex].items.size() / BallColCount;
-            if ((m_ballPages[m_ballPageIndex].items.size() % BallColCount) == 0)
+            itemIndex += BallColCount * 3;
+            while (itemIndex >= m_ballPages[m_ballPageIndex].items.size())
             {
-                rows--;
+                if (itemIndex > BallColCount)
+                {
+                    itemIndex -= BallColCount;
+                }
+                else
+                {
+                    itemIndex = std::min(std::size_t(4), m_ballPages[m_ballPageIndex].items.size() - 1);
+                }
             }
-            itemIndex += (rows * BallColCount);
 
             auto upIndex = m_ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
             m_ballPageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow, upIndex);
@@ -2970,8 +2982,6 @@ void ProfileState::activateBallPage(std::size_t page, bool forceRefresh)
 
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
-
-            //TODO update the prev/next indices of the paging arrows
         }
     }
 }
