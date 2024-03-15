@@ -2344,6 +2344,17 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
         std::size_t upIndex = inputIndex - BallColCount;
         std::size_t downIndex = inputIndex + BallColCount;
 
+        //if moving down takes us off the end of the array
+        //ie the next row isn't complete, skip to the nav arrow
+        if (downIndex > (RangeEnd - 1))
+        {
+            downIndex = x < 4 ? PrevArrow : NextArrow;
+        }
+        else
+        {
+            downIndex += IndexOffset;
+        }
+
         const auto itemsThisRow = std::min(BallColCount, (RangeEnd - RangeStart) - (((RowCount - y) - 1) * BallColCount));
 
         //these might be the same col (eg if there's only 1 entry this page)
@@ -2360,7 +2371,6 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
         leftIndex += IndexOffset;
         rightIndex += IndexOffset;
         upIndex += IndexOffset;
-        downIndex += IndexOffset;
         
         //these might be the same row
         if (y == 0
