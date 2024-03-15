@@ -1115,13 +1115,13 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowClose);
 
     entity = createTab(statsButtonEnt, 0, MenuID::Stats, TabAV);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowAdvanced);
-    entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowCredits);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowCredits);
     entity = createTab(statsButtonEnt, 1, MenuID::Stats, TabController);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, WindowCredits);
-    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowCredits);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, ResetStats);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowAdvanced);
     entity = createTab(statsButtonEnt, 2, MenuID::Stats, TabAchievements);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollUp);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ResetCareer);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);
 
     
@@ -3996,24 +3996,24 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
 
     auto downHighlight = createHighlight({ cropping.width - 19.f, 7.f }, "square_highlight");
     downHighlight.getComponent<cro::UIInput>().setSelectionIndex(ScrollDown);
-    downHighlight.getComponent<cro::UIInput>().setNextIndex(WindowAdvanced, ResetStats);
-    downHighlight.getComponent<cro::UIInput>().setPrevIndex(ResetStats, ScrollUp);
+    downHighlight.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowClose);
+    downHighlight.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, ScrollUp);
     downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatDown]);
 
     //reset stats button
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({cropping.width / 2.f, -16.f, 0.2f});
+    entity.addComponent<cro::Transform>().setPosition({ std::round(cropping.width / 3.f), -16.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_button");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createHighlight({ cropping.width / 2.f, -16.f }, "reset_button_highlight");
+    entity = createHighlight({ std::round(cropping.width / 3.f), -16.f }, "reset_button_highlight");
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetStats);
-    entity.getComponent<cro::UIInput>().setNextIndex(ScrollDown, WindowApply);
-    entity.getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, ScrollDown);
+    entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, TabController);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -4024,6 +4024,30 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
                 }
             });
 
+
+    //reset career button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ std::round((cropping.width / 3.f) * 2.f), -16.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_career");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createHighlight({ std::round((cropping.width / 3.f) * 2.f), -16.f }, "reset_button_highlight");
+    entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ResetCareer);
+    entity.getComponent<cro::UIInput>().setNextIndex(ScrollDown, WindowApply);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, TabAchievements);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.errorMessage = "reset_career";
+                    requestStackPush(StateID::MessageOverlay);
+                }
+            });
 }
 
 void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::uint32_t selectedID, std::uint32_t unselectedID, const cro::SpriteSheet& spriteSheet)
@@ -4086,7 +4110,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         downRightB = ScrollUp;
         upLeftA = TabAV;
         upLeftB = ResetStats;
-        upRightA = ResetStats;
+        upRightA = ResetCareer;
         upRightB = ScrollDown;
         break;
     }

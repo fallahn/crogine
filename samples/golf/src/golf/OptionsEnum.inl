@@ -102,6 +102,7 @@ enum OptionsIndex
     ScrollUp,
     ScrollDown,
     ResetStats,
+    ResetCareer,
 
 
     Window = 1000,

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -481,12 +481,13 @@ void MessageOverlayState::buildScene()
 
         auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(-82.f, -4.f));
+        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, -4.f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\nprogress including all of\nyour XP and all unlocked items.");
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -516,6 +517,59 @@ void MessageOverlayState::buildScene()
                             League league(i);
                             league.reset();
                         }
+                        requestStackClear();
+                        requestStackPush(StateID::SplashScreen);
+                    }
+                });
+
+    }
+    else if (m_sharedData.errorMessage == "reset_career")
+    {
+        entity.getComponent<cro::Text>().setString("Are You REALLY Sure?");
+        centreText(entity);
+
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, -4.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\n career progress including\nall of your unlocked items.");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+        //buttons
+        entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        quitState();
+                    }
+                });
+
+        entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        for (auto i = 0; i < LeagueRoundID::Count; ++i)
+                        {
+                            League league(i);
+                            league.reset();
+                        }
+
+                        Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
+                        Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
+                        Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);
+                        Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);
+
                         requestStackClear();
                         requestStackPush(StateID::SplashScreen);
                     }
