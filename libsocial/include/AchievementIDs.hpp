@@ -151,6 +151,7 @@ namespace AchievementID
         Master12,
 
         SemiRetired,
+        AllTime,
 
         Count
     };
