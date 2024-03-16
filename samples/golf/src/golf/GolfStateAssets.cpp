@@ -1222,9 +1222,17 @@ void GolfState::loadMap()
             }
         }
 
-        //make sure the hole position matches the terrain
+        //make sure the hole/target/tee position matches the terrain
         auto result = m_collisionMesh.getTerrain(hole.pin);
         hole.pin.y = result.height;
+
+        result = m_collisionMesh.getTerrain(hole.target);
+        hole.target.y = result.height;
+
+        result = m_collisionMesh.getTerrain(hole.tee);
+        hole.tee.y = result.height;
+
+
 
         //while we're here check if this is a putting
         //course by looking to see if the tee is on the green
