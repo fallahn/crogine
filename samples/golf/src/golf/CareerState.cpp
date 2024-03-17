@@ -339,12 +339,16 @@ void CareerState::buildScene()
                 currTime = std::max(0.f, currTime - (dt * 2.f));
                 e.getComponent<cro::Transform>().setScale({ m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime) });
 
+
+                //interestingly only clang tells us capturing a structured binding is C++20 (we're using 17)
+                auto ct = currTime;
+
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Menu::TitleText;
                 cmd.action =
-                    [currTime](cro::Entity t, float)
+                    [ct](cro::Entity t, float)
                     {
-                        t.getComponent<cro::Transform>().setScale(glm::vec2(currTime));
+                        t.getComponent<cro::Transform>().setScale(glm::vec2(ct));
                     };
                 m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -1139,7 +1143,6 @@ void CareerState::buildScene()
                 }
             });
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto startEnt = entity;
 
 
     auto updateView = [&, rootNode, bannerEnt](cro::Camera& cam) mutable
@@ -1296,7 +1299,7 @@ void CareerState::createConfirmMenu(cro::Entity parent)
     auto shadeEnt = entity;
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    //const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     //confirmation text
     entity = m_scene.createEntity();
@@ -1689,7 +1692,7 @@ void CareerState::loadConfig()
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
-        cfg.loadFromFile(path);
+        cfg.loadFromFile(path, false);
 
         for (const auto& prop : cfg.getProperties())
         {

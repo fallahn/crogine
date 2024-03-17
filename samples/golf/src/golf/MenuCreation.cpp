@@ -754,7 +754,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         //freeplay
         entity = createButton("Free Play");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {
@@ -771,7 +771,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         //career mode
         entity = createButton("Career");
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-            m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
                 {
                     if (activated(evt))
                     {

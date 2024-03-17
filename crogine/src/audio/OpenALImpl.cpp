@@ -761,7 +761,7 @@ void OpenALImpl::enumerateDevices()
 
             //look for device config and load if found
             ConfigFile cfg;
-            if (cfg.loadFromFile(prefPath))
+            if (cfg.loadFromFile(prefPath, false))
             {
                 const auto& props = cfg.getProperties();
                 for (const auto& prop : props)

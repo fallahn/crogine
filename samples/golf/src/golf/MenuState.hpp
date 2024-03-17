@@ -294,7 +294,7 @@ private:
     
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
-    void processAvatarList(bool locked, const std::vector<std::string>&, const std::string&, const std::string = "");
+    void processAvatarList(bool locked, const std::vector<std::string>&, const std::string&, const std::string = "", bool relativePath = true);
     void createAvatarScene();
     std::int32_t indexFromAvatarID(std::uint32_t);
     void ugcInstalledHandler(std::uint64_t id, std::int32_t type);

@@ -606,7 +606,7 @@ void MenuState::parseAvatarDirectory()
         {
             auto resourceDir = avatarUserDir + dir + "/";
             files = cro::FileSystem::listFiles(resourceDir);
-            processAvatarList(false, files, resourceDir, resourceDir);
+            processAvatarList(false, files, resourceDir, resourceDir, false);
         }
     }
 
@@ -806,7 +806,7 @@ void MenuState::parseAvatarDirectory()
     createAvatarScene();
 }
 
-void MenuState::processAvatarList(bool locked, const std::vector<std::string>& fileList, const std::string& searchPath, const std::string resourcePath)
+void MenuState::processAvatarList(bool locked, const std::vector<std::string>& fileList, const std::string& searchPath, const std::string resourcePath, bool relative)
 {
     //path strings must include trailing "/"!!
     for (const auto& file : fileList)
@@ -814,7 +814,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
         if (cro::FileSystem::getFileExtension(file) == ".avt")
         {
             cro::ConfigFile cfg;
-            if (cfg.loadFromFile(searchPath + file)/*, resourcePath.empty()*/)
+            if (cfg.loadFromFile(searchPath + file, relative))
             {
                 SharedStateData::AvatarInfo info;
 
@@ -828,7 +828,7 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
                         if (!info.modelPath.empty())
                         {
                             cro::ConfigFile modelData;
-                            modelData.loadFromFile(info.modelPath/*, resourcePath.empty()*/);
+                            if (!modelData.loadFromFile(info.modelPath, relative)) LogI << "flaps" << std::endl;
                             for (const auto& o : modelData.getObjects())
                             {
                                 if (o.getName() == "material")
