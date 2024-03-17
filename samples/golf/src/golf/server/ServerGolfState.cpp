@@ -1381,7 +1381,7 @@ void GolfState::buildWorld()
         if (Progress::read(m_sharedData.leagueID, h, scores)
             && h != 0)
         {
-            m_currentHole = std::min(h, m_holeData.size() - 1);
+            m_currentHole = std::min(std::size_t(h), m_holeData.size() - 1);
 
             scores.resize(m_holeData.size());
 

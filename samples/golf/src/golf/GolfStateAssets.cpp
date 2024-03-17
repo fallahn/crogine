@@ -1349,7 +1349,7 @@ void GolfState::loadMap()
             if (h != 0)
             {
                 scores.resize(scoreSize);
-                m_currentHole = std::min(holeStrings.size() - 1, h);
+                m_currentHole = std::min(holeStrings.size() - 1, std::size_t(h));
                 m_terrainBuilder.applyHoleIndex(m_currentHole);
                 
                 auto& player = m_sharedData.connectionData[0].playerData[0];
