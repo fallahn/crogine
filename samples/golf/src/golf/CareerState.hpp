@@ -107,9 +107,13 @@ private:
     std::function<void()> enterConfirmCallback;
     std::function<void()> quitConfirmCallback;
 
+    std::function<void()> enterInfoCallback;
+    std::function<void()> quitInfoCallback;
+
     void addSystems();
     void buildScene();
     void createConfirmMenu(cro::Entity);
+    void createInfoMenu(cro::Entity);
     void createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&);
 
     void selectLeague(std::size_t);
