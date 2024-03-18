@@ -1041,11 +1041,12 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
     //str = "  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n123 Points";
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 368.f, TextTop + 1.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 437.f, TextTop + 1.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(str[1]);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
     m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueText.scores = entity;
 
