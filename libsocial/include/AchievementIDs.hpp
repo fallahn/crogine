@@ -211,6 +211,8 @@ namespace StatID
         PlaysInShowers,
         PlaysInFog,
 
+        DroneHits,
+
         Count
     };
     static_assert(Count <= 64, "Count exceeds maximum number of stats");
@@ -229,12 +231,12 @@ namespace XPID
 }
 static constexpr std::array<std::int32_t, XPID::Count> XPValues =
 {
-    500, 150, 50,  30, 10, 50,
-    50,  100, 200, 300,
-    10,  40,  100
+    500, 250, 100, 50, 10, 100,
+    80, 120, 250, 350,
+    30, 60, 120
 };
 
 static constexpr std::array<std::int32_t, 7u> StreakXP =
 {
-    5,11,18,26,36,50,100
+    15,35,55,80,110,200,320
 };

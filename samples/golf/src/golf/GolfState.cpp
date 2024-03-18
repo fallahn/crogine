@@ -1390,6 +1390,11 @@ void GolfState::handleMessage(const cro::Message& msg)
             Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOneMillion]);
             Social::awardXP(XPValues[XPID::Special] * 5, XPStringID::DroneHit);
 
+            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+            {
+                Achievements::incrementStat(StatStrings[StatID::DroneHits]);
+            }
+
             m_gameScene.destroyEntity(m_drone);
             m_drone = {};
 

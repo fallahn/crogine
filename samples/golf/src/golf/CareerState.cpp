@@ -1715,7 +1715,7 @@ void CareerState::loadConfig()
     }
 }
 
-void CareerState::saveConfig()
+void CareerState::saveConfig() const
 {
     cro::ConfigFile cfg;
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);

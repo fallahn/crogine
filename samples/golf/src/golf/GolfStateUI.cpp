@@ -2066,7 +2066,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     }
     refreshUI();
-
 }
 
 void GolfState::createScoreboard()
@@ -4498,7 +4497,8 @@ void GolfState::updateLeague()
         }
 
         //we assume that as achievments are allowed that
-        //there's only one human player
+        //there's only one human player - though they may not
+        //necessarily be first in the player list
         for (const auto& player : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
         {
             if (!player.isCPU)
@@ -4508,6 +4508,30 @@ void GolfState::updateLeague()
                 //logGameScores(parVals, player.holeScores, m_holeData.size());
 #endif
                 break;
+            }
+        }
+
+        //if this is the final league and the last round
+        if (m_sharedData.leagueRoundID == LeagueRoundID::RoundSix
+            && m_league.getCurrentSeason() > 1) //iterating above will have incremented this on completion
+        {
+            Achievements::awardAchievement(AchievementStrings[AchievementID::SemiRetired]);
+        }
+
+        //if all the leagues are gold...
+        //remember this might happen in any order
+        if (m_league.getCurrentBest() == 1)
+        {
+            std::int32_t bestCount = 0;
+            for (auto i = 0u; i < 6u; ++i)
+            {
+                League l(LeagueRoundID::RoundOne + i);
+                bestCount += l.getCurrentBest();
+            }
+
+            if (bestCount == 6)
+            {
+                Achievements::awardAchievement(AchievementStrings[AchievementID::AllTime]);
             }
         }
     }

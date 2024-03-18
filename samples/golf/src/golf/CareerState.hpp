@@ -50,6 +50,7 @@ class CareerState final : public cro::State
 {
 public:
     CareerState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ~CareerState() { saveConfig(); }
 
     bool handleEvent(const cro::Event&) override;
 
@@ -117,5 +118,5 @@ private:
     void quitState();
 
     void loadConfig();
-    void saveConfig();
+    void saveConfig() const;
 };
