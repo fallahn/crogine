@@ -1616,7 +1616,6 @@ void CareerState::createInfoMenu(cro::Entity parent)
         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
     };
 
-
     enterInfoCallback = [&, confirmEnt, shadeEnt]() mutable
     {
         m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
@@ -1626,6 +1625,47 @@ void CareerState::createInfoMenu(cro::Entity parent)
 
         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
     };
+
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 298.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Welcome To Career Mode!");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    std::string desc = R"(
+Your career is split across 6 leagues, spanning 36 rounds over 12 courses. Each league
+consists of 6 rounds - two on the front 9, two on the back 9 and two rounds played over
+18 holes.
+
+Unlike free play mode you can leave a career round at any time, and resume it again when
+you're ready. Career mode will even remember which hole you're on!
+
+Standard league rules apply (see the league table for more information). Finish the
+league in the top 3 to unlock the next one. You can return to an unlocked league at any
+time if you want to try and improve your score.
+
+Finish in the top 3 to unlock a new ball, top 2 to unlock a new piece of headwear and
+placing number one unlocks a new avatar! Each of these will also be available in free play.
+
+You can reset your career at any time from the Stats page of the Options menu.
+
+Good Luck!
+)";
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 272.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(desc);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void CareerState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet& spriteSheet)
