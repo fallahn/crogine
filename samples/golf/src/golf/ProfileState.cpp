@@ -690,6 +690,7 @@ void ProfileState::buildScene()
                     refreshNameString();
                     refreshSwatch();
                 }
+                m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.ballColour);
                 refreshBio();
             }
             break;
@@ -2348,7 +2349,15 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
         //ie the next row isn't complete, skip to the nav arrow
         if (downIndex > (RangeEnd - 1))
         {
-            downIndex = x < 4 ? PrevArrow : NextArrow;
+            if (m_ballPageHandles.pageTotal > 1)
+            {
+                downIndex = x < 4 ? PrevArrow : NextArrow;
+            }
+            else
+            {
+                //wrap back to top (assumes we never only have one rown on the first page)
+                downIndex -= ((RowCount - 1) * BallColCount);
+            }
         }
         else
         {
@@ -2377,7 +2386,15 @@ void ProfileState::createBallPage(cro::Entity parent, std::int32_t page)
             || RowCount == 1)
         {
             //bottom row
-            downIndex = x < 4 ? PrevArrow : NextArrow;
+            if (m_ballPageHandles.pageTotal > 1)
+            {
+                downIndex = x < 4 ? PrevArrow : NextArrow;
+            }
+            else
+            {
+                //wrap back to top (assumes we never only have one row on the first page)
+                downIndex = (inputIndex - ((RowCount - 1) * BallColCount)) + IndexOffset;
+            }
         }
         if (y == (RowCount - 1)
             || RowCount == 1)
@@ -2551,7 +2568,7 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
     }
 
 
-    //for each page - this test if arrows were created (above)
+    //for each page - this tests if arrows were created (above)
     for (auto i = 0u; i < PageCount; ++i)
     {
         createBallPage(bgEnt, i);
