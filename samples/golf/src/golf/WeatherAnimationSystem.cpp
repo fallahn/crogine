@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -63,7 +63,7 @@ void WeatherAnimationSystem::process(float dt)
 
         for (auto entity : getEntities())
         {
-            auto& anim = entity.getComponent<WeatherAnimation>();
+            const auto& anim = entity.getComponent<WeatherAnimation>();
             entity.getComponent<cro::Transform>().setPosition(anim.basePosition + camPos);
         }
 

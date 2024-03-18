@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -349,10 +349,10 @@ void BilliardsState::sendInitialGameState(std::uint8_t clientID)
         //send all the ball positions
         auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
-        auto& balls = m_scene.getSystem<BPhysSystem>()->getEntities();
+        const auto& balls = m_scene.getSystem<BPhysSystem>()->getEntities();
         for (auto entity : balls)
         {
-            auto& ball = entity.getComponent<BPhysBall>();
+            const auto& ball = entity.getComponent<BPhysBall>();
 
             ActorInfo info;
             info.position = entity.getComponent<cro::Transform>().getPosition();

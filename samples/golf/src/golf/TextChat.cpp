@@ -136,13 +136,13 @@ namespace
 
     struct Emote final
     {
-        Emote(std::vector<std::uint32_t> cp)
+        explicit Emote(const std::vector<std::uint32_t>& cp)
             : codepoint(cp)
         {
             cro::String str;
-            for (auto cp : codepoint)
+            for (auto cpt : codepoint)
             {
-                str += cp;
+                str += cpt;
             }
             auto utf = str.toUtf8();
             icon.resize(utf.size());

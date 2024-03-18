@@ -1844,7 +1844,7 @@ void ProfileState::buildPreviewScene()
 
     //this has all been parsed by the menu state - so we're assuming
     //all the models etc are fine and load without chicken
-    std::int32_t i = 0;
+    std::int32_t c = 0;
     static constexpr glm::vec3 BallPos({ 10.f, 0.f, 0.f });
     for (auto& ballDef : m_profileData.ballDefs)
     {
@@ -1856,7 +1856,7 @@ void ProfileState::buildPreviewScene()
         entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
         entity.addComponent<cro::Callback>().active = true;
 
-        if (m_sharedData.ballInfo[i].rollAnimation)
+        if (m_sharedData.ballInfo[c].rollAnimation)
         {
             entity.getComponent<cro::Callback>().function =
                 [](cro::Entity e, float dt)
@@ -1878,13 +1878,13 @@ void ProfileState::buildPreviewScene()
 
         auto& preview = m_ballModels.emplace_back();
         preview.ball = entity;
-        preview.type = m_sharedData.ballInfo[i].type;
+        preview.type = m_sharedData.ballInfo[c].type;
         preview.root = m_modelScene.createEntity();
         preview.root.addComponent<cro::Transform>().setPosition(BallPos);
         preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
         preview.root.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
         
-        ++i;
+        ++c;
     }
     
     auto entity = m_modelScene.createEntity();
@@ -2022,11 +2022,11 @@ void ProfileState::buildPreviewScene()
                 {
                     if (as.hasEmitter(name))
                     {
-                        auto entity = m_uiScene.createEntity();
-                        entity.addComponent<cro::Transform>();
-                        entity.addComponent<cro::AudioEmitter>() = as.getEmitter(name);
-                        entity.getComponent<cro::AudioEmitter>().setLooped(false);
-                        m_avatarModels[i].previewAudio.push_back(entity);
+                        auto e = m_uiScene.createEntity();
+                        e.addComponent<cro::Transform>();
+                        e.addComponent<cro::AudioEmitter>() = as.getEmitter(name);
+                        e.getComponent<cro::AudioEmitter>().setLooped(false);
+                        m_avatarModels[i].previewAudio.push_back(e);
                     }
                 }
             }
@@ -2038,7 +2038,7 @@ void ProfileState::buildPreviewScene()
     m_ballHairModels.push_back({});
     for (auto& hair : m_profileData.hairDefs)
     {
-        auto entity = m_modelScene.createEntity();
+        entity = m_modelScene.createEntity();
         entity.addComponent<cro::Transform>();
         hair.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);

@@ -150,7 +150,7 @@ namespace
 
                 if (swapData.crowdEnts)
                 {
-                    auto& ents = *swapData.crowdEnts;
+                    const auto& ents = *swapData.crowdEnts;
                     for (auto e : ents)
                     {
                         if (e.isValid())
@@ -824,7 +824,7 @@ void TerrainBuilder::applyTreeQuality()
         bbFlags = RenderFlags::FlightCam;
     }
     
-    for (auto& ents : m_instancedShrubs)
+    for (const auto& ents : m_instancedShrubs)
     {
         for (auto e : ents)
         {
