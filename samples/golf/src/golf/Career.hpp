@@ -71,6 +71,7 @@ public:
 
     const auto& getLeagueData() const { return m_leagues; }
     const auto& getLeagueTables() const { return m_leagueTables; }
+    auto& getLeagueTables() { return m_leagueTables; }
 
     void reset();
 private:

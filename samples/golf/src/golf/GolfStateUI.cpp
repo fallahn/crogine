@@ -33,6 +33,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "Clubs.hpp"
+#include "Career.hpp"
 #include "MenuConsts.hpp"
 #include "CommonConsts.hpp"
 #include "TextAnimCallback.hpp"
@@ -4496,6 +4497,18 @@ void GolfState::updateLeague()
             parVals[i] = m_holeData[i].par;
         }
 
+        League* league = nullptr;
+        League clubLeague(LeagueRoundID::Club);
+
+        if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+        {
+            league = &clubLeague;
+        }
+        else
+        {
+            league = &Career::instance().getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
+        }
+
         //we assume that as achievments are allowed that
         //there's only one human player - though they may not
         //necessarily be first in the player list
@@ -4503,7 +4516,7 @@ void GolfState::updateLeague()
         {
             if (!player.isCPU)
             {
-                m_league.iterate(parVals, player.holeScores, m_holeData.size());
+                league->iterate(parVals, player.holeScores, m_holeData.size());
 #ifdef USE_GNS
                 //logGameScores(parVals, player.holeScores, m_holeData.size());
 #endif
@@ -4513,20 +4526,19 @@ void GolfState::updateLeague()
 
         //if this is the final league and the last round
         if (m_sharedData.leagueRoundID == LeagueRoundID::RoundSix
-            && m_league.getCurrentSeason() > 1) //iterating above will have incremented this on completion
+            && league->getCurrentSeason() > 1) //iterating above will have incremented this on completion
         {
             Achievements::awardAchievement(AchievementStrings[AchievementID::SemiRetired]);
         }
 
         //if all the leagues are gold...
         //remember this might happen in any order
-        if (m_league.getCurrentBest() == 1)
+        if (league->getCurrentBest() == 1)
         {
             std::int32_t bestCount = 0;
             for (auto i = 0u; i < 6u; ++i)
             {
-                League l(LeagueRoundID::RoundOne + i);
-                bestCount += l.getCurrentBest();
+                bestCount += Career::instance().getLeagueTables()[LeagueRoundID::RoundOne + i].getCurrentBest();
             }
 
             if (bestCount == 6)

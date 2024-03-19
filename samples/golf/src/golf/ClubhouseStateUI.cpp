@@ -590,7 +590,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 11.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Bonus Challenge! (500xp)");
+    entity.addComponent<cro::Text>(font).setString("Bonus Challenge! (1000xp)");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });

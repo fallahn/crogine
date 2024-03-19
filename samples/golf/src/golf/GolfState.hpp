@@ -592,7 +592,6 @@ private:
     };
     std::vector<StatBoardEntry> m_statBoardScores;
 
-    League m_league;
     void updateLeague();
 
     struct GamepadNotify final
