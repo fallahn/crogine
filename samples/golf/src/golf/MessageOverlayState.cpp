@@ -510,13 +510,17 @@ void MessageOverlayState::buildScene()
                 {
                     if (activated(evt))
                     {
-                        Social::resetProfile();
+                        //this is a kludge which tells the
+                        //menu state to remove any existing connection/server instance
+                        //if for some reason we're resetting mid-game
+                        m_sharedData.gameMode = GameMode::Tutorial;
 
-                        for (auto i = 0; i < LeagueRoundID::Count; ++i)
-                        {
-                            League league(i);
-                            league.reset();
-                        }
+                        Social::resetProfile();
+                        Career::instance().reset();
+
+                        League l(LeagueRoundID::Club);
+                        l.reset();
+                        
                         requestStackClear();
                         requestStackPush(StateID::SplashScreen);
                     }
@@ -559,11 +563,10 @@ void MessageOverlayState::buildScene()
                 {
                     if (activated(evt))
                     {
-                        /*for (std::int32_t i = LeagueRoundID::RoundOne; i < LeagueRoundID::Count; ++i)
-                        {
-                            League league(i);
-                            league.reset();
-                        }*/
+                        //this is a kludge which tells the
+                        //menu state to remove any existing connection/server instance
+                        //if for some reason we're resetting mid-game
+                        m_sharedData.gameMode = GameMode::Tutorial;
 
                         Career::instance().reset();
 
