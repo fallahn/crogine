@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -102,6 +102,26 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
                     break;
                 }
             }
+
+            //things have changed since this was first implemented
+            //the above *probably* does nothing but is left there
+            //in case removing it breaks something :)
+            //the below case should catch everything from every active state
+            //while the menu is open
+            else
+            {
+                //this is specifically when the animation plays on the career menu
+                switch (data.userType)
+                {
+                default: break;
+                case 3:
+                    playSound(AudioID::Ground, 0.5f);
+                    break;
+                case 4:
+                    playSound(AudioID::Hole, 0.5f);
+                    break;
+                }
+            }
         }
         break;
         }
@@ -112,7 +132,7 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
 void MenuSoundDirector::playSound(std::int32_t id, float vol)
 {
     auto ent = getNextEntity();
-    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+    ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
     ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
     ent.getComponent<cro::AudioEmitter>().setVolume(vol);
     ent.getComponent<cro::AudioEmitter>().play();

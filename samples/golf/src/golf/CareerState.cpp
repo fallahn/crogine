@@ -1513,8 +1513,8 @@ void CareerState::createInfoMenu(cro::Entity parent)
             }
             else
             {
-                data.progress = std::max(0.f, data.progress - (dt * 4.f));
-                scale = cro::Util::Easing::easeOutQuint(data.progress);
+                data.progress = std::max(0.f, data.progress - (dt * 2.f));
+                scale = cro::Util::Easing::easeOutBack(data.progress);
                 if (data.progress == 0)
                 {
                     e.getComponent<cro::Callback>().active = false;
@@ -1665,6 +1665,44 @@ Good Luck!
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //animated decorations
+    spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_sharedData.sharedResources->textures);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) - 19.f, 22.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag_base");
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + 1.f, 27.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    spriteSheet.loadFromFile("assets/golf/sprites/bounce.spt", m_sharedData.sharedResources->textures);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 95.f, 22.f, 0.05f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bounce");
+    entity.getComponent<cro::Sprite>().getAnimations()[0].looped = false;
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(10.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime -= dt;
+            if (currTime < 0.f
+                && m_scene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Info)
+            {
+                currTime += 22.f + cro::Util::Random::value(-4, 3);
+                e.getComponent<cro::SpriteAnimation>().play(0);
+            }
+        };
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
