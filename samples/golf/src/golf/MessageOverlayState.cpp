@@ -36,7 +36,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "Utility.hpp"
 #include "TextAnimCallback.hpp"
-#include "League.hpp"
+#include "Career.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -559,11 +559,13 @@ void MessageOverlayState::buildScene()
                 {
                     if (activated(evt))
                     {
-                        for (auto i = 0; i < LeagueRoundID::Count; ++i)
+                        /*for (std::int32_t i = LeagueRoundID::RoundOne; i < LeagueRoundID::Count; ++i)
                         {
                             League league(i);
                             league.reset();
-                        }
+                        }*/
+
+                        Career::instance().reset();
 
                         Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
                         Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);

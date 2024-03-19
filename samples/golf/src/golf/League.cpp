@@ -95,6 +95,7 @@ namespace
     constexpr std::int32_t SkillRoof = 10; //after this many increments the skills stop getting better - just shift around
     constexpr float BaseQuality = 0.87f;
     constexpr float MinQuality = BaseQuality - 0.07f; //0.01 * PlayerCount/2
+
 }
 
 League::League(std::int32_t id)

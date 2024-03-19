@@ -55,7 +55,6 @@ struct CareerLeague final
 class Career final
 {
 public:
-    Career();
 
     Career(const Career&) = delete;
     Career(Career&&) = delete;
@@ -64,9 +63,18 @@ public:
 
     static constexpr std::uint32_t MaxLeagues = 6;
 
+    static Career& instance()
+    {
+        static Career i;
+        return i;
+    }
+
     const auto& getLeagueData() const { return m_leagues; }
     const auto& getLeagueTables() const { return m_leagueTables; }
+
+    void reset();
 private:
+    Career();
     std::array<CareerLeague, MaxLeagues> m_leagues = {};
     std::vector<League> m_leagueTables;
 };

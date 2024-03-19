@@ -342,7 +342,7 @@ void CareerState::buildScene()
                     {
                         auto idx = m_sharedData.leagueRoundID - LeagueRoundID::RoundOne;
                         if (idx == 0 && m_progressPositions[idx] == 0 //no completed holes
-                            && m_career.getLeagueTables()[idx].getCurrentIteration() == 0)
+                            && Career::instance().getLeagueTables()[idx].getCurrentIteration() == 0)
                         {
                             //if we're on the first league/season show the info
                             enterInfoCallback();
@@ -498,8 +498,8 @@ void CareerState::buildScene()
 
 
     //league items
-    const auto& leagueData = m_career.getLeagueData();
-    const auto& leagueTables = m_career.getLeagueTables();
+    const auto& leagueData = Career::instance().getLeagueData();
+    const auto& leagueTables = Career::instance().getLeagueTables();
     glm::vec3 position = LeagueListPosition;
 
     //active league highlight
@@ -1820,8 +1820,8 @@ void CareerState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&
 
 void CareerState::selectLeague(std::size_t idx)
 {
-    const auto& leagueData = m_career.getLeagueData()[idx];
-    const auto& league = m_career.getLeagueTables()[idx];
+    const auto& leagueData = Career::instance().getLeagueData()[idx];
+    const auto& league = Career::instance().getLeagueTables()[idx];
 
     const auto playlistIdx = league.getCurrentIteration() % Career::MaxLeagues;
     const auto& courseData = m_sharedData.courseData->courseData[leagueData.playlist[playlistIdx].courseID];

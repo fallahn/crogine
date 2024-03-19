@@ -1368,7 +1368,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             if (data.terrain == TerrainID::Fairway)
             {
-                Social::awardXP(1, XPStringID::OnTheFairway);
+                Social::awardXP(2, XPStringID::OnTheFairway);
             }
 
             if (oob)
@@ -1611,7 +1611,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.type == CollisionEvent::NearMiss)
         {
             m_achievementTracker.nearMissChallenge = true;
-            Social::awardXP(1, XPStringID::NearMiss);
+            Social::awardXP(2, XPStringID::NearMiss);
         }
     }
         break;
@@ -3970,7 +3970,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         if (m_achievementTracker.hadBackspin)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::SpinClass]);
-                            Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::BackSpinSkill);
+                            Social::awardXP((XPValues[XPID::Special] * 5) / 2, XPStringID::BackSpinSkill);
                         }
                         else if (m_achievementTracker.hadTopspin)
                         {
@@ -3982,7 +3982,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     //however there's no real way to distinguish atm
                     if (m_sharedData.gimmeRadius == 0)
                     {
-                        Social::awardXP(15, XPStringID::NoGimme);
+                        Social::awardXP(25, XPStringID::NoGimme);
                     }
                 }
 

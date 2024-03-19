@@ -397,7 +397,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             if (data.challengeID > -1 &&
                 data.level == data.reason)
             {
-                Social::awardXP(500, XPStringID::ChallengeComplete);
+                Social::awardXP(1000, XPStringID::ChallengeComplete);
                 Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
             }
         }
@@ -665,12 +665,17 @@ bool GolfGame::initialise()
         {
             if (cro::FileSystem::showMessageBox("Information", "This will reset the leagues and close the game", cro::FileSystem::ButtonType::OK, cro::FileSystem::IconType::Warning))
             {
-                for (auto i = 0u; i < LeagueRoundID::Count; ++i)
+                /*for (auto i = 0u; i < LeagueRoundID::Count; ++i)
                 {
                     League l(i);
                     l.reset();
-                }
+                }*/
                 
+                League l(LeagueRoundID::Club);
+                l.reset();
+
+                Career::instance().reset();
+
                 Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
                 Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
                 Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);

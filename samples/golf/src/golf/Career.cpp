@@ -28,8 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "Career.hpp"
+#include "Input.hpp"
 
 #include <crogine/core/Log.hpp>
+#include <crogine/core/FileSystem.hpp>
 
 namespace
 {
@@ -68,5 +70,21 @@ Career::Career()
         }
 
         m_leagueTables.emplace_back(m_leagues[i].leagueID);
+    }
+}
+
+//public
+void Career::reset()
+{
+    for (auto i = 0u; i < m_leagueTables.size(); ++i)
+    {
+        m_leagueTables[i].reset();
+
+        const auto path = Progress::getFilePath(i + LeagueRoundID::RoundOne);
+        if (cro::FileSystem::fileExists(path))
+        {
+            std::error_code ec;
+            std::filesystem::remove(path, ec);
+        }
     }
 }

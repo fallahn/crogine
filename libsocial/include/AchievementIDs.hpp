@@ -229,14 +229,14 @@ namespace XPID
         Count
     };
 }
-static constexpr std::array<std::int32_t, XPID::Count> XPValues =
+static constexpr inline std::array<std::int32_t, XPID::Count> XPValues =
 {
     500, 250, 100, 50, 10, 100,
     80, 120, 250, 350,
     30, 60, 120
 };
 
-static constexpr std::array<std::int32_t, 7u> StreakXP =
+static constexpr inline std::array<std::int32_t, 7u> StreakXP =
 {
     15,35,55,80,110,200,320
 };
