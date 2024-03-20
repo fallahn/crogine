@@ -505,7 +505,7 @@ void MessageOverlayState::buildScene()
                 });
 
         entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
                     if (activated(evt))
@@ -558,7 +558,7 @@ void MessageOverlayState::buildScene()
                 });
 
         entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
                     if (activated(evt))

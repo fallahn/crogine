@@ -665,12 +665,6 @@ bool GolfGame::initialise()
         {
             if (cro::FileSystem::showMessageBox("Information", "This will reset the leagues and close the game", cro::FileSystem::ButtonType::OK, cro::FileSystem::IconType::Warning))
             {
-                /*for (auto i = 0u; i < LeagueRoundID::Count; ++i)
-                {
-                    League l(i);
-                    l.reset();
-                }*/
-                
                 League l(LeagueRoundID::Club);
                 l.reset();
 
@@ -732,13 +726,13 @@ bool GolfGame::initialise()
     getWindow().setIcon(icon);
     m_renderTarget = &getWindow();
 
-    cro::AudioMixer::setLabel("Music", MixerChannel::Music);
+    cro::AudioMixer::setLabel("Menu Music", MixerChannel::Music);
     cro::AudioMixer::setLabel("Effects", MixerChannel::Effects);
     cro::AudioMixer::setLabel("Menu", MixerChannel::Menu);
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
     cro::AudioMixer::setLabel("Environment", MixerChannel::Environment);
-    cro::AudioMixer::setLabel("User Music", MixerChannel::UserMusic);
+    cro::AudioMixer::setLabel("Game Music", MixerChannel::UserMusic);
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
@@ -750,6 +744,8 @@ bool GolfGame::initialise()
     }
 
     //preload resources which will be used in dynamically loaded menus
+    //TODO now we switched to pre-cached states this is probably unnecessary
+    //though it won't do any harm
     initFonts();
 
     for (const auto& [name, str] : IncludeMappings)
@@ -1392,6 +1388,21 @@ void GolfGame::loadPreferences()
     }
 
     m_sharedData.m3uPlaylist = std::make_unique<M3UPlaylist>(Social::getBaseContentPath() + "music/");
+
+    if (m_sharedData.m3uPlaylist->getTrackCount() == 0)
+    {
+        //look in the fallback dir
+        const auto MusicDir = cro::FileSystem::getResourcePath() + "assets/golf/sound/music/";
+        if (cro::FileSystem::directoryExists(MusicDir))
+        {
+            const auto files = cro::FileSystem::listFiles(MusicDir);
+            for (const auto& file : files)
+            {
+                //this checks the file has a valid extension
+                m_sharedData.m3uPlaylist->addTrack(MusicDir + file);
+            }
+        }
+    }
 }
 
 void GolfGame::savePreferences()
