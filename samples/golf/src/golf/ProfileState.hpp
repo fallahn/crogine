@@ -175,7 +175,7 @@ private:
     void createPalettes(cro::Entity);
     void createBallThumbs();
     void createHairThumbs();
-    void createItemPage(cro::Entity, std::int32_t);
+    void createItemPage(cro::Entity, std::int32_t page, std::int32_t itemID);
 
     //used to pass menu callbacks between creation functions
     struct CallbackContext final
@@ -223,13 +223,20 @@ private:
         std::size_t activateCallback;
     };
 
-    cro::RenderTexture m_ballThumbs;
-    cro::RenderTexture m_hairThumbs;
+    struct PaginationID final
+    {
+        enum
+        {
+            Balls, Hair,
 
-    std::vector<BrowserPage> m_ballPages;
-    std::vector<BrowserPage> m_hairPages;
-    
-    PageHandles m_ballPageHandles;
+            Count
+        };
+    };
+    std::array<PaginatorContext, PaginationID::Count> m_pageContexts = {};
+
+
+    cro::RenderTexture m_hairThumbs;
+    std::vector<BrowserPage> m_hairPages;   
     PageHandles m_hairPageHandles;
 
     std::size_t m_ballPageIndex;

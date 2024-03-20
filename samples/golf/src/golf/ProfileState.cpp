@@ -1767,7 +1767,8 @@ void ProfileState::buildScene()
             bounds.left = bounds.width + left;
             e.getComponent<cro::Sprite>().setTextureRect(bounds);
 
-            for (auto& page : m_ballPages)
+            //TODO we need to know the type of item we're paging
+            for (auto& page : m_pageContexts[PaginationID::Balls].pageList)
             {
                 page.highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
@@ -1785,7 +1786,8 @@ void ProfileState::buildScene()
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::Callback>().active = true;
 
-            for (auto& page : m_ballPages)
+            //TODO get the item ID of what we're paging
+            for (auto& page : m_pageContexts[PaginationID::Balls].pageList)
             {
                 page.highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
@@ -2253,8 +2255,8 @@ void ProfileState::createBallThumbs()
     keyIcon.setTextureRect(key);
     spannerIcon.setTextureRect(spanner);
 
-    m_ballThumbs.create(TexSize.x, TexSize.y);
-    m_ballThumbs.clear(CD32::Colours[CD32::BlueLight]);
+    m_pageContexts[PaginationID::Balls].thumbnailTexture.create(TexSize.x, TexSize.y);
+    m_pageContexts[PaginationID::Balls].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
 
     for (auto i = 0u; i < m_ballModels.size(); ++i)
     {
@@ -2284,7 +2286,7 @@ void ProfileState::createBallThumbs()
         }
     }
 
-    m_ballThumbs.display();
+    m_pageContexts[PaginationID::Balls].thumbnailTexture.display();
 
     cam.viewport = { 0.f, 0.f , 1.f, 1.f };
     showBall(oldIndex);
@@ -2295,15 +2297,9 @@ void ProfileState::createHairThumbs()
 
 }
 
-void ProfileState::createItemPage(cro::Entity parent, std::int32_t page)
+void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::int32_t itemID)
 {
-    //std::vector<BrowserPage> pageList;
-    //cro::RenderTexture thumbnailTexture;
-    //std::size_t menuID;
-    //std::size_t activateCallback;
-    //PageHandles pageHandles
-
-    CRO_ASSERT(m_ballPages.size() == page, "");
+    CRO_ASSERT(m_pageContexts[itemID].pageList.size() == page, "");
     static constexpr glm::vec2 IconSize(BallThumbSize);
     static constexpr float IconPadding = 6.f;
 
@@ -2317,7 +2313,7 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page)
     const auto RowCount = std::min(ThumbRowCount, (ItemCount / ThumbColCount) + std::min(std::size_t(1), ItemCount % ThumbColCount));
     const float ThumbHeight = (RowCount * IconSize.y) + (RowCount * IconPadding) + IconPadding;
 
-    auto& browserPage = m_ballPages.emplace_back();
+    auto& browserPage = m_pageContexts[itemID].pageList.emplace_back();
     browserPage.background = m_uiScene.createEntity();
     browserPage.background.addComponent<cro::Transform>().setPosition({ (BgWidth - ThumbWidth) / 2.f, 290.f - ThumbHeight, 0.2f});
     parent.getComponent<cro::Transform>().addChild(browserPage.background.getComponent<cro::Transform>());
@@ -2327,9 +2323,9 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page)
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    entity.getComponent<cro::Drawable2D>().setTexture(&m_ballThumbs.getTexture());
+    entity.getComponent<cro::Drawable2D>().setTexture(&m_pageContexts[itemID].thumbnailTexture.getTexture());
 
-    const glm::vec2 TexSize(m_ballThumbs.getSize());
+    const glm::vec2 TexSize(m_pageContexts[itemID].thumbnailTexture.getSize());
     cro::FloatRect textureBounds = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / TexSize.x, static_cast<float>(BallThumbSize.y) / TexSize.y };
 
     for (auto j = RangeStart; j < RangeEnd; ++j)
@@ -2365,29 +2361,7 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page)
 
 
     //buttons
-    auto menuID = MenuID::BallSelect;
-
-    //TODO all pages can use the same activate callback
-    browserPage.activateCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity e, const cro::ButtonEvent& evt)
-        {
-            auto quitMenu = [&]()
-            {
-                m_menuEntities[EntityID::BallBrowser].getComponent<cro::Callback>().active = true;
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-            };
-
-            if (activated(evt))
-            {
-                //apply selection
-                setBallIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
-                quitMenu();
-            }
-            else if (deactivated(evt))
-            {
-                quitMenu();
-            }
-        });
+    browserPage.activateCallback = m_pageContexts[PaginationID::Balls].activateCallback;
     browserPage.selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&, entity](cro::Entity e) mutable
         {
@@ -2413,7 +2387,7 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page)
 
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.1f));
-        entity.addComponent<cro::UIInput>().setGroup(menuID);
+        entity.addComponent<cro::UIInput>().setGroup(m_pageContexts[itemID].menuID);
         entity.getComponent<cro::UIInput>().area = { glm::vec2(0.f), IconSize };
         entity.getComponent<cro::UIInput>().setSelectionIndex(IndexOffset + inputIndex);
 
@@ -2426,7 +2400,7 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page)
         //ie the next row isn't complete, skip to the nav arrow
         if (downIndex > (RangeEnd - 1))
         {
-            if (m_ballPageHandles.pageTotal > 1)
+            if (m_pageContexts[itemID].pageHandles.pageTotal > 1)
             {
                 downIndex = x < 4 ? PrevArrow : NextArrow;
             }
@@ -2463,7 +2437,7 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page)
             || RowCount == 1)
         {
             //bottom row
-            if (m_ballPageHandles.pageTotal > 1)
+            if (m_pageContexts[itemID].pageHandles.pageTotal > 1)
             {
                 downIndex = x < 4 ? PrevArrow : NextArrow;
             }
@@ -2531,12 +2505,14 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
     {
         //this func sets up the input callback, and stores
         //UV data in cro::Callback::setUserData() - don't modify this!
-        m_ballPageHandles.prevButton = ctx.createArrow(1);
-        m_ballPageHandles.prevButton.getComponent<cro::UIInput>().setGroup(MenuID::BallSelect);
-        m_ballPageHandles.prevButton.getComponent<cro::UIInput>().setSelectionIndex(PrevArrow);
-        m_ballPageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow);
-        m_ballPageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow);
-        m_ballPageHandles.prevButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        auto& ballPageHandles = m_pageContexts[PaginationID::Balls].pageHandles;
+
+        ballPageHandles.prevButton = ctx.createArrow(1);
+        ballPageHandles.prevButton.getComponent<cro::UIInput>().setGroup(MenuID::BallSelect);
+        ballPageHandles.prevButton.getComponent<cro::UIInput>().setSelectionIndex(PrevArrow);
+        ballPageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow);
+        ballPageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow);
+        ballPageHandles.prevButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&](cro::Entity, const cro::ButtonEvent& evt) 
                 {
@@ -2545,15 +2521,15 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
                         prevBallPage();
                     }
                 });
-        m_ballPageHandles.prevButton.getComponent<cro::Transform>().setPosition(glm::vec2(192.f, 25.f));
-        bgEnt.getComponent<cro::Transform>().addChild(m_ballPageHandles.prevButton.getComponent<cro::Transform>());
+        ballPageHandles.prevButton.getComponent<cro::Transform>().setPosition(glm::vec2(192.f, 25.f));
+        bgEnt.getComponent<cro::Transform>().addChild(ballPageHandles.prevButton.getComponent<cro::Transform>());
 
-        m_ballPageHandles.nextButton = ctx.createArrow(0);
-        m_ballPageHandles.nextButton.getComponent<cro::UIInput>().setGroup(MenuID::BallSelect);
-        m_ballPageHandles.nextButton.getComponent<cro::UIInput>().setSelectionIndex(NextArrow);
-        m_ballPageHandles.nextButton.getComponent<cro::UIInput>().setNextIndex(PrevArrow, CloseButton);
-        m_ballPageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow);
-        m_ballPageHandles.nextButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        ballPageHandles.nextButton = ctx.createArrow(0);
+        ballPageHandles.nextButton.getComponent<cro::UIInput>().setGroup(MenuID::BallSelect);
+        ballPageHandles.nextButton.getComponent<cro::UIInput>().setSelectionIndex(NextArrow);
+        ballPageHandles.nextButton.getComponent<cro::UIInput>().setNextIndex(PrevArrow, CloseButton);
+        ballPageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow);
+        ballPageHandles.nextButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&](cro::Entity, const cro::ButtonEvent& evt)
                 {
@@ -2562,25 +2538,48 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
                         nextBallPage();
                     }
                 });
-        m_ballPageHandles.nextButton.getComponent<cro::Transform>().setPosition(glm::vec2(bgSize.width - 192.f - 16.f, 25.f));
-        bgEnt.getComponent<cro::Transform>().addChild(m_ballPageHandles.nextButton.getComponent<cro::Transform>());
+        ballPageHandles.nextButton.getComponent<cro::Transform>().setPosition(glm::vec2(bgSize.width - 192.f - 16.f, 25.f));
+        bgEnt.getComponent<cro::Transform>().addChild(ballPageHandles.nextButton.getComponent<cro::Transform>());
 
-        m_ballPageHandles.pageTotal = PageCount;
-        m_ballPageHandles.pageCount = m_uiScene.createEntity();
-        m_ballPageHandles.pageCount.addComponent<cro::Transform>().setPosition(glm::vec3(std::floor(bgSize.width / 2.f), 37.f, 0.1f));
-        m_ballPageHandles.pageCount.addComponent<cro::Drawable2D>();
-        m_ballPageHandles.pageCount.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-        m_ballPageHandles.pageCount.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        m_ballPageHandles.pageCount.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-        m_ballPageHandles.pageCount.getComponent<cro::Text>().setString("1/" + std::to_string(PageCount));
-        bgEnt.getComponent<cro::Transform>().addChild(m_ballPageHandles.pageCount.getComponent<cro::Transform>());
+        ballPageHandles.pageTotal = PageCount;
+        ballPageHandles.pageCount = m_uiScene.createEntity();
+        ballPageHandles.pageCount.addComponent<cro::Transform>().setPosition(glm::vec3(std::floor(bgSize.width / 2.f), 37.f, 0.1f));
+        ballPageHandles.pageCount.addComponent<cro::Drawable2D>();
+        ballPageHandles.pageCount.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        ballPageHandles.pageCount.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        ballPageHandles.pageCount.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        ballPageHandles.pageCount.getComponent<cro::Text>().setString("1/" + std::to_string(PageCount));
+        bgEnt.getComponent<cro::Transform>().addChild(ballPageHandles.pageCount.getComponent<cro::Transform>());
     }
 
+
+    m_pageContexts[PaginationID::Balls].menuID = MenuID::BallSelect;
+    m_pageContexts[PaginationID::Balls].activateCallback = 
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            auto quitMenu = [&]()
+                {
+                    m_menuEntities[EntityID::BallBrowser].getComponent<cro::Callback>().active = true;
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                };
+
+            if (activated(evt))
+            {
+                //apply selection
+                setBallIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                quitMenu();
+            }
+            else if (deactivated(evt))
+            {
+                quitMenu();
+            }
+        });
 
     //for each page - this tests if arrows were created (above)
     for (auto i = 0u; i < PageCount; ++i)
     {
-        createItemPage(bgEnt, i);
+        createItemPage(bgEnt, i, PaginationID::Balls);
     }
     activateBallPage(m_ballPageIndex, true);
 }
@@ -2622,9 +2621,6 @@ cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const Cal
 
                 if (currTime == 1)
                 {
-                    /*m_uiScene.getSystem<cro::UISystem>()->setColumnCount(BallColCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(m_ballIndex + 1);*/
-
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(menuID);
                     dir = 1;
                     e.getComponent<cro::Callback>().active = false;
@@ -2933,13 +2929,13 @@ void ProfileState::setBallIndex(std::size_t idx)
 
 void ProfileState::nextBallPage()
 {
-    activateBallPage((m_ballPageIndex + 1) % m_ballPages.size(), false);
+    activateBallPage((m_ballPageIndex + 1) % m_pageContexts[PaginationID::Balls].pageList.size(), false);
     m_uiScene.getSystem<cro::UISystem>()->selectAt(NextArrow);
 }
 
 void ProfileState::prevBallPage()
 {
-    activateBallPage((m_ballPageIndex + (m_ballPages.size() - 1)) % m_ballPages.size(), false);
+    activateBallPage((m_ballPageIndex + (m_pageContexts[PaginationID::Balls].pageList.size() - 1)) % m_pageContexts[PaginationID::Balls].pageList.size(), false);
     m_uiScene.getSystem<cro::UISystem>()->selectAt(PrevArrow);
 }
 
@@ -2948,35 +2944,39 @@ void ProfileState::activateBallPage(std::size_t page, bool forceRefresh)
     if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::BallSelect
         || forceRefresh)
     {
-        m_ballPages[m_ballPageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        m_ballPages[m_ballPageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        for (auto item : m_ballPages[m_ballPageIndex].items)
+        auto& ballPages = m_pageContexts[PaginationID::Balls].pageList;
+
+        ballPages[m_ballPageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        ballPages[m_ballPageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        for (auto item : ballPages[m_ballPageIndex].items)
         {
             item.getComponent<cro::UIInput>().enabled = false;
         }
 
         m_ballPageIndex = page;
 
-        m_ballPages[m_ballPageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_ballPages[m_ballPageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        for (auto item : m_ballPages[m_ballPageIndex].items)
+        ballPages[m_ballPageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        ballPages[m_ballPageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        for (auto item : ballPages[m_ballPageIndex].items)
         {
             item.getComponent<cro::UIInput>().enabled = true;
         }
 
-        if (m_ballPageHandles.pageCount.isValid())
+        auto& ballPageHandles = m_pageContexts[PaginationID::Balls].pageHandles;
+
+        if (ballPageHandles.pageCount.isValid())
         {
-            m_ballPageHandles.pageCount.getComponent<cro::Text>().setString(std::to_string(page + 1) + "/" + std::to_string(m_ballPageHandles.pageTotal));
+            ballPageHandles.pageCount.getComponent<cro::Text>().setString(std::to_string(page + 1) + "/" + std::to_string(ballPageHandles.pageTotal));
         }
 
-        if (m_ballPageHandles.prevButton.isValid())
+        if (ballPageHandles.prevButton.isValid())
         {
-            auto itemIndex = std::min(std::size_t(3), m_ballPages[m_ballPageIndex].items.size() - 1);
-            auto downIndex = m_ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
-            m_ballPageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow, downIndex);
+            auto itemIndex = std::min(std::size_t(3), ballPages[m_ballPageIndex].items.size() - 1);
+            auto downIndex = ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
+            ballPageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow, downIndex);
 
             itemIndex += ThumbColCount * 3;
-            while (itemIndex >= m_ballPages[m_ballPageIndex].items.size())
+            while (itemIndex >= ballPages[m_ballPageIndex].items.size())
             {
                 if (itemIndex > ThumbColCount)
                 {
@@ -2984,19 +2984,19 @@ void ProfileState::activateBallPage(std::size_t page, bool forceRefresh)
                 }
                 else
                 {
-                    itemIndex = std::min(std::size_t(3), m_ballPages[m_ballPageIndex].items.size() - 1);
+                    itemIndex = std::min(std::size_t(3), ballPages[m_ballPageIndex].items.size() - 1);
                 }
             }
 
-            auto upIndex = m_ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
-            m_ballPageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow, upIndex);
+            auto upIndex = ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
+            ballPageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow, upIndex);
         }
 
-        if (m_ballPageHandles.nextButton.isValid())
+        if (ballPageHandles.nextButton.isValid())
         {
-            auto itemIndex = std::min(std::size_t(4), m_ballPages[m_ballPageIndex].items.size() - 1);
+            auto itemIndex = std::min(std::size_t(4), ballPages[m_ballPageIndex].items.size() - 1);
             itemIndex += ThumbColCount * 3;
-            while (itemIndex >= m_ballPages[m_ballPageIndex].items.size())
+            while (itemIndex >= ballPages[m_ballPageIndex].items.size())
             {
                 if (itemIndex > ThumbColCount)
                 {
@@ -3004,17 +3004,17 @@ void ProfileState::activateBallPage(std::size_t page, bool forceRefresh)
                 }
                 else
                 {
-                    itemIndex = std::min(std::size_t(4), m_ballPages[m_ballPageIndex].items.size() - 1);
+                    itemIndex = std::min(std::size_t(4), ballPages[m_ballPageIndex].items.size() - 1);
                 }
             }
 
-            auto upIndex = m_ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
-            m_ballPageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow, upIndex);
+            auto upIndex = ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
+            ballPageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow, upIndex);
         }
 
         if (!forceRefresh)
         {
-            m_uiScene.getSystem<cro::UISystem>()->selectAt(m_ballPages[m_ballPageIndex].items[0].getComponent<cro::UIInput>().getSelectionIndex());
+            m_uiScene.getSystem<cro::UISystem>()->selectAt(ballPages[m_ballPageIndex].items[0].getComponent<cro::UIInput>().getSelectionIndex());
 
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
