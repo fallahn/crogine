@@ -161,10 +161,6 @@ bool CareerState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         }
-        if (evt.key.keysym.sym == SDLK_l)
-        {
-            enterInfoCallback();
-        }
     }
     else if (evt.type == SDL_KEYDOWN)
     {

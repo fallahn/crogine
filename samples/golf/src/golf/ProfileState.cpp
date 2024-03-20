@@ -2072,12 +2072,14 @@ void ProfileState::buildPreviewScene()
         entity.getComponent<cro::Model>().setHidden(true);
         entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.hair);
         m_avatarHairModels.push_back(entity);
-
+        
         entity = m_modelScene.createEntity();
         entity.addComponent<cro::Transform>().setScale(BallHairScale);
         entity.getComponent<cro::Transform>().setOrigin(BallHairOffset);
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.3f);
         hair.createModel(entity);
         entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.hair);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", CD32::Colours[CD32::Brown]);
         entity.getComponent<cro::Model>().setHidden(true);
         m_ballHairModels.push_back(entity);
     }
@@ -2250,9 +2252,9 @@ void ProfileState::createPalettes(cro::Entity parent)
 
 void ProfileState::createItemThumbs()
 {
-    glm::uvec2 TexSize(std::min(ThumbColCount, m_ballModels.size()) * BallThumbSize.x, ((m_ballModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
+    glm::uvec2 texSize(std::min(ThumbColCount, m_ballModels.size()) * BallThumbSize.x, ((m_ballModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
 
-    cro::FloatRect vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / TexSize.x, static_cast<float>(BallThumbSize.y) / TexSize.y };
+    cro::FloatRect vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / texSize.x, static_cast<float>(BallThumbSize.y) / texSize.y };
     auto& cam = m_cameras[CameraID::Ball].getComponent<cro::Camera>();
 
     auto oldIndex = m_ballIndex;
@@ -2280,7 +2282,7 @@ void ProfileState::createItemThumbs()
 
 
     //ball thumbs
-    m_pageContexts[PaginationID::Balls].thumbnailTexture.create(TexSize.x, TexSize.y);
+    m_pageContexts[PaginationID::Balls].thumbnailTexture.create(texSize.x, texSize.y);
     m_pageContexts[PaginationID::Balls].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
 
     for (auto i = 0u; i < m_ballModels.size(); ++i)
@@ -2312,17 +2314,74 @@ void ProfileState::createItemThumbs()
     }
 
     m_pageContexts[PaginationID::Balls].thumbnailTexture.display();
+    showBall(oldIndex);
 
+
+    const auto showHair = [&](std::size_t idx)
+        {
+            //first item is bald so there's no model ent
+            if (m_ballHairModels[idx].isValid())
+            {
+                m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[idx].getComponent<cro::Transform>());
+                m_ballHairModels[idx].getComponent<cro::Model>().setHidden(false);
+            }
+        };
+
+    const auto hideHair = [&](std::size_t idx)
+        {
+            if (m_ballHairModels[idx].isValid())
+            {
+                m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[idx].getComponent<cro::Transform>());
+                m_ballHairModels[idx].getComponent<cro::Model>().setHidden(true);
+                m_modelScene.simulate(0.f);
+            }
+        };
 
     //hair thumbs
-    TexSize = glm::uvec2(std::min(ThumbColCount, m_avatarHairModels.size()) * BallThumbSize.x, ((m_avatarHairModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
-    m_pageContexts[PaginationID::Hair].thumbnailTexture.create(TexSize.x, TexSize.y);
+    texSize = glm::uvec2(std::min(ThumbColCount, m_ballHairModels.size()) * BallThumbSize.x, ((m_ballHairModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
+    vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / texSize.x, static_cast<float>(BallThumbSize.y) / texSize.y };
+
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
+
+    m_pageContexts[PaginationID::Hair].thumbnailTexture.create(texSize.x, texSize.y);
     m_pageContexts[PaginationID::Hair].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
-    //TODO actual rendering
+    
+    for (auto i = 1u; i < m_ballHairModels.size(); ++i)
+    {
+        const auto x = (i % ThumbColCount);
+        const auto y = (i / ThumbColCount);
+
+        vp.left = x * vp.width;
+        vp.bottom = y * vp.height;
+        cam.viewport = vp;
+
+        showHair(i);
+
+        m_modelScene.simulate(0.f);
+        m_modelScene.render();
+
+        hideHair(i);
+
+        //hair info doesn't include bald at the front
+        if (m_sharedData.hairInfo[i-1].type == 1)
+        {
+            //unlocked hair
+            keyIcon.setPosition(glm::vec2(x * BallThumbSize.x, y * BallThumbSize.y) + iconOffset);
+            keyIcon.draw();
+        }
+        else if (m_sharedData.hairInfo[i - 1].type == 2)
+        {
+            //custom model
+            spannerIcon.setPosition(glm::vec2(x * BallThumbSize.x, y * BallThumbSize.y) + iconOffset);
+            spannerIcon.draw();
+        }
+    }
+
     m_pageContexts[PaginationID::Hair].thumbnailTexture.display();
     
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+
     cam.viewport = { 0.f, 0.f , 1.f, 1.f };
-    showBall(oldIndex);
 }
 
 void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::int32_t itemID)

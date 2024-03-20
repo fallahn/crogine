@@ -140,8 +140,8 @@ static constexpr std::int16_t LeftThumbDeadZone = cro::GameController::LeftThumb
 static constexpr std::int16_t RightThumbDeadZone = cro::GameController::RightThumbDeadZone;
 static constexpr std::int16_t TriggerDeadZone = cro::GameController::TriggerDeadZone;
 
-static constexpr glm::vec3 BallHairScale(0.277f);
-static constexpr glm::vec3 BallHairOffset(0.f, 0.04f, -0.007f);
+static constexpr glm::vec3 BallHairScale(0.23f);
+static constexpr glm::vec3 BallHairOffset(0.f, -0.29f, -0.008f);
 
 class btVector3;
 glm::vec3 btToGlm(btVector3 v);
