@@ -221,6 +221,8 @@ private:
         PageHandles pageHandles;
         std::size_t menuID;
         std::size_t activateCallback;
+
+        std::size_t pageIndex = 0;
     };
 
     struct PaginationID final
@@ -234,21 +236,9 @@ private:
     };
     std::array<PaginatorContext, PaginationID::Count> m_pageContexts = {};
 
-
-    cro::RenderTexture m_hairThumbs;
-    std::vector<BrowserPage> m_hairPages;   
-    PageHandles m_hairPageHandles;
-
-    std::size_t m_ballPageIndex;
-    std::size_t m_hairPageIndex;
-
-    void nextBallPage();
-    void prevBallPage();
-    void activateBallPage(std::size_t, bool);
-
-    void nextHairPage();
-    void prevHairPage();
-    void activateHairPage(std::size_t, bool);
+    void nextPage(std::int32_t itemID);
+    void prevPage(std::int32_t itemID);
+    void activatePage(std::int32_t itemID, std::size_t page, bool);
 
     void refreshMugshot();
     void refreshNameString();

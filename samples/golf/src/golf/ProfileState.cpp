@@ -163,8 +163,6 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_avatarIndex       (0),
     m_lockedAvatarCount (0),
     m_lastSelected      (0),
-    m_ballPageIndex     (0),
-    m_hairPageIndex     (0),
     m_mugshotUpdated    (false)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -328,16 +326,30 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             {
             default: break;
             case cro::GameController::ButtonRightShoulder:
-                if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::BallSelect)
+            {
+                const auto group = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
+                if (group == MenuID::BallSelect)
                 {
-                    nextBallPage();
+                    nextPage(PaginationID::Balls);
                 }
+                else if (group == MenuID::HairSelect)
+                {
+                    nextPage(PaginationID::Hair);
+                }
+            }
                 break;
             case cro::GameController::ButtonLeftShoulder:
-                if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::BallSelect)
+            {
+                const auto group = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
+                if (group == MenuID::BallSelect)
                 {
-                    prevBallPage();
+                    prevPage(PaginationID::Balls);
                 }
+                else if (group == MenuID::HairSelect)
+                {
+                    prevPage(PaginationID::Hair);
+                }
+            }
                 break;
             case cro::GameController::ButtonB:
                 quitMenu();
@@ -2518,7 +2530,7 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
                 {
                     if (activated(evt))
                     {
-                        prevBallPage();
+                        prevPage(PaginationID::Balls);
                     }
                 });
         ballPageHandles.prevButton.getComponent<cro::Transform>().setPosition(glm::vec2(192.f, 25.f));
@@ -2535,7 +2547,7 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
                 {
                     if (activated(evt))
                     {
-                        nextBallPage();
+                        nextPage(PaginationID::Balls);
                     }
                 });
         ballPageHandles.nextButton.getComponent<cro::Transform>().setPosition(glm::vec2(bgSize.width - 192.f - 16.f, 25.f));
@@ -2581,7 +2593,7 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
     {
         createItemPage(bgEnt, i, PaginationID::Balls);
     }
-    activateBallPage(m_ballPageIndex, true);
+    activatePage(PaginationID::Balls, m_pageContexts[PaginationID::Balls].pageIndex, true);
 }
 
 void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& ctx)
@@ -2927,56 +2939,61 @@ void ProfileState::setBallIndex(std::size_t idx)
     m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
 }
 
-void ProfileState::nextBallPage()
+void ProfileState::nextPage(std::int32_t itemID)
 {
-    activateBallPage((m_ballPageIndex + 1) % m_pageContexts[PaginationID::Balls].pageList.size(), false);
+    const auto page = (m_pageContexts[itemID].pageIndex + 1) % m_pageContexts[itemID].pageList.size();
+    
+    activatePage(itemID, page, false);
     m_uiScene.getSystem<cro::UISystem>()->selectAt(NextArrow);
 }
 
-void ProfileState::prevBallPage()
+void ProfileState::prevPage(std::int32_t itemID)
 {
-    activateBallPage((m_ballPageIndex + (m_pageContexts[PaginationID::Balls].pageList.size() - 1)) % m_pageContexts[PaginationID::Balls].pageList.size(), false);
+    auto page = (m_pageContexts[itemID].pageIndex + (m_pageContexts[itemID].pageList.size() - 1))
+        % m_pageContexts[itemID].pageList.size();
+    activatePage(itemID, page, false);
     m_uiScene.getSystem<cro::UISystem>()->selectAt(PrevArrow);
 }
 
-void ProfileState::activateBallPage(std::size_t page, bool forceRefresh)
+void ProfileState::activatePage(std::int32_t itemID, std::size_t page, bool forceRefresh)
 {
-    if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::BallSelect
+    if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == m_pageContexts[itemID].menuID
         || forceRefresh)
     {
-        auto& ballPages = m_pageContexts[PaginationID::Balls].pageList;
+        auto& pages = m_pageContexts[itemID].pageList;
+        auto& pageIndex = m_pageContexts[itemID].pageIndex;
 
-        ballPages[m_ballPageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        ballPages[m_ballPageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        for (auto item : ballPages[m_ballPageIndex].items)
+        pages[pageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        pages[pageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        for (auto item : pages[pageIndex].items)
         {
             item.getComponent<cro::UIInput>().enabled = false;
         }
 
-        m_ballPageIndex = page;
+        pageIndex = page;
 
-        ballPages[m_ballPageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        ballPages[m_ballPageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        for (auto item : ballPages[m_ballPageIndex].items)
+        pages[pageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        pages[pageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        for (auto item : pages[pageIndex].items)
         {
             item.getComponent<cro::UIInput>().enabled = true;
         }
 
-        auto& ballPageHandles = m_pageContexts[PaginationID::Balls].pageHandles;
 
-        if (ballPageHandles.pageCount.isValid())
+        auto& pageHandles = m_pageContexts[itemID].pageHandles;
+        if (pageHandles.pageCount.isValid())
         {
-            ballPageHandles.pageCount.getComponent<cro::Text>().setString(std::to_string(page + 1) + "/" + std::to_string(ballPageHandles.pageTotal));
+            pageHandles.pageCount.getComponent<cro::Text>().setString(std::to_string(page + 1) + "/" + std::to_string(pageHandles.pageTotal));
         }
 
-        if (ballPageHandles.prevButton.isValid())
+        if (pageHandles.prevButton.isValid())
         {
-            auto itemIndex = std::min(std::size_t(3), ballPages[m_ballPageIndex].items.size() - 1);
-            auto downIndex = ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
-            ballPageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow, downIndex);
+            auto itemIndex = std::min(std::size_t(3), pages[pageIndex].items.size() - 1);
+            auto downIndex = pages[pageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
+            pageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow, downIndex);
 
             itemIndex += ThumbColCount * 3;
-            while (itemIndex >= ballPages[m_ballPageIndex].items.size())
+            while (itemIndex >= pages[pageIndex].items.size())
             {
                 if (itemIndex > ThumbColCount)
                 {
@@ -2984,19 +3001,19 @@ void ProfileState::activateBallPage(std::size_t page, bool forceRefresh)
                 }
                 else
                 {
-                    itemIndex = std::min(std::size_t(3), ballPages[m_ballPageIndex].items.size() - 1);
+                    itemIndex = std::min(std::size_t(3), pages[pageIndex].items.size() - 1);
                 }
             }
 
-            auto upIndex = ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
-            ballPageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow, upIndex);
+            auto upIndex = pages[pageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
+            pageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow, upIndex);
         }
 
-        if (ballPageHandles.nextButton.isValid())
+        if (pageHandles.nextButton.isValid())
         {
-            auto itemIndex = std::min(std::size_t(4), ballPages[m_ballPageIndex].items.size() - 1);
+            auto itemIndex = std::min(std::size_t(4), pages[pageIndex].items.size() - 1);
             itemIndex += ThumbColCount * 3;
-            while (itemIndex >= ballPages[m_ballPageIndex].items.size())
+            while (itemIndex >= pages[pageIndex].items.size())
             {
                 if (itemIndex > ThumbColCount)
                 {
@@ -3004,109 +3021,17 @@ void ProfileState::activateBallPage(std::size_t page, bool forceRefresh)
                 }
                 else
                 {
-                    itemIndex = std::min(std::size_t(4), ballPages[m_ballPageIndex].items.size() - 1);
+                    itemIndex = std::min(std::size_t(4), pages[pageIndex].items.size() - 1);
                 }
             }
 
-            auto upIndex = ballPages[m_ballPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
-            ballPageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow, upIndex);
+            auto upIndex = pages[pageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
+            pageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow, upIndex);
         }
 
         if (!forceRefresh)
         {
-            m_uiScene.getSystem<cro::UISystem>()->selectAt(ballPages[m_ballPageIndex].items[0].getComponent<cro::UIInput>().getSelectionIndex());
-
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
-        }
-    }
-}
-
-void ProfileState::nextHairPage()
-{
-    activateHairPage((m_hairPageIndex + 1) % m_hairPages.size(), false);
-    m_uiScene.getSystem<cro::UISystem>()->selectAt(NextArrow);
-}
-
-void ProfileState::prevHairPage()
-{
-    activateHairPage((m_hairPageIndex + (m_hairPages.size() - 1)) % m_hairPages.size(), false);
-    m_uiScene.getSystem<cro::UISystem>()->selectAt(PrevArrow);
-}
-
-void ProfileState::activateHairPage(std::size_t page, bool forceRefresh)
-{
-    //TODO this could be refactored to a single func which indexes the browser page needed
-    if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::HairSelect
-        || forceRefresh)
-    {
-        m_hairPages[m_hairPageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        m_hairPages[m_hairPageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        for (auto item : m_hairPages[m_hairPageIndex].items)
-        {
-            item.getComponent<cro::UIInput>().enabled = false;
-        }
-
-        m_hairPageIndex = page;
-
-        m_hairPages[m_hairPageIndex].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        m_hairPages[m_hairPageIndex].highlight.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        for (auto item : m_hairPages[m_hairPageIndex].items)
-        {
-            item.getComponent<cro::UIInput>().enabled = true;
-        }
-
-        if (m_hairPageHandles.pageCount.isValid())
-        {
-            m_hairPageHandles.pageCount.getComponent<cro::Text>().setString(std::to_string(page + 1) + "/" + std::to_string(m_hairPageHandles.pageTotal));
-        }
-
-        if (m_hairPageHandles.prevButton.isValid())
-        {
-            auto itemIndex = std::min(std::size_t(3), m_hairPages[m_hairPageIndex].items.size() - 1);
-            auto downIndex = m_hairPages[m_hairPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
-            m_hairPageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow, downIndex);
-
-            itemIndex += ThumbColCount * 3;
-            while (itemIndex >= m_hairPages[m_hairPageIndex].items.size())
-            {
-                if (itemIndex > ThumbColCount)
-                {
-                    itemIndex -= ThumbColCount;
-                }
-                else
-                {
-                    itemIndex = std::min(std::size_t(3), m_hairPages[m_hairPageIndex].items.size() - 1);
-                }
-            }
-
-            auto upIndex = m_hairPages[m_hairPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
-            m_hairPageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow, upIndex);
-        }
-
-        if (m_hairPageHandles.nextButton.isValid())
-        {
-            auto itemIndex = std::min(std::size_t(4), m_hairPages[m_hairPageIndex].items.size() - 1);
-            itemIndex += ThumbColCount * 3;
-            while (itemIndex >= m_hairPages[m_hairPageIndex].items.size())
-            {
-                if (itemIndex > ThumbColCount)
-                {
-                    itemIndex -= ThumbColCount;
-                }
-                else
-                {
-                    itemIndex = std::min(std::size_t(4), m_hairPages[m_hairPageIndex].items.size() - 1);
-                }
-            }
-
-            auto upIndex = m_hairPages[m_hairPageIndex].items[itemIndex].getComponent<cro::UIInput>().getSelectionIndex();
-            m_hairPageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow, upIndex);
-        }
-
-        if (!forceRefresh)
-        {
-            m_uiScene.getSystem<cro::UISystem>()->selectAt(m_hairPages[m_hairPageIndex].items[0].getComponent<cro::UIInput>().getSelectionIndex());
+            m_uiScene.getSystem<cro::UISystem>()->selectAt(pages[pageIndex].items[0].getComponent<cro::UIInput>().getSelectionIndex());
 
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
