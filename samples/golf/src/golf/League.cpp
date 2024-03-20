@@ -169,6 +169,18 @@ void League::reset()
     m_currentSeason = 1;
     m_playerScore = 0;
     m_increaseCount = 0;
+
+    m_currentPosition = 16;
+    m_currentBest = 15;
+    m_previousPosition = 17;
+
+    const auto path = getFilePath(PrevFileName);
+    if (cro::FileSystem::fileExists(path))
+    {
+        std::error_code ec;
+        std::filesystem::remove(path, ec);
+    }
+
     write();
 }
 
