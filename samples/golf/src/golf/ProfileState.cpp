@@ -310,6 +310,9 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         case SDLK_RIGHT:
             cro::App::getWindow().setMouseCaptured(true);
             break;
+        case SDLK_l:
+            m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+            break;
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
@@ -1760,7 +1763,7 @@ void ProfileState::buildScene()
         [&](std::int32_t left)
         {
             auto ent = m_uiScene.createEntity();
-            ent.addComponent<cro::Transform>();
+            ent.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
             ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
             ent.addComponent<cro::Drawable2D>();
             ent.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite(left ? "arrow_left" : "arrow_right");
@@ -1784,6 +1787,11 @@ void ProfileState::buildScene()
             {
                 page.highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
+            //instead of hacking this here
+            for (auto& page : m_pageContexts[PaginationID::Hair].pageList)
+            {
+                page.highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
         });
     ctx.arrowUnselected = uiSystem.addCallback([](cro::Entity e)
         {
@@ -1800,6 +1808,11 @@ void ProfileState::buildScene()
 
             //TODO get the item ID of what we're paging
             for (auto& page : m_pageContexts[PaginationID::Balls].pageList)
+            {
+                page.highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+            //instead of hacking this here
+            for (auto& page : m_pageContexts[PaginationID::Hair].pageList)
             {
                 page.highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
@@ -2104,8 +2117,7 @@ void ProfileState::buildPreviewScene()
     m_cameras[CameraID::Ball].addComponent<cro::Camera>().resizeCallback = ballTexCallback;
     ballTexCallback(m_cameras[CameraID::Ball].getComponent<cro::Camera>());
 
-    createBallThumbs();
-    createHairThumbs();
+    createItemThumbs();
 
     m_cameras[CameraID::Avatar] = m_modelScene.createEntity();
     m_cameras[CameraID::Avatar].addComponent<cro::Transform>().setPosition(CameraBasePosition);
@@ -2236,10 +2248,9 @@ void ProfileState::createPalettes(cro::Entity parent)
     createPaletteButtons(m_ballColourFlyout, PaletteID::Hair, MenuID::BallColour, (PaletteID::Count * 100) + 200);
 }
 
-void ProfileState::createBallThumbs()
+void ProfileState::createItemThumbs()
 {
-    //I don't even.. wtf
-    const glm::uvec2 TexSize(std::min(ThumbColCount, m_ballModels.size()) * BallThumbSize.x, ((m_ballModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
+    glm::uvec2 TexSize(std::min(ThumbColCount, m_ballModels.size()) * BallThumbSize.x, ((m_ballModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
 
     cro::FloatRect vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / TexSize.x, static_cast<float>(BallThumbSize.y) / TexSize.y };
     auto& cam = m_cameras[CameraID::Ball].getComponent<cro::Camera>();
@@ -2267,6 +2278,8 @@ void ProfileState::createBallThumbs()
     keyIcon.setTextureRect(key);
     spannerIcon.setTextureRect(spanner);
 
+
+    //ball thumbs
     m_pageContexts[PaginationID::Balls].thumbnailTexture.create(TexSize.x, TexSize.y);
     m_pageContexts[PaginationID::Balls].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
 
@@ -2300,13 +2313,16 @@ void ProfileState::createBallThumbs()
 
     m_pageContexts[PaginationID::Balls].thumbnailTexture.display();
 
+
+    //hair thumbs
+    TexSize = glm::uvec2(std::min(ThumbColCount, m_avatarHairModels.size()) * BallThumbSize.x, ((m_avatarHairModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
+    m_pageContexts[PaginationID::Hair].thumbnailTexture.create(TexSize.x, TexSize.y);
+    m_pageContexts[PaginationID::Hair].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
+    //TODO actual rendering
+    m_pageContexts[PaginationID::Hair].thumbnailTexture.display();
+    
     cam.viewport = { 0.f, 0.f , 1.f, 1.f };
     showBall(oldIndex);
-}
-
-void ProfileState::createHairThumbs()
-{
-
 }
 
 void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::int32_t itemID)
@@ -2319,7 +2335,7 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::in
     const float BgWidth = parent.getComponent<cro::Sprite>().getTextureBounds().width;
 
     const std::size_t RangeStart = page * ThumbRowCount * ThumbColCount;
-    const std::size_t RangeEnd = RangeStart + std::min(ThumbRowCount * ThumbColCount, m_ballModels.size() - RangeStart);
+    const std::size_t RangeEnd = RangeStart + std::min(ThumbRowCount * ThumbColCount, m_pageContexts[itemID].itemCount - RangeStart);
     const std::size_t ItemCount = RangeEnd - RangeStart;
 
     const auto RowCount = std::min(ThumbRowCount, (ItemCount / ThumbColCount) + std::min(std::size_t(1), ItemCount % ThumbColCount));
@@ -2373,7 +2389,9 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::in
 
 
     //buttons
-    browserPage.activateCallback = m_pageContexts[PaginationID::Balls].activateCallback;
+    browserPage.activateCallback = m_pageContexts[itemID].activateCallback;
+    
+    //TODO rather than capture this ent use a single callback which indexes into the page items array
     browserPage.selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&, entity](cro::Entity e) mutable
         {
@@ -2565,6 +2583,7 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
     }
 
 
+    m_pageContexts[PaginationID::Balls].itemCount = m_ballModels.size();
     m_pageContexts[PaginationID::Balls].menuID = MenuID::BallSelect;
     m_pageContexts[PaginationID::Balls].activateCallback = 
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2601,6 +2620,111 @@ void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& 
     auto bgEnt = createBrowserBackground(MenuID::HairSelect, ctx);
     m_menuEntities[EntityID::HairBrowser] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto bgSize = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(std::floor(bgSize.width / 2.f), bgSize.height - 38.f, 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Choose Your Headwear");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //calc hair per page
+    static constexpr auto HairPerPage = ThumbColCount * ThumbRowCount;
+
+    //calc number of pages
+    const auto PageCount = (m_avatarHairModels.size() / HairPerPage) + std::min(std::size_t(1), m_avatarHairModels.size() % HairPerPage);
+
+    //add arrows
+    if (PageCount > 1)
+    {
+        //this func sets up the input callback, and stores
+        //UV data in cro::Callback::setUserData() - don't modify this!
+        auto& pageHandles = m_pageContexts[PaginationID::Hair].pageHandles;
+
+        pageHandles.prevButton = ctx.createArrow(1);
+        pageHandles.prevButton.getComponent<cro::UIInput>().setGroup(MenuID::HairSelect);
+        pageHandles.prevButton.getComponent<cro::UIInput>().setSelectionIndex(PrevArrow);
+        pageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow);
+        pageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow);
+        pageHandles.prevButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&](cro::Entity, const cro::ButtonEvent& evt)
+                {
+                    if (activated(evt))
+                    {
+                        prevPage(PaginationID::Hair);
+                    }
+                });
+        pageHandles.prevButton.getComponent<cro::Transform>().setPosition(glm::vec2(192.f, 25.f));
+        bgEnt.getComponent<cro::Transform>().addChild(pageHandles.prevButton.getComponent<cro::Transform>());
+
+        pageHandles.nextButton = ctx.createArrow(0);
+        pageHandles.nextButton.getComponent<cro::UIInput>().setGroup(MenuID::HairSelect);
+        pageHandles.nextButton.getComponent<cro::UIInput>().setSelectionIndex(NextArrow);
+        pageHandles.nextButton.getComponent<cro::UIInput>().setNextIndex(PrevArrow, CloseButton);
+        pageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow);
+        pageHandles.nextButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&](cro::Entity, const cro::ButtonEvent& evt)
+                {
+                    if (activated(evt))
+                    {
+                        nextPage(PaginationID::Hair);
+                    }
+                });
+        pageHandles.nextButton.getComponent<cro::Transform>().setPosition(glm::vec2(bgSize.width - 192.f - 16.f, 25.f));
+        bgEnt.getComponent<cro::Transform>().addChild(pageHandles.nextButton.getComponent<cro::Transform>());
+
+        pageHandles.pageTotal = PageCount;
+        pageHandles.pageCount = m_uiScene.createEntity();
+        pageHandles.pageCount.addComponent<cro::Transform>().setPosition(glm::vec3(std::floor(bgSize.width / 2.f), 37.f, 0.1f));
+        pageHandles.pageCount.addComponent<cro::Drawable2D>();
+        pageHandles.pageCount.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        pageHandles.pageCount.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        pageHandles.pageCount.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        pageHandles.pageCount.getComponent<cro::Text>().setString("1/" + std::to_string(PageCount));
+        bgEnt.getComponent<cro::Transform>().addChild(pageHandles.pageCount.getComponent<cro::Transform>());
+    }
+
+
+    m_pageContexts[PaginationID::Hair].itemCount = m_avatarHairModels.size();
+    m_pageContexts[PaginationID::Hair].menuID = MenuID::HairSelect;
+    m_pageContexts[PaginationID::Hair].activateCallback =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                auto quitMenu = [&]()
+                    {
+                        m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    };
+
+                if (activated(evt))
+                {
+                    //apply selection
+                    setHairIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                    quitMenu();
+                }
+                else if (deactivated(evt))
+                {
+                    quitMenu();
+                }
+            });
+
+    //for each page - this tests if arrows were created (above)
+    for (auto i = 0u; i < PageCount; ++i)
+    {
+        createItemPage(bgEnt, i, PaginationID::Hair);
+    }
+    activatePage(PaginationID::Hair, m_pageContexts[PaginationID::Hair].pageIndex, true);
 }
 
 cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const CallbackContext& ctx)

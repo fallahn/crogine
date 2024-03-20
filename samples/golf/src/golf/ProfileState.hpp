@@ -173,8 +173,7 @@ private:
     void buildScene();
     void buildPreviewScene();
     void createPalettes(cro::Entity);
-    void createBallThumbs();
-    void createHairThumbs();
+    void createItemThumbs();
     void createItemPage(cro::Entity, std::int32_t page, std::int32_t itemID);
 
     //used to pass menu callbacks between creation functions
@@ -223,6 +222,7 @@ private:
         std::size_t activateCallback;
 
         std::size_t pageIndex = 0;
+        std::size_t itemCount = 0;
     };
 
     struct PaginationID final

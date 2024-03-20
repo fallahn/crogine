@@ -264,7 +264,6 @@ void GolfState::buildUI()
         cam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Composite];
     }
 
-
     auto courseEnt = entity;
     m_courseEnt = courseEnt;
 
