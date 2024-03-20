@@ -61,7 +61,7 @@ namespace
 
     const cro::Time ResendTime = cro::seconds(1.5f);
 
-    const std::array<std::string, 12u> ApplaudStrings =
+    const std::array<std::string, 14u> ApplaudStrings =
     {
         "/me applauds",
         "/me nods in appreciation",
@@ -74,7 +74,9 @@ namespace
         "/me feels a bit star-struck",
         "/me ovates (which means applauding.)",
         "/me raises a glass of Fizz",
-        "/me now knows what a true hero looks like"
+        "/me now knows what a true hero looks like",
+        "/me whoops and hollers from the crowd",
+        "/me asks for a selfie"
     };
 
     const std::array<std::string, 17u> HappyStrings =
@@ -98,7 +100,7 @@ namespace
         "/me lets out a squeak"
     };
 
-    const std::array<std::string, 11u> LaughStrings =
+    const std::array<std::string, 14u> LaughStrings =
     {
         "/me laughs like a clogged drain",
         "/me giggles into their sleeve",
@@ -110,7 +112,10 @@ namespace
         "/me can't contain themselves",
         "/me howls with laughter",
         "/me goes into hysterics",
-        "/me cachinnates (which means laughing loudly)"
+        "/me cachinnates (which means laughing loudly)",
+        "/me buries a snort",
+        "/me brays like a mule",
+        "/me cackles like a crone"
     };
 
     const std::array<std::string, 17u> AngerStrings =

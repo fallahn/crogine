@@ -142,7 +142,6 @@ private:
     std::vector<cro::Entity> m_ballHairModels;
     std::size_t m_ballIndex;
     std::size_t m_ballHairIndex;
-    cro::RenderTexture m_ballThumbs;
 
     std::vector<AvatarPreview> m_avatarModels;
     std::vector<cro::Entity> m_avatarHairModels;
@@ -165,10 +164,8 @@ private:
         };
     };
     std::array<FlyoutMenu, PaletteID::Count> m_flyouts = {};
-    std::vector<BrowserPage> m_ballPages;
-    std::size_t m_ballPageIndex;
-
     FlyoutMenu m_ballColourFlyout;
+
     std::size_t m_lastSelected;
 
     void addSystems();
@@ -176,8 +173,9 @@ private:
     void buildScene();
     void buildPreviewScene();
     void createPalettes(cro::Entity);
-    void createBallPage(cro::Entity, std::int32_t);
     void createBallThumbs();
+    void createHairThumbs();
+    void createItemPage(cro::Entity, std::int32_t);
 
     //used to pass menu callbacks between creation functions
     struct CallbackContext final
@@ -216,10 +214,34 @@ private:
         std::size_t pageTotal = 1;
     };
 
+    struct PaginatorContext final
+    {
+        cro::RenderTexture thumbnailTexture;
+        std::vector<BrowserPage> pageList;
+        PageHandles pageHandles;
+        std::size_t menuID;
+        std::size_t activateCallback;
+    };
+
+    cro::RenderTexture m_ballThumbs;
+    cro::RenderTexture m_hairThumbs;
+
+    std::vector<BrowserPage> m_ballPages;
+    std::vector<BrowserPage> m_hairPages;
+    
     PageHandles m_ballPageHandles;
+    PageHandles m_hairPageHandles;
+
+    std::size_t m_ballPageIndex;
+    std::size_t m_hairPageIndex;
+
     void nextBallPage();
     void prevBallPage();
     void activateBallPage(std::size_t, bool);
+
+    void nextHairPage();
+    void prevHairPage();
+    void activateHairPage(std::size_t, bool);
 
     void refreshMugshot();
     void refreshNameString();
