@@ -780,16 +780,26 @@ void MenuState::parseAvatarDirectory()
     //for every profile create a texture for the preview
     for (auto& profile : m_profileData.playerProfiles)
     {
-        if (profile.skinID == 0)
+        //make sure the profile avatar is actually available
+        auto skinIndex = indexFromAvatarID(profile.skinID);
+        if (profile.skinID == 0
+            || m_sharedData.avatarInfo[skinIndex].locked)
         {
             //use first valid skin
             profile.skinID = m_sharedData.avatarInfo[0].uid;
         }
 
+        //and the hair
+        auto hairIndex = indexFromHairID(profile.hairID);
+        if (m_sharedData.hairInfo[hairIndex].locked)
+        {
+            profile.hairID = m_sharedData.hairInfo[0].uid;
+        }
+
         //compare against list of unlocked balls and make sure we're in it
         auto ballID = indexFromBallID(profile.ballID);
         if (ballID >= m_profileData.ballDefs.size()
-            || ballID == -1)
+            || m_sharedData.ballInfo[ballID].locked)
         {
             profile.ballID = 0;
         }
