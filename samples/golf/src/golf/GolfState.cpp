@@ -3952,7 +3952,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         {
                             Achievements::incrementStat(StatStrings[StatID::LongPutts]);
                             Achievements::awardAchievement(AchievementStrings[AchievementID::PuttStar]);
-                            Social::awardXP(XPValues[XPID::Special] / 2, XPStringID::LongPutt);
+                            Social::awardXP((XPValues[XPID::Special] / 4) * 3, XPStringID::LongPutt);
                             Social::getMonthlyChallenge().updateChallenge(ChallengeID::One, 0);
                             special = true;
                         }
