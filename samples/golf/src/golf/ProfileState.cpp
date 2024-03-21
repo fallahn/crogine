@@ -103,6 +103,8 @@ namespace
         };
     };
     
+    constexpr std::uint32_t ThumbTextureScale = 4;
+
     //UI selection indices
     constexpr std::size_t PrevArrow = 2000;
     constexpr std::size_t NextArrow = 2001;
@@ -2253,8 +2255,9 @@ void ProfileState::createPalettes(cro::Entity parent)
 void ProfileState::createItemThumbs()
 {
     glm::uvec2 texSize(std::min(ThumbColCount, m_ballModels.size()) * BallThumbSize.x, ((m_ballModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
+    texSize *= ThumbTextureScale;
 
-    cro::FloatRect vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / texSize.x, static_cast<float>(BallThumbSize.y) / texSize.y };
+    cro::FloatRect vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x * ThumbTextureScale) / texSize.x, static_cast<float>(BallThumbSize.y * ThumbTextureScale) / texSize.y };
     auto& cam = m_cameras[CameraID::Ball].getComponent<cro::Camera>();
 
     auto oldIndex = m_ballIndex;
@@ -2276,9 +2279,11 @@ void ProfileState::createItemThumbs()
     const auto identSize = glm::vec2(ident.getSize());
     const cro::FloatRect key(0.f, 0.f, identSize.x / 2.f, identSize.y);
     const cro::FloatRect spanner(identSize.x / 2.f, 0.f, identSize.x / 2.f, identSize.y);
-    const glm::vec2 iconOffset = glm::vec2(BallThumbSize) - glm::vec2(17.f);
+    const glm::vec2 iconOffset = (glm::vec2(BallThumbSize) - glm::vec2(17.f)) * ThumbTextureScale;
     keyIcon.setTextureRect(key);
+    keyIcon.setScale(glm::vec2(ThumbTextureScale));
     spannerIcon.setTextureRect(spanner);
+    spannerIcon.setScale(glm::vec2(ThumbTextureScale));
 
 
     //ball thumbs
@@ -2302,13 +2307,13 @@ void ProfileState::createItemThumbs()
         if (m_ballModels[i].type == 1)
         {
             //unlocked ball
-            keyIcon.setPosition(glm::vec2(x * BallThumbSize.x, y * BallThumbSize.y) + iconOffset);
+            keyIcon.setPosition(glm::vec2(x * BallThumbSize.x * ThumbTextureScale, y * BallThumbSize.y * ThumbTextureScale) + iconOffset);
             keyIcon.draw();
         }
         else if (m_ballModels[i].type == 2)
         {
             //custom model
-            spannerIcon.setPosition(glm::vec2(x * BallThumbSize.x, y * BallThumbSize.y) + iconOffset);
+            spannerIcon.setPosition(glm::vec2(x * BallThumbSize.x * ThumbTextureScale, y * BallThumbSize.y * ThumbTextureScale) + iconOffset);
             spannerIcon.draw();
         }
     }
@@ -2339,7 +2344,8 @@ void ProfileState::createItemThumbs()
 
     //hair thumbs
     texSize = glm::uvec2(std::min(ThumbColCount, m_ballHairModels.size()) * BallThumbSize.x, ((m_ballHairModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
-    vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / texSize.x, static_cast<float>(BallThumbSize.y) / texSize.y };
+    texSize *= ThumbTextureScale;
+    vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x * ThumbTextureScale) / texSize.x, static_cast<float>(BallThumbSize.y * ThumbTextureScale) / texSize.y };
 
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
 
@@ -2366,13 +2372,13 @@ void ProfileState::createItemThumbs()
         if (m_sharedData.hairInfo[i-1].type == 1)
         {
             //unlocked hair
-            keyIcon.setPosition(glm::vec2(x * BallThumbSize.x, y * BallThumbSize.y) + iconOffset);
+            keyIcon.setPosition(glm::vec2(x * BallThumbSize.x * ThumbTextureScale, y * BallThumbSize.y * ThumbTextureScale) + iconOffset);
             keyIcon.draw();
         }
         else if (m_sharedData.hairInfo[i - 1].type == 2)
         {
             //custom model
-            spannerIcon.setPosition(glm::vec2(x * BallThumbSize.x, y * BallThumbSize.y) + iconOffset);
+            spannerIcon.setPosition(glm::vec2(x * BallThumbSize.x * ThumbTextureScale, y * BallThumbSize.y * ThumbTextureScale) + iconOffset);
             spannerIcon.draw();
         }
     }
@@ -2413,7 +2419,7 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::in
     entity.getComponent<cro::Drawable2D>().setTexture(&m_pageContexts[itemID].thumbnailTexture.getTexture());
 
     const glm::vec2 TexSize(m_pageContexts[itemID].thumbnailTexture.getSize());
-    cro::FloatRect textureBounds = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / TexSize.x, static_cast<float>(BallThumbSize.y) / TexSize.y };
+    cro::FloatRect textureBounds = { 0.f, 0.f, static_cast<float>(BallThumbSize.x * ThumbTextureScale) / TexSize.x, static_cast<float>(BallThumbSize.y * ThumbTextureScale) / TexSize.y };
 
     for (auto j = RangeStart; j < RangeEnd; ++j)
     {
