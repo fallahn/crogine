@@ -47,6 +47,7 @@ enum ProfileButton
 
     ButtonPrevHair,
     ButtonNextHair,
+    ButtonHairBrowse,
     ButtonPrevBody,
     ButtonNextBody,
 

@@ -312,9 +312,6 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         case SDLK_RIGHT:
             cro::App::getWindow().setMouseCaptured(true);
             break;
-        case SDLK_l:
-            m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
-            break;
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
@@ -861,7 +858,7 @@ void ProfileState::buildScene()
                 }
             });
 
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonName, ButtonHairColour);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonHairColour);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonName, ButtonRandomise);
 #endif
 
@@ -1027,6 +1024,36 @@ void ProfileState::buildScene()
     bottomDarkColour.getComponent<cro::UIInput>().setPrevIndex(ButtonBottomLight, ButtonTopDark);
 
 
+    //hat select button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({163.f, 214.f, 0.5f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("hat_select");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    auto rect = entity.getComponent<cro::Sprite>().getTextureRect();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonHairBrowse);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonNextHair, ButtonNextBody);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevHair, ButtonPrevBody);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 
+        uiSystem.addCallback([rect](cro::Entity e) {e.getComponent<cro::Sprite>().setTextureRect(rect); });
+    rect.bottom += rect.height;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+        uiSystem.addCallback([&,rect](cro::Entity e)
+            {
+                e.getComponent<cro::Sprite>().setTextureRect(rect);
+                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt) 
+            {
+                m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+            });
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     const auto expandHitbox = 
         [](cro::Entity e)
         {
@@ -1049,7 +1076,7 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    hairLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextHair, ButtonPrevBody);
+    hairLeft.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonPrevBody);
     hairLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonHairColour, ButtonPrevBody);
     expandHitbox(hairLeft);
 
@@ -1065,7 +1092,7 @@ void ProfileState::buildScene()
                 }
             });
     hairRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextBody);
-    hairRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevHair, ButtonNextBody);
+    hairRight.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonNextBody);
     expandHitbox(hairRight);
 
     auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 110.f), ButtonPrevBody);
@@ -1211,10 +1238,10 @@ void ProfileState::buildScene()
             });
 #ifdef USE_GNS
     nameButton.getComponent<cro::UIInput>().setNextIndex(ButtonWorkshop, ButtonBallSelect);
-    nameButton.getComponent<cro::UIInput>().setPrevIndex(ButtonWorkshop, ButtonCancel);
+    nameButton.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonCancel);
 #else
     nameButton.getComponent<cro::UIInput>().setNextIndex(ButtonDescUp, ButtonBallSelect);
-    nameButton.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonBallSelect);
+    nameButton.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonBallSelect);
 #endif
 
     //ball arrow buttons
@@ -2322,6 +2349,13 @@ void ProfileState::createItemThumbs()
     showBall(oldIndex);
 
 
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/models/bust.cmt");
+    auto ent = m_modelScene.createEntity();
+    ent.addComponent<cro::Transform>();
+    md.createModel(ent);
+    m_modelScene.simulate(0.f);
+
     const auto showHair = [&](std::size_t idx)
         {
             //first item is bald so there's no model ent
@@ -2329,6 +2363,7 @@ void ProfileState::createItemThumbs()
             {
                 m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[idx].getComponent<cro::Transform>());
                 m_ballHairModels[idx].getComponent<cro::Model>().setHidden(false);
+                m_ballHairModels[idx].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
             }
         };
 
@@ -2338,6 +2373,7 @@ void ProfileState::createItemThumbs()
             {
                 m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[idx].getComponent<cro::Transform>());
                 m_ballHairModels[idx].getComponent<cro::Model>().setHidden(true);
+                m_ballHairModels[idx].getComponent<cro::Transform>().removeChild(ent.getComponent<cro::Transform>());
                 m_modelScene.simulate(0.f);
             }
         };
@@ -2352,6 +2388,7 @@ void ProfileState::createItemThumbs()
     m_pageContexts[PaginationID::Hair].thumbnailTexture.create(texSize.x, texSize.y);
     m_pageContexts[PaginationID::Hair].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
     
+    //don't include bald at the front
     for (auto i = 1u; i < m_ballHairModels.size(); ++i)
     {
         const auto x = (i % ThumbColCount);
@@ -2368,14 +2405,13 @@ void ProfileState::createItemThumbs()
 
         hideHair(i);
 
-        //hair info doesn't include bald at the front
-        if (m_sharedData.hairInfo[i-1].type == 1)
+        if (m_sharedData.hairInfo[i].type == 1)
         {
             //unlocked hair
             keyIcon.setPosition(glm::vec2(x * BallThumbSize.x * ThumbTextureScale, y * BallThumbSize.y * ThumbTextureScale) + iconOffset);
             keyIcon.draw();
         }
-        else if (m_sharedData.hairInfo[i - 1].type == 2)
+        else if (m_sharedData.hairInfo[i].type == 2)
         {
             //custom model
             spannerIcon.setPosition(glm::vec2(x * BallThumbSize.x * ThumbTextureScale, y * BallThumbSize.y * ThumbTextureScale) + iconOffset);
@@ -2385,6 +2421,7 @@ void ProfileState::createItemThumbs()
 
     m_pageContexts[PaginationID::Hair].thumbnailTexture.display();
     
+    m_modelScene.destroyEntity(ent);
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
 
     cam.viewport = { 0.f, 0.f , 1.f, 1.f };

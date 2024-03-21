@@ -2021,7 +2021,9 @@ void GolfState::render()
     m_renderTarget.clear(cro::Colour::Black);
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
+#ifndef __APPLE__
     glCheck(glEnable(GL_LINE_SMOOTH));
+#endif
     m_gameScene.render();
 #ifdef CAMERA_TRACK
     //if (recordCam)
@@ -2030,7 +2032,9 @@ void GolfState::render()
     //    m_cameraDebugPoints[m_currentCamera].emplace_back(tx.getRotation(), tx.getPosition());
     //}
 #endif
+#ifndef __APPLE__
     glCheck(glDisable(GL_LINE_SMOOTH));
+#endif
 #ifdef CRO_DEBUG_
     //m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
 #endif

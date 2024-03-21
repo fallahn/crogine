@@ -1970,7 +1970,7 @@ void CareerState::quitState()
 
 void CareerState::loadConfig()
 {
-    const auto path = Social::getBaseContentPath() + ConfigFile;
+    const auto path = Social::getUserContentPath(Social::UserContent::Career) + ConfigFile;
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -2003,5 +2003,5 @@ void CareerState::saveConfig() const
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
-    cfg.save(Social::getBaseContentPath() + ConfigFile);
+    cfg.save(Social::getUserContentPath(Social::UserContent::Career) + ConfigFile);
 }
