@@ -209,6 +209,7 @@ private:
     {
         cro::Entity prevButton;
         cro::Entity nextButton;
+        cro::Entity itemLabel;
         cro::Entity pageCount;
         std::size_t pageTotal = 1;
     };
@@ -219,7 +220,7 @@ private:
         std::vector<BrowserPage> pageList;
         PageHandles pageHandles;
         std::size_t menuID;
-        std::size_t activateCallback;
+        std::uint32_t activateCallback;
 
         std::size_t pageIndex = 0;
         std::size_t itemCount = 0;

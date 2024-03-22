@@ -1048,7 +1048,10 @@ void ProfileState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt) 
             {
-                m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+                if (activated(evt))
+                {
+                    m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+                }
             });
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2504,18 +2507,17 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::in
 
 
     //buttons
-    browserPage.activateCallback = m_pageContexts[itemID].activateCallback;
     
     //TODO rather than capture this ent use a single callback which indexes into the page items array
-    browserPage.selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&, entity](cro::Entity e) mutable
-        {
-            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
-            entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+    //browserPage.selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+    //    [&, itemID, page](cro::Entity e) mutable
+    //    {
+    //        m_pageContexts[itemID].pageList[page].highlight.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+    //        m_pageContexts[itemID].pageList[page].highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
-            m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
-            m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
-        });
+    //        m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+    //        m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
+    //    });
 
     constexpr std::size_t IndexOffset = 100;
     for (auto j = RangeStart; j < RangeEnd; ++j)
@@ -2601,8 +2603,9 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::in
         entity.getComponent<cro::UIInput>().setPrevIndex(leftIndex, upIndex);
         entity.getComponent<cro::UIInput>().setNextIndex(rightIndex, downIndex);
 
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = browserPage.selectCallback;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = browserPage.activateCallback;
+        //this needs to be set per-pagination type so we know which model array to index for description labels
+        //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = browserPage.selectCallback;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_pageContexts[itemID].activateCallback;
         entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(static_cast<std::uint8_t>(inputIndex));
 
         browserPage.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2698,6 +2701,19 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
     }
 
 
+    //item label
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bgSize.width / 2.f, 13.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(" ");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_pageContexts[PaginationID::Balls].pageHandles.itemLabel = entity;
+
     m_pageContexts[PaginationID::Balls].itemCount = m_ballModels.size();
     m_pageContexts[PaginationID::Balls].menuID = MenuID::BallSelect;
     m_pageContexts[PaginationID::Balls].activateCallback = 
@@ -2726,6 +2742,25 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
     for (auto i = 0u; i < PageCount; ++i)
     {
         createItemPage(bgEnt, i, PaginationID::Balls);
+
+        //shame model arrays are unique, else we could
+        //recycle this for all paging types...
+        auto selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, i](cro::Entity e) mutable
+            {
+                m_pageContexts[PaginationID::Balls].pageList[i].highlight.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+                m_pageContexts[PaginationID::Balls].pageList[i].highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+
+                const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                m_pageContexts[PaginationID::Balls].pageHandles.itemLabel.getComponent<cro::Text>().setString(m_sharedData.hairInfo[itemIndex].modelPath);
+
+                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
+            });
+        for (auto& item : m_pageContexts[PaginationID::Balls].pageList[i].items)
+        {
+            item.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCallback;
+        }
     }
     activatePage(PaginationID::Balls, m_pageContexts[PaginationID::Balls].pageIndex, true);
 }
@@ -2809,6 +2844,18 @@ void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& 
         bgEnt.getComponent<cro::Transform>().addChild(pageHandles.pageCount.getComponent<cro::Transform>());
     }
 
+    //item label - TODO we should probably be creating this as part of the background
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({bgSize.width / 2.f, 13.f, 0.1f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(" ");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_pageContexts[PaginationID::Hair].pageHandles.itemLabel = entity;
 
     m_pageContexts[PaginationID::Hair].itemCount = m_avatarHairModels.size();
     m_pageContexts[PaginationID::Hair].menuID = MenuID::HairSelect;
@@ -2838,6 +2885,25 @@ void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& 
     for (auto i = 0u; i < PageCount; ++i)
     {
         createItemPage(bgEnt, i, PaginationID::Hair);
+        //TODO if we only had one highlight we could do this for
+        //all items in the browser, rather than per-page
+        auto selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, i](cro::Entity e) mutable
+            {
+                m_pageContexts[PaginationID::Hair].pageList[i].highlight.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+                m_pageContexts[PaginationID::Hair].pageList[i].highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+
+                const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                m_pageContexts[PaginationID::Hair].pageHandles.itemLabel.getComponent<cro::Text>().setString(m_sharedData.hairInfo[itemIndex].modelPath);
+
+                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
+            });
+
+        for (auto& item : m_pageContexts[PaginationID::Hair].pageList[i].items)
+        {
+            item.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCallback;
+        }
     }
     activatePage(PaginationID::Hair, m_pageContexts[PaginationID::Hair].pageIndex, true);
 }
