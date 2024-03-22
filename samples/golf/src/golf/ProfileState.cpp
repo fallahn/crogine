@@ -2752,7 +2752,14 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
                 m_pageContexts[PaginationID::Balls].pageList[i].highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
                 const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
-                m_pageContexts[PaginationID::Balls].pageHandles.itemLabel.getComponent<cro::Text>().setString(m_sharedData.hairInfo[itemIndex].modelPath);
+                if (!m_sharedData.ballInfo[itemIndex].label.empty())
+                {
+                    m_pageContexts[PaginationID::Balls].pageHandles.itemLabel.getComponent<cro::Text>().setString(m_sharedData.ballInfo[itemIndex].label);
+                }
+                else
+                {
+                    m_pageContexts[PaginationID::Balls].pageHandles.itemLabel.getComponent<cro::Text>().setString(" ");
+                }
 
                 m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
                 m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
@@ -2894,8 +2901,14 @@ void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& 
                 m_pageContexts[PaginationID::Hair].pageList[i].highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
 
                 const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
-                m_pageContexts[PaginationID::Hair].pageHandles.itemLabel.getComponent<cro::Text>().setString(m_sharedData.hairInfo[itemIndex].modelPath);
-
+                if (!m_sharedData.hairInfo[itemIndex].label.empty())
+                {
+                    m_pageContexts[PaginationID::Hair].pageHandles.itemLabel.getComponent<cro::Text>().setString(m_sharedData.hairInfo[itemIndex].label);
+                }
+                else
+                {
+                    m_pageContexts[PaginationID::Hair].pageHandles.itemLabel.getComponent<cro::Text>().setString(" ");
+                }
                 m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
                 m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
             });

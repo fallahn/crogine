@@ -99,6 +99,10 @@ namespace
             {
                 retVal.rollAnimation = p.getValue<bool>();
             }
+            else if (name == "label")
+            {
+                retVal.label = p.getValue<cro::String>();
+            }
         }
 
         return retVal;
@@ -119,6 +123,10 @@ namespace
             else if (name == "uid")
             {
                 retVal.uid = p.getValue<std::uint32_t>();
+            }
+            else if (name == "label")
+            {
+                retVal.label = p.getValue<cro::String>();
             }
         }
 
@@ -625,7 +633,7 @@ void MenuState::parseAvatarDirectory()
     m_sharedData.hairInfo.clear();
 
     //push an empty model on the front so index 0 is always no hair
-    m_sharedData.hairInfo.emplace_back(0, "");
+    m_sharedData.hairInfo.emplace_back(0, "").label = "Bald";
     for (auto& avatar : m_playerAvatars)
     {
         avatar.hairModels.emplace_back();

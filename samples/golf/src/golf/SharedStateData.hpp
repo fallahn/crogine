@@ -131,6 +131,7 @@ struct SharedStateData final
         {
             Regular, Unlock, Custom
         }type = Regular;
+        cro::String label;
 
         cro::Colour tint;
         std::uint32_t uid = 0;
@@ -168,6 +169,7 @@ struct SharedStateData final
         {
             Regular, Unlock, Custom
         }type = Regular;
+        cro::String label;
 
         std::uint32_t uid = 0;
         std::string modelPath;
