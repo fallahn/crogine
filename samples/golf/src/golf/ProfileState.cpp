@@ -2354,6 +2354,8 @@ void ProfileState::createItemThumbs()
     auto ent = m_modelScene.createEntity();
     ent.addComponent<cro::Transform>();
     md.createModel(ent);
+    ent.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.hair);
+    ent.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", CD32::Colours[CD32::BeigeLight]);
     m_modelScene.simulate(0.f);
 
     const auto showHair = [&](std::size_t idx)
@@ -2382,12 +2384,23 @@ void ProfileState::createItemThumbs()
     texSize = glm::uvec2(std::min(ThumbColCount, m_ballHairModels.size()) * BallThumbSize.x, ((m_ballHairModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
     texSize *= ThumbTextureScale;
     vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x * ThumbTextureScale) / texSize.x, static_cast<float>(BallThumbSize.y * ThumbTextureScale) / texSize.y };
+    cam.viewport = vp;
 
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
 
     m_pageContexts[PaginationID::Hair].thumbnailTexture.create(texSize.x, texSize.y);
     m_pageContexts[PaginationID::Hair].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
     
+    //fudge to render bald bust
+    ent.getComponent<cro::Transform>().setPosition(m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().getWorldPosition() - (BallHairOffset * BallHairScale));
+    ent.getComponent<cro::Transform>().setScale(BallHairScale);
+    ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 0.3f);
+    m_modelScene.simulate(0.f);
+    m_modelScene.render();
+    ent.getComponent<cro::Transform>().setPosition(glm::vec3(0.f));
+    ent.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+    ent.getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTITY);
+
     //don't include bald at the front
     for (auto i = 1u; i < m_ballHairModels.size(); ++i)
     {
