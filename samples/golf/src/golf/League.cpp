@@ -43,6 +43,7 @@ source distribution.
 
 #include <string>
 #include <fstream>
+#include <filesystem>
 
 namespace
 {
