@@ -402,7 +402,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
-
+#ifndef __APPLE__
     registerCommand("tree_ed", [&](const std::string&)
         {
             if (getStateCount() == 1)
@@ -443,7 +443,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 cro::Console::print("Must be on main menu to launch designer");
             }
         });
-
+#endif
 #ifdef USE_GNS
     registerCommand("restore_xp", [](const std::string&)
         {
@@ -476,7 +476,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 #endif
 
-#ifdef USE_WORKSHOP
+#if defined USE_WORKSHOP && !defined __APPLE__
     registerCommand("workshop",
         [&](const std::string&)
         {
