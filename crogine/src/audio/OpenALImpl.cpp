@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -671,9 +671,31 @@ void OpenALImpl::enumerateDevices()
     auto enumAvailable = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
     if (enumAvailable)
     {
-        const auto* deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+        static const auto getDeviceList = [&]()
+        {
+            m_devices.clear();
+            const auto* deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+            if (deviceList)
+            {
+                auto* next = deviceList + 1;
+                std::size_t len = 0;
 
-        if (deviceList)
+                while (deviceList && *deviceList != '\0'
+                    && next
+                    && *next != '\0')
+                {
+                    m_devices.push_back(std::string(deviceList));
+                    len = strlen(deviceList);
+                    deviceList += (len + 1);
+                    next += (len + 2);
+                }
+                m_devices.push_back("Default");
+            }        
+        };
+        
+        getDeviceList();
+
+        if (!m_devices.empty())
         {
             char* pp = SDL_GetPrefPath("Trederia", "common");
             auto prefPath = std::string(pp);
@@ -681,26 +703,17 @@ void OpenALImpl::enumerateDevices()
             std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
             prefPath += u8"audio_device.cfg";
 
-            auto* next = deviceList + 1;
-            std::size_t len = 0;
-
-            while (deviceList && *deviceList != '\0'
-                && next
-                && *next != '\0')
-            {
-                m_devices.push_back(std::string(deviceList));
-                len = strlen(deviceList);
-                deviceList += (len + 1);
-                next += (len + 2);
-            }
-            m_devices.push_back("Default");
-
             static bool showWindow = false;
 
             registerCommand("al_config",
                 [](const std::string)
                 {
                     showWindow = !showWindow;
+
+                    if (showWindow)
+                    {
+                        getDeviceList();
+                    }
                 });
 
             registerWindow(
@@ -735,6 +748,12 @@ void OpenALImpl::enumerateDevices()
                                 ImGui::EndListBox();
                             }
 
+                            if (ImGui::Button("Refresh"))
+                            {
+                                getDeviceList();
+                            }
+                            ImGui::Separator();
+                            ImGui::NewLine();
                             if (!m_preferredDevice.empty())
                             {
                                 ImGui::Text("Current Device: %s", m_preferredDevice.c_str());
