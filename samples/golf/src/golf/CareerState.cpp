@@ -321,6 +321,17 @@ void CareerState::buildScene()
                     applySettingsValues(); //loadConfig() might not load anything
                     loadConfig();
                     
+                    //check if we just completed a league, and if we did and it's
+                    //one less than max leagues, increment our current round id
+                    auto currIdx = m_sharedData.leagueRoundID - 1;
+                    if (currIdx == m_maxLeagueIndex - 1)
+                    {
+                        if (Career::instance().getLeagueTables()[currIdx].getCurrentIteration() == 0)
+                        {
+                            m_sharedData.leagueRoundID = std::min(std::int32_t(LeagueRoundID::RoundSix), m_sharedData.leagueRoundID + 1);
+                        }
+                    }
+
                     if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
                     {
                         selectLeague(m_maxLeagueIndex);

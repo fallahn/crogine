@@ -436,13 +436,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_2:
-            if (!m_textChat.isVisible())
+            if (!m_textChat.isVisible()
+                && !m_holeData[m_currentHole].puttFromTee)
             {
                 if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
                     && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
                 {
-                    if (m_inputParser.getActive())
+                    if (m_inputParser.getActive()
+                        && m_currentPlayer.terrain != TerrainID::Green)
                     {
+                        //that's a lot of if's.
+
                         if (m_currentCamera == CameraID::Player)
                         {
                             setActiveCamera(CameraID::Bystander);
