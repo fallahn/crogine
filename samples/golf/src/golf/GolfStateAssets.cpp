@@ -1359,6 +1359,22 @@ void GolfState::loadMap()
                 {
                     player.holeComplete[i] = true;
 
+                    //look at previous holes and see if we need to take on the crowd positions
+                    if (m_holeData[i].modelEntity == m_holeData[m_currentHole].modelEntity)
+                    {
+                        if (m_holeData[m_currentHole].crowdPositions[0].empty())
+                        {
+                            for (auto j = 0u; j < m_holeData[i].crowdPositions.size(); ++j)
+                            {
+                                m_holeData[i].crowdPositions[j].swap(m_holeData[m_currentHole].crowdPositions[j]);
+                            }
+                        }
+
+                        if (m_holeData[m_currentHole].crowdCurves.empty())
+                        {
+                            m_holeData[i].crowdCurves.swap(m_holeData[m_currentHole].crowdCurves);
+                        }
+                    }
                 }
 
                 m_resumedFromSave = true;
