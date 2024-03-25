@@ -1767,7 +1767,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
             auto pos = e.getComponent<cro::Transform>().getPosition();
 
-            pos.x -= 20.f * dt;
+            pos.x -= 20.f * m_scrollSpeed * dt;
             pos.y = BasePosY + std::floor(scrollBounds.height - LineHeight) ;
             pos.z = 0.3f;
 
@@ -3189,7 +3189,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         {
             auto pos = e.getComponent<cro::Transform>().getPosition();
 
-            pos.x -= 20.f * dt;
+            pos.x -= 20.f * m_scrollSpeed * dt;
             pos.y = 15.f;
             pos.z = 0.3f;
 

@@ -235,6 +235,7 @@ private:
     }m_textEdit;
 
     glm::vec2 m_viewScale;
+    float m_scrollSpeed;
 
     void addSystems();
     void loadAssets();

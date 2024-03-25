@@ -169,7 +169,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu           (MenuID::Main),
     m_prevMenu              (MenuID::Main),
-    m_viewScale             (1.f)
+    m_viewScale             (1.f),
+    m_scrollSpeed           (1.f)
 {
     checkCommandLine = false;
     sd.courseData = &m_sharedCourseData;
@@ -1292,6 +1293,19 @@ bool MenuState::simulate(float dt)
             handleNetEvent(evt);
         }
     }
+
+    //update the scroll speed of lobby text
+    m_scrollSpeed = 1.f;
+    if (auto amt = cro::GameController::getAxisPosition(0, cro::GameController::AxisRightX);
+        amt > cro::GameController::LeftThumbDeadZone)
+    {
+        m_scrollSpeed += 4.f * (static_cast<float>(amt) / cro::GameController::AxisMax);
+    }
+    else if (amt < -cro::GameController::LeftThumbDeadZone)
+    {
+        m_scrollSpeed -= 0.5f * (static_cast<float>(amt) / cro::GameController::AxisMin);
+    }
+
 
     static float accumTime = 0.f;
     accumTime += dt;
