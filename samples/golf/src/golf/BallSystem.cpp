@@ -207,6 +207,8 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
     //updating the collision mesh sets m_puttFromTee too
     auto result = rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
     holeData.pin.y = getTerrain(holeData.pin).intersection.y;
+    holeData.target.y = getTerrain(holeData.target).intersection.y;
+    holeData.tee.y = getTerrain(holeData.tee).intersection.y;
     holeData.puttFromTee = m_puttFromTee;
 
     for (auto entity : getEntities())

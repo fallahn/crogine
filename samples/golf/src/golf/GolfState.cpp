@@ -3102,7 +3102,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 {
                     //only do this when active player.
                     if (ballEnt.getComponent<ClientCollider>().state != std::uint8_t(Ball::State::Idle)
-                        || ballEnt.getComponent<cro::Transform>().getPosition() == m_holeData[m_currentHole].tee)
+                        || glm::length2(ballEnt.getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].tee) < 0.042f*0.042f)
                     {
                         auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
                         auto ballHeight = ballPos.y;

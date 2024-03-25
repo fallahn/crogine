@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1321,7 +1321,9 @@ void GolfState::initScene()
     //check for putt from tee and update any rule properties
     for (auto& hole : m_holeData)
     {
-        m_scene.getSystem<BallSystem>()->setHoleData(hole); //applies putt from tee
+        //applies putt from tee and corrects vertical pos
+        //for pin/target/tee
+        m_scene.getSystem<BallSystem>()->setHoleData(hole);
 
         switch (m_sharedData.scoreType)
         {
