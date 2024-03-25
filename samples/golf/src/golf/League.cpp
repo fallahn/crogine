@@ -374,8 +374,8 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             increaseDifficulty();
             m_increaseCount++;
         }
-        else if (m_currentSeason > 1
-            && m_currentBest > 3) //if we played a couple of seasons and still not won, make it easier
+        else if (/*m_currentSeason > 1
+            &&*/ m_currentBest > 3) //if we played a couple of seasons and still not won, make it easier
         {
             decreaseDifficulty();
         }
@@ -508,10 +508,19 @@ void League::increaseDifficulty()
 
 void League::decreaseDifficulty()
 {
+    std::int32_t failureMagnitude = std::max(1, m_currentBest - 2);
+    failureMagnitude /= 4;
+    failureMagnitude += 1;
+
     for (auto i = 0u; i < PlayerCount; ++i)
     {
-        m_players[i].quality = std::max(MinQuality, m_players[i].quality - ((0.02f * ((PlayerCount - 1)-i)) / 10.f));
+        //the worse our last position was the more we decrease difficulty
+        for (auto j = 0; j < failureMagnitude; ++j)
+        {
+            m_players[i].quality = std::max(MinQuality, m_players[i].quality - ((0.02f * ((PlayerCount - 1)-i)) / 10.f));
+        }
     }
+    LogI << "League reduced." << std::endl;
 }
 
 std::string League::getFilePath(const std::string& fn) const

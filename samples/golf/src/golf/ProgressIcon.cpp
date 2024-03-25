@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -153,7 +153,7 @@ void ProgressIcon::showChallenge(std::int32_t index, std::int32_t progress, std:
 
             if (progress == total)
             {
-                m_titleText.setString("CHALLENGE COMPLETE! 500XP");
+                m_titleText.setString("CHALLENGE COMPLETE! 1000XP");
             }
             else
             {

@@ -4532,7 +4532,7 @@ void GolfState::updateLeague()
 
         //if all the leagues are gold...
         //remember this might happen in any order
-        if (league->getCurrentBest() == 1)
+        //if (league->getCurrentBest() == 1)
         {
             std::int32_t bestCount = 0;
             for (auto i = 0u; i < 6u; ++i)
