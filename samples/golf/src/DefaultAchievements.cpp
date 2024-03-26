@@ -124,6 +124,10 @@ bool DefaultAchievements::init()
     trigger->achID = AchievementID::LeagueSeasonal;
     trigger->threshold = 24;
 
+    trigger = &StatTriggers[StatID::DroneHits].emplace_back();
+    trigger->achID = AchievementID::Vandal;
+    trigger->threshold = 10;
+
     return true;
 }
 

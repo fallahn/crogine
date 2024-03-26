@@ -152,6 +152,7 @@ namespace AchievementID
 
         SemiRetired,
         AllTime,
+        Vandal,
 
         Count
     };

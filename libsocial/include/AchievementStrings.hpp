@@ -143,7 +143,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "course12_complete",
     "course_12_par",
     "semi_retired",
-    "all_time_champ"
+    "all_time_champ",
+    "vandal"
 };
 
 //appears on the notification
@@ -245,7 +246,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Complete Course 12",
     "Master Course 12",
     "Semi-Retired",
-    "All Time Champion"
+    "All Time Champion",
+    "Vandal"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -347,7 +349,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Play a full 18 holes on Hertog Regis", false),
     std::make_pair("Complete Hertog Regis with par or under", false),
     std::make_pair("Complete Career Mode", false),
-    std::make_pair("Get first place in every Career league", false)
+    std::make_pair("Get first place in every Career league", false),
+    std::make_pair("Hit the camera drone 10 times", false),
 };
 
 //assuming trophies load correctly they are:
@@ -481,6 +484,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldCup,
 
     TrophyID::GoldCup ,
+    TrophyID::Platinum,
     TrophyID::Platinum,
 };
 
