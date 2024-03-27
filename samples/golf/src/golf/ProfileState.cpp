@@ -1941,6 +1941,7 @@ void ProfileState::buildPreviewScene()
         preview.type = m_sharedData.ballInfo[c].type;
         preview.root = m_modelScene.createEntity();
         preview.root.addComponent<cro::Transform>().setPosition(BallPos);
+        preview.root.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_sharedData.ballInfo[c].previewRotation);
         preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
         preview.root.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
         

@@ -103,6 +103,10 @@ namespace
             {
                 retVal.label = p.getValue<cro::String>();
             }
+            else if (name == "preview_rotation")
+            {
+                retVal.previewRotation = p.getValue<float>();
+            }
         }
 
         return retVal;

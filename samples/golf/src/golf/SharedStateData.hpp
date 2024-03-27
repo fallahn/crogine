@@ -132,13 +132,14 @@ struct SharedStateData final
             Regular, Unlock, Custom
         }type = Regular;
         cro::String label;
+        std::string modelPath;
 
+        std::uint64_t workshopID = 0;
         cro::Colour tint;
         std::uint32_t uid = 0;
-        std::string modelPath;
+        float previewRotation = 0.f;
         bool rollAnimation = true;
         bool locked = false;
-        std::uint64_t workshopID = 0;
         BallInfo() {}
         BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
             : tint(c), uid(i), modelPath(str) {}
