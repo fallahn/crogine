@@ -2112,7 +2112,7 @@ void ProfileState::buildPreviewScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.3f);
         hair.createModel(entity);
         entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.hair);
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", CD32::Colours[CD32::Brown]);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", CD32::Colours[CD32::Orange]);
         entity.getComponent<cro::Model>().setHidden(true);
         m_ballHairModels.push_back(entity);
     }
