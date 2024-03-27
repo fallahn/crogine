@@ -2293,11 +2293,15 @@ void ProfileState::createItemThumbs()
 
     auto oldIndex = m_ballIndex;
 
+    glm::quat oldRot = cro::Transform::QUAT_IDENTITY;
     const auto showBall = [&](std::size_t idx)
         {
             m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
             m_ballIndex = idx;
             m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+
+            oldRot = m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().getRotation();
+            m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTITY);
         };
 
     m_modelScene.setActiveCamera(m_cameras[CameraID::Ball]);
@@ -2334,6 +2338,7 @@ void ProfileState::createItemThumbs()
 
         m_modelScene.simulate(0.f);
         m_modelScene.render();
+        m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setRotation(oldRot);
 
         if (m_ballModels[i].type == 1)
         {
