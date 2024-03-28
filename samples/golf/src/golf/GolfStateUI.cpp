@@ -4533,11 +4533,12 @@ void GolfState::updateLeague()
         //if all the leagues are gold...
         //remember this might happen in any order
         //if (league->getCurrentBest() == 1)
+        if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
         {
             std::int32_t bestCount = 0;
             for (auto i = 0u; i < 6u; ++i)
             {
-                bestCount += Career::instance().getLeagueTables()[LeagueRoundID::RoundOne + i].getCurrentBest();
+                bestCount += Career::instance().getLeagueTables()[i].getCurrentBest();
             }
 
             if (bestCount == 6)

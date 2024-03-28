@@ -1916,18 +1916,18 @@ void ProfileState::buildPreviewScene()
         entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
         entity.addComponent<cro::Callback>().active = true;
 
-        if (m_sharedData.ballInfo[c].rollAnimation)
-        {
-            entity.getComponent<cro::Callback>().function =
-                [](cro::Entity e, float dt)
-            {
-                e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -dt * 6.f);
-            };
-            entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -cro::Util::Const::PI * 0.85f);
-            entity.getComponent<cro::Transform>().move({ 0.f, Ball::Radius, 0.f });
-            entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
-        }
-        else
+        //if (m_sharedData.ballInfo[c].rollAnimation)
+        //{
+        //    entity.getComponent<cro::Callback>().function =
+        //        [](cro::Entity e, float dt)
+        //    {
+        //        e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -dt * 6.f);
+        //    };
+        //    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, /*cro::Util::Const::PI + */m_sharedData.ballInfo[c].previewRotation);
+        //    entity.getComponent<cro::Transform>().move({ 0.f, Ball::Radius, 0.f });
+        //    entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
+        //}
+        //else
         {
             entity.getComponent<cro::Callback>().function =
                 [](cro::Entity e, float dt)
