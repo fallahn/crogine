@@ -452,7 +452,7 @@ void MenuState::createBallScene()
             baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             entity.addComponent<cro::Callback>().active = true;
-            if (m_sharedData.ballInfo[i].rollAnimation)
+            /*if (m_sharedData.ballInfo[i].rollAnimation)
             {
                 entity.getComponent<cro::Callback>().function =
                     [](cro::Entity e, float dt)
@@ -463,7 +463,7 @@ void MenuState::createBallScene()
                 entity.getComponent<cro::Transform>().move({ 0.f, Ball::Radius, 0.f });
                 entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
             }
-            else
+            else*/
             {
                 entity.getComponent<cro::Callback>().function =
                     [](cro::Entity e, float dt)
