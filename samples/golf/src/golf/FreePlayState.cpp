@@ -368,8 +368,15 @@ void FreePlayState::buildScene()
 
                     m_sharedData.hosting = true;
                     m_sharedData.clubSet = m_sharedData.preferredClubSet;
-                    m_sharedData.courseIndex = courseOfTheMonth();
                     m_sharedData.holeCount = 0;
+
+                    //hack so this doesn't happen when quitting from a previous game
+                    static bool wasDone = false;
+                    if (!wasDone)
+                    {
+                        m_sharedData.courseIndex = courseOfTheMonth();
+                        wasDone = true;
+                    }
 
                     auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
                     msg->type = SystemEvent::MenuRequest;
