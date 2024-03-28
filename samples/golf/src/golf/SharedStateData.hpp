@@ -142,7 +142,7 @@ struct SharedStateData final
         bool locked = false;
         BallInfo() {}
         BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
-            : tint(c), uid(i), modelPath(str) {}
+            : modelPath(str), tint(c), uid(i) {}
     };
     std::vector<BallInfo> ballInfo;
 

@@ -483,7 +483,7 @@ void MessageOverlayState::buildScene()
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, -4.f));
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\nprogress including all of\nyour XP and all unlocked items.");
+        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\nprogress including all of\nyour XP and quit the game.");
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
@@ -513,7 +513,7 @@ void MessageOverlayState::buildScene()
                         //this is a kludge which tells the
                         //menu state to remove any existing connection/server instance
                         //if for some reason we're resetting mid-game
-                        m_sharedData.gameMode = GameMode::Tutorial;
+                        //m_sharedData.gameMode = GameMode::Tutorial;
 
                         Social::resetProfile();
                         Career::instance().reset();
@@ -521,8 +521,10 @@ void MessageOverlayState::buildScene()
                         League l(LeagueRoundID::Club);
                         l.reset();
                         
-                        requestStackClear();
-                        requestStackPush(StateID::SplashScreen);
+                        cro::App::quit();
+
+                        /*requestStackClear();
+                        requestStackPush(StateID::SplashScreen);*/
                     }
                 });
 
