@@ -963,9 +963,9 @@ void EndlessDrivingState::createRoad()
     //remember this has to be the same each time to cover the swap
     float offsetMultiplier = 1.f;
     std::int32_t bushCounter = 0;
-    for (auto i = 0; i < pendingSegs.size(); ++i)
+    for (auto i = 0u; i < pendingSegs.size(); ++i)
     {
-        if ((i > 20)
+        if ((i > 20u)
             && (i % 18) == 0)
         {
             auto bushOffset = bushCounter % 2;
@@ -998,12 +998,12 @@ void EndlessDrivingState::createRoad()
                 spr2.position = -1.25f;
                 spr2.scale = 2.5f;
             }
-            else if (i < 20 && ((i % 3) == 0))
+            else if (i < 20u && ((i % 3) == 0))
             {
                 //parked carts
                 auto& seg = pendingSegs[i];
                 auto& spr = seg.sprites.emplace_back(m_trackSprites[TrackSprite::CartSide + (i%2)]);
-                spr.position = 1.82f * (i % 5) ? 1.f : -1.f;
+                spr.position = (1.82f * (i % 5)) != 0 ? 1.f : -1.f;
                 spr.scale = 2.f;
             }
         }
@@ -1046,7 +1046,7 @@ void EndlessDrivingState::createRoad()
     const float contextPercent = static_cast<float>(m_contextIndex) / m_trackContexts.size();
 
     auto segmentCount = cro::Util::Random::value(3, 5) + (m_contextIndex / 3);
-    for (auto i = 0; i < segmentCount; ++i)
+    for (auto i = 0u; i < segmentCount; ++i)
     {
         const std::size_t first = m_road.getPendingSegments().size();
 
@@ -1889,7 +1889,7 @@ void EndlessDrivingState::updateRoad(float dt)
         //stash the sprites - these might poke out from
         //behind a hill so we'll draw them anyway regardless
         //of segment culling
-        if (!curr.sprites.empty() || !curr.cars.empty()
+        if ((!curr.sprites.empty() || !curr.cars.empty())
             && i < (start + (DrawDistance - 1))) //sprites are interpolated, so we don't want to interpolate into a segment whose projection is not yet updated
         {
             spriteSegments.push_back(currIndex);
