@@ -60,7 +60,7 @@ public:
     bool getFriendsOnly() const { return false; }
     void createLobby(std::int32_t, std::int32_t) {}
 
-    void joinGame(std::uint64_t lobbyID);
+    void joinGame(std::uint64_t lobbyID, std::int32_t gameType);
     void joinLobby(std::uint64_t) {};
 
     void refreshLobbyList(std::int32_t gameType = 0) {}

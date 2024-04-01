@@ -1687,7 +1687,7 @@ void ClubhouseState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter
                     if (!m_sharedData.targetIP.empty() &&
                         !m_sharedData.clientConnection.connected)
                     {
-                        m_matchMaking.joinGame(0);
+                        m_matchMaking.joinGame(0, Server::GameMode::Billiards);
                     }
 #endif
                     auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];

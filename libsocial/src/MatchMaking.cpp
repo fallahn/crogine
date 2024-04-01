@@ -44,8 +44,9 @@ void MatchMaking::createGame(std::int32_t, std::int32_t)
     msg->type = Message::GameCreated;
 }
 
-void MatchMaking::joinGame(std::uint64_t)
+void MatchMaking::joinGame(std::uint64_t,  std::int32_t gameType)
 {
     auto* msg = m_messageBus.post<Message>(MessageID);
     msg->type = Message::LobbyJoined;
+    msg->gameType = gameType;
 }

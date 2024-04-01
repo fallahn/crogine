@@ -462,7 +462,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 m_sharedData.targetIP = address;
                 if (!m_sharedData.clientConnection.connected)
                 {
-                    m_matchMaking.joinGame(0);
+                    m_matchMaking.joinGame(0, Server::GameMode::Golf);
                 }
                 else
                 {

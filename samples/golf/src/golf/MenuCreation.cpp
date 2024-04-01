@@ -1180,7 +1180,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     if (!m_sharedData.targetIP.empty() &&
                         !m_sharedData.clientConnection.connected)
                     {
-                        m_matchMaking.joinGame(0);
+                        m_matchMaking.joinGame(0, Server::GameMode::Golf);
                     }
 #endif
                     auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
