@@ -1739,7 +1739,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
             if (CourseIDs.count(m_sharedData.mapDirectory) != 0)
             {
                 Achievements::awardAchievement(AchievementStrings[CourseIDs.at(m_sharedData.mapDirectory)]);
-                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
+                if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+                {
+                    Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
+                }
 
                 if (m_sharedData.nightTime)
                 {

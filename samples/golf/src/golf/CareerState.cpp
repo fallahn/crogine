@@ -142,6 +142,16 @@ CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     buildScene();
 }
 
+CareerState::~CareerState()
+{
+    //this might be quitting from a cached state and not
+    //necessarily startinga career game.
+    if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+    {
+        saveConfig();
+    }
+}
+
 //public
 bool CareerState::handleEvent(const cro::Event& evt)
 {

@@ -86,7 +86,8 @@ void GolfState::updateHoleScore(std::uint16_t data)
 
 void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestString)
 {
-    if (m_sharedData.scoreType == ScoreType::Stroke)
+    if (m_sharedData.scoreType == ScoreType::Stroke
+        && Social::getLeaderboardsEnabled())
     {
         const auto& connectionData = m_sharedData.connectionData[m_sharedData.clientConnection.connectionID];
         for (auto k = 0u; k < connectionData.playerCount; ++k)
