@@ -2373,6 +2373,7 @@ void ProfileState::createItemThumbs()
             if (m_ballHairModels[idx].isValid())
             {
                 m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[idx].getComponent<cro::Transform>());
+                m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTITY); //this will have been set when rendering balls
                 m_ballHairModels[idx].getComponent<cro::Model>().setHidden(false);
                 m_ballHairModels[idx].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
             }
