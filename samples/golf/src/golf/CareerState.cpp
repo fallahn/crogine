@@ -657,7 +657,7 @@ void CareerState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerGimme);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerWeather, CareerClubs);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerWeather, Social::getClubLevel() ? CareerClubs : CareerClubStats);
     entity.getComponent<cro::UIInput>().setPrevIndex(CareerWeather, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
@@ -767,8 +767,8 @@ void CareerState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerNight);
-    entity.getComponent<cro::UIInput>().setNextIndex(Social::isAvailable() ? CareerClubs : CareerClubStats, CareerClubStats);
-    entity.getComponent<cro::UIInput>().setPrevIndex(Social::isAvailable() ? CareerClubs : CareerWeather, CareerWeather);
+    entity.getComponent<cro::UIInput>().setNextIndex(Social::getClubLevel() ? CareerClubs : CareerClubStats, CareerClubStats);
+    entity.getComponent<cro::UIInput>().setPrevIndex(Social::getClubLevel() ? CareerClubs : CareerWeather, CareerWeather);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
         m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) 
