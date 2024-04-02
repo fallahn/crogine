@@ -1822,6 +1822,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
         else
         {
+            if (m_holeData.size() == 12
+                && m_sharedData.scoreType == ScoreType::ShortRound)
+            {
+                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
+            }
+
             m_achievementDebug.awardStatus = "Did not award Course Complete: there were only " + std::to_string(m_holeData.size()) + " holes.";
         }
 
