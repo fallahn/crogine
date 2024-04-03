@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -50,6 +50,7 @@ struct XPStringID final
         FirstPlace,
         SecondPlace,
         ThirdPlace,
+        NoGimme,
 
         HIO,
         Albatross,
@@ -64,6 +65,9 @@ struct XPStringID final
         ChallengeComplete,
         BullsEyeHit,
         Survivor,
+
+        CareerRoundComplete,
+        CareerSeasonComplete,
 
         Count
     };
@@ -86,6 +90,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     "First Place!",
     "Second Place",
     "Third Place",
+    "No Gimme",
 
     "Hole In One!!",
     "Albatross (No Assist)",
@@ -99,5 +104,8 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
 
     "Challenge Completed",
     "Target Hit",
-    "Survivor"
+    "Survivor",
+
+    "Career Round Complete",
+    "Career Season Complete",
 };

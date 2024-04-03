@@ -41,10 +41,13 @@ class M3UPlaylist final
 public:
     //takes a single directory through which to search for
     //playlists. Doesn't support recursive searching (no subdirs)
-    explicit M3UPlaylist(const std::string& searchFolder, std::int32_t maxFiles = 10);
+    explicit M3UPlaylist(const std::string& searchFolder, std::uint32_t maxFiles = 25);
 
     //load another file and appeand it to the list
     bool loadPlaylist(const std::string& path);
+
+    //manually add a path to a music file
+    void addTrack(const std::string&);
 
     //shuffles playlist if it is loaded
     void shuffle();
@@ -55,7 +58,7 @@ public:
     //decrements the current index
     void prevTrack();
 
-    //returns the current track at the curernt index (or empty if not rtacks loaded)
+    //returns the current track at the curernt index (or empty if no tracks loaded)
     const std::string& getCurrentTrack() const;
 
     std::size_t getCurrentIndex() const { return m_currentIndex; }

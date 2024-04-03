@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -61,7 +61,9 @@ namespace MaxStrokeID
     enum
     {
         Default = 0,
-        Forfeit
+        Forfeit,
+        IdleTimeout,
+        HostPunishment
     };
 }
 
@@ -172,7 +174,8 @@ namespace PacketID
         LevelUp, //< uint64 00|00|client|player|level (level is 4 bytes)
         BallPrediction, //< InputUpdate if from client, vec3 if from server
         PlayerXP, //<uint16 level << 8 | client - used to share client xp/level info
-        ChatMessage //TextMessage struct
+        ChatMessage, //TextMessage struct
+        DronePosition //< compressed vec3 from host rebroadcast to clients
     };
 }
 

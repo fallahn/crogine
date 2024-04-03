@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "SharedCourseData.hpp"
 #include "CommonConsts.hpp"
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
@@ -109,13 +110,13 @@ private:
 
     TextChat m_textChat;
     MatchMaking m_matchMaking;
-    cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;
 
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
     cro::Scene m_avatarScene;
     cro::CubemapTexture m_reflectionMap;
+    cro::Texture m_defaultMaskMap;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
@@ -135,6 +136,7 @@ private:
     {
         enum
         {
+            Ball,
             Cel,
             CelTextured,
             CelTexturedSkinned,
@@ -233,26 +235,14 @@ private:
     }m_textEdit;
 
     glm::vec2 m_viewScale;
+    float m_scrollSpeed;
 
     void addSystems();
     void loadAssets();
     void createScene();
     void createClouds();
 
-    struct CourseData final
-    {
-        cro::String directory;
-        cro::String title = "Untitled";
-        cro::String description = "No Description";
-        std::int32_t courseNumber = 0; //base 1
-        std::array<cro::String, 3u> holeCount = {};
-        std::vector<std::int32_t> parVals;
-        bool isUser = false;
-    };
-    std::vector<CourseData> m_courseData;
-    std::unordered_map<std::string, std::unique_ptr<cro::Texture>> m_courseThumbs;
-    std::unordered_map<std::string, std::string> m_videoPaths;
-    cro::VideoPlayer m_videoPlayer;
+    SharedCourseData m_sharedCourseData;
     
     struct Range final
     {
@@ -275,10 +265,12 @@ private:
     void showToolTip(const std::string&);
     void hideToolTip();
 
+    void updateCompletionString();
 
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
     cro::Entity m_ballCam;
     cro::RenderTexture m_ballTexture;
+    std::vector<cro::Entity> m_ballModels;
     void createBallScene();
     std::int32_t indexFromBallID(std::uint32_t);
 
@@ -287,8 +279,8 @@ private:
     PlayerAvatar represents each one of the avatar models and its texture. (size n where n is number of models available)
     ProfileTexture represents the texture and mugshot texture for each avatar used when previewing profiles in the
     roster menu, so is size 1-MaxPlayers
-    HOWEVER as each profile requres a uniqe texture, but multiple profiles may use the SAME avatar then m_playerAvatars
-    (holding the avatar textures) is update with colour settings, but those colours are then applied to m_profileTextures[x]
+    HOWEVER as each profile requres a unique texture, but multiple profiles may use the SAME avatar then m_playerAvatars
+    (holding the avatar textures) is updated with colour settings, but those colours are then applied to m_profileTextures[x]
 
     On the face of it, it would seem a simple refactor to remove the unused image/colour information from ProfileTexture
     and the unused texture from PlayerAvatar - if it weren't for the fact PlayerAvatar *inherits* ProfileTexture
@@ -303,7 +295,7 @@ private:
     
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
-    void processAvatarList(const std::vector<std::string>&, const std::string&, const std::string = "");
+    void processAvatarList(bool locked, const std::vector<std::string>&, const std::string&, const std::string = "", bool relativePath = true);
     void createAvatarScene();
     std::int32_t indexFromAvatarID(std::uint32_t);
     void ugcInstalledHandler(std::uint64_t id, std::int32_t type);
@@ -321,6 +313,14 @@ private:
 
     FlyoutMenu m_profileFlyout;
 
+    //these appear in 2 menus so we have to use
+    //this hack to keep them in sync
+    struct ClubsetButtons final
+    {
+        cro::Entity roster;
+        cro::Entity lobby;
+    }m_clubsetButtons;
+
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity);
@@ -330,7 +330,7 @@ private:
     void createMenuCallbacks();
     void createProfileLayout(cro::Entity, cro::Transform&, const cro::SpriteSheet&);//display XP, clubs, streak etc on avatar menu
     void eraseCurrentProfile();
-    void setProfileIndex(std::size_t);
+    void setProfileIndex(std::size_t, bool playSound = true);
     void refreshProfileFlyout();
 
     //allows updating the target indices
@@ -352,7 +352,7 @@ private:
 
     //message handlers for completing connection
     void finaliseGameCreate(const MatchMaking::Message&);
-    void finaliseGameJoin(const MatchMaking::Message&);
+    void finaliseGameJoin(std::uint64_t);
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);

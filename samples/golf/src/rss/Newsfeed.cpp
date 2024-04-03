@@ -141,6 +141,13 @@ bool RSSFeed::parseFeed(const std::vector<std::uint8_t>& src)
             cro::Util::String::replace(i.description, "<ul class=\"bb_ul\">", " "); //sigh... wish this didn't have to be so specific...
             cro::Util::String::replace(i.description, "<li>", "\n - ");
             cro::Util::String::replace(i.description, "</li>", " ");
+
+            //steam puts this odd message in on items when first posted - this
+            //hacks around getting rid of it
+            if (i.description.find("A lil somethin") != cro::String::InvalidPos)
+            {
+                m_items.pop_back();
+            }
         }
     }
     m_fetchComplete = true;

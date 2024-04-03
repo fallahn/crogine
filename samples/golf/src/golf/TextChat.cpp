@@ -61,7 +61,7 @@ namespace
 
     const cro::Time ResendTime = cro::seconds(1.5f);
 
-    const std::array<std::string, 13u> ApplaudStrings =
+    const std::array<std::string, 14u> ApplaudStrings =
     {
         "/me applauds",
         "/me nods in appreciation",
@@ -75,7 +75,8 @@ namespace
         "/me ovates (which means applauding.)",
         "/me raises a glass of Fizz",
         "/me now knows what a true hero looks like",
-        "/me hops on the 8:45 to Hassocks"
+        "/me whoops and hollers from the crowd",
+        "/me asks for a selfie"
     };
 
     const std::array<std::string, 17u> HappyStrings =
@@ -99,7 +100,7 @@ namespace
         "/me lets out a squeak"
     };
 
-    const std::array<std::string, 11u> LaughStrings =
+    const std::array<std::string, 14u> LaughStrings =
     {
         "/me laughs like a clogged drain",
         "/me giggles into their sleeve",
@@ -111,7 +112,10 @@ namespace
         "/me can't contain themselves",
         "/me howls with laughter",
         "/me goes into hysterics",
-        "/me cachinnates (which means laughing loudly)"
+        "/me cachinnates (which means laughing loudly)",
+        "/me buries a snort",
+        "/me brays like a mule",
+        "/me cackles like a crone"
     };
 
     const std::array<std::string, 17u> AngerStrings =
@@ -137,13 +141,13 @@ namespace
 
     struct Emote final
     {
-        Emote(std::vector<std::uint32_t> cp)
+        explicit Emote(const std::vector<std::uint32_t>& cp)
             : codepoint(cp)
         {
             cro::String str;
-            for (auto cp : codepoint)
+            for (auto cpt : codepoint)
             {
-                str += cp;
+                str += cpt;
             }
             auto utf = str.toUtf8();
             icon.resize(utf.size());
@@ -174,6 +178,24 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_screenChatActiveCount (0),
     m_showShortcuts         (false)
 {
+    registerCommand("use_tts", [&](const std::string& str)
+        {
+            if (str == "1" || str == "true")
+            {
+                m_sharedData.useTTS = true;
+                cro::Console::print("use_tts set to " + str);
+            }
+            else if (str == "0" || str == "false")
+            {
+                m_sharedData.useTTS = false;
+                cro::Console::print("use_tts set to " + str);
+            }
+            else
+            {
+                cro::Console::print("Usage: use_tts <0|1>");
+            }
+        });
+
     //use cro string to construct the utf8 strings
     cro::String str(std::uint32_t(0x1F44F));
 
@@ -390,7 +412,7 @@ void TextChat::handleMessage(const cro::Message& msg)
     }
 }
 
-void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
+bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 {
     const auto msg = pkt.as<TextMessage>();
     //only one person can type on a connected computer anyway
@@ -405,6 +427,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 #endif
 
     cro::Colour chatColour = TextNormalColour;
+    bool playSound = true;
 
     //process any emotes such as /me and choose colour
     if (auto p = msgText.find("/me"); p == 0
@@ -416,6 +439,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     else
     {
         outStr += ": " + msgText;
+        playSound = !speak(msgText);
     }
     m_displayBuffer.emplace_back(outStr, ImVec4(chatColour));
 
@@ -490,7 +514,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         const auto offset = -bounds.height * (1.f - alpha);
         e.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
 
-        //move the next ent down (so this happens recursivelyand we get a nice stack)
+        //move the next ent down (so this happens recursively and we get a nice stack)
         auto nextEnt = (currIdx + 1) % m_screenChatBuffer.size();
         if (m_screenChatBuffer[nextEnt].isValid())
         {
@@ -537,6 +561,8 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     m_screenChatIndex = (m_screenChatIndex + 1) % m_screenChatBuffer.size();
 
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+    return playSound;
 }
 
 void TextChat::toggleWindow(bool showOSK, bool showQuickEmote)
@@ -665,4 +691,20 @@ void TextChat::sendTextChat()
 
         endChat();
     }
+}
+
+bool TextChat::speak(const cro::String& str) const
+{
+#ifdef _WIN32
+    if (!Social::isSteamdeck() &&
+        m_sharedData.useTTS)
+    {
+        if (m_speaker.voice != nullptr)
+        {
+            m_speaker.voice->Speak((LPCWSTR)(str.toUtf16().c_str()), SPF_ASYNC, nullptr);
+            return true;
+        }
+    }
+#endif
+    return false;
 }

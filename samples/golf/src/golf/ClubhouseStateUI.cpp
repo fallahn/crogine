@@ -552,7 +552,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                     quitLobby();
 
                     //reset this else we might put course data out of range
-                    m_sharedData.courseIndex = 0;
+                    m_sharedData.courseIndex = courseOfTheMonth();
                     m_sharedData.localConnectionData.playerCount = 1;
 
                     requestStackClear();
@@ -590,7 +590,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 11.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Bonus Challenge! (500xp)");
+    entity.addComponent<cro::Text>(font).setString("Bonus Challenge! (1000xp)");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
@@ -600,7 +600,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     static constexpr float BarWidth = 60.f;
     static constexpr float BarHeight = 12.f;
-    auto [value, target, _, flags] = Social::getMonthlyChallenge().getProgress();
+    auto [value, target, _1, flags, _2] = Social::getMonthlyChallenge().getProgress();
     const float progress = static_cast<float>(value) / target;
 
     if (value != target) //don't draw the progress if completed
@@ -1683,13 +1683,13 @@ void ClubhouseState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-
+#ifndef USE_GNS
                     if (!m_sharedData.targetIP.empty() &&
                         !m_sharedData.clientConnection.connected)
                     {
-                        m_matchMaking.joinGame(0);
+                        m_matchMaking.joinGame(0, Server::GameMode::Billiards);
                     }
-
+#endif
                     auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
                     e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 0;
 
@@ -1840,15 +1840,16 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
                 std::size_t idx = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
                 idx += (LobbyPager::ItemsPerPage * m_lobbyPager.currentPage);
 
-                if (idx < m_lobbyPager.lobbyIDs.size())
+                if (idx < m_lobbyPager.serverIDs.size())
                 {
                     //this will be reset next time the page is scrolled, and prevents double presses
                     e.getComponent<cro::UIInput>().enabled = false;
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                    m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
-                    m_sharedData.lobbyID = m_lobbyPager.lobbyIDs[idx];
+                    /*m_matchMaking.joinGame(m_lobbyPager.serverIDs[idx]);
+                    m_sharedData.lobbyID = m_lobbyPager.serverIDs[idx];*/
+                    finaliseGameJoin(m_lobbyPager.serverIDs[idx]);
                 }
             }
         });
@@ -1888,7 +1889,7 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
 
         for (auto i = start; i < end; ++i)
         {
-            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.lobbyIDs.size());
+            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.serverIDs.size());
         }
     };
 
@@ -2696,6 +2697,7 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
             {
                 if (activated(evt))
                 {
+                    m_sharedData.leagueTable = 0;
                     requestStackPush(StateID::League);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
@@ -2841,7 +2843,7 @@ void ClubhouseState::updateLobbyList()
     }
 
     m_lobbyPager.pages.clear();
-    m_lobbyPager.lobbyIDs.clear();
+    m_lobbyPager.serverIDs.clear();
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     const auto& lobbyData = m_matchMaking.getLobbies();
@@ -2879,7 +2881,7 @@ void ClubhouseState::updateLobbyList()
                 pageString += ss.str();
                 pageString += lobbyData[j].title + "\n";
 
-                m_lobbyPager.lobbyIDs.push_back(lobbyData[j].ID);
+                m_lobbyPager.serverIDs.push_back(lobbyData[j].ID);
             }
 
             auto entity = m_uiScene.createEntity();
@@ -2903,7 +2905,7 @@ void ClubhouseState::updateLobbyList()
 
         for (auto i = start; i < end; ++i)
         {
-            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.lobbyIDs.size());
+            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.serverIDs.size());
         }
     }
 
@@ -2944,7 +2946,7 @@ void ClubhouseState::quitLobby()
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
 
-    m_matchMaking.leaveGame();
+    m_matchMaking.leaveLobby();
 
     if (m_sharedData.hosting)
     {

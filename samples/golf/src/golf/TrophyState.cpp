@@ -799,11 +799,11 @@ void TrophyState::buildTrophyScene()
     m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
 
-    std::string wobble;
-    if (m_sharedData.vertexSnap)
-    {
-        wobble = "#define WOBBLE\n";
-    }
+    //std::string wobble;
+    //if (m_sharedData.vertexSnap)
+    //{
+    //    wobble = "#define WOBBLE\n";
+    //}
 
     if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Course))
     {
@@ -836,7 +836,7 @@ void TrophyState::buildTrophyScene()
 
     if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Trophy))
     {
-        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define TINT\n/*#define RX_SHADOWS\n*/#define VERTEX_COLOURED\n#define REFLECTIONS\n");
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define TINT\n/*#define RX_SHADOWS\n*/#define VERTEX_COLOURED\n#define REFLECTIONS\n" /*+ wobble*/);
     }
     shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Trophy);
     m_scaleBuffer.addShader(*shader);

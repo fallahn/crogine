@@ -86,7 +86,8 @@ void GolfState::updateHoleScore(std::uint16_t data)
 
 void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestString)
 {
-    if (m_sharedData.scoreType == ScoreType::Stroke)
+    if (m_sharedData.scoreType == ScoreType::Stroke
+        && Social::getLeaderboardsEnabled())
     {
         const auto& connectionData = m_sharedData.connectionData[m_sharedData.clientConnection.connectionID];
         for (auto k = 0u; k < connectionData.playerCount; ++k)
@@ -115,7 +116,15 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
                     }
                 }
 
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score);
+                //calculate the player's stableford score
+                std::int32_t stableford = 0;
+                for (auto i = 0u; i < m_holeData.size(); ++i)
+                {
+                    std::int32_t holeScore = static_cast<std::int32_t>(connectionData.playerData[k].holeScores[i]) - m_holeData[i].par;
+                    stableford += std::max(0, 2 - holeScore);
+                }
+
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford);
                 break;
             }
         }

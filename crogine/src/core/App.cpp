@@ -28,26 +28,26 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #ifndef __APPLE__
-#include "../detail/StackDump.hpp"
+#include <crogine/detail/StackDump.hpp>
 #include <signal.h>
 static void winAbort(int)
 {
-    StackDump::dump(StackDump::ABRT);
+    cro::StackDump::dump(cro::StackDump::ABRT);
 }
 
 static void winSeg(int)
 {
-    StackDump::dump(StackDump::SEG);
+    cro::StackDump::dump(cro::StackDump::SEG);
 }
 
 static void winIll(int)
 {
-    StackDump::dump(StackDump::ILL);
+    cro::StackDump::dump(cro::StackDump::ILL);
 }
 
 static void winFPE(int)
 {
-    StackDump::dump(StackDump::FPE);
+    cro::StackDump::dump(cro::StackDump::FPE);
 }
 
 #endif
@@ -84,7 +84,7 @@ static void winFPE(int)
 #include <sstream>
 
 #ifdef CRO_DEBUG_
-//#define DEBUG_NO_CONTROLLER
+#define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
 using namespace cro;

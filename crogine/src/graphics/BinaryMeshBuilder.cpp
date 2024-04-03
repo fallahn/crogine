@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -37,9 +37,18 @@ source distribution.
 using namespace cro;
 
 BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path)
-    : m_path    (cro::FileSystem::getResourcePath() + path),
+    : m_path    (path),
     m_uid       (0)
 {
+
+#ifdef __APPLE__
+    if (!FileSystem::fileExists(m_path))
+    {
+        m_path = cro::FileSystem::getResourcePath() + path;
+    }
+
+#endif
+
     if (FileSystem::fileExists(m_path))
     {
         //calc a UID from the file path
@@ -48,6 +57,7 @@ BinaryMeshBuilder::BinaryMeshBuilder(const std::string& path)
     }
     else
     {
+        LogE << "Could not find model binary " << m_path << std::endl;
         m_path = "";
     }
 }

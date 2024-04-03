@@ -33,6 +33,7 @@ source distribution.
 #include "SpectatorSystem.hpp"
 #include "SpectatorAnimCallback.hpp"
 #include "PropFollowSystem.hpp"
+#include "PoissonDisk.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -42,8 +43,13 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/util/Maths.hpp>
+
+#include <Input.hpp>
 
 #include "../ErrorCheck.hpp"
+
+namespace pd = thinks;
 
 namespace
 {
@@ -70,8 +76,10 @@ void GolfState::loadAssets()
     {
         m_lightVolumeDefinition.loadFromFile("assets/golf/models/light_sphere.cmt");
     }
-    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
-
+    if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm"))
+    {
+        m_reflectionMap.generateMipMaps();
+    }
 
     loadMaterials();
 
@@ -85,39 +93,70 @@ void GolfState::loadAssets()
 void GolfState::loadMap()
 {
     //used when parsing holes
-    const auto addCrowd = [&](HoleData& holeData, glm::vec3 position, glm::vec3 lookAt, float rotation)
+    const auto addCrowd = [&](HoleData& holeData, glm::vec3 position, glm::vec3 lookAt, float rotation, std::int32_t crowdIdx)
         {
             constexpr auto MapOrigin = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
+            static std::int32_t seed = 0;
+
+            struct CrowdContext final
+            {
+                std::array<float, 2u> start = {};
+                std::array<float, 2u> end = {};
+                float density = 1.f;
+                constexpr CrowdContext(std::array<float, 2u> s, std::array<float, 2u> e, float d)
+                    : start(s), end(e), density(d) {}
+
+                float checkpoint(const std::array<float, 2u>& point) const
+                {
+                    const float p = ((point[0] * point[0]) / (end[0] * end[0]))
+                                + ((point[1] * point[1]) / (end[1] * end[1]));
+
+                    return p;
+                }
+            };
+            constexpr std::array<CrowdContext, 4u> Contexts =
+            {
+                CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 1.75f),
+                CrowdContext({ -8.f, -1.5f }, { 8.f, 1.5f }, 0.75f),
+                CrowdContext({ -16.f, -3.5f }, { 16.f, 3.5f }, 0.75f),
+                CrowdContext({ -18.f, -5.5f }, { 18.f, 5.5f }, 0.85f)
+            };
+
+            const auto dist = pd::PoissonDiskSampling(Contexts[crowdIdx].density, Contexts[crowdIdx].start, Contexts[crowdIdx].end, 30, seed++);
+
+            rotation *= cro::Util::Const::degToRad;
 
             //used by terrain builder to create instanced geom
-            glm::vec3 offsetPos(-8.f, 0.f, 0.f);
-            const glm::mat4 rotMat = glm::rotate(glm::mat4(1.f), rotation * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
+            const glm::mat4 rotMat = glm::rotate(glm::mat4(1.f), rotation, cro::Transform::Y_AXIS);
 
-            for (auto i = 0; i < 16; ++i)
+            for (const auto& p : dist)
             {
-                auto offset = glm::vec3(rotMat * glm::vec4(offsetPos, 1.f));
-
-                auto tx = glm::translate(glm::mat4(1.f), position - MapOrigin);
-                tx = glm::translate(tx, offset);
-
-                auto lookDir = lookAt - (glm::vec3(tx[3]) + MapOrigin);
-                if (float len = glm::length2(lookDir); len < 1600.f)
+                if (Contexts[crowdIdx].checkpoint(p) < 1.f)
                 {
-                    rotation = std::atan2(-lookDir.z, lookDir.x) + (90.f * cro::Util::Const::degToRad);
-                    tx = glm::rotate(tx, rotation, glm::vec3(0.f, 1.f, 0.f));
+                    auto offset = glm::vec3(rotMat * glm::vec4(p[0], 0.f, p[1], 1.f));
+                    offset.x += 0.3f + (static_cast<float>(cro::Util::Random::value(2, 5)) / 100.f);
+                    offset.z += static_cast<float>(cro::Util::Random::value(-10, 10)) / 100.f;
+
+                    auto r = rotation + cro::Util::Random::value(-0.25f, 0.25f);
+
+                    auto tx = glm::translate(glm::mat4(1.f), position - MapOrigin);
+                    tx = glm::translate(tx, offset);
+
+                    auto lookDir = lookAt - (glm::vec3(tx[3]) + MapOrigin);
+                    const float len = glm::length2(lookDir);
+                    if (len < 1600.f)
+                    {
+                        r = std::atan2(-lookDir.z, lookDir.x);
+                        r += (90.f * cro::Util::Const::degToRad);
+                    }
+                    tx = glm::rotate(tx, r, cro::Transform::Y_AXIS);                      
+
+
+                    float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;
+                    tx = glm::scale(tx, glm::vec3(scale));
+
+                    holeData.crowdPositions[crowdIdx].push_back(tx);
                 }
-                else
-                {
-                    tx = glm::rotate(tx, cro::Util::Random::value(-0.25f, 0.25f) + (rotation * cro::Util::Const::degToRad), glm::vec3(0.f, 1.f, 0.f));
-                }
-
-                float scale = static_cast<float>(cro::Util::Random::value(95, 110)) / 100.f;
-                tx = glm::scale(tx, glm::vec3(scale));
-
-                holeData.crowdPositions.push_back(tx);
-
-                offsetPos.x += 0.3f + (static_cast<float>(cro::Util::Random::value(2, 5)) / 10.f);
-                offsetPos.z = static_cast<float>(cro::Util::Random::value(-10, 10)) / 10.f;
             }
         };
 
@@ -848,6 +887,7 @@ void GolfState::loadMap()
                                 glm::vec3 position(0.f);
                                 float rotation = 0.f;
                                 glm::vec3 lookAt = holeData.pin;
+                                std::int32_t minDensity = 0;
 
                                 for (const auto& modelProp : modelProps)
                                 {
@@ -863,6 +903,10 @@ void GolfState::loadMap()
                                     else if (propName == "lookat")
                                     {
                                         lookAt = modelProp.getValue<glm::vec3>();
+                                    }
+                                    else if (propName == "min_density")
+                                    {
+                                        minDensity = std::clamp(modelProp.getValue<std::int32_t>(), 0, CrowdDensityCount - 1);
                                     }
                                 }
 
@@ -887,7 +931,13 @@ void GolfState::loadMap()
 
                                 if (curve.size() < 4)
                                 {
-                                    addCrowd(holeData, position, lookAt, rotation);
+                                    for (auto i = 0; i < CrowdDensityCount; ++i)
+                                    {
+                                        if (minDensity <= /*m_sharedData.crowdDensity*/i)
+                                        {
+                                            addCrowd(holeData, position, lookAt, rotation, i);
+                                        }
+                                    }
                                 }
                                 else
                                 {
@@ -1022,7 +1072,6 @@ void GolfState::loadMap()
                 holeData.distanceToPin = glm::length(holeData.pin - holeData.tee);
             }
         }
-        std::shuffle(holeData.crowdPositions.begin(), holeData.crowdPositions.end(), cro::Util::Random::rndEngine);
     }
 
     //add the dynamically updated model to any leaderboard props
@@ -1115,14 +1164,53 @@ void GolfState::loadMap()
     {
         m_collisionMesh.updateCollisionMesh(hole.modelEntity.getComponent<cro::Model>().getMeshData());
 
-        for (auto& m : hole.crowdPositions)
+        for (auto& positions : hole.crowdPositions)
         {
-            glm::vec3 pos = m[3];
-            pos.x += MapSize.x / 2;
-            pos.z -= MapSize.y / 2;
+            //remove spectators on the fairway or green
+            positions.erase(std::remove_if(positions.begin(), positions.end(),
+                [&](const glm::mat4& m)
+                {
+                    glm::vec3 pos = m[3];
+                    pos.x += MapSize.x / 2;
+                    pos.z -= MapSize.y / 2;
 
-            auto result = m_collisionMesh.getTerrain(pos);
-            m[3][1] = result.height;
+                    auto result = m_collisionMesh.getTerrain(pos);
+                    return (result.terrain != TerrainID::Rough && result.terrain != TerrainID::Scrub && result.terrain != TerrainID::Stone) || !result.wasRayHit || result.height <= 0;
+                }),
+                positions.end());
+
+
+            //make sure remaining positions are on the ground plane
+            for (auto& m : positions)
+            {
+                glm::vec3 pos = m[3];
+                pos.x += MapSize.x / 2;
+                pos.z -= MapSize.y / 2;
+
+                auto result = m_collisionMesh.getTerrain(pos);
+                m[3][1] = result.height;
+            }
+
+
+            //remove spectators which intersect the bounding sphere of props
+            for (auto pe : hole.propEntities)
+            {
+                auto sphere = pe.getComponent<cro::Model>().getBoundingSphere();
+                sphere.centre += pe.getComponent<cro::Transform>().getPosition();
+
+                positions.erase(std::remove_if(positions.begin(), positions.end(),
+                    [sphere](const glm::mat4& m)
+                    {
+                        glm::vec3 pos = m[3];
+                        pos.x += MapSize.x / 2;
+                        pos.z -= MapSize.y / 2;
+
+                        return sphere.contains(pos);
+                    }),
+                    positions.end());
+            }
+
+            std::shuffle(positions.begin(), positions.end(), cro::Util::Random::rndEngine);
         }
 
         for (auto& c : hole.crowdCurves)
@@ -1134,9 +1222,17 @@ void GolfState::loadMap()
             }
         }
 
-        //make sure the hole position matches the terrain
+        //make sure the hole/target/tee position matches the terrain
         auto result = m_collisionMesh.getTerrain(hole.pin);
         hole.pin.y = result.height;
+
+        result = m_collisionMesh.getTerrain(hole.target);
+        hole.target.y = result.height;
+
+        result = m_collisionMesh.getTerrain(hole.tee);
+        hole.tee.y = result.height;
+
+
 
         //while we're here check if this is a putting
         //course by looking to see if the tee is on the green
@@ -1235,6 +1331,59 @@ void GolfState::loadMap()
         std::fill(data.holeTimes.begin(), data.holeTimes.end(), 0.f);
     }
 
+    //if this is a career game see if we had a round in progress
+    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+    {
+        Social::setLeaderboardsEnabled(true);
+    }
+    else
+    {
+        //always disable these in career
+        Social::setLeaderboardsEnabled(false);
+
+        const auto scoreSize = m_sharedData.connectionData[0].playerData[0].holeScores.size();
+
+        std::uint64_t h = 0;
+        std::vector<std::uint8_t> scores(scoreSize);
+        if (Progress::read(m_sharedData.leagueRoundID, h, scores))
+        {
+            if (h != 0)
+            {
+                scores.resize(scoreSize);
+                m_currentHole = std::min(holeStrings.size() - 1, std::size_t(h));
+                m_terrainBuilder.applyHoleIndex(m_currentHole);
+                
+                auto& player = m_sharedData.connectionData[0].playerData[0];
+                player.holeScores.swap(scores);
+                
+                for (auto i = 0u; i < m_currentHole; ++i)
+                {
+                    player.holeComplete[i] = true;
+
+                    //look at previous holes and see if we need to take on the crowd positions
+                    if (m_holeData[i].modelEntity == m_holeData[m_currentHole].modelEntity)
+                    {
+                        if (m_holeData[m_currentHole].crowdPositions[0].empty())
+                        {
+                            for (auto j = 0u; j < m_holeData[i].crowdPositions.size(); ++j)
+                            {
+                                m_holeData[i].crowdPositions[j].swap(m_holeData[m_currentHole].crowdPositions[j]);
+                            }
+                        }
+
+                        if (m_holeData[m_currentHole].crowdCurves.empty())
+                        {
+                            m_holeData[i].crowdCurves.swap(m_holeData[m_currentHole].crowdCurves);
+                        }
+                    }
+                }
+
+                m_resumedFromSave = true;
+            }
+        }
+    }
+
+
     initAudio(theme.treesets.size() > 2);
 }
 
@@ -1273,18 +1422,20 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Flag] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
+    //we always create this because it's also used on clubs etc even at night
+    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Ball);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
-
+    m_resources.materials.get(m_materialIDs[MaterialID::Ball]).setProperty("u_ballColour", cro::Colour::White);
 
     if (m_sharedData.nightTime)
     {
         m_resources.shaders.loadFromString(ShaderID::BallNight, GlowVertex, GlowFragment);
         shader = &m_resources.shaders.get(ShaderID::BallNight);
         m_materialIDs[MaterialID::BallNight] = m_resources.materials.add(*shader);
+        m_resources.materials.get(m_materialIDs[MaterialID::BallNight]).setProperty("u_ballColour", cro::Colour::White);
     }
 
 
@@ -1381,15 +1532,17 @@ void GolfState::loadMaterials()
     glassMat.blendMode = cro::Material::BlendMode::Alpha;
 
 
-    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Player);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Player] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::PlayerMasked, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
-    shader = &m_resources.shaders.get(ShaderID::PlayerMasked);
-    m_resolutionBuffer.addShader(*shader);
-    m_materialIDs[MaterialID::PlayerMasked] = m_resources.materials.add(*shader);
+    cro::Image defaultMask;
+    defaultMask.create(2, 2, cro::Colour::Black);
+    m_defaultMaskMap.loadFromImage(defaultMask);
+    m_resources.materials.get(m_materialIDs[MaterialID::Player]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    m_resources.materials.get(m_materialIDs[MaterialID::Player]).setProperty("u_maskMap", m_defaultMaskMap);
+
 
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Hair);
@@ -1697,10 +1850,10 @@ void GolfState::loadModels()
     m_modelDefs[ModelID::BullsEye]->loadFromFile("assets/golf/models/target.cmt"); //TODO we can only load this if challenge month or game mode requires
 
     //ball models - the menu should never have let us get this far if it found no ball files
-    for (const auto& [colour, uid, path, _1, _2, _3] : m_sharedData.ballInfo)
+    for (const auto& info : m_sharedData.ballInfo)
     {
         std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
-        m_ballModels.insert(std::make_pair(uid, std::move(def)));
+        m_ballModels.insert(std::make_pair(info.uid, std::move(def)));
     }
 
 
@@ -1727,7 +1880,7 @@ void GolfState::loadModels()
             {
                 return std::distance(m_sharedData.avatarInfo.begin(), result);
             }
-            return 0;
+            return cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1);
         };
 
     const auto indexFromHairID = [&](std::uint32_t hairID)
@@ -1739,7 +1892,7 @@ void GolfState::loadModels()
                 return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
             }
 
-            return 0;
+            return static_cast<std::int32_t>(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1));
         };
 
     //player avatars
@@ -1750,6 +1903,9 @@ void GolfState::loadModels()
         {
             auto skinID = m_sharedData.connectionData[i].playerData[j].skinID;
             auto avatarIndex = indexFromSkinID(skinID);
+
+            //if this returned a random index because the skinID wasn't found, correct the skinID
+            skinID = m_sharedData.avatarInfo[avatarIndex].uid;
 
             m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(avatarIndex));
             m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
@@ -1803,6 +1959,7 @@ void GolfState::loadModels()
                 md.createModel(entity);
 
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
+                applyMaterialData(md, material); //apply mask map if it exists
                 material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[i][j]);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
 
@@ -1870,6 +2027,7 @@ void GolfState::loadModels()
                     {
                         //look to see if we have a hair model to attach
                         auto hairID = indexFromHairID(m_sharedData.connectionData[i].playerData[j].hairID);
+
                         if (hairID != 0
                             && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
                         {

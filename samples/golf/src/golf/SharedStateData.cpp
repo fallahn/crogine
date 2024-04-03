@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -59,6 +59,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         sizes[i] = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, playerData[i].name.size() * sizeof(std::uint32_t)));
 
         sizes[i] += sizeof(playerData[i].avatarFlags);
+        sizes[i] += sizeof(playerData[i].ballColourIndex);
         sizes[i] += sizeof(playerData[i].ballID);
         sizes[i] += sizeof(playerData[i].hairID);
         sizes[i] += sizeof(playerData[i].skinID);
@@ -78,6 +79,9 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         std::memcpy(&buffer[offset], playerData[i].avatarFlags.data(), sizeof(playerData[i].avatarFlags));
         offset += sizeof(playerData[i].avatarFlags);
 
+        std::memcpy(&buffer[offset], &playerData[i].ballColourIndex, sizeof(playerData[i].ballColourIndex));
+        offset += sizeof(playerData[i].ballColourIndex);
+        
         std::memcpy(&buffer[offset], &playerData[i].ballID, sizeof(playerData[i].ballID));
         offset += sizeof(playerData[i].ballID);
 
@@ -173,6 +177,10 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         offset += sizeof(playerData[i].avatarFlags);
         stringSize -= sizeof(playerData[i].avatarFlags);
 
+        std::memcpy(&playerData[i].ballColourIndex, ptr + offset, sizeof(playerData[i].ballColourIndex));
+        offset += sizeof(playerData[i].ballColourIndex);
+        stringSize -= sizeof(playerData[i].ballColourIndex);        
+        
         std::memcpy(&playerData[i].ballID, ptr + offset, sizeof(playerData[i].ballID));
         offset += sizeof(playerData[i].ballID);
         stringSize -= sizeof(playerData[i].ballID);
@@ -203,6 +211,15 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
 
         playerData[i].name = cro::String::fromUtf32(buffer.begin(), buffer.end());
         offset += stringSize;
+
+        if (playerData[i].ballColourIndex < pc::Palette.size())
+        {
+            playerData[i].ballColour = pc::Palette[playerData[i].ballColourIndex];
+        }
+        else
+        {
+            playerData[i].ballColour = cro::Colour::White;
+        }
     }
 
     return true;

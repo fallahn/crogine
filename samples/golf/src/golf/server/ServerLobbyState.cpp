@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,7 @@ source distribution.
 #include "../CommonConsts.hpp"
 #include "../SharedStateData.hpp"
 #include "../Utility.hpp"
+
 #include "ServerLobbyState.hpp"
 #include "ServerPacketData.hpp"
 #include "ServerMessages.hpp"
@@ -41,6 +42,20 @@ source distribution.
 #include <cstring>
 
 using namespace sv;
+
+PlayerInfo& PlayerInfo::operator=(const PlayerData& pd)
+{
+    name = pd.name;
+    avatarFlags = pd.avatarFlags;
+    ballColourIndex = pd.ballColourIndex;
+    ballID = pd.ballID;
+    hairID = pd.hairID;
+    skinID = pd.skinID;
+    flipped = pd.flipped;
+    isCPU = pd.isCPU;
+
+    return *this;
+}
 
 LobbyState::LobbyState(SharedData& sd)
     : m_returnValue (StateID::Lobby),
@@ -175,7 +190,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 //is this true for other connections?
                 if (idx < ConstVal::MaxClients)
                 {
-                    m_sharedData.clubLevels[idx] = (data & 0xff);
+                    m_sharedData.clubLevels[idx] = std::clamp((data & 0xff), 0, 2);
                     //LogI << "set club level for client " << (int)idx << std::endl;
                 }
                 /*else
@@ -250,13 +265,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
                 m_sharedData.clients[connectionID].playerCount = cd.playerCount;
                 for (auto i = 0u; i < cd.playerCount; ++i)
                 {
-                    m_sharedData.clients[connectionID].playerData[i].name = cd.playerData[i].name;
-                    m_sharedData.clients[connectionID].playerData[i].avatarFlags = cd.playerData[i].avatarFlags;
-                    m_sharedData.clients[connectionID].playerData[i].ballID = cd.playerData[i].ballID;
-                    m_sharedData.clients[connectionID].playerData[i].hairID = cd.playerData[i].hairID;
-                    m_sharedData.clients[connectionID].playerData[i].skinID = cd.playerData[i].skinID;
-                    m_sharedData.clients[connectionID].playerData[i].flipped = cd.playerData[i].flipped;
-                    m_sharedData.clients[connectionID].playerData[i].isCPU = cd.playerData[i].isCPU;
+                    m_sharedData.clients[connectionID].playerData[i] = cd.playerData[i];
                 }
             }
             else
@@ -284,13 +293,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
             cd.playerCount = static_cast<std::uint8_t>(c.playerCount);
             for (auto j = 0u; j < c.playerCount; ++j)
             {
-                cd.playerData[j].name = c.playerData[j].name;
-                cd.playerData[j].avatarFlags = c.playerData[j].avatarFlags;
-                cd.playerData[j].ballID = c.playerData[j].ballID;
-                cd.playerData[j].hairID = c.playerData[j].hairID;
-                cd.playerData[j].skinID = c.playerData[j].skinID;
-                cd.playerData[j].flipped = c.playerData[j].flipped;
-                cd.playerData[j].isCPU = c.playerData[j].isCPU;
+                cd.playerData[j] = c.playerData[j];
             }
             auto buffer = cd.serialise();
 

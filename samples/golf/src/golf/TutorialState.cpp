@@ -2379,7 +2379,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
 
     if (cro::GameController::getControllerCount() != 0)
     {
-        entity.getComponent<cro::Text>().setString("Hold    to show the Spin icon");
+        entity.getComponent<cro::Text>().setString("Hold    to show the Spin Icon");
         centreText(entity);
 
         auto buttonEnt = m_scene.createEntity();
@@ -2407,7 +2407,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     }
     else
     {
-        cro::String str = "Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]) + " to show the Spin icon";
+        cro::String str = "Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::SpinMenu]) + " to show the Spin Icon";
         entity.getComponent<cro::Text>().setString(str);
         centreText(entity);
     }
@@ -2511,7 +2511,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("Use the directional controls to adjust the spin");
+    entity.addComponent<cro::Text>(font).setString("When the Spin Icon is visible use the directional controls to adjust the spin");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
@@ -2666,6 +2666,75 @@ void TutorialState::tutorialSpin(cro::Entity root)
             text04.getComponent<cro::Callback>().active = true;
         });
 
+
+    //fifth text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
+    entity.addComponent<cro::Text>(font).setString("Full club stats are avilable from the Career and Free Play menus");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -174.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt) mutable
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            cro::FloatRect area(bounds.left, bounds.bottom, bounds.width * currTime, bounds.height);
+            e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                showContinue();
+            }
+        };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    centreText(entity);
+    auto text05 = entity;
+
+
+    //club info
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("club_details");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });;
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -210.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + dt);
+
+            glm::vec2 scale(1.f, cro::Util::Easing::easeInQuint(currTime));
+            e.getComponent<cro::Transform>().setScale(scale);
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto infoEnt = entity;
+
+    m_actionCallbacks.push_back([text05, infoEnt]() mutable
+        {
+            text05.getComponent<cro::Callback>().active = true;
+            infoEnt.getComponent<cro::Callback>().active = true;
+        });
 
 
     m_actionCallbacks.push_back([&]() { quitState(); });

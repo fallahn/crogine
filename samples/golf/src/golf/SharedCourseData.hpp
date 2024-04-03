@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2024
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,14 +29,29 @@ source distribution.
 
 #pragma once
 
-/*Wraps UST because complicated includes.*/
-class StackDump final
-{
-public:
-    static void dump(int);
+#include <crogine/core/String.hpp>
+#include <crogine/graphics/VideoPlayer.hpp>
 
-    enum
+#include <array>
+#include <vector>
+#include <unordered_map>
+
+//instanciated in MenuState and pointed to by SharedStateData
+//when sub-menus require it (else nullptr)
+struct SharedCourseData final
+{
+    struct CourseData final
     {
-        ABRT, SEG, ILL, FPE
+        cro::String directory;
+        cro::String title = "Untitled";
+        cro::String description = "No Description";
+        std::int32_t courseNumber = 0; //base 1
+        std::array<cro::String, 3u> holeCount = {};
+        std::vector<std::int32_t> parVals;
+        bool isUser = false;
     };
+    std::vector<CourseData> courseData;
+    std::unordered_map<std::string, std::unique_ptr<cro::Texture>> courseThumbs;
+    std::unordered_map<std::string, std::string> videoPaths;
+    cro::VideoPlayer videoPlayer;
 };

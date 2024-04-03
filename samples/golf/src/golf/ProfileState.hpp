@@ -40,22 +40,32 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/SpriteSheet.hpp>
 
 struct SharedStateData;
 struct SharedProfileData;
+
+namespace cro
+{
+    class SpriteSheet;
+}
 
 struct BallPreview final
 {
     cro::Entity root;
     cro::Entity ball;
+
+    std::int32_t type = 0;
 };
 
 struct AvatarPreview final
 {
+    std::int32_t type = 0;
     std::size_t hairIndex = 0; //TODO this doesn't really need to be per model...
     cro::Attachment* hairAttachment = nullptr;
     cro::Entity previewModel;
     std::vector<cro::Entity> previewAudio;
+    std::size_t previewIndex = 0; //actual index may differ because of locked models
 };
 
 class ProfileState final : public cro::State, public cro::GuiClient
@@ -109,6 +119,9 @@ private:
             Swatch, AvatarPreview,
             BioText,
 
+            BallBrowser,
+            HairBrowser,
+
             Count
         };
     };
@@ -129,11 +142,11 @@ private:
     std::vector<cro::Entity> m_ballHairModels;
     std::size_t m_ballIndex;
     std::size_t m_ballHairIndex;
-    cro::RenderTexture m_ballThumbs;
 
     std::vector<AvatarPreview> m_avatarModels;
     std::vector<cro::Entity> m_avatarHairModels;
     std::size_t m_avatarIndex;
+    std::size_t m_lockedAvatarCount;
 
     std::vector<ProfileTexture> m_profileTextures;
 
@@ -151,6 +164,8 @@ private:
         };
     };
     std::array<FlyoutMenu, PaletteID::Count> m_flyouts = {};
+    FlyoutMenu m_ballColourFlyout;
+
     std::size_t m_lastSelected;
 
     void addSystems();
@@ -158,9 +173,29 @@ private:
     void buildScene();
     void buildPreviewScene();
     void createPalettes(cro::Entity);
-    void createBallFlyout(cro::Entity);
-    void createBallThumbs();
+    void createItemThumbs();
+    void createItemPage(cro::Entity, std::int32_t page, std::int32_t itemID);
+
+    //used to pass menu callbacks between creation functions
+    struct CallbackContext final
+    {
+        std::int32_t arrowSelected = 0;
+        std::int32_t arrowUnselected = 0;
+        std::int32_t closeSelected = 0;
+        std::int32_t closeUnselected = 0;
+        cro::SpriteSheet spriteSheet;
+        std::function<cro::Entity(std::int32_t)> createArrow;
+    };
+
+    void createBallBrowser(cro::Entity, const CallbackContext&);
+    void createHairBrowser(cro::Entity, const CallbackContext&);
+    cro::Entity createBrowserBackground(std::int32_t, const CallbackContext&);
+
     void quitState();
+
+    //returns the highlight entity
+    cro::Entity createPaletteBackground(cro::Entity parent, FlyoutMenu& target, std::uint32_t palleteIndex);
+    void createPaletteButtons(FlyoutMenu& target, std::uint32_t palleteIndex, std::uint32_t menuID, std::size_t indexOffset);
 
     std::size_t indexFromAvatarID(std::uint32_t) const;
     std::size_t indexFromBallID(std::uint32_t) const;
@@ -169,6 +204,42 @@ private:
     void setAvatarIndex(std::size_t);
     void setHairIndex(std::size_t);
     void setBallIndex(std::size_t);
+
+    struct PageHandles final
+    {
+        cro::Entity prevButton;
+        cro::Entity nextButton;
+        cro::Entity itemLabel;
+        cro::Entity pageCount;
+        std::size_t pageTotal = 1;
+    };
+
+    struct PaginatorContext final
+    {
+        cro::RenderTexture thumbnailTexture;
+        std::vector<BrowserPage> pageList;
+        PageHandles pageHandles;
+        std::size_t menuID;
+        std::uint32_t activateCallback;
+
+        std::size_t pageIndex = 0;
+        std::size_t itemCount = 0;
+    };
+
+    struct PaginationID final
+    {
+        enum
+        {
+            Balls, Hair,
+
+            Count
+        };
+    };
+    std::array<PaginatorContext, PaginationID::Count> m_pageContexts = {};
+
+    void nextPage(std::int32_t itemID);
+    void prevPage(std::int32_t itemID);
+    void activatePage(std::int32_t itemID, std::size_t page, bool);
 
     void refreshMugshot();
     void refreshNameString();

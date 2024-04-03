@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -170,7 +170,7 @@ void SpectatorSystem::updateSpectatorGroups()
 {
     m_spectatorGroups.clear();
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto* path = entity.getComponent<Spectator>().path;

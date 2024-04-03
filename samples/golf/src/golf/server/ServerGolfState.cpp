@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -41,6 +41,7 @@ source distribution.
 
 #include <AchievementIDs.hpp>
 #include <Social.hpp>
+#include <Input.hpp>
 
 #include <crogine/core/Log.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -349,6 +350,9 @@ void GolfState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::DronePosition:
+            m_sharedData.host.broadcastPacket(PacketID::DronePosition, evt.packet.as<std::array<std::int16_t, 3u>>(), net::NetFlag::Unreliable);
+            break;
         case PacketID::NewPlayer:
             //checks if player is CPU and requires fast move
             //makeCPUMove();
@@ -470,6 +474,8 @@ std::int32_t GolfState::process(float dt)
                     m_playerInfo[0].distanceToHole = 0.f;
                     m_playerInfo[0].terrain = TerrainID::Green;
                     setNextPlayer(); //resets the timer
+
+                    m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::IdleTimeout), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
         }
@@ -509,7 +515,7 @@ std::int32_t GolfState::process(float dt)
                         && (progress.value != progress.target)
                         && m_sharedData.scoreType == ScoreType::Stroke)
                     {
-                        if (cro::Util::Random::value(0, 9) == 0)
+                        if (cro::Util::Random::value(0, 4) == 0)
                         {
                             return m_randomTargetCount++ < MaxRandomTargets;
                         }
@@ -1315,7 +1321,9 @@ void GolfState::initScene()
     //check for putt from tee and update any rule properties
     for (auto& hole : m_holeData)
     {
-        m_scene.getSystem<BallSystem>()->setHoleData(hole); //applies putt from tee
+        //applies putt from tee and corrects vertical pos
+        //for pin/target/tee
+        m_scene.getSystem<BallSystem>()->setHoleData(hole);
 
         switch (m_sharedData.scoreType)
         {
@@ -1363,6 +1371,34 @@ void GolfState::buildWorld()
         player.distanceScore.resize(m_holeData.size());
         std::fill(player.holeScore.begin(), player.holeScore.end(), 0);
         std::fill(player.distanceScore.begin(), player.distanceScore.end(), 0.f);
+    }
+
+    //if this is a career league look for a progress file
+    //TODO what are the chances of this overlapping with the client?
+    if (m_sharedData.leagueID != 0)
+    {
+        std::uint64_t h = 0;
+        std::vector<std::uint8_t> scores(m_holeData.size());
+
+        if (Progress::read(m_sharedData.leagueID, h, scores)
+            && h != 0)
+        {
+            m_currentHole = std::min(std::size_t(h), m_holeData.size() - 1);
+
+            scores.resize(m_holeData.size());
+
+            //if we're here we *should* only have one player...
+            auto& player = m_playerInfo[0];
+            player.holeScore.swap(scores);
+
+            player.position = m_holeData[m_currentHole].tee;
+            player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
+            m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[m_currentHole]);
+
+            player.terrain = m_scene.getSystem<BallSystem>()->getTerrain(player.position).terrain;
+            player.ballEntity.getComponent<cro::Transform>().setPosition(player.position);
+            player.ballEntity.getComponent<Ball>().terrain = player.terrain;
+        }
     }
 }
 
@@ -1419,6 +1455,8 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
                     m_playerInfo[0].distanceToHole = 0.f;
                     m_playerInfo[0].terrain = TerrainID::Green;
                     setNextPlayer();
+
+                    m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::HostPunishment), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
             break;

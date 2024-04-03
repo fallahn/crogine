@@ -48,11 +48,12 @@ source distribution.
 //(player avatar data format changed 1110 -> 1120)
 //(ball started sending wind effect 1120 -> 1124)
 //(added night mode/weather 1141 -> 1150)
-static constexpr std::uint16_t CURRENT_VER = 1153;
+//(player avatar data format changed 1153->1160)
+static constexpr std::uint16_t CURRENT_VER = 1160;
 #ifdef __APPLE__
-static const std::string StringVer("1.15.3 (macOS beta)");
+static const std::string StringVer("1.16.0 (macOS beta)");
 #else
-static const std::string StringVer("1.15.3");
+static const std::string StringVer("1.16.0");
 #endif
 
 struct HallEntry final
@@ -95,7 +96,8 @@ public:
             StatsReceived,
             HOFReceived,
             AwardsReceived,
-            RequestRestart
+            RequestRestart,
+            LeagueReceived
         }type = StatsReceived;
         std::int32_t index = -1;
         std::int32_t page = -1;
@@ -112,6 +114,7 @@ public:
             OverlayActivated,
             PlayerAchievement, //as in we should cheer, not an actual achievement
             MonthlyProgress,
+            LeagueProgress,
             LobbyUpdated
         }type = LevelUp;
         std::int32_t level = 0; //if monthly progress then current value
@@ -166,11 +169,14 @@ public:
         };
     };
     static void findLeaderboards(std::int32_t) {}
-    static void insertScore(const std::string&, std::uint8_t, std::int32_t);
+    static void setLeaderboardsEnabled(bool) {}
+    static bool getLeaderboardsEnabled() { return false; }
+    static void insertScore(const std::string&, std::uint8_t, std::int32_t, std::int32_t);
     static cro::String getTopFive(const std::string& course, std::uint8_t holeCount);
     static void invalidateTopFive(const std::string& course, std::uint8_t holeCount);
     static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
     static std::int32_t getMonthlyBest(const std::string&, std::uint8_t) { return -1; }
+    static const std::array<cro::String, 5u>& getMonthlyLeague() { static std::array<cro::String, 5u> fallback = {}; return fallback; }
     static void getRandomBest() {}
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
     static void courseComplete(const std::string&, std::uint8_t);
@@ -208,7 +214,9 @@ public:
 
     enum class UnlockType
     {
-        Ball, Club, Level, Generic
+        Ball, Club, Level, Generic,
+        CareerBalls, CareerHair, CareerAvatar,
+        CareerPosition
     };
     static std::int32_t getUnlockStatus(UnlockType);
     static void setUnlockStatus(UnlockType, std::int32_t set);
@@ -218,7 +226,7 @@ public:
         enum
         {
             Ball, Hair, Course,
-            Profile, Avatar
+            Profile, Avatar, Career
         };
     };
     static std::string getBaseContentPath();

@@ -441,6 +441,15 @@
     <ClCompile Include="src\runner\EndlessSoundDirector.cpp">
       <Filter>Source Files\endless</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\Career.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\FreePlayState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\CareerState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -901,6 +910,18 @@
     </ClInclude>
     <ClInclude Include="src\runner\EndlessShared.hpp">
       <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Career.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\FreePlayState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CareerState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\SharedCourseData.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

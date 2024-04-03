@@ -134,6 +134,11 @@ void Server::setHostID(std::uint64_t id)
     m_sharedData.hostID = id;
 }
 
+void Server::setLeagueID(std::int32_t id)
+{
+    m_sharedData.leagueID = id;
+}
+
 //private
 void Server::run()
 {

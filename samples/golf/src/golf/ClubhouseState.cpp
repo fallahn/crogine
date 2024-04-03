@@ -172,12 +172,12 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     //this is actually set as a flag from the pause menu
     //to say we want to quit
-    if (sd.tutorial)
+    if (sd.gameMode != GameMode::Clubhouse)
     {
         sd.serverInstance.stop();
         sd.hosting = false;
 
-        sd.tutorial = false;
+        sd.gameMode = GameMode::Clubhouse;
         sd.clientConnection.connected = false;
         sd.clientConnection.connectionID = ConstVal::NullValue;
         sd.clientConnection.ready = false;
@@ -551,8 +551,9 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
             {
                 if (data.gameType == Server::GameMode::Billiards)
                 {
-                    m_matchMaking.joinGame(data.hostID);
-                    m_sharedData.lobbyID = data.hostID;
+                    /*m_matchMaking.joinGame(data.hostID);
+                    m_sharedData.lobbyID = data.hostID;*/
+                    finaliseGameJoin(data.hostID);
                     m_sharedData.localConnectionData.playerCount = 1;
                 }
                 else
@@ -571,12 +572,32 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
             break;
         case MatchMaking::Message::LobbyCreated:
             //broadcast the lobby ID to clients. This will also join ourselves.
+            //actually this now does nothing - hosts are auto-joined to lobbies
+            //and clients ignore lobbies completely and connect directly to hosts
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::NewLobbyReady, data.hostID, net::NetFlag::Reliable);
             break;
         case MatchMaking::Message::LobbyJoined:
-            finaliseGameJoin(data);
+            if (!m_sharedData.clientConnection.connected)
+            {
+                if (data.gameType == Server::GameMode::Billiards)
+                {
+                    finaliseGameJoin(data.hostID);
+                }
+                else
+                {
+                    m_sharedData.inviteID = data.hostID;
+                    requestStackClear();
+                    requestStackPush(StateID::Menu);
+                }
+            }
             break;
         case MatchMaking::Message::LobbyJoinFailed:
+            m_sharedData.lobbyID = 0;
+            m_sharedData.inviteID = 0;
+            m_sharedData.clientConnection.hostID = 0;
+
+            m_matchMaking.leaveLobby();
+
             m_matchMaking.refreshLobbyList(Server::GameMode::Billiards);
             updateLobbyList();
             m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
@@ -1659,13 +1680,13 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientPlayerCount, m_sharedData.localConnectionData.playerCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         case PacketID::NewLobbyReady:
-            m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
+            //m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
             break;
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Billiards)
             {
                 //leave the lobby
-                m_matchMaking.leaveGame();
+                m_matchMaking.leaveLobby();
 
                 m_sharedData.ballSkinIndex = m_tableData[m_tableIndex].ballSkinIndex;
                 m_sharedData.tableSkinIndex = m_tableData[m_tableIndex].tableSkinIndex;
@@ -1696,11 +1717,11 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
             auto buffer = m_sharedData.localConnectionData.serialise();
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-            if (m_sharedData.tutorial)
+            /*if (m_sharedData.gameMode == GameMode::Tutorial)
             {
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
-            else
+            else*/
             {
                 //switch to lobby view
                 cro::Command cmd;
@@ -1884,7 +1905,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
     }
     else if (evt.type == net::NetEvent::ClientDisconnect)
     {
-        m_matchMaking.leaveGame();
+        m_matchMaking.leaveLobby();
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(StateID::Error);
     }
@@ -1959,10 +1980,11 @@ void ClubhouseState::finaliseGameCreate()
     refreshLobbyButtons();
 }
 
-void ClubhouseState::finaliseGameJoin(const MatchMaking::Message& data)
+void ClubhouseState::finaliseGameJoin(std::uint64_t hostID)
 {
 #ifdef USE_GNS
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(data.hostID)));
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(hostID)));
+    m_sharedData.clientConnection.hostID = hostID;
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
 #endif

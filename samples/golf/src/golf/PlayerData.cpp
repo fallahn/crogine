@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,12 +31,27 @@ source distribution.
 #include "PlayerColours.hpp"
 #include "GameConsts.hpp"
 #include "spooky2.hpp"
+#include "server/ServerState.hpp"
 
 #include <Social.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/core/ConfigFile.hpp>
 
 #include <crogine/graphics/ImageArray.hpp>
+
+PlayerData& PlayerData::operator=(const sv::PlayerInfo& pi)
+{
+    name = pi.name;
+    avatarFlags = pi.avatarFlags;
+    ballColourIndex = pi.ballColourIndex;
+    ballID = pi.ballID;
+    hairID = pi.hairID;
+    skinID = pi.skinID;
+    flipped = pi.flipped;
+    isCPU = pi.isCPU;
+
+    return *this;
+}
 
 bool PlayerData::saveProfile() const
 {   
@@ -47,6 +62,7 @@ bool PlayerData::saveProfile() const
         const auto s = name.toUtf8();
         cfg.addProperty("name", std::string(s.c_str(), s.c_str() + s.length()));
     }
+    cfg.addProperty("ball_colour").setValue(ballColourIndex);
     cfg.addProperty("ball_id").setValue(ballID);
     cfg.addProperty("hair_id").setValue(hairID);
     cfg.addProperty("skin_id").setValue(skinID);
@@ -92,6 +108,16 @@ bool PlayerData::saveProfile() const
 
 bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 {
+    //profiles may not yet have the colour index property, so set to a default
+    if (ballColourIndex < pc::Palette.size())
+    {
+        ballColour = pc::Palette[ballColourIndex];
+    }
+    else
+    {
+        ballColour = cro::Colour::White;
+    }
+
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path, false))
     {
@@ -102,6 +128,18 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             if (n == "name")
             {
                 name = prop.getValue<cro::String>();
+            }
+            else if (n == "ball_colour")
+            {
+                ballColourIndex = (prop.getValue<std::uint32_t>() & 0xff);
+                if (ballColourIndex < pc::Palette.size())
+                {
+                    ballColour = pc::Palette[ballColourIndex];
+                }
+                else
+                {
+                    ballColour = cro::Colour::White;
+                }
             }
             else if (n == "ball_id")
             {

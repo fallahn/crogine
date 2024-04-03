@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -789,11 +789,11 @@ void PlaylistState::buildScene()
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
         md.createModel(entity);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
+        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Course]);
         for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
         {
-            applyMaterialData(md, material, i);
-            entity.getComponent<cro::Model>().setMaterial(i, material);
+            applyMaterialData(md, mat, i);
+            entity.getComponent<cro::Model>().setMaterial(i, mat);
         }
 
         m_collisionMesh.updateCollisionMesh(entity.getComponent<cro::Model>().getMeshData());
@@ -1546,7 +1546,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     glm::vec2 position(0.f);
     for (auto i = 0u; i < m_skyboxes.size(); ++i)
     {
-        auto entity = m_uiScene.createEntity();
+        entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(m_skyboxes[i]);
@@ -1800,7 +1800,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     glm::vec2 position(0.f);
     for (auto i = 0u; i < m_shrubs.size(); ++i)
     {
-        auto entity = m_uiScene.createEntity();
+        entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString(m_shrubs[i]);
@@ -2142,7 +2142,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     glm::vec2 position(0.f);
     for (auto i = 0u; i < m_holeDirs.size(); ++i)
     {
-        auto entity = m_uiScene.createEntity();
+        entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(m_holeDirs[i].name);
@@ -4211,9 +4211,9 @@ void PlaylistState::loadCourse()
         cro::FileSystem::createDirectory(exportDir);
     }
 
-    std::stringstream ss;
-    ss << exportDir << m_saveFiles[m_saveFileIndex];
-    std::string fileName = ss.str();
+    std::stringstream strs;
+    strs << exportDir << m_saveFiles[m_saveFileIndex];
+    std::string fileName = strs.str();
 
     cro::RaiiRWops file;
     file.file = SDL_RWFromFile(fileName.c_str(), "rb");

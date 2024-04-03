@@ -33,6 +33,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "Clubs.hpp"
+#include "Career.hpp"
 #include "MenuConsts.hpp"
 #include "CommonConsts.hpp"
 #include "TextAnimCallback.hpp"
@@ -262,7 +263,6 @@ void GolfState::buildUI()
     {
         cam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Composite];
     }
-
 
     auto courseEnt = entity;
     m_courseEnt = courseEnt;
@@ -1616,6 +1616,13 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_roundEnded = true;
     Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
 
+#ifdef USE_GNS
+    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+    {
+        Social::incCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
+    }
+#endif
+
     if (m_achievementTracker.eagles > 1
         && m_achievementTracker.birdies > 2)
     {
@@ -1735,7 +1742,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
             if (CourseIDs.count(m_sharedData.mapDirectory) != 0)
             {
                 Achievements::awardAchievement(AchievementStrings[CourseIDs.at(m_sharedData.mapDirectory)]);
-                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
+                if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+                {
+                    Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
+                }
 
                 if (m_sharedData.nightTime)
                 {
@@ -1812,6 +1822,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
         else
         {
+            if (m_holeData.size() == 12
+                && m_sharedData.scoreType == ScoreType::ShortRound)
+            {
+                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
+            }
+
             m_achievementDebug.awardStatus = "Did not award Course Complete: there were only " + std::to_string(m_holeData.size()) + " holes.";
         }
 
@@ -1909,7 +1925,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
             sec--;
         }
 
-        if (m_sharedData.tutorial)
+        if (m_sharedData.gameMode == GameMode::Tutorial)
         {
             e.getComponent<cro::Text>().setString("Returning to menu in: " + std::to_string(sec));
         }
@@ -1933,7 +1949,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
-    if (personalBest)
+    if (personalBest && Social::getLeaderboardsEnabled())
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.8f });
@@ -2062,7 +2078,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     }
     refreshUI();
-
 }
 
 void GolfState::createScoreboard()
@@ -2078,7 +2093,7 @@ void GolfState::createScoreboard()
     size.y -= size.y / 2.f;
 
     auto rootEnt = m_uiScene.createEntity();
-    rootEnt.addComponent<cro::Transform>().setPosition({ size.x, -size.y });
+    rootEnt.addComponent<cro::Transform>().setPosition({ size.x, -size.y, 1.f });
     rootEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::ScoreboardController;
     //use the callback to keep the board centred/scaled
     rootEnt.addComponent<cro::Callback>().function =
@@ -4493,17 +4508,54 @@ void GolfState::updateLeague()
             parVals[i] = m_holeData[i].par;
         }
 
+        League* league = nullptr;
+        League clubLeague(LeagueRoundID::Club);
+
+        if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+        {
+            league = &clubLeague;
+        }
+        else
+        {
+            league = &Career::instance().getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
+        }
+
         //we assume that as achievments are allowed that
-        //there's only one human player
+        //there's only one human player - though they may not
+        //necessarily be first in the player list
         for (const auto& player : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
         {
             if (!player.isCPU)
             {
-                m_league.iterate(parVals, player.holeScores, m_holeData.size());
+                league->iterate(parVals, player.holeScores, m_holeData.size());
 #ifdef USE_GNS
                 //logGameScores(parVals, player.holeScores, m_holeData.size());
 #endif
                 break;
+            }
+        }
+
+        //if this is the final league and the last round
+        if (m_sharedData.leagueRoundID == LeagueRoundID::RoundSix
+            && league->getCurrentSeason() > 1) //iterating above will have incremented this on completion
+        {
+            Achievements::awardAchievement(AchievementStrings[AchievementID::SemiRetired]);
+        }
+
+        //if all the leagues are gold...
+        //remember this might happen in any order
+        //if (league->getCurrentBest() == 1)
+        if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+        {
+            std::int32_t bestCount = 0;
+            for (auto i = 0u; i < 6u; ++i)
+            {
+                bestCount += Career::instance().getLeagueTables()[i].getCurrentBest();
+            }
+
+            if (bestCount == 6)
+            {
+                Achievements::awardAchievement(AchievementStrings[AchievementID::AllTime]);
             }
         }
     }
@@ -4545,7 +4597,7 @@ glm::vec2 MinimapZoom::toMapCoords(glm::vec3 worldCoord) const
 //------emote wheel-----//
 void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::TextureResource& textures)
 {
-    if (sharedData.tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial)
     {
         //don't need this.
         return;
@@ -4689,7 +4741,7 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
 
 bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 {
-    if (sharedData.tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial)
     {
         return false;
     }
@@ -4944,7 +4996,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 
 void GolfState::EmoteWheel::update(float dt)
 {
-    if (sharedData.tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial)
     {
         return;
     }
@@ -4967,7 +5019,7 @@ void GolfState::EmoteWheel::update(float dt)
 
 void GolfState::EmoteWheel::refreshLabels()
 {
-    if (sharedData.tutorial)
+    if (sharedData.gameMode == GameMode::Tutorial)
     {
         //these won't exist
         return;

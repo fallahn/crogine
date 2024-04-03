@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,6 +31,8 @@ source distribution.
 #include "Social.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
+#include "RandNames.hpp"
+#include "XPAwardStrings.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/App.hpp>
@@ -41,9 +43,20 @@ source distribution.
 
 #include <string>
 #include <fstream>
+#include <filesystem>
 
 namespace
 {
+    constexpr std::array XPAmount =
+    {
+        400, 200, 100
+    };
+
+    constexpr std::array XPMultiplier =
+    {
+        100, 50, 25
+    };
+
     const std::string FileName("lea.gue");
 
     constexpr std::int32_t MaxCurve = 5;
@@ -81,14 +94,24 @@ namespace
     }
 
     constexpr std::int32_t SkillRoof = 10; //after this many increments the skills stop getting better - just shift around
+    constexpr float BaseQuality = 0.87f;
+    constexpr float MinQuality = BaseQuality - 0.07f; //0.01 * PlayerCount/2
+
 }
 
-League::League()
-    : m_playerScore     (0),
+League::League(std::int32_t id)
+    : m_id              (id),
+    m_maxIterations     (id == LeagueRoundID::Club ? MaxIterations : MaxIterations / 4),
+    m_playerScore       (0),
     m_currentIteration  (0),
     m_currentSeason     (1),
-    m_increaseCount     (0)
+    m_increaseCount     (0),
+    m_currentPosition   (16),
+    m_currentBest       (15),
+    m_previousPosition  (17)
 {
+    CRO_ASSERT(id < LeagueRoundID::Count, "");
+
     read();
 }
 
@@ -110,26 +133,70 @@ void League::reset()
 
         //this starts small and increase as
         //player level is increased
-        player.quality = 0.87f - (0.01f * (player.nameIndex / 2));
+        player.quality = BaseQuality - (0.01f * (player.nameIndex / 2));
     }
+
+    //for career leagues we want to increase the initial difficulty
+    //as it remains at that level between seasons
+    std::int32_t maxIncrease = 0;
+    switch (m_id)
+    {
+    default: break;
+    case LeagueRoundID::RoundTwo:
+        maxIncrease = 2;
+        break;
+    case LeagueRoundID::RoundThree:
+        maxIncrease = 4;
+        break;
+    case LeagueRoundID::RoundFour:
+        maxIncrease = 6;
+        break;
+    case LeagueRoundID::RoundFive:
+        maxIncrease = 8;
+        break;
+    case LeagueRoundID::RoundSix:
+        maxIncrease = 10;
+        break;
+    }
+
+    for (auto i = 0; i < maxIncrease; ++i)
+    {
+        increaseDifficulty();
+    }
+
+    createSortedTable();
+
     m_currentIteration = 0;
     m_currentSeason = 1;
     m_playerScore = 0;
     m_increaseCount = 0;
+
+    m_currentPosition = 16;
+    m_currentBest = 15;
+    m_previousPosition = 17;
+
+    const auto path = getFilePath(PrevFileName);
+    if (cro::FileSystem::fileExists(path))
+    {
+        std::error_code ec;
+        std::filesystem::remove(path, ec);
+    }
+
     write();
 }
 
 void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vector<std::uint8_t>& playerScores, std::size_t holeCount)
 {
     //reset the scores if this is the first iteration of a new season
-    if (m_currentIteration == 0)
+    //moved to end of func when resetting iter
+    /*if (m_currentIteration == 0)
     {
         m_playerScore = 0;
         for (auto& player : m_players)
         {
             player.currentScore = 0;
         }
-    }
+    }*/
 
     CRO_ASSERT(holeCount == 6 || holeCount == 9 || holeCount == 12 || holeCount == 18, "");
 
@@ -204,7 +271,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     std::sort(m_players.begin(), m_players.end(), 
         [](const LeaguePlayer& a, const LeaguePlayer& b)
         {
-            return a.currentScore == b.currentScore ? 
+            return a.currentScore == b.currentScore ?
                 (a.curve + a.outlier) > (b.curve + b.outlier) : //roughly the handicap
                 a.currentScore > b.currentScore;
         });
@@ -217,16 +284,20 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     }
 
     m_currentIteration++;
-    Achievements::incrementStat(StatStrings[StatID::LeagueRounds]);
-
+    
+    if (m_id == LeagueRoundID::Club)
+    {
+        Achievements::incrementStat(StatStrings[StatID::LeagueRounds]);
+    }
     //displays the notification overlay
     auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
-    msg->type = Social::SocialEvent::MonthlyProgress;
-    msg->challengeID = -1;
+    msg->type = Social::SocialEvent::LeagueProgress;
+    msg->challengeID = m_id;
     msg->level = m_currentIteration;
-    msg->reason = MaxIterations;
+    msg->reason = m_maxIterations;
+   
 
-    if (m_currentIteration == MaxIterations)
+    if (m_currentIteration == m_maxIterations)
     {
         //calculate our final place and update our stats
         std::vector<SortData> sortData;
@@ -259,9 +330,19 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             if (sortData[i].nameIndex == -1)
             {
                 //this is us
-                Achievements::incrementStat(StatStrings[StatID::LeagueFirst + i]);
-                Achievements::awardAchievement(AchievementStrings[AchievementID::LeagueChampion]);
-
+                switch (m_id)
+                {
+                case LeagueRoundID::Club:
+                    Achievements::incrementStat(StatStrings[StatID::LeagueFirst + i]);
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::LeagueChampion]);
+                    break;
+                default:
+                    //award XP for each slot above 4th
+                    Social::awardXP(XPAmount[i] + (m_id * XPMultiplier[i]), XPStringID::CareerSeasonComplete);
+                    
+                    //TODO award achievement for completion
+                    break;
+                }
                 playerPos = i;
 
                 //TODO raise a message to notify somewhere?
@@ -269,8 +350,13 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             }
         }
 
+        if (playerPos < m_currentBest)
+        {
+            m_currentBest = playerPos;
+        }
+
         //write the data to a file
-        const auto path = Social::getBaseContentPath() + PrevFileName;
+        const auto path = getFilePath(PrevFileName);
         cro::RaiiRWops file;
         file.file = SDL_RWFromFile(path.c_str(), "wb");
         if (file.file)
@@ -280,40 +366,22 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         }
 
 
-        //evaluate all players and adjust skills if we came in the top 2
-        if (playerPos < 2
+        //evaluate all players and adjust skills
+
+        if (playerPos < 2 //increase in top 2
             && m_increaseCount < SkillRoof)
         {
-            //increase ALL player quality, but show a bigger improvement near the bottom
-            for (auto i = 0u; i < PlayerCount; ++i)
-            {
-                m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
-
-                //modify chance of making mistake 
-                auto outlier = m_players[i].outlier;
-                if (i < PlayerCount / 2)
-                {
-                    outlier = std::clamp(outlier + cro::Util::Random::value(0, 1), 1, 10);
-
-                    //modify curve for top 3rd
-                    //if (1 < PlayerCount < 3)
-                    //{
-                    //    auto curve = m_players[i].curve;
-                    //    curve = std::max(0, curve - cro::Util::Random::value(0, 1));
-
-                    //    //wait... I've forgotten what I was doing here - though this clearly does nothing.
-                    //}
-                }
-                else
-                {
-                    outlier = std::clamp(outlier + cro::Util::Random::value(-1, 0), 1, 10);
-                }
-                m_players[i].outlier = outlier;
-            }
+            increaseDifficulty();
             m_increaseCount++;
+        }
+        else if (/*m_currentSeason > 1
+            &&*/ m_currentBest > 3) //if we played a couple of seasons and still not won, make it easier
+        {
+            decreaseDifficulty();
         }
         else
         {
+            //add some small variance
             for (auto& player : m_players)
             {
                 auto rVal = cro::Util::Random::value(0.f, 0.11f);
@@ -328,18 +396,227 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             }
         }
 
-        //start a new season
+        //start a new season - this should be ok here as we saved the previous results
+        //out to a file to scroll at the bottom
         m_currentIteration = 0;
+        m_playerScore = 0;
+
+        for (auto& player : m_players)
+        {
+            player.currentScore = 0;
+        }
+
         m_currentSeason++;
     }
+    else if (m_id != LeagueRoundID::Club)
+    {
+        //award some XP for completing a career round
+        Social::awardXP(100 + (m_id * 50), XPStringID::CareerRoundComplete);
+    }
 
+    createSortedTable();
     write();
 }
 
+std::int32_t League::reward(std::int32_t position) const
+{
+    switch (position)
+    {
+    default: return 0;
+    case 1:
+    case 2:
+    case 3:
+        return XPAmount[position - 1] + (m_id * XPMultiplier[position - 1]);
+    }
+}
+
+const cro::String& League::getPreviousResults(const cro::String& playerName) const
+{
+    const auto path = getFilePath(PrevFileName);
+    if ((m_currentIteration == 0 || m_previousResults.empty())
+        && cro::FileSystem::fileExists(path))
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
+            if (size % sizeof(PreviousEntry) == 0)
+            {
+                auto count = size / sizeof(PreviousEntry);
+                std::vector<PreviousEntry> buff(count);
+
+                SDL_RWseek(file.file, 0, RW_SEEK_SET);
+                SDL_RWread(file.file, buff.data(), sizeof(PreviousEntry), count);
+
+                //this assumes everything was sorted correctly when it was saved
+                m_previousResults = "Previous Season's Results";
+                for (auto i = 0u; i < buff.size(); ++i)
+                {
+                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(RandomNames.size()) - 1);
+
+                    m_previousResults += " -~- ";
+                    m_previousResults += std::to_string(i + 1);
+                    if (buff[i].nameIndex > -1)
+                    {
+                        m_previousResults += ". " + RandomNames[buff[i].nameIndex];
+                    }
+                    else
+                    {
+                        m_previousResults += ". " + playerName;
+                        m_previousPosition = i + 1;
+                    }
+                    m_previousResults += " " + std::to_string(buff[i].score);
+                }
+            }
+        }
+    }
+
+    return m_previousResults;
+}
+
 //private
+void League::increaseDifficulty()
+{
+    //increase ALL player quality, but show a bigger improvement near the bottom
+    for (auto i = 0u; i < PlayerCount; ++i)
+    {
+        m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
+
+        //modify chance of making mistake 
+        auto outlier = m_players[i].outlier;
+        if (i < PlayerCount / 2)
+        {
+            outlier = std::clamp(outlier + cro::Util::Random::value(0, 1), 1, 10);
+
+            //modify curve for top 3rd
+            //if (1 < PlayerCount < 3)
+            //{
+            //    auto curve = m_players[i].curve;
+            //    curve = std::max(0, curve - cro::Util::Random::value(0, 1));
+
+            //    //wait... I've forgotten what I was doing here - though this clearly does nothing.
+            //}
+        }
+        else
+        {
+            outlier = std::clamp(outlier + cro::Util::Random::value(-1, 0), 1, 10);
+        }
+        m_players[i].outlier = outlier;
+    }
+}
+
+void League::decreaseDifficulty()
+{
+    std::int32_t failureMagnitude = std::max(1, m_currentBest - 2);
+    failureMagnitude /= 4;
+    failureMagnitude += 1;
+
+    for (auto i = 0u; i < PlayerCount; ++i)
+    {
+        //the worse our last position was the more we decrease difficulty
+        for (auto j = 0; j < failureMagnitude; ++j)
+        {
+            m_players[i].quality = std::max(MinQuality, m_players[i].quality - ((0.02f * ((PlayerCount - 1)-i)) / 10.f));
+        }
+    }
+    LogI << "League reduced." << std::endl;
+}
+
+std::string League::getFilePath(const std::string& fn) const
+{
+    std::string basePath = Social::getBaseContentPath();
+    
+    const auto assertPath = 
+        [&]()
+        {
+            if (!cro::FileSystem::directoryExists(basePath))
+            {
+                cro::FileSystem::createDirectory(basePath);
+            }
+        };
+    
+    switch (m_id)
+    {
+    default: break;
+    case LeagueRoundID::RoundOne:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_01/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundTwo:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_02/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundThree:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_03/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundFour:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_04/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundFive:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_05/";
+        assertPath();
+        break;
+    case LeagueRoundID::RoundSix:
+        basePath += "career/";
+        assertPath();
+        basePath += "round_06/";
+        assertPath();
+        break;
+    }
+
+    return basePath + fn;
+}
+
+void League::createSortedTable()
+{
+    std::vector<TableEntry> entries;
+    for (const auto& p : m_players)
+    {
+        entries.emplace_back(p.currentScore, p.outlier + p.curve, p.nameIndex);
+    }
+    //we'll fake our handicap (it's not a real golf one anyway) with our current level
+    entries.emplace_back(m_playerScore, Social::getLevel() / 2, -1);
+
+    std::sort(entries.begin(), entries.end(),
+        [](const TableEntry& a, const TableEntry& b)
+        {
+            if (a.score == b.score)
+            {
+                if (a.name > -1)
+                {
+                    return a.handicap > b.handicap;
+                }
+                return false;
+            }
+            return a.score > b.score;
+        });
+
+    entries.swap(m_sortedTable);
+
+    m_currentPosition = static_cast<std::int32_t>(std::distance(m_sortedTable.begin(),
+        std::find_if(m_sortedTable.begin(), m_sortedTable.end(),
+            [](const TableEntry& te)
+            {
+                return te.name == -1;
+            })));
+}
+
 void League::read()
 {
-    const auto path = Social::getBaseContentPath() + FileName;
+    const auto path = getFilePath(FileName);
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
@@ -351,8 +628,13 @@ void League::read()
             return;
         }
 
-        static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 4) + (sizeof(LeaguePlayer) * PlayerCount);
-        if (auto size = file.file->seek(file.file, 0, RW_SEEK_END); size != ExpectedSize)
+        //since 1.16 we padded out 4 extra ints to reserve some for future use (and attempt not to break existing)
+        static constexpr std::size_t OldExpectedSize = (sizeof(std::int32_t) * 4) + (sizeof(LeaguePlayer) * PlayerCount);
+        static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 8) + (sizeof(LeaguePlayer) * PlayerCount);
+        
+        const auto size = file.file->seek(file.file, 0, RW_SEEK_END);
+
+        if (size != ExpectedSize && size != OldExpectedSize)
         {
             file.file->close(file.file);
 
@@ -360,6 +642,10 @@ void League::read()
             reset();
             return;
         }
+        /*if (size == OldExpectedSize)
+        {
+            LogI << "found old style league... updating" << std::endl;
+        }*/
 
         file.file->seek(file.file, 0, RW_SEEK_SET);
         file.file->read(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
@@ -367,13 +653,25 @@ void League::read()
         file.file->read(file.file, &m_playerScore, sizeof(std::int32_t), 1);
         file.file->read(file.file, &m_increaseCount, sizeof(std::int32_t), 1);
 
+        if (size == ExpectedSize)
+        {
+            //read the personal best, and skip padding
+            std::int32_t padding = 0;
+            file.file->read(file.file, &m_currentBest, sizeof(std::int32_t), 1);
+            file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
+            file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
+            file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
+        }
+
         file.file->read(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
 
 
         //validate the loaded data and clamp to sane values
-        m_currentIteration %= MaxIterations;
+        m_currentIteration %= m_maxIterations;
 
         //static constexpr std::int32_t MaxScore = 5 * 18 * MaxIterations;
+
+        std::vector<std::int32_t> currScores;
 
         //TODO what do we consider sane values for each player?
         for (auto& player : m_players)
@@ -384,7 +682,14 @@ void League::read()
             player.nameIndex = std::clamp(player.nameIndex, 0, std::int32_t(PlayerCount) - 1);
 
             //player.currentScore = std::clamp(player.currentScore, 0, MaxScore);
+
+            currScores.push_back(player.currentScore);
         }
+        currScores.push_back(m_playerScore);
+
+        //creates a table which includes player data, ready for display
+        //and finds the current player position in the table
+        createSortedTable();
     }
     else
     {
@@ -395,7 +700,7 @@ void League::read()
 
 void League::write()
 {
-    const auto path = Social::getBaseContentPath() + FileName;
+    const auto path = getFilePath(FileName);
 
     cro::RaiiRWops file;
     file.file = SDL_RWFromFile(path.c_str(), "wb");
@@ -405,6 +710,12 @@ void League::write()
         file.file->write(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
         file.file->write(file.file, &m_playerScore, sizeof(std::int32_t), 1);
         file.file->write(file.file, &m_increaseCount, sizeof(std::int32_t), 1);
+
+        const std::int32_t padding = 0;
+        file.file->write(file.file, &m_currentBest, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
 
         file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
     }

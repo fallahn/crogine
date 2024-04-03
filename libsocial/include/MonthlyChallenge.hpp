@@ -78,7 +78,7 @@ static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
     "Make 100 So Close chips on to the green",
     "Make 50 Nice Putts",
     "Hit 25 random bull's eyes",
-    "Play a full 18 (or 12) hole round in every game mode",
+    "Play a full 18 (or 12) hole round in every game mode in Free Play",
     "Play 9 holes on each course with at least 3 human or CPU players",
     "Get the equivalent of 10 Boomerang achievements",
     "Get 99% or better on each target on the Driving Range",
@@ -126,6 +126,7 @@ public:
         std::int32_t target = 0;
         std::int32_t index = -1;
         std::uint32_t flags = std::numeric_limits<std::uint32_t>::max();
+        bool valid = true;
     };
     Progress getProgress() const;
     cro::String getProgressString() const;
@@ -137,13 +138,13 @@ private:
         Challenge(50, Challenge::Counter),
         Challenge(25, Challenge::Counter),
         Challenge(0x7F, Challenge::Flag), //game mode count
-        Challenge(0x3ff, Challenge::Flag), //(1 << 0) - (1 << 9)
+        Challenge(0xfff, Challenge::Flag), //(1 << 0) - (1 << 11) course count
         Challenge(10, Challenge::Counter),
         Challenge(0x1fff, Challenge::Flag), //(1 << 0) - (1 << 12)
         Challenge(50, Challenge::Counter),
         Challenge(250, Challenge::Counter),
-        Challenge(0x3ff, Challenge::Flag),
-        Challenge(0x3ff, Challenge::Flag),
+        Challenge(0xfff, Challenge::Flag),
+        Challenge(0xfff, Challenge::Flag),
         Challenge(50, Challenge::Counter),
     };
 

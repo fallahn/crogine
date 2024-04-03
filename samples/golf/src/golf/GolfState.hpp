@@ -129,6 +129,7 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
     TerrainDepthmap m_depthMap;
+    cro::Texture m_defaultMaskMap;
 
     TextChat m_textChat;
 
@@ -221,6 +222,7 @@ private:
     float m_distanceToHole;
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
+    bool m_resumedFromSave;
 
     TerrainBuilder m_terrainBuilder;
 
@@ -246,7 +248,6 @@ private:
             ShadowMapSkinned,
             Leaderboard,
             Player,
-            PlayerMasked,
             Hair,
             Course,
             Ball,
@@ -322,7 +323,7 @@ private:
     void handleMaxStrokes(std::uint8_t reason);
     void removeClient(std::uint8_t);
 
-    void setCurrentHole(std::uint16_t); //(number << 8) | par
+    void setCurrentHole(std::uint16_t, bool forceTransition = false); //(number << 8) | par
     void setCameraPosition(glm::vec3, float, float);
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
@@ -591,7 +592,6 @@ private:
     };
     std::vector<StatBoardEntry> m_statBoardScores;
 
-    League m_league;
     void updateLeague();
 
     struct GamepadNotify final

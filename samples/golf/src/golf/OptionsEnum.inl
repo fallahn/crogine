@@ -55,6 +55,7 @@ enum OptionsIndex
     AVBeacon,
     AVBeaconL,
     AVBeaconR,
+    AVTextToSpeech,
     AVTrail,
     AVTrailL,
     AVTrailR,
@@ -69,6 +70,8 @@ enum OptionsIndex
     AVTreeR,
     AVShadowL,
     AVShadowR,
+    AVCrowdL,
+    AVCrowdR,
 
 
     Controls = 300,
@@ -98,6 +101,8 @@ enum OptionsIndex
     Scroll = 400,
     ScrollUp,
     ScrollDown,
+    ResetStats,
+    ResetCareer,
 
 
     Window = 1000,

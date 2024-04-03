@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,7 +36,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "Utility.hpp"
 #include "TextAnimCallback.hpp"
-#include "League.hpp"
+#include "Career.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -356,7 +356,7 @@ void MessageOverlayState::buildScene()
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                         m_sharedData.hosting = true;
-                        m_sharedData.tutorial = true;
+                        m_sharedData.gameMode = GameMode::Tutorial;
                         m_sharedData.localConnectionData.playerCount = 1;
                         m_sharedData.localConnectionData.playerData[0].isCPU = false;
 
@@ -386,6 +386,7 @@ void MessageOverlayState::buildScene()
                             else
                             {
                                 m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+                                m_sharedData.serverInstance.setLeagueID(0);
                                 m_sharedData.mapDirectory = "tutorial";
 
                                 //set the course to tutorial
@@ -480,12 +481,13 @@ void MessageOverlayState::buildScene()
 
         auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(-82.f, -4.f));
+        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, -4.f));
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\nprogress including all of\nyour XP and all unlocked items.");
+        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\nprogress including all of\nyour XP and quit the game.");
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -503,14 +505,77 @@ void MessageOverlayState::buildScene()
                 });
 
         entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        //this is a kludge which tells the
+                        //menu state to remove any existing connection/server instance
+                        //if for some reason we're resetting mid-game
+                        //m_sharedData.gameMode = GameMode::Tutorial;
+
+                        Social::resetProfile();
+                        Career::instance().reset();
+
+                        League l(LeagueRoundID::Club);
+                        l.reset();
+                        
+                        cro::App::quit();
+
+                        /*requestStackClear();
+                        requestStackPush(StateID::SplashScreen);*/
+                    }
+                });
+
+    }
+    else if (m_sharedData.errorMessage == "reset_career")
+    {
+        entity.getComponent<cro::Text>().setString("Are You REALLY Sure?");
+        centreText(entity);
+
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, -4.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\n career progress including\nall of your unlocked items.");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+        //buttons
+        entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
                     if (activated(evt))
                     {
-                        Social::resetProfile();
-                        League league;
-                        league.reset();
+                        quitState();
+                    }
+                });
+
+        entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        //this is a kludge which tells the
+                        //menu state to remove any existing connection/server instance
+                        //if for some reason we're resetting mid-game
+                        m_sharedData.gameMode = GameMode::Tutorial;
+
+                        Career::instance().reset();
+
+                        Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
+                        Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
+                        Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);
+                        Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);
 
                         requestStackClear();
                         requestStackPush(StateID::SplashScreen);

@@ -53,6 +53,8 @@ enum MenuIndex
     PlayerNextProf,
 
     PlayerReset,
+    PlayerClubStats,
+    PlayerClubs,
     PlayerCreate,
     PlayerEdit,
     PlayerDelete,
@@ -67,6 +69,7 @@ enum MenuIndex
     LobbyRulesB,
     LobbyInfoA,
     LobbyInfoB,
+    LobbyOptions,
     PlayerManagement,
 
     CoursePrev,

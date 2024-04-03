@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -49,7 +49,7 @@ namespace cro
         explicit Sphere(const Box&);
         Sphere& operator = (const Box&);
 
-        bool contains(glm::vec3);
+        bool contains(glm::vec3) const;
     };
 
     enum class Planar

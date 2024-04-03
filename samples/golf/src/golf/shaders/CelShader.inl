@@ -267,6 +267,10 @@ inline const std::string CelFragmentShader = R"(
     uniform vec4 u_darkColour = vec4(0.5);
 #endif
 
+#if defined (BALL_COLOUR)
+    uniform vec4 u_ballColour = vec4(1.0);
+#endif
+
 #if defined (MASK_MAP)
     uniform sampler2D u_maskMap;
 #if !defined(REFLECTIONS)
@@ -430,6 +434,9 @@ inline const std::string CelFragmentShader = R"(
 #if defined (VERTEX_COLOURED)
         colour *= v_colour;
 #endif
+#if defined (BALL_COLOUR)
+        colour *= u_ballColour;
+#endif
 
 #if defined (NORMAL_MAP)
         vec3 normal = TEXTURE(u_normalMap, v_normalTexCoord).rgb * 2.0 - 1.0;
@@ -448,7 +455,7 @@ inline const std::string CelFragmentShader = R"(
 
 #if defined (USER_COLOUR)
         float mixAmount = step(0.95, (v_colour.r + v_colour.g + v_colour.b) / 3.0);        
-        colour.rgb = mix(v_colour.rgb, u_hairColour.rgb, mixAmount);
+        colour.rgb = mix(v_colour.rgb, u_hairColour.rgb, mixAmount) * getLightColour().rgb;
 #endif
         float checkAmount = smoothstep(0.3, 0.9, 1.0 - amount);
 
@@ -650,15 +657,18 @@ inline const std::string CelFragmentShader = R"(
 
 #if defined(TERRAIN_CLIP)
     FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118) * u_lightColour.rgb, FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
-
-//if(v_worldPosition.y < WaterLevel) discard;//don't do this, it reveals the hidden trees.
 #endif
 
 #if defined (MASK_MAP)
     vec3 mask = TEXTURE(u_maskMap, texCoord).rgb;
 
 #if !defined(REFLECTIONS)
-    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, (TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25) + FRAG_OUT.rgb, mask.r);
+
+    //we assume 12 LODs for a 1024 texture as textureQueryLevels() requires GLSL 4.3 :(
+    float lod = clamp(((1.0 - mask.r) * 2.0), 0.0, 1.0) * 11.0;
+    vec3 reflectColour = textureLod(u_reflectMap, reflect(-viewDirection, normal), lod).rgb * 0.25;
+
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, reflectColour + FRAG_OUT.rgb, mask.r);
 #endif
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, emissionColour, mask.g);

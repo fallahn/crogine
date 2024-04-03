@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -44,8 +44,22 @@ source distribution.
 #include <array>
 #include <memory>
 
+namespace sv
+{
+    struct PlayerInfo;
+}
+
 struct PlayerData final
 {
+    /*
+    SIGH this is partially duplicated in sv::PlayerInfo (the serialised
+    parts at least) so REMEMBER if we add a new field here it probably
+    needs duplicating in sv::PlayerInfo too. We'll use the assignment
+    overload to try and contain this somewhat (though both structs will
+    still need updating)
+    */
+    PlayerData& operator = (const sv::PlayerInfo&);
+
     cro::String name;
     std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = 
     { 
@@ -56,6 +70,7 @@ struct PlayerData final
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[4] - 1)),
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[5] - 1))    
     }; //indices into colours
+    std::uint8_t ballColourIndex = 255; //ignore the palette if not in range and set to white
     std::uint32_t ballID = 0;
     std::uint32_t hairID = 0;
     std::uint32_t skinID = 0; //uid as loaded from the avatar data file
@@ -73,6 +88,7 @@ struct PlayerData final
     std::int32_t parScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
+    cro::Colour ballColour = cro::Colour::White;
 
     //this is client side profile specific data
     cro::ImageArray<std::uint8_t> mugshotData; //pixel data of the mugshot for avatar icon

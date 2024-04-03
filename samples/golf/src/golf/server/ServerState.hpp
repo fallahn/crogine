@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,17 +40,24 @@ source distribution.
 #include <array>
 #include <atomic>
 
+struct PlayerData;
 namespace sv
 {
     struct PlayerInfo final
     {
+        //as this takes info from an incoming PlayerData struct
+        //remember to update the duplicated *sigh* fields here
+        //if PlayerData is modified
         cro::String name;
         std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = {}; //not really flags per se, but let's at least keep naming consistent
+        std::uint8_t ballColourIndex = 255;
         std::uint32_t ballID = 0;
         std::uint32_t hairID = 0;
         std::uint32_t skinID = 0;
         bool flipped = false; //we don't really care about this on the server, but we do need to forward it to clients.
         bool isCPU = false; //only allow CPU players to request predictions
+
+        PlayerInfo& operator = (const PlayerData&);
     };
 
     struct ClientConnection final
@@ -84,6 +91,7 @@ namespace sv
         std::array<std::uint8_t, ConstVal::MaxClients> clubLevels = {};
 
         std::atomic_uint64_t hostID = 0;
+        std::atomic_int32_t leagueID = 0;
     };
 
     namespace StateID

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -162,7 +162,8 @@ namespace
         ButtonClubset = 600,
         ButtonPerformance,
         ButtonHistory,
-        ButtonAwards
+        ButtonAwards,
+        ButtonClose
     };
 }
 
@@ -527,7 +528,32 @@ void StatsState::buildScene()
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
+    auto closeCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                quitState();
+            }
+        });
 
+    //close button
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 468.f, 325.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("close_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonClose);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = closeCallback;
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_closeButton = entity;
 
     const float stride = 102.f;
     auto sprite = spriteSheet.getSprite("button_highlight");
@@ -1228,7 +1254,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(PerfDate);
     entity.getComponent<cro::UIInput>().setNextIndex(PerfCPU, ButtonAwards);
-    entity.getComponent<cro::UIInput>().setPrevIndex(PerfNextProf, PerfNextCourse);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PerfNextProf, ButtonClose);
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselected;
@@ -1756,7 +1782,7 @@ void StatsState::createAwardsTab(cro::Entity parent, const cro::SpriteSheet& spr
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(AwardPrevious);
     entity.getComponent<cro::UIInput>().setNextIndex(AwardNext, ButtonPerformance);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AwardNext, ButtonPerformance);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AwardNext, ButtonClose);
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
@@ -1789,7 +1815,7 @@ void StatsState::createAwardsTab(cro::Entity parent, const cro::SpriteSheet& spr
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(AwardNext);
     entity.getComponent<cro::UIInput>().setNextIndex(AwardPrevious, ButtonHistory);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AwardPrevious, ButtonHistory);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AwardPrevious, ButtonClose);
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
@@ -2026,14 +2052,17 @@ void StatsState::activateTab(std::int32_t tabID)
     {
     default: break;
     case TabID::ClubStats:
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, ButtonHistory);
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonAwards);
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, ButtonClose);
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonClose);
 
-        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonAwards);
-        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, ButtonPerformance);
+        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonClose);
+        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, ButtonClose);
 
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonHistory);
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonClose);
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonClose);
+
+        m_closeButton.getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonAwards);
+        m_closeButton.getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonAwards);
 
         selectNext(ButtonPerformance);
         break;
@@ -2044,32 +2073,41 @@ void StatsState::activateTab(std::int32_t tabID)
         m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, PerfNextCourse);
         m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, PerfNextProf);
 
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, PerfDate);
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, ButtonClose);
         m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, PerfDate);
         
+        m_closeButton.getComponent<cro::UIInput>().setNextIndex(ButtonAwards, PerfDate);
+        m_closeButton.getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonAwards);
+
         selectNext(ButtonHistory);
         break;
     case TabID::History:
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonAwards);
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonClose);
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonClose);
 
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonAwards);
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, ButtonClubset);
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonClose);
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, ButtonClose);
 
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, ButtonClubset);
-        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, ButtonPerformance);
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, ButtonClose);
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, ButtonClose);
+
+        m_closeButton.getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonAwards);
+        m_closeButton.getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonAwards);
 
         selectNext(ButtonAwards);
         break;
     case TabID::Awards:
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
-        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonHistory);
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonClose);
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonClose);
         
-        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, AwardPrevious);
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, ButtonClose);
         m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, AwardPrevious);
 
-        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, AwardNext);
+        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, ButtonClose);
         m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, AwardNext);
+
+        m_closeButton.getComponent<cro::UIInput>().setNextIndex(ButtonHistory, ButtonHistory);
+        m_closeButton.getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonHistory);
 
         selectNext(ButtonClubset);
         break;

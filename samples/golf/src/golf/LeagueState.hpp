@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -86,14 +86,58 @@ private:
         static constexpr std::int32_t Max = 2;
     };
     std::int32_t m_currentTab;
+    std::int32_t m_currentLeague;
     cro::Entity m_tabEntity;
     std::array<cro::Entity, TabID::Count> m_tabButtons = {};   
     std::array<cro::Entity, TabID::Count> m_tabNodes = {};   
 
+    struct LeagueID final
+    {
+        enum
+        {
+            Club,
+            S01,
+            S02,
+            S03,
+            S04,
+            S05,
+            S06,
+            Global,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, LeagueID::Count> m_leagueNodes = {};
 
     void buildScene();
-    void createLeagueTab(cro::Entity, const cro::SpriteSheet&);
+    bool createLeagueTab(cro::Entity, const cro::SpriteSheet&, std::int32_t);
     void createInfoTab(cro::Entity);
+
+#ifdef USE_GNS
+
+    struct LeagueText final
+    {
+        cro::Entity games;
+        cro::Entity names;
+        cro::Entity scores;
+        cro::Entity personal;
+        cro::Entity previous;
+    }m_leagueText;
+
+    void createGlobalLeagueTab(cro::Entity,const cro::SpriteSheet&);
+    void updateLeagueText();
+#endif
+    void addLeagueButtons(const cro::SpriteSheet&);
+
     void activateTab(std::int32_t);
+
+    struct Page final
+    {
+        enum
+        {
+            Forward, Back
+        };
+    };
+    void switchLeague(std::int32_t);
     void quitState();
 };

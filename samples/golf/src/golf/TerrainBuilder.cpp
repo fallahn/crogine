@@ -72,7 +72,7 @@ namespace
     constexpr glm::vec2 ChunkSize(static_cast<float>(MapSize.x) / ChunkVisSystem::ColCount, static_cast<float>(MapSize.y) / ChunkVisSystem::RowCount);
 
     //params for poisson disk samples
-    static constexpr float GrassDensity = 1.7f; //radius for PD sampler
+    static constexpr float GrassDensity = 1.4f;// 1.7f; //radius for PD sampler
     static constexpr float TreeDensity = 4.f;
 
     static constexpr std::array MinBounds = { 0.f, 0.f };
@@ -150,7 +150,7 @@ namespace
 
                 if (swapData.crowdEnts)
                 {
-                    auto& ents = *swapData.crowdEnts;
+                    const auto& ents = *swapData.crowdEnts;
                     for (auto e : ents)
                     {
                         if (e.isValid())
@@ -670,7 +670,19 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_thread = std::make_unique<std::thread>(&TerrainBuilder::threadFunc, this);
 }
 
-void TerrainBuilder::update(std::size_t holeIndex)
+void TerrainBuilder::applyHoleIndex(std::size_t idx)
+{
+    while (m_wantsUpdate) {};
+    if (idx < m_holeData.size()
+        && idx > m_currentHole)
+    {
+        m_currentHole = idx;
+        renderNormalMap(true);
+        m_wantsUpdate = true;
+    }
+}
+
+void TerrainBuilder::update(std::size_t holeIndex, bool forceAnim)
 {
     //wait for thread to finish (usually only the first time)
     //this *shouldn't* ever block unless something goes wrong
@@ -679,7 +691,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
     if (holeIndex == m_currentHole)
     {
-        bool doAnim = holeIndex == 0 || (m_holeData[holeIndex - 1].modelPath != m_holeData[holeIndex].modelPath);
+        bool doAnim = holeIndex == 0 || (m_holeData[holeIndex - 1].modelPath != m_holeData[holeIndex].modelPath) || forceAnim;
 
         if (doAnim)
         {
@@ -736,10 +748,11 @@ void TerrainBuilder::update(std::size_t holeIndex)
 
                 //crowd instances
                 //TODO can we move some of this to the thread func (can't set transforms in it though)
+                auto density = m_holeData[m_currentHole].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
                 std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[first].size());
-                for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions.size(); ++i)
+                for (auto i = 0u; i < m_holeData[m_currentHole].crowdPositions[density].size(); ++i)
                 {
-                    positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[i]);
+                    positions[i % positions.size()].push_back(m_holeData[m_currentHole].crowdPositions[density][i]);
                 }
 
                 for (auto i = 0u; i < m_crowdEntities[first].size(); ++i)
@@ -811,7 +824,7 @@ void TerrainBuilder::applyTreeQuality()
         bbFlags = RenderFlags::FlightCam;
     }
     
-    for (auto& ents : m_instancedShrubs)
+    for (const auto& ents : m_instancedShrubs)
     {
         for (auto e : ents)
         {
@@ -827,6 +840,28 @@ void TerrainBuilder::applyTreeQuality()
         if (e.isValid())
         {
             e.getComponent<cro::Model>().setRenderFlags(bbFlags);
+        }
+    }
+}
+
+void TerrainBuilder::applyCrowdDensity()
+{
+    auto crowdIndex = m_swapIndex % 2;
+    auto holeIdx = std::clamp(m_currentHole - 1, std::size_t(0), std::size_t(17));
+
+    auto density = m_holeData[holeIdx].puttFromTee ? std::min(m_sharedData.crowdDensity, 1) : m_sharedData.crowdDensity;
+    std::vector<std::vector<glm::mat4>> positions(m_crowdEntities[crowdIndex].size());
+    for (auto i = 0u; i < m_holeData[holeIdx].crowdPositions[density].size(); ++i)
+    {
+        positions[i % positions.size()].push_back(m_holeData[holeIdx].crowdPositions[density][i]);
+    }
+
+    for (auto i = 0u; i < m_crowdEntities[crowdIndex].size(); ++i)
+    {
+        if (m_crowdEntities[crowdIndex][i].isValid()
+            && !positions[i].empty())
+        {
+            m_crowdEntities[crowdIndex][i].getComponent<cro::Model>().setInstanceTransforms(positions[i]);
         }
     }
 }
@@ -1315,10 +1350,10 @@ void TerrainBuilder::threadFunc()
     }
 }
 
-void TerrainBuilder::renderNormalMap()
+void TerrainBuilder::renderNormalMap(bool forceUpdate)
 {
     //skip this if we rendered the model the previous hole
-    if (m_currentHole && 
+    if (m_currentHole && !forceUpdate &&
         m_holeData[m_currentHole].modelEntity == m_holeData[m_currentHole - 1].modelEntity)
     {
         return;

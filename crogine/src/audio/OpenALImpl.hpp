@@ -52,12 +52,14 @@ namespace cro
 {
     namespace Detail
     {
+        class BufferedStreamLoader;
         struct OpenALStream final
         {
             std::unique_ptr<AudioFile> audioFile;
 
             std::array<ALuint, 4u> buffers{};
             std::size_t currentBuffer = 0;
+            std::int32_t streamID = -1; //NOT the same as source ID!
             //ALint processed = 0;
 
             std::atomic<bool> busy{ false }; //signifies the thread is processing
@@ -93,6 +95,7 @@ namespace cro
             void deleteBuffer(std::int32_t) override;
 
             std::int32_t requestNewStream(const std::string&) override;
+            std::int32_t requestNewBufferableStream(BufferedStreamLoader** dst);
             void deleteStream(std::int32_t) override;
 
             std::int32_t requestAudioSource(std::int32_t, bool) override;
@@ -136,6 +139,9 @@ namespace cro
             std::vector<std::string> m_devices;
             std::string m_preferredDevice;
             void enumerateDevices();
+
+            OpenALStream& getNextFreeStream();
+            bool initStream(OpenALStream&);
         };
     }
 }

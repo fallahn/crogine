@@ -1,8 +1,19 @@
 cmake_minimum_required(VERSION 3.5.0)
 
-#required for std::filesystem
+
 if(APPLE)
+  #required for std::filesystem
   SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
+
+  #force macOS to use homebrew installed libs, eg OpenAL
+  SET(CMAKE_PREFIX_PATH 
+	"/opt/homebrew"
+	"/opt/homebrew/opt/openal-soft/include"
+	"/opt/homebrew/opt/openal-soft/lib"
+	"/usr/local"
+	"/usr/local/opt/openal-soft/include"
+	"/usr/local/opt/openal-soft/lib")
+  SET(CMAKE_FIND_FRAMEWORK LAST)
 endif()
 
 project(crogine)
@@ -30,6 +41,10 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   else()
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
   endif()
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
 endif()
 
 if(USE_OPENAL)
@@ -71,12 +86,13 @@ SET (OpenGL_GL_PREFERENCE "GLVND")
 find_package(SDL2 REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(OPUS REQUIRED)
 
 if(USE_OPENAL)
-#use mojo AL on mac
-  if(NOT APPLE)
+#we were using mojoal on mac but now trying to get openal-soft to work from brew
+  #if(NOT APPLE)
     find_package(OpenAL REQUIRED)
-  endif()
+  #endif()
 else()
   find_package(SDL2_mixer REQUIRED)
 endif()
@@ -91,21 +107,25 @@ endif()
 include_directories(
   ${SDL2_INCLUDE_DIR}  
   ${FREETYPE_INCLUDE_DIRS} 
+  ${OPUS_INCLUDE_DIRS}
   ${CMAKE_SOURCE_DIR}/crogine/include)
   
 if(MSVC)
   include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
 elseif(LINUX)
   include_directories(${LIBUNWIND_INCLUDE_DIRS})
+elseif(APPLE)
+  include_directories(/usr/local/opt/openal-soft/include)
+  link_directories(/usr/local/opt/openal-soft/lib)
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 
 if(USE_OPENAL)
-  if(NOT APPLE)
+  #if(NOT APPLE)
     include_directories(${OPENAL_INCLUDE_DIR})
-  endif()
+  #endif()
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_openal})
 else()
   include_directories(${SDL2_MIXER_INCLUDE_DIR})
@@ -120,7 +140,7 @@ else()
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_nix})
 endif()
 
-# add the Resourcepath source, mojoal source and GL41 loader for apple, else load GL46
+# add the Resourcepath source, and GL41 loader for apple, else load GL46
 if (APPLE)
   set(PROJECT_SRC ${PROJECT_SRC} ${project_src_macos})
 else()
@@ -140,12 +160,13 @@ if(NOT TARGET crogine)
   target_link_libraries(${PROJECT_NAME}
     ${SDL2_LIBRARY} 
     ${FREETYPE_LIBRARIES}
+    ${OPUS_LIBRARIES}
     ${OPENGL_LIBRARIES})
 
   if(USE_OPENAL)
-    if(NOT APPLE)
+    #if(NOT APPLE)
       target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY})
-    endif()
+    #endif()
   else()
     target_link_libraries(${PROJECT_NAME} ${SDL2_MIXER_LIBRARY})
   endif()

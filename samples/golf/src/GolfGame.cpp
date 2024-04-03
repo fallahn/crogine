@@ -37,6 +37,7 @@ source distribution.
 #include "golf/TutorialState.hpp"
 #include "golf/KeyboardState.hpp"
 #include "golf/PracticeState.hpp"
+#include "golf/CareerState.hpp"
 #include "golf/DrivingState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/LeagueState.hpp"
@@ -51,6 +52,7 @@ source distribution.
 #include "golf/ProfileState.hpp"
 #include "golf/LeaderboardState.hpp"
 #include "golf/StatsState.hpp"
+#include "golf/FreePlayState.hpp"
 #include "golf/MapOverviewState.hpp"
 #include "golf/EventOverlay.hpp"
 #include "golf/MenuConsts.hpp"
@@ -189,6 +191,8 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PlayerManagementState>(StateID::PlayerManagement, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
+    m_stateStack.registerState<CareerState>(StateID::Career, m_sharedData);
+    m_stateStack.registerState<FreePlayState>(StateID::FreePlay, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData, *this);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
@@ -388,14 +392,19 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::MonthlyProgress)
         {
-            m_progressIcon->show(data.challengeID, data.level, data.reason);
+            m_progressIcon->showChallenge(data.challengeID, data.level, data.reason);
 
-            if (data.challengeID != -1 &&
+            if (data.challengeID > -1 &&
                 data.level == data.reason)
             {
-                Social::awardXP(500, XPStringID::ChallengeComplete);
+                Social::awardXP(1000, XPStringID::ChallengeComplete);
                 Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
             }
+        }
+        else if (data.type == Social::SocialEvent::LeagueProgress)
+        {
+            m_progressIcon->showLeague(data.challengeID, data.level, data.reason);
+            //achievement is awarded by League class on completion
         }
     }
 
@@ -486,14 +495,10 @@ bool GolfGame::initialise()
 
     loadAvatars(); //this relies on steam being initialised
 
-//#ifdef USE_WORKSHOP
-//    registerCommand("workshop",
-//        [&](const std::string&)
-//        {
-//            m_stateStack.clearStates();
-//            m_stateStack.pushState(StateID::Workshop);
-//        });
-//#endif
+    if (Social::isSteamdeck())
+    {
+        getWindow().setVsyncEnabled(true);
+    }
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS
@@ -655,12 +660,25 @@ bool GolfGame::initialise()
             cro::Util::String::parseURL(Social::getBaseContentPath());
         });
 
-    registerCommand("reset_league", 
+    registerCommand("reset_leagues", 
         [](const std::string&)
         {
-            League l;
-            l.reset();
-            cro::Console::print("League tables are reset");
+            if (cro::FileSystem::showMessageBox("Information", "This will reset the leagues and close the game", cro::FileSystem::ButtonType::OK, cro::FileSystem::IconType::Warning))
+            {
+                League l(LeagueRoundID::Club);
+                l.reset();
+
+                Career::instance().reset();
+
+                Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
+                Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
+                Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);
+                Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);
+                
+                cro::Clock c;
+                while (c.elapsed().asSeconds() < 1.5f) {}
+                cro::App::quit();
+            }
         });
 
     cro::Console::addConvar("shuffle_music", "false", "If true then custom music playlists will be shuffled when loaded.");
@@ -708,13 +726,13 @@ bool GolfGame::initialise()
     getWindow().setIcon(icon);
     m_renderTarget = &getWindow();
 
-    cro::AudioMixer::setLabel("Music", MixerChannel::Music);
+    cro::AudioMixer::setLabel("Menu Music", MixerChannel::Music);
     cro::AudioMixer::setLabel("Effects", MixerChannel::Effects);
     cro::AudioMixer::setLabel("Menu", MixerChannel::Menu);
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
     cro::AudioMixer::setLabel("Environment", MixerChannel::Environment);
-    cro::AudioMixer::setLabel("User Music", MixerChannel::UserMusic);
+    cro::AudioMixer::setLabel("Game Music", MixerChannel::UserMusic);
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
@@ -726,6 +744,8 @@ bool GolfGame::initialise()
     }
 
     //preload resources which will be used in dynamically loaded menus
+    //TODO now we switched to pre-cached states this is probably unnecessary
+    //though it won't do any harm
     initFonts();
 
     for (const auto& [name, str] : IncludeMappings)
@@ -1205,14 +1225,116 @@ void GolfGame::loadPreferences()
                 else if (name == "clubset")
                 {
                     m_sharedData.preferredClubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                    m_sharedData.clubSet = m_sharedData.preferredClubSet;
                 }
                 else if (name == "press_hold")
                 {
                     m_sharedData.pressHold = prop.getValue<bool>();
                 }
+                else if (name == "use_tts")
+                {
+                    m_sharedData.useTTS = prop.getValue<bool>();
+                }
+                else if (name == "crowd_density")
+                {
+                    m_sharedData.crowdDensity = std::clamp(prop.getValue<std::int32_t>(), 0, CrowdDensityCount - 1);
+                }
             }
         }
     }
+
+    //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
+    path = Social::getBaseContentPath() + "user_prefs.cfg";
+    if (cro::FileSystem::fileExists(path))
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(path, false))
+        {
+            const auto& properties = cfg.getProperties();
+            for (const auto& prop : properties)
+            {
+                const auto& name = prop.getName();
+                if (name == "pixel_scale")
+                {
+                    m_sharedData.pixelScale = prop.getValue<bool>();
+                }
+                else if (name == "fov")
+                {
+                    m_sharedData.fov = std::max(MinFOV, std::min(MaxFOV, prop.getValue<float>()));
+                }
+                else if (name == "vertex_snap")
+                {
+                    m_sharedData.vertexSnap = prop.getValue<bool>();
+                }
+                else if (name == "mouse_speed")
+                {
+                    m_sharedData.mouseSpeed = std::max(ConstVal::MinMouseSpeed, std::min(ConstVal::MaxMouseSpeed, prop.getValue<float>()));
+                }
+                else if (name == "invert_x")
+                {
+                    m_sharedData.invertX = prop.getValue<bool>();
+                }
+                else if (name == "invert_y")
+                {
+                    m_sharedData.invertY = prop.getValue<bool>();
+                }
+                else if (name == "show_beacon")
+                {
+                    m_sharedData.showBeacon = prop.getValue<bool>();
+                }
+                else if (name == "beacon_colour")
+                {
+                    m_sharedData.beaconColour = std::fmod(prop.getValue<float>(), 1.f);
+                }
+                else if (name == "imperial_measurements")
+                {
+                    m_sharedData.imperialMeasurements = prop.getValue<bool>();
+                }
+                else if (name == "grid_transparency")
+                {
+                    m_sharedData.gridTransparency = std::max(0.f, std::min(1.f, prop.getValue<float>()));
+                }
+                else if (name == "show_tutorial")
+                {
+                    m_sharedData.showTutorialTip = prop.getValue<bool>();
+                }
+                else if (name == "putting_power")
+                {
+                    m_sharedData.showPuttingPower = prop.getValue<bool>();
+                }
+                else if (name == "use_vibration")
+                {
+                    m_sharedData.enableRumble = prop.getValue<bool>() ? 1 : 0;
+                }
+                else if (name == "use_trail")
+                {
+                    m_sharedData.showBallTrail = prop.getValue<bool>();
+                }
+                else if (name == "use_beacon_colour")
+                {
+                    m_sharedData.trailBeaconColour = prop.getValue<bool>();
+                }
+                else if (name == "fast_cpu")
+                {
+                    m_sharedData.fastCPU = prop.getValue<bool>();
+                }
+                else if (name == "clubset")
+                {
+                    m_sharedData.preferredClubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                    m_sharedData.clubSet = m_sharedData.preferredClubSet;
+                }
+                else if (name == "press_hold")
+                {
+                    m_sharedData.pressHold = prop.getValue<bool>();
+                }
+                else if (name == "use_tts")
+                {
+                    m_sharedData.useTTS = prop.getValue<bool>();
+                }
+            }
+        }
+    }
+
 
     //read keybind bin
     path = Social::getBaseContentPath() + "keys.bind";
@@ -1266,6 +1388,21 @@ void GolfGame::loadPreferences()
     }
 
     m_sharedData.m3uPlaylist = std::make_unique<M3UPlaylist>(Social::getBaseContentPath() + "music/");
+
+    if (m_sharedData.m3uPlaylist->getTrackCount() == 0)
+    {
+        //look in the fallback dir
+        const auto MusicDir = cro::FileSystem::getResourcePath() + "assets/golf/sound/music/";
+        if (cro::FileSystem::directoryExists(MusicDir))
+        {
+            const auto files = cro::FileSystem::listFiles(MusicDir);
+            for (const auto& file : files)
+            {
+                //this checks the file has a valid extension
+                m_sharedData.m3uPlaylist->addTrack(MusicDir + file);
+            }
+        }
+    }
 }
 
 void GolfGame::savePreferences()
@@ -1281,30 +1418,38 @@ void GolfGame::savePreferences()
         cfg.addProperty("custom_shader").setValue(m_sharedData.customShaderPath);
     }
     cfg.addProperty("last_ip").setValue(m_sharedData.targetIP.toAnsiString());
+    cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
+    cfg.addProperty("swingput_threshold").setValue(m_sharedData.swingputThreshold);
+    cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
+    cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
+    cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
+    cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
+    cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
+    cfg.save(path);
+
+
+    //per-user options
+    path = Social::getBaseContentPath() + "user_prefs.cfg";
+    cfg = cro::ConfigFile("user_preferences");
     cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
     cfg.addProperty("fov").setValue(m_sharedData.fov);
     cfg.addProperty("vertex_snap").setValue(m_sharedData.vertexSnap);
     cfg.addProperty("mouse_speed").setValue(m_sharedData.mouseSpeed);
-    cfg.addProperty("swingput_threshold").setValue(m_sharedData.swingputThreshold);
     cfg.addProperty("invert_x").setValue(m_sharedData.invertX);
     cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
     cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);
     cfg.addProperty("beacon_colour").setValue(m_sharedData.beaconColour);
     cfg.addProperty("imperial_measurements").setValue(m_sharedData.imperialMeasurements);
     cfg.addProperty("grid_transparency").setValue(m_sharedData.gridTransparency);
-    cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
-    cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
-    cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
-    cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("show_tutorial").setValue(m_sharedData.showTutorialTip);
     cfg.addProperty("putting_power").setValue(m_sharedData.showPuttingPower);
-    cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
     cfg.addProperty("use_vibration").setValue(m_sharedData.enableRumble == 0 ? false : true);
     cfg.addProperty("use_trail").setValue(m_sharedData.showBallTrail);
     cfg.addProperty("use_beacon_colour").setValue(m_sharedData.trailBeaconColour);
     cfg.addProperty("fast_cpu").setValue(m_sharedData.fastCPU);
     cfg.addProperty("clubset").setValue(m_sharedData.preferredClubSet);
     cfg.addProperty("press_hold").setValue(m_sharedData.pressHold);
+    cfg.addProperty("use_tts").setValue(m_sharedData.useTTS);
     cfg.save(path);
 
 

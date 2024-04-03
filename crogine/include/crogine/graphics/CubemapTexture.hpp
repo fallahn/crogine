@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -71,7 +71,7 @@ namespace cro
         */
         std::uint32_t getCubemapCount() const { return m_cubemapCount; }
 
-        /*
+        /*!
         \brief Attempts to load a cubemap from a *.ccm configuration file
         \returns true on success else false.
         */
@@ -84,6 +84,12 @@ namespace cro
         \returns true on success else false
         */
         bool loadFromFiles(const std::vector<std::string>& paths);
+
+        /*!
+        \brief Genrates mipmap chain for the texture if data is loaded
+        else does nothing.
+        */
+        void generateMipMaps();
 
     private:
         std::uint32_t m_handle;

@@ -39,6 +39,6 @@ namespace cro::Detail
         MaxComponents = 64, //this is max number of types on a single entity
         IndexBits = 24,
         GenerationBits = 8,
-        MinFreeIDs = std::numeric_limits<std::int16_t>::max() //after this generation is incremented and we go back to zero
+        MinFreeIDs = std::numeric_limits<std::int16_t>::max() / 4 //after this generation is incremented and we go back to zero
     };
 }

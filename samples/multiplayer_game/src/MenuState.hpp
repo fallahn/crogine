@@ -32,6 +32,9 @@ source distribution.
 #include "StateIDs.hpp"
 #include "CommonConsts.hpp"
 
+#include <crogine/audio/sound_system/SoundRecorder.hpp>
+#include <crogine/audio/DynamicAudioStream.hpp>
+
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -87,7 +90,8 @@ public:
     void render() override;
 
 private:
-
+    cro::SoundRecorder m_soundRecorder;
+    cro::DynamicAudioStream m_audioStream;
     SharedStateData& m_sharedData;
 
     cro::Scene m_scene;
@@ -116,6 +120,8 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+
+    void registerUI();
 
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);

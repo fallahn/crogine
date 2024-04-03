@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -83,7 +83,7 @@ Sphere& Sphere::operator=(const Box& box)
     return *this;
 }
 
-bool Sphere::contains(glm::vec3 point)
+bool Sphere::contains(glm::vec3 point) const
 {
     auto pointLen = glm::length2(point - centre);
     return pointLen < (radius * radius);

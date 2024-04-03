@@ -300,7 +300,7 @@ private:
 
     void handleNetEvent(const net::NetEvent&);
     void finaliseGameCreate();
-    void finaliseGameJoin(const MatchMaking::Message&);
+    void finaliseGameJoin(std::uint64_t);
 
     friend struct ClubhouseContext;
 };

@@ -42,7 +42,9 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\DynamicAudioStream.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\MusicPlayer.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundRecorder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundSource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundStream.hpp" />
     <ClInclude Include="..\crogine\include\crogine\Config.hpp" />
@@ -76,6 +78,7 @@
     <ClInclude Include="..\crogine\include\crogine\detail\NoResize.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\QuadTree.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\SDLResource.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\StackDump.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\Types.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Component.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\ComponentPool.hpp" />
@@ -205,6 +208,7 @@
     <ClInclude Include="..\crogine\src\audio\ALCheck.hpp" />
     <ClInclude Include="..\crogine\src\audio\AudioFile.hpp" />
     <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp" />
+    <ClInclude Include="..\crogine\src\audio\BufferedStreamLoader.hpp" />
     <ClInclude Include="..\crogine\src\audio\Mp3Loader.hpp" />
     <ClInclude Include="..\crogine\src\audio\NullImpl.hpp" />
     <ClInclude Include="..\crogine\src\audio\OpenALImpl.hpp" />
@@ -217,7 +221,6 @@
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\crogine\src\detail\HiResTimer.hpp" />
     <ClInclude Include="..\crogine\src\detail\SDLImageRead.hpp" />
-    <ClInclude Include="..\crogine\src\detail\StackDump.hpp" />
     <ClInclude Include="..\crogine\src\detail\StaticMeshFile.hpp" />
     <ClInclude Include="..\crogine\src\detail\TextConstruction.hpp" />
     <ClInclude Include="..\crogine\src\detail\ust.hpp" />
@@ -252,9 +255,12 @@
     <ClCompile Include="..\crogine\src\audio\AudioScape.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioSource.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioStream.cpp" />
+    <ClCompile Include="..\crogine\src\audio\BufferedStreamLoader.cpp" />
+    <ClCompile Include="..\crogine\src\audio\DynamicAudioStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\Mp3Loader.cpp" />
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\MusicPlayer.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\SoundRecorder.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundSource.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\stb_vorbis.c" />
@@ -597,7 +603,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -606,8 +612,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;%(AdditionalDependencies);openal32.lib;DbgHelp.lib;Shlwapi.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64\debug;$(SolutionDir)extlibs\opus\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;%(AdditionalDependencies);openal32.lib;DbgHelp.lib;Shlwapi.lib;opus-d.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugASan|x64'">
@@ -673,7 +679,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GL41;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -681,8 +687,8 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>openal32.lib;SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;DbgHelp.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;$(SolutionDir)extlibs\openal\msvc\x64;$(SolutionDir)extlibs\opus\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>openal32.lib;SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;DbgHelp.lib;Shlwapi.lib;opus.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SubSystem>Windows</SubSystem>
     </Link>

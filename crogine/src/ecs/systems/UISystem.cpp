@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -36,9 +36,18 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+
+#define DEBUG_UI
+
+namespace
+{
+
+}
 
 using namespace cro;
 
@@ -50,6 +59,8 @@ UISystem::UISystem(MessageBus& mb)
     m_scrollNavigation  (true),
     m_columnCount       (1),
     m_selectedIndex     (0),
+    m_prevDirection     (-1),
+    m_previousIndex     (0),
     m_groups            (1),
     m_activeGroup       (0)
 {
@@ -259,7 +270,7 @@ void UISystem::handleEvent(const Event& evt)
         if (m_activeControllerID == ActiveControllerAll ||
             evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone;// 15000;
+            static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
             switch (evt.caxis.axis)
             {
             default: break;
@@ -527,6 +538,21 @@ void UISystem::selectAt(std::size_t index)
         m_selectedIndex = (m_selectedIndex + 1) % entities.size();
     } while (m_selectedIndex != index && m_selectedIndex != old);
 
+    //if we didn't find anything check the specific selection ID
+    if (m_selectedIndex == old)
+    {
+        auto res = std::find_if(entities.begin(), entities.end(), 
+            [index](cro::Entity e)
+            {
+                return e.getComponent<cro::UIInput>().getSelectionIndex() == index;
+            });
+
+        if (res != entities.end())
+        {
+            m_selectedIndex = std::distance(entities.begin(), res);
+        }
+    }
+
     //and do selected callback
     if (m_selectedIndex != old
         && entities[m_selectedIndex].getComponent<UIInput>().enabled)
@@ -553,6 +579,49 @@ void UISystem::selectByIndex(std::size_t index)
         unselect(old);
         select(m_selectedIndex);
     }
+}
+
+void UISystem::initDebug(const std::string& label) const
+{
+#ifdef DEBUG_UI
+    registerWindow([&, label]()
+        {
+            if (ImGui::Begin(label.c_str()))
+            {
+                if (ImGui::BeginTable("Table", 3))
+                {
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text(" ");
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.upIndex);
+                    ImGui::TableNextColumn();
+                    ImGui::Text(" ");
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.leftIndex);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.selectedIndex);
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.rightIndex);
+
+                    ImGui::TableNextRow();
+                    ImGui::TableNextColumn();
+                    ImGui::Text(" ");
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%lu", m_debugContext.downIndex);
+                    ImGui::TableNextColumn();
+                    ImGui::Text(" ");
+
+                    ImGui::EndTable();
+                }
+
+                ImGui::Text("Back: %lu", m_debugContext.backIndex);
+            }
+            ImGui::End();
+        });
+#endif
 }
 
 //private
@@ -592,9 +661,17 @@ void UISystem::selectNext(std::size_t stride, std::int32_t direction)
     auto old = m_selectedIndex;
 
     auto targetSelection = entities[m_selectedIndex].getComponent<UIInput>().m_neighbourIndices[direction];
+
+    //check if we're moving back to a previous entry and prefer that
+    if ((direction == UIInput::Index::Down && m_prevDirection == UIInput::Index::Up)
+        || (direction == UIInput::Index::Right && m_prevDirection == UIInput::Index::Left))
+    {
+        targetSelection = m_previousIndex;
+    }
+
     if (targetSelection != std::numeric_limits<std::size_t>::max())
     {
-        //check if any of the entities in this groupd have the requested index
+        //check if any of the entities in this group have the requested index
         auto result = std::find_if(entities.cbegin(), entities.cend(),
             [targetSelection](const Entity& e)
             {
@@ -605,6 +682,11 @@ void UISystem::selectNext(std::size_t stride, std::int32_t direction)
             /*&& result->getComponent<cro::UIInput>().enabled*/)
         {
             m_selectedIndex = std::distance(entities.cbegin(), result);
+        }
+        else if (targetSelection < entities.size() &&
+            entities[targetSelection].getComponent<cro::UIInput>().enabled)
+        {
+            m_selectedIndex = targetSelection;
         }
     }
 
@@ -624,6 +706,13 @@ void UISystem::selectNext(std::size_t stride, std::int32_t direction)
     {
         unselect(old);
         select(m_selectedIndex);
+
+        m_previousIndex = entities[old].getComponent<UIInput>().getSelectionIndex(); //old;
+        m_prevDirection = direction;
+
+#ifdef DEBUG_UI
+        m_debugContext.backIndex = entities[old].getComponent<UIInput>().getSelectionIndex();
+#endif
     }
 }
 
@@ -634,19 +723,33 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
     auto old = m_selectedIndex;
 
     auto targetSelection = entities[m_selectedIndex].getComponent<UIInput>().m_neighbourIndices[direction];
+
+    //check if we're moving back to a previous entry and prefer that
+    if ((direction == UIInput::Index::Up && m_prevDirection == UIInput::Index::Down)
+        || (direction == UIInput::Index::Left && m_prevDirection == UIInput::Index::Right))
+    {
+        targetSelection = m_previousIndex;
+    }
+
     if (targetSelection != std::numeric_limits<std::size_t>::max())
     {
-        //check if any of the entities in this groupd have the requested index
+        //check if any of the entities in this group have the requested index
         auto result = std::find_if(entities.cbegin(), entities.cend(),
             [targetSelection](const Entity& e)
             {
-                return e.getComponent<UIInput>().getSelectionIndex() == targetSelection;
+                return e.getComponent<UIInput>().getSelectionIndex() == targetSelection
+                    && e.getComponent<UIInput>().enabled;
             });
 
         if (result != entities.cend()
             /*&& result->getComponent<cro::UIInput>().enabled*/)
         {
             m_selectedIndex = std::distance(entities.cbegin(), result);
+        }
+        else if (targetSelection < entities.size() &&
+            entities[targetSelection].getComponent<cro::UIInput>().enabled)
+        {
+            m_selectedIndex = targetSelection;
         }
     }
 
@@ -666,6 +769,13 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
     {
         unselect(old);
         select(m_selectedIndex);
+
+        m_previousIndex = entities[old].getComponent<UIInput>().getSelectionIndex(); //old;
+        m_prevDirection = direction;
+
+#ifdef DEBUG_UI
+        m_debugContext.backIndex = entities[old].getComponent<UIInput>().getSelectionIndex();
+#endif
     }
 }
 
@@ -684,6 +794,18 @@ void UISystem::select(std::size_t entIdx)
     auto& entities = m_groups[m_activeGroup];
     auto idx = entities[entIdx].getComponent<UIInput>().callbacks[UIInput::Selected];
     m_selectionCallbacks[idx](entities[entIdx]);
+
+#ifdef DEBUG_UI
+    const auto& ui = entities[entIdx].getComponent<UIInput>();
+    m_debugContext.selectedIndex = ui.getSelectionIndex();
+
+    auto [right, down] = ui.getNextIndex();
+    auto [left, up] = ui.getPrevIndex();
+    m_debugContext.downIndex = down;
+    m_debugContext.leftIndex = left;
+    m_debugContext.rightIndex = right;
+    m_debugContext.upIndex = up;
+#endif
 }
 
 void UISystem::updateGroupAssignments()

@@ -78,8 +78,18 @@ struct ConnectionData final
 static constexpr float MinFOV = 60.f;
 static constexpr float MaxFOV = 90.f;
 
+enum class GameMode
+{
+    Career, FreePlay, Tutorial, Clubhouse
+};
+
+struct SharedCourseData;
 struct SharedStateData final
 {
+    bool showCredits = false;
+    std::int32_t leagueTable = 0; //which league table to display when opening league browser
+    SharedCourseData* courseData = nullptr; //only valid when MenuState is active
+
     ChatFonts chatFonts;
 
     bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
@@ -117,35 +127,55 @@ struct SharedStateData final
     //available ball models mapped to ID
     struct BallInfo final
     {
+        enum
+        {
+            Regular, Unlock, Custom
+        }type = Regular;
+        cro::String label;
+        std::string modelPath;
+
+        std::uint64_t workshopID = 0;
         cro::Colour tint;
         std::uint32_t uid = 0;
-        std::string modelPath;
+        float previewRotation = 0.f;
         bool rollAnimation = true;
         bool locked = false;
-        std::uint64_t workshopID = 0;
         BallInfo() {}
         BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
-            : tint(c), uid(i), modelPath(str) {}
+            : modelPath(str), tint(c), uid(i) {}
     };
     std::vector<BallInfo> ballInfo;
 
     //available avatar models mapped to ID
     struct AvatarInfo final
     {
+        enum
+        {
+            Regular, Unlock, Custom
+        }type = Regular;
+
         std::uint32_t uid = 0;
         std::string modelPath;
         std::string texturePath;
         std::string audioscape;
         std::uint64_t workshopID = 0;
+        bool locked = false;
     };
     std::vector<AvatarInfo> avatarInfo;
 
     //available hair models mapped to ID
     struct HairInfo final
     {
+        enum
+        {
+            Regular, Unlock, Custom
+        }type = Regular;
+        cro::String label;
+
         std::uint32_t uid = 0;
         std::string modelPath;
         std::uint64_t workshopID = 0;
+        bool locked = false;
         HairInfo() = default;
         HairInfo(std::uint32_t i, const std::string& str)
             :uid(i), modelPath(str) {}
@@ -176,6 +206,7 @@ struct SharedStateData final
     std::uint8_t clubLimit = 0; //limit game to lowest player's clubs
     std::uint8_t nightTime = 0; //bool
     std::uint8_t weatherType = 0;
+    std::int32_t leagueRoundID = 0; //which league we're playing in
 
     //counts the number of holes actually played in elimination
     std::uint8_t holesPlayed = 0;
@@ -184,14 +215,20 @@ struct SharedStateData final
     std::string errorMessage;
 
     bool hosting = false;
-    bool tutorial = false;
+    GameMode gameMode = GameMode::FreePlay;
     std::size_t tutorialIndex = 0; //set in tutorial mode to decide which part to display
     std::size_t courseIndex = 0; //if hosting which course/billiard table we last chose.
     std::int32_t ballSkinIndex = 0; //billiards balls
     std::int32_t tableSkinIndex = 0; //billiards table
 
     //IDs used by the unlock state to display new unlocks
-    std::vector<std::int32_t> unlockedItems;
+    //and optional XP value to display (0 is ignored)
+    struct Unlock final
+    {
+        std::int32_t id = 0;
+        std::int32_t xp = 0;
+    };
+    std::vector<Unlock> unlockedItems;
 
     //client settings
     bool usePostProcess = false;
@@ -227,7 +264,9 @@ struct SharedStateData final
     std::int32_t enableRumble = 1;
     std::int32_t clubSet = 0;
     std::int32_t preferredClubSet = 0; //this is what the player chooses, may be overridden by game rules
+    std::int32_t crowdDensity = 1;
     bool pressHold = false; //press and hold the action button to select power
+    bool useTTS = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

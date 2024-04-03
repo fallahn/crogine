@@ -122,6 +122,22 @@ namespace cro
             m_neighbourIndices[2] = up;
         }
 
+        /*!
+        \brief Returns the right and down indices of this component, set by setNextIndex()
+        */
+        std::array<std::size_t, 2u> getNextIndex() const
+        {
+            return { m_neighbourIndices[1], m_neighbourIndices[3] };
+        }
+
+        /*!
+        \brief Returns the left and up indices of this component, set by setPrevIndex()
+        */
+        std::array<std::size_t, 2u> getPrevIndex() const
+        {
+            return { m_neighbourIndices[0], m_neighbourIndices[2] };
+        }
+
     private:
         std::size_t m_previousGroup = 0;
         std::size_t m_group = 0;

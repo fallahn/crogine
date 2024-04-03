@@ -46,14 +46,17 @@ namespace
     };
 }
 
-M3UPlaylist::M3UPlaylist(const std::string& searchDir, std::int32_t maxFiles)
+M3UPlaylist::M3UPlaylist(const std::string& searchDir, std::uint32_t maxFiles)
     : m_currentIndex(0)
 {
     if (cro::FileSystem::directoryExists(searchDir))
     {
-        auto files = cro::FileSystem::listFiles(searchDir);
-        for (const auto& file : files)
+        const auto files = cro::FileSystem::listFiles(searchDir);
+        const auto fileCount = std::min(files.size(), std::size_t(maxFiles));
+
+        for (auto i = 0u; i < fileCount; ++i)
         {
+            const auto& file = files[i];
             auto ext = cro::FileSystem::getFileExtension(file);
             if (std::find(FileExtensions.cbegin(), FileExtensions.cend(), ext) != FileExtensions.cend())
             {
@@ -86,6 +89,8 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
             return false;
         }
 
+
+        //hmmmm this should probably need to ensure utf8 encoding
         std::string fileString(buffer.cbegin(), buffer.cend());
         std::size_t pos = 0;
         std::size_t prev = 0;
@@ -139,6 +144,21 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
 
     LogE << path << " file is empty" << std::endl;
     return false;
+}
+
+void M3UPlaylist::addTrack(const std::string& path)
+{
+    static const std::array ValidExt =
+    {
+        std::string(".mp3"),
+        std::string(".ogg"),
+        std::string(".wav"),
+    };
+
+    if (std::find(ValidExt.begin(), ValidExt.end(), cro::FileSystem::getFileExtension(path)) != ValidExt.end())
+    {
+        m_filePaths.push_back(path);
+    }
 }
 
 void M3UPlaylist::shuffle()

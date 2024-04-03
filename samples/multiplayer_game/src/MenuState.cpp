@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2024
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -53,6 +54,9 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
+
+#include <crogine/util/Wavetable.hpp>
 
 #include <cstring>
 
@@ -75,6 +79,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         loadAssets();
         //create some entities
         createScene();
+        //register ImGui windows
+        registerUI();
     });
 
     context.mainWindow.setMouseCaptured(false);
@@ -136,6 +142,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
+        case SDLK_p:
+            m_soundRecorder.stop();
+            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -145,6 +154,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_BACKSPACE:
             handleTextEdit(evt);
+            break;
+        case SDLK_p:
+            m_soundRecorder.start();
             break;
         }
     }
@@ -176,6 +188,17 @@ bool MenuState::simulate(float dt)
         }
     }
 
+    std::int32_t packetCount = 0;
+    const auto* d = m_soundRecorder.getEncodedPackets(&packetCount);
+
+    static std::vector<std::uint8_t> tempBuffer;
+    if (packetCount != 0)
+    {
+        tempBuffer.resize(packetCount * 2);
+        std::memcpy(tempBuffer.data(), d, tempBuffer.size());
+        m_audioStream.updateBuffer(tempBuffer);
+    }
+
     m_scene.simulate(dt);
     return true;
 }
@@ -199,6 +222,7 @@ void MenuState::addSystems()
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
+    m_scene.addSystem<cro::AudioSystem>(mb);
 }
 
 void MenuState::loadAssets()
@@ -208,8 +232,54 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);        
+        });
+    auto mouseExitCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        });
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition( {0.f, 0.f, -10.f} );
+    entity.addComponent<cro::Sprite>(m_textureResource.get("assets/images/menu_background.png"));
+    entity.addComponent<cro::Drawable2D>();
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::RootNode;
+
+    createMainMenu(entity, mouseEnterCallback, mouseExitCallback);
+    createAvatarMenu(entity, mouseEnterCallback, mouseExitCallback);
+    createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
+    createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
+    createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>().setSource(m_audioStream);
+    entity.getComponent<cro::AudioEmitter>().play();
+    entity.getComponent<cro::AudioEmitter>().setLooped(true); //hmmm what do we need to do to not make this necessary?
+
+
+
+    //set a custom camera so the scene doesn't overwrite the viewport
+    //with the default view when resizing the window
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
+    m_scene.setActiveCamera(entity);
+    updateView(entity.getComponent<cro::Camera>());
+}
+
+void MenuState::registerUI()
+{
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
+    registerWindow([&]()
         {
             ImGui::SetNextWindowSize({ 400.f, 400.f });
             if (ImGui::Begin("Main Menu"))
@@ -244,10 +314,10 @@ void MenuState::createScene()
                             cro::Command cmd;
                             cmd.targetFlags = MenuCommandID::RootNode;
                             cmd.action = [&](cro::Entity e, float)
-                            {
-                                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Join]);
-                                m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Join);
-                            };
+                                {
+                                    e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Join]);
+                                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Join);
+                                };
                             m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                         }
                     }
@@ -273,14 +343,14 @@ void MenuState::createScene()
                         m_sharedData.clientConnection.netClient.disconnect();
                         m_sharedData.serverInstance.stop();
                         m_sharedData.clientConnection.connected = false;
-                        
+
                         cro::Command cmd;
                         cmd.targetFlags = MenuCommandID::RootNode;
                         cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
-                            m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
-                        };
+                            {
+                                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
+                                m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
+                            };
                         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                     }
                 }
@@ -301,57 +371,82 @@ void MenuState::createScene()
                         m_sharedData.clientConnection.netClient.disconnect();
                         m_sharedData.serverInstance.stop();
                         m_sharedData.clientConnection.connected = false;
-                        
+
                         cro::Command cmd;
                         cmd.targetFlags = MenuCommandID::RootNode;
                         cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
-                            m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
-                        };
+                            {
+                                e.getComponent<cro::Transform>().setPosition(m_menuPositions[MenuID::Main]);
+                                m_scene.getSystem<cro::UISystem>()->setActiveGroup(GroupID::Main);
+                            };
                         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                     }
                 }
 
             }
-            ImGui::End();        
+            ImGui::End();
         });
 #endif //CRO_DEBUG_
 
-    auto mouseEnterCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
-        [](cro::Entity e)
-        {
-            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);        
-        });
-    auto mouseExitCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
-        [](cro::Entity e)
-        {
-            e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        });
+        registerWindow([&]() 
+            {
+                if (ImGui::Begin("Sound Recorder"))
+                {
+                    const auto& devices = m_soundRecorder.listDevices();
 
-    auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition( {0.f, 0.f, -10.f} );
-    entity.addComponent<cro::Sprite>(m_textureResource.get("assets/images/menu_background.png"));
-    entity.addComponent<cro::Drawable2D>();
+                    std::vector<const char*> items; //lol.
+                    for (const auto& d : devices)
+                    {
+                        items.push_back(d.c_str());
+                    }
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = MenuCommandID::RootNode;
+                    static std::int32_t idx = 0;
+                    if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
+                    {
+                        for (auto n = 0u; n < items.size(); ++n)
+                        {
+                            const bool selected = (idx == n);
+                            if (ImGui::Selectable(items[n], selected))
+                            {
+                                idx = n;
+                            }
 
-    createMainMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createAvatarMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createJoinMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createLobbyMenu(entity, mouseEnterCallback, mouseExitCallback);
-    createOptionsMenu(entity, mouseEnterCallback, mouseExitCallback);
+                            if (selected)
+                            {
+                                ImGui::SetItemDefaultFocus();
+                            }
+                        }
+                        ImGui::EndListBox();
+                    }
 
 
-    //set a custom camera so the scene doesn't overwrite the viewport
-    //with the default view when resizing the window
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = std::bind(&MenuState::updateView, this, std::placeholders::_1);
-    m_scene.setActiveCamera(entity);
-    updateView(entity.getComponent<cro::Camera>());
+                    if (ImGui::Button("Open Device"))
+                    {
+                        m_soundRecorder.openDevice(devices[idx]);
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("Close Device"))
+                    {
+                        m_soundRecorder.closeDevice();
+                    }
+
+
+
+                    if (ImGui::Button("Start Recording"))
+                    {
+                        m_soundRecorder.start();
+                    }
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("Stop Recording"))
+                    {
+                        m_soundRecorder.stop();
+                    }
+                }
+                ImGui::End();
+            
+            });
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)

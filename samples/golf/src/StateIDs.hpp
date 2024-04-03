@@ -42,6 +42,7 @@ struct StateID final
         Tutorial,
         Keyboard,
         Practice,
+        Career,
         DrivingRange,
         PuttingRange,
         Clubhouse,
@@ -52,6 +53,7 @@ struct StateID final
         Playlist,
         MessageOverlay,
         Credits,
+        FreePlay,
         EventOverlay, //consumes events if the overlay is open
         Unlock,
         Profile, 

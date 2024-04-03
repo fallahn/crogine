@@ -7,12 +7,15 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/AudioScape.cpp
   ${PROJECT_DIR}/audio/AudioSource.cpp
   ${PROJECT_DIR}/audio/AudioStream.cpp
+  ${PROJECT_DIR}/audio/BufferedStreamLoader.cpp
+  ${PROJECT_DIR}/audio/DynamicAudioStream.cpp
   ${PROJECT_DIR}/audio/Mp3Loader.cpp
   ${PROJECT_DIR}/audio/stb_vorbis.c
   ${PROJECT_DIR}/audio/VorbisLoader.cpp
   ${PROJECT_DIR}/audio/WavLoader.cpp
 
   ${PROJECT_DIR}/audio/sound_system/MusicPlayer.cpp
+  ${PROJECT_DIR}/audio/sound_system/SoundRecorder.cpp
   ${PROJECT_DIR}/audio/sound_system/SoundSource.cpp
   ${PROJECT_DIR}/audio/sound_system/SoundStream.cpp
   
@@ -192,7 +195,7 @@ SET(project_src_nix
   )
 
 SET(project_src_macos
-  ${PROJECT_DIR}/audio/mojoal.c
+  #${PROJECT_DIR}/audio/mojoal.c
   ${PROJECT_DIR}/detail/ResourcePath.mm 
   ${PROJECT_DIR}/detail/41/glad.c
   )

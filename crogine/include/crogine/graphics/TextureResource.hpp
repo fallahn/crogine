@@ -86,6 +86,13 @@ namespace cro
         Texture& get(std::uint32_t id);
 
         /*!
+        \brief Searches for the texture by the give GL handle and returns it if found.
+        Otherwise returns a fallback texture with the current fallback colour
+        \param handle The GL handle of the texture for which to search
+        */
+        Texture& getByHandle(std::uint32_t handle);
+
+        /*!
         \brief Sets the current fallback colour.
         If a texture fails to load then a texture filled with the current
         fallback colour is returned. Defaults to magenta.
@@ -109,5 +116,7 @@ namespace cro
         std::unordered_map<std::uint32_t, std::pair<std::string, std::unique_ptr<Texture>>> m_textures;
         std::unordered_map<Colour, std::unique_ptr<Texture>> m_fallbackTextures;
         Colour m_fallbackColour;
+
+        Texture& getFallbackTexture();
     };
 }
