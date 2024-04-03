@@ -272,7 +272,7 @@ namespace ul
         { ModelID::GolfBag02,  "Pro Clubs Available!",      "Club Range Extended" },
         { ModelID::Padlock,    "Socialiser",                "Clubhouse Unlocked" },
         { ModelID::Padlock,    "Designer",                  "Course Editor Unlocked" },
-        { ModelID::GoldCup,    "Monthly Challege Complete", "+500XP" },
+        { ModelID::GoldCup,    "Monthly Challege Complete", "+1000XP" },
 
         { ModelID::Streak01,  "1 Day Streak",    "+5XP" },
         { ModelID::Streak02,  "2 Day Streak",    "+11XP" },
