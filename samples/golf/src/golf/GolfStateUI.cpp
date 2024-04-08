@@ -997,7 +997,7 @@ void GolfState::buildUI()
         float textureRatio = 1.f; //pixels per metre in the minimap texture * 2
     };
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
+    entity.addComponent<cro::Transform>();// .setPosition({ 0.f, 82.f });
     entity.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.05f, 0.f));
@@ -1120,7 +1120,64 @@ void GolfState::buildUI()
         }
         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f / ratio, newScale / ratio));
     };
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    m_mapRoot = m_uiScene.createEntity();
+    m_mapRoot.addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_mapRoot.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 1);
+    m_mapRoot.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& [progress, dir] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+            if (dir == 0)
+            {
+                //bigger
+                progress = std::min(1.f, progress + (dt * 8.f));
+                if (progress == 1)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+            else
+            {
+                progress = std::max(0.f, progress - (dt * 8.f));
+                if (progress == 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+
+            static constexpr glm::vec2 offset(0.5299f, 0.84799f); //1/8 map size, rotated 90deg, normalised
+            static constexpr float l = 47.167f;// glm::length(offset); //aww no constexpr
+            
+            const auto p = cro::Util::Easing::easeOutExpo(progress);
+            auto o = offset * l * p;
+            o.x = std::round(o.x);
+            o.y = std::round(o.y);
+
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f + p));
+            e.getComponent<cro::Transform>().setOrigin(o);
+        };
+
+
+    /*registerWindow([&]()
+        {
+            if (ImGui::Begin("Zoom"))
+            {
+                static float scale = 1.f;
+                
+                
+                if (ImGui::SliderFloat("Scale", &scale, 1.f, 2.f))
+                {
+                    m_mapRoot.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    m_mapRoot.getComponent<cro::Transform>().setOrigin(offset * (scale - 1.f));
+                }
+
+
+            }
+            ImGui::End();
+        });*/
+
+    infoEnt.getComponent<cro::Transform>().addChild(m_mapRoot.getComponent<cro::Transform>());
     auto mapEnt = entity;
     m_minimapEnt = entity;
 
@@ -1457,7 +1514,7 @@ void GolfState::buildUI()
 
 
     //callback for the UI camera when window is resized
-    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, windEnt2, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, windEnt2, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -3.5f, 20.f);
@@ -1480,7 +1537,7 @@ void GolfState::buildUI()
         const auto uiSize = size / m_viewScale;
         auto mapSize = glm::vec2(MapSize / 2u);
         mapSize /= 2.f;
-        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.05f }); //map sprite is rotated 90
+        m_mapRoot.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.05f }); //map sprite is rotated 90
 
 
         greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });
