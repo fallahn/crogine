@@ -83,6 +83,7 @@ enum OptionsIndex
     CtrlInvY,
     CtrlVib,
     CtrlAltPower,
+    CtrlSwg,
     CtrlReset,
     CtrlDown,
     CtrlLeft,

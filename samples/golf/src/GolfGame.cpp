@@ -1331,6 +1331,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.useTTS = prop.getValue<bool>();
                 }
+                else if (name == "use_swingput")
+                {
+                    m_sharedData.useSwingput = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -1435,6 +1439,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("fov").setValue(m_sharedData.fov);
     cfg.addProperty("vertex_snap").setValue(m_sharedData.vertexSnap);
     cfg.addProperty("mouse_speed").setValue(m_sharedData.mouseSpeed);
+    cfg.addProperty("use_swingput").setValue(m_sharedData.useSwingput);
     cfg.addProperty("invert_x").setValue(m_sharedData.invertX);
     cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
     cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);

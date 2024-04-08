@@ -242,6 +242,7 @@ struct SharedStateData final
     bool vertexSnap = false;
     float mouseSpeed = 1.f;
     float swingputThreshold = 0.1f;
+    bool useSwingput = false;
     bool invertX = false;
     bool invertY = false;
     bool showBeacon = true;

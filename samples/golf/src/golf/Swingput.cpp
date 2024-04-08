@@ -58,7 +58,7 @@ namespace
 
 Swingput::Swingput(const SharedStateData& sd)
     : m_sharedData  (sd),
-    m_enabled       (false),
+    m_enabled       (-1),
     m_backPoint     (0.f),
     m_activePoint   (0.f),
     m_frontPoint    (0.f),
@@ -97,7 +97,8 @@ Swingput::Swingput(const SharedStateData& sd)
 //public
 bool Swingput::handleEvent(const cro::Event& evt)
 {
-    if (m_enabled == -1)
+    if (m_enabled == -1
+        || !m_sharedData.useSwingput)
     {
         return false;
     }
@@ -159,59 +160,59 @@ bool Swingput::handleEvent(const cro::Event& evt)
         //we allow either trigger or either stick
         //to aid handedness of players
     case SDL_CONTROLLERAXISMOTION:
-        //if (cro::GameController::controllerID(evt.caxis.which) == activeControllerID(m_enabled))
-        //{
-        //    switch (evt.caxis.axis)
-        //    {
-        //    default: break;
-        //    case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
-        //    case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-        //        if (evt.caxis.value > MinTriggerMove)
-        //        {
-        //            startStroke(MaxControllerVelocity);
-        //        }
-        //        else
-        //        {
-        //            endStroke();
-        //        }
+        if (cro::GameController::controllerID(evt.caxis.which) == activeControllerID(m_enabled))
+        {
+            switch (evt.caxis.axis)
+            {
+            default: break;
+            case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
+            case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
+                if (evt.caxis.value > MinTriggerMove)
+                {
+                    startStroke(MaxControllerVelocity);
+                }
+                else
+                {
+                    endStroke();
+                }
 
-        //        if (evt.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
-        //        {
-        //            m_lastLT = evt.caxis.value;
-        //        }
-        //        else
-        //        {
-        //            m_lastRT = evt.caxis.value;
-        //        }
+                if (evt.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+                {
+                    m_lastLT = evt.caxis.value;
+                }
+                else
+                {
+                    m_lastRT = evt.caxis.value;
+                }
 
-        //        return (evt.caxis.value > MinTriggerMove);
-        //    case SDL_CONTROLLER_AXIS_LEFTY:
-        //    case SDL_CONTROLLER_AXIS_RIGHTY:
+                return (evt.caxis.value > MinTriggerMove);
+            case SDL_CONTROLLER_AXIS_LEFTY:
+            case SDL_CONTROLLER_AXIS_RIGHTY:
 
-        //        if (std::abs(evt.caxis.value) > MinStickMove)
-        //        {
-        //            if (m_state == State::Swing)
-        //            {
-        //                m_activePoint.y = std::pow((static_cast<float>(-evt.caxis.value) / ControllerAxisRange), 7.f) * (MaxSwingputDistance / 2.f);
-        //                return true;
-        //            }
-        //        }
-        //        return false;
-        //    case SDL_CONTROLLER_AXIS_LEFTX:
-        //    case SDL_CONTROLLER_AXIS_RIGHTX:
-        //        //just set this and we'll have
-        //        //whichever value was present when
-        //        //the swing is finished
+                if (std::abs(evt.caxis.value) > MinStickMove)
+                {
+                    if (m_state == State::Swing)
+                    {
+                        m_activePoint.y = std::pow((static_cast<float>(-evt.caxis.value) / ControllerAxisRange), 7.f) * (MaxSwingputDistance / 2.f);
+                        return true;
+                    }
+                }
+                return false;
+            case SDL_CONTROLLER_AXIS_LEFTX:
+            case SDL_CONTROLLER_AXIS_RIGHTX:
+                //just set this and we'll have
+                //whichever value was present when
+                //the swing is finished
 
-        //        if (std::abs(evt.caxis.value) > MinStickMove
-        //            && m_state == State::Swing)
-        //        {
-        //            m_activePoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
-        //            return true;
-        //        }
-        //        return false;
-        //    }
-        //}
+                if (std::abs(evt.caxis.value) > MinStickMove
+                    && m_state == State::Swing)
+                {
+                    m_activePoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
+                    return true;
+                }
+                return false;
+            }
+        }
         return isActive();
     }
 
