@@ -4870,7 +4870,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
         auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
-        if (cro::GameController::controllerID(evt.cbutton.which) == controllerID)
+        if (cro::GameController::controllerID(evt.cbutton.which) == controllerID
+            || sharedData.localConnectionData.playerCount == 1)
         {
             switch (evt.cbutton.button)
             {
@@ -4915,7 +4916,9 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
+        //the controller ID is actually used to select the play name in this case
+        auto controllerID = activeControllerID(sharedData.localConnectionData.playerCount == 1 ? 0 :
+            sharedData.inputBinding.playerID);
 
         /*if (cro::GameController::controllerID(evt.cbutton.which) == controllerID)
         {

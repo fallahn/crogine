@@ -251,7 +251,8 @@ void InputParser::handleEvent(const cro::Event& evt)
         {
             auto controllerID = activeControllerID(m_inputBinding.playerID);
             if (!m_isCPU &&
-                evt.cbutton.which == cro::GameController::deviceID(controllerID))
+                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
+                || m_sharedData.localConnectionData.playerCount == 1)) //allow input from any controller if only one local player
             {
                 if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
@@ -304,7 +305,8 @@ void InputParser::handleEvent(const cro::Event& evt)
         {
             auto controllerID = activeControllerID(m_inputBinding.playerID);
             if (!m_isCPU &&
-                evt.cbutton.which == cro::GameController::deviceID(controllerID))
+                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
+                || m_sharedData.localConnectionData.playerCount == 1))
             {
                 if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
