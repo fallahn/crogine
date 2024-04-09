@@ -53,6 +53,8 @@ namespace InputFlag
         CamModifier = SpinMenu,
         SwitchView  = EmoteWheel,
 
+        Swingput    = 0x400,
+
         All = 0xFFFF
     };
 }

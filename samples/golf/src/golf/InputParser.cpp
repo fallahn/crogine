@@ -139,7 +139,7 @@ void InputParser::handleEvent(const cro::Event& evt)
     };
 
     if (m_active &&
-        !m_swingput.handleEvent(evt))
+        !m_swingput.handleEvent(evt, m_inputFlags, static_cast<std::int32_t>(m_state)))
     {
         //apply to input mask
         if (evt.type == SDL_KEYDOWN
@@ -849,19 +849,6 @@ void InputParser::updateStroke(float dt)
 
     if (m_active)
     {
-        if (m_swingput.process(dt))
-        {
-            //we took our shot
-            m_power = m_swingput.getPower();
-            m_hook = m_swingput.getHook();
-
-            m_powerbarDirection = 1.f;
-            m_state = State::Flight;
-
-            auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
-            msg->type = GolfEvent::HitBall;
-        }
-
         m_inputFlags &= m_enableFlags;
 
         switch (m_state)
@@ -974,7 +961,8 @@ void InputParser::updateStroke(float dt)
                 m_powerbarDirection = -1.f;
             }
 
-            if (m_sharedData.pressHold)
+            if (m_sharedData.pressHold
+                && ((m_inputFlags & InputFlag::Swingput) == 0))
             {
                 if ((m_inputFlags & InputFlag::Action) == 0 && (m_prevFlags & InputFlag::Action))
                 {
@@ -993,9 +981,23 @@ void InputParser::updateStroke(float dt)
                     {
                         m_powerbarDirection = 1.f;
 
-                        m_state = State::Stroke;
-                        m_doubleTapClock.restart();
-                        beginIcon();
+                        if (m_inputFlags & InputFlag::Swingput)
+                        {
+                            //take shot immediately
+                            m_state = State::Flight;
+                            m_hook = m_swingput.getHook();
+
+                            auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+                            msg->type = GolfEvent::HitBall;
+
+                            //TODO read hook value from swingput
+                        }
+                        else
+                        {
+                            m_state = State::Stroke;
+                            m_doubleTapClock.restart();
+                            beginIcon();
+                        }
                     }
                 }
             }
@@ -1074,6 +1076,13 @@ void InputParser::updateStroke(float dt)
                 }
             }
         }
+    }
+
+    //if the input is flagged as being from the swingput,
+    //automatically reset the flag as if the button was released
+    if ((m_inputFlags & InputFlag::Swingput) != 0)
+    {
+        m_inputFlags &= ~(InputFlag::Action | InputFlag::Swingput);
     }
 
     m_prevDisabledFlags = disabledFlags;

@@ -800,7 +800,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
-        if (evt.button.button == SDL_BUTTON_RIGHT)
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            toggleQuitReady();
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT)
         {
             closeMessage();
         }

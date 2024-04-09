@@ -807,7 +807,7 @@ void DrivingState::createUI()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         m_viewScale = glm::vec2(getViewScale());
-        m_inputParser.setMouseScale(m_viewScale.x);
+        //m_inputParser.setMouseScale(m_viewScale.x);
 
         glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
 

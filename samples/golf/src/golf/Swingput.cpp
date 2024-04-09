@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "Swingput.hpp"
+#include "InputBinding.hpp"
 #include "GameConsts.hpp"
 #include "SharedStateData.hpp"
 
@@ -46,29 +47,42 @@ namespace
     }debugOutput;
 #endif
 
-    constexpr float MaxControllerVelocity = 3000.f;
-    constexpr float MaxMouseVelocity = 1700.f;
-    constexpr float MaxAccuracy = 20.f;
+    //constexpr float MaxControllerVelocity = 3000.f;
+    //constexpr float MaxMouseVelocity = 1700.f;
+    //constexpr float MaxAccuracy = 20.f;
     //constexpr float CommitDistance = 4.f;// 0.01f; //TODO make this user variable
 
-    constexpr float ControllerAxisRange = 32767.f;
+    //constexpr float ControllerAxisRange = 32767.f;
+    //constexpr std::int16_t MinStickMove = 8000;
+
+    //these we do use
     constexpr std::int16_t MinTriggerMove = 16000;
-    constexpr std::int16_t MinStickMove = 8000;
+
+    constexpr std::int32_t MaxMouseDraw = 20;
+    constexpr std::int32_t MaxMouseSwing = -20;
+    constexpr std::int32_t MaxMouseHook = 120;
+
+    constexpr std::int16_t MaxControllerDraw = (std::numeric_limits<std::int16_t>::max() / 3) * 2;
+    constexpr std::int16_t MaxControllerSwing = -std::numeric_limits<std::int16_t>::max() / 2;
+
+    //horrible hack to match up with InputParser::State
+    struct StateID final
+    {
+        enum
+        {
+            Aim, Power
+        };
+    };
 }
 
 Swingput::Swingput(const SharedStateData& sd)
     : m_sharedData  (sd),
     m_enabled       (-1),
-    m_backPoint     (0.f),
-    m_activePoint   (0.f),
-    m_frontPoint    (0.f),
-    m_power         (0.f),
+    m_mouseMovement (0),
     m_hook          (0.f),
-    m_maxVelocity   (1.f),
-    m_mouseScale    (1.f),
+    m_gaugePosition (0.f),
     m_lastLT        (0),
-    m_lastRT        (0),
-    m_elapsedTime   (0.f)
+    m_lastRT        (0)
 {
 #ifdef CRO_DEBUG_
     //registerWindow([&]()
@@ -95,7 +109,7 @@ Swingput::Swingput(const SharedStateData& sd)
 }
 
 //public
-bool Swingput::handleEvent(const cro::Event& evt)
+bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std::int32_t state)
 {
     if (m_enabled == -1
         || !m_sharedData.useSwingput)
@@ -103,20 +117,16 @@ bool Swingput::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    const auto startStroke = [&](float maxVelocity)
+    const auto startStroke = [&]()
     {
         if (m_state == State::Inactive
             && (m_lastLT < MinTriggerMove)
             && (m_lastRT < MinTriggerMove))
         {
             m_state = State::Swing;
-            m_backPoint = { 0.f, 0.f };
-            m_activePoint = { 0.f, 0.f };
-            m_frontPoint = { 0.f, 0.f };
-            m_power = 0.f;
+            m_mouseMovement = { 0,0 };
             m_hook = 0.f;
-
-            m_maxVelocity = maxVelocity;
+            m_gaugePosition = 0.f;
 
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -125,7 +135,6 @@ bool Swingput::handleEvent(const cro::Event& evt)
     const auto endStroke = [&]()
     {
         m_state = State::Inactive;
-        m_activePoint = { 0.f, 0.f };
     };
 
     switch (evt.type)
@@ -134,7 +143,7 @@ bool Swingput::handleEvent(const cro::Event& evt)
     case SDL_MOUSEBUTTONDOWN:
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
-            startStroke(MaxMouseVelocity);
+            startStroke();
             return true;
         }
         return false;
@@ -147,13 +156,45 @@ bool Swingput::handleEvent(const cro::Event& evt)
         return false;
     case SDL_MOUSEMOTION:
         //TODO we need to scale this down relative to the game buffer size
-        switch (m_state)
+        //or use some sort of mouse sensitivity
+        if (m_state == State::Swing)
         {
-        default: break;
-        case State::Swing:
-            m_activePoint.x = std::clamp(m_activePoint.x + (static_cast<float>(evt.motion.xrel) / 10.f/* / m_mouseScale*/), -MaxAccuracy, MaxAccuracy);
-            m_activePoint.y = std::clamp(m_activePoint.y - (static_cast<float>(evt.motion.yrel)/* / m_mouseScale*/), -(MaxSwingputDistance / 2.f), MaxSwingputDistance / 2.f);
-            return true;
+            switch (state)
+            {
+            default: break;
+            case StateID::Aim:
+                if (evt.motion.yrel > 1)
+                {
+                    //measure this then trigger action
+                    //once a certain distance is met
+                    m_mouseMovement.y += evt.motion.yrel;
+                    if (m_mouseMovement.y > MaxMouseDraw)
+                    {
+                        inputFlags |= (InputFlag::Action | InputFlag::Swingput);
+                    }
+                }
+                break;
+            case StateID::Power:
+                if (evt.motion.yrel < -4)
+                {
+                    //measure the distance as it's travelled
+                    //as well as the X axis for accuracy
+                    m_mouseMovement.x += evt.motion.xrel;
+                    m_mouseMovement.y += evt.motion.yrel;
+
+                    if (m_mouseMovement.y < MaxMouseSwing)
+                    {
+                        inputFlags |= (InputFlag::Action | InputFlag::Swingput);
+                        m_hook = std::clamp(static_cast<float>(m_mouseMovement.x) / MaxMouseHook, -1.f, 1.f);
+                        m_hook += 1.f;
+                        m_hook /= 2.f;
+
+                        m_state = State::Inactive;
+                    }
+                }
+                break;
+            }
+            setGaugeFromMouse();
         }
         return false;
 
@@ -169,7 +210,7 @@ bool Swingput::handleEvent(const cro::Event& evt)
             case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
                 if (evt.caxis.value > MinTriggerMove)
                 {
-                    startStroke(MaxControllerVelocity);
+                    startStroke();
                 }
                 else
                 {
@@ -188,28 +229,42 @@ bool Swingput::handleEvent(const cro::Event& evt)
                 return (evt.caxis.value > MinTriggerMove);
             case SDL_CONTROLLER_AXIS_LEFTY:
             case SDL_CONTROLLER_AXIS_RIGHTY:
-
-                if (std::abs(evt.caxis.value) > MinStickMove)
+                if (m_state == State::Swing)
                 {
-                    if (m_state == State::Swing)
+                    //one of the triggers is held
+                    if (state == StateID::Aim)
                     {
-                        m_activePoint.y = std::pow((static_cast<float>(-evt.caxis.value) / ControllerAxisRange), 7.f) * (MaxSwingputDistance / 2.f);
-                        return true;
+                        //pulling back should create a button press - as this
+                        //should more or less immediately change state to power
+                        //we *shouldn't* get multiple presses. InputParser will
+                        //reset these flags for us automatically.
+                        if (evt.caxis.value > MaxControllerDraw)
+                        {
+                            inputFlags |= (InputFlag::Action | InputFlag::Swingput);
+                            m_tempoTimer.restart();
+                        }
                     }
+                    else if (state == StateID::Power)
+                    {
+                        //pushing forward rapidly should create a button press
+                        //the swingput flag should tell the InputParser to skip
+                        //the accuracy stage...
+                        if (evt.caxis.value < MaxControllerSwing)
+                        {
+                            //TODO measure the tempo of the swing and use it to set the accuracy
+                            LogI << "Tempo is " << m_tempoTimer.restart() << std::endl;
+
+                            inputFlags |= (InputFlag::Action | InputFlag::Swingput);
+                            m_state = State::Inactive;
+                        }
+                    }
+                    setGaugeFromController(evt.caxis.value);
                 }
+
                 return false;
             case SDL_CONTROLLER_AXIS_LEFTX:
             case SDL_CONTROLLER_AXIS_RIGHTX:
-                //just set this and we'll have
-                //whichever value was present when
-                //the swing is finished
 
-                if (std::abs(evt.caxis.value) > MinStickMove
-                    && m_state == State::Swing)
-                {
-                    m_activePoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
-                    return true;
-                }
                 return false;
             }
         }
@@ -219,77 +274,34 @@ bool Swingput::handleEvent(const cro::Event& evt)
     return isActive();
 }
 
-bool Swingput::process(float)
-{
-    switch (m_state)
-    {
-    default: break;
-    case State::Swing:
-    {
-        //moving down
-        if (m_activePoint.y < m_frontPoint.y)
-        {
-            m_backPoint = m_activePoint;
-        }
-
-        //started moving back up so time the ascent
-        if (m_activePoint.y > m_backPoint.y
-            && m_frontPoint.y == m_backPoint.y)
-        {
-            m_timer.restart();
-        }
-
-        //we've done full stroke.
-        if (m_activePoint.y > (MaxSwingputDistance / 2.f) - /*CommitDistance*/m_sharedData.swingputThreshold)
-        {
-            m_state = State::Summarise;
-            m_elapsedTime = m_timer.restart();
-        }
-
-        m_frontPoint = m_activePoint;
-    }
-    return false;
-    case State::Summarise:
-        m_state = State::Inactive;
-
-#ifdef CRO_DEBUG_
-        debugOutput.distance = (m_frontPoint.y - m_backPoint.y);
-        debugOutput.velocity = debugOutput.distance / (m_elapsedTime + 0.0001f); //potential NaN
-        debugOutput.accuracy = (m_frontPoint.x - m_backPoint.x);
-        m_power = std::clamp(debugOutput.velocity / m_maxVelocity, 0.f, 1.f);
-        m_hook = std::clamp(debugOutput.accuracy / MaxAccuracy, -1.f, 1.f);
-
-        //travelling a shorter distance doesn't imply lower
-        //velocity so we need to create a distance based modifier
-        float multiplier = debugOutput.distance / MaxSwingputDistance;
-
-#else
-        float distance = (m_frontPoint.y - m_backPoint.y);
-        float velocity = distance / (m_elapsedTime + 0.0001f); //potential NaN
-        float accuracy = (m_frontPoint.x - m_backPoint.x);
-        m_power = std::clamp(velocity / m_maxVelocity, 0.f, 1.f);
-        m_hook = std::clamp(accuracy / MaxAccuracy, -1.f, 1.f);
-
-        //travelling a shorter distance doesn't imply lower
-        //velocity so we need to create a distance based modifier
-        float multiplier = distance / MaxSwingputDistance;
-#endif
-
-        //hmm have to double convert this because the input parser
-        //actually calcs it to 0-1 and converts back to -1 1 on return
-        m_hook += 1.f;
-        m_hook /= 2.f;
-
-        m_power *= multiplier;
-
-        return true;
-    }
-    return false;
-}
-
 void Swingput::setEnabled(std::int32_t enabled)
 {
     m_enabled = enabled; 
     m_lastLT = 0;
     m_lastRT = 0;
+}
+
+//private
+void Swingput::setGaugeFromMouse()
+{
+    //gauge id +/- MaxSwingputDistance / 2
+    //but also INVERTED from the actual values *sigh*
+    float norm = 0.f;
+    if (m_mouseMovement.y > 0)
+    {
+        //draw
+        norm = std::min(1.f, static_cast<float>(m_mouseMovement.y) / MaxMouseDraw) * -1.f;
+    }
+    else
+    {
+        //swing
+        norm = std::min(1.f, static_cast<float>(m_mouseMovement.y) / MaxMouseSwing);
+    }
+    m_gaugePosition = (MaxSwingputDistance / 2.f) * norm;
+}
+
+void Swingput::setGaugeFromController(std::int16_t position)
+{
+    const float norm = (static_cast<float>(position) / std::numeric_limits<std::int16_t>::max()) * -1.f;
+    m_gaugePosition = (MaxSwingputDistance / 2.f) * norm;
 }
