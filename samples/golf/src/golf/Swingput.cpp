@@ -58,9 +58,9 @@ namespace
     //these we do use
     constexpr std::int16_t MinTriggerMove = 16000;
 
-    constexpr std::int32_t MaxMouseDraw = 20;
-    constexpr std::int32_t MaxMouseSwing = -20;
-    constexpr std::int32_t MaxMouseHook = 120;
+    constexpr float MaxMouseDraw = 20.f;
+    constexpr float MaxMouseSwing = -20.f;
+    constexpr float MaxMouseHook = 120.f;
 
     constexpr std::int16_t MaxControllerDraw = (std::numeric_limits<std::int16_t>::max() / 3) * 2;
     constexpr std::int16_t MaxControllerSwing = -std::numeric_limits<std::int16_t>::max() / 2;
@@ -124,7 +124,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
             && (m_lastRT < MinTriggerMove))
         {
             m_state = State::Swing;
-            m_mouseMovement = { 0,0 };
+            m_mouseMovement = { 0.f,0.f };
             m_hook = 0.f;
             m_gaugePosition = 0.f;
 
@@ -167,7 +167,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                 {
                     //measure this then trigger action
                     //once a certain distance is met
-                    m_mouseMovement.y += evt.motion.yrel;
+                    m_mouseMovement.y += static_cast<float>(evt.motion.yrel) * m_sharedData.swingputThreshold;
                     if (m_mouseMovement.y > MaxMouseDraw)
                     {
                         inputFlags |= (InputFlag::Action | InputFlag::Swingput);
@@ -179,13 +179,13 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                 {
                     //measure the distance as it's travelled
                     //as well as the X axis for accuracy
-                    m_mouseMovement.x += evt.motion.xrel;
-                    m_mouseMovement.y += evt.motion.yrel;
+                    m_mouseMovement.x += static_cast<float>(evt.motion.xrel); //hmm this is going to be dependent on screen resolution
+                    m_mouseMovement.y += static_cast<float>(evt.motion.yrel) * m_sharedData.swingputThreshold;
 
                     if (m_mouseMovement.y < MaxMouseSwing)
                     {
                         inputFlags |= (InputFlag::Action | InputFlag::Swingput);
-                        m_hook = std::clamp(static_cast<float>(m_mouseMovement.x) / MaxMouseHook, -1.f, 1.f);
+                        m_hook = std::clamp(m_mouseMovement.x / MaxMouseHook, -1.f, 1.f);
                         m_hook += 1.f;
                         m_hook /= 2.f;
 
@@ -284,18 +284,18 @@ void Swingput::setEnabled(std::int32_t enabled)
 //private
 void Swingput::setGaugeFromMouse()
 {
-    //gauge id +/- MaxSwingputDistance / 2
+    //gauge is +/- MaxSwingputDistance / 2
     //but also INVERTED from the actual values *sigh*
     float norm = 0.f;
     if (m_mouseMovement.y > 0)
     {
         //draw
-        norm = std::min(1.f, static_cast<float>(m_mouseMovement.y) / MaxMouseDraw) * -1.f;
+        norm = std::min(1.f, m_mouseMovement.y / MaxMouseDraw) * -1.f;
     }
     else
     {
         //swing
-        norm = std::min(1.f, static_cast<float>(m_mouseMovement.y) / MaxMouseSwing);
+        norm = std::min(1.f, m_mouseMovement.y / MaxMouseSwing);
     }
     m_gaugePosition = (MaxSwingputDistance / 2.f) * norm;
 }

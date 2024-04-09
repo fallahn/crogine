@@ -241,7 +241,7 @@ struct SharedStateData final
     float fov = MinFOV;
     bool vertexSnap = false;
     float mouseSpeed = 1.f;
-    float swingputThreshold = 0.1f;
+    float swingputThreshold = 1.f;
     bool useSwingput = false;
     bool invertX = false;
     bool invertY = false;

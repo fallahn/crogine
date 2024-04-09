@@ -71,7 +71,7 @@ private:
     const SharedStateData& m_sharedData;
     std::int32_t m_enabled;
 
-    glm::ivec2 m_mouseMovement;
+    glm::vec2 m_mouseMovement;
     cro::HiResTimer m_tempoTimer;
 
     float m_hook;
