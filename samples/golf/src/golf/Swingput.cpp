@@ -47,15 +47,6 @@ namespace
     }debugOutput;
 #endif
 
-    //constexpr float MaxControllerVelocity = 3000.f;
-    //constexpr float MaxMouseVelocity = 1700.f;
-    //constexpr float MaxAccuracy = 20.f;
-    //constexpr float CommitDistance = 4.f;// 0.01f; //TODO make this user variable
-
-    //constexpr float ControllerAxisRange = 32767.f;
-    //constexpr std::int16_t MinStickMove = 8000;
-
-    //these we do use
     constexpr std::int16_t MinTriggerMove = 16000;
 
     constexpr float MaxMouseDraw = 20.f;
@@ -76,13 +67,14 @@ namespace
 }
 
 Swingput::Swingput(const SharedStateData& sd)
-    : m_sharedData  (sd),
-    m_enabled       (-1),
-    m_mouseMovement (0),
-    m_hook          (0.f),
-    m_gaugePosition (0.f),
-    m_lastLT        (0),
-    m_lastRT        (0)
+    : m_sharedData          (sd),
+    m_enabled               (-1),
+    m_mouseMovement         (0),
+    m_hook                  (0.f),
+    m_gaugePosition         (0.f),
+    m_lastLT                (0),
+    m_lastRT                (0),
+    m_strokeStartPosition   (0)
 {
 #ifdef CRO_DEBUG_
     //registerWindow([&]()
@@ -125,8 +117,9 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
         {
             m_state = State::Swing;
             m_mouseMovement = { 0.f,0.f };
-            m_hook = 0.f;
+            m_hook = 0.5f;
             m_gaugePosition = 0.f;
+            m_strokeStartPosition = 0;
 
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -135,19 +128,26 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
     const auto endStroke = [&]()
     {
         m_state = State::Inactive;
+
+        if (state == StateID::Power)
+        {
+            //cancel the shot
+            inputFlags |= (InputFlag::Cancel | InputFlag::Swingput);
+        }
     };
 
     switch (evt.type)
     {
     default: return isActive();
     case SDL_MOUSEBUTTONDOWN:
-        if (evt.button.button == SDL_BUTTON_RIGHT)
+        /*if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             startStroke();
             return true;
-        }
+        }*/
         return false;
     case SDL_MOUSEBUTTONUP:
+        return false; //disable for now
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             endStroke();
@@ -155,8 +155,8 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
         }
         return false;
     case SDL_MOUSEMOTION:
+        return false;
         //TODO we need to scale this down relative to the game buffer size
-        //or use some sort of mouse sensitivity
         if (m_state == State::Swing)
         {
             switch (state)
@@ -172,6 +172,9 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                     {
                         inputFlags |= (InputFlag::Action | InputFlag::Swingput);
                     }
+
+                    setGaugeFromMouse();
+                    return true;
                 }
                 break;
             case StateID::Power:
@@ -191,10 +194,12 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
 
                         m_state = State::Inactive;
                     }
+
+                    setGaugeFromMouse();
+                    return true;
                 }
                 break;
             }
-            setGaugeFromMouse();
         }
         return false;
 
@@ -212,7 +217,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                 {
                     startStroke();
                 }
-                else
+                else if(evt.caxis.value > 4000) //some arbitrary deadzone
                 {
                     endStroke();
                 }
@@ -241,8 +246,11 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                         if (evt.caxis.value > MaxControllerDraw)
                         {
                             inputFlags |= (InputFlag::Action | InputFlag::Swingput);
-                            m_tempoTimer.restart();
+                            m_strokeStartPosition = evt.caxis.value;
                         }
+
+                        setGaugeFromController(evt.caxis.value);
+                        return true;
                     }
                     else if (state == StateID::Power)
                     {
@@ -251,21 +259,38 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                         //the accuracy stage...
                         if (evt.caxis.value < MaxControllerSwing)
                         {
-                            //TODO measure the tempo of the swing and use it to set the accuracy
-                            LogI << "Tempo is " << m_tempoTimer.restart() << std::endl;
-
                             inputFlags |= (InputFlag::Action | InputFlag::Swingput);
                             m_state = State::Inactive;
+
+                            const float t = m_tempoTimer.restart();
+                            m_hook = 0.5f + ((0.033f - std::min(t, 0.066f)) / 2.f);
+
+                            auto x = cro::GameController::getAxisPosition(activeControllerID(m_enabled), 
+                                evt.caxis.axis == cro::GameController::AxisLeftY ? cro::GameController::AxisLeftX : cro::GameController::AxisRightX);
+                            const float xAmount = std::pow(std::clamp(static_cast<float>(x) / 10000.f, -1.f, 1.f), 3.f); //TODO vary this between 3 and 11 based on player level
+                            
+                            m_hook += (xAmount * 0.122f);
                         }
-                    }
-                    setGaugeFromController(evt.caxis.value);
+
+                        //see if we started moving back after beginning the power mode
+                        if (evt.caxis.value < m_strokeStartPosition)
+                        {                            
+                            m_tempoTimer.restart();
+                            
+                            //prevent this triggering again
+                            m_strokeStartPosition = std::numeric_limits<std::int16_t>::min();
+                        }
+
+                        setGaugeFromController(evt.caxis.value);
+                        return true;
+                    }                    
                 }
 
                 return false;
-            case SDL_CONTROLLER_AXIS_LEFTX:
+            /*case SDL_CONTROLLER_AXIS_LEFTX:
             case SDL_CONTROLLER_AXIS_RIGHTX:
 
-                return false;
+                return false;*/
             }
         }
         return isActive();

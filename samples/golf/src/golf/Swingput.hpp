@@ -79,6 +79,7 @@ private:
 
     std::int16_t m_lastLT;
     std::int16_t m_lastRT;
+    std::int16_t m_strokeStartPosition;
 
     std::int32_t m_state = State::Inactive;
     const std::array<std::string, State::Count> StateStrings =

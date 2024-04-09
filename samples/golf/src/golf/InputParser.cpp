@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -383,7 +383,7 @@ void InputParser::handleEvent(const cro::Event& evt)
         }*/
 
     }
-    else
+    else if ((m_inputFlags & InputFlag::Swingput) == 0)
     {
         m_inputFlags = 0;
     }
@@ -1082,7 +1082,7 @@ void InputParser::updateStroke(float dt)
     //automatically reset the flag as if the button was released
     if ((m_inputFlags & InputFlag::Swingput) != 0)
     {
-        m_inputFlags &= ~(InputFlag::Action | InputFlag::Swingput);
+        m_inputFlags &= ~(InputFlag::Action | InputFlag::Cancel | InputFlag::Swingput);
     }
 
     m_prevDisabledFlags = disabledFlags;

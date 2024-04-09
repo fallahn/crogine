@@ -3485,7 +3485,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //swingput enable
     entity = createSquareHighlight(glm::vec2(103.f, 22.f));
-    entity.setLabel("Enables analogue swing with triggers and thumbstick.\n(EXPERIMENTAL) May cause some frustration.");
+    entity.setLabel("Enables analogue swing with triggers and thumbstick.\n(BETA)");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlSwg);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlDown, WindowAdvanced);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlReset, CtrlAltPower);
