@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -47,6 +47,10 @@ public:
     bool handleEvent(const cro::Event&, std::uint16_t& flags, std::int32_t state);
     bool isActive() const { return m_state != State::Inactive; }
 
+    //checksto see if an active swing was cancelled by letting go of
+    //the thumbstick must be called by input parser at top of processing
+    void assertIdled(float, std::uint16_t& flags, std::int32_t state);
+
     //set to -1 to deactivate, else current player ID
     void setEnabled(std::int32_t enabled);
     std::int32_t getEnabled() const { return m_enabled; }
@@ -80,6 +84,12 @@ private:
     std::int16_t m_lastLT;
     std::int16_t m_lastRT;
     std::int16_t m_strokeStartPosition;
+
+    //used to track if we should cancel from letting go of the stick
+    std::int32_t m_activeStick;
+    std::int16_t m_lastAxisposition;
+    float m_cancelTimer;
+    bool m_inCancelZone;
 
     std::int32_t m_state = State::Inactive;
     const std::array<std::string, State::Count> StateStrings =

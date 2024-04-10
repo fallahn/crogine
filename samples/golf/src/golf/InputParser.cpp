@@ -843,6 +843,8 @@ void InputParser::updateDistanceEstimation()
 
 void InputParser::updateStroke(float dt)
 {
+    m_swingput.assertIdled(dt, m_inputFlags, static_cast<std::int32_t>(m_state));
+
     //catch the inputs that where filtered by the
     //enable flags so we can raise their own event for them
     auto disabledFlags = (m_inputFlags & ~m_enableFlags);

@@ -75,7 +75,11 @@ Swingput::Swingput(const SharedStateData& sd)
     m_gaugePosition         (0.f),
     m_lastLT                (0),
     m_lastRT                (0),
-    m_strokeStartPosition   (0)
+    m_strokeStartPosition   (0),
+    m_activeStick           (SDL_CONTROLLER_AXIS_INVALID),
+    m_lastAxisposition      (0),
+    m_cancelTimer           (0.f),
+    m_inCancelZone          (false)
 {
 #ifdef CRO_DEBUG_
     //registerWindow([&]()
@@ -129,6 +133,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
     const auto endStroke = [&]()
     {
         m_state = State::Inactive;
+        m_activeStick = SDL_CONTROLLER_AXIS_INVALID;
 
         if (state == StateID::Power)
         {
@@ -248,6 +253,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                         {
                             inputFlags |= (InputFlag::Action | InputFlag::Swingput);
                             m_strokeStartPosition = evt.caxis.value;
+                            m_activeStick = evt.caxis.axis;
                         }
 
                         setGaugeFromController(evt.caxis.value);
@@ -285,22 +291,54 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                             m_strokeStartPosition = std::numeric_limits<std::int16_t>::min();
                         }
 
+
+                        //check if this is the active axis and if it's in the cancel
+                        //zone - ie the user let go of the stick before swinging
+                        if (evt.caxis.axis == m_activeStick)
+                        {
+                            m_inCancelZone = (evt.caxis.value < cro::GameController::RightThumbDeadZone && evt.caxis.value > -cro::GameController::RightThumbDeadZone);
+
+                            //reset the timer if we entered the zon forthe first time
+                            if (m_inCancelZone && m_lastAxisposition > cro::GameController::RightThumbDeadZone)
+                            {
+                                //TODO do we need to check if it was below the deadzone? We should only be travelling in one dir
+                                m_cancelTimer = 0.f;
+                            }
+                            m_lastAxisposition = evt.caxis.value;
+                        }
+
                         setGaugeFromController(evt.caxis.value);
                         return true;
                     }                    
                 }
 
                 return false;
-            /*case SDL_CONTROLLER_AXIS_LEFTX:
-            case SDL_CONTROLLER_AXIS_RIGHTX:
-
-                return false;*/
             }
         }
         return isActive();
     }
 
     return isActive();
+}
+
+void Swingput::assertIdled(float dt, std::uint16_t& inputFlags, std::int32_t state)
+{
+    if (state == StateID::Power
+        && m_activeStick != SDL_CONTROLLER_AXIS_INVALID)
+    {
+        if (m_inCancelZone)
+        {
+            static constexpr float Timeout = 0.8f;
+            m_cancelTimer += dt;
+
+            if (m_cancelTimer > Timeout)
+            {
+                inputFlags |= (InputFlag::Cancel | InputFlag::Swingput);
+                m_state = State::Inactive;
+                m_activeStick = SDL_CONTROLLER_AXIS_INVALID;
+            }
+        }
+    }
 }
 
 void Swingput::setEnabled(std::int32_t enabled)
