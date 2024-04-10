@@ -233,7 +233,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                 {
                     startStroke();
                 }
-                else if (evt.caxis.value < 8000) //some arbitrary deadzone
+                else if (evt.caxis.value < 6000) //some arbitrary deadzone
                 {
                     endStroke();
                 }
@@ -266,7 +266,11 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                             m_activeStick = evt.caxis.axis;
                         }
 
-                        setGaugeFromController(evt.caxis.value);
+                        if (evt.caxis.value > cro::GameController::RightThumbDeadZone
+                            || evt.caxis.value < -cro::GameController::RightThumbDeadZone)
+                        {
+                            setGaugeFromController(evt.caxis.value);
+                        }
                         return true;
                     }
                     else if (state == StateID::Power)
@@ -315,9 +319,9 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                                 m_cancelTimer = 0.f;
                             }
                             m_lastAxisposition = evt.caxis.value;
+                            setGaugeFromController(evt.caxis.value);
                         }
 
-                        setGaugeFromController(evt.caxis.value);
                         return true;
                     }                    
                 }
