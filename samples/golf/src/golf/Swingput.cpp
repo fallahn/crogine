@@ -209,6 +209,16 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
         }
         return false;
 
+    case SDL_CONTROLLERBUTTONDOWN:
+        if (cro::GameController::controllerID(evt.cbutton.which) == activeControllerID(m_enabled))
+        {
+            if (evt.cbutton.button == cro::GameController::ButtonB
+                && m_state == State::Swing)
+            {
+                endStroke();
+            }
+        }
+        return false;
         //we allow either trigger or either stick
         //to aid handedness of players
     case SDL_CONTROLLERAXISMOTION:
@@ -223,7 +233,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                 {
                     startStroke();
                 }
-                else if(evt.caxis.value > 4000) //some arbitrary deadzone
+                else if (evt.caxis.value < 8000) //some arbitrary deadzone
                 {
                     endStroke();
                 }
@@ -277,9 +287,9 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                             //higher level club sets require better accuracy
                             //https://www.desmos.com/calculator/u8hmy5q3mz
                             static constexpr std::array LevelMultipliers = { 19.f, 11.f, 7.f };
-                            const float xAmount = std::pow(std::clamp(static_cast<float>(x) / 12000.f, -1.f, 1.f), LevelMultipliers[Club::getClubLevel()]);
+                            const float xAmount = std::pow(std::clamp(static_cast<float>(x) / 22000.f, -1.f, 1.f), LevelMultipliers[Club::getClubLevel()]);
                             
-                            m_hook += (xAmount * 0.244f);
+                            m_hook += (xAmount * 0.122f);
                         }
 
                         //see if we started moving back after beginning the power mode
@@ -298,7 +308,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                         {
                             m_inCancelZone = (evt.caxis.value < cro::GameController::RightThumbDeadZone && evt.caxis.value > -cro::GameController::RightThumbDeadZone);
 
-                            //reset the timer if we entered the zon forthe first time
+                            //reset the timer if we entered the zone for the first time
                             if (m_inCancelZone && m_lastAxisposition > cro::GameController::RightThumbDeadZone)
                             {
                                 //TODO do we need to check if it was below the deadzone? We should only be travelling in one dir
@@ -328,13 +338,13 @@ void Swingput::assertIdled(float dt, std::uint16_t& inputFlags, std::int32_t sta
     {
         if (m_inCancelZone)
         {
-            static constexpr float Timeout = 0.8f;
+            static constexpr float Timeout = 0.08f;
             m_cancelTimer += dt;
 
             if (m_cancelTimer > Timeout)
             {
                 inputFlags |= (InputFlag::Cancel | InputFlag::Swingput);
-                m_state = State::Inactive;
+                //m_state = State::Inactive;
                 m_activeStick = SDL_CONTROLLER_AXIS_INVALID;
             }
         }
