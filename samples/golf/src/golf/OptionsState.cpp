@@ -3149,21 +3149,21 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
         return e;
     };
-    std::stringstream ss;
+    /*std::stringstream ss;
     ss.precision(2);
     ss << "Swingput Mouse Sensitivity " << m_sharedData.swingputThreshold;
-    auto swingputText = createText(glm::vec2(20.f, 124.f), ss.str());
+    auto swingputText = createText(glm::vec2(20.f, 124.f), ss.str());*/
 
 
     std::stringstream st;
     st.precision(2);
     st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
-    auto mouseText = createText(glm::vec2(20.f, 92.f), st.str());
-    createText(glm::vec2(32.f, 63.f), "Invert X");
-    createText(glm::vec2(32.f, 47.f), "Invert Y");
-    createText(glm::vec2(118.f, 63.f), "Use Vibration");
-    createText(glm::vec2(118.f, 47.f), "Hold For Power");
-    createText(glm::vec2(118.f, 31.f), "Enable Swingput");
+    auto mouseText = createText(glm::vec2(20.f, 124.f), st.str());
+    createText(glm::vec2(32.f, 79.f), "Invert X");
+    createText(glm::vec2(32.f, 63.f), "Invert Y");
+    createText(glm::vec2(118.f, 79.f), "Use Vibration");
+    createText(glm::vec2(118.f, 63.f), "Hold For Power");
+    createText(glm::vec2(118.f, 47.f), "Enable Swingput");
 
     //TODO don't duplicate these as they already exist in the AV menu
     auto selectedID = uiSystem.addCallback([infoEnt](cro::Entity e) mutable
@@ -3236,7 +3236,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         return entity;
     };
 
-    auto swingputSlider = createSlider({ 35.f, 109.f });
+    /*auto swingputSlider = createSlider({ 35.f, 109.f });
     swingputSlider.getComponent<cro::Callback>().getUserData<SliderData>().onActivate =
         [&, swingputText](float distance) mutable
     {
@@ -3254,10 +3254,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         float amount = (m_sharedData.swingputThreshold - ConstVal::MinSwingputThresh) / (ConstVal::MaxSwingputThresh - ConstVal::MinSwingputThresh);
 
         e.getComponent<cro::Transform>().setPosition({ pos.x + (width * amount), pos.y });
-    };
+    };*/
 
     //mouse speed slider
-    createSlider(glm::vec2(35.f, 77.f));
+    createSlider(glm::vec2(35.f, 109.f));//77
 
 
     auto createSquareHighlight = [&](glm::vec2 pos)
@@ -3284,53 +3284,53 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     };
 
     //swingput down
-    entity = createSquareHighlight(glm::vec2(17.f, 103.f));
-    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshL);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlThreshR, CtrlLookL);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, TabAV);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&, swingputText](cro::Entity, cro::ButtonEvent evt) mutable
-        {
-            if (activated(evt))
-            {
-                m_sharedData.swingputThreshold = std::max(ConstVal::MinSwingputThresh, m_sharedData.swingputThreshold - 0.1f);
+    //entity = createSquareHighlight(glm::vec2(17.f, 103.f));
+    //entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshL);
+    //entity.getComponent<cro::UIInput>().setNextIndex(CtrlThreshR, CtrlLookL);
+    //entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, TabAV);
+    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+    //    [&, swingputText](cro::Entity, cro::ButtonEvent evt) mutable
+    //    {
+    //        if (activated(evt))
+    //        {
+    //            m_sharedData.swingputThreshold = std::max(ConstVal::MinSwingputThresh, m_sharedData.swingputThreshold - 0.1f);
 
-                std::stringstream ss;
-                ss.precision(2);
-                ss << "Swingput Mouse Sensitivity " << m_sharedData.swingputThreshold;
-                swingputText.getComponent<cro::Text>().setString(ss.str());
+    //            std::stringstream ss;
+    //            ss.precision(2);
+    //            ss << "Swingput Mouse Sensitivity " << m_sharedData.swingputThreshold;
+    //            swingputText.getComponent<cro::Text>().setString(ss.str());
 
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
-        });
+    //            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+    //        }
+    //    });
 
-    //swingput up
-    entity = createSquareHighlight(glm::vec2(184.f, 103.f));
-    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshR);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlRB, CtrlLookR);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlThreshL, TabAchievements);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&, swingputText](cro::Entity, cro::ButtonEvent evt) mutable
-        {
-            if (activated(evt))
-            {
-                m_sharedData.swingputThreshold = std::min(ConstVal::MaxSwingputThresh, m_sharedData.swingputThreshold + 0.1f);
+    ////swingput up
+    //entity = createSquareHighlight(glm::vec2(184.f, 103.f));
+    //entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshR);
+    //entity.getComponent<cro::UIInput>().setNextIndex(CtrlRB, CtrlLookR);
+    //entity.getComponent<cro::UIInput>().setPrevIndex(CtrlThreshL, TabAchievements);
+    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+    //    [&, swingputText](cro::Entity, cro::ButtonEvent evt) mutable
+    //    {
+    //        if (activated(evt))
+    //        {
+    //            m_sharedData.swingputThreshold = std::min(ConstVal::MaxSwingputThresh, m_sharedData.swingputThreshold + 0.1f);
 
-                std::stringstream ss;
-                ss.precision(2);
-                ss << "Swingput Mouse Sensitivity " << m_sharedData.swingputThreshold;
-                swingputText.getComponent<cro::Text>().setString(ss.str());
+    //            std::stringstream ss;
+    //            ss.precision(2);
+    //            ss << "Swingput Mouse Sensitivity " << m_sharedData.swingputThreshold;
+    //            swingputText.getComponent<cro::Text>().setString(ss.str());
 
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-            }
-        });
+    //            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+    //        }
+    //    });
 
 
     //mouse speed down
-    entity = createSquareHighlight(glm::vec2(17.f, 71.f));
+    entity = createSquareHighlight(glm::vec2(17.f, 103.f));//71
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLookL);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlInvX);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, CtrlThreshL);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, /*CtrlThreshL*/TabAV);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, mouseText](cro::Entity, cro::ButtonEvent evt) mutable
         {
@@ -3348,10 +3348,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
     //mouse speed up
-    entity = createSquareHighlight(glm::vec2(184.f, 71.f));
+    entity = createSquareHighlight(glm::vec2(184.f, 103.f));//71
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLookR);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlUp, CtrlVib);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookL, CtrlThreshR);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookL, /*CtrlThreshR*/TabAchievements);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, mouseText](cro::Entity, cro::ButtonEvent evt) mutable
         {
@@ -3369,7 +3369,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
     //invert X
-    entity = createSquareHighlight(glm::vec2(17.f, 54.f));
+    entity = createSquareHighlight(glm::vec2(17.f, 70.f));
     entity.setLabel("Invert the controller X axis when playing Billiards");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlInvX);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlVib, CtrlInvY);
@@ -3388,7 +3388,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(19.f, 56.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(19.f, 72.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -3408,10 +3408,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
 
     //rumble enable
-    entity = createSquareHighlight(glm::vec2(103.f, 54.f));
+    entity = createSquareHighlight(glm::vec2(103.f, 70.f));
     entity.setLabel("Enable or disable controller vibration");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlVib);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlAltPower);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlUp, CtrlAltPower);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvX, CtrlLookR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity, cro::ButtonEvent evt) mutable
@@ -3426,7 +3426,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(105.f, 56.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(105.f, 72.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -3446,10 +3446,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
 
     //alt power input
-    entity = createSquareHighlight(glm::vec2(103.f, 38.f));
+    entity = createSquareHighlight(glm::vec2(103.f, 54.f));
     entity.setLabel("When enabled press and hold Action to select stroke power\nelse use the default 2-tap method when disabled");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlAltPower);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlRight, CtrlSwg);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlSwg);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvY, CtrlVib);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity, cro::ButtonEvent evt) mutable
@@ -3464,7 +3464,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
     //y'know if we defined these first we could capture them and update them in the button callback...
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(105.f, 40.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(105.f, 56.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -3484,10 +3484,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
 
     //swingput enable
-    entity = createSquareHighlight(glm::vec2(103.f, 22.f));
+    entity = createSquareHighlight(glm::vec2(103.f, 38.f));
     entity.setLabel("Enables analogue swing with triggers and thumbstick.\n(BETA)");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlSwg);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlDown, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlRight, WindowAdvanced);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlReset, CtrlAltPower);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity, cro::ButtonEvent evt) mutable
@@ -3501,7 +3501,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             }
         });
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(105.f, 24.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(105.f, 40.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -3521,7 +3521,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
 
     //invert Y
-    entity = createSquareHighlight(glm::vec2(17.f, 38.f));
+    entity = createSquareHighlight(glm::vec2(17.f, 54.f));
     entity.setLabel("Invert the controller Y axis when playing Billiards");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlInvY);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlAltPower, CtrlReset);
@@ -3539,7 +3539,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(19.f, 40.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(19.f, 56.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),

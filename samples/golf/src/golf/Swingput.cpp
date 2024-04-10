@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "Swingput.hpp"
+#include "Clubs.hpp"
 #include "InputBinding.hpp"
 #include "GameConsts.hpp"
 #include "SharedStateData.hpp"
@@ -267,9 +268,12 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
 
                             auto x = cro::GameController::getAxisPosition(activeControllerID(m_enabled), 
                                 evt.caxis.axis == cro::GameController::AxisLeftY ? cro::GameController::AxisLeftX : cro::GameController::AxisRightX);
-                            const float xAmount = std::pow(std::clamp(static_cast<float>(x) / 10000.f, -1.f, 1.f), 3.f); //TODO vary this between 3 and 11 based on player level
+                            //higher level club sets require better accuracy
+                            //https://www.desmos.com/calculator/u8hmy5q3mz
+                            static constexpr std::array LevelMultipliers = { 19.f, 11.f, 7.f };
+                            const float xAmount = std::pow(std::clamp(static_cast<float>(x) / 12000.f, -1.f, 1.f), LevelMultipliers[Club::getClubLevel()]);
                             
-                            m_hook += (xAmount * 0.122f);
+                            m_hook += (xAmount * 0.244f);
                         }
 
                         //see if we started moving back after beginning the power mode
