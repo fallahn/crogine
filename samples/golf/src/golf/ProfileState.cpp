@@ -1171,7 +1171,7 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     //randomise hair
-                    setHairIndex(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1));
+                    setHairIndex(cro::Util::Random::value(0u, m_avatarHairModels.size() - 1));
 
                     //randomise avatar
                     setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
@@ -1326,7 +1326,6 @@ void ProfileState::buildScene()
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
-                    LogI << "Last selected set to " << m_lastSelected << std::endl;
                 }
             });
 
