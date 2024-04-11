@@ -288,7 +288,11 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
-    createSwingMeter(infoEnt);
+    
+    entity = m_uiScene.createEntity();
+    createSwingputMeter(entity, m_inputParser);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     m_textChat.setRootNode(infoEnt);
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -1594,78 +1598,6 @@ void GolfState::buildUI()
     m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 5.f });
 
     m_emoteWheel.build(infoEnt, m_uiScene, m_resources.textures);
-}
-
-void GolfState::createSwingMeter(cro::Entity root)
-{
-    static constexpr float Width = 4.f;
-    static constexpr float Height = 40.f;
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(-Width, -Height), SwingputDark),
-            cro::Vertex2D(glm::vec2(Width,  -Height), SwingputDark),
-            cro::Vertex2D(glm::vec2(-Width,  -0.5f), SwingputDark),
-            cro::Vertex2D(glm::vec2(Width,  -0.5f), SwingputDark),
-
-            cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextNormalColour),
-            cro::Vertex2D(glm::vec2(Width,  -0.5f), TextNormalColour),
-            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextNormalColour),
-            cro::Vertex2D(glm::vec2(Width,  0.5f), TextNormalColour),
-
-            cro::Vertex2D(glm::vec2(-Width,  0.5f), SwingputDark),
-            cro::Vertex2D(glm::vec2(Width,  0.5f), SwingputDark),
-            cro::Vertex2D(glm::vec2(-Width, Height), SwingputDark),
-            cro::Vertex2D(glm::vec2(Width,  Height), SwingputDark),
-
-
-            cro::Vertex2D(glm::vec2(-Width, -Height), SwingputLight),
-            cro::Vertex2D(glm::vec2(Width,  -Height), SwingputLight),
-            cro::Vertex2D(glm::vec2(-Width, 0.f), SwingputLight),
-            cro::Vertex2D(glm::vec2(Width,  0.f), SwingputLight),
-        });
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-        float height = verts[14].position.y;
-        float targetAlpha = -0.01f;
-
-        if (m_inputParser.isSwingputActive())
-        {
-            height = m_inputParser.getSwingputPosition() * ((Height * 2.f) / MaxSwingputDistance);
-            targetAlpha = 1.f;
-        }
-
-        auto& currentAlpha = e.getComponent<cro::Callback>().getUserData<float>();
-        const float InSpeed = dt * 6.f;
-        const float OutSpeed = m_inputParser.getPower() < 0.5 ? InSpeed : dt * 0.5f;
-        if (currentAlpha <= targetAlpha)
-        {
-            currentAlpha = std::min(1.f, currentAlpha + InSpeed);
-        }
-        else
-        {
-            currentAlpha = std::max(0.f, currentAlpha - OutSpeed);
-        }
-
-        for (auto& v : verts)
-        {
-            v.colour.setAlpha(currentAlpha);
-        }
-        verts[14].position.y = height;
-        verts[15].position.y = height;
-    };
-    
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().depth = 0.2f;
-    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
-    
-    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void GolfState::showCountdown(std::uint8_t seconds)

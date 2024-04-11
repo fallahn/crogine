@@ -460,7 +460,6 @@ private:
     std::uint8_t m_readyQuitFlags;
 
     void buildUI();
-    void createSwingMeter(cro::Entity);
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard(bool updatePardiff = true);
