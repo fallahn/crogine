@@ -80,7 +80,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     std::string("Nice On!"),
     "Near Miss",
     "Great Accuracy",
-    "Nice Timing!"
+    "Nice Timing!",
     "Fairway",
     "Drone Hit!",
     "Course Complete",

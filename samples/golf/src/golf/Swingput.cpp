@@ -147,7 +147,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
     {
     default: return isActive();
     case SDL_MOUSEBUTTONDOWN:
-        //return false; //disable for now
+        return false; //disable for now
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             startStroke();
@@ -155,7 +155,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
         }
         return false;
     case SDL_MOUSEBUTTONUP:
-        //return false; //disable for now
+        return false; //disable for now
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             endStroke();
