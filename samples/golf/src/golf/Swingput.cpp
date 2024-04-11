@@ -32,6 +32,7 @@ source distribution.
 #include "InputBinding.hpp"
 #include "GameConsts.hpp"
 #include "SharedStateData.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
@@ -285,6 +286,12 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
 
                             const float t = m_tempoTimer.restart();
                             m_hook = 0.5f + ((0.033f - std::min(t, 0.066f)) / 2.f);
+
+                            if (std::floor(t * 1000.f) == 33.f)
+                            {
+                                auto* msg = cro::App::postMessage<GolfEvent>(cl::MessageID::GolfMessage);
+                                msg->type = GolfEvent::NiceTiming;
+                            }
 
                             auto x = cro::GameController::getAxisPosition(activeControllerID(m_enabled), 
                                 evt.caxis.axis == cro::GameController::AxisLeftY ? cro::GameController::AxisLeftX : cro::GameController::AxisRightX);

@@ -1185,6 +1185,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::NiceTiming:
+            Social::awardXP(10, XPStringID::NiceTiming);
+            break;
         case GolfEvent::HitBall:
         {
             hitBall();

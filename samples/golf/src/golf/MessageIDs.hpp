@@ -65,6 +65,7 @@ struct GolfEvent final
         SlicedBall,
         BallLanded,
         Scored,
+        NiceTiming,
         NiceShot,
         PowerShot,
         DriveComplete,
