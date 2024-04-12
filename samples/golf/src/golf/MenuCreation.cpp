@@ -1743,6 +1743,127 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto bgEnt = entity;
     auto bgBounds = bounds;
 
+
+    //shows a button hint for switching courses if hosting
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bgBounds.width / 2.f) - 180.f, bgBounds.height - 15.f, -0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("button_hint");
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            static constexpr float HideOffset = 16.f;
+            float target = HideOffset;
+            if (m_sharedData.hosting)
+            {
+                //hmm, seems a funny way to tell which page we're on
+                //but it does the job I guess
+                if (m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+                {
+                    target = 0.f;
+                }
+            }
+
+            const float Speed = 56.f * dt;
+            auto origin = e.getComponent<cro::Transform>().getOrigin();
+            if (target > origin.y)
+            {
+                origin.y = std::min(target, origin.y + Speed);
+            }
+            else
+            {
+                origin.y = std::max(target, origin.y - Speed);
+            }
+            e.getComponent<cro::Transform>().setOrigin(origin);
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto buttonEnt = entity;
+
+    //button icons
+    struct IconCallback final
+    {
+        void operator()(cro::Entity e, float)
+        {
+            if (cro::GameController::isConnected(0))
+            {
+                if (cro::GameController::hasPSLayout(0))
+                {
+                    e.getComponent<cro::SpriteAnimation>().play(1);
+                }
+                else
+                {
+                    e.getComponent<cro::SpriteAnimation>().play(0);
+                }
+            }
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 12.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("lb");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = false; //set true but the UI command
+    entity.getComponent<cro::Callback>().function = IconCallback();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseHint;
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 330.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("rb");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = false;
+    entity.getComponent<cro::Callback>().function = IconCallback();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseHint;
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //button texts
+    struct TextCallback final
+    {
+        std::int32_t keybind = InputBinding::PrevClub;
+        const SharedStateData& sharedData;
+        explicit TextCallback(std::int32_t kb, const SharedStateData& sd) : keybind(kb), sharedData(sd) {}
+
+        void operator()(cro::Entity e, float)
+        {
+            auto s = cro::Keyboard::keyString(sharedData.inputBinding.keys[keybind]);
+            e.getComponent<cro::Text>().setString(s);
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 23.f, 9.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("X");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = false; //command sets this to true so we only update on switch
+    entity.getComponent<cro::Callback>().function = TextCallback(InputBinding::PrevClub, m_sharedData);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseHint;
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 337.f, 9.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Y");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = false;
+    entity.getComponent<cro::Callback>().function = TextCallback(InputBinding::NextClub, m_sharedData);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseHint;
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 #ifdef USE_GNS
     //scrolls info about the selected course
     auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);

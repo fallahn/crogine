@@ -639,7 +639,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
         };
 
-    const auto setChatHint =
+    const auto setChatHint = //also sets the hint icons for switching courses
         [&](bool controller, std::int32_t joyID)
         {
             cro::Command cmd;
@@ -653,7 +653,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     {
                         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-                        if (cro::GameController::hasPSLayout(/*cro::GameController::controllerID(joyID)*/0))
+                        if (cro::GameController::hasPSLayout(0))
                         {
                             e.getComponent<cro::SpriteAnimation>().play(1);
                         }
@@ -682,6 +682,40 @@ bool MenuState::handleEvent(const cro::Event& evt)
                         e.getComponent<cro::Text>().setString("Shift+F8 to Chat");
                     }
                 };
+            }
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //update the hint about switching courses
+            cmd.targetFlags = CommandID::Menu::CourseHint;
+            if (controller)
+            {
+                cmd.action = [](cro::Entity e, float)
+                    {
+                        if (e.hasComponent<cro::Sprite>())
+                        {
+                            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            e.getComponent<cro::Callback>().active = true; //updates the animation
+                        }
+                        else
+                        {
+                            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                        }
+                    };
+            }
+            else
+            {
+                cmd.action = [](cro::Entity e, float)
+                    {
+                        if (e.hasComponent<cro::Sprite>())
+                        {
+                            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                        }
+                        else
+                        {
+                            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            e.getComponent<cro::Callback>().active = true; //updates the string
+                        }
+                    };
             }
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         };
@@ -1012,6 +1046,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
+        setChatHint(false, 0);
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {

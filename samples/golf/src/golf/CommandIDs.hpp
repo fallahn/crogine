@@ -115,7 +115,8 @@ struct CommandID final
             CourseType   = 0x80000,
             MetricClub   = 0x100000, //used in the stats viewer for club labels
             ImperialClub = 0x200000,
-            ChatHint     = 0x400000
+            ChatHint     = 0x400000,
+            CourseHint   = 0x800000
         };
     };
 };
