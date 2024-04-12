@@ -4038,8 +4038,8 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<UIElement>().absolutePosition = { 6.f, 101.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
-    bounds.bottom -= 6.f;
-    bounds.height += 12.f;
+    bounds.bottom -= 16.f;
+    bounds.height += 32.f;
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CoursePrev);
@@ -4068,8 +4068,8 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<UIElement>().absolutePosition = { 159.f, 101.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
-    bounds.bottom -= 6.f;
-    bounds.height += 12.f;
+    bounds.bottom -= 16.f;
+    bounds.height += 32.f;
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseNext);

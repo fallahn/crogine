@@ -1061,8 +1061,8 @@ void ProfileState::buildScene()
         [](cro::Entity e)
         {
             auto bounds = e.getComponent<cro::UIInput>().area;
-            bounds.bottom -= 8.f;
-            bounds.height += 16.f;
+            bounds.bottom -= 16.f;
+            bounds.height += 32.f;
             e.getComponent<cro::UIInput>().area = bounds;
         };
 
