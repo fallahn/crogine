@@ -202,6 +202,12 @@ void InputParser::handleEvent(const cro::Event& evt)
             {
                 toggleDroneCam();
             }
+
+            else if (evt.key.keysym.sym == SDLK_PAGEUP)
+            {
+                m_inputFlags |= InputFlag::MiniMap;
+                m_minimapToggleTimer.restart();
+            }
         }
         else if (evt.type == SDL_KEYUP)
         {
@@ -245,6 +251,11 @@ void InputParser::handleEvent(const cro::Event& evt)
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::SpinMenu])
             {
                 m_inputFlags &= ~InputFlag::SpinMenu;
+            }
+
+            else if (evt.key.keysym.sym == SDLK_PAGEUP)
+            {
+                m_inputFlags &= ~InputFlag::MiniMap;
             }
         }
         else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
@@ -299,6 +310,12 @@ void InputParser::handleEvent(const cro::Event& evt)
                 {
                     toggleDroneCam();
                 }
+                //people say this happens accidentally, so let's use a timer
+                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                {
+                    m_inputFlags |= InputFlag::MiniMap;
+                    m_minimapToggleTimer.restart();
+                }
             }
         }
         else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -352,6 +369,11 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == cro::GameController::DPadDown)
                 {
                     m_inputFlags &= ~InputFlag::Down;
+                }
+
+                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                {
+                    m_inputFlags &= ~InputFlag::MiniMap;
                 }
             }
         }
@@ -651,6 +673,15 @@ void InputParser::update(float dt)
     }
     else
     {
+        //if the stick is held, toggle the mini map
+        if ((m_inputFlags & InputFlag::MiniMap)
+            && m_minimapToggleTimer.elapsed() > cro::seconds(0.5f))
+        {
+            cro::App::postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::RequestToggleMinimap;
+
+            m_inputFlags &= ~InputFlag::MiniMap;
+        }
+
         //drone controls handle controller independently
         checkControllerInput();
         checkMouseInput();

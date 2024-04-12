@@ -104,6 +104,7 @@ struct SceneEvent
         TransitionStart,
         TransitionComplete,
         RequestSwitchCamera,
+        RequestToggleMinimap,
         PlayerIdle,
         PlayerRotate,
         PlayerBad,

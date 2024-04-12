@@ -54,6 +54,7 @@ namespace InputFlag
         SwitchView  = EmoteWheel,
 
         Swingput    = 0x400,
+        MiniMap     = 0x800,
 
         All = 0xFFFF
     };

@@ -1175,6 +1175,13 @@ void GolfState::handleMessage(const cro::Message& msg)
             setActiveCamera(data.data);
         }
             break;
+        case SceneEvent::RequestToggleMinimap:
+        {
+            auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+            dir = (dir == 0) ? 1 : 0;
+            m_mapRoot.getComponent<cro::Callback>().active = true;
+        }
+            break;
         }
     }
         break;
