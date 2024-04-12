@@ -580,6 +580,38 @@ MenuState::~MenuState()
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
+    const auto doNext = [&]()
+        {
+            if (m_sharedData.hosting
+                && m_currentMenu == MenuID::Lobby
+                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+            {
+                nextCourse();
+            }
+            else if (m_currentMenu == MenuID::Avatar)
+            {
+                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                i = (i + 1) % m_profileData.playerProfiles.size();
+                setProfileIndex(i);
+            }
+        };
+
+    const auto doPrev = [&]()
+        {
+            if (m_sharedData.hosting
+                && m_currentMenu == MenuID::Lobby
+                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+            {
+                prevCourse();
+            }
+            else if (m_currentMenu == MenuID::Avatar)
+            {
+                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
+                setProfileIndex(i);
+            }
+        };
+
     const auto showOptions = [&]()
         {
             if (m_currentMenu == MenuID::Lobby)
@@ -743,6 +775,17 @@ bool MenuState::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_KEYUP)
     {
         setChatHint(false, 0);
+
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        {
+            doPrev();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        {
+            doNext();
+        }
+
+
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -915,32 +958,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
             quitMenu();
             break;
         case cro::GameController::ButtonRightShoulder:
-            if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby
-                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
-            {
-                nextCourse();
-            }
-            else if (m_currentMenu == MenuID::Avatar)
-            {
-                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-                i = (i + 1) % m_profileData.playerProfiles.size();
-                setProfileIndex(i);
-            }
+            doNext();
             break;
         case cro::GameController::ButtonLeftShoulder:
-            if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby
-                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
-            {
-                prevCourse();
-            }
-            else if (m_currentMenu == MenuID::Avatar)
-            {
-                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-                i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
-                setProfileIndex(i);
-            }
+            doPrev();
             break;
         case cro::GameController::ButtonGuide:
             togglePreviousScoreCard();
