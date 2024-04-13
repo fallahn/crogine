@@ -522,6 +522,15 @@ void MenuState::createBallScene()
             }), m_sharedData.ballInfo.end());
     }
 
+
+    //store valid/unlocked IDs so the new profile randomiser can pick one
+    for (const auto& i : m_sharedData.ballInfo)
+    {
+        if (!i.locked)
+        {
+            m_cosmeticIDs.balls.push_back(i.uid);
+        }
+    }
 }
 
 std::int32_t MenuState::indexFromBallID(std::uint32_t ballID)
@@ -631,6 +640,14 @@ void MenuState::parseAvatarDirectory()
     }
 
 
+    //store the unlocked UIDs so the new profile can pick only unlocked avatars
+    for (const auto& i : m_sharedData.avatarInfo)
+    {
+        if (!i.locked)
+        {
+            m_cosmeticIDs.avatars.push_back(i.uid);
+        }
+    }
 
 
     //load hair models
@@ -750,8 +767,14 @@ void MenuState::parseAvatarDirectory()
         }
     }
 
-
-
+    //honestly these are probably already sorted above, but let's just get this done
+    for (const auto& i : m_sharedData.hairInfo)
+    {
+        if (!i.locked)
+        {
+            m_cosmeticIDs.hair.push_back(i.uid);
+        }
+    }
 
 
     //these are just used in the player preview window

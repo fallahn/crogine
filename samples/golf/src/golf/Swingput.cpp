@@ -286,9 +286,10 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                             m_state = State::Inactive;
 
                             const float t = m_tempoTimer.restart();
-                            m_hook = 0.5f + ((0.033f - std::min(t, 0.066f)) / 2.f);
+                            m_hook = 0.5f + ((0.033f - std::min(t, 0.066f)) / 3.f);
 
-                            if (std::floor(t * 1000.f) == 33.f)
+                            const auto timing = std::floor(t * 1000.f);
+                            if (timing == 33.f)
                             {
                                 auto* msg = cro::App::postMessage<GolfEvent>(cl::MessageID::GolfMessage);
                                 msg->type = GolfEvent::NiceTiming;

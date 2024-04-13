@@ -133,7 +133,8 @@ namespace Progress
             {
                 std::array<std::uint8_t, sizeof(holeIndex) + 18> buffer = {};
                 std::size_t i = 0u;
-                while (file.file->read(file.file, &buffer[i], 1, 1))
+                while (file.file->read(file.file, &buffer[i], 1, 1) 
+                    && i < buffer.size() - 1) //TODO this is covering up a bug where the file being read was too large...
                 {
                     i++;
                 }
