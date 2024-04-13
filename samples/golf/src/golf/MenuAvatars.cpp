@@ -942,9 +942,21 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     {
                         profile.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, pc::PairCounts[i] - 1));
                     }
-                    profile.skinID = m_sharedData.avatarInfo[cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1)].uid;
-                    profile.ballID = m_sharedData.ballInfo[cro::Util::Random::value(0u, m_sharedData.ballInfo.size() - 1)].uid;
-                    profile.hairID = m_sharedData.hairInfo[cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1)].uid;
+
+                    //don't allow locked items duh
+                    profile.skinID = m_cosmeticIDs.avatars[cro::Util::Random::value(0u, m_cosmeticIDs.avatars.size() - 1)];
+                    profile.hairID = m_cosmeticIDs.hair[cro::Util::Random::value(0u, m_cosmeticIDs.hair.size() - 1)];
+                    //prefer the white ball by default
+                    if (std::find(m_cosmeticIDs.balls.begin(), m_cosmeticIDs.balls.end(), DefaultBallID) != m_cosmeticIDs.balls.end())
+                    {
+                        profile.ballID = DefaultBallID;
+                    }
+                    else
+                    {
+                        profile.ballID = m_cosmeticIDs.balls[cro::Util::Random::value(0u, m_cosmeticIDs.balls.size() - 1)];
+
+                    }
+
                     profile.flipped = cro::Util::Random::value(0, 1) == 0 ? false : true;
                     profile.saveProfile();
                     m_profileData.activeProfileIndex = m_profileData.playerProfiles.size() - 1;

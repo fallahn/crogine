@@ -460,7 +460,6 @@ private:
     std::uint8_t m_readyQuitFlags;
 
     void buildUI();
-    void createSwingMeter(cro::Entity);
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard(bool updatePardiff = true);
@@ -543,6 +542,7 @@ private:
     //-----------
 
     cro::Entity m_mapCam;
+    cro::Entity m_mapRoot;
     cro::RenderTexture m_mapTexture;
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
 

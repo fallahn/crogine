@@ -271,7 +271,9 @@ App::App(std::uint32_t styleFlags)
         m_instance = this;
 
         //maps the steam deck rear buttons to the controller paddles
-        auto mapResult = SDL_GameControllerAddMapping("03000000de2800000512000011010000,Steam Deck,platform:Linux,crc:17f6,a:b3,b:b4,x:b5,y:b6,back:b11,guide:b13,start:b12,leftstick:b14,rightstick:b15,leftshoulder:b7,rightshoulder:b8,dpup:b16,dpdown:b17,dpleft:b18,dpright:b19,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a9,righttrigger:a8,");
+        //auto mapResult = SDL_GameControllerAddMapping("03000000de2800000512000011010000,Steam Deck,platform:Linux,crc:17f6,a:b3,b:b4,x:b5,y:b6,back:b11,guide:b13,start:b12,leftstick:b14,rightstick:b15,leftshoulder:b7,rightshoulder:b8,dpup:b16,dpdown:b17,dpleft:b18,dpright:b19,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,leftx:a0,lefty:a1,rightx:a2,righty:a3,lefttrigger:a9,righttrigger:a8");
+        auto mapResult = SDL_GameControllerAddMapping("03000000de2800000512000011010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,misc1:b2,paddle1:b21,paddle2:b20,paddle3:b23,paddle4:b22,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
+        //auto mapResult = SDL_GameControllerAddMapping("03000000de2800000512000010010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
         if (mapResult == -1)
         {
             LogE << SDL_GetError() << std::endl;

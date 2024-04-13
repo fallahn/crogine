@@ -108,6 +108,13 @@ private:
     std::int32_t m_connectedClientCount;
     std::int32_t m_connectedPlayerCount;
 
+    struct CosmeticID final
+    {
+        std::vector<std::uint32_t> balls;
+        std::vector<std::uint32_t> hair;
+        std::vector<std::uint32_t> avatars;
+    }m_cosmeticIDs;
+
     TextChat m_textChat;
     MatchMaking m_matchMaking;
     cro::ResourceCollection m_resources;

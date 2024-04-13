@@ -117,7 +117,7 @@ private:
             Root, HelpText,
             Mugshot, NameText,
             Swatch, AvatarPreview,
-            BioText,
+            BioText, TipText,
 
             BallBrowser,
             HairBrowser,

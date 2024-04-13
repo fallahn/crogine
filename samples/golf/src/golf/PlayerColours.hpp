@@ -67,7 +67,7 @@ namespace pc
         cro::Colour(0xadd9b7ff),
         cro::Colour(0x6eb39dff),
         cro::Colour(0x30555bff),
-        cro::Colour(0x1a1e2dff),
+        cro::Colour(0x1a1e3fff),
         cro::Colour(0x284e43ff),
         cro::Colour(0x467e3eff),
         cro::Colour(0x93ab52ff),

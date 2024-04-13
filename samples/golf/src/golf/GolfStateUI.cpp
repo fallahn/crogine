@@ -288,7 +288,11 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
-    createSwingMeter(infoEnt);
+    
+    entity = m_uiScene.createEntity();
+    createSwingputMeter(entity, m_inputParser);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     m_textChat.setRootNode(infoEnt);
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -997,7 +1001,7 @@ void GolfState::buildUI()
         float textureRatio = 1.f; //pixels per metre in the minimap texture * 2
     };
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
+    entity.addComponent<cro::Transform>();// .setPosition({ 0.f, 82.f });
     entity.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.05f, 0.f));
@@ -1120,7 +1124,64 @@ void GolfState::buildUI()
         }
         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f / ratio, newScale / ratio));
     };
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    m_mapRoot = m_uiScene.createEntity();
+    m_mapRoot.addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_mapRoot.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 1);
+    m_mapRoot.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& [progress, dir] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+            if (dir == 0)
+            {
+                //bigger
+                progress = std::min(1.f, progress + (dt * 8.f));
+                if (progress == 1)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+            else
+            {
+                progress = std::max(0.f, progress - (dt * 8.f));
+                if (progress == 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+
+            static constexpr glm::vec2 offset(0.5299f, 0.84799f); //1/8 map size, rotated 90deg, normalised
+            static constexpr float l = 47.167f;// glm::length(offset); //aww no constexpr
+            
+            const auto p = cro::Util::Easing::easeOutExpo(progress);
+            auto o = offset * l * p;
+            o.x = std::round(o.x);
+            o.y = std::round(o.y);
+
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f + p));
+            e.getComponent<cro::Transform>().setOrigin(o);
+        };
+
+
+    /*registerWindow([&]()
+        {
+            if (ImGui::Begin("Zoom"))
+            {
+                static float scale = 1.f;
+                
+                
+                if (ImGui::SliderFloat("Scale", &scale, 1.f, 2.f))
+                {
+                    m_mapRoot.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    m_mapRoot.getComponent<cro::Transform>().setOrigin(offset * (scale - 1.f));
+                }
+
+
+            }
+            ImGui::End();
+        });*/
+
+    infoEnt.getComponent<cro::Transform>().addChild(m_mapRoot.getComponent<cro::Transform>());
     auto mapEnt = entity;
     m_minimapEnt = entity;
 
@@ -1457,14 +1518,14 @@ void GolfState::buildUI()
 
 
     //callback for the UI camera when window is resized
-    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, windEnt2, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, windEnt2, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -3.5f, 20.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         m_viewScale = glm::vec2(getViewScale());
-        m_inputParser.setMouseScale(m_viewScale.x);
+        //m_inputParser.setMouseScale(m_viewScale.x);
 
         glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
 
@@ -1480,7 +1541,7 @@ void GolfState::buildUI()
         const auto uiSize = size / m_viewScale;
         auto mapSize = glm::vec2(MapSize / 2u);
         mapSize /= 2.f;
-        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.05f }); //map sprite is rotated 90
+        m_mapRoot.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.05f }); //map sprite is rotated 90
 
 
         greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });
@@ -1537,78 +1598,6 @@ void GolfState::buildUI()
     m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 5.f });
 
     m_emoteWheel.build(infoEnt, m_uiScene, m_resources.textures);
-}
-
-void GolfState::createSwingMeter(cro::Entity root)
-{
-    static constexpr float Width = 4.f;
-    static constexpr float Height = 40.f;
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(-Width, -Height), SwingputDark),
-            cro::Vertex2D(glm::vec2(Width,  -Height), SwingputDark),
-            cro::Vertex2D(glm::vec2(-Width,  -0.5f), SwingputDark),
-            cro::Vertex2D(glm::vec2(Width,  -0.5f), SwingputDark),
-
-            cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextNormalColour),
-            cro::Vertex2D(glm::vec2(Width,  -0.5f), TextNormalColour),
-            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextNormalColour),
-            cro::Vertex2D(glm::vec2(Width,  0.5f), TextNormalColour),
-
-            cro::Vertex2D(glm::vec2(-Width,  0.5f), SwingputDark),
-            cro::Vertex2D(glm::vec2(Width,  0.5f), SwingputDark),
-            cro::Vertex2D(glm::vec2(-Width, Height), SwingputDark),
-            cro::Vertex2D(glm::vec2(Width,  Height), SwingputDark),
-
-
-            cro::Vertex2D(glm::vec2(-Width, -Height), SwingputLight),
-            cro::Vertex2D(glm::vec2(Width,  -Height), SwingputLight),
-            cro::Vertex2D(glm::vec2(-Width, 0.f), SwingputLight),
-            cro::Vertex2D(glm::vec2(Width,  0.f), SwingputLight),
-        });
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-        float height = verts[14].position.y;
-        float targetAlpha = -0.01f;
-
-        if (m_inputParser.isSwingputActive())
-        {
-            height = m_inputParser.getSwingputPosition() * ((Height * 2.f) / MaxSwingputDistance);
-            targetAlpha = 1.f;
-        }
-
-        auto& currentAlpha = e.getComponent<cro::Callback>().getUserData<float>();
-        const float InSpeed = dt * 6.f;
-        const float OutSpeed = m_inputParser.getPower() < 0.5 ? InSpeed : dt * 0.5f;
-        if (currentAlpha <= targetAlpha)
-        {
-            currentAlpha = std::min(1.f, currentAlpha + InSpeed);
-        }
-        else
-        {
-            currentAlpha = std::max(0.f, currentAlpha - OutSpeed);
-        }
-
-        for (auto& v : verts)
-        {
-            v.colour.setAlpha(currentAlpha);
-        }
-        verts[14].position.y = height;
-        verts[15].position.y = height;
-    };
-    
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().depth = 0.2f;
-    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
-    
-    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void GolfState::showCountdown(std::uint8_t seconds)
@@ -4870,7 +4859,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
         auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
-        if (cro::GameController::controllerID(evt.cbutton.which) == controllerID)
+        if (cro::GameController::controllerID(evt.cbutton.which) == controllerID
+            || sharedData.localConnectionData.playerCount == 1)
         {
             switch (evt.cbutton.button)
             {
@@ -4915,7 +4905,9 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
+        //the controller ID is actually used to select the play name in this case
+        auto controllerID = activeControllerID(sharedData.localConnectionData.playerCount == 1 ? 0 :
+            sharedData.inputBinding.playerID);
 
         /*if (cro::GameController::controllerID(evt.cbutton.which) == controllerID)
         {

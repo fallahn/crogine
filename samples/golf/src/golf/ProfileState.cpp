@@ -815,8 +815,22 @@ void ProfileState::buildScene()
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::Callback>().active = true;
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+            const auto& str = e.getLabel();
+            if (str.empty())
+            {
+                m_menuEntities[EntityID::TipText].getComponent<cro::Text>().setString(" ");
+            }
+            else
+            {
+                m_menuEntities[EntityID::TipText].getComponent<cro::Text>().setString(str);
+            }
         });
-    auto unselected = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
+    auto unselected = uiSystem.addCallback([&](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); 
+            m_menuEntities[EntityID::TipText].getComponent<cro::Text>().setString(" ");
+        });
 
     const auto createButton = [&](const std::string& spriteID, glm::vec2 position, std::int32_t selectionIndex)
     {
@@ -860,6 +874,7 @@ void ProfileState::buildScene()
 
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonHairColour);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonName, ButtonRandomise);
+    entity.setLabel("Open Steam Workshop In Overlay");
 #endif
 
     //colour swatch - this has its own update function
@@ -1026,6 +1041,7 @@ void ProfileState::buildScene()
 
     //hat select button
     entity = m_uiScene.createEntity();
+    entity.setLabel("Open Headwear Browser");
     entity.addComponent<cro::Transform>().setPosition({163.f, 214.f, 0.5f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("hat_select");
@@ -1044,6 +1060,8 @@ void ProfileState::buildScene()
             {
                 e.getComponent<cro::Sprite>().setTextureRect(rect);
                 m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+
+                m_menuEntities[EntityID::TipText].getComponent<cro::Text>().setString(e.getLabel());
             });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt) 
@@ -1061,8 +1079,8 @@ void ProfileState::buildScene()
         [](cro::Entity e)
         {
             auto bounds = e.getComponent<cro::UIInput>().area;
-            bounds.bottom -= 8.f;
-            bounds.height += 16.f;
+            bounds.bottom -= 16.f;
+            bounds.height += 32.f;
             e.getComponent<cro::UIInput>().area = bounds;
         };
 
@@ -1081,6 +1099,7 @@ void ProfileState::buildScene()
             });
     hairLeft.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonPrevBody);
     hairLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonHairColour, ButtonPrevBody);
+    hairLeft.setLabel("Previous Headwear");
     expandHitbox(hairLeft);
 
     auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f), ButtonNextHair);
@@ -1096,6 +1115,7 @@ void ProfileState::buildScene()
             });
     hairRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextBody);
     hairRight.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonNextBody);
+    hairRight.setLabel("Next Headwear");
     expandHitbox(hairRight);
 
     auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 110.f), ButtonPrevBody);
@@ -1110,6 +1130,7 @@ void ProfileState::buildScene()
             });
     avatarLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonPrevHair);
     avatarLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonTopDark, ButtonPrevHair);
+    avatarLeft.setLabel("Previous Avatar");
     expandHitbox(avatarLeft);
 
     auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 110.f), ButtonNextBody);
@@ -1124,9 +1145,10 @@ void ProfileState::buildScene()
             });
     avatarRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextHair);
     avatarRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevBody, ButtonNextHair);
+    avatarRight.setLabel("Next Avatar");
     expandHitbox(avatarRight);
 
-    //checkbox
+    //southpaw checkbox
     auto southPaw = createButton("check_highlight", glm::vec2(17.f, 50.f), ButtonSouthPaw);
     southPaw.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -1139,6 +1161,8 @@ void ProfileState::buildScene()
             });
     southPaw.getComponent<cro::UIInput>().setNextIndex(ButtonSaveClose, ButtonRandomise);
     southPaw.getComponent<cro::UIInput>().setPrevIndex(ButtonSaveClose, ButtonBottomLight);
+    southPaw.getComponent<cro::UIInput>().area.width *= 7.f;
+    southPaw.setLabel("Use Left Handed Avatar");
     
     auto innerEnt = m_uiScene.createEntity();
     innerEnt.addComponent<cro::Transform>().setPosition(glm::vec3(19.f, 52.f, 0.1f));
@@ -1171,7 +1195,7 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     //randomise hair
-                    setHairIndex(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1));
+                    setHairIndex(cro::Util::Random::value(0u, m_avatarHairModels.size() - 1));
 
                     //randomise avatar
                     setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
@@ -1261,6 +1285,7 @@ void ProfileState::buildScene()
             });
     ballLeft.getComponent<cro::UIInput>().setNextIndex(ButtonBallSelect, ButtonBallColour);
     ballLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonName);
+    ballLeft.setLabel("Previous Ball");
     expandHitbox(ballLeft);
 
     //toggles the ball browser
@@ -1281,6 +1306,7 @@ void ProfileState::buildScene()
             });
     ballThumb.getComponent<cro::UIInput>().setNextIndex(ButtonNextBall, ButtonBallColour);
     ballThumb.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevBall, ButtonName);
+    ballThumb.setLabel("Open Ball Browser");
 
     auto ballRight = createButton("arrow_right", glm::vec2(382.f, 144.f), ButtonNextBall);
     ballRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1295,6 +1321,7 @@ void ProfileState::buildScene()
             });
     ballRight.getComponent<cro::UIInput>().setNextIndex(ButtonDescUp, ButtonBallColourReset);
     ballRight.getComponent<cro::UIInput>().setPrevIndex(ButtonBallSelect, ButtonName);
+    ballRight.setLabel("Next Ball");
     expandHitbox(ballRight);
 
 
@@ -1326,9 +1353,9 @@ void ProfileState::buildScene()
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
-                    LogI << "Last selected set to " << m_lastSelected << std::endl;
                 }
             });
+    ballColour.setLabel("Choose Ball Tint");
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 316.f, 78.f, 0.1f });
@@ -1371,6 +1398,7 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
+    ballColourReset.setLabel("Reset Ball Tint");
 
 
     //updates the profile icon
@@ -1778,7 +1806,7 @@ void ProfileState::buildScene()
     //help string
     bounds = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({bounds.width / 2.f, 14.f, 0.1f});
+    entity.addComponent<cro::Transform>().setPosition({/*bounds.width / 2.f*/164.f, 14.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1787,6 +1815,21 @@ void ProfileState::buildScene()
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_menuEntities[EntityID::HelpText] = entity;
+
+
+    //button help string
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({bounds.width - 126.f, 14.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //entity.getComponent<cro::Text>().setString("This is some test text. Hello!");
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_menuEntities[EntityID::TipText] = entity;
 
 
     CallbackContext ctx;

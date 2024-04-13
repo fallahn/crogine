@@ -580,6 +580,38 @@ MenuState::~MenuState()
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
+    const auto doNext = [&]()
+        {
+            if (m_sharedData.hosting
+                && m_currentMenu == MenuID::Lobby
+                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+            {
+                nextCourse();
+            }
+            else if (m_currentMenu == MenuID::Avatar)
+            {
+                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                i = (i + 1) % m_profileData.playerProfiles.size();
+                setProfileIndex(i);
+            }
+        };
+
+    const auto doPrev = [&]()
+        {
+            if (m_sharedData.hosting
+                && m_currentMenu == MenuID::Lobby
+                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+            {
+                prevCourse();
+            }
+            else if (m_currentMenu == MenuID::Avatar)
+            {
+                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
+                setProfileIndex(i);
+            }
+        };
+
     const auto showOptions = [&]()
         {
             if (m_currentMenu == MenuID::Lobby)
@@ -607,7 +639,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
         };
 
-    const auto setChatHint =
+    const auto setChatHint = //also sets the hint icons for switching courses
         [&](bool controller, std::int32_t joyID)
         {
             cro::Command cmd;
@@ -621,7 +653,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     {
                         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-                        if (cro::GameController::hasPSLayout(/*cro::GameController::controllerID(joyID)*/0))
+                        if (cro::GameController::hasPSLayout(0))
                         {
                             e.getComponent<cro::SpriteAnimation>().play(1);
                         }
@@ -650,6 +682,40 @@ bool MenuState::handleEvent(const cro::Event& evt)
                         e.getComponent<cro::Text>().setString("Shift+F8 to Chat");
                     }
                 };
+            }
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //update the hint about switching courses
+            cmd.targetFlags = CommandID::Menu::CourseHint;
+            if (controller)
+            {
+                cmd.action = [](cro::Entity e, float)
+                    {
+                        if (e.hasComponent<cro::Sprite>())
+                        {
+                            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            e.getComponent<cro::Callback>().active = true; //updates the animation
+                        }
+                        else
+                        {
+                            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                        }
+                    };
+            }
+            else
+            {
+                cmd.action = [](cro::Entity e, float)
+                    {
+                        if (e.hasComponent<cro::Sprite>())
+                        {
+                            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                        }
+                        else
+                        {
+                            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            e.getComponent<cro::Callback>().active = true; //updates the string
+                        }
+                    };
             }
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         };
@@ -743,6 +809,17 @@ bool MenuState::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_KEYUP)
     {
         setChatHint(false, 0);
+
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        {
+            doPrev();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        {
+            doNext();
+        }
+
+
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -915,32 +992,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
             quitMenu();
             break;
         case cro::GameController::ButtonRightShoulder:
-            if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby
-                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
-            {
-                nextCourse();
-            }
-            else if (m_currentMenu == MenuID::Avatar)
-            {
-                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-                i = (i + 1) % m_profileData.playerProfiles.size();
-                setProfileIndex(i);
-            }
+            doNext();
             break;
         case cro::GameController::ButtonLeftShoulder:
-            if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby
-                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
-            {
-                prevCourse();
-            }
-            else if (m_currentMenu == MenuID::Avatar)
-            {
-                auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-                i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
-                setProfileIndex(i);
-            }
+            doPrev();
             break;
         case cro::GameController::ButtonGuide:
             togglePreviousScoreCard();
@@ -991,6 +1046,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
+        setChatHint(false, 0);
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {

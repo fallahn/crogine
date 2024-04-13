@@ -429,12 +429,22 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     };
 
+    const auto toggleMiniZoom = [&]()
+        {
+            auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+            dir = (dir == 0) ? 1 : 0;
+            m_mapRoot.getComponent<cro::Callback>().active = true;
+        };
+
     if (evt.type == SDL_KEYUP)
     {
         //hideMouse(); //TODO this should only react to current keybindings
         switch (evt.key.keysym.sym)
         {
         default: break;
+        case SDLK_KP_MULTIPLY:
+            toggleMiniZoom();
+            break;
         case SDLK_2:
             if (!m_textChat.isVisible()
                 && !m_holeData[m_currentHole].puttFromTee)
@@ -479,10 +489,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             closeMessage();
             break;
         case SDLK_F6:
-            //logCSV();
-            /*m_activeAvatar->model.getComponent<cro::Callback>().active = true;
-            m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);*/
-            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::NextHole), net::NetFlag::Reliable);
+            toggleMiniZoom();
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
@@ -721,8 +728,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
-        case cro::GameController::ButtonLeftStick:
+        case cro::GameController::ButtonRightStick:
+            //can't use sticks because they are used on the emote wheel
             //showMapOverview();
+            break;
+        case cro::GameController::ButtonTrackpad:
+        case cro::GameController::PaddleR5:
+            toggleMiniZoom();
             break;
         case cro::GameController::ButtonBack:
             if (!m_textChat.isVisible())
@@ -744,7 +756,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonA:
             toggleQuitReady();
             break;
-        case cro::GameController::ButtonTrackpad:
+        //case cro::GameController::ButtonTrackpad:
         case cro::GameController::PaddleR4:
             m_textChat.toggleWindow(true, true);
             break;
@@ -788,7 +800,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
-        if (evt.button.button == SDL_BUTTON_RIGHT)
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            toggleQuitReady();
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT)
         {
             closeMessage();
         }
@@ -1156,6 +1175,13 @@ void GolfState::handleMessage(const cro::Message& msg)
             setActiveCamera(data.data);
         }
             break;
+        case SceneEvent::RequestToggleMinimap:
+        {
+            auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+            dir = (dir == 0) ? 1 : 0;
+            m_mapRoot.getComponent<cro::Callback>().active = true;
+        }
+            break;
         }
     }
         break;
@@ -1166,6 +1192,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::NiceTiming:
+            Social::awardXP(10, XPStringID::NiceTiming);
+            break;
         case GolfEvent::HitBall:
         {
             hitBall();

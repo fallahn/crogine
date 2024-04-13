@@ -522,6 +522,29 @@ void MenuState::createBallScene()
             }), m_sharedData.ballInfo.end());
     }
 
+    //put the default ball at the front - this doesn't work???
+    //if (const auto b = std::find_if(m_sharedData.ballInfo.cbegin(), m_sharedData.ballInfo.cend(), [](const auto& inf) {return inf.uid == DefaultBallID;});
+    //    b != m_sharedData.ballInfo.cend())
+    //{
+    //    //std::swap(m_sharedData.ballInfo.begin(), b);
+    //    const auto pos = std::distance(m_sharedData.ballInfo.cbegin(), b);
+    //    const auto old = m_sharedData.ballInfo[0];
+    //    m_sharedData.ballInfo[0] = m_sharedData.ballInfo[pos];
+    //    m_sharedData.ballInfo[pos] = old;
+
+    //    const auto oldModel = m_ballModels[0];
+    //    m_ballModels[0] = m_ballModels[pos];
+    //    m_ballModels[pos] = oldModel;
+    //}
+
+    //store valid/unlocked IDs so the new profile randomiser can pick one
+    for (const auto& i : m_sharedData.ballInfo)
+    {
+        if (!i.locked)
+        {
+            m_cosmeticIDs.balls.push_back(i.uid);
+        }
+    }
 }
 
 std::int32_t MenuState::indexFromBallID(std::uint32_t ballID)
@@ -631,6 +654,14 @@ void MenuState::parseAvatarDirectory()
     }
 
 
+    //store the unlocked UIDs so the new profile can pick only unlocked avatars
+    for (const auto& i : m_sharedData.avatarInfo)
+    {
+        if (!i.locked)
+        {
+            m_cosmeticIDs.avatars.push_back(i.uid);
+        }
+    }
 
 
     //load hair models
@@ -750,8 +781,14 @@ void MenuState::parseAvatarDirectory()
         }
     }
 
-
-
+    //honestly these are probably already sorted above, but let's just get this done
+    for (const auto& i : m_sharedData.hairInfo)
+    {
+        if (!i.locked)
+        {
+            m_cosmeticIDs.hair.push_back(i.uid);
+        }
+    }
 
 
     //these are just used in the player preview window

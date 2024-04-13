@@ -32,6 +32,9 @@ source distribution.
 #include "Terrain.hpp"
 #include "MenuConsts.hpp"
 #include "SharedStateData.hpp"
+#include "InputParser.hpp"
+#include "MenuConsts.hpp"
+#include "CommandIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <Social.hpp>
@@ -43,7 +46,9 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/ImageArray.hpp>
@@ -675,6 +680,76 @@ static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts()
         cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
         cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
     };
+}
+
+static inline void createSwingputMeter(cro::Entity entity, InputParser& inputParser)
+{
+    static constexpr float Width = 4.f;
+    static constexpr float Height = 40.f;
+
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-Width, -Height), SwingputDark),
+            cro::Vertex2D(glm::vec2(Width,  -Height), SwingputDark),
+            cro::Vertex2D(glm::vec2(-Width,  -0.5f), SwingputDark),
+            cro::Vertex2D(glm::vec2(Width,  -0.5f), SwingputDark),
+
+            cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextNormalColour),
+            cro::Vertex2D(glm::vec2(Width,  -0.5f), TextNormalColour),
+            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextNormalColour),
+            cro::Vertex2D(glm::vec2(Width,  0.5f), TextNormalColour),
+
+            cro::Vertex2D(glm::vec2(-Width,  0.5f), SwingputDark),
+            cro::Vertex2D(glm::vec2(Width,  0.5f), SwingputDark),
+            cro::Vertex2D(glm::vec2(-Width, Height), SwingputDark),
+            cro::Vertex2D(glm::vec2(Width,  Height), SwingputDark),
+
+
+            cro::Vertex2D(glm::vec2(-Width, -Height), SwingputLight),
+            cro::Vertex2D(glm::vec2(Width,  -Height), SwingputLight),
+            cro::Vertex2D(glm::vec2(-Width, 0.f), SwingputLight),
+            cro::Vertex2D(glm::vec2(Width,  0.f), SwingputLight),
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            float height = verts[14].position.y;
+            float targetAlpha = -0.01f;
+
+            if (inputParser.isSwingputActive())
+            {
+                height = inputParser.getSwingputPosition() * ((Height * 2.f) / MaxSwingputDistance);
+                targetAlpha = 1.f;
+            }
+
+            auto& currentAlpha = e.getComponent<cro::Callback>().getUserData<float>();
+            const float InSpeed = dt * 6.f;
+            const float OutSpeed = inputParser.getPower() < 0.5 ? InSpeed : dt * 0.5f;
+            if (currentAlpha <= targetAlpha)
+            {
+                currentAlpha = std::min(1.f, currentAlpha + InSpeed);
+            }
+            else
+            {
+                currentAlpha = std::max(0.f, currentAlpha - OutSpeed);
+            }
+
+            for (auto& v : verts)
+            {
+                v.colour.setAlpha(currentAlpha);
+            }
+            verts[14].position.y = height;
+            verts[15].position.y = height;
+        };
+
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
 }
 
 //applies material data loaded in a model definition such as texture info to custom materials

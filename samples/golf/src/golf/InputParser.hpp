@@ -78,8 +78,8 @@ public:
     bool isAiming() const { return m_state == InputParser::State::Aim; }
 
     bool isSwingputActive() const { return m_swingput.isActive() && m_state != State::Drone; }
-    float getSwingputPosition() const { return m_swingput.getActivePoint().y; }
-    void setMouseScale(float scale) { CRO_ASSERT(scale > 0, ""); m_swingput.setMouseScale(scale); }
+    float getSwingputPosition() const { return m_swingput.getGaugePosition(); }
+    //void setMouseScale(float scale) { CRO_ASSERT(scale > 0, ""); m_swingput.setMouseScale(scale); }
 
     void setMaxRotation(float);
     float getMaxRotation() const { return m_maxRotation; }
@@ -168,6 +168,8 @@ private:
     void checkControllerInput();
     void checkMouseInput();
     glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const; //used for drone cam and spin amount
+
+    cro::Clock m_minimapToggleTimer;
 
     cro::Clock m_iconTimer;
     bool m_iconActive;

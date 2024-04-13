@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -139,7 +139,7 @@ void InputParser::handleEvent(const cro::Event& evt)
     };
 
     if (m_active &&
-        !m_swingput.handleEvent(evt))
+        !m_swingput.handleEvent(evt, m_inputFlags, static_cast<std::int32_t>(m_state)))
     {
         //apply to input mask
         if (evt.type == SDL_KEYDOWN
@@ -202,6 +202,12 @@ void InputParser::handleEvent(const cro::Event& evt)
             {
                 toggleDroneCam();
             }
+
+            else if (evt.key.keysym.sym == SDLK_PAGEUP)
+            {
+                m_inputFlags |= InputFlag::MiniMap;
+                m_minimapToggleTimer.restart();
+            }
         }
         else if (evt.type == SDL_KEYUP)
         {
@@ -246,12 +252,18 @@ void InputParser::handleEvent(const cro::Event& evt)
             {
                 m_inputFlags &= ~InputFlag::SpinMenu;
             }
+
+            else if (evt.key.keysym.sym == SDLK_PAGEUP)
+            {
+                m_inputFlags &= ~InputFlag::MiniMap;
+            }
         }
         else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
         {
             auto controllerID = activeControllerID(m_inputBinding.playerID);
             if (!m_isCPU &&
-                evt.cbutton.which == cro::GameController::deviceID(controllerID))
+                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
+                || m_sharedData.localConnectionData.playerCount == 1)) //allow input from any controller if only one local player
             {
                 if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
@@ -298,13 +310,20 @@ void InputParser::handleEvent(const cro::Event& evt)
                 {
                     toggleDroneCam();
                 }
+                //people say this happens accidentally, so let's use a timer
+                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                {
+                    m_inputFlags |= InputFlag::MiniMap;
+                    m_minimapToggleTimer.restart();
+                }
             }
         }
         else if (evt.type == SDL_CONTROLLERBUTTONUP)
         {
             auto controllerID = activeControllerID(m_inputBinding.playerID);
             if (!m_isCPU &&
-                evt.cbutton.which == cro::GameController::deviceID(controllerID))
+                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
+                || m_sharedData.localConnectionData.playerCount == 1))
             {
                 if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
@@ -351,6 +370,11 @@ void InputParser::handleEvent(const cro::Event& evt)
                 {
                     m_inputFlags &= ~InputFlag::Down;
                 }
+
+                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                {
+                    m_inputFlags &= ~InputFlag::MiniMap;
+                }
             }
         }
 
@@ -381,7 +405,7 @@ void InputParser::handleEvent(const cro::Event& evt)
         }*/
 
     }
-    else
+    else if ((m_inputFlags & InputFlag::Swingput) == 0)
     {
         m_inputFlags = 0;
     }
@@ -649,6 +673,15 @@ void InputParser::update(float dt)
     }
     else
     {
+        //if the stick is held, toggle the mini map
+        if ((m_inputFlags & InputFlag::MiniMap)
+            && m_minimapToggleTimer.elapsed() > cro::seconds(0.5f))
+        {
+            cro::App::postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::RequestToggleMinimap;
+
+            m_inputFlags &= ~InputFlag::MiniMap;
+        }
+
         //drone controls handle controller independently
         checkControllerInput();
         checkMouseInput();
@@ -841,25 +874,14 @@ void InputParser::updateDistanceEstimation()
 
 void InputParser::updateStroke(float dt)
 {
+    m_swingput.assertIdled(dt, m_inputFlags, static_cast<std::int32_t>(m_state));
+
     //catch the inputs that where filtered by the
     //enable flags so we can raise their own event for them
     auto disabledFlags = (m_inputFlags & ~m_enableFlags);
 
     if (m_active)
     {
-        if (m_swingput.process(dt))
-        {
-            //we took our shot
-            m_power = m_swingput.getPower();
-            m_hook = m_swingput.getHook();
-
-            m_powerbarDirection = 1.f;
-            m_state = State::Flight;
-
-            auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
-            msg->type = GolfEvent::HitBall;
-        }
-
         m_inputFlags &= m_enableFlags;
 
         switch (m_state)
@@ -972,7 +994,8 @@ void InputParser::updateStroke(float dt)
                 m_powerbarDirection = -1.f;
             }
 
-            if (m_sharedData.pressHold)
+            if (m_sharedData.pressHold
+                && ((m_inputFlags & InputFlag::Swingput) == 0))
             {
                 if ((m_inputFlags & InputFlag::Action) == 0 && (m_prevFlags & InputFlag::Action))
                 {
@@ -991,9 +1014,23 @@ void InputParser::updateStroke(float dt)
                     {
                         m_powerbarDirection = 1.f;
 
-                        m_state = State::Stroke;
-                        m_doubleTapClock.restart();
-                        beginIcon();
+                        if (m_inputFlags & InputFlag::Swingput)
+                        {
+                            //take shot immediately
+                            m_state = State::Flight;
+                            m_hook = m_swingput.getHook();
+
+                            auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+                            msg->type = GolfEvent::HitBall;
+
+                            //TODO read hook value from swingput
+                        }
+                        else
+                        {
+                            m_state = State::Stroke;
+                            m_doubleTapClock.restart();
+                            beginIcon();
+                        }
                     }
                 }
             }
@@ -1072,6 +1109,13 @@ void InputParser::updateStroke(float dt)
                 }
             }
         }
+    }
+
+    //if the input is flagged as being from the swingput,
+    //automatically reset the flag as if the button was released
+    if ((m_inputFlags & InputFlag::Swingput) != 0)
+    {
+        m_inputFlags &= ~(InputFlag::Action | InputFlag::Cancel | InputFlag::Swingput);
     }
 
     m_prevDisabledFlags = disabledFlags;

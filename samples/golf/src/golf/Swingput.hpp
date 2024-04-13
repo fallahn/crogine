@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -44,24 +44,19 @@ public:
     explicit Swingput(const SharedStateData&);
 
     //returns true if this consumed the event
-    bool handleEvent(const cro::Event&);
-
-    //returns true if the shot was taken and result
-    //is ready in power/hook
-    bool process(float);
-
+    bool handleEvent(const cro::Event&, std::uint16_t& flags, std::int32_t state);
     bool isActive() const { return m_state != State::Inactive; }
+
+    //checksto see if an active swing was cancelled by letting go of
+    //the thumbstick must be called by input parser at top of processing
+    void assertIdled(float, std::uint16_t& flags, std::int32_t state);
 
     //set to -1 to deactivate, else current player ID
     void setEnabled(std::int32_t enabled);
     std::int32_t getEnabled() const { return m_enabled; }
 
-    float getPower() const { return m_power; }
     float getHook() const { return m_hook; }
-
-    glm::vec2 getBackPoint() const { return m_backPoint; }
-    glm::vec2 getActivePoint() const { return m_activePoint; }
-    glm::vec2 getFrontPoint() const { return m_frontPoint; }
+    float getGaugePosition() const { return m_gaugePosition; }
 
     struct State final
     {
@@ -76,24 +71,25 @@ public:
     };
     std::int32_t getState() const { return m_state; }
 
-    void setMouseScale(float scale) { m_mouseScale = scale; }
-
 private:
     const SharedStateData& m_sharedData;
     std::int32_t m_enabled;
 
-    glm::vec2 m_backPoint;
-    glm::vec2 m_activePoint;
-    glm::vec2 m_frontPoint;
+    glm::vec2 m_mouseMovement;
+    cro::HiResTimer m_tempoTimer;
 
-    float m_power;
     float m_hook;
-
-    float m_maxVelocity; //depends on controller or mouse input
-    float m_mouseScale;
+    float m_gaugePosition;
 
     std::int16_t m_lastLT;
     std::int16_t m_lastRT;
+    std::int16_t m_strokeStartPosition;
+
+    //used to track if we should cancel from letting go of the stick
+    std::int32_t m_activeStick;
+    std::int16_t m_lastAxisposition;
+    float m_cancelTimer;
+    bool m_inCancelZone;
 
     std::int32_t m_state = State::Inactive;
     const std::array<std::string, State::Count> StateStrings =
@@ -101,6 +97,6 @@ private:
         "Inactive", "Swing", "Summarise"
     };
 
-    cro::HiResTimer m_timer;
-    float m_elapsedTime;
+    void setGaugeFromMouse();
+    void setGaugeFromController(std::int16_t);
 };

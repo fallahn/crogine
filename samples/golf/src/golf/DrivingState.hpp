@@ -215,7 +215,6 @@ private:
     cro::Entity m_mapCam;
     cro::SimpleQuad m_flagQuad;
     void createUI();
-    void createSwingMeter(cro::Entity);
     void createGameOptions();
     void createSummary();
     void updateMinimap();
