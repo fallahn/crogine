@@ -105,17 +105,20 @@ namespace Progress
         file.file = SDL_RWFromFile(path.c_str(), "wb");
         if (file.file)
         {
-            file.file->write(file.file, &holeIndex, sizeof(holeIndex), 1);
+            static constexpr std::size_t MaxBytes = 26; //size of holeIndex + 18 scores. TODO this will make files INCOMPATIBLE cross platform if size_t is defined as a different size...
+
+            auto written = file.file->write(file.file, &holeIndex, sizeof(holeIndex), 1);
 
             const auto scoreSize = std::min(std::size_t(18), holeScores.size());
             for (auto i = 0u; i < scoreSize; ++i)
             {
-                file.file->write(file.file, &holeScores[i], 1, 1);
+                written += file.file->write(file.file, &holeScores[i], 1, 1);
             }
-            for (auto i = scoreSize; i < 18; ++i)
+            //for (auto i = scoreSize; i < 18; ++i)
+            while (written < MaxBytes)
             {
                 std::uint8_t packing = 0;
-                file.file->write(file.file, &packing, 1, 1);
+                written += file.file->write(file.file, &packing, 1, 1);
             }
         }
     }
@@ -131,10 +134,13 @@ namespace Progress
             file.file = SDL_RWFromFile(path.c_str(), "rb");
             if (file.file)
             {
+                /*auto size = file.file->seek(file.file, 0, RW_SEEK_END);
+                file.file->seek(file.file, 0, RW_SEEK_SET);*/
+
                 std::array<std::uint8_t, sizeof(holeIndex) + 18> buffer = {};
                 std::size_t i = 0u;
                 while (file.file->read(file.file, &buffer[i], 1, 1) 
-                    && i < buffer.size() - 1) //TODO this is covering up a bug where the file being read was too large...
+                    && i < buffer.size() - 1) //hm some existing files have 1 byte padding too many
                 {
                     i++;
                 }

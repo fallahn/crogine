@@ -129,6 +129,8 @@ static constexpr std::array<glm::vec3, 8u> EmotePositions =
     glm::vec3(24.f, -24.f, 0.15f)
 };
 
+static constexpr std::uint32_t DefaultBallID = 1714267008;
+
 static constexpr std::uint32_t LargeTextSize = 64;
 static constexpr std::uint32_t MediumTextSize = 32;
 static constexpr std::uint32_t SmallTextSize = 16;

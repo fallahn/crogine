@@ -522,6 +522,20 @@ void MenuState::createBallScene()
             }), m_sharedData.ballInfo.end());
     }
 
+    //put the default ball at the front - this doesn't work???
+    //if (const auto b = std::find_if(m_sharedData.ballInfo.cbegin(), m_sharedData.ballInfo.cend(), [](const auto& inf) {return inf.uid == DefaultBallID;});
+    //    b != m_sharedData.ballInfo.cend())
+    //{
+    //    //std::swap(m_sharedData.ballInfo.begin(), b);
+    //    const auto pos = std::distance(m_sharedData.ballInfo.cbegin(), b);
+    //    const auto old = m_sharedData.ballInfo[0];
+    //    m_sharedData.ballInfo[0] = m_sharedData.ballInfo[pos];
+    //    m_sharedData.ballInfo[pos] = old;
+
+    //    const auto oldModel = m_ballModels[0];
+    //    m_ballModels[0] = m_ballModels[pos];
+    //    m_ballModels[pos] = oldModel;
+    //}
 
     //store valid/unlocked IDs so the new profile randomiser can pick one
     for (const auto& i : m_sharedData.ballInfo)
