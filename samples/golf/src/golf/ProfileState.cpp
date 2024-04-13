@@ -1148,7 +1148,7 @@ void ProfileState::buildScene()
     avatarRight.setLabel("Next Avatar");
     expandHitbox(avatarRight);
 
-    //checkbox
+    //southpaw checkbox
     auto southPaw = createButton("check_highlight", glm::vec2(17.f, 50.f), ButtonSouthPaw);
     southPaw.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -1161,6 +1161,7 @@ void ProfileState::buildScene()
             });
     southPaw.getComponent<cro::UIInput>().setNextIndex(ButtonSaveClose, ButtonRandomise);
     southPaw.getComponent<cro::UIInput>().setPrevIndex(ButtonSaveClose, ButtonBottomLight);
+    southPaw.getComponent<cro::UIInput>().area.width *= 8.f;
     southPaw.setLabel("Use Left Handed Avatar");
     
     auto innerEnt = m_uiScene.createEntity();

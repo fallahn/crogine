@@ -1800,7 +1800,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         }
     };
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 12.f, 0.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 67.f, -1.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("lb");
     entity.addComponent<cro::SpriteAnimation>();
@@ -1810,7 +1810,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 330.f, 0.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 273.f, -1.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("rb");
     entity.addComponent<cro::SpriteAnimation>();
@@ -1829,13 +1829,21 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
         void operator()(cro::Entity e, float)
         {
-            auto s = cro::Keyboard::keyString(sharedData.inputBinding.keys[keybind]);
+            cro::String s;
+            if (keybind == InputBinding::PrevClub)
+            {
+                s = "< " + cro::Keyboard::keyString(sharedData.inputBinding.keys[keybind]);
+            }
+            else
+            {
+                s = cro::Keyboard::keyString(sharedData.inputBinding.keys[keybind]) + " >";
+            }
             e.getComponent<cro::Text>().setString(s);
             e.getComponent<cro::Callback>().active = false;
         }
     };
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 23.f, 9.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 75.f, 9.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("X");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1849,7 +1857,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 337.f, 9.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 285.f, 9.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Y");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
