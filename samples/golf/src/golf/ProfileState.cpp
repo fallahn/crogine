@@ -1161,7 +1161,7 @@ void ProfileState::buildScene()
             });
     southPaw.getComponent<cro::UIInput>().setNextIndex(ButtonSaveClose, ButtonRandomise);
     southPaw.getComponent<cro::UIInput>().setPrevIndex(ButtonSaveClose, ButtonBottomLight);
-    southPaw.getComponent<cro::UIInput>().area.width *= 8.f;
+    southPaw.getComponent<cro::UIInput>().area.width *= 7.f;
     southPaw.setLabel("Use Left Handed Avatar");
     
     auto innerEnt = m_uiScene.createEntity();
