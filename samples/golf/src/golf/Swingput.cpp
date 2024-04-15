@@ -125,6 +125,8 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
             m_gaugePosition = 0.f;
             m_strokeStartPosition = 0;
 
+            m_mouseSwing.active = false; //gets confused if holding the right mouse before swinging with a controller...
+
             cro::App::getWindow().setMouseCaptured(true);
         }
     };
