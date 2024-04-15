@@ -43,6 +43,14 @@ using namespace cro;
 
 void StackDump::dump(int type)
 {
+    //hmm apparently we can get a few hundred reports so..
+    static int reportCount = 0;
+
+    if (reportCount)
+    {
+        return;
+    }
+
 //#ifdef _MSC_VER
     auto t = std::time(nullptr);
     //auto* tm = std::localtime(&t);
@@ -54,15 +62,19 @@ void StackDump::dump(int type)
     case StackDump::Generic:
     default: break;
     case StackDump::ABRT:
+        reportCount++;
         file << "ABORT\n";
         break;
     case StackDump::FPE:
+        reportCount++;
         file << "Floating Point Exception\n";
         break;
     case StackDump::ILL:
+        reportCount++;
         file << "Illegal op\n";
         break;
     case StackDump::SEG:
+        reportCount++;
         file << "Segment Fault\n";
         break;
     }
