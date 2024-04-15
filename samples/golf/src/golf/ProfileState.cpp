@@ -491,31 +491,57 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
-        auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
-        auto bounds = m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Sprite>().getTextureBounds();
-        bounds = m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Transform>().getWorldTransform() * bounds;
-
-        if (bounds.contains(mousePos))
+        const auto group = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
+        if (group == MenuID::BallSelect)
         {
-            float zoom = evt.wheel.preciseY * (1.f / 20.f);
-            auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
-            if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom
-                && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
+            if (evt.wheel.y > 0)
             {
-                pos += CameraZoomVector * zoom;
-                m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
+                prevPage(PaginationID::Balls);
+            }
+            else if(evt.wheel.y < 0)
+            {
+                nextPage(PaginationID::Balls);
+            }
+        }
+        else if (group == MenuID::HairSelect)
+        {
+            if (evt.wheel.y > 0)
+            {
+                prevPage(PaginationID::Hair);
+            }
+            else if (evt.wheel.y < 0)
+            {
+                nextPage(PaginationID::Hair);
             }
         }
         else
         {
-            //check bio for scroll
-            bounds = cro::Text::getLocalBounds(m_menuEntities[EntityID::BioText]);
-            bounds = m_menuEntities[EntityID::BioText].getComponent<cro::Transform>().getWorldTransform() * bounds;
+            auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+            auto bounds = m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Sprite>().getTextureBounds();
+            bounds = m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Transform>().getWorldTransform() * bounds;
 
             if (bounds.contains(mousePos))
             {
-                m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>() -= evt.wheel.y;
-                m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
+                float zoom = evt.wheel.preciseY * (1.f / 20.f);
+                auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
+                if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom
+                    && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
+                {
+                    pos += CameraZoomVector * zoom;
+                    m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
+                }
+            }
+            else
+            {
+                //check bio for scroll
+                bounds = cro::Text::getLocalBounds(m_menuEntities[EntityID::BioText]);
+                bounds = m_menuEntities[EntityID::BioText].getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+                if (bounds.contains(mousePos))
+                {
+                    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>() -= evt.wheel.y;
+                    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
+                }
             }
         }
     }
