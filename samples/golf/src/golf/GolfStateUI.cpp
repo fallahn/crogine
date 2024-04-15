@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
 Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
@@ -1824,60 +1824,93 @@ void GolfState::showCountdown(std::uint8_t seconds)
         Social::courseComplete(m_sharedData.mapDirectory, m_sharedData.holeCount);
     }
 
-    auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
-    for (auto i = 0u; i < trophyCount; ++i)
+    //only show trophies in freeplay
+    cro::Entity leagueEntity;
+    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
     {
-        if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID
-            && !m_sharedData.localConnectionData.playerData[m_statBoardScores[i].player].isCPU)
+        auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
+
+        for (auto i = 0u; i < trophyCount; ++i)
         {
-            if (m_statBoardScores.size() > 1
-                && m_holeData.size() > 8)
+            if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID
+                && !m_sharedData.localConnectionData.playerData[m_statBoardScores[i].player].isCPU)
             {
-                Achievements::incrementStat(StatStrings[StatID::GoldWins + i]);
-
-                //only award rank XP if there are players to rank against
-                //and reduce XP if < 4 players. Probably ought to consider
-                //the opponent's XP too, ie award more if a player wins
-                //against someone with a significantly higher level.
-                float multiplier = std::min(1.f, static_cast<float>(m_statBoardScores.size()) / 4.f);
-                float xp = 0.f;
-                std::int32_t xpReason = -1;
-                switch (i)
+                if (m_statBoardScores.size() > 1
+                    && m_holeData.size() > 8)
                 {
-                default: break;
-                case 0:
-                    xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
-                    xpReason = XPStringID::FirstPlace;
-                    break;
-                case 1:
-                    xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
-                    xpReason = XPStringID::SecondPlace;
-                    break;
-                case 2:
-                    xp = static_cast<float>(XPValues[XPID::Third]) * multiplier;
-                    xpReason = XPStringID::ThirdPlace;
-                    break;
+                    Achievements::incrementStat(StatStrings[StatID::GoldWins + i]);
+
+                    //only award rank XP if there are players to rank against
+                    //and reduce XP if < 4 players. Probably ought to consider
+                    //the opponent's XP too, ie award more if a player wins
+                    //against someone with a significantly higher level.
+                    float multiplier = std::min(1.f, static_cast<float>(m_statBoardScores.size()) / 4.f);
+                    float xp = 0.f;
+                    std::int32_t xpReason = -1;
+                    switch (i)
+                    {
+                    default: break;
+                    case 0:
+                        xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
+                        xpReason = XPStringID::FirstPlace;
+                        break;
+                    case 1:
+                        xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
+                        xpReason = XPStringID::SecondPlace;
+                        break;
+                    case 2:
+                        xp = static_cast<float>(XPValues[XPID::Third]) * multiplier;
+                        xpReason = XPStringID::ThirdPlace;
+                        break;
+                    }
+                    Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
                 }
-                Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
             }
+
+            m_trophies[i].trophy.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
+            //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
+            m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
+            m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
+
+            m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
+            auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
+            bounds.bottom = bounds.height * m_statBoardScores[i].player;
+            m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
+
+            //choose the relevant player from the sheet
+            bounds = getAvatarBounds(m_statBoardScores[i].player);
+            m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
         }
-
-        m_trophies[i].trophy.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
-        //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
-        m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
-        m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
-
-        m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
-        auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
-        bounds.bottom = bounds.height * m_statBoardScores[i].player;
-        m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
-
-        //choose the relevant player from the sheet
-        bounds = getAvatarBounds(m_statBoardScores[i].player);
-        m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
+        m_trophyScene.getActiveCamera().getComponent<cro::Camera>().active = true;
     }
-    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+    else
+    {
+        //otherwise show some stats about how we did in the league
+        leagueEntity = m_uiScene.createEntity();
+        leagueEntity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 120.f, 0.23f });
+        leagueEntity.addComponent<cro::Drawable2D>();
+        leagueEntity.addComponent<UIElement>().absolutePosition = { 200.f, 120.f };
+        leagueEntity.getComponent<UIElement>().depth = 0.23f;
+        leagueEntity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
+            {
+                e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f });
+            };
+        leagueEntity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        leagueEntity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        leagueEntity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        leagueEntity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+
+        //attaches to scoreboard
+        cmd.targetFlags = CommandID::UI::Scoreboard;
+        cmd.action =
+            [leagueEntity](cro::Entity e, float) mutable
+            {
+                e.getComponent<cro::Transform>().addChild(leagueEntity.getComponent<cro::Transform>());
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
 
     bool personalBest = false;
     cro::String bestString("PERSONAL BEST!");
@@ -1886,8 +1919,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
     //enter score into leaderboard
     updateLeaderboardScore(personalBest, bestString);
 #endif
-
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.23f }); //attaches to scoreboard
@@ -2060,8 +2091,40 @@ void GolfState::showCountdown(std::uint8_t seconds)
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
         case ScoreType::ShortRound:
-            //TODO make this async too
+        {
+            const auto& league = Career::instance().getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
+            const auto pos = league.getCurrentPosition();
+
+            cro::String str;
+            if (leagueEntity.isValid())
+            {
+                str = "CAREER ROUND COMPLETE\nPrevious Rank: " + std::to_string(pos);
+            }
+
             updateLeague();
+
+            if (leagueEntity.isValid())
+            {
+                const auto newPos = league.getCurrentPosition();
+                str += "\nCurrent Rank: " + std::to_string(newPos);
+
+                static const std::array<std::string, 2u> Indicators = { u8" ↓", u8" ↑" };
+                const auto change = newPos - pos;
+                if (change < 0)
+                {
+                    //we went up (lower is better)
+                    str += cro::String::fromUtf8(Indicators[1].begin(), Indicators[1].end());
+                    str += std::to_string(change);
+                }
+                else if (change > 0)
+                {
+                    str += cro::String::fromUtf8(Indicators[0].begin(), Indicators[0].end());
+                    str += std::to_string(change);
+                }
+
+                leagueEntity.getComponent<cro::Text>().setString(str);
+            }
+        }
             break;
         }
 

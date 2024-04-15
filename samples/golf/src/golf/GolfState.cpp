@@ -4355,7 +4355,7 @@ void GolfState::handleMaxStrokes(std::uint8_t reason)
         }
         break;
     case MaxStrokeID::HostPunishment:
-        showNotification("Host Penalised Your Turn");
+        showNotification("Host Penalised Player's Turn");
         break;
     case MaxStrokeID::IdleTimeout:
         showNotification("AFK Timeout");
