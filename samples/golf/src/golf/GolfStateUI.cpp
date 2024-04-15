@@ -1870,17 +1870,20 @@ void GolfState::showCountdown(std::uint8_t seconds)
     {
         //otherwise show some stats about how we did in the league
         leagueEntity = m_uiScene.createEntity();
-        leagueEntity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 120.f, 0.23f });
+        leagueEntity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 183.f, 0.23f });
         leagueEntity.addComponent<cro::Drawable2D>();
-        leagueEntity.addComponent<UIElement>().absolutePosition = { 200.f, 120.f };
+        leagueEntity.addComponent<UIElement>().absolutePosition = { 200.f, 183.f };
         leagueEntity.getComponent<UIElement>().depth = 0.23f;
         leagueEntity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
             {
                 e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f });
             };
         leagueEntity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-        leagueEntity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-        leagueEntity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        leagueEntity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
+        leagueEntity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        leagueEntity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        leagueEntity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        leagueEntity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing * 2.f);
         leagueEntity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
         //attaches to scoreboard
@@ -2079,7 +2082,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
             cro::String str;
             if (leagueEntity.isValid())
             {
-                str = "CAREER ROUND COMPLETE\nPrevious Rank: " + std::to_string(pos);
+                str = "CAREER ROUND COMPLETE\n\nPrevious Rank: " + std::to_string(pos);
             }
 
             updateLeague();
@@ -2089,18 +2092,18 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 const auto newPos = league.getCurrentPosition();
                 str += "\nCurrent Rank: " + std::to_string(newPos);
 
-                static const std::array<std::string, 2u> Indicators = { u8" ↓", u8" ↑" };
+                static const std::array<std::string, 2u> Indicators = { u8" (↓", u8" (↑" };
                 const auto change = newPos - pos;
                 if (change < 0)
                 {
                     //we went up (lower is better)
                     str += cro::String::fromUtf8(Indicators[1].begin(), Indicators[1].end());
-                    str += std::to_string(change);
+                    str += std::to_string(std::abs(change)) + ")";
                 }
                 else if (change > 0)
                 {
                     str += cro::String::fromUtf8(Indicators[0].begin(), Indicators[0].end());
-                    str += std::to_string(change);
+                    str += std::to_string(change) + ")";
                 }
 
                 leagueEntity.getComponent<cro::Text>().setString(str);
