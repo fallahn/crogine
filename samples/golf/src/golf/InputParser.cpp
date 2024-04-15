@@ -1007,7 +1007,7 @@ void InputParser::updateStroke(float dt)
                 m_powerbarDirection = -1.f;
             }
 
-            if (m_sharedData.pressHold
+            if ((m_sharedData.pressHold && !m_isCPU)
                 && ((m_inputFlags & InputFlag::Swingput) == 0))
             {
                 if ((m_inputFlags & InputFlag::Action) == 0 && (m_prevFlags & InputFlag::Action))
