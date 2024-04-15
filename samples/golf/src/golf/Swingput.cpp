@@ -71,7 +71,6 @@ namespace
 Swingput::Swingput(const SharedStateData& sd)
     : m_sharedData          (sd),
     m_enabled               (-1),
-    m_mouseMovement         (0),
     m_hook                  (0.f),
     m_gaugePosition         (0.f),
     m_lastLT                (0),
@@ -122,7 +121,6 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
             && (m_lastRT < MinTriggerMove))
         {
             m_state = State::Swing;
-            m_mouseMovement = { 0.f,0.f };
             m_hook = 0.5f;
             m_gaugePosition = 0.f;
             m_strokeStartPosition = 0;
@@ -147,67 +145,28 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
     {
     default: return isActive();
     case SDL_MOUSEBUTTONDOWN:
-        return false; //disable for now
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
-            startStroke();
+            m_state = State::Swing;
+            cro::App::getWindow().setMouseCaptured(true);
+            m_mouseSwing.startStroke();
             return true;
         }
         return false;
     case SDL_MOUSEBUTTONUP:
-        return false; //disable for now
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
-            endStroke();
+            m_state = State::Inactive;
+            m_mouseSwing.endStroke();
             return true;
         }
         return false;
     case SDL_MOUSEMOTION:
-        return false;
-        //TODO we need to scale this down relative to the game buffer size
         if (m_state == State::Swing)
         {
-            switch (state)
-            {
-            default: break;
-            case StateID::Aim:
-                if (evt.motion.yrel > 1)
-                {
-                    //measure this then trigger action
-                    //once a certain distance is met
-                    m_mouseMovement.y += static_cast<float>(evt.motion.yrel) * m_sharedData.swingputThreshold;
-                    if (m_mouseMovement.y > MaxMouseDraw)
-                    {
-                        inputFlags |= (InputFlag::Action | InputFlag::Swingput);
-                    }
-
-                    setGaugeFromMouse();
-                    return true;
-                }
-                break;
-            case StateID::Power:
-                if (evt.motion.yrel < -4)
-                {
-                    //measure the distance as it's travelled
-                    //as well as the X axis for accuracy
-                    m_mouseMovement.x += static_cast<float>(evt.motion.xrel); //hmm this is going to be dependent on screen resolution
-                    m_mouseMovement.y += static_cast<float>(evt.motion.yrel) * m_sharedData.swingputThreshold;
-
-                    if (m_mouseMovement.y < MaxMouseSwing)
-                    {
-                        inputFlags |= (InputFlag::Action | InputFlag::Swingput);
-                        m_hook = std::clamp(m_mouseMovement.x / MaxMouseHook, -1.f, 1.f);
-                        m_hook += 1.f;
-                        m_hook /= 2.f;
-
-                        m_state = State::Inactive;
-                    }
-
-                    setGaugeFromMouse();
-                    return true;
-                }
-                break;
-            }
+            //TODO we need to scale this down relative to the game buffer size
+            m_mouseSwing.activePoint.x = std::clamp(m_mouseSwing.activePoint.x + (static_cast<float>(evt.motion.xrel) / 10.f), -m_mouseSwing.MaxAccuracy, m_mouseSwing.MaxAccuracy);
+            m_mouseSwing.activePoint.y = std::clamp(m_mouseSwing.activePoint.y - (static_cast<float>(evt.motion.yrel)), -(MaxSwingputDistance / 2.f), MaxSwingputDistance / 2.f);
         }
         return false;
 
@@ -364,6 +323,79 @@ void Swingput::assertIdled(float dt, std::uint16_t& inputFlags, std::int32_t sta
     }
 }
 
+bool Swingput::processMouseSwing()
+{
+    if (m_mouseSwing.active)
+    {
+        switch (m_state)
+        {
+        default: break;
+        case State::Swing:
+        {
+            //moving down
+            if (m_mouseSwing.activePoint.y < m_mouseSwing.frontPoint.y)
+            {
+                m_mouseSwing.backPoint = m_mouseSwing.activePoint;
+            }
+
+            //started moving back up so time the ascent
+            if (m_mouseSwing.activePoint.y > m_mouseSwing.backPoint.y
+                && m_mouseSwing.frontPoint.y == m_mouseSwing.backPoint.y)
+            {
+                m_mouseSwing.timer.restart();
+            }
+
+            //we've done full stroke.
+            if (m_mouseSwing.activePoint.y > (MaxSwingputDistance / 2.f) - m_sharedData.swingputThreshold)
+            {
+                m_state = State::Summarise;
+                m_mouseSwing.elapsedTime = m_mouseSwing.timer.restart();
+            }
+
+            m_mouseSwing.frontPoint = m_mouseSwing.activePoint;
+
+            m_gaugePosition = m_mouseSwing.activePoint.y;
+        }
+        return false;
+        case State::Summarise:
+            m_state = State::Inactive;
+
+#ifdef CRO_DEBUG_
+            //debugOutput.distance = (m_frontPoint.y - m_backPoint.y);
+            //debugOutput.velocity = debugOutput.distance / (m_elapsedTime + 0.0001f); //potential NaN
+            //debugOutput.accuracy = (m_frontPoint.x - m_backPoint.x);
+            //m_power = std::clamp(debugOutput.velocity / m_maxVelocity, 0.f, 1.f);
+            //m_hook = std::clamp(debugOutput.accuracy / MaxAccuracy, -1.f, 1.f);
+
+            ////travelling a shorter distance doesn't imply lower
+            ////velocity so we need to create a distance based modifier
+            //float multiplier = debugOutput.distance / MaxSwingputDistance;
+
+#else
+            float distance = (m_mouseSwing.frontPoint.y - m_mouseSwing.backPoint.y);
+            float velocity = distance / (m_mouseSwing.elapsedTime + 0.0001f); //potential NaN
+            float accuracy = (m_mouseSwing.frontPoint.x - m_mouseSwing.backPoint.x);
+            m_mouseSwing.power = std::clamp(velocity / m_mouseSwing.MaxVelocity, 0.f, 1.f);
+            m_mouseSwing.hook = std::clamp(accuracy / m_mouseSwing.MaxAccuracy, -1.f, 1.f);
+
+            //travelling a shorter distance doesn't imply lower
+            //velocity so we need to create a distance based modifier
+            float multiplier = distance / MaxSwingputDistance;
+#endif
+
+            //hmm have to double convert this because the input parser
+            //actually calcs it to 0-1 and converts back to -1 1 on return
+            m_mouseSwing.hook += 1.f;
+            m_mouseSwing.hook /= 2.f;
+
+            m_mouseSwing.power *= multiplier;
+
+            return true;
+        }
+    }
+    return false;
+}
+
 void Swingput::setEnabled(std::int32_t enabled)
 {
     m_enabled = enabled; 
@@ -372,24 +404,6 @@ void Swingput::setEnabled(std::int32_t enabled)
 }
 
 //private
-void Swingput::setGaugeFromMouse()
-{
-    //gauge is +/- MaxSwingputDistance / 2
-    //but also INVERTED from the actual values *sigh*
-    float norm = 0.f;
-    if (m_mouseMovement.y > 0)
-    {
-        //draw
-        norm = std::min(1.f, m_mouseMovement.y / MaxMouseDraw) * -1.f;
-    }
-    else
-    {
-        //swing
-        norm = std::min(1.f, m_mouseMovement.y / MaxMouseSwing);
-    }
-    m_gaugePosition = (MaxSwingputDistance / 2.f) * norm;
-}
-
 void Swingput::setGaugeFromController(std::int16_t position)
 {
     const float norm = (static_cast<float>(position) / std::numeric_limits<std::int16_t>::max()) * -1.f;

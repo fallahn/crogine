@@ -55,7 +55,7 @@ namespace ConstVal
     static constexpr float MaxMouseSpeed = 2.f;
 
     static constexpr float MinSwingputThresh = 0.1f;
-    static constexpr float MaxSwingputThresh = 2.f;
+    static constexpr float MaxSwingputThresh = 10.f;
 
     static constexpr std::int32_t MaxProfiles = 64;
     static constexpr std::uint32_t MaxBalls = 64u;

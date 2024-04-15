@@ -79,7 +79,7 @@ public:
 
     bool isSwingputActive() const { return m_swingput.isActive() && m_state != State::Drone; }
     float getSwingputPosition() const { return m_swingput.getGaugePosition(); }
-    //void setMouseScale(float scale) { CRO_ASSERT(scale > 0, ""); m_swingput.setMouseScale(scale); }
+    void setMouseScale(float scale) { CRO_ASSERT(scale > 0, ""); m_swingput.setMouseScale(scale); }
 
     void setMaxRotation(float);
     float getMaxRotation() const { return m_maxRotation; }
