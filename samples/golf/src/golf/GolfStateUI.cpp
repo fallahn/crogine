@@ -1162,25 +1162,6 @@ void GolfState::buildUI()
             e.getComponent<cro::Transform>().setOrigin(o);
         };
 
-
-    /*registerWindow([&]()
-        {
-            if (ImGui::Begin("Zoom"))
-            {
-                static float scale = 1.f;
-                
-                
-                if (ImGui::SliderFloat("Scale", &scale, 1.f, 2.f))
-                {
-                    m_mapRoot.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-                    m_mapRoot.getComponent<cro::Transform>().setOrigin(offset * (scale - 1.f));
-                }
-
-
-            }
-            ImGui::End();
-        });*/
-
     infoEnt.getComponent<cro::Transform>().addChild(m_mapRoot.getComponent<cro::Transform>());
     auto mapEnt = entity;
     m_minimapEnt = entity;
