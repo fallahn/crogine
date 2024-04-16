@@ -442,9 +442,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_KP_MULTIPLY:
-            toggleMiniZoom();
-            break;
         case SDLK_2:
             if (!m_textChat.isVisible()
                 && !m_holeData[m_currentHole].puttFromTee)
@@ -488,6 +485,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
             break;
+        case SDLK_KP_MULTIPLY:
         case SDLK_F6:
             toggleMiniZoom();
             break;

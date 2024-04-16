@@ -713,50 +713,50 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     //or the player's current level.
     float stripePos = 0.f;
 
-    cro::SpriteSheet shieldSprites;
-    shieldSprites.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_sharedData.sharedResources->textures);
+    //cro::SpriteSheet shieldSprites;
+    //shieldSprites.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_sharedData.sharedResources->textures);
 
     //TODO we could optimise this a bit by batching into a vertex array...
     glm::vec3 spritePos(68.f, TextTop - 12.f, 0.1f);
     auto z = 0; //track our position so we can highlight the name
     for (const auto& entry : entries)
     {
-        std::int32_t level = 0;
-        if (entry.name == -1)
-        {
-            level = Social::getLevel() / 10;
-            stripePos = (VerticalSpacing * (entries.size() - (z+ 1)));
-        }
-        else
-        {
-            level = entry.handicap * 2;
-            level /= 10;
-        }
-        level = std::clamp(level, 0, 5);
+        //std::int32_t level = 0;
+        //if (entry.name == -1)
+        //{
+        //    level = Social::getLevel() / 10;
+        //    stripePos = (VerticalSpacing * (entries.size() - (z+ 1)));
+        //}
+        //else
+        //{
+        //    level = entry.handicap * 2;
+        //    level /= 10;
+        //}
+        //level = std::clamp(level, 0, 5);
 
-        //uhhh there ought to be a good way to swap just these cases
-        switch (level)
-        {
-        default: break;
-        case 0:
-            level = 2;
-            break;
-        case 2:
-            level = 0;
-            break;
-        case 3:
-            level = 5;
-            break;
-        case 5:
-            level = 3;
-            break;
-        }
+        ////uhhh there ought to be a good way to swap just these cases
+        //switch (level)
+        //{
+        //default: break;
+        //case 0:
+        //    level = 2;
+        //    break;
+        //case 2:
+        //    level = 0;
+        //    break;
+        //case 3:
+        //    level = 5;
+        //    break;
+        //case 5:
+        //    level = 3;
+        //    break;
+        //}
 
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(spritePos);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = shieldSprites.getSprite("rank_badge");
-        entity.addComponent<cro::SpriteAnimation>().play(level);
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("progress");
+        entity.addComponent<cro::SpriteAnimation>().play(entry.positionChange);
         m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         spritePos.y -= VerticalSpacing;

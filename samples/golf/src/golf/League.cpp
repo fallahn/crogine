@@ -100,15 +100,16 @@ namespace
 }
 
 League::League(std::int32_t id)
-    : m_id              (id),
-    m_maxIterations     (id == LeagueRoundID::Club ? MaxIterations : MaxIterations / 4),
-    m_playerScore       (0),
-    m_currentIteration  (0),
-    m_currentSeason     (1),
-    m_increaseCount     (0),
-    m_currentPosition   (16),
-    m_currentBest       (15),
-    m_previousPosition  (17)
+    : m_id                  (id),
+    m_maxIterations         (id == LeagueRoundID::Club ? MaxIterations : MaxIterations / 4),
+    m_playerScore           (0),
+    m_currentIteration      (0),
+    m_currentSeason         (1),
+    m_increaseCount         (0),
+    m_currentPosition       (16),
+    m_lastIterationPosition (16),
+    m_currentBest           (15),
+    m_previousPosition      (17)
 {
     CRO_ASSERT(id < LeagueRoundID::Count, "");
 
@@ -172,6 +173,7 @@ void League::reset()
     m_increaseCount = 0;
 
     m_currentPosition = 16;
+    m_lastIterationPosition = 16;
     m_currentBest = 15;
     m_previousPosition = 17;
 
@@ -201,6 +203,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     CRO_ASSERT(holeCount == 6 || holeCount == 9 || holeCount == 12 || holeCount == 18, "");
 
     //update all the player scores
+    std::int32_t p = 0;
     for (auto& player : m_players)
     {
         std::int32_t playerTotal = 0;
@@ -263,6 +266,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         }
 
         player.currentScore += playerTotal;
+        player.previousPosition = p++;
     }
 
     //as we store the index into the name array
@@ -275,6 +279,15 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
                 (a.curve + a.outlier) > (b.curve + b.outlier) : //roughly the handicap
                 a.currentScore > b.currentScore;
         });
+
+    //look for any position change
+    p = 0;
+    for (auto& player : m_players)
+    {
+        player.previousPosition = std::clamp(player.previousPosition - p, -1, 1) + 1;
+        p++;
+    }
+
 
     //calculate the player's stableford score
     for (auto i = 0u; i < holeCount; ++i)
@@ -296,6 +309,8 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     msg->level = m_currentIteration;
     msg->reason = m_maxIterations;
    
+    //current position will be updated by createSortedTable()
+    m_lastIterationPosition = m_currentPosition;
 
     if (m_currentIteration == m_maxIterations)
     {
@@ -400,6 +415,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         //out to a file to scroll at the bottom
         m_currentIteration = 0;
         m_playerScore = 0;
+        m_lastIterationPosition = 16;
 
         for (auto& player : m_players)
         {
@@ -585,10 +601,10 @@ void League::createSortedTable()
     std::vector<TableEntry> entries;
     for (const auto& p : m_players)
     {
-        entries.emplace_back(p.currentScore, p.outlier + p.curve, p.nameIndex);
+        entries.emplace_back(p.currentScore, p.outlier + p.curve, p.nameIndex, p.previousPosition);
     }
     //we'll fake our handicap (it's not a real golf one anyway) with our current level
-    entries.emplace_back(m_playerScore, Social::getLevel() / 2, -1);
+    entries.emplace_back(m_playerScore, Social::getLevel() / 2, -1, 1);
 
     std::sort(entries.begin(), entries.end(),
         [](const TableEntry& a, const TableEntry& b)
@@ -606,12 +622,15 @@ void League::createSortedTable()
 
     entries.swap(m_sortedTable);
 
-    m_currentPosition = static_cast<std::int32_t>(std::distance(m_sortedTable.begin(),
-        std::find_if(m_sortedTable.begin(), m_sortedTable.end(),
-            [](const TableEntry& te)
-            {
-                return te.name == -1;
-            })));
+    //find our position, and also update any change
+    auto result = std::find_if(m_sortedTable.begin(), m_sortedTable.end(),
+        [](const TableEntry& te)
+        {
+            return te.name == -1;
+        });
+    
+    m_currentPosition = static_cast<std::int32_t>(std::distance(m_sortedTable.begin(), result));
+    result->positionChange = std::clamp(m_lastIterationPosition - m_currentPosition, -1, 1) + 1;
 }
 
 void League::read()
@@ -629,6 +648,7 @@ void League::read()
         }
 
         //since 1.16 we padded out 4 extra ints to reserve some for future use (and attempt not to break existing)
+        //one of which was used in 1.16.2 to store our last iteration position
         static constexpr std::size_t OldExpectedSize = (sizeof(std::int32_t) * 4) + (sizeof(LeaguePlayer) * PlayerCount);
         static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 8) + (sizeof(LeaguePlayer) * PlayerCount);
         
@@ -658,7 +678,7 @@ void League::read()
             //read the personal best, and skip padding
             std::int32_t padding = 0;
             file.file->read(file.file, &m_currentBest, sizeof(std::int32_t), 1);
-            file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
+            file.file->read(file.file, &m_lastIterationPosition, sizeof(std::int32_t), 1);
             file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
             file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
         }
@@ -713,7 +733,7 @@ void League::write()
 
         const std::int32_t padding = 0;
         file.file->write(file.file, &m_currentBest, sizeof(std::int32_t), 1);
-        file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &m_lastIterationPosition, sizeof(std::int32_t), 1);
         file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
         file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
 
