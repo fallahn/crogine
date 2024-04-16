@@ -2224,6 +2224,7 @@ void GolfState::addSystems()
     m_trophyScene.addSystem<TrophyDisplaySystem>(mb);
     m_trophyScene.addSystem<cro::SpriteSystem3D>(mb, 300.f);
     m_trophyScene.addSystem<cro::SpriteAnimator>(mb);
+    m_trophyScene.addSystem<cro::CallbackSystem>(mb);
     m_trophyScene.addSystem<cro::ParticleSystem>(mb);
     m_trophyScene.addSystem<cro::CameraSystem>(mb);
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);

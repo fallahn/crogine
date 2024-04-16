@@ -1868,6 +1868,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
     else
     {
+        for (auto fw : m_fireworks)
+        {
+            fw.getComponent<cro::Callback>().active = true;
+        }
+        m_trophyScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
         //otherwise show some stats about how we did in the league
         leagueEntity = m_uiScene.createEntity();
         leagueEntity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 183.f, 0.23f });
@@ -1905,7 +1911,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
 #endif
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.23f }); //attaches to scoreboard
+    entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 2.23f }); //attaches to scoreboard
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 200.f, 10.f - UITextPosV };
     entity.getComponent<UIElement>().depth = 0.23f;
@@ -2078,32 +2084,65 @@ void GolfState::showCountdown(std::uint8_t seconds)
         {
             const auto& league = Career::instance().getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
             const auto pos = league.getCurrentPosition();
+            const auto lastSeason = league.getCurrentSeason();
 
             cro::String str;
             if (leagueEntity.isValid())
             {
-                str = "CAREER ROUND COMPLETE\n\nPrevious Rank: " + std::to_string(pos);
+                str = "CAREER ROUND COMPLETE\n\n";// Previous Rank : " + std::to_string(pos);
             }
 
             updateLeague();
 
             if (leagueEntity.isValid())
             {
-                const auto newPos = league.getCurrentPosition();
-                str += "\nCurrent Rank: " + std::to_string(newPos);
+                if (league.getCurrentSeason() == lastSeason)
+                {
+                    const auto newPos = league.getCurrentPosition();
+                    str += "\nCurrent Rank: " + std::to_string(newPos);
 
-                static const std::array<std::string, 2u> Indicators = { u8" (↓", u8" (↑" };
-                const auto change = newPos - pos;
-                if (change < 0)
-                {
-                    //we went up (lower is better)
-                    str += cro::String::fromUtf8(Indicators[1].begin(), Indicators[1].end());
-                    str += std::to_string(std::abs(change)) + ")";
+                    static const std::array<std::string, 2u> Indicators = { u8" (↓", u8" (↑" };
+                    const auto change = newPos - pos;
+                    if (change < 0)
+                    {
+                        //we went up (lower is better)
+                        str += cro::String::fromUtf8(Indicators[1].begin(), Indicators[1].end());
+                        str += std::to_string(std::abs(change)) + ")";
+                    }
+                    else if (change > 0)
+                    {
+                        str += cro::String::fromUtf8(Indicators[0].begin(), Indicators[0].end());
+                        str += std::to_string(change) + ")";
+                    }
+                    else
+                    {
+                        str += " (NC)";
+                    }
                 }
-                else if (change > 0)
+                else
                 {
-                    str += cro::String::fromUtf8(Indicators[0].begin(), Indicators[0].end());
-                    str += std::to_string(change) + ")";
+                    //we need this to update the previous position value
+                    league.getPreviousResults(Social::getPlayerName());
+                    const auto finalPos = league.getPreviousPosition();
+                    auto posStr = std::to_string(finalPos);
+                    switch (finalPos)
+                    {
+                    default:
+                        posStr += "th";
+                        break;
+                    case 1:
+                        posStr += "st";
+                        break;
+                    case 2:
+                        posStr += "nd";
+                        break;
+                    case 3:
+                        posStr += "rd";
+                        break;
+                    }
+
+                    //this was the final round
+                    str += "Season Complete!\nYou Came " + posStr;
                 }
 
                 leagueEntity.getComponent<cro::Text>().setString(str);
@@ -4279,6 +4318,32 @@ void GolfState::buildTrophyScene()
                     }
                 }
             };
+
+
+            //fireworks for end of career round
+            entity = m_trophyScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(position);
+            entity.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("firework");
+            entity.getComponent<cro::AudioEmitter>().setPitch(static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f);
+            entity.getComponent<cro::AudioEmitter>().setLooped(false);
+            entity.addComponent<cro::Callback>().setUserData<float>(0.5f + (0.5f * i));
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                    currTime -= dt;
+
+                    if (currTime < 0)
+                    {
+                        e.getComponent<cro::ParticleEmitter>().start();
+                        e.getComponent<cro::AudioEmitter>().play();
+
+                        currTime += 1.f;
+                        currTime += static_cast<float>(cro::Util::Random::value(-5, 5)) / 10.f;
+                    }
+                };
+            m_fireworks[i] = entity;
         }
         ++i;
     }
