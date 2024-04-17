@@ -1985,6 +1985,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        //extra fireworks for a good score
+        for (auto fw : m_fireworks)
+        {
+            fw.getComponent<cro::Callback>().active = true;
+        }
     }
 
     
@@ -4324,7 +4330,7 @@ void GolfState::buildTrophyScene()
             struct FireWorkData final
             {
                 float currentTime = 0.f;
-                std::int32_t count = 12;
+                std::int32_t count = 8;
                 explicit FireWorkData(float t) : currentTime(t) {};
             };
             entity = m_trophyScene.createEntity();
@@ -4343,8 +4349,15 @@ void GolfState::buildTrophyScene()
                     if (currTime < 0)
                     {
                         e.getComponent<cro::ParticleEmitter>().start();
-                        e.getComponent<cro::AudioEmitter>().play();
-
+                        
+                        if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
+                        {
+                            e.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
+                        }
+                        else
+                        {
+                            e.getComponent<cro::AudioEmitter>().play();
+                        }
                         currTime += 1.f;
                         currTime += static_cast<float>(cro::Util::Random::value(-5, 5)) / 10.f;
 
