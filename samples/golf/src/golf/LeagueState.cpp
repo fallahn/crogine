@@ -205,6 +205,23 @@ bool LeagueState::handleEvent(const cro::Event& evt)
         return false;
     }
 
+    const auto nextTab = [&]() 
+        {
+            if (m_currentTab == TabID::League)
+            {
+                switchLeague(Page::Forward);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        };
+    const auto prevTab = [&]() 
+        {
+            if (m_currentTab == TabID::League)
+            {
+                switchLeague(Page::Back);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        };
+
     if (evt.type == SDL_KEYUP)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
@@ -240,18 +257,10 @@ bool LeagueState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         case cro::GameController::ButtonRightShoulder:
-            if (m_currentTab == TabID::League)
-            {
-                switchLeague(Page::Forward);
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
+            nextTab();
             break;
         case cro::GameController::ButtonLeftShoulder:
-            if (m_currentTab == TabID::League)
-            {
-                switchLeague(Page::Back);
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-            }
+            prevTab();
             break;
         }
     }
@@ -273,6 +282,17 @@ bool LeagueState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
+    }
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        if (evt.wheel.y > 0)
+        {
+            prevTab();
+        }
+        else if (evt.wheel.y < 0)
+        {
+            nextTab();
+        }
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -321,7 +341,7 @@ void LeagueState::render()
 void LeagueState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);
+    m_scene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
