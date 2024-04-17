@@ -738,6 +738,9 @@
     <ClInclude Include="..\crogine\include\crogine\audio\DynamicAudioStream.hpp">
       <Filter>Header Files\audio\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\gui\detail\imfilebrowser.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1243,6 +1246,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\DynamicAudioStream.cpp">
       <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\imgui\imfilebrowser.cpp">
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -645,6 +645,32 @@ void MenuState::createUI()
                 ImGui::End();
             }
         });
+
+    //configure browser - ImGuiBrowserFlags can be passed to ctor
+    m_fileBrowser.SetTitle("Test Browser");
+    m_fileBrowser.SetWindowSize(640, 480);
+    
+    //interacts with browser
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Browser Test"))
+            {
+                if (ImGui::Button("Open"))
+                {
+                    m_fileBrowser.Open();
+                }
+
+                if (m_fileBrowser.HasSelected())
+                {
+                    LogI << "Selected filename" << m_fileBrowser.GetSelected().string() << std::endl;
+                    m_fileBrowser.ClearSelected();
+                }
+
+                //this should only be called once for each instance that exists
+                m_fileBrowser.Display();
+            }
+            ImGui::End();
+        });
 }
 
 bool MenuState::createStub(const std::string& name)

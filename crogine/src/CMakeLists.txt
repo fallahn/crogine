@@ -150,6 +150,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/Gui.cpp
   ${PROJECT_DIR}/imgui/GuiClient.cpp
   ${PROJECT_DIR}/imgui/ImCurveEdit.cpp
+  ${PROJECT_DIR}/imgui/imfilebrowser.cpp
   ${PROJECT_DIR}/imgui/ImGradient.cpp
   ${PROJECT_DIR}/imgui/imgui.cpp
   ${PROJECT_DIR}/imgui/imgui_demo.cpp
