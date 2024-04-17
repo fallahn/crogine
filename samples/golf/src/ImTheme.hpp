@@ -98,7 +98,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
 
     //load specific fonts
     auto* fonts = ImGui::GetIO().Fonts;
-    fonts->AddFontDefault();
+    //fonts->AddFontDefault(); //this is already be done by cro, and will break the font if done again
 
     ImFontConfig config;
     config.MergeMode = true;
@@ -106,7 +106,8 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     //config.OversampleH = config.OversampleV = 1;
 
     //expands the default glyph set - default is 32-255
-    static const std::vector<ImWchar> rangesA = { 0x1, 0xFFFF, 0 }; //TODO what's the third number? Plane? Terminator?
+    //0xe005-0xf8ff is used by the icon font internally
+    static const std::vector<ImWchar> rangesA = { 0x1, /*0xFFFF*/0xe004, 0 }; //TODO what's the third number? Plane? Terminator?
     fonts->AddFontFromFileTTF("assets/golf/fonts/ProggyClean.ttf", 13.f, &config, rangesA.data());
     
     fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesCyrillic());

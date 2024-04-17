@@ -70,6 +70,8 @@ static void winFPE(int)
 
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
+#include "../detail/fa-regular-400.hpp"
+#include "../detail/IconsFontAwesome6.h"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_sdl.h"
 
@@ -341,6 +343,9 @@ void App::run()
 
     LogI << "Using SDL " << (int)v.major << "." << (int)v.minor << "." << (int)v.patch << std::endl;
 
+    //hmm we have to *copy* this ?? (it also has to live as long as the app runs)
+    std::vector<std::uint8_t> fontBuff(std::begin(FA_Regular400), std::end(FA_Regular400));
+
     auto settings = loadSettings();
     glm::uvec2 size = settings.fullscreen ? glm::uvec2(settings.windowedSize) : glm::uvec2(settings.width, settings.height);
 
@@ -381,6 +386,17 @@ void App::run()
         //load ES2 shaders on mobile
         ImGui_ImplOpenGL3_Init();
 #endif
+
+
+        ImFontConfig config;
+        config.MergeMode = true;
+        config.FontDataOwnedByAtlas = false; //held in vector above
+        config.GlyphMinAdvanceX = 13.0f; // Use if you want to make the icon monospaced
+        config.FontBuilderFlags |= (1 << 8) | (1 << 9); //enables colour rendering
+        static constexpr ImWchar ranges[] = { ICON_MIN_FA, ICON_MAX_FA, 0 };
+
+        ImGui::GetIO().Fonts->AddFontDefault();
+        ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), fontBuff.size(), 13.f, &config, ranges);
 
         m_window.setIcon(defaultIcon);
         m_window.setFullScreen(settings.fullscreen);

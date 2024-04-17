@@ -459,8 +459,13 @@ void MenuState::createScene()
 
 void MenuState::createUI()
 {
+    m_fileBrowser.SetTitle("File Browser");
+    m_fileBrowser.SetWindowSize(640, 480);
+
     registerWindow([&]()
         {
+            m_fileBrowser.Display();
+
             if (ImGui::BeginMainMenuBar())
             {
                 if (ImGui::BeginMenu("Utility"))
@@ -478,6 +483,11 @@ void MenuState::createUI()
                     if (ImGui::MenuItem("Generate Boilerplate"))
                     {
                         showBoilerplate = true;
+                    }
+
+                    if (ImGui::MenuItem("Convert File To Byte Array"))
+                    {
+                        m_fileBrowser.Open();
                     }
 
                     ImGui::EndMenu();
@@ -644,36 +654,24 @@ void MenuState::createUI()
                 }
                 ImGui::End();
             }
-        });
 
-    //configure browser - ImGuiBrowserFlags can be passed to ctor
-    m_fileBrowser.SetTitle("Test Browser");
-    m_fileBrowser.SetWindowSize(640, 480);
-    
-    //interacts with browser
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Browser Test"))
+            if (m_fileBrowser.HasSelected())
             {
-                if (ImGui::Button("Open"))
-                {
-                    m_fileBrowser.Open();
-                }
+                const auto inpath = m_fileBrowser.GetSelected().string();
+                m_fileBrowser.ClearSelected();
 
-                if (m_fileBrowser.HasSelected())
-                {
-                    LogI << "Selected filename" << m_fileBrowser.GetSelected().string() << std::endl;
-                    m_fileBrowser.ClearSelected();
-                }
+                //TODO figure out how this is done with imgui
+                auto outpath = cro::FileSystem::saveFileDialogue("", "hpp");
 
-                //this should only be called once for each instance that exists
-                m_fileBrowser.Display();
+                if (!outpath.empty())
+                {
+                    fileToByteArray(inpath, outpath);
+                }
             }
-            ImGui::End();
         });
 }
 
-bool MenuState::createStub(const std::string& name)
+bool MenuState::createStub(const std::string& name) const
 {
     auto className = cro::Util::String::toLower(name);
 
@@ -907,4 +905,39 @@ bool MenuState::createStub(const std::string& name)
 
 
     return true;
+}
+
+void MenuState::fileToByteArray(const std::string& infile, const std::string& dst) const
+{
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(infile.c_str(), "rb");
+    if (file.file)
+    {
+        std::stringstream ss;
+        ss << "static inline constexpr unsigned char FileData[] = {\n";
+
+        std::uint8_t b = 0;
+        std::int32_t i = 0;
+        while (file.file->read(file.file, &b, 1, 1))
+        {
+            ss << "0x" << std::uppercase << std::setfill('0') << std::setw(2) << std::hex << (int)b << ", ";
+
+            if (i % 32 == 31)
+            {
+                ss << "\n";
+            }
+            i++;
+        }
+
+        ss << "\n};";
+
+        file.file->close(file.file);
+
+        file.file = SDL_RWFromFile(dst.c_str(), "w");
+        if (file.file)
+        {
+            const auto str = ss.str();
+            file.file->write(file.file, str.c_str(), str.length(), 1);
+        }
+    }
 }

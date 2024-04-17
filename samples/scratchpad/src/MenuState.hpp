@@ -72,6 +72,7 @@ namespace sp
         void createScene();
         void createUI();
 
-        bool createStub(const std::string&);
+        bool createStub(const std::string&) const;
+        void fileToByteArray(const std::string&, const std::string&) const;
     };
 }

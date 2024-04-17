@@ -22,6 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#include "../detail/IconsFontAwesome6.h"
+
 #include <crogine/gui/detail/imgui.h>
 #include <crogine/gui/detail/imfilebrowser.h>
 
@@ -750,7 +752,7 @@ inline std::string ImGui::FileBrowser::ToLower(const std::string& s)
 
 inline void ImGui::FileBrowser::UpdateFileRecords()
 {
-    fileRecords_ = { FileRecord{ true, "..", "[D] ..", "" } };
+    fileRecords_ = { FileRecord{ true, "..", ICON_FA_FOLDER " ..", "" } };
 
     for (auto& p : std::filesystem::directory_iterator(pwd_))
     {
@@ -777,7 +779,7 @@ inline void ImGui::FileBrowser::UpdateFileRecords()
 
         rcd.extension = p.path().filename().extension();
 
-        rcd.showName = (rcd.isDir ? "[D] " : "[F] ") +
+        rcd.showName = (rcd.isDir ? /*"[D] " : "[F] "*/ICON_FA_FOLDER " " : ICON_FA_FILE " ") +
             u8StrToStr(p.path().filename().u8string());
         fileRecords_.push_back(rcd);
     }
