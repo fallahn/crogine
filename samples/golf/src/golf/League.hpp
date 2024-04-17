@@ -64,7 +64,7 @@ struct TableEntry final
     std::int32_t score = 0;
     std::int32_t handicap = 0;
     std::int32_t name = -1;
-    std::int32_t positionChange = 0; //index into animation 0 NC, 1 down, 2 up
+    std::int32_t positionChange = 1; //index into animation 0 down, 1 NC, 2 up
     TableEntry(std::int32_t s, std::int32_t h, std::int32_t n, std::int32_t p)
         :score(s), handicap(h), name(n), positionChange(p) {}
 };

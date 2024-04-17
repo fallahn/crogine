@@ -97,6 +97,9 @@ namespace
     constexpr float BaseQuality = 0.87f;
     constexpr float MinQuality = BaseQuality - 0.07f; //0.01 * PlayerCount/2
 
+    //used to version the league data file
+    constexpr std::uint32_t VersionMask = 0x000000ff;
+    constexpr std::uint8_t VersionNumber = 1;
 }
 
 League::League(std::int32_t id)
@@ -673,18 +676,19 @@ void League::read()
         file.file->read(file.file, &m_playerScore, sizeof(std::int32_t), 1);
         file.file->read(file.file, &m_increaseCount, sizeof(std::int32_t), 1);
 
+        std::int32_t version = 0;
         if (size == ExpectedSize)
         {
             //read the personal best, and skip padding
             std::int32_t padding = 0;
             file.file->read(file.file, &m_currentBest, sizeof(std::int32_t), 1);
             file.file->read(file.file, &m_lastIterationPosition, sizeof(std::int32_t), 1);
-            file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
+            file.file->read(file.file, &version, sizeof(std::int32_t), 1);
             file.file->read(file.file, &padding, sizeof(std::int32_t), 1);
         }
 
         file.file->read(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
-
+        version &= VersionMask;
 
         //validate the loaded data and clamp to sane values
         m_currentIteration %= m_maxIterations;
@@ -703,6 +707,18 @@ void League::read()
 
             //player.currentScore = std::clamp(player.currentScore, 0, MaxScore);
 
+            if (version != VersionNumber)
+            {
+                switch (version)
+                {
+                default: break;
+                case 0:
+                    //we added position tracking, so need to set our previous position
+                    player.previousPosition = 1;//no change
+                    break;
+                }
+            }
+
             currScores.push_back(player.currentScore);
         }
         currScores.push_back(m_playerScore);
@@ -710,6 +726,21 @@ void League::read()
         //creates a table which includes player data, ready for display
         //and finds the current player position in the table
         createSortedTable();
+
+        //again, check the file version - in case we need to
+        //set any default values for the current player
+        if (version != VersionNumber)
+        {
+            switch (version)
+            {
+            default: break;
+            case 0:
+                //we added position tracking, so need to set our previous position
+                m_lastIterationPosition = m_currentPosition;
+                createSortedTable(); //this needs to be rebuilt now it knows what the last iteration ought to be
+                break;
+            }
+        }
     }
     else
     {
@@ -720,6 +751,21 @@ void League::read()
 
 void League::write()
 {
+    /*
+    File Structure
+    int32 current interation
+    int32 current season
+    int32 player score
+    int32 increase count - number of times the difficulty has been increased
+    int32 current best
+    int32 last iteration position - tracks our player position change between rounds
+    int32 metadata - currently reserved except for version byte 0xrrrrrrvv
+    int32 reserved
+
+    array of LeaguePlayer[PlayerCount] - 15 players
+    
+    */
+
     const auto path = getFilePath(FileName);
 
     cro::RaiiRWops file;
@@ -731,10 +777,11 @@ void League::write()
         file.file->write(file.file, &m_playerScore, sizeof(std::int32_t), 1);
         file.file->write(file.file, &m_increaseCount, sizeof(std::int32_t), 1);
 
-        const std::int32_t padding = 0;
+        static constexpr std::int32_t padding = 0;
+        static constexpr std::int32_t version = (0 | VersionNumber);
         file.file->write(file.file, &m_currentBest, sizeof(std::int32_t), 1);
         file.file->write(file.file, &m_lastIterationPosition, sizeof(std::int32_t), 1);
-        file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &version, sizeof(std::int32_t), 1);
         file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
 
         file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
