@@ -109,8 +109,8 @@ League::League(std::int32_t id)
     m_currentIteration      (0),
     m_currentSeason         (1),
     m_increaseCount         (0),
-    m_currentPosition       (16),
-    m_lastIterationPosition (16),
+    m_currentPosition       (15),
+    m_lastIterationPosition (15),
     m_currentBest           (15),
     m_previousPosition      (17)
 {
@@ -175,8 +175,8 @@ void League::reset()
     m_playerScore = 0;
     m_increaseCount = 0;
 
-    m_currentPosition = 16;
-    m_lastIterationPosition = 16;
+    m_currentPosition = 15;
+    m_lastIterationPosition = 15;
     m_currentBest = 15;
     m_previousPosition = 17;
 
@@ -418,11 +418,12 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         //out to a file to scroll at the bottom
         m_currentIteration = 0;
         m_playerScore = 0;
-        m_lastIterationPosition = 16;
+        m_lastIterationPosition = 15;
 
         for (auto& player : m_players)
         {
-            player.currentScore = 0;
+            player.currentScore = 0; 
+            player.previousPosition = 1;
         }
 
         m_currentSeason++;
