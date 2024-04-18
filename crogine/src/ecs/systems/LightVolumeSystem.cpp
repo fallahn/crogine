@@ -269,7 +269,7 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
 {
     const auto& camComponent = camera.getComponent<Camera>();
     const auto& pass = camComponent.getPass(Camera::Pass::Final);
-    const auto& camTx = camera.getComponent<Transform>();
+    //const auto& camTx = camera.getComponent<Transform>();
     //const auto cameraPosition = camTx.getWorldPosition();
 
     CRO_ASSERT(camComponent.getDrawListIndex() < m_drawLists.size(), "Can't call this before having updated draw lists");

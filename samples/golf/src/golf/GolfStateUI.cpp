@@ -1935,7 +1935,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
             sec--;
         }
 
-        if (m_sharedData.gameMode == GameMode::Tutorial)
+        if (m_sharedData.gameMode == GameMode::Tutorial
+            || m_sharedData.leagueRoundID != LeagueRoundID::Club)
         {
             e.getComponent<cro::Text>().setString("Returning to menu in: " + std::to_string(sec));
         }
@@ -2148,7 +2149,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     }
 
                     //this was the final round
-                    str += "Season Complete!\nYou Came " + posStr;
+                    str += "Season Complete!\nYou Placed: " + posStr;
                 }
 
                 leagueEntity.getComponent<cro::Text>().setString(str);
