@@ -118,7 +118,7 @@ namespace
         "/me cackles like a crone"
     };
 
-    const std::array<std::string, 17u> AngerStrings =
+    const std::array<std::string, 18u> AngerStrings =
     {
         "/me cow-fudged that one up",
         "/me rages",
@@ -136,7 +136,8 @@ namespace
         "/me blows a fuse",
         "/me blames the dev",
         "/me explodes in a shower of fleshy chunks",
-        "/me should've known better"
+        "/me should've known better",
+        "/me meant to do that"
     };
 
     struct Emote final
