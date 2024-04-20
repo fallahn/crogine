@@ -36,6 +36,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "Utility.hpp"
 #include "TextAnimCallback.hpp"
+#include "League.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -355,6 +356,10 @@ void PracticeState::buildScene()
                     m_sharedData.gameMode = GameMode::Tutorial;
                     m_sharedData.localConnectionData.playerCount = 1;
                     m_sharedData.localConnectionData.playerData[0].isCPU = false;
+                    m_sharedData.clubSet = 0;
+                    m_sharedData.preferredClubSet = 0;
+
+                    m_sharedData.leagueRoundID = LeagueRoundID::Club;
 
                     //start a local server and connect
                     if (!m_sharedData.clientConnection.connected)
