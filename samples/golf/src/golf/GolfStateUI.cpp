@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
 Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
@@ -1162,25 +1162,6 @@ void GolfState::buildUI()
             e.getComponent<cro::Transform>().setOrigin(o);
         };
 
-
-    /*registerWindow([&]()
-        {
-            if (ImGui::Begin("Zoom"))
-            {
-                static float scale = 1.f;
-                
-                
-                if (ImGui::SliderFloat("Scale", &scale, 1.f, 2.f))
-                {
-                    m_mapRoot.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-                    m_mapRoot.getComponent<cro::Transform>().setOrigin(offset * (scale - 1.f));
-                }
-
-
-            }
-            ImGui::End();
-        });*/
-
     infoEnt.getComponent<cro::Transform>().addChild(m_mapRoot.getComponent<cro::Transform>());
     auto mapEnt = entity;
     m_minimapEnt = entity;
@@ -1824,60 +1805,102 @@ void GolfState::showCountdown(std::uint8_t seconds)
         Social::courseComplete(m_sharedData.mapDirectory, m_sharedData.holeCount);
     }
 
-    auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
-    for (auto i = 0u; i < trophyCount; ++i)
+    //only show trophies in freeplay
+    cro::Entity leagueEntity;
+    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
     {
-        if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID
-            && !m_sharedData.localConnectionData.playerData[m_statBoardScores[i].player].isCPU)
+        auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
+
+        for (auto i = 0u; i < trophyCount; ++i)
         {
-            if (m_statBoardScores.size() > 1
-                && m_holeData.size() > 8)
+            if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID
+                && !m_sharedData.localConnectionData.playerData[m_statBoardScores[i].player].isCPU)
             {
-                Achievements::incrementStat(StatStrings[StatID::GoldWins + i]);
-
-                //only award rank XP if there are players to rank against
-                //and reduce XP if < 4 players. Probably ought to consider
-                //the opponent's XP too, ie award more if a player wins
-                //against someone with a significantly higher level.
-                float multiplier = std::min(1.f, static_cast<float>(m_statBoardScores.size()) / 4.f);
-                float xp = 0.f;
-                std::int32_t xpReason = -1;
-                switch (i)
+                if (m_statBoardScores.size() > 1
+                    && m_holeData.size() > 8)
                 {
-                default: break;
-                case 0:
-                    xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
-                    xpReason = XPStringID::FirstPlace;
-                    break;
-                case 1:
-                    xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
-                    xpReason = XPStringID::SecondPlace;
-                    break;
-                case 2:
-                    xp = static_cast<float>(XPValues[XPID::Third]) * multiplier;
-                    xpReason = XPStringID::ThirdPlace;
-                    break;
+                    Achievements::incrementStat(StatStrings[StatID::GoldWins + i]);
+
+                    //only award rank XP if there are players to rank against
+                    //and reduce XP if < 4 players. Probably ought to consider
+                    //the opponent's XP too, ie award more if a player wins
+                    //against someone with a significantly higher level.
+                    float multiplier = std::min(1.f, static_cast<float>(m_statBoardScores.size()) / 4.f);
+                    float xp = 0.f;
+                    std::int32_t xpReason = -1;
+                    switch (i)
+                    {
+                    default: break;
+                    case 0:
+                        xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
+                        xpReason = XPStringID::FirstPlace;
+                        break;
+                    case 1:
+                        xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
+                        xpReason = XPStringID::SecondPlace;
+                        break;
+                    case 2:
+                        xp = static_cast<float>(XPValues[XPID::Third]) * multiplier;
+                        xpReason = XPStringID::ThirdPlace;
+                        break;
+                    }
+                    Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
                 }
-                Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
             }
+
+            m_trophies[i].trophy.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
+            //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
+            m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
+            m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
+
+            m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
+            auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
+            bounds.bottom = bounds.height * m_statBoardScores[i].player;
+            m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
+
+            //choose the relevant player from the sheet
+            bounds = getAvatarBounds(m_statBoardScores[i].player);
+            m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
         }
-
-        m_trophies[i].trophy.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
-        //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
-        m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
-        m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
-
-        m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
-        auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
-        bounds.bottom = bounds.height * m_statBoardScores[i].player;
-        m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
-
-        //choose the relevant player from the sheet
-        bounds = getAvatarBounds(m_statBoardScores[i].player);
-        m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
+        m_trophyScene.getActiveCamera().getComponent<cro::Camera>().active = true;
     }
-    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+    else
+    {
+        for (auto fw : m_fireworks)
+        {
+            fw.getComponent<cro::Callback>().active = true;
+        }
+        m_trophyScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+        //otherwise show some stats about how we did in the league
+        leagueEntity = m_uiScene.createEntity();
+        leagueEntity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 183.f, 0.23f });
+        leagueEntity.addComponent<cro::Drawable2D>();
+        leagueEntity.addComponent<UIElement>().absolutePosition = { 200.f, 183.f };
+        leagueEntity.getComponent<UIElement>().depth = 0.23f;
+        leagueEntity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
+            {
+                e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f });
+            };
+        leagueEntity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        leagueEntity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
+        leagueEntity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        leagueEntity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        leagueEntity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        leagueEntity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing * 2.f);
+        leagueEntity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+
+        //attaches to scoreboard
+        cmd.targetFlags = CommandID::UI::Scoreboard;
+        cmd.action =
+            [leagueEntity](cro::Entity e, float) mutable
+            {
+                e.getComponent<cro::Transform>().addChild(leagueEntity.getComponent<cro::Transform>());
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
 
     bool personalBest = false;
     cro::String bestString("PERSONAL BEST!");
@@ -1887,10 +1910,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     updateLeaderboardScore(personalBest, bestString);
 #endif
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.23f }); //attaches to scoreboard
+    entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 2.23f }); //attaches to scoreboard
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 200.f, 10.f - UITextPosV };
     entity.getComponent<UIElement>().depth = 0.23f;
@@ -1914,7 +1935,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
             sec--;
         }
 
-        if (m_sharedData.gameMode == GameMode::Tutorial)
+        if (m_sharedData.gameMode == GameMode::Tutorial
+            || m_sharedData.leagueRoundID != LeagueRoundID::Club)
         {
             e.getComponent<cro::Text>().setString("Returning to menu in: " + std::to_string(sec));
         }
@@ -1964,6 +1986,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        //extra fireworks for a good score
+        for (auto fw : m_fireworks)
+        {
+            fw.getComponent<cro::Callback>().active = true;
+        }
     }
 
     
@@ -2060,8 +2088,73 @@ void GolfState::showCountdown(std::uint8_t seconds)
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
         case ScoreType::ShortRound:
-            //TODO make this async too
+        {
+            const auto& league = Career::instance().getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
+            const auto pos = league.getCurrentPosition();
+            const auto lastSeason = league.getCurrentSeason();
+
+            cro::String str;
+            if (leagueEntity.isValid())
+            {
+                str = "CAREER ROUND COMPLETE\n\n";// Previous Rank : " + std::to_string(pos);
+            }
+
             updateLeague();
+
+            if (leagueEntity.isValid())
+            {
+                if (league.getCurrentSeason() == lastSeason)
+                {
+                    const auto newPos = league.getCurrentPosition();
+                    str += "\nCurrent Rank: " + std::to_string(newPos);
+
+                    static const std::array<std::string, 2u> Indicators = { u8" (↓", u8" (↑" };
+                    const auto change = newPos - pos;
+                    if (change < 0)
+                    {
+                        //we went up (lower is better)
+                        str += cro::String::fromUtf8(Indicators[1].begin(), Indicators[1].end());
+                        str += std::to_string(std::abs(change)) + ")";
+                    }
+                    else if (change > 0)
+                    {
+                        str += cro::String::fromUtf8(Indicators[0].begin(), Indicators[0].end());
+                        str += std::to_string(change) + ")";
+                    }
+                    else
+                    {
+                        str += " (NC)";
+                    }
+                }
+                else
+                {
+                    //we need this to update the previous position value
+                    league.getPreviousResults(Social::getPlayerName());
+                    const auto finalPos = league.getPreviousPosition();
+                    auto posStr = std::to_string(finalPos);
+                    switch (finalPos)
+                    {
+                    default:
+                        posStr += "th";
+                        break;
+                    case 1:
+                        posStr += "st";
+                        break;
+                    case 2:
+                        posStr += "nd";
+                        break;
+                    case 3:
+                        posStr += "rd";
+                        break;
+                    }
+
+                    //this was the final round
+                    str += "Season Complete!\nYou Placed: " + posStr;
+                }
+
+                leagueEntity.getComponent<cro::Text>().setString(str);
+            }
+        }
             break;
         }
 
@@ -4232,6 +4325,51 @@ void GolfState::buildTrophyScene()
                     }
                 }
             };
+
+
+            //fireworks for end of career round
+            struct FireWorkData final
+            {
+                float currentTime = 0.f;
+                std::int32_t count = 8;
+                explicit FireWorkData(float t) : currentTime(t) {};
+            };
+            entity = m_trophyScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(position);
+            entity.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
+            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("firework");
+            entity.getComponent<cro::AudioEmitter>().setPitch(static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f);
+            entity.getComponent<cro::AudioEmitter>().setLooped(false);
+            entity.addComponent<cro::Callback>().setUserData<FireWorkData>(0.5f + (0.5f * i));
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    auto& [currTime, count] = e.getComponent<cro::Callback>().getUserData<FireWorkData>();
+                    currTime -= dt;
+
+                    if (currTime < 0)
+                    {
+                        e.getComponent<cro::ParticleEmitter>().start();
+                        
+                        if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
+                        {
+                            e.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
+                        }
+                        else
+                        {
+                            e.getComponent<cro::AudioEmitter>().play();
+                        }
+                        currTime += 1.f;
+                        currTime += static_cast<float>(cro::Util::Random::value(-5, 5)) / 10.f;
+
+                        count--;
+                        if (count == 0)
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                        }
+                    }
+                };
+            m_fireworks[i] = entity;
         }
         ++i;
     }

@@ -830,6 +830,7 @@ static inline void createMusicPlayer(cro::Scene& scene, SharedStateData& sharedD
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::AudioEmitter>().setSource(sharedData.sharedResources->audio.get(id));
         entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
+        entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
         entity.getComponent<cro::AudioEmitter>().play();
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
@@ -839,6 +840,7 @@ static inline void createMusicPlayer(cro::Scene& scene, SharedStateData& sharedD
             //while the incidental music is playing
             if (gameMusic.isValid())
             {
+                //fade out if the menu music is playing, ie in a transition
                 const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
                 float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
                 if (target < vol)

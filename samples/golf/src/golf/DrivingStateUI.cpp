@@ -661,13 +661,53 @@ void DrivingState::createUI()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("minimap");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    
+
+    m_mapRoot = m_uiScene.createEntity();
+    m_mapRoot.addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_mapRoot.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 1);
+    m_mapRoot.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& [progress, dir] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+            if (dir == 0)
+            {
+                //bigger
+                progress = std::min(1.f, progress + (dt * 8.f));
+                if (progress == 1)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+            else
+            {
+                progress = std::max(0.f, progress - (dt * 8.f));
+                if (progress == 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+
+            static constexpr glm::vec2 offset(0.5299f, 0.84799f); //1/8 map size, rotated 90deg, normalised
+            static constexpr float l = 47.167f;// glm::length(offset); //aww no constexpr
+
+            const auto p = cro::Util::Easing::easeOutExpo(progress);
+            auto o = offset * l * p;
+            o.x = std::round(o.x);
+            o.y = std::round(o.y);
+
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f + p));
+            e.getComponent<cro::Transform>().setOrigin(o);
+        };
+
+    infoEnt.getComponent<cro::Transform>().addChild(m_mapRoot.getComponent<cro::Transform>());
     auto mapEnt = entity;
+
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, std::ceil(bounds.height / 2.f) + 1.f, 0.2f });
@@ -804,7 +844,7 @@ void DrivingState::createUI()
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode, courseEnt, infoEnt, spinEnt, windEnt, mapEnt](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, courseEnt, infoEnt, spinEnt, windEnt/*, mapEnt*/](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 2.f);
@@ -823,7 +863,7 @@ void DrivingState::createUI()
         const auto uiSize = size / m_viewScale;
 
         auto mapSize = RangeSize / 4.f;
-        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.x - UIBarHeight, uiSize.y - (mapSize.y) - (UIBarHeight * 1.5f) });
+        m_mapRoot.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.x - UIBarHeight, uiSize.y - (mapSize.y) - (UIBarHeight * 1.5f) });
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*uiSize.x +*/ WindIndicatorPosition.x, WindIndicatorPosition.y - UIBarHeight));
         spinEnt.getComponent<cro::Transform>().setPosition(glm::vec2(std::floor(uiSize.x / 2.f), 32.f));

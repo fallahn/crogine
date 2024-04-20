@@ -36,6 +36,7 @@ source distribution.
 #include <vector>
 #include <string>
 
+//don't modify this! It's read/written directly from saves and will break existing data.
 struct LeaguePlayer final
 {
     std::int32_t skill = 1; //indexes into the skill array (lower is smaller error offset == better)
@@ -45,7 +46,8 @@ struct LeaguePlayer final
 
     float quality = 1.f; //quality of player result is multiplied by this to limit them from being Perfect
 
-    std::int32_t currentScore = 0; //sum of holes converted to stableford
+    std::int16_t currentScore = 0; //sum of holes converted to stableford
+    std::int16_t previousPosition = 0; //from previous iteration
 };
 
 struct PreviousEntry final
@@ -62,8 +64,9 @@ struct TableEntry final
     std::int32_t score = 0;
     std::int32_t handicap = 0;
     std::int32_t name = -1;
-    TableEntry(std::int32_t s, std::int32_t h, std::int32_t n)
-        :score(s), handicap(h), name(n) {}
+    std::int32_t positionChange = 1; //index into animation 0 down, 1 NC, 2 up
+    TableEntry(std::int32_t s, std::int32_t h, std::int32_t n, std::int32_t p)
+        :score(s), handicap(h), name(n), positionChange(p) {}
 };
 
 struct LeagueRoundID final
@@ -119,6 +122,7 @@ private:
     std::int32_t m_currentSeason;
     std::int32_t m_increaseCount;
     std::int32_t m_currentPosition;
+    std::int32_t m_lastIterationPosition;
 
     std::int32_t m_currentBest;
 

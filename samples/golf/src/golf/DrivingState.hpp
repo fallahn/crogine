@@ -213,6 +213,7 @@ private:
 
     cro::RenderTexture m_mapTexture;
     cro::Entity m_mapCam;
+    cro::Entity m_mapRoot;
     cro::SimpleQuad m_flagQuad;
     void createUI();
     void createGameOptions();

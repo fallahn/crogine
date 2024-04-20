@@ -442,9 +442,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_KP_MULTIPLY:
-            toggleMiniZoom();
-            break;
         case SDLK_2:
             if (!m_textChat.isVisible()
                 && !m_holeData[m_currentHole].puttFromTee)
@@ -488,6 +485,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
             break;
+        case SDLK_KP_MULTIPLY:
         case SDLK_F6:
             toggleMiniZoom();
             break;
@@ -2224,6 +2222,7 @@ void GolfState::addSystems()
     m_trophyScene.addSystem<TrophyDisplaySystem>(mb);
     m_trophyScene.addSystem<cro::SpriteSystem3D>(mb, 300.f);
     m_trophyScene.addSystem<cro::SpriteAnimator>(mb);
+    m_trophyScene.addSystem<cro::CallbackSystem>(mb);
     m_trophyScene.addSystem<cro::ParticleSystem>(mb);
     m_trophyScene.addSystem<cro::CameraSystem>(mb);
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
@@ -4355,7 +4354,7 @@ void GolfState::handleMaxStrokes(std::uint8_t reason)
         }
         break;
     case MaxStrokeID::HostPunishment:
-        showNotification("Host Penalised Your Turn");
+        showNotification("Host Penalised Player's Turn");
         break;
     case MaxStrokeID::IdleTimeout:
         showNotification("AFK Timeout");

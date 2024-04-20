@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -269,8 +269,8 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
 {
     const auto& camComponent = camera.getComponent<Camera>();
     const auto& pass = camComponent.getPass(Camera::Pass::Final);
-    const auto& camTx = camera.getComponent<Transform>();
-    const auto cameraPosition = camTx.getWorldPosition();
+    //const auto& camTx = camera.getComponent<Transform>();
+    //const auto cameraPosition = camTx.getWorldPosition();
 
     CRO_ASSERT(camComponent.getDrawListIndex() < m_drawLists.size(), "Can't call this before having updated draw lists");
     const auto& drawList = m_drawLists[camComponent.getDrawListIndex()];

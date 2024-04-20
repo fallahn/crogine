@@ -68,7 +68,7 @@ namespace
     {
         CRO_ASSERT(img.getFormat() == cro::ImageFormat::RGBA, "");
         std::stringstream ss;
-        ss << "static const unsigned char icon[] = {" << std::endl;
+        ss << "static inline constexpr unsigned char icon[] = {" << std::endl;
         ss << std::showbase << std::internal << std::setfill('0');
 
         auto i = 0;

@@ -47,9 +47,15 @@ public:
     bool handleEvent(const cro::Event&, std::uint16_t& flags, std::int32_t state);
     bool isActive() const { return m_state != State::Inactive; }
 
-    //checksto see if an active swing was cancelled by letting go of
+    //checks to see if an active swing was cancelled by letting go of
     //the thumbstick must be called by input parser at top of processing
     void assertIdled(float, std::uint16_t& flags, std::int32_t state);
+
+    //processes mouse swing if it's active and returns true if swing was taken
+    bool processMouseSwing();
+    float getMousePower() const { return m_mouseSwing.power; }
+    float getMouseHook() const { return m_mouseSwing.hook; }
+    void setMouseScale(float s) { m_mouseSwing.scale = s; }
 
     //set to -1 to deactivate, else current player ID
     void setEnabled(std::int32_t enabled);
@@ -75,7 +81,6 @@ private:
     const SharedStateData& m_sharedData;
     std::int32_t m_enabled;
 
-    glm::vec2 m_mouseMovement;
     cro::HiResTimer m_tempoTimer;
 
     float m_hook;
@@ -97,6 +102,41 @@ private:
         "Inactive", "Swing", "Summarise"
     };
 
-    void setGaugeFromMouse();
+    struct MouseSwing final
+    {
+        glm::vec2 backPoint = glm::vec2(0.f);
+        glm::vec2 activePoint = glm::vec2(0.f);
+        glm::vec2 frontPoint = glm::vec2(0.f);
+
+        float power = 0.f;
+        float hook = 0.f;
+        float scale = 1.f;
+
+        cro::HiResTimer timer;
+        float elapsedTime = 0.f;
+
+        bool active = false;
+
+        static constexpr float MaxVelocity = 1700.f;
+        static constexpr float MaxAccuracy = 20.f;
+
+        void startStroke()
+        {
+            backPoint = glm::vec2(0.f);
+            activePoint = glm::vec2(0.f);
+            frontPoint = glm::vec2(0.f);
+
+            power = 0.f;
+            hook = 0.f;
+
+            active = true;
+        }
+        void endStroke()
+        {
+            activePoint = glm::vec2(0.f);
+            active = false;
+        }
+    }m_mouseSwing;
+
     void setGaugeFromController(std::int16_t);
 };

@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/gui/Gui.hpp>
 
 class MyApp;
 namespace sp
@@ -64,11 +65,14 @@ namespace sp
         cro::MusicPlayer m_music;
         std::string m_musicName;
 
+        ImGui::FileBrowser m_fileBrowser;
+
         void addSystems();
         void loadAssets();
         void createScene();
         void createUI();
 
-        bool createStub(const std::string&);
+        bool createStub(const std::string&) const;
+        void fileToByteArray(const std::string&, const std::string&) const;
     };
 }

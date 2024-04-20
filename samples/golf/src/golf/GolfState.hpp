@@ -121,8 +121,8 @@ public:
     cro::StateID getStateID() const override { return StateID::Golf; }
 
 private:
-    cro::ResourceCollection m_resources;    
-    
+    cro::ResourceCollection m_resources;
+
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_skyScene;
@@ -215,7 +215,7 @@ private:
     };
     std::array<PostProcess, PostID::Count> m_postProcesses = {};
 
-    cro::Image m_currentMap; 
+    cro::Image m_currentMap;
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
@@ -370,7 +370,7 @@ private:
     };
     std::array<cro::Entity, SkyCam::Count> m_skyCameras = {};
     void updateSkybox(float);
-    
+
     static const cro::Time DefaultIdleTime;
     cro::Time m_idleTime;
     void resetIdle();
@@ -481,7 +481,7 @@ private:
     void showNotification(const cro::String&);
     void showLevelUp(std::uint64_t);
     void toggleQuitReady();
-    
+
     SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();
@@ -502,6 +502,7 @@ private:
         cro::Entity avatar;
     };
     std::array<Trophy, 3u> m_trophies = {};
+    std::array<cro::Entity, 3u> m_fireworks = {};
 
     struct GridShader final
     {

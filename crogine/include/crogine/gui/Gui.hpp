@@ -32,6 +32,7 @@ source distribution.
 #include "detail/imgui.h"
 #include "detail/imgui_stdlib.h"
 #include "detail/ImGuizmo.h"
+#include "detail/imfilebrowser.h"
 
 #include <crogine/Config.hpp>
 #include <crogine/graphics/MaterialData.hpp>

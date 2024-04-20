@@ -390,6 +390,13 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         requestStackPush(StateID::Pause);
     };
 
+    const auto toggleMiniZoom = [&]()
+    {
+        auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+        dir = (dir == 0) ? 1 : 0;
+        m_mapRoot.getComponent<cro::Callback>().active = true;
+    };
+
 #ifdef USE_GNS
     const auto closeLeaderboard = [&]()
     {
@@ -426,6 +433,10 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F1:
         case SDLK_F5:
 
+            break;
+        case SDLK_F6:
+        case SDLK_KP_MULTIPLY:
+            toggleMiniZoom();
             break;
         case SDLK_SPACE:
             closeMessage();
@@ -741,6 +752,13 @@ void DrivingState::handleMessage(const cro::Message& msg)
         case SceneEvent::RequestSwitchCamera:
             setActiveCamera(data.data);
             break;
+        case SceneEvent::RequestToggleMinimap:
+        {
+            auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+            dir = (dir == 0) ? 1 : 0;
+            m_mapRoot.getComponent<cro::Callback>().active = true;
+        }
+        break;
         }
     }
     break;

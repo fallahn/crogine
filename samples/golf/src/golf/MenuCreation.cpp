@@ -5474,7 +5474,7 @@ void MenuState::refreshLobbyButtons()
         m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, CourseWeather);
 
         m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoB, LobbyQuit);
-        m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setPrevIndex(PlayerManagement, CourseNext);
+        m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setPrevIndex(PlayerManagement, CourseHoleNext);
 
         if (m_lobbyButtonContext.rulesClubset.isValid())
         {

@@ -1405,6 +1405,7 @@ void GolfGame::loadPreferences()
                 //this checks the file has a valid extension
                 m_sharedData.m3uPlaylist->addTrack(MusicDir + file);
             }
+            m_sharedData.m3uPlaylist->shuffle();
         }
     }
 }

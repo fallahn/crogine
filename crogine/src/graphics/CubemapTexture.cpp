@@ -227,7 +227,7 @@ bool CubemapTexture::loadFromFiles(const std::vector<std::string>& paths)
             return false;
         }
 
-        GLsizei currentDepth = 0;
+        //GLsizei currentDepth = 0;
         glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, m_handle));
         glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, format, size.x, size.y, paths.size() * 6, 0, format, GL_UNSIGNED_BYTE, nullptr);
 

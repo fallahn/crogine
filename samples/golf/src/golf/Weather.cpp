@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -212,7 +212,7 @@ void GolfState::createWeather(std::int32_t weatherType)
     meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
 
     auto weatherColour = LeaderboardTextLight;
-    auto blendMode = cro::Material::BlendMode::None;
+    //auto blendMode = cro::Material::BlendMode::None;
     if (weatherType == WeatherType::Snow)
     {
         m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment, "#define EASE_SNOW\n");
@@ -221,7 +221,7 @@ void GolfState::createWeather(std::int32_t weatherType)
     {
         m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment);
         weatherColour = cro::Colour(0.86f, 0.87f, 0.873f);
-        blendMode = cro::Material::BlendMode::Custom;
+        //blendMode = cro::Material::BlendMode::Custom;
 
         //create audio entity
         cro::AudioScape audioscape;

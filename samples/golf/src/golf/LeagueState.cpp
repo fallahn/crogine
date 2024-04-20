@@ -205,6 +205,23 @@ bool LeagueState::handleEvent(const cro::Event& evt)
         return false;
     }
 
+    const auto nextTab = [&]() 
+        {
+            if (m_currentTab == TabID::League)
+            {
+                switchLeague(Page::Forward);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        };
+    const auto prevTab = [&]() 
+        {
+            if (m_currentTab == TabID::League)
+            {
+                switchLeague(Page::Back);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        };
+
     if (evt.type == SDL_KEYUP)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
@@ -240,18 +257,10 @@ bool LeagueState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         case cro::GameController::ButtonRightShoulder:
-            if (m_currentTab == TabID::League)
-            {
-                switchLeague(Page::Forward);
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
+            nextTab();
             break;
         case cro::GameController::ButtonLeftShoulder:
-            if (m_currentTab == TabID::League)
-            {
-                switchLeague(Page::Back);
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-            }
+            prevTab();
             break;
         }
     }
@@ -273,6 +282,17 @@ bool LeagueState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
+    }
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        if (evt.wheel.y > 0)
+        {
+            prevTab();
+        }
+        else if (evt.wheel.y < 0)
+        {
+            nextTab();
+        }
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -321,7 +341,7 @@ void LeagueState::render()
 void LeagueState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);
+    m_scene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -709,54 +729,24 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     const auto& entries = league.getSortedTable();
 
 
-    //column of rank badges representing psuedo-level (handicap * 2)
-    //or the player's current level.
+    //displays the player's change in position since the last round
     float stripePos = 0.f;
-
-    cro::SpriteSheet shieldSprites;
-    shieldSprites.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_sharedData.sharedResources->textures);
 
     //TODO we could optimise this a bit by batching into a vertex array...
     glm::vec3 spritePos(68.f, TextTop - 12.f, 0.1f);
     auto z = 0; //track our position so we can highlight the name
     for (const auto& entry : entries)
     {
-        std::int32_t level = 0;
         if (entry.name == -1)
         {
-            level = Social::getLevel() / 10;
             stripePos = (VerticalSpacing * (entries.size() - (z+ 1)));
-        }
-        else
-        {
-            level = entry.handicap * 2;
-            level /= 10;
-        }
-        level = std::clamp(level, 0, 5);
-
-        //uhhh there ought to be a good way to swap just these cases
-        switch (level)
-        {
-        default: break;
-        case 0:
-            level = 2;
-            break;
-        case 2:
-            level = 0;
-            break;
-        case 3:
-            level = 5;
-            break;
-        case 5:
-            level = 3;
-            break;
         }
 
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(spritePos);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = shieldSprites.getSprite("rank_badge");
-        entity.addComponent<cro::SpriteAnimation>().play(level);
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("progress");
+        entity.addComponent<cro::SpriteAnimation>().play(entry.positionChange);
         m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         spritePos.y -= VerticalSpacing;

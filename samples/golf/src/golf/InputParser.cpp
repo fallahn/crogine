@@ -882,6 +882,19 @@ void InputParser::updateStroke(float dt)
 
     if (m_active)
     {
+        if (m_swingput.processMouseSwing())
+        {
+            //we took our shot
+            m_power = m_swingput.getMousePower();
+            m_hook = m_swingput.getMouseHook();
+
+            m_powerbarDirection = 1.f;
+            m_state = State::Flight;
+
+            auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::HitBall;
+        }
+
         m_inputFlags &= m_enableFlags;
 
         switch (m_state)
@@ -994,7 +1007,7 @@ void InputParser::updateStroke(float dt)
                 m_powerbarDirection = -1.f;
             }
 
-            if (m_sharedData.pressHold
+            if ((m_sharedData.pressHold && !m_isCPU)
                 && ((m_inputFlags & InputFlag::Swingput) == 0))
             {
                 if ((m_inputFlags & InputFlag::Action) == 0 && (m_prevFlags & InputFlag::Action))

@@ -103,7 +103,7 @@ void TerrainChunker::update()
     cro::FloatRect camAABB(camBox[0].x, -camBox[1].z, camBox[1].x - camBox[0].x, -(camBox[0].z - camBox[1].z));
 
     auto camWorldPos = m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
-    auto camPos = glm::vec2(camWorldPos.x, -camWorldPos.z);
+    //auto camPos = glm::vec2(camWorldPos.x, -camWorldPos.z);
 
     m_previouslyVisible.swap(m_visible);
     for (auto chunkIndex : m_previouslyVisible)
@@ -187,7 +187,7 @@ void TerrainChunker::update()
 
 
 
-    auto forward = cro::Util::Matrix::getForwardVector(m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldTransform());
+    //auto forward = cro::Util::Matrix::getForwardVector(m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldTransform());
     //float camRot = glm::eulerAngles(m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation()).y;
 
     m_debugTexture.clear(cro::Colour::Magenta);
