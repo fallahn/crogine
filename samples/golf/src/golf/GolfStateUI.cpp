@@ -1960,7 +1960,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
-    if (personalBest && Social::getLeaderboardsEnabled())
+    if ((personalBest && Social::getLeaderboardsEnabled())
+        || m_sharedData.gameMode == GameMode::Tutorial)
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.8f });
@@ -1974,8 +1975,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
         entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
         entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
         entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-        //entity.getComponent<cro::Text>().setOutlineColour(LeaderboardTextDark);
-        //entity.getComponent<cro::Text>().setOutlineThickness(1.f);
         entity.getComponent<cro::Text>().setString(bestString);
         centreText(entity);
 
@@ -1993,7 +1992,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
             fw.getComponent<cro::Callback>().active = true;
         }
     }
-
     
 
     //create status icons for each connected client
