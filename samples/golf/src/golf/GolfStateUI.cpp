@@ -209,7 +209,7 @@ void GolfState::buildUI()
     //draws the background using the render texture
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
 
     auto* shader = &m_resources.shaders.get(ShaderID::Composite);
     entity.getComponent<cro::Drawable2D>().setShader(shader);

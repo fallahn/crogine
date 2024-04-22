@@ -162,6 +162,6 @@ void main()
     colour.rgb = (blurColour * maskAmount * 0.65) + colour.rgb;
 #endif
 
-    FRAG_OUT = colour;
+    FRAG_OUT = vec4(colour.rgb, 1.0);
     //FRAG_OUT = mix(colour, vec4(d,d,d,1.0), u_density / 10.0);
 })";
