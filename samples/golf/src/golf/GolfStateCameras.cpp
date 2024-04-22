@@ -752,10 +752,7 @@ void GolfState::toggleFreeCam()
         //reduce fade distance
         m_resolutionUpdate.targetFade = 0.2f;
 
-        //hide UI by bringing scene ent to front
-        auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
-        origin.z = -3.f;
-        m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
+        setUIHidden(true);
     }
     else
     {
@@ -769,9 +766,7 @@ void GolfState::toggleFreeCam()
         m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
 
         //unhide UI
-        auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
-        origin.z = 0.5f;
-        m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
+        setUIHidden(false);
 
 
         //and stroke indicator

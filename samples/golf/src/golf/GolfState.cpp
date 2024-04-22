@@ -1157,6 +1157,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Model>().setHidden(true); 
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                setUIHidden(true);
             }
             else if (data.data == CameraID::Player
                 && m_currentCamera == CameraID::Drone)
@@ -1168,6 +1169,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                setUIHidden(false);
             }
 
             setActiveCamera(data.data);

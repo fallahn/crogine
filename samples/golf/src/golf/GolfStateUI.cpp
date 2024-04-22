@@ -4686,6 +4686,23 @@ void GolfState::updateLeague()
     }
 }
 
+void GolfState::setUIHidden(bool hidden)
+{
+    if (hidden)
+    {
+        //hide UI by bringing scene ent to front
+        auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
+        origin.z = -3.f;
+        m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
+    }
+    else
+    {
+        auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
+        origin.z = 0.5f;
+        m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
+    }
+}
+
 void MinimapZoom::updateShader()
 {
     CRO_ASSERT(glm::length2(textureSize) != 0, "");
