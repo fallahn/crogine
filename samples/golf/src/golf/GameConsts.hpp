@@ -148,6 +148,8 @@ static constexpr std::int16_t TriggerDeadZone = cro::GameController::TriggerDead
 static constexpr glm::vec3 BallHairScale(0.23f);
 static constexpr glm::vec3 BallHairOffset(0.f, -0.29f, -0.008f);
 
+static constexpr float MinMusicVolume = 0.001f;
+
 class btVector3;
 glm::vec3 btToGlm(btVector3 v);
 btVector3 glmToBt(glm::vec3 v);
@@ -854,8 +856,21 @@ static inline void createMusicPlayer(cro::Scene& scene, SharedStateData& sharedD
                 cro::AudioMixer::setPrefadeVolume(vol, MixerChannel::UserMusic);
             }
 
+            //if the user turned the volume down, pause the playback (TODO this might be better reading messages?)
+            const float currVol = cro::AudioMixer::getVolume(MixerChannel::UserMusic);
+            const auto state = e.getComponent<cro::AudioEmitter>().getState();
 
-            if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+            if (state == cro::AudioEmitter::State::Playing
+                && currVol < MinMusicVolume)
+            {
+                e.getComponent<cro::AudioEmitter>().pause();
+            }
+            else if (state == cro::AudioEmitter::State::Paused
+                && currVol > MinMusicVolume)
+            {
+                e.getComponent<cro::AudioEmitter>().play();
+            }
+            else if (state == cro::AudioEmitter::State::Stopped)
             {
                 e.getComponent<cro::Callback>().active = false;
                 scene.destroyEntity(e);
