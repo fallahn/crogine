@@ -1367,8 +1367,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //full screen label
     createLabel(glm::vec2(12.f, 51.f), "Full Screen");
 
+    //vsync label
+    createLabel(glm::vec2(12.f, 35.f), "Enable VSync");
+
     //beacon label
-    auto beaconLabel = createLabel(glm::vec2(12.f, 35.f), "Flag Beacon");
+    auto beaconLabel = createLabel(glm::vec2(12.f, 19.f), "Flag Beacon");
     beaconLabel.addComponent<cro::Callback>().active = true;
     beaconLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1574,7 +1577,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
 
     auto helpEnt = m_scene.createEntity();
-    helpEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, -4.f, 0.1f });
+    helpEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, -9.f, 0.1f });
     helpEnt.addComponent<cro::Drawable2D>();
     helpEnt.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
     helpEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1589,7 +1592,19 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             e.getComponent<cro::AudioEmitter>().play();
             e.getComponent<cro::Callback>().active = true;
 
-            helpEnt.getComponent<cro::Text>().setString(e.getLabel());
+            const auto& str = e.getLabel();
+
+            auto pos = helpEnt.getComponent<cro::Transform>().getPosition();
+            if (str.find('\n') != std::string::npos)
+            {
+                pos.y = -9.f;
+            }
+            else
+            {
+                pos.y = -15.f;
+            }
+            helpEnt.getComponent<cro::Transform>().setPosition(pos);
+            helpEnt.getComponent<cro::Text>().setString(str);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
     auto unselectedID = uiSystem.addCallback([helpEnt](cro::Entity e) mutable
@@ -1897,7 +1912,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //full screen check box
     entity = createHighlight(glm::vec2(81.f, 42.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVFullScreen);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVTreeL, AVBeacon);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVTreeL, AVVSync);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVTreeR, AVVertSnap);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -1931,9 +1946,47 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //vsync checkbox
+    entity = createHighlight(glm::vec2(81.f, 26.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AVVSync);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVShadowL, AVBeacon);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVShadowR, AVFullScreen);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    bool vsync = cro::App::getWindow().getVsyncEnabled();
+                    cro::App::getWindow().setVsyncEnabled(!vsync);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+            });
+
+    //vsync checkbox centre
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 28.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = cro::App::getWindow().getVsyncEnabled() ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //beacon check box
-    entity = createHighlight(glm::vec2(81.f, 26.f));
+    entity = createHighlight(glm::vec2(81.f, 10.f));
     entity.setLabel("Displays a beacon on the course at the pin position.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVBeacon);
 #ifdef _WIN32
@@ -1946,7 +1999,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     {
         entity.getComponent<cro::UIInput>().setNextIndex(AVBeaconL, WindowCredits);
     }
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVShadowR, AVFullScreen);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdR, AVVSync);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -1961,7 +2014,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //beacon checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 28.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 12.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -1982,7 +2035,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //beacon colour preview
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(99.f, 28.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(99.f, 12.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().setVertexData(
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), cro::Colour::Magenta),
@@ -2001,7 +2054,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     glUseProgram(shaderID);
     glUniform1f(uniformID, m_sharedData.beaconColour);
 
-    entity = createHighlight(glm::vec2(113.f, 26.f));
+    entity = createHighlight(glm::vec2(113.f, 10.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVBeaconL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVBeaconR, WindowCredits);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVBeacon, AVFullScreen);
@@ -2018,9 +2071,9 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
-    entity = createHighlight(glm::vec2(182.f, 26.f));
+    entity = createHighlight(glm::vec2(182.f, 10.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVBeaconR);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVShadowL, TabController);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdL, TabController);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVBeaconL, AVResolutionR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, shaderID, uniformID](cro::Entity e, cro::ButtonEvent evt)
@@ -2036,7 +2089,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     //colour slider
-    auto colourPos = glm::vec2(131.f, 32.f);
+    auto colourPos = glm::vec2(131.f, 16.f);
     auto colourSlider = createSlider(colourPos);
     auto sliderData = SliderData(colourPos, 44.f);
     sliderData.onActivate =
@@ -2396,12 +2449,12 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity = createHighlight(glm::vec2(286.f, 26.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVShadowL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVShadowR, AVCrowdL);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVBeaconR, AVTreeL);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVVSync, AVTreeL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChanged;
 
     entity = createHighlight(glm::vec2(355.f, 26.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVShadowR);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVBeacon, AVCrowdR);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVVSync, AVCrowdR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVShadowL, AVTreeR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChanged;
 
@@ -2446,11 +2499,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 #ifdef _WIN32
     if (!Social::isSteamdeck())
     {
-        entity.getComponent<cro::UIInput>().setPrevIndex(AVTextToSpeech, AVShadowL);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVBeaconR, AVShadowL);
     }
     else
 #endif
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdR, AVShadowL);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVBeaconR, AVShadowL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = crowdChanged;
 
     entity = createHighlight(glm::vec2(355.f, 10.f));
@@ -2459,11 +2512,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 #ifdef _WIN32
     if (!Social::isSteamdeck())
     {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVTextToSpeech, WindowClose);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVBeacon, WindowClose);
     }
     else
 #endif
-    entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdL, WindowClose);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVBeacon, WindowClose);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdL, AVShadowR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = crowdChanged;
 
@@ -2471,7 +2524,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     if (!Social::isSteamdeck())
     {
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 12.f, 11.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 12.f, -5.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("use_tts");
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
