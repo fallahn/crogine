@@ -5206,6 +5206,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     auto isCPU = m_sharedData.connectionData[player.client].playerData[player.player].isCPU;
 
+    m_uiScene.getSystem<MiniBallSystem>()->setActivePlayer(player.client, player.player);
     m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player, isCPU && m_sharedData.fastCPU);
     m_avatars[player.client][player.player].ballModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
