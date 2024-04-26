@@ -835,7 +835,7 @@ void GolfState::buildUI()
     const auto BarWidth = bounds.width - 8.f;
     const auto BarHeight = bounds.height;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.1f)); //TODO expell the magic number!!
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.3f)); //TODO expell the magic number!!
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -851,7 +851,7 @@ void GolfState::buildUI()
 
     //hook/slice indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.25f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.55f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -860,7 +860,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&, BarCentre](cro::Entity e, float)
     {
-        glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 8.f, 0.25f);
+        glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 8.f, 0.55f);
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

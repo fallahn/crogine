@@ -116,10 +116,10 @@ namespace
     const std::array<cro::String, MixerChannel::Count> MixerLabels =
     {
         "Menu Music",
-        "Effects Volume",
-        "Menu Volume",
-        "Voice Volume",
-        "Vehicle Volume",
+        "Effects",
+        "Menu Sounds",
+        "Voice",
+        "Vehicles",
         "Environment",
         "Game Music"
     };
@@ -1313,7 +1313,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
 
     //audio label
-    auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 101.f, 156.f), "Music Volume");
+    auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 101.f, 156.f), MixerLabels[mixerChannelIndex]);
     centreText(audioLabel);
     audioLabel.addComponent<cro::Callback>().active = true;
     audioLabel.getComponent<cro::Callback>().function =

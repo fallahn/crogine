@@ -6254,7 +6254,8 @@ void GolfState::startFlyBy()
                 data.speeds[2] *= 1.f / SpeedMultiplier;
 
                 //play the transition music
-                if (m_sharedData.gameMode == GameMode::Tutorial)
+                if (m_sharedData.gameMode == GameMode::Tutorial
+                    && cro::AudioMixer::getVolume(MixerChannel::UserMusic) < 0.01f)
                 {
                     m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
                 }
@@ -6277,7 +6278,11 @@ void GolfState::startFlyBy()
                 {
                     showScoreboard(true);
                     m_newHole = true;
-                    m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
+
+                    if (cro::AudioMixer::getVolume(MixerChannel::UserMusic) < 0.01f)
+                    {
+                        m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
+                    }
 
                     //delayed ent just to show the score board for a while
                     auto de = m_gameScene.createEntity();
