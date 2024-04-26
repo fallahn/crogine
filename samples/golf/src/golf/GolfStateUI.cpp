@@ -4156,6 +4156,59 @@ void GolfState::refreshUI()
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
+void GolfState::catAuth()
+{
+    cro::SpriteSheet sheet;
+    if (sheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures))
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -380.f, 120.f, 0.1f });
+        entity.getComponent<cro::Transform>().setScale(m_viewScale);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = sheet.getSprite("rockit");
+        entity.addComponent<cro::SpriteAnimation>().play(0);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 2.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                const glm::vec2 Speed = glm::vec2(420.f * m_viewScale.x, 0.f);
+                auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+                switch (state)
+                {
+                case 0:
+                    e.getComponent<cro::Transform>().move(Speed * dt);
+                    if (e.getComponent<cro::Transform>().getPosition().x > (static_cast<float>(cro::App::getWindow().getSize().x)/* / m_viewScale.x*/) * 2.f)
+                    {
+                        state = 1;
+                        e.getComponent<cro::Transform>().setScale({ -m_viewScale.x, m_viewScale.y });
+                        e.getComponent<cro::Transform>().move({ 0.f, 120.f * m_viewScale.y });
+                        e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                    }
+                    break;
+                case 1:
+                    currTime -= dt;
+                    if (currTime < 0)
+                    {
+                        state = 2;
+                    }
+                    break;
+                case 2:
+                    e.getComponent<cro::Transform>().move(-Speed * dt);
+                    if (e.getComponent<cro::Transform>().getPosition().x < 0)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                    }
+                    break;
+                default:
+                    m_uiScene.destroyEntity(e);
+                    break;
+                }
+            };
+    }
+}
+
 void GolfState::buildTrophyScene()
 {
     auto updateCam = [&](cro::Camera& cam)

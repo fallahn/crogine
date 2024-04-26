@@ -3612,6 +3612,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::CAT:
+            catAuth();
+            break;
         case PacketID::DronePosition:
         if (!m_sharedData.hosting)
         {
