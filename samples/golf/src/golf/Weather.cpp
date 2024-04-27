@@ -220,7 +220,7 @@ void GolfState::createWeather(std::int32_t weatherType)
     else
     {
         m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment);
-        weatherColour = cro::Colour(0.86f, 0.87f, 0.873f, 0.6f);
+        weatherColour = cro::Colour(0.8f, 0.81f, 0.873f, 0.6f);
         //blendMode = cro::Material::BlendMode::Custom;
 
         //create audio entity

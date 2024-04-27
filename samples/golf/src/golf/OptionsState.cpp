@@ -1300,17 +1300,17 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     parent.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
 
     auto createLabel = [&](glm::vec2 pos, const std::string& str)
-    {
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, TextOffset));
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setString(str);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        {
+            auto entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, TextOffset));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
+            entity.getComponent<cro::Text>().setString(str);
+            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-        return entity;
-    };
+            return entity;
+        };
 
     //audio label
     auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 101.f, 156.f), MixerLabels[mixerChannelIndex]);
@@ -1318,18 +1318,18 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     audioLabel.addComponent<cro::Callback>().active = true;
     audioLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::CustomMusic);
-    };
+        {
+            updateToolTip(e, ToolTipID::CustomMusic);
+        };
 
     //antialiasing label
     auto aliasLabel = createLabel(glm::vec2(12.f, 131.f), "Antialiasing");
     aliasLabel.addComponent<cro::Callback>().active = true;
     aliasLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::AA);
-    };
+        {
+            updateToolTip(e, ToolTipID::AA);
+        };
 
     auto aaLabel = createLabel(glm::vec2(136.f, 131.f), AAStrings[AAIndexMap[m_sharedData.multisamples]]);
     centreText(aaLabel);
@@ -1351,18 +1351,18 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     pixelLabel.addComponent<cro::Callback>().active = true;
     pixelLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::Pixel);
-    };
+        {
+            updateToolTip(e, ToolTipID::Pixel);
+        };
 
     //vertex snap label
     auto vertLabel = createLabel(glm::vec2(12.f, 67.f), "Vertex Snap      (requires restart)");
     vertLabel.addComponent<cro::Callback>().active = true;
     vertLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::VertSnap);
-    };
+        {
+            updateToolTip(e, ToolTipID::VertSnap);
+        };
 
     //full screen label
     createLabel(glm::vec2(12.f, 51.f), "Full Screen");
@@ -1375,21 +1375,21 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     beaconLabel.addComponent<cro::Callback>().active = true;
     beaconLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::Beacon);
-    };
+        {
+            updateToolTip(e, ToolTipID::Beacon);
+        };
 
     //ball trail label
     createLabel({ 204.f, 131.f }, "Enable       Ball Trail");
-    
+
     //putting assist
     auto puttingEnt = createLabel({ 204.f, 115.f }, "Enable       Putting Assist");
     puttingEnt.addComponent<cro::Callback>().active = true;
     puttingEnt.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::PuttingPower);
-    };
+        {
+            updateToolTip(e, ToolTipID::PuttingPower);
+        };
 
 
     //post process label
@@ -1400,9 +1400,9 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     measureLabel.addComponent<cro::Callback>().active = true;
     measureLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::Units);
-    };
+        {
+            updateToolTip(e, ToolTipID::Units);
+        };
 
     //grid transparency
     createLabel({ 204.f, 67.f }, "Grid Amount");
@@ -1410,16 +1410,16 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //tree quality
     auto treeLabel = createLabel({ 204.f, 51.f }, "Tree Quality");
     treeLabel.addComponent<cro::Callback>().active = true;
-    treeLabel.getComponent<cro::Callback>().function = 
+    treeLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::NeedsRestart);
-    };
+        {
+            updateToolTip(e, ToolTipID::NeedsRestart);
+        };
 
 
     //shadow quality
     createLabel({ 204.f, 35.f }, "Shadow Quality");
- 
+
     //crowd density
     /*auto crowdLabel =*/ createLabel({ 204, 19.f }, "Crowd Density");
     //crowdLabel.addComponent<cro::Callback>().active = true;
@@ -1431,30 +1431,30 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     auto createSlider = [&](glm::vec2 position)
-    {
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(position);
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slider");
-        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), /*std::floor*/(bounds.height / 2.f), -TextOffset });
-
-
-        auto userData = SliderData(position);
-        userData.onActivate = [](float distance)
         {
-            float vol = distance;
-            cro::AudioMixer::setVolume(vol, mixerChannelIndex);
+            auto entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(position);
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("slider");
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), /*std::floor*/(bounds.height / 2.f), -TextOffset });
+
+
+            auto userData = SliderData(position);
+            userData.onActivate = [](float distance)
+                {
+                    float vol = distance;
+                    cro::AudioMixer::setVolume(vol, mixerChannelIndex);
+                };
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<SliderData>(userData);
+            entity.getComponent<cro::Callback>().function = SliderCallback();
+
+            parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            m_sliders.push_back(entity);
+            return entity;
         };
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<SliderData>(userData);
-        entity.getComponent<cro::Callback>().function = SliderCallback();
-
-        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-        m_sliders.push_back(entity);
-        return entity;
-    };
 
     //volume slider
     auto volSlider = createSlider(glm::vec2(192.f, 153.f));
@@ -1463,33 +1463,33 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     tipEnt.addComponent<cro::Callback>().active = true;
     tipEnt.getComponent<cro::Callback>().function =
         [&, volSlider](cro::Entity e, float)
-    {
-        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
-        auto bounds = volSlider.getComponent<cro::Drawable2D>().getLocalBounds();
-        bounds = volSlider.getComponent<cro::Transform>().getWorldTransform() * bounds;
-
-        if (bounds.contains(mousePos))
         {
-            mousePos.x = std::floor(mousePos.x);
-            mousePos.y = std::floor(mousePos.y);
-            mousePos.z = ToolTipDepth / 2.f;
-            
-            if (m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().getScale().x == 0)
+            auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+            auto bounds = volSlider.getComponent<cro::Drawable2D>().getLocalBounds();
+            bounds = volSlider.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+            if (bounds.contains(mousePos))
             {
-                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                mousePos.x = std::floor(mousePos.x);
+                mousePos.y = std::floor(mousePos.y);
+                mousePos.z = ToolTipDepth / 2.f;
+
+                if (m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().getScale().x == 0)
+                {
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+
+                m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+                m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(m_viewScale);
+
+                float vol = cro::AudioMixer::getVolume(mixerChannelIndex);
+                m_tooltips[ToolTipID::Volume].getComponent<cro::Text>().setString("Vol: " + std::to_string(static_cast<std::int32_t>(vol * 100.f)));
             }
-
-            m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
-            m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(m_viewScale);
-
-            float vol = cro::AudioMixer::getVolume(mixerChannelIndex);
-            m_tooltips[ToolTipID::Volume].getComponent<cro::Text>().setString("Vol: " + std::to_string(static_cast<std::int32_t>(vol * 100.f)));
-        }
-        else
-        {
-            m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        }
-    };
+            else
+            {
+                m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
     volSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
 
 
@@ -1498,65 +1498,65 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto fovPos = glm::vec2(99.f, 112.f);
     auto fovSlider = createSlider(fovPos);
     auto userData = SliderData(fovPos, 76.f);
-    userData.onActivate = 
+    userData.onActivate =
         [&, fovLabel](float distance) mutable
-    {
-        float fov = MinFOV + ((MaxFOV - MinFOV) * distance);
+        {
+            float fov = MinFOV + ((MaxFOV - MinFOV) * distance);
 
-        m_sharedData.fov = fov;
+            m_sharedData.fov = fov;
 
-        //raise a window resize message to trigger callbacks
-        auto size = cro::App::getWindow().getSize();
-        auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
-        msg->data0 = size.x;
-        msg->data1 = size.y;
-        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+            //raise a window resize message to trigger callbacks
+            auto size = cro::App::getWindow().getSize();
+            auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+            msg->data0 = size.x;
+            msg->data1 = size.y;
+            msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
 
-        fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
-    };
+            fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+        };
 
     fovSlider.getComponent<cro::Callback>().setUserData<SliderData>(userData);
     fovSlider.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
-        float amount = (m_sharedData.fov - MinFOV) / (MaxFOV - MinFOV);
+        {
+            const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
+            float amount = (m_sharedData.fov - MinFOV) / (MaxFOV - MinFOV);
 
-        e.getComponent<cro::Transform>().setPosition({ pos.x + (width * amount), pos.y });
-    };
+            e.getComponent<cro::Transform>().setPosition({ pos.x + (width * amount), pos.y });
+        };
 
     tipEnt = m_scene.createEntity();
     tipEnt.addComponent<cro::Transform>();
     tipEnt.addComponent<cro::Callback>().active = true;
     tipEnt.getComponent<cro::Callback>().function =
         [&, fovSlider](cro::Entity, float)
-    {
-        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
-        auto bounds = fovSlider.getComponent<cro::Drawable2D>().getLocalBounds();
-        bounds = fovSlider.getComponent<cro::Transform>().getWorldTransform() * bounds;
-
-        if (bounds.contains(mousePos))
         {
-            mousePos.x = std::floor(mousePos.x);
-            mousePos.y = std::floor(mousePos.y);
-            mousePos.z = ToolTipDepth;
+            auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+            auto bounds = fovSlider.getComponent<cro::Drawable2D>().getLocalBounds();
+            bounds = fovSlider.getComponent<cro::Transform>().getWorldTransform() * bounds;
 
-            if (m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().getScale().x == 0)
+            if (bounds.contains(mousePos))
             {
-                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                mousePos.x = std::floor(mousePos.x);
+                mousePos.y = std::floor(mousePos.y);
+                mousePos.z = ToolTipDepth;
+
+                if (m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().getScale().x == 0)
+                {
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+
+                m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
+                m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(m_viewScale);
+
+                float fov = m_sharedData.fov;
+                m_tooltips[ToolTipID::FOV].getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(fov)));
             }
-
-            m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
-            m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(m_viewScale);
-
-            float fov = m_sharedData.fov;
-            m_tooltips[ToolTipID::FOV].getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(fov)));
-        }
-        else
-        {
-            m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        }
-    };
+            else
+            {
+                m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
     fovSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
 
     //grid transparency
@@ -1565,16 +1565,16 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto ud = SliderData(transPos, 91.f);
     ud.onActivate =
         [&](float distance)
-    {
-        m_sharedData.gridTransparency = distance;
-    };
+        {
+            m_sharedData.gridTransparency = distance;
+        };
     transSlider.getComponent<cro::Callback>().setUserData<SliderData>(ud);
     transSlider.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
-        e.getComponent<cro::Transform>().setPosition({ pos.x + (width * m_sharedData.gridTransparency), pos.y });
-    };
+        {
+            const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
+            e.getComponent<cro::Transform>().setPosition({ pos.x + (width * m_sharedData.gridTransparency), pos.y });
+        };
 
     auto helpEnt = m_scene.createEntity();
     helpEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, -9.f, 0.1f });
@@ -1586,7 +1586,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
-    auto selectedID = uiSystem.addCallback([&,helpEnt](cro::Entity e) mutable
+    auto selectedID = uiSystem.addCallback([&, helpEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
@@ -1609,33 +1609,33 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
     auto unselectedID = uiSystem.addCallback([helpEnt](cro::Entity e) mutable
         {
-            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); 
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
 
             helpEnt.getComponent<cro::Text>().setString(" ");
         });
 
     auto createHighlight = [&](glm::vec2 pos)
-    {
-        auto ent = m_scene.createEntity();
-        ent.addComponent<cro::Transform>().setPosition(pos);
-        ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        ent.addComponent<cro::Drawable2D>();
-        ent.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
-        ent.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        ent.addComponent<cro::UIInput>().setGroup(MenuID::Video);
-        auto bounds = ent.getComponent<cro::Sprite>().getTextureBounds();
-        ent.getComponent<cro::UIInput>().area = bounds;
-        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+        {
+            auto ent = m_scene.createEntity();
+            ent.addComponent<cro::Transform>().setPosition(pos);
+            ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            ent.addComponent<cro::Drawable2D>();
+            ent.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
+            ent.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            ent.addComponent<cro::UIInput>().setGroup(MenuID::Video);
+            auto bounds = ent.getComponent<cro::Sprite>().getTextureBounds();
+            ent.getComponent<cro::UIInput>().area = bounds;
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
-        ent.addComponent<cro::Callback>().function = HighlightAnimationCallback();
-        ent.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -HighlightOffset });
-        ent.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
+            ent.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+            ent.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -HighlightOffset });
+            ent.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
 
-        parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+            parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
-        return ent;
-    };
+            return ent;
+        };
 
     //channel select down
     auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 156.f, 147.f));
@@ -1643,7 +1643,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::UIInput>().setNextIndex(AVMixerRight, AVAAL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeUp, TabController);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&,audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        [&, audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
@@ -1660,7 +1660,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::UIInput>().setNextIndex(AVVolumeDown, AVAAR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVMixerLeft, TabController);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&,audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        [&, audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
@@ -1700,7 +1700,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                     auto currIndex = AAIndexMap[m_sharedData.multisamples];
                     currIndex = (currIndex + (AASamples.size() - 1)) % AASamples.size();
                     //m_sharedData.multisamples = AASamples[currIndex];
-                    
+
                     aaLabel.getComponent<cro::Text>().setString(AAStrings[currIndex]);
                     centreText(aaLabel);
 
@@ -1723,7 +1723,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     auto currIndex = AAIndexMap[m_sharedData.multisamples];
                     currIndex = (currIndex + 1) % AASamples.size();
-                   // m_sharedData.multisamples = AASamples[currIndex];
+                    // m_sharedData.multisamples = AASamples[currIndex];
 
                     aaLabel.getComponent<cro::Text>().setString(AAStrings[currIndex]);
                     centreText(aaLabel);
@@ -1743,28 +1743,28 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, fovLabel](cro::Entity e, cro::ButtonEvent evt) mutable
-        {
-            if (activated(evt))
             {
-                auto fov = m_sharedData.fov;
-                fov = std::max(MinFOV, fov - 5.f);
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                if (fov < m_sharedData.fov)
+                if (activated(evt))
                 {
-                    m_sharedData.fov = fov;
+                    auto fov = m_sharedData.fov;
+                    fov = std::max(MinFOV, fov - 5.f);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                    //raise a window resize message to trigger callbacks
-                    auto size = cro::App::getWindow().getSize();
-                    auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
-                    msg->data0 = size.x;
-                    msg->data1 = size.y;
-                    msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+                    if (fov < m_sharedData.fov)
+                    {
+                        m_sharedData.fov = fov;
 
-                    fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+                        //raise a window resize message to trigger callbacks
+                        auto size = cro::App::getWindow().getSize();
+                        auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+                        msg->data0 = size.x;
+                        msg->data1 = size.y;
+                        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+
+                        fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+                    }
                 }
-            }
-        });
+            });
 
     //FOV up
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 106.f));
@@ -1774,28 +1774,28 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, fovLabel](cro::Entity e, cro::ButtonEvent evt) mutable
-        {
-            if (activated(evt))
             {
-                auto fov = m_sharedData.fov;
-                fov = std::min(MaxFOV, fov + 5.f);
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-
-                if (fov > m_sharedData.fov)
+                if (activated(evt))
                 {
-                    m_sharedData.fov = fov;
+                    auto fov = m_sharedData.fov;
+                    fov = std::min(MaxFOV, fov + 5.f);
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
-                    //raise a window resize message to trigger callbacks
-                    auto size = cro::App::getWindow().getSize();
-                    auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
-                    msg->data0 = size.x;
-                    msg->data1 = size.y;
-                    msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+                    if (fov > m_sharedData.fov)
+                    {
+                        m_sharedData.fov = fov;
 
-                    fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+                        //raise a window resize message to trigger callbacks
+                        auto size = cro::App::getWindow().getSize();
+                        auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+                        msg->data0 = size.x;
+                        msg->data1 = size.y;
+                        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+
+                        fovLabel.getComponent<cro::Text>().setString("FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+                    }
                 }
-            }
-        });
+            });
 
 
     //res down
@@ -1806,15 +1806,15 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, resLabel](cro::Entity e, cro::ButtonEvent evt) mutable
-        {
-            if (activated(evt))
             {
-                m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + (m_sharedData.resolutions.size() - 1)) % m_sharedData.resolutions.size();
-                resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
-                centreText(resLabel);
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-            }
-        });
+                if (activated(evt))
+                {
+                    m_videoSettings.resolutionIndex = (m_videoSettings.resolutionIndex + (m_sharedData.resolutions.size() - 1)) % m_sharedData.resolutions.size();
+                    resLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+                    centreText(resLabel);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
 
     //res up
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 90.f));
@@ -1866,10 +1866,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        float scale = m_sharedData.pixelScale ? 1.f : 0.f;
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-    };
+        {
+            float scale = m_sharedData.pixelScale ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //vertex snap checkbox
@@ -1901,10 +1901,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        float scale = m_sharedData.vertexSnap ? 1.f : 0.f;
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-    };
+        {
+            float scale = m_sharedData.vertexSnap ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -1939,15 +1939,19 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
-    {
-        float scale = m_videoSettings.fullScreen ? 1.f : 0.f;
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-    };
+        {
+            float scale = m_videoSettings.fullScreen ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //vsync checkbox
     entity = createHighlight(glm::vec2(81.f, 26.f));
+    if (Social::isSteamdeck())
+    {
+        entity.setLabel("Requires Disable Frame Limit set on Steam Deck.\nHigher frame rates may reduce battery life.");
+    }
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVSync);
     entity.getComponent<cro::UIInput>().setNextIndex(AVShadowL, AVBeacon);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVShadowR, AVFullScreen);

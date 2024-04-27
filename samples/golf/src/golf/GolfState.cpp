@@ -6255,7 +6255,8 @@ void GolfState::startFlyBy()
 
                 //play the transition music
                 if (m_sharedData.gameMode == GameMode::Tutorial
-                    && cro::AudioMixer::getVolume(MixerChannel::UserMusic) < 0.01f)
+                    && cro::AudioMixer::getVolume(MixerChannel::UserMusic) < 0.01f
+                    && cro::AudioMixer::getVolume(MixerChannel::Music) != 0)
                 {
                     m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
                 }
@@ -6279,7 +6280,8 @@ void GolfState::startFlyBy()
                     showScoreboard(true);
                     m_newHole = true;
 
-                    if (cro::AudioMixer::getVolume(MixerChannel::UserMusic) < 0.01f)
+                    if (cro::AudioMixer::getVolume(MixerChannel::UserMusic) < 0.01f
+                        && cro::AudioMixer::getVolume(MixerChannel::Music) != 0)
                     {
                         m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
                     }
