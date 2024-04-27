@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -178,6 +178,7 @@ void RenderSystem2D::process(float)
 
         const auto& tx = entity.getComponent<Transform>();
         auto pos = tx.getWorldPosition();
+        auto origin = tx.getOrigin();
 
         //set sort criteria based on position
         //faster to do a sort on int than float
@@ -185,11 +186,11 @@ void RenderSystem2D::process(float)
         {
             //multiplying by 100 preserves two places of precision
             //which is enough to sort on
-            drawable.m_sortCriteria = static_cast<std::int32_t>(-pos.y * 100.f);
+            drawable.m_sortCriteria = static_cast<std::int32_t>(-(pos.y - origin.y) * 100.f);
         }
         else
         {
-            drawable.m_sortCriteria = static_cast<std::int32_t>(pos.z * 100.f);
+            drawable.m_sortCriteria = static_cast<std::int32_t>((pos.z - origin.z) * 100.f);
         }
 
         //check if the cropping area is smaller than

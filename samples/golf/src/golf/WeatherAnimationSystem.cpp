@@ -118,5 +118,5 @@ void WeatherAnimationSystem::setMaterialData(const cro::Shader& shader, cro::Col
 void WeatherAnimationSystem::updateShader()
 {
     glUseProgram(m_shaderID);
-    glUniform4f(m_uniformID, m_colour.getRed(), m_colour.getGreen(), m_colour.getBlue(), m_opacity);
+    glUniform4f(m_uniformID, m_colour.getRed(), m_colour.getGreen(), m_colour.getBlue(), m_colour.getAlpha() * m_opacity);
 }

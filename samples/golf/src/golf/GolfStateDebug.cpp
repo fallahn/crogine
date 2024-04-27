@@ -434,6 +434,22 @@ void GolfState::registerDebugCommands()
         });
 
 
+    registerCommand("cl_drawhud", [&](const std::string& param)
+        {
+            if (param == "1" || param == "true")
+            {
+                setUIHidden(false);
+            }
+            else if (param == "0" || param == "false")
+            {
+                setUIHidden(true);
+            }
+            else
+            {
+                cro::Console::print("Usage: cl_drawhud <0|1>");
+            }
+        });
+
     //nasssssty staticses
     static bool showKickWindow = false;
     if (m_sharedData.hosting)

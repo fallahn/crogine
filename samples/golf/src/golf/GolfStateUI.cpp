@@ -209,7 +209,7 @@ void GolfState::buildUI()
     //draws the background using the render texture
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
 
     auto* shader = &m_resources.shaders.get(ShaderID::Composite);
     entity.getComponent<cro::Drawable2D>().setShader(shader);
@@ -835,7 +835,7 @@ void GolfState::buildUI()
     const auto BarWidth = bounds.width - 8.f;
     const auto BarHeight = bounds.height;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.1f)); //TODO expell the magic number!!
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.3f)); //TODO expell the magic number!!
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -851,7 +851,7 @@ void GolfState::buildUI()
 
     //hook/slice indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.25f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.55f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -860,7 +860,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&, BarCentre](cro::Entity e, float)
     {
-        glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 8.f, 0.25f);
+        glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 8.f, 0.55f);
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1960,7 +1960,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
-    if (personalBest && Social::getLeaderboardsEnabled())
+    if ((personalBest && Social::getLeaderboardsEnabled())
+        || m_sharedData.gameMode == GameMode::Tutorial)
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.8f });
@@ -1974,8 +1975,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
         entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
         entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
         entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-        //entity.getComponent<cro::Text>().setOutlineColour(LeaderboardTextDark);
-        //entity.getComponent<cro::Text>().setOutlineThickness(1.f);
         entity.getComponent<cro::Text>().setString(bestString);
         centreText(entity);
 
@@ -1993,7 +1992,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
             fw.getComponent<cro::Callback>().active = true;
         }
     }
-
     
 
     //create status icons for each connected client
@@ -4158,6 +4156,59 @@ void GolfState::refreshUI()
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
+void GolfState::catAuth()
+{
+    cro::SpriteSheet sheet;
+    if (sheet.loadFromFile("assets/golf/sprites/rockit.spt", m_resources.textures))
+    {
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -380.f, 120.f, 0.1f });
+        entity.getComponent<cro::Transform>().setScale(m_viewScale);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = sheet.getSprite("rockit");
+        entity.addComponent<cro::SpriteAnimation>().play(0);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 2.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                const glm::vec2 Speed = glm::vec2(420.f * m_viewScale.x, 0.f);
+                auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+                switch (state)
+                {
+                case 0:
+                    e.getComponent<cro::Transform>().move(Speed * dt);
+                    if (e.getComponent<cro::Transform>().getPosition().x > (static_cast<float>(cro::App::getWindow().getSize().x)/* / m_viewScale.x*/) * 2.f)
+                    {
+                        state = 1;
+                        e.getComponent<cro::Transform>().setScale({ -m_viewScale.x, m_viewScale.y });
+                        e.getComponent<cro::Transform>().move({ 0.f, 120.f * m_viewScale.y });
+                        e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                    }
+                    break;
+                case 1:
+                    currTime -= dt;
+                    if (currTime < 0)
+                    {
+                        state = 2;
+                    }
+                    break;
+                case 2:
+                    e.getComponent<cro::Transform>().move(-Speed * dt);
+                    if (e.getComponent<cro::Transform>().getPosition().x < 0)
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                    }
+                    break;
+                default:
+                    m_uiScene.destroyEntity(e);
+                    break;
+                }
+            };
+    }
+}
+
 void GolfState::buildTrophyScene()
 {
     auto updateCam = [&](cro::Camera& cam)
@@ -4685,6 +4736,23 @@ void GolfState::updateLeague()
                 Achievements::awardAchievement(AchievementStrings[AchievementID::AllTime]);
             }
         }
+    }
+}
+
+void GolfState::setUIHidden(bool hidden)
+{
+    if (hidden)
+    {
+        //hide UI by bringing scene ent to front
+        auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
+        origin.z = -3.f;
+        m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
+    }
+    else
+    {
+        auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
+        origin.z = 0.5f;
+        m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
     }
 }
 

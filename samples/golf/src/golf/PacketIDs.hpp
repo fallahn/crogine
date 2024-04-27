@@ -31,6 +31,8 @@ source distribution.
 
 #include "ScoreType.hpp"
 
+#include <crogine/core/String.hpp>
+
 #include <cstdint>
 #include <string>
 #include <array>
@@ -93,6 +95,12 @@ struct TextMessage final
     static constexpr std::size_t MaxBytes = 8192; 
     std::array<char, MaxBytes + 1> messageData = {};
     TextMessage() { std::fill(messageData.begin(), messageData.end(), 0); }
+
+    cro::String getString() const
+    {
+        //we have to manually truncate this else we get a lot of white space
+        return cro::String::fromUtf8(messageData.begin(), std::find(messageData.begin(), messageData.end(), 0));
+    }
 };
 
 namespace PacketID
@@ -138,6 +146,7 @@ namespace PacketID
         WarnTime, //< uint8 warning time for AFK in seconds
         WeatherChange, //< 0 off 1 on uint8
         Poke, //< uint8 0 - only sent to specific client
+        CAT,
 
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -485,6 +485,7 @@ private:
     SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();
+    void catAuth();
     glm::vec3 findTargetPos(glm::vec3 playerPos) const; //decides if we should be using the sub-target (if it exists)
 
     //hack to allow the profile update to be const.
@@ -594,6 +595,7 @@ private:
     std::vector<StatBoardEntry> m_statBoardScores;
 
     void updateLeague();
+    void setUIHidden(bool hidden);
 
     struct GamepadNotify final
     {

@@ -86,7 +86,13 @@ void GolfState::updateHoleScore(std::uint16_t data)
 
 void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestString)
 {
-    if (m_sharedData.scoreType == ScoreType::Stroke
+    if (m_sharedData.gameMode == GameMode::Tutorial)
+    {
+        bestString = "Tutorial Complete";
+        return;
+    }
+
+    else if (m_sharedData.scoreType == ScoreType::Stroke
         && Social::getLeaderboardsEnabled())
     {
         const auto& connectionData = m_sharedData.connectionData[m_sharedData.clientConnection.connectionID];
@@ -129,8 +135,8 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
             }
         }
     }
-    else
-    {
-        cro::Logger::log("LEADERBOARD did not insert score: Score Type is not Stroke.\n", cro::Logger::Type::Info, cro::Logger::Output::File);
-    }
+    //else
+    //{
+    //    cro::Logger::log("LEADERBOARD did not insert score: Score Type is not Stroke.\n", cro::Logger::Type::Info, cro::Logger::Output::File);
+    //}
 }

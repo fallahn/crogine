@@ -165,7 +165,7 @@ R"(
     VARYING_IN vec2 v_heightData;
 
     const vec3 DotColour = vec3(1.0, 0.85, 0.6);
-    const vec3 BaseColour = vec3(0.627, 0.699, 0.94); //stored as HSV to save on a conversion
+    const vec3 BaseColour = vec3(0.627, 0.699, 0.58); //0.94 stored as HSV to save on a conversion
 
     #include HSV
 

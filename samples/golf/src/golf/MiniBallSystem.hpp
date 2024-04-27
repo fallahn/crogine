@@ -54,6 +54,9 @@ public:
 
     void process(float) override;
 
+    void setActivePlayer(std::uint8_t client, std::uint8_t player);
+
 private:
     const MinimapZoom& m_minimapZoom;
+    std::int32_t m_activePlayer;
 };

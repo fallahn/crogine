@@ -29,6 +29,7 @@ source distribution.
 
 #include "MiniBallSystem.hpp"
 #include "MinimapZoom.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -38,7 +39,8 @@ source distribution.
 
 MiniBallSystem::MiniBallSystem(cro::MessageBus& mb, const MinimapZoom& mz)
     : cro::System(mb, typeid(MiniBallSystem)),
-    m_minimapZoom(mz)
+    m_minimapZoom(mz),
+    m_activePlayer(0)
 {
     requireComponent<cro::Transform>();
     requireComponent<cro::Drawable2D>();
@@ -84,7 +86,7 @@ void MiniBallSystem::process(float dt)
             if (ball.parent.isValid())
             {
                 auto position = ball.parent.getComponent<cro::Transform>().getPosition();
-                entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.1f));
+                entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.1f * ball.playerID));
             }
         }
         else
@@ -92,7 +94,7 @@ void MiniBallSystem::process(float dt)
             if (ball.parent.isValid())
             {
                 auto position = ball.parent.getComponent<cro::Transform>().getPosition();
-                entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.1f));
+                entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.1f * ball.playerID));
 
                 //set scale based on height
                 static constexpr float MaxHeight = 40.f;
@@ -104,7 +106,30 @@ void MiniBallSystem::process(float dt)
                 auto miniBounds = ball.minimap.getComponent<cro::Transform>().getWorldTransform() * ball.minimap.getComponent<cro::Drawable2D>().getLocalBounds();
                 auto renderBounds = glm::inverse(entity.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
                 entity.getComponent<cro::Drawable2D>().setCroppingArea(renderBounds);
+
+
+                //fade out the ball if not the active player to make current player more prominent
+                auto& verts = entity.getComponent<cro::Drawable2D>().getVertexData();
+                float alpha = verts[0].colour.getAlpha();
+                if (ball.playerID == m_activePlayer)
+                {
+                    alpha = std::min(1.f, alpha + dt);
+                }
+                else
+                {
+                    alpha = std::max(0.4f, alpha - dt);
+                }
+                for (auto& v : verts)
+                {
+                    v.colour.setAlpha(alpha);
+                }
             }
         }
     }
+}
+
+void MiniBallSystem::setActivePlayer(std::uint8_t client, std::uint8_t player)
+{
+    //this MUST match how the ball playerID is calculated (and actually should be a single func somewhere)
+    m_activePlayer = ((client * ConstVal::MaxPlayers) + player) + 1;
 }

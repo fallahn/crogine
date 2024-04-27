@@ -420,8 +420,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     //so we'll always assume it's player 0
     auto outStr = m_sharedData.connectionData[msg.client].playerData[0].name;
 
-    //we have to manually truncate this else we get a lot of white space
-    auto msgText = cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
+    auto msgText = msg.getString();// cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
 
 #ifdef USE_GNS
     Social::filterString(msgText);

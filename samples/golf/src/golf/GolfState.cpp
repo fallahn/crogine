@@ -1157,6 +1157,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Model>().setHidden(true); 
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                setUIHidden(true);
             }
             else if (data.data == CameraID::Player
                 && m_currentCamera == CameraID::Drone)
@@ -1168,6 +1169,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                setUIHidden(false);
             }
 
             setActiveCamera(data.data);
@@ -3610,6 +3612,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::CAT:
+            catAuth();
+            break;
         case PacketID::DronePosition:
         if (!m_sharedData.hosting)
         {
@@ -5204,6 +5209,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     auto isCPU = m_sharedData.connectionData[player.client].playerData[player.player].isCPU;
 
+    m_uiScene.getSystem<MiniBallSystem>()->setActivePlayer(player.client, player.player);
     m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player, isCPU && m_sharedData.fastCPU);
     m_avatars[player.client][player.player].ballModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
@@ -6248,7 +6254,9 @@ void GolfState::startFlyBy()
                 data.speeds[2] *= 1.f / SpeedMultiplier;
 
                 //play the transition music
-                if (m_sharedData.gameMode == GameMode::Tutorial)
+                if (m_sharedData.gameMode == GameMode::Tutorial
+                    && cro::AudioMixer::getVolume(MixerChannel::UserMusic) < 0.01f
+                    && cro::AudioMixer::getVolume(MixerChannel::Music) != 0)
                 {
                     m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
                 }
@@ -6271,7 +6279,12 @@ void GolfState::startFlyBy()
                 {
                     showScoreboard(true);
                     m_newHole = true;
-                    m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
+
+                    if (cro::AudioMixer::getVolume(MixerChannel::UserMusic) < 0.01f
+                        && cro::AudioMixer::getVolume(MixerChannel::Music) != 0)
+                    {
+                        m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
+                    }
 
                     //delayed ent just to show the score board for a while
                     auto de = m_gameScene.createEntity();
