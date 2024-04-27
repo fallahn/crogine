@@ -1396,10 +1396,10 @@ void GolfGame::loadPreferences()
     if (m_sharedData.m3uPlaylist->getTrackCount() == 0)
     {
         //look in the fallback dir
-        const auto MusicDir = cro::FileSystem::getResourcePath() + "assets/golf/sound/music/";
-        if (cro::FileSystem::directoryExists(MusicDir))
+        const auto MusicDir = "assets/golf/sound/music/";
+        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
         {
-            const auto files = cro::FileSystem::listFiles(MusicDir);
+            const auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + MusicDir);
             for (const auto& file : files)
             {
                 //this checks the file has a valid extension
