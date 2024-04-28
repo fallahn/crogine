@@ -87,6 +87,8 @@ source distribution.
 #include <WorkshopState.hpp>
 #endif
 
+#define NO_PROF
+
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
@@ -1243,6 +1245,7 @@ void GolfGame::loadPreferences()
         }
     }
 
+#ifndef NO_PROF
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
     path = Social::getBaseContentPath() + "user_prefs.cfg";
     if (cro::FileSystem::fileExists(path))
@@ -1338,7 +1341,7 @@ void GolfGame::loadPreferences()
             }
         }
     }
-
+#endif
 
     //read keybind bin
     path = Social::getBaseContentPath() + "keys.bind";
@@ -1573,7 +1576,9 @@ void GolfGame::loadAvatars()
     auto uid = Social::getPlayerID();
     
     auto steamPath = path + uid + "/";
+#ifndef NO_PROF
     if (!cro::FileSystem::directoryExists(steamPath))
+#endif
     {
         cro::FileSystem::createDirectory(steamPath);
 
@@ -1585,6 +1590,7 @@ void GolfGame::loadAvatars()
         m_profileData.playerProfiles.push_back(sPlayer);
         i++;
     }
+#ifndef NO_PROF
     else
     {
         auto files = cro::FileSystem::listFiles(steamPath);
@@ -1607,6 +1613,7 @@ void GolfGame::loadAvatars()
             }
         }
     }
+#endif
     m_profileData.playerProfiles[0].isSteamID = true;
 #endif
 
@@ -1623,6 +1630,8 @@ void GolfGame::loadAvatars()
 
 
 
+
+#ifndef NO_PROF
     for (const auto& dir : profileDirs)
     {
         auto profilePath = path + dir + "/";
@@ -1686,7 +1695,7 @@ void GolfGame::loadAvatars()
             break;
         }
     }
-
+#endif
     if (!m_profileData.playerProfiles.empty())
     {
         m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
