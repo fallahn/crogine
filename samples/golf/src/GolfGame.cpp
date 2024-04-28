@@ -480,6 +480,13 @@ bool GolfGame::initialise()
     //prevent any profile loss.
     if (initResult)
     {
+#ifdef NO_PROF
+        cro::App::getWindow().setFullScreen(false);
+        cro::App::getWindow().setSize({ 640u, 480u });
+        cro::FileSystem::showMessageBox("Loading Paused", "Game loading is currently paused\nso that you may optionally remove\nor backup your profile directory.\nWhen you are done press OK to continue.");
+
+
+#endif
         //however this relies on having successfully
         //init Steam as we need the uid of the logged on user
         convertPreferences();
