@@ -1635,7 +1635,7 @@ void GolfGame::loadAvatars()
             if (!pd.loadProfile(steamPath + files[0], files[0].substr(0, files[0].size() - 4)))
             {
                 //if we failed to load use the default
-                pd = {};
+                pd = PlayerData();
                 pd.profileID = uid;
             }
             //always use the current Steam user name
