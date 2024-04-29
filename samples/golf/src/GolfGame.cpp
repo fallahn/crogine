@@ -87,7 +87,7 @@ source distribution.
 #include <WorkshopState.hpp>
 #endif
 
-#define NO_PROF
+//#define NO_PROF
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>

@@ -693,8 +693,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 break;
             }
             [[fallthrough]];
-        case SDLK_p:
         case SDLK_PAUSE:
+            if (evt.key.keysym.mod & KMOD_SHIFT)
+            {
+                if (Social::isAuth())
+                {
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::CAT, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+                break;
+            }
+            [[fallthrough]];
+        case SDLK_p:
             requestStackPush(StateID::Pause);
             break;
         case SDLK_SPACE:

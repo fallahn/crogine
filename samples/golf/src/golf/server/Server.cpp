@@ -241,15 +241,13 @@ void Server::run()
                 case PacketID::PlayerXP:
                     m_sharedData.host.broadcastPacket(PacketID::PlayerXP, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable);
                     break;
+                case PacketID::CAT:
+                    m_sharedData.host.broadcastPacket(PacketID::CAT, std::uint8_t(0), net::NetFlag::Reliable);
+                    break;
                 case PacketID::ChatMessage:
                 {
-                    const auto msg = evt.packet.as<TextMessage>();
-                    if (msg.getString() == "CAT"
-                        && Social::isAuth())
-                    {
-                        m_sharedData.host.broadcastPacket(PacketID::CAT, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    }
-                    m_sharedData.host.broadcastPacket(PacketID::ChatMessage, msg, net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                    //TODO there ought to be an overload for perfect forwarding a packet...
+                    m_sharedData.host.broadcastPacket(PacketID::ChatMessage, evt.packet.as<TextMessage>(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
                 }
                     break;
                 }
