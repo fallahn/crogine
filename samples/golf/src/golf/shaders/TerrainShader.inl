@@ -173,7 +173,7 @@ R"(
     void main()
     {
 
-        float alpha = (sin((v_texCoord.x * TAU) - ((u_windData.w * 5.0) * v_texCoord.y)) + 1.0) * 0.5;
+        float alpha = (sin((v_texCoord.x * TAU) - ((u_windData.w * 2.5) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.01, alpha);
 
         vec3 c = BaseColour;

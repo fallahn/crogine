@@ -1610,14 +1610,28 @@ void GolfGame::loadAvatars()
         if (!files.empty())
         {
             PlayerData pd;
-            if (pd.loadProfile(steamPath + files[0], files[0].substr(0, files[0].size() - 4)))
+            if (!pd.loadProfile(steamPath + files[0], files[0].substr(0, files[0].size() - 4)))
             {
-                //always use the current Steam user name
-                pd.name = Social::getPlayerName();
-
-                m_profileData.playerProfiles.push_back(pd);
-                i++;
+                //if we failed to load use the default
+                pd = {};
+                pd.profileID = uid;
             }
+            //always use the current Steam user name
+            pd.name = Social::getPlayerName();
+            pd.saveProfile();
+
+            m_profileData.playerProfiles.push_back(pd);
+            i++;
+        }
+        else
+        {
+            PlayerData sPlayer;
+            sPlayer.profileID = uid;
+            sPlayer.name = Social::getPlayerName();
+            sPlayer.saveProfile();
+
+            m_profileData.playerProfiles.push_back(sPlayer);
+            i++;
         }
     }
 #endif
@@ -1703,10 +1717,11 @@ void GolfGame::loadAvatars()
         }
     }
 #endif
-    if (!m_profileData.playerProfiles.empty())
+    if (m_profileData.playerProfiles.empty())
     {
-        m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
+        m_profileData.playerProfiles.emplace_back().name = "The Dev's not funny";
     }
+    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
 }
 
 void GolfGame::recreatePostProcess()

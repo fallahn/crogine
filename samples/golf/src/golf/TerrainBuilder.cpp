@@ -1287,7 +1287,7 @@ void TerrainBuilder::threadFunc()
                             vert4.position = vert.position + offset;
                             vert4.position.y = height;
                             vert4.normal = readNormal(worldX, worldY + 1, GridDensity);
-                            vert4.texCoord = { vert4.position.z * DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
+                            vert4.texCoord = { vert4.position.z * DashCount, std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
                             vert3.texCoord.x = vert3.position.z * DashCount;
                             vert3.texCoord.y = vert4.texCoord.y;
 
