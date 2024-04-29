@@ -58,6 +58,7 @@ public:
     void loadPlugin(const std::string& path) { cro::App::loadPlugin(path, m_stateStack); }
     void unloadPlugin() { cro::App::unloadPlugin(m_stateStack); }
 
+    void setSafeModeEnabled(bool sm);
 private:
     
     SharedStateData m_sharedData;

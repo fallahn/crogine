@@ -185,20 +185,6 @@ GolfGame::GolfGame()
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
 
-    //check for safe mode
-    safeMode = cro::FileSystem::fileExists("assets/safe_mode.txt"); //TODO this won't work on a mac bundle even with a search path
-    /*cro::ConfigFile cfg;
-    if (cfg.loadFromFile("assets/safe_mode.txt"))
-    {
-        for (const auto& p : cfg.getProperties())
-        {
-            if (p.getName() == "use_safe")
-            {
-                safeMode = p.getValue<bool>();
-            }
-        }
-    }*/
-
     m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
@@ -244,6 +230,11 @@ GolfGame::GolfGame()
 }
 
 //public
+void GolfGame::setSafeModeEnabled(bool sm)
+{
+    safeMode = sm || cro::FileSystem::fileExists("assets/safe_mode.txt");
+}
+
 void GolfGame::handleEvent(const cro::Event& evt)
 {
     switch (evt.type)
