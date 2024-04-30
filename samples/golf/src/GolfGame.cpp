@@ -491,10 +491,12 @@ bool GolfGame::initialise()
     //prevent any profile loss.
     if (initResult)
     {
-        if (safeMode)
+        //we can't assume linux users have a DE to display this
+#ifndef __linux__
+        if (safeMode && !Social::isSteamdeck())
         {
             cro::App::getWindow().setFullScreen(false);
-            cro::App::getWindow().setSize({ 640u, 480u });
+            cro::App::getWindow().setSize({ 800u, 600u });
 
             std::stringstream msg;
             msg << "Game loading is currently paused\nso that you may optionally remove\nor backup your profile directory.\n";
@@ -506,6 +508,7 @@ bool GolfGame::initialise()
                 return false;
             }
         }
+#endif
         //however this relies on having successfully
         //init Steam as we need the uid of the logged on user
         convertPreferences();
