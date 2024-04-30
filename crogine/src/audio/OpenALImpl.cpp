@@ -853,15 +853,17 @@ void OpenALStream::updateStream()
             //if stopped rewind file and load buffers
             ALenum newState;
             alCheck(alGetSourcei(sourceID, AL_SOURCE_STATE, &newState));
+            bool rewind = false;
             if (newState != state && newState == AL_STOPPED)
             {
                 audioFile->seek(cro::Time());
                 processed = static_cast<ALint>(buffers.size());
+                rewind = true;
             }
 
             //update the buffers if necessary
             if (processed > 0
-                && state == AL_PLAYING)
+                && (state == AL_PLAYING || rewind))
             {
                 for (auto i = 0; i < processed; ++i)
                 {

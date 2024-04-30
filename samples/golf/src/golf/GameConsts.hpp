@@ -823,10 +823,6 @@ static inline void createMusicPlayer(cro::Scene& scene, SharedStateData& sharedD
     {
         //this is a fudge because there's a bug preventing reassigning streams
         //so we just delete the old entity when done playing and create a new one
-        /*const auto& trackPath = sharedData.m3uPlaylist->getCurrentTrack();
-
-        auto id = sharedData.sharedResources->audio.load(trackPath, true);*/
-
         const auto id = sharedData.m3uPlaylist->getCurrentTrack();
         sharedData.m3uPlaylist->nextTrack();
 
@@ -835,7 +831,7 @@ static inline void createMusicPlayer(cro::Scene& scene, SharedStateData& sharedD
         entity.addComponent<cro::AudioEmitter>().setSource(sharedData.sharedResources->audio.get(id));
         entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
         entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
-        //entity.getComponent<cro::AudioEmitter>().play(); //let the callback do this
+        entity.getComponent<cro::AudioEmitter>().play();
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<cro::AudioEmitter::State>(cro::AudioEmitter::State::Stopped);
         entity.getComponent<cro::Callback>().function =
@@ -864,24 +860,38 @@ static inline void createMusicPlayer(cro::Scene& scene, SharedStateData& sharedD
             auto state = e.getComponent<cro::AudioEmitter>().getState();
             auto& prevState = e.getComponent<cro::Callback>().getUserData<cro::AudioEmitter::State>();
 
-            if (state == cro::AudioEmitter::State::Playing
-                && currVol < MinMusicVolume)
+            if (state == cro::AudioEmitter::State::Playing)
             {
-                e.getComponent<cro::AudioEmitter>().pause();
-                state = cro::AudioEmitter::State::Paused;
+                if (currVol < MinMusicVolume)
+                {
+                    e.getComponent<cro::AudioEmitter>().pause();
+                    state = cro::AudioEmitter::State::Paused;
+                    LogI << "Paused" << std::endl;
+                }
+                else if (prevState == cro::AudioEmitter::State::Stopped)
+                {
+                    e.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
+                }
             }
-            else if (state != cro::AudioEmitter::State::Playing
+            else if (state == cro::AudioEmitter::State::Paused
                 && currVol > MinMusicVolume)
             {
                 e.getComponent<cro::AudioEmitter>().play();
                 state = cro::AudioEmitter::State::Playing;
+
+                LogI << "Played" << std::endl;
             }
-            else if (state == cro::AudioEmitter::State::Stopped
-                && prevState == cro::AudioEmitter::State::Playing)
+            else if (state == cro::AudioEmitter::State::Stopped)
             {
-                e.getComponent<cro::Callback>().active = false;
-                scene.destroyEntity(e);
-                createMusicPlayer(scene, sharedData, gameMusic);
+                if (prevState == cro::AudioEmitter::State::Playing)
+                {
+                    LogI << "finished" << std::endl;
+
+                    e.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
+                    e.getComponent<cro::Callback>().active = false;
+                    scene.destroyEntity(e);
+                    createMusicPlayer(scene, sharedData, gameMusic);
+                }
             }
             prevState = state;
         };
