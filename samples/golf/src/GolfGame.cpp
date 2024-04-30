@@ -476,6 +476,8 @@ bool GolfGame::initialise()
         cro::FileSystem::createDirectory(path);
     }
 
+    //this has to be done early on to pre-cache the music files
+    m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
 
 #if defined USE_GNS
     m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
@@ -766,7 +768,6 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Game Music", MixerChannel::UserMusic);
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
-    m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
 
     //texture used to hold name tags
     for (auto& t : m_sharedData.nameTextures)
@@ -1426,7 +1427,7 @@ void GolfGame::loadPreferences()
         cro::FileSystem::createDirectory(Social::getBaseContentPath() + u8"music");
     }
 
-    m_sharedData.m3uPlaylist = std::make_unique<M3UPlaylist>(Social::getBaseContentPath() + "music/");
+    m_sharedData.m3uPlaylist = std::make_unique<M3UPlaylist>(m_sharedData.sharedResources->audio, Social::getBaseContentPath() + "music/");
 
     if (m_sharedData.m3uPlaylist->getTrackCount() == 0)
     {
@@ -1438,6 +1439,7 @@ void GolfGame::loadPreferences()
             for (const auto& file : files)
             {
                 //this checks the file has a valid extension
+                //and limits the number of files loaded
                 m_sharedData.m3uPlaylist->addTrack(MusicDir + file);
             }
             m_sharedData.m3uPlaylist->shuffle();

@@ -122,7 +122,7 @@ bool OpenALImpl::init()
 
     bool current = false;
     /*alcCheck*/(current = alcMakeContextCurrent(m_context));
-
+    
     return current;
 }
 
