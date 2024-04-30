@@ -748,10 +748,10 @@ static inline void createSwingputMeter(cro::Entity entity, InputParser& inputPar
             verts[15].position.y = height;
         };
 
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().depth = 0.2f;
-    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<UIElement>().depth = 0.2f;
+        entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+        entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
 }
 
 //applies material data loaded in a model definition such as texture info to custom materials
@@ -786,7 +786,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
             && dest.properties.count("u_colour"))
         {
             const auto* c = m->properties.at("u_colour").second.vecValue;
-            glm::vec4 colour(c[0],c[1],c[2],c[3]);
+            glm::vec4 colour(c[0], c[1], c[2], c[3]);
 
             dest.setProperty("u_colour", colour);
         }
@@ -819,82 +819,95 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
 
 static inline void createMusicPlayer(cro::Scene& scene, SharedStateData& sharedData, cro::Entity gameMusic)
 {
-    if (sharedData.m3uPlaylist->getTrackCount() != 0)
+    if (auto trackCount = sharedData.m3uPlaylist->getTrackCount(); trackCount != 0)
     {
-        //this is a fudge because there's a bug preventing reassigning streams
-        //so we just delete the old entity when done playing and create a new one
-        const auto id = sharedData.m3uPlaylist->getCurrentTrack();
-        sharedData.m3uPlaylist->nextTrack();
-
-        auto entity = scene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::AudioEmitter>().setSource(sharedData.sharedResources->audio.get(id));
-        entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
-        entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
-        entity.getComponent<cro::AudioEmitter>().play();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<cro::AudioEmitter::State>(cro::AudioEmitter::State::Stopped);
-        entity.getComponent<cro::Callback>().function =
-            [&, gameMusic](cro::Entity e, float dt)
+        struct MusicPlayerData final
         {
-            //set the mixer channel to inverse valaue of main music channel
-            //while the incidental music is playing
-            if (gameMusic.isValid())
-            {
-                //fade out if the menu music is playing, ie in a transition
-                const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
-                float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
-                if (target < vol)
-                {
-                    vol = std::max(0.f, vol - (dt * 2.f));
-                }
-                else
-                {
-                    vol = std::min(1.f, vol + dt);
-                }
-                cro::AudioMixer::setPrefadeVolume(vol, MixerChannel::UserMusic);
-            }
-
-            //if the user turned the volume down, pause the playback (TODO this might be better reading messages?)
-            const float currVol = cro::AudioMixer::getVolume(MixerChannel::UserMusic);
-            auto state = e.getComponent<cro::AudioEmitter>().getState();
-            auto& prevState = e.getComponent<cro::Callback>().getUserData<cro::AudioEmitter::State>();
-
-            if (state == cro::AudioEmitter::State::Playing)
-            {
-                if (currVol < MinMusicVolume)
-                {
-                    e.getComponent<cro::AudioEmitter>().pause();
-                    state = cro::AudioEmitter::State::Paused;
-                    LogI << "Paused" << std::endl;
-                }
-                else if (prevState == cro::AudioEmitter::State::Stopped)
-                {
-                    e.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
-                }
-            }
-            else if (state == cro::AudioEmitter::State::Paused
-                && currVol > MinMusicVolume)
-            {
-                e.getComponent<cro::AudioEmitter>().play();
-                state = cro::AudioEmitter::State::Playing;
-
-                LogI << "Played" << std::endl;
-            }
-            else if (state == cro::AudioEmitter::State::Stopped)
-            {
-                if (prevState == cro::AudioEmitter::State::Playing)
-                {
-                    LogI << "finished" << std::endl;
-
-                    e.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
-                    e.getComponent<cro::Callback>().active = false;
-                    scene.destroyEntity(e);
-                    createMusicPlayer(scene, sharedData, gameMusic);
-                }
-            }
-            prevState = state;
+            std::vector<cro::Entity> playlist;
+            std::size_t currentIndex = 0;
         };
+
+        auto playerEnt = scene.createEntity();
+        playerEnt.addComponent<cro::Transform>();
+        playerEnt.addComponent<cro::Callback>().active = true;
+        playerEnt.getComponent<cro::Callback>().setUserData<MusicPlayerData>();
+        playerEnt.getComponent<cro::Callback>().function =
+            [gameMusic](cro::Entity e, float dt) mutable
+            {
+                //set the mixer channel to inverse valaue of main music channel
+                 //while the incidental music is playing
+                if (gameMusic.isValid())
+                {
+                    //fade out if the menu music is playing, ie in a transition
+                    const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
+                    float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
+                    if (target < vol)
+                    {
+                        vol = std::max(0.f, vol - (dt * 2.f));
+                    }
+                    else
+                    {
+                        vol = std::min(1.f, vol + dt);
+                    }
+                    cro::AudioMixer::setPrefadeVolume(vol, MixerChannel::UserMusic);
+                }
+
+
+                //if the playlist is empty just disable this ent
+                auto& [playlist, currentIndex] = e.getComponent<cro::Callback>().getUserData<MusicPlayerData>();
+                if (playlist.empty())
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    return;
+                }
+
+
+                //else check the current music state and pause when volume is low else play the
+                //next track when we stop playing.
+                auto musicEnt = playlist[currentIndex];
+                const float currVol = cro::AudioMixer::getVolume(MixerChannel::UserMusic);
+                auto state = musicEnt.getComponent<cro::AudioEmitter>().getState();
+
+                if (state == cro::AudioEmitter::State::Playing)
+                {
+                    if (currVol < MinMusicVolume)
+                    {
+                        musicEnt.getComponent<cro::AudioEmitter>().pause();
+                    }
+                }
+                else if (state == cro::AudioEmitter::State::Paused
+                    && currVol > MinMusicVolume)
+                {
+                    musicEnt.getComponent<cro::AudioEmitter>().play();
+                }
+                else if (state == cro::AudioEmitter::State::Stopped)
+                {
+                    currentIndex = (currentIndex + 1) % playlist.size();
+                    playlist[currentIndex].getComponent<cro::AudioEmitter>().play();
+                }
+            };
+
+        
+        auto& playlist = playerEnt.getComponent<cro::Callback>().getUserData<MusicPlayerData>().playlist;
+        
+        //this is a fudge because there's a bug preventing reassigning streams
+        for (auto i = 0u; i < trackCount; ++i)
+        {
+            const auto id = sharedData.m3uPlaylist->getCurrentTrack();
+            sharedData.m3uPlaylist->nextTrack();
+
+            auto entity = scene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::AudioEmitter>().setSource(sharedData.sharedResources->audio.get(id));
+            entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
+            entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
+
+            playlist.push_back(entity);
+        }
+        if (!playlist.empty())
+        {
+            playlist[0].getComponent<cro::AudioEmitter>().play();
+        }
     }
 }
 
