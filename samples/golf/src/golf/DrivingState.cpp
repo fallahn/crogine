@@ -487,9 +487,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
         }
         break;
-        case SDLK_KP_MULTIPLY:
+        /*case SDLK_KP_MULTIPLY:
             triggerGC(PlayerPosition);
-            break;
+            break;*/
 #endif
         }
     }

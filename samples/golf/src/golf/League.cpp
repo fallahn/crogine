@@ -619,7 +619,7 @@ void League::createSortedTable()
                 {
                     return a.handicap > b.handicap;
                 }
-                return true; //favour the humans
+                return false;
             }
             return a.score > b.score;
         });
