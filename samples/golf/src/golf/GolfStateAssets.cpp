@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>

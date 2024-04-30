@@ -1149,6 +1149,22 @@ void GolfState::handleMessage(const cro::Message& msg)
                 Progress::write(m_sharedData.leagueRoundID, m_currentHole, m_sharedData.connectionData[0].playerData[0].holeScores);
             }
 
+            if (m_resumedFromSave)
+            {
+                //make sure carts are properly aligned
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Cart;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+                        auto result = m_collisionMesh.getTerrain(pos);
+                        float diff = result.height - pos.y;
+
+                        e.getComponent<cro::Transform>().move({ 0.f, diff, 0.f });
+                    };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
