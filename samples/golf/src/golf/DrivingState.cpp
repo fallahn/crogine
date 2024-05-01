@@ -1386,7 +1386,7 @@ void DrivingState::initAudio()
         }
     };
 
-    createMusicPlayer(m_gameScene, m_sharedData, m_gameScene.getActiveCamera());
+    createMusicPlayer(m_gameScene, m_resources.audio, m_gameScene.getActiveCamera());
 }
 
 void DrivingState::createScene()

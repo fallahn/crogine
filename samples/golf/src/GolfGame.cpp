@@ -476,8 +476,6 @@ bool GolfGame::initialise()
         cro::FileSystem::createDirectory(path);
     }
 
-    //this has to be done early on to pre-cache the music files
-    m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
 
 #if defined USE_GNS
     m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
@@ -723,8 +721,6 @@ bool GolfGame::initialise()
             {
                 cro::Console::setConvarValue("shuffle_music", true);
                 cro::Console::print("cl_shuffle_music set to TRUE");
-
-                m_sharedData.m3uPlaylist->shuffle();
             }
             else if (cro::Util::String::toLower(param) == "false")
             {
@@ -749,10 +745,6 @@ bool GolfGame::initialise()
             }
         });
 
-    if (cro::Console::getConvarValue<bool>("shuffle_music"))
-    {
-        m_sharedData.m3uPlaylist->shuffle();
-    }
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
@@ -768,6 +760,7 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Game Music", MixerChannel::UserMusic);
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
+    m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
 
     //texture used to hold name tags
     for (auto& t : m_sharedData.nameTextures)
@@ -1425,25 +1418,6 @@ void GolfGame::loadPreferences()
     if (!cro::FileSystem::directoryExists(Social::getBaseContentPath() + u8"music"))
     {
         cro::FileSystem::createDirectory(Social::getBaseContentPath() + u8"music");
-    }
-
-    m_sharedData.m3uPlaylist = std::make_unique<M3UPlaylist>(m_sharedData.sharedResources->audio, Social::getBaseContentPath() + "music/");
-
-    if (m_sharedData.m3uPlaylist->getTrackCount() == 0)
-    {
-        //look in the fallback dir
-        const auto MusicDir = "assets/golf/sound/music/";
-        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
-        {
-            const auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + MusicDir);
-            for (const auto& file : files)
-            {
-                //this checks the file has a valid extension
-                //and limits the number of files loaded
-                m_sharedData.m3uPlaylist->addTrack(MusicDir + file);
-            }
-            m_sharedData.m3uPlaylist->shuffle();
-        }
     }
 }
 
