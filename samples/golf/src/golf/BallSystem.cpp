@@ -708,7 +708,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //if we've slowed down or fallen more than the
             //ball's diameter (radius??) stop the ball
-            if (vel2 < MinVelocitySqr 
+            if (vel2 < MinVelocitySqr //TODO this might be true when there's still backspin to be applied, so we need to check that too
                 || (terrainContact.penetration > (Ball::Radius * 2.5f)) 
                 || ((ball.delay < BallRollTimeout) && (vel2 < BallTimeoutVelocity))
                 || (ball.delay < (BallRollTimeout * 2.f)))
@@ -748,19 +748,19 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                     ball.terrain = TerrainID::Hole;
                 }
-                else if (len2 < GimmeRadii[m_gimmeRadius]
-                    && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
-                {
-                    auto* msg2 = postEvent();
-                    msg2->type = GolfBallEvent::Gimme;
+                //else if (len2 < GimmeRadii[m_gimmeRadius]
+                //    && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
+                //{
+                //    auto* msg2 = postEvent();
+                //    msg2->type = GolfBallEvent::Gimme;
 
-                    position.x = m_holeData->pin.x;
-                    position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
-                    position.z = m_holeData->pin.z;
-                    tx.setPosition(position);
+                //    position.x = m_holeData->pin.x;
+                //    position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
+                //    position.z = m_holeData->pin.z;
+                //    tx.setPosition(position);
 
-                    ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
-                }
+                //    ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
+                //}
 
                 msg->position = position;
 
@@ -911,13 +911,32 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
+            auto position = entity.getComponent<cro::Transform>().getPosition();
+            
+            //check for gimme first
+            const auto pinDir = m_holeData->pin - position;
+            const auto len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
+
+            if (len2 < GimmeRadii[m_gimmeRadius]
+                && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
+            {
+                auto* msg2 = postEvent();
+                msg2->type = GolfBallEvent::Gimme;
+
+                position.x = m_holeData->pin.x;
+                position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
+                position.z = m_holeData->pin.z;
+                entity.getComponent<cro::Transform>().setPosition(position);
+
+                ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
+            }
+
+
+
             ball.spin = { 0.f, 0.f };
             ball.initialForwardVector = { 0.f, 0.f, 0.f };
             ball.initialSideVector = { 0.f, 0.f, 0.f };
 
-            auto position = entity.getComponent<cro::Transform>().getPosition();
-            //auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
-            //auto wantGimme = (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius]));
 
             //send message to report status
             auto* msg = postEvent();
