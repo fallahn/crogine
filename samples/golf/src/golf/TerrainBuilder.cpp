@@ -1220,7 +1220,7 @@ void TerrainBuilder::threadFunc()
                 //we can optimise this by only looping the grid around the pin pos
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
-                static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
+                static constexpr float DashCount = 2.f;// 80.f;
                 static constexpr float SlopeSpeed = -40.f;//REMEMBER this const is also used in the slope frag shader
                 static constexpr std::int32_t AvgDistance = 1;
                 static constexpr std::int32_t GridDensity = NormalMapMultiplier; //verts per metre, however grid size is half this.
@@ -1268,7 +1268,8 @@ void TerrainBuilder::threadFunc()
                             vert2.position = vert.position + offset;
                             vert2.position.y = height;
                             vert2.normal = readNormal(worldX + 1, worldY, GridDensity);
-                            vert2.texCoord = { DashCount / GridDensity, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
+                            vert2.texCoord = { vert2.position.x * DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
+                            vert.texCoord.x = vert.position.x * DashCount;
                             vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
                             
 
@@ -1286,7 +1287,8 @@ void TerrainBuilder::threadFunc()
                             vert4.position = vert.position + offset;
                             vert4.position.y = height;
                             vert4.normal = readNormal(worldX, worldY + 1, GridDensity);
-                            vert4.texCoord = { DashCount / GridDensity, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
+                            vert4.texCoord = { vert4.position.z * DashCount, std::min(-glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
+                            vert3.texCoord.x = vert3.position.z * DashCount;
                             vert3.texCoord.y = vert4.texCoord.y;
 
                             vert.position += vert.normal * SurfaceOffset;

@@ -629,6 +629,7 @@
     <ClCompile Include="src\golf\FloatingTextSystem.cpp" />
     <ClCompile Include="src\golf\FpsCameraSystem.cpp" />
     <ClCompile Include="src\golf\FreePlayState.cpp" />
+    <ClCompile Include="src\golf\GameConsts.cpp" />
     <ClCompile Include="src\golf\GcState.cpp" />
     <ClCompile Include="src\golf\GolfCartSystem.cpp" />
     <ClCompile Include="src\golf\GolfParticleDirector.cpp" />

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,12 +36,17 @@ source distribution.
 #include <vector>
 #include <cstdint>
 
+namespace cro
+{
+    class AudioResource;
+}
+
 class M3UPlaylist final
 {
 public:
     //takes a single directory through which to search for
     //playlists. Doesn't support recursive searching (no subdirs)
-    explicit M3UPlaylist(const std::string& searchFolder, std::uint32_t maxFiles = 25);
+    explicit M3UPlaylist(cro::AudioResource&, const std::string& searchFolder, std::uint32_t maxFiles = 25);
 
     //load another file and appeand it to the list
     bool loadPlaylist(const std::string& path);
@@ -58,14 +63,16 @@ public:
     //decrements the current index
     void prevTrack();
 
-    //returns the current track at the curernt index (or empty if no tracks loaded)
-    const std::string& getCurrentTrack() const;
+
+    //returns the resource ID of the current track or -1 if playlist is empty
+    std::int32_t getCurrentTrack() const;
 
     std::size_t getCurrentIndex() const { return m_currentIndex; }
-    std::size_t getTrackCount() const { return m_filePaths.size(); }
+    std::size_t getTrackCount() const { return m_resourceIDs.size(); }
 
 private:
-    std::vector<std::string> m_filePaths;
+    cro::AudioResource& m_audioResource;
+    std::vector<std::int32_t> m_resourceIDs;
     std::size_t m_currentIndex;
     std::string m_defaultFile;
 };

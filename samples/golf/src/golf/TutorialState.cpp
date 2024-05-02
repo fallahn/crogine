@@ -2671,7 +2671,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("Full club stats are avilable from the Career and Free Play menus");
+    entity.addComponent<cro::Text>(font).setString("Full club stats are available from the Career and Free Play menus");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);

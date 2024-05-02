@@ -122,7 +122,7 @@ bool OpenALImpl::init()
 
     bool current = false;
     /*alcCheck*/(current = alcMakeContextCurrent(m_context));
-
+    
     return current;
 }
 
@@ -861,7 +861,7 @@ void OpenALStream::updateStream()
 
             //update the buffers if necessary
             if (processed > 0
-                && state == AL_PLAYING)
+                && (state == AL_PLAYING))
             {
                 for (auto i = 0; i < processed; ++i)
                 {

@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -2447,7 +2448,7 @@ void GolfState::initAudio(bool loadTrees)
         m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>();
         LogE << "Invalid AudioScape file was found" << std::endl;
     }
-    createMusicPlayer(m_gameScene, m_sharedData, m_gameScene.getActiveCamera());
+    createMusicPlayer(m_gameScene, m_resources.audio, m_gameScene.getActiveCamera());
 
 
     if (loadTrees)

@@ -29,7 +29,6 @@ source distribution.
 
 #pragma once
 
-#include "../M3UPlaylist.hpp"
 #include "InputBinding.hpp"
 #include "Networking.hpp"
 #include "CommonConsts.hpp"
@@ -274,6 +273,4 @@ struct SharedStateData final
     
     std::vector<glm::uvec2> resolutions;
     std::vector<std::string> resolutionStrings;
-
-    std::unique_ptr<M3UPlaylist> m3uPlaylist;
 };

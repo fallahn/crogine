@@ -523,7 +523,7 @@ void CareerState::buildScene()
     //active league highlight
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f, 3.f, 0.1f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f, 3.f, -0.1f));
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(-99.f, 7.f), TextGoldColour),
@@ -546,6 +546,7 @@ void CareerState::buildScene()
         //league titles, listed on left
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
+        entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f, 0.f, -0.2f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(largeFont).setString(leagueData[i].title);
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);

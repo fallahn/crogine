@@ -163,32 +163,32 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 
             else if (n == "flags0")
             {
-                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[0];
+                auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[0];
                 avatarFlags[0] = static_cast<std::uint8_t>(flag);
             }
             else if (n == "flags1")
             {
-                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[1];
+                auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[1];
                 avatarFlags[1] = static_cast<std::uint8_t>(flag);
             }
             else if (n == "flags2")
             {
-                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[2];
+                auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[2];
                 avatarFlags[2] = static_cast<std::uint8_t>(flag);
             }
             else if (n == "flags3")
             {
-                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
+                auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[3];
                 avatarFlags[3] = static_cast<std::uint8_t>(flag);
             }
             else if (n == "flags4")
             {
-                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[4];
+                auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[4];
                 avatarFlags[4] = static_cast<std::uint8_t>(flag);
             }
             else if (n == "flags5")
             {
-                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[5];
+                auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[5];
                 avatarFlags[5] = static_cast<std::uint8_t>(flag);
             }
 
@@ -215,6 +215,9 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             {
                 LogE << "Failed to load " << mugshot << std::endl;
                 mugshot.clear();
+
+                img.create(64, 64, cro::Colour::White);
+                mugshotData = std::move(img);
             }
         }
 

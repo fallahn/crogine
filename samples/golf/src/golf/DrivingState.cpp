@@ -487,9 +487,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
         }
         break;
-        case SDLK_KP_MULTIPLY:
+        /*case SDLK_KP_MULTIPLY:
             triggerGC(PlayerPosition);
-            break;
+            break;*/
 #endif
         }
     }
@@ -1386,7 +1386,7 @@ void DrivingState::initAudio()
         }
     };
 
-    createMusicPlayer(m_gameScene, m_sharedData, m_gameScene.getActiveCamera());
+    createMusicPlayer(m_gameScene, m_resources.audio, m_gameScene.getActiveCamera());
 }
 
 void DrivingState::createScene()

@@ -34,7 +34,15 @@ source distribution.
 #include <iostream>
 int main(int argc, char** argsv)
 {
+    bool safeMode = false;
+    
     GolfGame game;
+    if (argc > 1)
+    {
+        std::string str(argsv[1]);
+        safeMode = (str == "safe_mode");
+    }
+    game.setSafeModeEnabled(safeMode);
     game.run();
 
     return 0;

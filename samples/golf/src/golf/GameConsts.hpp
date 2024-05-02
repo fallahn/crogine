@@ -748,10 +748,10 @@ static inline void createSwingputMeter(cro::Entity entity, InputParser& inputPar
             verts[15].position.y = height;
         };
 
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().depth = 0.2f;
-    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<UIElement>().depth = 0.2f;
+        entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+        entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
 }
 
 //applies material data loaded in a model definition such as texture info to custom materials
@@ -786,7 +786,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
             && dest.properties.count("u_colour"))
         {
             const auto* c = m->properties.at("u_colour").second.vecValue;
-            glm::vec4 colour(c[0],c[1],c[2],c[3]);
+            glm::vec4 colour(c[0], c[1], c[2], c[3]);
 
             dest.setProperty("u_colour", colour);
         }
@@ -817,69 +817,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
     }
 }
 
-static inline void createMusicPlayer(cro::Scene& scene, SharedStateData& sharedData, cro::Entity gameMusic)
-{
-    if (sharedData.m3uPlaylist->getTrackCount() != 0)
-    {
-        //this is a fudge because there's a bug preventing reassigning streams
-        //so we just delete the old entity when done playing and create a new one
-        const auto& trackPath = sharedData.m3uPlaylist->getCurrentTrack();
-        sharedData.m3uPlaylist->nextTrack();
-
-        auto id = sharedData.sharedResources->audio.load(trackPath, true);
-
-        auto entity = scene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::AudioEmitter>().setSource(sharedData.sharedResources->audio.get(id));
-        entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
-        entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
-        entity.getComponent<cro::AudioEmitter>().play();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&, gameMusic](cro::Entity e, float dt)
-        {
-            //set the mixer channel to inverse valaue of main music channel
-            //while the incidental music is playing
-            if (gameMusic.isValid())
-            {
-                //fade out if the menu music is playing, ie in a transition
-                const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
-                float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
-                if (target < vol)
-                {
-                    vol = std::max(0.f, vol - (dt * 2.f));
-                }
-                else
-                {
-                    vol = std::min(1.f, vol + dt);
-                }
-                cro::AudioMixer::setPrefadeVolume(vol, MixerChannel::UserMusic);
-            }
-
-            //if the user turned the volume down, pause the playback (TODO this might be better reading messages?)
-            const float currVol = cro::AudioMixer::getVolume(MixerChannel::UserMusic);
-            const auto state = e.getComponent<cro::AudioEmitter>().getState();
-
-            if (state == cro::AudioEmitter::State::Playing
-                && currVol < MinMusicVolume)
-            {
-                e.getComponent<cro::AudioEmitter>().pause();
-            }
-            else if (state == cro::AudioEmitter::State::Paused
-                && currVol > MinMusicVolume)
-            {
-                e.getComponent<cro::AudioEmitter>().play();
-            }
-            else if (state == cro::AudioEmitter::State::Stopped)
-            {
-                e.getComponent<cro::Callback>().active = false;
-                scene.destroyEntity(e);
-
-                createMusicPlayer(scene, sharedData, gameMusic);
-            }
-        };
-    }
-}
+void createMusicPlayer(cro::Scene& scene, cro::AudioResource&, cro::Entity gameMusic);
 
 //finds an intersecting point on the water plane.
 static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)

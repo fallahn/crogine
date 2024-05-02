@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string WireframeVertex = R"(
+static inline const std::string WireframeVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
 
@@ -111,7 +111,7 @@ float far = 15.0;
     }
 )";
 
-inline const std::string WireframeFragment = R"(
+static inline const std::string WireframeFragment = R"(
 #include OUTPUT_LOCATION
     uniform vec4 u_colour = vec4(1.0);
 #if defined (DASHED)

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "M3UPlaylist.hpp"
 
+#include <crogine/audio/AudioResource.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/detail/Types.hpp>
@@ -44,10 +45,14 @@ namespace
         std::string(".m3u"),
         std::string(".m3u8"),
     };
+
+    //hm, we pre-cache these so this needs to be less than the OpenAL limit for buffers
+    constexpr std::size_t MaxTotalFiles = 64;
 }
 
-M3UPlaylist::M3UPlaylist(const std::string& searchDir, std::uint32_t maxFiles)
-    : m_currentIndex(0)
+M3UPlaylist::M3UPlaylist(cro::AudioResource& ar, const std::string& searchDir, std::uint32_t maxFiles)
+    : m_audioResource   (ar),
+    m_currentIndex      (0)
 {
     if (cro::FileSystem::directoryExists(searchDir))
     {
@@ -109,9 +114,10 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
         };
         const auto parseString = [&](const std::string str)
         {
-            if (str.find(FilePrefix) == 0)
+            if (str.find(FilePrefix) == 0
+                && m_resourceIDs.size() < MaxTotalFiles)
             {
-                auto& fp = m_filePaths.emplace_back(str.substr(FilePrefix.size()));
+                auto fp = str.substr(FilePrefix.size());
                 std::replace(fp.begin(), fp.end(), '\\', '/');
                 replaceSpace(fp);
 
@@ -124,9 +130,13 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
                     fp = fp.substr(1);
                 }
 
-                if (!cro::FileSystem::fileExists(fp))
+                if (cro::FileSystem::fileExists(fp))
                 {
-                    m_filePaths.pop_back();
+                    const auto id = m_audioResource.load(fp, true);
+                    if (id != -1)
+                    {
+                        m_resourceIDs.push_back(id);
+                    }
                 }
             }
         };
@@ -139,7 +149,7 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
         }
         parseString(fileString.substr(prev));
 
-        return !m_filePaths.empty();
+        return !m_resourceIDs.empty();
     }
 
     LogE << path << " file is empty" << std::endl;
@@ -155,38 +165,43 @@ void M3UPlaylist::addTrack(const std::string& path)
         std::string(".wav"),
     };
 
-    if (std::find(ValidExt.begin(), ValidExt.end(), cro::FileSystem::getFileExtension(path)) != ValidExt.end())
+    if (m_resourceIDs.size() < MaxTotalFiles &&
+        std::find(ValidExt.begin(), ValidExt.end(), cro::FileSystem::getFileExtension(path)) != ValidExt.end())
     {
-        m_filePaths.push_back(path);
+        const auto id = m_audioResource.load(path, true);
+        if (id != -1)
+        {
+            m_resourceIDs.push_back(id);
+        }
     }
 }
 
 void M3UPlaylist::shuffle()
 {
-    std::shuffle(m_filePaths.begin(), m_filePaths.end(), cro::Util::Random::rndEngine);
+    std::shuffle(m_resourceIDs.begin(), m_resourceIDs.end(), cro::Util::Random::rndEngine);
 }
 
 void M3UPlaylist::nextTrack()
 {
-    if (!m_filePaths.empty())
+    if (!m_resourceIDs.empty())
     {
-        m_currentIndex = (m_currentIndex + 1) % m_filePaths.size();
+        m_currentIndex = (m_currentIndex + 1) % m_resourceIDs.size();
     }
 }
 
 void M3UPlaylist::prevTrack()
 {
-    if (!m_filePaths.empty())
+    if (!m_resourceIDs.empty())
     {
-        m_currentIndex = (m_currentIndex + (m_filePaths.size() - 1)) % m_filePaths.size();
+        m_currentIndex = (m_currentIndex + (m_resourceIDs.size() - 1)) % m_resourceIDs.size();
     }
 }
 
-const std::string& M3UPlaylist::getCurrentTrack() const
+std::int32_t M3UPlaylist::getCurrentTrack() const
 {
-    if (m_filePaths.empty())
+    if (m_resourceIDs.empty())
     {
-        return m_defaultFile;
+        return -1;
     }
-    return m_filePaths[m_currentIndex];
+    return m_resourceIDs[m_currentIndex];
 }

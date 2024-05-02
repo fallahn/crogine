@@ -362,7 +362,7 @@ bool Swingput::processMouseSwing()
         case State::Summarise:
             m_state = State::Inactive;
 
-#ifdef CRO_DEBUG_
+//#ifdef CRO_DEBUG_
             //debugOutput.distance = (m_frontPoint.y - m_backPoint.y);
             //debugOutput.velocity = debugOutput.distance / (m_elapsedTime + 0.0001f); //potential NaN
             //debugOutput.accuracy = (m_frontPoint.x - m_backPoint.x);
@@ -373,7 +373,7 @@ bool Swingput::processMouseSwing()
             ////velocity so we need to create a distance based modifier
             //float multiplier = debugOutput.distance / MaxSwingputDistance;
 
-#else
+//#else
             float distance = (m_mouseSwing.frontPoint.y - m_mouseSwing.backPoint.y);
             float velocity = distance / (m_mouseSwing.elapsedTime + 0.0001f); //potential NaN
             float accuracy = (m_mouseSwing.frontPoint.x - m_mouseSwing.backPoint.x);
@@ -383,7 +383,7 @@ bool Swingput::processMouseSwing()
             //travelling a shorter distance doesn't imply lower
             //velocity so we need to create a distance based modifier
             float multiplier = distance / MaxSwingputDistance;
-#endif
+//#endif
 
             //hmm have to double convert this because the input parser
             //actually calcs it to 0-1 and converts back to -1 1 on return

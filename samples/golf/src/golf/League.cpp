@@ -615,11 +615,18 @@ void League::createSortedTable()
         {
             if (a.score == b.score)
             {
-                if (a.name > -1)
+                //favours humans
+                if (a.name == -1)
                 {
-                    return a.handicap > b.handicap;
+                    return true;
                 }
-                return true; //favour the humans
+
+                if (b.name == -1)
+                {
+                    return false;
+                }
+
+                return a.handicap > b.handicap;
             }
             return a.score > b.score;
         });

@@ -87,6 +87,8 @@ source distribution.
 #include <WorkshopState.hpp>
 #endif
 
+//#define NO_PROF
+
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
@@ -112,6 +114,12 @@ namespace
 #include "golf/shaders/PostProcess.inl"
 #include "golf/shaders/ShaderIncludes.inl"
 #include "golf/RandNames.hpp"
+
+#ifdef NO_PROF
+    constexpr bool safeMode = true;
+#else
+    bool safeMode = false;
+#endif
 
     els::SharedStateData elsShared;
 
@@ -222,6 +230,11 @@ GolfGame::GolfGame()
 }
 
 //public
+void GolfGame::setSafeModeEnabled(bool sm)
+{
+    safeMode = sm || cro::FileSystem::fileExists("assets/safe_mode.txt");
+}
+
 void GolfGame::handleEvent(const cro::Event& evt)
 {
     switch (evt.type)
@@ -478,6 +491,24 @@ bool GolfGame::initialise()
     //prevent any profile loss.
     if (initResult)
     {
+        //we can't assume linux users have a DE to display this
+#ifndef __linux__
+        if (safeMode && !Social::isSteamdeck())
+        {
+            cro::App::getWindow().setFullScreen(false);
+            cro::App::getWindow().setSize({ 800u, 600u });
+
+            std::stringstream msg;
+            msg << "Game loading is currently paused\nso that you may optionally remove\nor backup your profile directory.\n";
+            msg << "Your profile directory is " << Social::getUserContentPath(Social::UserContent::Profile) << "\n";
+            msg << "Press OK when you are ready to continue, or Cancel to quit.";
+
+            if (!cro::FileSystem::showMessageBox("SAFE MODE", msg.str(), cro::FileSystem::OKCancel))
+            {
+                return false;
+            }
+        }
+#endif
         //however this relies on having successfully
         //init Steam as we need the uid of the logged on user
         convertPreferences();
@@ -495,10 +526,10 @@ bool GolfGame::initialise()
 
     loadAvatars(); //this relies on steam being initialised
 
-    if (Social::isSteamdeck())
+    /*if (Social::isSteamdeck())
     {
         getWindow().setVsyncEnabled(true);
-    }
+    }*/
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS
@@ -690,8 +721,6 @@ bool GolfGame::initialise()
             {
                 cro::Console::setConvarValue("shuffle_music", true);
                 cro::Console::print("cl_shuffle_music set to TRUE");
-
-                m_sharedData.m3uPlaylist->shuffle();
             }
             else if (cro::Util::String::toLower(param) == "false")
             {
@@ -716,10 +745,6 @@ bool GolfGame::initialise()
             }
         });
 
-    if (cro::Console::getConvarValue<bool>("shuffle_music"))
-    {
-        m_sharedData.m3uPlaylist->shuffle();
-    }
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
@@ -1243,97 +1268,101 @@ void GolfGame::loadPreferences()
         }
     }
 
+
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
-    path = Social::getBaseContentPath() + "user_prefs.cfg";
-    if (cro::FileSystem::fileExists(path))
+    if (!safeMode)
     {
-        cro::ConfigFile cfg;
-        if (cfg.loadFromFile(path, false))
+        path = Social::getBaseContentPath() + "user_prefs.cfg";
+        if (cro::FileSystem::fileExists(path))
         {
-            const auto& properties = cfg.getProperties();
-            for (const auto& prop : properties)
+            cro::ConfigFile cfg;
+            if (cfg.loadFromFile(path, false))
             {
-                const auto& name = prop.getName();
-                if (name == "pixel_scale")
+                const auto& properties = cfg.getProperties();
+                for (const auto& prop : properties)
                 {
-                    m_sharedData.pixelScale = prop.getValue<bool>();
-                }
-                else if (name == "fov")
-                {
-                    m_sharedData.fov = std::max(MinFOV, std::min(MaxFOV, prop.getValue<float>()));
-                }
-                else if (name == "vertex_snap")
-                {
-                    m_sharedData.vertexSnap = prop.getValue<bool>();
-                }
-                else if (name == "mouse_speed")
-                {
-                    m_sharedData.mouseSpeed = std::max(ConstVal::MinMouseSpeed, std::min(ConstVal::MaxMouseSpeed, prop.getValue<float>()));
-                }
-                else if (name == "invert_x")
-                {
-                    m_sharedData.invertX = prop.getValue<bool>();
-                }
-                else if (name == "invert_y")
-                {
-                    m_sharedData.invertY = prop.getValue<bool>();
-                }
-                else if (name == "show_beacon")
-                {
-                    m_sharedData.showBeacon = prop.getValue<bool>();
-                }
-                else if (name == "beacon_colour")
-                {
-                    m_sharedData.beaconColour = std::fmod(prop.getValue<float>(), 1.f);
-                }
-                else if (name == "imperial_measurements")
-                {
-                    m_sharedData.imperialMeasurements = prop.getValue<bool>();
-                }
-                else if (name == "grid_transparency")
-                {
-                    m_sharedData.gridTransparency = std::max(0.f, std::min(1.f, prop.getValue<float>()));
-                }
-                else if (name == "show_tutorial")
-                {
-                    m_sharedData.showTutorialTip = prop.getValue<bool>();
-                }
-                else if (name == "putting_power")
-                {
-                    m_sharedData.showPuttingPower = prop.getValue<bool>();
-                }
-                else if (name == "use_vibration")
-                {
-                    m_sharedData.enableRumble = prop.getValue<bool>() ? 1 : 0;
-                }
-                else if (name == "use_trail")
-                {
-                    m_sharedData.showBallTrail = prop.getValue<bool>();
-                }
-                else if (name == "use_beacon_colour")
-                {
-                    m_sharedData.trailBeaconColour = prop.getValue<bool>();
-                }
-                else if (name == "fast_cpu")
-                {
-                    m_sharedData.fastCPU = prop.getValue<bool>();
-                }
-                else if (name == "clubset")
-                {
-                    m_sharedData.preferredClubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
-                    m_sharedData.clubSet = m_sharedData.preferredClubSet;
-                }
-                else if (name == "press_hold")
-                {
-                    m_sharedData.pressHold = prop.getValue<bool>();
-                }
-                else if (name == "use_tts")
-                {
-                    m_sharedData.useTTS = prop.getValue<bool>();
-                }
-                else if (name == "use_swingput")
-                {
-                    m_sharedData.useSwingput = prop.getValue<bool>();
+                    const auto& name = prop.getName();
+                    if (name == "pixel_scale")
+                    {
+                        m_sharedData.pixelScale = prop.getValue<bool>();
+                    }
+                    else if (name == "fov")
+                    {
+                        m_sharedData.fov = std::max(MinFOV, std::min(MaxFOV, prop.getValue<float>()));
+                    }
+                    else if (name == "vertex_snap")
+                    {
+                        m_sharedData.vertexSnap = prop.getValue<bool>();
+                    }
+                    else if (name == "mouse_speed")
+                    {
+                        m_sharedData.mouseSpeed = std::max(ConstVal::MinMouseSpeed, std::min(ConstVal::MaxMouseSpeed, prop.getValue<float>()));
+                    }
+                    else if (name == "invert_x")
+                    {
+                        m_sharedData.invertX = prop.getValue<bool>();
+                    }
+                    else if (name == "invert_y")
+                    {
+                        m_sharedData.invertY = prop.getValue<bool>();
+                    }
+                    else if (name == "show_beacon")
+                    {
+                        m_sharedData.showBeacon = prop.getValue<bool>();
+                    }
+                    else if (name == "beacon_colour")
+                    {
+                        m_sharedData.beaconColour = std::fmod(prop.getValue<float>(), 1.f);
+                    }
+                    else if (name == "imperial_measurements")
+                    {
+                        m_sharedData.imperialMeasurements = prop.getValue<bool>();
+                    }
+                    else if (name == "grid_transparency")
+                    {
+                        m_sharedData.gridTransparency = std::max(0.f, std::min(1.f, prop.getValue<float>()));
+                    }
+                    else if (name == "show_tutorial")
+                    {
+                        m_sharedData.showTutorialTip = prop.getValue<bool>();
+                    }
+                    else if (name == "putting_power")
+                    {
+                        m_sharedData.showPuttingPower = prop.getValue<bool>();
+                    }
+                    else if (name == "use_vibration")
+                    {
+                        m_sharedData.enableRumble = prop.getValue<bool>() ? 1 : 0;
+                    }
+                    else if (name == "use_trail")
+                    {
+                        m_sharedData.showBallTrail = prop.getValue<bool>();
+                    }
+                    else if (name == "use_beacon_colour")
+                    {
+                        m_sharedData.trailBeaconColour = prop.getValue<bool>();
+                    }
+                    else if (name == "fast_cpu")
+                    {
+                        m_sharedData.fastCPU = prop.getValue<bool>();
+                    }
+                    else if (name == "clubset")
+                    {
+                        m_sharedData.preferredClubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                        m_sharedData.clubSet = m_sharedData.preferredClubSet;
+                    }
+                    else if (name == "press_hold")
+                    {
+                        m_sharedData.pressHold = prop.getValue<bool>();
+                    }
+                    else if (name == "use_tts")
+                    {
+                        m_sharedData.useTTS = prop.getValue<bool>();
+                    }
+                    else if (name == "use_swingput")
+                    {
+                        m_sharedData.useSwingput = prop.getValue<bool>();
+                    }
                 }
             }
         }
@@ -1389,24 +1418,6 @@ void GolfGame::loadPreferences()
     if (!cro::FileSystem::directoryExists(Social::getBaseContentPath() + u8"music"))
     {
         cro::FileSystem::createDirectory(Social::getBaseContentPath() + u8"music");
-    }
-
-    m_sharedData.m3uPlaylist = std::make_unique<M3UPlaylist>(Social::getBaseContentPath() + "music/");
-
-    if (m_sharedData.m3uPlaylist->getTrackCount() == 0)
-    {
-        //look in the fallback dir
-        const auto MusicDir = cro::FileSystem::getResourcePath() + "assets/golf/sound/music/";
-        if (cro::FileSystem::directoryExists(MusicDir))
-        {
-            const auto files = cro::FileSystem::listFiles(MusicDir);
-            for (const auto& file : files)
-            {
-                //this checks the file has a valid extension
-                m_sharedData.m3uPlaylist->addTrack(MusicDir + file);
-            }
-            m_sharedData.m3uPlaylist->shuffle();
-        }
     }
 }
 
@@ -1573,7 +1584,9 @@ void GolfGame::loadAvatars()
     auto uid = Social::getPlayerID();
     
     auto steamPath = path + uid + "/";
-    if (!cro::FileSystem::directoryExists(steamPath))
+
+    if (!cro::FileSystem::directoryExists(steamPath)
+        || safeMode)
     {
         cro::FileSystem::createDirectory(steamPath);
 
@@ -1585,6 +1598,7 @@ void GolfGame::loadAvatars()
         m_profileData.playerProfiles.push_back(sPlayer);
         i++;
     }
+
     else
     {
         auto files = cro::FileSystem::listFiles(steamPath);
@@ -1597,16 +1611,31 @@ void GolfGame::loadAvatars()
         if (!files.empty())
         {
             PlayerData pd;
-            if (pd.loadProfile(steamPath + files[0], files[0].substr(0, files[0].size() - 4)))
+            if (!pd.loadProfile(steamPath + files[0], files[0].substr(0, files[0].size() - 4)))
             {
-                //always use the current Steam user name
-                pd.name = Social::getPlayerName();
-
-                m_profileData.playerProfiles.push_back(pd);
-                i++;
+                //if we failed to load use the default
+                pd = PlayerData();
+                pd.profileID = uid;
             }
+            //always use the current Steam user name
+            pd.name = Social::getPlayerName();
+            pd.saveProfile();
+
+            m_profileData.playerProfiles.push_back(pd);
+            i++;
+        }
+        else
+        {
+            PlayerData sPlayer;
+            sPlayer.profileID = uid;
+            sPlayer.name = Social::getPlayerName();
+            sPlayer.saveProfile();
+
+            m_profileData.playerProfiles.push_back(sPlayer);
+            i++;
         }
     }
+
     m_profileData.playerProfiles[0].isSteamID = true;
 #endif
 
@@ -1623,74 +1652,80 @@ void GolfGame::loadAvatars()
 
 
 
-    for (const auto& dir : profileDirs)
+
+
+    if (!safeMode)
     {
-        auto profilePath = path + dir + "/";
-        auto files = cro::FileSystem::listFiles(profilePath);
-        files.erase(std::remove_if(files.begin(), files.end(), 
-            [](const std::string& f)
-            {
-                return cro::FileSystem::getFileExtension(f) != ".pfl";
-            }), files.end());
-
-        if (!files.empty())
+        for (const auto& dir : profileDirs)
         {
-            PlayerData pd;
-            if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4)))
-            {
-#ifdef USE_GNS
-                //check if we need to convert this to the UID profile
-                if (pd.name == Social::getPlayerName())
+            auto profilePath = path + dir + "/";
+            auto files = cro::FileSystem::listFiles(profilePath);
+            files.erase(std::remove_if(files.begin(), files.end(),
+                [](const std::string& f)
                 {
-                    pd.profileID = Social::getPlayerID();
-                    pd.saveProfile();
-                    m_profileData.playerProfiles[0] = pd;
+                    return cro::FileSystem::getFileExtension(f) != ".pfl";
+                }), files.end());
 
-                    auto copyFiles = cro::FileSystem::listFiles(profilePath);
-                    for (const auto& cFile : copyFiles)
+            if (!files.empty())
+            {
+                PlayerData pd;
+                if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4)))
+                {
+#ifdef USE_GNS
+                    //check if we need to convert this to the UID profile
+                    if (pd.name == Social::getPlayerName())
                     {
-                        if (cro::FileSystem::getFileExtension(cFile) != ".pfl")
-                        {
-                            auto dbPath = profilePath + cFile;
-                            if (cro::FileSystem::fileExists(dbPath))
-                            {
-                                std::error_code ec;
-                                std::filesystem::copy_file(std::filesystem::u8path(dbPath),
-                                    std::filesystem::u8path(steamPath + cFile),
-                                    std::filesystem::copy_options::update_existing, ec);
+                        pd.profileID = Social::getPlayerID();
+                        pd.saveProfile();
+                        m_profileData.playerProfiles[0] = pd;
 
-                                if (ec)
+                        auto copyFiles = cro::FileSystem::listFiles(profilePath);
+                        for (const auto& cFile : copyFiles)
+                        {
+                            if (cro::FileSystem::getFileExtension(cFile) != ".pfl")
+                            {
+                                auto dbPath = profilePath + cFile;
+                                if (cro::FileSystem::fileExists(dbPath))
                                 {
-                                    LogE << "Failed copying player data, error code: " << ec.value() << std::endl;
+                                    std::error_code ec;
+                                    std::filesystem::copy_file(std::filesystem::u8path(dbPath),
+                                        std::filesystem::u8path(steamPath + cFile),
+                                        std::filesystem::copy_options::update_existing, ec);
+
+                                    if (ec)
+                                    {
+                                        LogE << "Failed copying player data, error code: " << ec.value() << std::endl;
+                                    }
                                 }
                             }
                         }
+                        //remove the old data so it stops getting sync'd
+                        cro::FileSystem::removeDirectory(profilePath);
                     }
-                    //remove the old data so it stops getting sync'd
-                    cro::FileSystem::removeDirectory(profilePath);
-                }
-                else
-                {
+                    else
+                    {
 #endif
-                    m_profileData.playerProfiles.push_back(pd);
-                    i++;
+                        m_profileData.playerProfiles.push_back(pd);
+                        i++;
 #ifdef USE_GNS
-                }
+                    }
 #endif
+                }
+            }
+
+            //arbitrary limit on profile loading.
+            if (i == ConstVal::MaxProfiles)
+            {
+                break;
             }
         }
-
-        //arbitrary limit on profile loading.
-        if (i == ConstVal::MaxProfiles)
-        {
-            break;
-        }
     }
 
-    if (!m_profileData.playerProfiles.empty())
+    if (m_profileData.playerProfiles.empty())
     {
-        m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
+        m_profileData.playerProfiles.emplace_back().name = "I blame the dev";
     }
+    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
 }
 
 void GolfGame::recreatePostProcess()

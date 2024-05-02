@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string TerrainVertexShader = R"(
+static inline const std::string TerrainVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -108,7 +108,7 @@ inline const std::string TerrainVertexShader = R"(
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
 
-inline const std::string SlopeVertexShader =
+static inline const std::string SlopeVertexShader =
 R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -148,7 +148,7 @@ R"(
 )";
 
 //the UV coords actually indicate direction of slope
-inline const std::string SlopeFragmentShader =
+static inline const std::string SlopeFragmentShader =
 R"(
     OUTPUT
     layout (location = 2) out vec4 NORM_OUT;
@@ -164,20 +164,17 @@ R"(
     VARYING_IN vec2 v_texCoord;
     VARYING_IN vec2 v_heightData;
 
-    const vec3 DotColour = vec3(1.0, 0.85, 0.6);
+    const vec3 DotColour = vec3(1.0, 0.85, 0.5);
     const vec3 BaseColour = vec3(0.627, 0.699, 0.58); //0.94 stored as HSV to save on a conversion
+    const float TAU = 6.2831855;
 
     #include HSV
 
     void main()
     {
-        //float strength = 1.0 - dot(normalize(v_normal), vec3(0.0, 1.0, 0.0));
-        //strength = smoothstep(0.0, 0.05, strength);
 
-//float strength = 1.0; //apparently superfluous?
-
-        float alpha = (sin(v_texCoord.x - ((u_windData.w * 5.0 /** strength*/) * v_texCoord.y)) + 1.0) * 0.5;
-        alpha = step(0.1, alpha);
+        float alpha = (sin((v_texCoord.x * TAU) - ((u_windData.w * 2.5) * v_texCoord.y)) + 1.0) * 0.5;
+        alpha = step(0.01, alpha);
 
         vec3 c = BaseColour;
         c.x += mod(v_heightData.y * 2.5/* * u_value*/, 1.0);
@@ -189,7 +186,7 @@ R"(
         vec4 colour = vec4(c, v_heightData.x);
 
         colour.a *= u_alpha;
-        colour = mix(vec4(DotColour, (0.35 + (0.5 * u_alpha)) * v_heightData.x /** step(0.0001, alpha)*/), colour, alpha);
+        colour = mix(vec4(DotColour, (0.35 + (0.5 * u_alpha)) * v_heightData.x), colour, alpha);
 
 //colour.rgb *= 0.1; //additive blending
 //colour.rgb *= colour.a; //additive blending
