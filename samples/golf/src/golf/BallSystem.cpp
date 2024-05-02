@@ -64,6 +64,7 @@ namespace
     static constexpr float MinVelocitySqr = 0.001f;// 0.005f;//0.04f
     static constexpr float BallRollTimeout = -10.f;
     static constexpr float BallTimeoutVelocity = 0.04f;
+    static constexpr float MinSpinPower = 0.05f; //min velocity to stop doesn't kick in if there's more than this much top/back spin to apply
 
     static constexpr float MinRollVelocity = -0.25f;
     static constexpr float MaxStoneSlope = 0.9f; //dot prod with vertical - ball is OOB if less than this
@@ -478,7 +479,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         //finally check to see if we're slow enough to stop
         constexpr float TimeOut = (BallRollTimeout / 2.f);
         auto len2 = glm::length2(ball.velocity);
-        if (len2 < MinVelocitySqr
+        if ((len2 < MinVelocitySqr && std::abs(ball.spin.y) < MinSpinPower)
             || ((ball.delay < TimeOut) && (len2 < BallTimeoutVelocity))
             || (ball.delay < (TimeOut * 2.f)))
         {
@@ -708,7 +709,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //if we've slowed down or fallen more than the
             //ball's diameter (radius??) stop the ball
-            if (vel2 < MinVelocitySqr //TODO this might be true when there's still backspin to be applied, so we need to check that too
+            if ((vel2 < MinVelocitySqr && std::abs(ball.spin.y) < MinSpinPower)//this might be true when there's still spin to be applied
                 || (terrainContact.penetration > (Ball::Radius * 2.5f)) 
                 || ((ball.delay < BallRollTimeout) && (vel2 < BallTimeoutVelocity))
                 || (ball.delay < (BallRollTimeout * 2.f)))
@@ -748,6 +749,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                     ball.terrain = TerrainID::Hole;
                 }
+                //moved to post-pause delay (below)
                 //else if (len2 < GimmeRadii[m_gimmeRadius]
                 //    && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
                 //{
