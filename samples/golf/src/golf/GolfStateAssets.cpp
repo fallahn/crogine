@@ -1291,7 +1291,6 @@ void GolfState::loadMap()
         m_depthMap.update(40);
     }
 
-
     m_terrainBuilder.create(m_resources, m_gameScene, theme);
 
     //terrain builder will have loaded some shaders from which we need to capture some uniforms
@@ -1354,6 +1353,9 @@ void GolfState::loadMap()
                 m_currentHole = std::min(holeStrings.size() - 1, std::size_t(h));
                 m_terrainBuilder.applyHoleIndex(m_currentHole);
                 
+                m_depthMap.setModel(m_holeData[m_currentHole]);
+                m_depthMap.update(40);
+
                 auto& player = m_sharedData.connectionData[0].playerData[0];
                 player.holeScores.swap(scores);
                 
