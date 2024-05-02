@@ -66,6 +66,7 @@ namespace
     static constexpr float BallTimeoutVelocity = 0.04f;
 
     static constexpr float MinRollVelocity = -0.25f;
+    static constexpr float MaxStoneSlope = 0.9f; //dot prod with vertical - ball is OOB if less than this
 
     static constexpr std::array<float, TerrainID::Count> Friction =
     {
@@ -492,7 +493,14 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 resetBall(Ball::State::Reset, terrainContact.terrain);
                 break;*/
             case TerrainID::Stone:
-                resetBall(Ball::State::Reset, TerrainID::Scrub);
+                if (glm::dot(terrainContact.normal, cro::Transform::Y_AXIS) > MaxStoneSlope)
+                {
+                    resetBall(Ball::State::Paused, terrainContact.terrain);
+                }
+                else
+                {
+                    resetBall(Ball::State::Reset, TerrainID::Scrub);
+                }
                 break;
             }
         }
@@ -712,11 +720,11 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 {
                     ball.state = Ball::State::Reset;
                 }
-                else if (ball.terrain == TerrainID::Stone)
+                /*else if (ball.terrain == TerrainID::Stone)
                 {
                     ball.state = Ball::State::Reset;
                     ball.terrain = TerrainID::Scrub;
-                }
+                }*/
                 else
                 {
                     ball.state = Ball::State::Paused;
@@ -849,7 +857,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                     if (terrain != TerrainID::Water
                         && terrain != TerrainID::Scrub
-                        && terrain != TerrainID::Stone
+                        && terrain != TerrainID::Stone //we're restoring from OOB, so we still don't want to land on stone here
                         && slope > 0.996f)
                     {
                         //move the ball a bit closer so we're not balancing on the edge
@@ -1112,7 +1120,15 @@ void BallSystem::doCollision(cro::Entity entity)
                 resetBall(ball, Ball::State::Reset, terrainResult.terrain);
                 break;
             case TerrainID::Stone:
-                resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
+                //assume flat surfaces are OK to stop on
+                if (glm::dot(terrainResult.normal, cro::Transform::Y_AXIS) > MaxStoneSlope)
+                {
+                    resetBall(ball, Ball::State::Paused, terrainResult.terrain);
+                }
+                else
+                {
+                    resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
+                }
                 break;
             }
         }

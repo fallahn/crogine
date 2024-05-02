@@ -98,7 +98,7 @@ static const std::array<std::string, TerrainID::Count> TerrainStrings =
 //how much the stroke is affected by the current terrain
 static constexpr std::array<float, TerrainID::Count> Dampening =
 {
-    0.95f, 1.f, 1.f, 0.95f, 1.f, 1.f, 0.f, 0.f
+    0.95f, 1.f, 1.f, 0.95f, 1.f, 1.f, 0.98f, 0.f
 };
 
 //how much the dampening is affected by the current lie
