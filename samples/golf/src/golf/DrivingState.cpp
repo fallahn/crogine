@@ -3061,17 +3061,17 @@ void DrivingState::hitBall()
 
     //from here the hook value is just used for UI feedback
     //so we want to flip it as appropriate with the current avatar
-    auto hook = result.hook;
+    auto hook = m_inputParser.getHook();// result.hook; //though this is technically more accurate it should match the value used in GolfState
     hook *= playerXScale;
 
     //check if we hooked/sliced
-    if (hook < -0.15f) //this magic number doesn't match that of the golf state...
+    if (hook < -MinHook/*-0.15f*/) //this magic number doesn't match that of the golf state...
     {
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg2->type = GolfEvent::HookedBall;
         floatingMessage("Hook");
     }
-    else if (hook > 0.15f)
+    else if (hook > MinHook/*0.15f*/)
     {
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg2->type = GolfEvent::SlicedBall;

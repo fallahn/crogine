@@ -965,13 +965,13 @@ void GolfState::handleMessage(const cro::Message& msg)
                 //TODO this doesn't include any easing added when making the stroke
                 //we should be using the value returned by getStroke() in hitBall()
                 auto hook = m_inputParser.getHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
-                if (hook < -0.08f)
+                if (hook < -MinHook)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::HookedBall;
                     floatingMessage("Hook");
                 }
-                else if (hook > 0.08f)
+                else if (hook > MinHook)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::SlicedBall;
