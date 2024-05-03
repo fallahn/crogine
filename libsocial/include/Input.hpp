@@ -123,7 +123,7 @@ namespace Progress
         }
     }
 
-    static inline bool read(std::int32_t leagueID, std::size_t& holeIndex, std::vector<std::uint8_t>& holeScores)
+    static inline bool read(std::int32_t leagueID, std::uint64_t& holeIndex, std::vector<std::uint8_t>& holeScores)
     {
         CRO_ASSERT(!holeScores.empty(), "");
 
