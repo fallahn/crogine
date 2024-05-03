@@ -1685,6 +1685,29 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+    //hack to speed up transition when holding the action button
+    static constexpr float MaxMultiplier = 2.f;
+    static constexpr float MinMultiplier = 1.f;
+    static float multiplier = MinMultiplier;
+    if (m_currentCamera == CameraID::Transition)
+    {
+        if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
+            || cro::GameController::isButtonPressed(0, cro::GameController::ButtonA))
+        {
+            multiplier = std::min(MaxMultiplier, multiplier + (dt * 2.f));
+        }
+        else
+        {
+            multiplier = std::max(MinMultiplier, multiplier * 0.99f);
+        }
+    }
+    else
+    {
+        multiplier = std::max(MinMultiplier, multiplier * 0.99f);
+    }
+
+    dt *= multiplier;
+
 #ifdef CRO_DEBUG_
     glm::vec3 move(0.f);
     if (cro::Keyboard::isKeyPressed(SDLK_UP))
