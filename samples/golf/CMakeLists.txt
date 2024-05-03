@@ -154,9 +154,6 @@ if(APPLE)
      SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
   ENDIF("${isSystemDir}" STREQUAL "-1")
 
-  set_source_files_properties(
-      ${CMAKE_SOURCE_DIR}/icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
-
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
 
   # Add the assets if the folder ezists
@@ -166,6 +163,10 @@ if(APPLE)
     set_source_files_properties(${ASSETS_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
   endif()
 
+  # Add the icon
+  set(ICON_PATH ${CMAKE_CURRENT_SOURCE_DIR}/macOS/icon.icns)
+  target_sources(${PROJECT_NAME} PRIVATE ${ICON_PATH})
+  set_source_files_properties(${ICON_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE icon.icns)
 
 endif()
