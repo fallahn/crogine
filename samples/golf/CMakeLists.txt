@@ -119,10 +119,10 @@ include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
 SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SQLITE_SRC})
-#if(USE_NEWSFEED) #we actually use this in steam version now too
+if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
-#endif()
+endif()
 
 if(USE_GNS)
   #include source of workshop, libgns
