@@ -12,7 +12,7 @@ cd ..
 # make sure assets have been copied into golf from latest Windows download
 mkdir build
 cd build
-cmake .. -D MACOS_BUNDLE=true -G Xcode
+cmake .. -G Xcode
 sudo -A cmake --build . --config Release --target install
 
 cd ..

@@ -1,14 +1,10 @@
 cmake_minimum_required(VERSION 3.5.2)
 
-
 #Xcode 10 will default to Mojave (must be done BEFORE project())
 if (APPLE)
  SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
- SET(MACOS_BUNDLE False CACHE BOOL "")
 
-  if(MACOS_BUNDLE)
-    SET(BUNDLE_NAME "Super Video Golf")
-  endif()
+ SET(BUNDLE_NAME "Super Video Golf")
 
 endif()
 
@@ -132,9 +128,12 @@ if(USE_GNS)
   SET(GOLF_SRC ${GOLF_SRC} ${GNS_SRC} ${WORKSHOP_SRC})
 endif()
 
+add_executable(${PROJECT_NAME}
+                ${PROJECT_SRC}
+                ${GOLF_SRC})
 
 # If on apple, create a nice bundle
-if(APPLE AND MACOS_BUNDLE)
+if(APPLE)
 
   # use, i.e. don't skip the full RPATH for the build tree
   SET(CMAKE_SKIP_BUILD_RPATH FALSE)
@@ -155,32 +154,23 @@ if(APPLE AND MACOS_BUNDLE)
      SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
   ENDIF("${isSystemDir}" STREQUAL "-1")
 
-  set_source_files_properties( 
-      ${CMAKE_SOURCE_DIR}/assets PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
   set_source_files_properties(
       ${CMAKE_SOURCE_DIR}/icon.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources )
-  add_executable(${PROJECT_NAME} MACOSX_BUNDLE 
-                 ${PROJECT_SRC} 
-                 ${GOLF_SRC} 
-                 ${CMAKE_SOURCE_DIR}/assets 
-                 ${CMAKE_SOURCE_DIR}/macOS/icon.icns)
 
+  set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
+
+  # Add the assets if the folder ezists
+  set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/assets)
+  if (EXISTS ${ASSETS_PATH})
+    target_sources(${PROJECT_NAME} PRIVATE ${ASSETS_PATH})
+    set_source_files_properties(${ASSETS_PATH} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+  endif()
 
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE icon.icns)
 
-
-
-else()
-
-
-  #regular make files
-  add_executable(${PROJECT_NAME}
-                 ${PROJECT_SRC}
-                 ${GOLF_SRC})
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:CRO_DEBUG_>)
-
 
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
@@ -202,7 +192,7 @@ if(USE_GNS)
 endif()
 
 # install to the bundle
-if(APPLE AND MACOS_BUNDLE)
+if(APPLE)
 
   install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION .
