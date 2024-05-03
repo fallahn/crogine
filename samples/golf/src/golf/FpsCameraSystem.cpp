@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "FpsCameraSystem.hpp"
 #include "CollisionMesh.hpp"
+#include "InputBinding.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Keyboard.hpp>
@@ -40,11 +41,14 @@ namespace
 {
     constexpr float FlyMultiplier = 15.f;
     constexpr float MinHeight = 0.3f;
+
+    constexpr std::int16_t MinTriggerMovement = 12000;
 }
 
-FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm)
+FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, const InputBinding& ib)
     : cro::System   (mb, typeid(FpsCameraSystem)),
-    m_collisionMesh (cm)
+    m_collisionMesh (cm),
+    m_inputBinding  (ib)
 {
     requireComponent<FpsCamera>();
     requireComponent<cro::Transform>();
@@ -60,51 +64,88 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
     {
     default: break;
     case SDL_KEYDOWN:
-        switch (evt.key.keysym.sym)
+        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
         {
-        default:break;
-        case SDLK_w:
+            //actually forward...
             m_inputs[0].buttonFlags |= Input::Forward;
-            break;
-        case SDLK_s:
-            m_inputs[0].buttonFlags |= Input::Backward;
-            break;
-        case SDLK_a:
-            m_inputs[0].buttonFlags |= Input::Left;
-            break;
-        case SDLK_d:
-            m_inputs[0].buttonFlags |= Input::Right;
-            break;
-        case SDLK_SPACE:
-            m_inputs[0].buttonFlags |= Input::Jump;
-            break;
-        case SDLK_LCTRL:
-            m_inputs[0].buttonFlags |= Input::Crouch;
-            break;
         }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+        {
+            //actually backward...
+            m_inputs[0].buttonFlags |= Input::Backward;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+        {
+            m_inputs[0].buttonFlags |= Input::Left;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+        {
+            m_inputs[0].buttonFlags |= Input::Right;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        {
+            //actually up...
+            m_inputs[0].buttonFlags |= Input::Up;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::EmoteMenu])
+        {
+            //actually down
+            m_inputs[0].buttonFlags |= Input::Down;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
+        {
+            m_inputs[0].buttonFlags |= Input::ZoomIn;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
+        {
+            m_inputs[0].buttonFlags |= Input::ZoomOut;
+        }
+        else if (evt.key.keysym.sym == SDLK_LSHIFT)
+        {
+            m_inputs[0].buttonFlags |= Input::Sprint;
+        }
+
         break;
     case SDL_KEYUP:
-        switch (evt.key.keysym.sym)
+        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
         {
-        default:break;
-        case SDLK_w:
+            //actually forward...
             m_inputs[0].buttonFlags &= ~Input::Forward;
-            break;
-        case SDLK_s:
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+        {
+            //actually backward...
             m_inputs[0].buttonFlags &= ~Input::Backward;
-            break;
-        case SDLK_a:
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+        {
             m_inputs[0].buttonFlags &= ~Input::Left;
-            break;
-        case SDLK_d:
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+        {
             m_inputs[0].buttonFlags &= ~Input::Right;
-            break;
-        case SDLK_SPACE:
-            m_inputs[0].buttonFlags &= ~Input::Jump;
-            break;
-        case SDLK_LCTRL:
-            m_inputs[0].buttonFlags &= ~Input::Crouch;
-            break;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        {
+            //actually up...
+            m_inputs[0].buttonFlags &= ~Input::Up;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::EmoteMenu])
+        {
+            //actually down
+            m_inputs[0].buttonFlags &= ~Input::Down;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
+        {
+            m_inputs[0].buttonFlags &= ~Input::ZoomIn;
+        }
+        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
+        {
+            m_inputs[0].buttonFlags &= ~Input::ZoomOut;
+        }
+        else if (evt.key.keysym.sym == SDLK_LSHIFT)
+        {
+            m_inputs[0].buttonFlags &= ~Input::Sprint;
         }
         break;
     case SDL_MOUSEBUTTONDOWN:
@@ -112,10 +153,10 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         {
         default: break;
         case 0:
-            m_inputs[0].buttonFlags |= Input::LeftMouse;
+            m_inputs[0].buttonFlags |= Input::Sprint;
             break;
         case 1:
-            m_inputs[0].buttonFlags |= Input::RightMouse;
+            m_inputs[0].buttonFlags |= Input::Walk;
             break;
         }
         break;
@@ -124,10 +165,10 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         {
         default: break;
         case 0:
-            m_inputs[0].buttonFlags &= ~Input::LeftMouse;
+            m_inputs[0].buttonFlags &= ~Input::Sprint;
             break;
         case 1:
-            m_inputs[0].buttonFlags &= ~Input::RightMouse;
+            m_inputs[0].buttonFlags &= ~Input::Walk;
             break;
         }
         break;
@@ -141,23 +182,23 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
     case SDL_CONTROLLERBUTTONDOWN:
     {
         auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
-        if (controllerID != -1)
+        if (controllerID == 0)
         {
             CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
             switch (evt.cbutton.button)
             {
             default: break;
-            case cro::GameController::ButtonA:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Jump;
+            /*case cro::GameController::ButtonA:
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Up;
                 break;
             case cro::GameController::ButtonB:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Crouch;
-                break;
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Down;
+                break;*/
             case cro::GameController::ButtonX:
-
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Sprint;
                 break;
             case cro::GameController::ButtonY:
-                
+                m_inputs[controllerID].buttonFlags |= Input::Flags::Walk;
                 break;
             case cro::GameController::DPadUp:
                 m_inputs[controllerID].buttonFlags |= Input::Flags::Forward;
@@ -171,6 +212,12 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             case cro::GameController::DPadRight:
                 m_inputs[controllerID].buttonFlags |= Input::Flags::Right;
                 break;
+            case cro::GameController::ButtonRightShoulder:
+                m_inputs[controllerID].buttonFlags |= Input::Flags::ZoomIn;
+                break;
+            case cro::GameController::ButtonLeftShoulder:
+                m_inputs[controllerID].buttonFlags |= Input::Flags::ZoomOut;
+                break;
             }
         }
     }
@@ -178,23 +225,23 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
     case SDL_CONTROLLERBUTTONUP:
     {
         auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
-        if (controllerID != -1)
+        if (controllerID == 0) //TODO check active controller
         {
             CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
             switch (evt.cbutton.button)
             {
             default: break;
-            case cro::GameController::ButtonA:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Jump;
+            /*case cro::GameController::ButtonA:
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Up;
                 break;
             case cro::GameController::ButtonB:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Crouch;
-                break;
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Down;
+                break;*/
             case cro::GameController::ButtonX:
-
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Sprint;
                 break;
             case cro::GameController::ButtonY:
-
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Walk;
                 break;
             case cro::GameController::DPadUp:
                 m_inputs[controllerID].buttonFlags &= ~Input::Flags::Forward;
@@ -208,9 +255,45 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             case cro::GameController::DPadRight:
                 m_inputs[controllerID].buttonFlags &= ~Input::Flags::Right;
                 break;
+            case cro::GameController::ButtonRightShoulder:
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::ZoomIn;
+                break;
+            case cro::GameController::ButtonLeftShoulder:
+                m_inputs[controllerID].buttonFlags &= ~Input::Flags::ZoomOut;
+                break;
             }
         }
     }
+        break;
+    case SDL_CONTROLLERAXISMOTION:
+        auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
+        if (controllerID == 0) //TODO check active controller
+        {
+            switch (evt.caxis.axis)
+            {
+            default: break;
+            case cro::GameController::TriggerLeft:
+                if (evt.caxis.value > MinTriggerMovement)
+                {
+                    m_inputs[controllerID].buttonFlags |= Input::Flags::Down;
+                }
+                else
+                {
+                    m_inputs[controllerID].buttonFlags &= ~Input::Flags::Down;
+                }
+                break;
+            case cro::GameController::TriggerRight:
+                if (evt.caxis.value > MinTriggerMovement)
+                {
+                    m_inputs[controllerID].buttonFlags |= Input::Flags::Up;
+                }
+                else
+                {
+                    m_inputs[controllerID].buttonFlags &= ~Input::Flags::Up;
+                }
+                break;
+            }
+        }
         break;
     }
 
@@ -280,14 +363,17 @@ void FpsCameraSystem::process(float dt)
 
         //walking speed in metres per second
         float moveSpeed = controller.moveSpeed * dt;
-        if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
+        if (input.buttonFlags & Input::Flags::Sprint)
+        {
+            moveSpeed *= FlyMultiplier;
+        }
+        if (input.buttonFlags & Input::Flags::Walk)
         {
             moveSpeed *= 0.05f;
         }
 
         if (controller.flyMode)
         {
-            moveSpeed *= FlyMultiplier;
             forwardVector = tx.getForwardVector();
             rightVector = tx.getRightVector();
         }
@@ -312,26 +398,27 @@ void FpsCameraSystem::process(float dt)
 
         if (controller.flyMode)
         {
-            if (input.buttonFlags & Input::Jump)
+            if (input.buttonFlags & Input::Up)
             {
                 tx.move(glm::vec3(0.f, 1.f, 0.f) * moveSpeed);
             }
-            if (input.buttonFlags & Input::Crouch)
+            if (input.buttonFlags & Input::Down)
             {
                 tx.move(glm::vec3(0.f, -1.f, 0.f) * moveSpeed);
             }
         }
-        else
-        {
-            //add gravity / any jump impulse
-        }
 
+
+        //clamp above the ground
         auto pos = tx.getPosition();
         auto result = m_collisionMesh.getTerrain(pos);
         if (auto diff = pos.y - result.height; diff < MinHeight)
         {
             tx.move({ 0.f, MinHeight - diff, 0.f });
         }
+
+
+        //TODO check zoom buttons
     }
 }
 

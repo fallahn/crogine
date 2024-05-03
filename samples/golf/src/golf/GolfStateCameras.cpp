@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -225,7 +225,7 @@ void GolfState::createCameras()
     m_cameras[CameraID::Sky] = camEnt;
 
 
-    //same as sky cam, but conrolled by the active player
+    //same as sky cam, but controlled by the active player
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>().setPosition(DefaultSkycamPosition);
     camEnt.addComponent<cro::Camera>().resizeCallback =

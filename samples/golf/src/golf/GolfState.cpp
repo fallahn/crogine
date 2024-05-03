@@ -2223,7 +2223,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<ChunkVisSystem>(mb, MapSize, &m_terrainBuilder);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
 //#ifdef CRO_DEBUG_
-    m_gameScene.addSystem<FpsCameraSystem>(mb, m_collisionMesh);
+    m_gameScene.addSystem<FpsCameraSystem>(mb, m_collisionMesh, m_sharedData.inputBinding);
 //#endif
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);

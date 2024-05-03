@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,6 +42,8 @@ and place it appropriately to create a third person view.
 
 struct FpsCamera final
 {
+    float fov = 1.5f;
+
     float cameraPitch = 0.f; //used to clamp camera
     float cameraYaw = 0.f; //used to calc forward vector
 
@@ -64,33 +66,37 @@ struct FpsCamera final
 };
 
 class CollisionMesh;
+struct InputBinding;
 class FpsCameraSystem final : public cro::System
 {
 public:
-    FpsCameraSystem(cro::MessageBus&, const CollisionMesh&);
+    FpsCameraSystem(cro::MessageBus&, const CollisionMesh&, const InputBinding&);
 
     void handleEvent(const cro::Event&);
 
     void process(float) override;
 
-    //TODO allow adding keybinds to controller index mapping
-
 private:
 
     const CollisionMesh& m_collisionMesh;
+    const InputBinding& m_inputBinding;
 
     struct Input final
     {
         enum Flags
         {
-            Forward = 0x1,
-            Backward = 0x2,
-            Left = 0x4,
-            Right = 0x8,
-            LeftMouse = 0x10,
+            Forward    = 0x1,
+            Backward   = 0x2,
+            Left       = 0x4,
+            Right      = 0x8,
+            LeftMouse  = 0x10,
             RightMouse = 0x20,
-            Crouch = 0x40,
-            Jump = 0x80
+            Down       = 0x40,
+            Up         = 0x80,
+            ZoomIn     = 0x100,
+            ZoomOut    = 0x200,
+            Sprint     = 0x400,
+            Walk       = 0x800,
         };
 
         std::uint32_t timeStamp = 0;
