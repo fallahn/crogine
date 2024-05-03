@@ -1,0 +1,8 @@
+{
+  "dependencies": [
+    "bullet3",
+    "sdl2",
+    "sqlite3",
+    "curl"
+  ]
+}
