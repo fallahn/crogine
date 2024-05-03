@@ -606,7 +606,7 @@ void DrivingState::createUI()
     auto barEnt = entity;
     auto barCentre = bounds.width / 2.f;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(5.f, 0.f)); //TODO expel the magic number!!
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.3f)); //TODO expel the magic number!!
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -622,7 +622,7 @@ void DrivingState::createUI()
 
     //hook/slice indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 8.f, 0.1f)); //TODO expel the magic number!!
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 8.f, 0.55f)); //TODO expel the magic number!!
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -631,7 +631,7 @@ void DrivingState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&, barCentre](cro::Entity e, float)
     {
-        glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.1f);
+        glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.55f);
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

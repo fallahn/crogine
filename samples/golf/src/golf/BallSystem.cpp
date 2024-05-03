@@ -749,10 +749,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                     ball.terrain = TerrainID::Hole;
                 }
-                //moved to post-pause delay (below)
-                //else if (len2 < GimmeRadii[m_gimmeRadius]
-                //    && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
-                //{
+                else if (len2 < GimmeRadii[m_gimmeRadius]
+                    && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
+                {
+                //    moved to post-pause delay (below)
                 //    auto* msg2 = postEvent();
                 //    msg2->type = GolfBallEvent::Gimme;
 
@@ -762,7 +762,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //    tx.setPosition(position);
 
                 //    ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
-                //}
+                    ball.checkGimme = true;
+                }
 
                 msg->position = position;
 
@@ -911,10 +912,11 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         doBallCollision(entity);
 
         ball.delay -= dt;
-        if (ball.delay < 0)
+
+        if (ball.checkGimme && ball.delay < (BallTurnDelay / 2.f))
         {
             auto position = entity.getComponent<cro::Transform>().getPosition();
-            
+
             //check for gimme first
             const auto pinDir = m_holeData->pin - position;
             const auto len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
@@ -931,9 +933,13 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 entity.getComponent<cro::Transform>().setPosition(position);
 
                 ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
+                ball.checkGimme = false;
             }
+        }
 
-
+        if (ball.delay < 0)
+        {
+            auto position = entity.getComponent<cro::Transform>().getPosition();
 
             ball.spin = { 0.f, 0.f };
             ball.initialForwardVector = { 0.f, 0.f, 0.f };

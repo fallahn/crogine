@@ -682,6 +682,8 @@ void GolfState::setActiveCamera(std::int32_t camID)
         {
             m_courseEnt.getComponent<cro::Drawable2D>().bindUniform(name, val);
         }
+
+        setUIHidden(m_currentCamera == CameraID::Sky);
     }
 }
 
