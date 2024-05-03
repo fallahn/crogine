@@ -12,16 +12,11 @@ endif()
 project(golf)
 SET(PROJECT_NAME golf)
 
-
 if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
-if(APPLE)
-SET(USE_NEWSFEED False CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
-else()
-SET(USE_NEWSFEED True CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
-endif()
+option(USE_NEWSFEED "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl" TRUE)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET (PROJECT_STATIC_RUNTIME FALSE)
