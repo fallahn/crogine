@@ -73,8 +73,6 @@ else()
   add_definitions(-DCRO_BUILD)
 endif()
 
-SET (CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_ -DHAS_SOCKLEN_T")
-SET (CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DHAS_SOCKLEN_T")
 SET (CMAKE_DEBUG_POSTFIX -d)
 
 # We're using c++17
@@ -156,6 +154,7 @@ if(NOT TARGET crogine)
     add_library(${PROJECT_NAME} SHARED ${PROJECT_SRC})
   endif()
 
+  target_compile_definitions(${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG_>)
 
   target_link_libraries(${PROJECT_NAME}
     ${SDL2_LIBRARY} 

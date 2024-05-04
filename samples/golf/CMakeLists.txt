@@ -43,9 +43,6 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
 endif()
 
-SET(CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_")
-SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
-
 if(USE_NEWSFEED)
   #add_definitions(-DUSE_RSS) #doesn't work?
   add_compile_definitions(USE_RSS)
@@ -60,7 +57,6 @@ SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET(OpenGL_GL_PREFERENCE "GLVND")
 
-find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 #TODO specify version 2.83
@@ -68,16 +64,14 @@ find_package(Bullet REQUIRED)
 find_package(SQLite3 REQUIRED)
 
 if(USE_NEWSFEED)
-find_package(CURL REQUIRED)
+  find_package(CURL REQUIRED)
 endif()
 
-if(NOT CROGINE_FOUND)
-  #build it from source
-  add_subdirectory(../../crogine)
-
-  #SET (CROGINE_INCLUDE_DIR ../../crogine/include)
-  #SET (CROGINE_LIBRARIES TODO set lib output dir)
-
+# If the crogine target exists then we're being built as part of the crogine project
+# so can link to it directly. If not, we must find a pre-installed version
+if(NOT TARGET crogine)
+  # We are configuring golf standalone, so must find a crogine installation
+  find_package(CROGINE REQUIRED)
 endif()
 
 
@@ -109,10 +103,6 @@ include_directories(
   ${SQLite3_INCLUDE_DIRS}
   ${SOCIAL_INCLUDE_DIR}
   src)
-
-if(USE_NEWSFEED)
-  include_directories(${CURL_INCLUDE_DIR})
-endif()
 
 if(USE_GNS)
   include_directories(${STEAMWORKS_INCLUDE_DIR})
@@ -189,7 +179,7 @@ else()
                  ${GOLF_SRC})
 endif()
 
-
+target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:CRO_DEBUG_>)
 
 
 target_link_libraries(${PROJECT_NAME}
@@ -199,8 +189,12 @@ target_link_libraries(${PROJECT_NAME}
   ${SQLite3_LIBRARIES}  
   ${OPENGL_LIBRARIES})
 
+if (TARGET crogine)
+ target_link_libraries(${PROJECT_NAME} crogine)
+endif()
+
 if(USE_NEWSFEED)
-  target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARIES})
+  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
 endif()
 
 if(USE_GNS)
