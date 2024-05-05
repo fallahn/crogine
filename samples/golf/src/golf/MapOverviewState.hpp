@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "Thumbsticks.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -116,6 +117,8 @@ private:
 
     std::array<TrackpadFinger, 2u> m_trackpadFingers = {};
     std::int32_t m_fingerCount;
+
+    Thumbsticks m_thumbsticks;
 
     void addSystems();
     void loadAssets();

@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "Thumbsticks.hpp"
+
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/core/HiResTimer.hpp>
@@ -101,6 +103,8 @@ private:
     {
         "Inactive", "Swing", "Summarise"
     };
+
+    Thumbsticks m_thumbsticks;
 
     struct MouseSwing final
     {

@@ -188,6 +188,8 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
     case SDL_CONTROLLERAXISMOTION:
         if (cro::GameController::controllerID(evt.caxis.which) == activeControllerID(m_enabled))
         {
+            m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
+
             switch (evt.caxis.axis)
             {
             default: break;
@@ -258,7 +260,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                                 msg->type = GolfEvent::NiceTiming;
                             }
 
-                            auto x = cro::GameController::getAxisPosition(activeControllerID(m_enabled), 
+                            auto x = /*cro::GameController::getAxisPosition(activeControllerID(m_enabled),*/m_thumbsticks.getValue(
                                 evt.caxis.axis == cro::GameController::AxisLeftY ? cro::GameController::AxisLeftX : cro::GameController::AxisRightX);
                             //higher level club sets require better accuracy
                             //https://www.desmos.com/calculator/u8hmy5q3mz
@@ -412,6 +414,7 @@ void Swingput::setEnabled(std::int32_t enabled)
     m_enabled = enabled; 
     m_lastLT = 0;
     m_lastRT = 0;
+    m_thumbsticks.reset();
 }
 
 //private

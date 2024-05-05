@@ -267,6 +267,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
+        m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADDOWN)
     {
@@ -371,16 +372,14 @@ bool MapOverviewState::simulate(float dt)
 
     if (len2 == 0)
     {
-        auto controllerID = activeControllerID(m_sharedData.inputBinding.playerID);
-
         //check controller analogue
-        auto x = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
+        auto x = m_thumbsticks.getValue(cro::GameController::AxisLeftX);
         if (x > LeftThumbDeadZone || x < -LeftThumbDeadZone)
         {
             movement.x = static_cast<float>(x) / cro::GameController::AxisMax;
         }
 
-        auto y = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
+        auto y = m_thumbsticks.getValue(cro::GameController::AxisLeftY);
         if (y > LeftThumbDeadZone || y < -LeftThumbDeadZone)
         {
             movement.y = -static_cast<float>(y) / cro::GameController::AxisMax;
@@ -392,7 +391,7 @@ bool MapOverviewState::simulate(float dt)
         }
 
 
-        auto zoom = -cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightY);
+        auto zoom = -m_thumbsticks.getValue(cro::GameController::AxisRightY);
         if (zoom < -LeftThumbDeadZone || zoom > LeftThumbDeadZone)
         {
             float zoomRatio = static_cast<float>(zoom) / cro::GameController::AxisMax;
