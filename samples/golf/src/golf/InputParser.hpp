@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -160,6 +160,7 @@ private:
     float m_estimatedDistance;
     void updateDistanceEstimation();
 
+
     void updateStroke(float);
     void updateDroneCam(float);
     void updateSpin(float);
@@ -168,6 +169,23 @@ private:
     void checkControllerInput();
     void checkMouseInput();
     glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const; //used for drone cam and spin amount
+
+
+    struct Thumbstick final
+    {
+        std::int16_t x = 0;
+        std::int16_t y = 0;
+
+        enum
+        {
+            Left, Right,
+            Count
+        };
+    };
+    std::array<Thumbstick, Thumbstick::Count> m_thumbsticks = {};
+    std::int16_t getAxisPosition(std::int32_t axis) const;
+
+
 
     cro::Clock m_minimapToggleTimer;
 

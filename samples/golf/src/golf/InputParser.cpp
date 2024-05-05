@@ -378,6 +378,33 @@ void InputParser::handleEvent(const cro::Event& evt)
             }
         }
 
+        else if (evt.type == SDL_CONTROLLERAXISMOTION)
+        {
+            //TODO we check this condition a lot... so refactor it please?
+            auto controllerID = activeControllerID(m_inputBinding.playerID);
+            if (!m_isCPU &&
+                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
+                    || m_sharedData.localConnectionData.playerCount == 1))
+            {
+                switch (evt.caxis.axis)
+                {
+                default: break;
+                case cro::GameController::AxisLeftX:
+                    m_thumbsticks[0].x = evt.caxis.value;
+                    break;
+                case cro::GameController::AxisLeftY:
+                    m_thumbsticks[0].y = evt.caxis.value;
+                    break;
+                case cro::GameController::AxisRightX:
+                    m_thumbsticks[1].x = evt.caxis.value;
+                    break;
+                case cro::GameController::AxisRightY:
+                    m_thumbsticks[1].y = evt.caxis.value;
+                    break;
+                }
+            }
+        }
+
         //this would be nice - but I cba to block the input when, say,
         //a menu is open so clicking the menu doesn't take a swing...
         /*else if (evt.type == SDL_MOUSEBUTTONDOWN)
@@ -476,7 +503,7 @@ float InputParser::getCamRotation() const
             return -1.f;
         }
 
-        auto x = -cro::GameController::getAxisPosition(activeControllerID(m_inputBinding.playerID), cro::GameController::AxisRightX);
+        auto x = -getAxisPosition(cro::GameController::AxisRightX);
         const auto dz = LeftThumbDeadZone / 4;
         if (x < -dz || x > dz)
         {
@@ -540,6 +567,7 @@ void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::
         resetPower();
         m_inputFlags = 0;
         m_spin = glm::vec2(0.f);
+        m_thumbsticks = {};
 
         m_swingput.setEnabled((m_enableFlags == std::numeric_limits<std::uint16_t>::max()) && !isCPU ? m_inputBinding.playerID : -1);
 
@@ -1230,12 +1258,10 @@ void InputParser::checkControllerInput()
         return;
     }
 
-    auto controllerID = activeControllerID(m_inputBinding.playerID);
 
     //left stick
     auto startInput = m_inputFlags;
-    float xPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
-    //xPos += cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightX);
+    float xPos = getAxisPosition(cro::GameController::AxisLeftX);
 
     if (xPos < -LeftThumbDeadZone)
     {
@@ -1255,7 +1281,7 @@ void InputParser::checkControllerInput()
         m_inputFlags &= ~InputFlag::Right;
     }
 
-    float yPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
+    float yPos = getAxisPosition(cro::GameController::AxisLeftY);
     
     float len2 = (xPos * xPos) + (yPos * yPos);
     static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);
@@ -1266,7 +1292,8 @@ void InputParser::checkControllerInput()
 
 
     //this isn't really analogue, it just moves the camera so do it separately
-    yPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightY);
+    yPos = getAxisPosition(cro::GameController::AxisRightY);
+
     if (yPos > (LeftThumbDeadZone))
     {
         m_inputFlags |= InputFlag::Down;
@@ -1364,9 +1391,8 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
         }
     }
 
-    auto controllerID = activeControllerID(m_inputBinding.playerID);
-    auto controllerX = cro::GameController::getAxisPosition(controllerID, xAxis);
-    auto controllerY = cro::GameController::getAxisPosition(controllerID, yAxis);
+    auto controllerX = getAxisPosition(xAxis);
+    auto controllerY = getAxisPosition(yAxis);
     if (std::abs(controllerX) > LeftThumbDeadZone)
     {
         //hmmm we want to read axis inversion from the settings...
@@ -1383,6 +1409,25 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
     }
 
     return rotation;
+}
+
+std::int16_t InputParser::getAxisPosition(std::int32_t axis) const
+{
+    //auto controllerID = activeControllerID(m_inputBinding.playerID);
+    //return cro::GameController::getAxisPosition(controllerID, axis);
+
+    switch (axis)
+    {
+    default: return 0;
+    case cro::GameController::AxisLeftX:
+        return m_thumbsticks[0].x;
+    case cro::GameController::AxisLeftY:
+        return m_thumbsticks[0].y;
+    case cro::GameController::AxisRightX:
+        return m_thumbsticks[1].x;
+    case cro::GameController::AxisRightY:
+        return m_thumbsticks[1].y;
+    }
 }
 
 void InputParser::beginIcon()

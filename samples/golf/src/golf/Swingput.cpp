@@ -272,7 +272,6 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                                 || timing == 33.f) //we had perfect timing but still want direction error
                             {
                                 m_hook += (xAmount * 0.31f);
-                                LogI << "Accuracy " << xAmount << std::endl;
                             }
                         }
 
