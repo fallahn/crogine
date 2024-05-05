@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -934,6 +934,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                 ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
                 ball.checkGimme = false;
+
+                ball.delay += (BallTurnDelay / 2.f);
             }
         }
 

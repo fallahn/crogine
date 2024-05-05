@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/gui/Gui.hpp>
+#include <crogine/util/Maths.hpp>
 
 namespace
 {
@@ -71,7 +72,7 @@ namespace
 Swingput::Swingput(const SharedStateData& sd)
     : m_sharedData          (sd),
     m_enabled               (-1),
-    m_hook                  (0.f),
+    m_hook                  (0.5f),
     m_gaugePosition         (0.f),
     m_lastLT                (0),
     m_lastRT                (0),
@@ -247,7 +248,8 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                             m_state = State::Inactive;
 
                             const float t = m_tempoTimer.restart();
-                            m_hook = 0.5f + ((0.033f - std::min(t, 0.066f)) / 3.f);
+                            const float timingError = ((0.033f - std::min(t, 0.066f)) / 3.f);
+                            m_hook = 0.5f + timingError;
 
                             const auto timing = std::floor(t * 1000.f);
                             if (timing == 33.f)
@@ -263,7 +265,15 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                             static constexpr std::array LevelMultipliers = { 19.f, 11.f, 7.f };
                             const float xAmount = std::pow(std::clamp(static_cast<float>(x) / 22000.f, -1.f, 1.f), LevelMultipliers[Club::getClubLevel()]);
                             
-                            m_hook += (xAmount * 0.122f);
+                            //we want to make sure any timing error is 'complimented'
+                            //by inaccuracy, else a hooked shot can actually correct for poor
+                            //timing, which isn't the idea...
+                            if (cro::Util::Maths::sgn(timingError) == cro::Util::Maths::sgn(xAmount)
+                                || timing == 33.f) //we had perfect timing but still want direction error
+                            {
+                                m_hook += (xAmount * 0.31f);
+                                LogI << "Accuracy " << xAmount << std::endl;
+                            }
                         }
 
                         //see if we started moving back after beginning the power mode

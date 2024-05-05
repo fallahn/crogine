@@ -978,11 +978,14 @@ void GolfState::handleMessage(const cro::Message& msg)
                     floatingMessage("Slice");
                 }
 
+                //LogI << "Hook is " << hook << std::endl;
+
                 auto power = m_inputParser.getPower();
                 hook *= 20.f;
                 hook = std::round(hook);
                 hook /= 20.f;
                 static constexpr float  PowerShot = 0.97f;
+
 
                 if (power > 0.59f //hmm not sure why power should factor into this?
                     && std::abs(hook) < 0.05f)
@@ -998,7 +1001,6 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                     //award more XP for aiming straight
                     float dirAmount = /*cro::Util::Easing::easeOutExpo*/((m_inputParser.getMaxRotation() - std::abs(m_inputParser.getRotation())) / m_inputParser.getMaxRotation());
-
                     auto xp = std::clamp(static_cast<std::int32_t>(6.f * dirAmount), 0, 6);
                     if (xp)
                     {

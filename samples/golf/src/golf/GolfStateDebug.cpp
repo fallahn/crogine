@@ -250,8 +250,9 @@ void GolfState::registerDebugCommands()
     //            ImGui::Text("Position %3.2f, %3.2f, %3.2f", m_targetShader.position.x, m_targetShader.position.y, m_targetShader.position.z);
     //            ImGui::Text("Size %3.3f", m_targetShader.size);*/
     //            
-    //            const auto* system = m_gameScene.getSystem<ChunkVisSystem>();
-    //            ImGui::Text("Visible Chunks %d", system->getIndexList().size());
+    //            /*const auto* system = m_gameScene.getSystem<ChunkVisSystem>();
+    //            ImGui::Text("Visible Chunks %d", system->getIndexList().size());*/
+    //            ImGui::Text("Hook %3.3f", m_inputParser.getHook());
     //        }
     //        ImGui::End();        
     //    });
