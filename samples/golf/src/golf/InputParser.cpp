@@ -33,11 +33,11 @@ source distribution.
 #include "Clubs.hpp"
 #include "Terrain.hpp"
 #include "SharedStateData.hpp"
-#include "GameConsts.hpp"
 #include "CameraFollowSystem.hpp"
 #include "CommandIDs.hpp"
 #include "BallSystem.hpp"
 #include "PacketIDs.hpp"
+#include "GameConsts.hpp"
 
 #include <AchievementStrings.hpp>
 
@@ -384,24 +384,9 @@ void InputParser::handleEvent(const cro::Event& evt)
             auto controllerID = activeControllerID(m_inputBinding.playerID);
             if (!m_isCPU &&
                 (evt.cbutton.which == cro::GameController::deviceID(controllerID)
-                    || m_sharedData.localConnectionData.playerCount == 1))
+                    || m_sharedData.localConnectionData.playerCount == 1)) //TODO this should be single human count, else adding CPU plaer breaks it
             {
-                switch (evt.caxis.axis)
-                {
-                default: break;
-                case cro::GameController::AxisLeftX:
-                    m_thumbsticks[0].x = evt.caxis.value;
-                    break;
-                case cro::GameController::AxisLeftY:
-                    m_thumbsticks[0].y = evt.caxis.value;
-                    break;
-                case cro::GameController::AxisRightX:
-                    m_thumbsticks[1].x = evt.caxis.value;
-                    break;
-                case cro::GameController::AxisRightY:
-                    m_thumbsticks[1].y = evt.caxis.value;
-                    break;
-                }
+                m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
             }
         }
 
@@ -567,7 +552,7 @@ void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::
         resetPower();
         m_inputFlags = 0;
         m_spin = glm::vec2(0.f);
-        m_thumbsticks = {};
+        m_thumbsticks.reset();
 
         m_swingput.setEnabled((m_enableFlags == std::numeric_limits<std::uint16_t>::max()) && !isCPU ? m_inputBinding.playerID : -1);
 
@@ -1416,18 +1401,7 @@ std::int16_t InputParser::getAxisPosition(std::int32_t axis) const
     //auto controllerID = activeControllerID(m_inputBinding.playerID);
     //return cro::GameController::getAxisPosition(controllerID, axis);
 
-    switch (axis)
-    {
-    default: return 0;
-    case cro::GameController::AxisLeftX:
-        return m_thumbsticks[0].x;
-    case cro::GameController::AxisLeftY:
-        return m_thumbsticks[0].y;
-    case cro::GameController::AxisRightX:
-        return m_thumbsticks[1].x;
-    case cro::GameController::AxisRightY:
-        return m_thumbsticks[1].y;
-    }
+    return m_thumbsticks.getValue(axis);
 }
 
 void InputParser::beginIcon()

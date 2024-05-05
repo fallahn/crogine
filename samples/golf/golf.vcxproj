@@ -839,6 +839,7 @@
     <ClInclude Include="src\golf\TerrainDepthmap.hpp" />
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />
     <ClInclude Include="src\golf\TextChat.hpp" />
+    <ClInclude Include="src\golf\Thumbsticks.hpp" />
     <ClInclude Include="src\golf\Treeset.hpp" />
     <ClInclude Include="src\golf\TrophyDisplaySystem.hpp" />
     <ClInclude Include="src\golf\TrophyState.hpp" />

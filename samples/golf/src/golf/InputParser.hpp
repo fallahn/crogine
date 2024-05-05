@@ -31,6 +31,7 @@ source distribution.
 
 #include "InputBinding.hpp"
 #include "Swingput.hpp"
+#include "Thumbsticks.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -171,18 +172,7 @@ private:
     glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const; //used for drone cam and spin amount
 
 
-    struct Thumbstick final
-    {
-        std::int16_t x = 0;
-        std::int16_t y = 0;
-
-        enum
-        {
-            Left, Right,
-            Count
-        };
-    };
-    std::array<Thumbstick, Thumbstick::Count> m_thumbsticks = {};
+    Thumbsticks m_thumbsticks;
     std::int16_t getAxisPosition(std::int32_t axis) const;
 
 

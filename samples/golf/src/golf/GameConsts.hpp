@@ -61,6 +61,7 @@ source distribution.
 #include <cstdint>
 #include <sstream>
 #include <iomanip>
+#include <array>
 
 static inline constexpr std::int32_t CrowdDensityCount = 4;
 
