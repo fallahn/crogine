@@ -16,11 +16,11 @@ if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
-option(USE_NEWSFEED "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl" TRUE)
+option(USE_NEWSFEED "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl" ON)
+option(USE_STEAM "Enable the steamworks SDK" OFF)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET (PROJECT_STATIC_RUNTIME FALSE)
-SET (USE_GNS FALSE CACHE STRING "Can't use newsfeed with this")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   if(PROJECT_STATIC_RUNTIME)
@@ -66,18 +66,19 @@ if(NOT TARGET crogine)
 endif()
 
 
-if(USE_GNS)
-  if(USE_NEWSFEED)
-  message(FATAL_ERROR "Can't use newsfeed with GNS builds. Set USE_NEWSFEED to false")
-  endif()
+if(USE_STEAM)
 
   add_compile_definitions(USE_GNS)
 
+  include(FetchContent)
+  FetchContent_Declare(libgns
+    GIT_REPOSITORY https://github.com/fallahn/libgns) # Could specify a tag/commit hash here?
+  FetchContent_MakeAvailable(libgns)
 
-  SET(GNS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../libgns)
+  SET(GNS_DIR ${libgns_SOURCE_DIR})
   SET(SOCIAL_DIR ${GNS_DIR}/golf_ach/src)
   SET(SOCIAL_INCLUDE_DIR ${GNS_DIR}/golf_ach/include)
-  SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${GNS_DIR}/cmake/modules/")
+  SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${GNS_DIR}/cmake/modules/")
   find_package(STEAMWORKS REQUIRED)
 
 else()
@@ -95,7 +96,7 @@ include_directories(
   ${SOCIAL_INCLUDE_DIR}
   src)
 
-if(USE_GNS)
+if(USE_STEAM)
   include_directories(${STEAMWORKS_INCLUDE_DIR})
   include_directories(${GNS_DIR}/golf_workshop/include)
   include_directories(${GNS_DIR}/libgns/include)
@@ -115,7 +116,7 @@ if(USE_NEWSFEED)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
 endif()
 
-if(USE_GNS)
+if(USE_STEAM)
   #include source of workshop, libgns
   include(${GNS_DIR}/golf_workshop/src/CMakeLists.txt)
   include(${GNS_DIR}/libgns/src/CMakeLists.txt)
@@ -183,22 +184,22 @@ if(USE_NEWSFEED)
   target_link_libraries(${PROJECT_NAME} CURL::libcurl)
 endif()
 
-if(USE_GNS)
+if(USE_STEAM)
   target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
 endif()
 
-# install to the bundle
 if(APPLE)
+  # Install the app bundle to the root install folder
+  install(TARGETS ${PROJECT_NAME} DESTINATION .)
 
-  install(TARGETS ${PROJECT_NAME}
-    RUNTIME DESTINATION .
-    BUNDLE DESTINATION ${CMAKE_SOURCE_DIR}/bundle)
-
-
+  # Use fixup_bundle to ensure all libs are copied into the bundle
+  # Then sign with ad-hoc signing
   install(CODE " include(BundleUtilities)
-    fixup_bundle(${CMAKE_SOURCE_DIR}/bundle/${PROJECT_NAME}.app \"\" \"/Library/Frameworks\")
-    verify_app(${CMAKE_SOURCE_DIR}/bundle/${PROJECT_NAME}.app)")
-    SET(CPACK_GENERATOR "DragNDrop")
+    fixup_bundle(${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app \"\" 
+    \"/Library/Frameworks;$<TARGET_FILE_DIR:crogine>;${CMAKE_INSTALL_PREFIX}/lib;${GNS_DIR}/extlibs/steam/bin\")
+    execute_process(COMMAND codesign -f -s \"-\" --deep ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app COMMAND_ECHO STDOUT)
+    execute_process(COMMAND codesign -vvvv ${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app COMMAND_ECHO STDOUT)")
+  set(CPACK_GENERATOR "DragNDrop")
 
   include(CPack)
 
