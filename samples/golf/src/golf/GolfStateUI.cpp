@@ -4063,7 +4063,8 @@ void GolfState::updateSkipMessage(float dt)
 
             //read input
             if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
-                || cro::GameController::isButtonPressed(activeControllerID(m_currentPlayer.player), m_sharedData.inputBinding.buttons[InputBinding::Action]))
+                || cro::GameController::isButtonPressed(activeControllerID(m_currentPlayer.player), m_sharedData.inputBinding.buttons[InputBinding::Action])
+                || (m_humanCount == 1 && m_buttonStates.buttonA)) //TODO this breaks if we ever get around to reassigning controller buttons
             {
                 m_skipState.currentTime = std::min(SkipState::SkipTime, m_skipState.currentTime + dt);
                 if (m_skipState.currentTime == SkipState::SkipTime)
@@ -4080,28 +4081,6 @@ void GolfState::updateSkipMessage(float dt)
                         e.getComponent<cro::Callback>().active = true;
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                    //switch to sky cam after slight delay
-                    /*auto entity = m_gameScene.createEntity();
-                    entity.addComponent<cro::Callback>().active = true;
-                    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
-                    entity.getComponent<cro::Callback>().function =
-                        [&](cro::Entity ent, float dt)
-                    {
-                        auto& currTime = ent.getComponent<cro::Callback>().getUserData<float>();
-                        currTime -= dt;
-
-                        if (currTime < 0)
-                        {
-                            if (m_currentCamera == CameraID::Player
-                                || m_currentCamera == CameraID::Bystander)
-                            {
-                                setActiveCamera(CameraID::Sky);
-                            }
-                            ent.getComponent<cro::Callback>().active = false;
-                            m_gameScene.destroyEntity(ent);
-                        }
-                    };*/
                 }
             }
             else

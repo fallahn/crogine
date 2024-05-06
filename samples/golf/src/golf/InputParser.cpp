@@ -73,6 +73,8 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_inputBinding      (sd.inputBinding),
     m_gameScene         (s),
     m_swingput          (sd),
+    m_humanCount        (1),
+    m_activeController  (-1),
     m_inputFlags        (0),
     m_prevFlags         (0),
     m_enableFlags       (std::numeric_limits<std::uint16_t>::max()),
@@ -137,6 +139,14 @@ void InputParser::handleEvent(const cro::Event& evt)
             }
         }
     };
+
+    const auto acceptInput = [&](std::int32_t joyID)
+        {
+            auto controllerID = activeControllerID(m_inputBinding.playerID);
+            return !m_isCPU &&
+                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
+                    || (m_humanCount == 1 && (m_activeController == -1 || m_activeController == joyID))); //allow input from any controller if only one local player
+        };
 
     if (m_active &&
         !m_swingput.handleEvent(evt, m_inputFlags, static_cast<std::int32_t>(m_state)))
@@ -260,10 +270,7 @@ void InputParser::handleEvent(const cro::Event& evt)
         }
         else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
         {
-            auto controllerID = activeControllerID(m_inputBinding.playerID);
-            if (!m_isCPU &&
-                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
-                || m_sharedData.localConnectionData.playerCount == 1)) //allow input from any controller if only one local player
+            if (acceptInput(evt.cbutton.which))
             {
                 if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
@@ -320,10 +327,7 @@ void InputParser::handleEvent(const cro::Event& evt)
         }
         else if (evt.type == SDL_CONTROLLERBUTTONUP)
         {
-            auto controllerID = activeControllerID(m_inputBinding.playerID);
-            if (!m_isCPU &&
-                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
-                || m_sharedData.localConnectionData.playerCount == 1))
+            if (acceptInput(evt.cbutton.which))
             {
                 if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
@@ -380,32 +384,17 @@ void InputParser::handleEvent(const cro::Event& evt)
 
         else if (evt.type == SDL_CONTROLLERAXISMOTION)
         {
-            //TODO we check this condition a lot... so refactor it please?
-            auto controllerID = activeControllerID(m_inputBinding.playerID);
-            if (!m_isCPU &&
-                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
-                    || m_sharedData.localConnectionData.playerCount == 1)) //TODO this should be single human count, else adding CPU plaer breaks it
+            if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
+            {
+                m_activeController = evt.caxis.which;
+            }
+            
+            if (acceptInput(evt.caxis.which))
             {
                 m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
             }
         }
 
-        //this would be nice - but I cba to block the input when, say,
-        //a menu is open so clicking the menu doesn't take a swing...
-        /*else if (evt.type == SDL_MOUSEBUTTONDOWN)
-        {
-            if (evt.button.button == SDL_BUTTON_LEFT)
-            {
-                m_inputFlags |= InputFlag::Action;
-            }
-        }
-        else if (evt.type == SDL_MOUSEBUTTONUP)
-        {
-            if (evt.button.button == SDL_BUTTON_LEFT)
-            {
-                m_inputFlags &= ~InputFlag::Action;
-            }
-        }*/
 
         else if (evt.type == SDL_MOUSEWHEEL)
         {
@@ -537,6 +526,12 @@ std::int32_t InputParser::getClub() const
     return m_currentClub;
 }
 
+void InputParser::setHumanCount(std::int32_t count)
+{
+    m_humanCount = count;
+    m_swingput.setHumanCount(count);
+}
+
 void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::uint8_t lie)
 {
     CRO_ASSERT(terrain < TerrainID::Count, "");
@@ -553,6 +548,7 @@ void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::
         m_inputFlags = 0;
         m_spin = glm::vec2(0.f);
         m_thumbsticks.reset();
+        m_activeController = -1;
 
         m_swingput.setEnabled((m_enableFlags == std::numeric_limits<std::uint16_t>::max()) && !isCPU ? m_inputBinding.playerID : -1);
 

@@ -151,6 +151,7 @@ namespace
 
     bool recordCam = false;
 
+
     bool isFastCPU(const SharedStateData& sd, const ActivePlayer& activePlayer)
     {
         return sd.connectionData[activePlayer.client].playerData[activePlayer.player].isCPU
@@ -254,6 +255,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     }
     m_allowAchievements = (humanCount == 1) && (getCourseIndex(sd.mapDirectory) != -1);
     m_humanCount = humanCount;
+    m_inputParser.setHumanCount(humanCount);
 
 #ifndef USE_GNS
     if (humanCount == 1)
@@ -750,6 +752,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
         case cro::GameController::ButtonB:
+            m_buttonStates.buttonB = true;
             showScoreboard(false);
             break;
         case cro::GameController::DPadUp:
@@ -761,6 +764,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             scrollScores(19);
             break;
         case cro::GameController::ButtonA:
+            m_buttonStates.buttonA = true;
             toggleQuitReady();
             break;
         //case cro::GameController::ButtonTrackpad:
@@ -786,10 +790,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Pause);
             break;
         case cro::GameController::ButtonA:
-            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player)))
+            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+                || m_humanCount == 1)
             {
                 closeMessage();
             }
+            m_buttonStates.buttonA = false;
+            break;
+        case cro::GameController::ButtonB:
+            m_buttonStates.buttonB = false;
             break;
         }
     }
@@ -1694,7 +1703,7 @@ bool GolfState::simulate(float dt)
     if (m_currentCamera == CameraID::Transition)
     {
         if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
-            || cro::GameController::isButtonPressed(0, cro::GameController::ButtonA))
+            || m_buttonStates.buttonA)
         {
             multiplier = std::min(MaxMultiplier, multiplier + (dt * 2.f));
         }
@@ -5234,6 +5243,8 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    m_buttonStates = {};
+
     cro::App::getWindow().setMouseCaptured(true);
     m_achievementTracker.hadBackspin = false;
     m_achievementTracker.hadTopspin = false;

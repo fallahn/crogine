@@ -133,6 +133,15 @@ private:
 
     TextChat m_textChat;
 
+    //fudge to track real time state of buttons
+    struct ButtonState final
+    {
+        bool buttonA = false;
+        bool buttonB = false;
+        bool buttonX = false;
+        bool buttonY = false;
+    }m_buttonStates;
+
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
     std::int32_t m_humanCount;

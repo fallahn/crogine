@@ -64,6 +64,7 @@ public:
     float getHook() const; //-1 to -1 * some angle, club defined
 
     std::int32_t getClub() const;
+    void setHumanCount(std::int32_t); //if there's only one human count we can use input from any controller
 
     // *sigh* be careful with this, the int param can be implicitly converted to bool...
     void setActive(bool active, std::int32_t terrain, bool isCPU = false, std::uint8_t lie = 1);
@@ -111,6 +112,8 @@ private:
     cro::Scene* m_gameScene;
 
     Swingput m_swingput;
+    std::int32_t m_humanCount;
+    std::int32_t m_activeController; //used when multple controllers are connected in single player
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;

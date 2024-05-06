@@ -79,6 +79,9 @@ public:
     };
     std::int32_t getState() const { return m_state; }
 
+    //allows any controller input if there's a single human on a client
+    void setHumanCount(std::int32_t c) { m_humanCount = c; }
+
 private:
     const SharedStateData& m_sharedData;
     std::int32_t m_enabled;
@@ -105,6 +108,8 @@ private:
     };
 
     Thumbsticks m_thumbsticks;
+    std::int32_t m_humanCount;
+    std::int32_t m_activeControllerID; //controller used to initiate swing
 
     struct MouseSwing final
     {
