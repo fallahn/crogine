@@ -29,16 +29,12 @@ source distribution.
 
 #pragma once
 
+#include "Thumbsticks.hpp"
+
 #include <crogine/core/GameController.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
-/*
-First/third person camera controller.
-Attach this directly to an entity which has a Camera component for first
-person view, or attach a Camera to a child entity of the camera controller
-and place it appropriately to create a third person view.
-*/
 
 struct FpsCamera final
 {
@@ -76,10 +72,16 @@ public:
 
     void process(float) override;
 
+    void setHumanCount(std::int32_t c) { m_humanCount = c; }
+    void setActivePlayer(std::int32_t p);
+
 private:
 
     const CollisionMesh& m_collisionMesh;
     const InputBinding& m_inputBinding;
+
+    std::int32_t m_humanCount;
+    std::int32_t m_playerID;
 
     struct Input final
     {
@@ -101,10 +103,15 @@ private:
 
         std::uint32_t timeStamp = 0;
         std::uint16_t buttonFlags = 0;
+        std::uint16_t prevStick = 0; //previous flags used by left thumb stick
         std::int8_t xMove = 0;
         std::int8_t yMove = 0;
-    };
-    std::array<Input, cro::GameController::MaxControllers> m_inputs;
+    }m_input;
+    
+    Thumbsticks m_thumbsticks;
+    float m_analogueMultiplier;
+    float m_inputAcceleration;
 
+    void checkControllerInput(float);
     void onEntityAdded(cro::Entity) override;
 };

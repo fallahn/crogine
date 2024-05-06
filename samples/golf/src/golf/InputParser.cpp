@@ -1189,8 +1189,8 @@ void InputParser::updateDroneCam(float dt)
         auto invRotation = glm::inverse(tx.getRotation());
         auto up = invRotation * cro::Transform::Y_AXIS;
 
-        e.getComponent<cro::Transform>().rotate(up, rotation.y * zoomSpeed * dt);
-        e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rotation.x * zoomSpeed * dt);
+        tx.rotate(up, rotation.y * zoomSpeed * dt);
+        tx.rotate(cro::Transform::X_AXIS, rotation.x * zoomSpeed * dt);
     };
     m_gameScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

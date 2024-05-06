@@ -46,9 +46,13 @@ namespace
 }
 
 FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, const InputBinding& ib)
-    : cro::System   (mb, typeid(FpsCameraSystem)),
-    m_collisionMesh (cm),
-    m_inputBinding  (ib)
+    : cro::System       (mb, typeid(FpsCameraSystem)),
+    m_collisionMesh     (cm),
+    m_inputBinding      (ib),
+    m_humanCount        (1),
+    m_playerID          (0),
+    m_analogueMultiplier(1.f),
+    m_inputAcceleration (0.f)
 {
     requireComponent<FpsCamera>();
     requireComponent<cro::Transform>();
@@ -57,9 +61,12 @@ FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, c
 //public
 void FpsCameraSystem::handleEvent(const cro::Event& evt)
 {
-    //TODO add button mapping. Probably only map one
-    //set of keys as it's unlikely people will play with
-    //two mice, if that's even possible..?
+    const auto acceptInput = [&](std::int32_t joyID)
+        {
+            return m_humanCount == 1
+                || cro::GameController::controllerID(evt.cbutton.which) == activeControllerID(m_playerID);
+        };
+
     switch (evt.type)
     {
     default: break;
@@ -67,42 +74,42 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
         {
             //actually forward...
-            m_inputs[0].buttonFlags |= Input::Forward;
+            m_input.buttonFlags |= Input::Forward;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
         {
             //actually backward...
-            m_inputs[0].buttonFlags |= Input::Backward;
+            m_input.buttonFlags |= Input::Backward;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
         {
-            m_inputs[0].buttonFlags |= Input::Left;
+            m_input.buttonFlags |= Input::Left;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
         {
-            m_inputs[0].buttonFlags |= Input::Right;
+            m_input.buttonFlags |= Input::Right;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
         {
             //actually up...
-            m_inputs[0].buttonFlags |= Input::Up;
+            m_input.buttonFlags |= Input::Up;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::EmoteMenu])
         {
             //actually down
-            m_inputs[0].buttonFlags |= Input::Down;
+            m_input.buttonFlags |= Input::Down;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
         {
-            m_inputs[0].buttonFlags |= Input::ZoomIn;
+            m_input.buttonFlags |= Input::ZoomIn;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
         {
-            m_inputs[0].buttonFlags |= Input::ZoomOut;
+            m_input.buttonFlags |= Input::ZoomOut;
         }
         else if (evt.key.keysym.sym == SDLK_LSHIFT)
         {
-            m_inputs[0].buttonFlags |= Input::Sprint;
+            m_input.buttonFlags |= Input::Sprint;
         }
 
         break;
@@ -110,42 +117,42 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
         {
             //actually forward...
-            m_inputs[0].buttonFlags &= ~Input::Forward;
+            m_input.buttonFlags &= ~Input::Forward;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
         {
             //actually backward...
-            m_inputs[0].buttonFlags &= ~Input::Backward;
+            m_input.buttonFlags &= ~Input::Backward;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
         {
-            m_inputs[0].buttonFlags &= ~Input::Left;
+            m_input.buttonFlags &= ~Input::Left;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
         {
-            m_inputs[0].buttonFlags &= ~Input::Right;
+            m_input.buttonFlags &= ~Input::Right;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
         {
             //actually up...
-            m_inputs[0].buttonFlags &= ~Input::Up;
+            m_input.buttonFlags &= ~Input::Up;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::EmoteMenu])
         {
             //actually down
-            m_inputs[0].buttonFlags &= ~Input::Down;
+            m_input.buttonFlags &= ~Input::Down;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
         {
-            m_inputs[0].buttonFlags &= ~Input::ZoomIn;
+            m_input.buttonFlags &= ~Input::ZoomIn;
         }
         else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
         {
-            m_inputs[0].buttonFlags &= ~Input::ZoomOut;
+            m_input.buttonFlags &= ~Input::ZoomOut;
         }
         else if (evt.key.keysym.sym == SDLK_LSHIFT)
         {
-            m_inputs[0].buttonFlags &= ~Input::Sprint;
+            m_input.buttonFlags &= ~Input::Sprint;
         }
         break;
     case SDL_MOUSEBUTTONDOWN:
@@ -153,10 +160,11 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         {
         default: break;
         case 0:
-            m_inputs[0].buttonFlags |= Input::Sprint;
+            //m_input.buttonFlags |= Input::Sprint;
+            //TODO make this take a screenshot
             break;
         case 1:
-            m_inputs[0].buttonFlags |= Input::Walk;
+            m_input.buttonFlags |= Input::Sprint;
             break;
         }
         break;
@@ -165,58 +173,57 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         {
         default: break;
         case 0:
-            m_inputs[0].buttonFlags &= ~Input::Sprint;
+            //m_input.buttonFlags &= ~Input::Sprint;
             break;
         case 1:
-            m_inputs[0].buttonFlags &= ~Input::Walk;
+            m_input.buttonFlags &= ~Input::Sprint;
             break;
         }
         break;
     case SDL_MOUSEMOTION:
-        m_inputs[0].xMove += evt.motion.xrel;
-        m_inputs[0].yMove += evt.motion.yrel;
+        m_input.xMove += evt.motion.xrel;
+        m_input.yMove += evt.motion.yrel;
     break;
 
 
     //parse controller presses into corresponding inputs
     case SDL_CONTROLLERBUTTONDOWN:
     {
-        auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
-        if (controllerID == 0)
+        if (acceptInput(evt.cbutton.which))
         {
-            CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
+            //CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
             switch (evt.cbutton.button)
             {
             default: break;
             /*case cro::GameController::ButtonA:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Up;
+                m_input.buttonFlags |= Input::Flags::Up;
                 break;
             case cro::GameController::ButtonB:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Down;
+                m_input.buttonFlags |= Input::Flags::Down;
                 break;*/
             case cro::GameController::ButtonX:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Sprint;
+                m_input.buttonFlags |= Input::Flags::Sprint;
                 break;
             case cro::GameController::ButtonY:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Walk;
+                m_input.buttonFlags |= Input::Flags::Walk;
                 break;
             case cro::GameController::DPadUp:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Forward;
+                m_input.buttonFlags |= Input::Flags::Forward;
                 break;
             case cro::GameController::DPadDown:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Backward;
+                m_input.buttonFlags |= Input::Flags::Backward;
                 break;
             case cro::GameController::DPadLeft:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Left;
+                m_input.buttonFlags |= Input::Flags::Left;
                 break;
             case cro::GameController::DPadRight:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::Right;
+                m_input.buttonFlags |= Input::Flags::Right;
                 break;
             case cro::GameController::ButtonRightShoulder:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::ZoomIn;
+                m_input.buttonFlags |= Input::Flags::ZoomIn;
                 break;
             case cro::GameController::ButtonLeftShoulder:
-                m_inputs[controllerID].buttonFlags |= Input::Flags::ZoomOut;
+                m_input.buttonFlags |= Input::Flags::ZoomOut;
                 break;
             }
         }
@@ -224,50 +231,47 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         break;
     case SDL_CONTROLLERBUTTONUP:
     {
-        auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
-        if (controllerID == 0) //TODO check active controller
+        if (acceptInput(evt.cbutton.which))
         {
-            CRO_ASSERT(controllerID < m_inputs.size(), "OUT OF RANGE");
             switch (evt.cbutton.button)
             {
             default: break;
             /*case cro::GameController::ButtonA:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Up;
+                m_input.buttonFlags &= ~Input::Flags::Up;
                 break;
             case cro::GameController::ButtonB:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Down;
+                m_input.buttonFlags &= ~Input::Flags::Down;
                 break;*/
             case cro::GameController::ButtonX:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Sprint;
+                m_input.buttonFlags &= ~Input::Flags::Sprint;
                 break;
             case cro::GameController::ButtonY:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Walk;
+                m_input.buttonFlags &= ~Input::Flags::Walk;
                 break;
             case cro::GameController::DPadUp:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Forward;
+                m_input.buttonFlags &= ~Input::Flags::Forward;
                 break;
             case cro::GameController::DPadDown:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Backward;
+                m_input.buttonFlags &= ~Input::Flags::Backward;
                 break;
             case cro::GameController::DPadLeft:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Left;
+                m_input.buttonFlags &= ~Input::Flags::Left;
                 break;
             case cro::GameController::DPadRight:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::Right;
+                m_input.buttonFlags &= ~Input::Flags::Right;
                 break;
             case cro::GameController::ButtonRightShoulder:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::ZoomIn;
+                m_input.buttonFlags &= ~Input::Flags::ZoomIn;
                 break;
             case cro::GameController::ButtonLeftShoulder:
-                m_inputs[controllerID].buttonFlags &= ~Input::Flags::ZoomOut;
+                m_input.buttonFlags &= ~Input::Flags::ZoomOut;
                 break;
             }
         }
     }
         break;
     case SDL_CONTROLLERAXISMOTION:
-        auto controllerID = cro::GameController::controllerID(evt.cbutton.which);
-        if (controllerID == 0) //TODO check active controller
+        if (acceptInput(evt.caxis.which))
         {
             switch (evt.caxis.axis)
             {
@@ -275,137 +279,177 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             case cro::GameController::TriggerLeft:
                 if (evt.caxis.value > MinTriggerMovement)
                 {
-                    m_inputs[controllerID].buttonFlags |= Input::Flags::Down;
+                    m_input.buttonFlags |= Input::Flags::Up;
                 }
                 else
                 {
-                    m_inputs[controllerID].buttonFlags &= ~Input::Flags::Down;
+                    m_input.buttonFlags &= ~Input::Flags::Up;
                 }
                 break;
             case cro::GameController::TriggerRight:
                 if (evt.caxis.value > MinTriggerMovement)
                 {
-                    m_inputs[controllerID].buttonFlags |= Input::Flags::Up;
+                    m_input.buttonFlags |= Input::Flags::Down;
                 }
                 else
                 {
-                    m_inputs[controllerID].buttonFlags &= ~Input::Flags::Up;
+                    m_input.buttonFlags &= ~Input::Flags::Down;
                 }
+                break;
+            case cro::GameController::AxisLeftX:
+            case cro::GameController::AxisLeftY:
+            case cro::GameController::AxisRightX:
+            case cro::GameController::AxisRightY:
+                m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
                 break;
             }
         }
         break;
     }
-
-    
 }
 
 void FpsCameraSystem::process(float dt)
 {
+    checkControllerInput(dt);
+
     auto& entities = getEntities();
     for (auto entity : entities)
     {
+        //TODO check zoom buttons - we need to do this first so wew can create a zoom speed multiplier for cam rotation
+
+
         auto& controller = entity.getComponent<FpsCamera>();
-        auto& input = m_inputs[controller.controllerIndex];
+        auto& tx = entity.getComponent<cro::Transform>();
 
-        static constexpr float MoveScale = 0.004f;
-        float pitchMove = static_cast<float>(-input.yMove) * MoveScale * controller.lookSensitivity;
-        pitchMove *= controller.yInvert;
-
-        float yawMove = static_cast<float>(-input.xMove) * MoveScale * controller.lookSensitivity;
-        
-        input.xMove = input.yMove = 0;
-
-        //clamp pitch
-        float newPitch = controller.cameraPitch + pitchMove;
-        const float clamp = 1.4f;
-        if (newPitch > clamp)
+        //do mouselook if there's any recorded movement
+        if (m_input.xMove + m_input.yMove != 0)
         {
-            pitchMove -= (newPitch - clamp);
-            controller.cameraPitch = clamp;
-        }
-        else if (newPitch < -clamp)
-        {
-            pitchMove -= (newPitch + clamp);
-            controller.cameraPitch = -clamp;
+            static constexpr float MoveScale = 0.004f;
+            float pitchMove = static_cast<float>(-m_input.yMove) * MoveScale * controller.lookSensitivity;
+            pitchMove *= controller.yInvert;
+
+            float yawMove = static_cast<float>(-m_input.xMove) * MoveScale * controller.lookSensitivity;
+
+            m_input.xMove = m_input.yMove = 0;
+
+            //clamp pitch
+            float newPitch = controller.cameraPitch + pitchMove;
+            const float clamp = 1.4f;
+            if (newPitch > clamp)
+            {
+                pitchMove -= (newPitch - clamp);
+                controller.cameraPitch = clamp;
+            }
+            else if (newPitch < -clamp)
+            {
+                pitchMove -= (newPitch + clamp);
+                controller.cameraPitch = -clamp;
+            }
+            else
+            {
+                controller.cameraPitch = newPitch;
+            }
+
+            //we need to clamp this to TAU (or ideally +- PI) else more than one rotation
+            //introduces very visible jitter
+            //player.cameraYaw = std::fmod(player.cameraYaw + yawMove, cro::Util::Const::TAU);
+            controller.cameraYaw += yawMove;
+            if (controller.cameraYaw < -cro::Util::Const::PI)
+            {
+                controller.cameraYaw += cro::Util::Const::TAU;
+            }
+            else if (controller.cameraYaw > cro::Util::Const::PI)
+            {
+                controller.cameraYaw -= cro::Util::Const::TAU;
+            }
+
+            glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
+            glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
+
+            auto rotation = tx.getRotation();
+            rotation = yaw * rotation * pitch;
+            tx.setRotation(rotation);
         }
         else
         {
-            controller.cameraPitch = newPitch;
+            //see if we have any gamepad input
+            auto controllerX = m_thumbsticks.getValue(cro::GameController::AxisRightX);
+            auto controllerY = m_thumbsticks.getValue(cro::GameController::AxisRightY);
+            glm::vec2 axisRotation = glm::vec2(0.f);
+
+            if (std::abs(controllerX) > LeftThumbDeadZone)
+            {
+                //hmmm we want to read axis inversion from the settings...
+                axisRotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
+            }
+            if (std::abs(controllerY) > LeftThumbDeadZone)
+            {
+                axisRotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
+            }
+
+            if (auto len2 = glm::length2(axisRotation); len2 != 0)
+            {
+                axisRotation = glm::normalize(axisRotation) * std::min(1.f, std::pow(std::sqrt(len2), 5.f));
+            }
+
+            auto invRotation = glm::inverse(tx.getRotation());
+            auto up = invRotation * cro::Transform::Y_AXIS;
+
+            //TODO implement zoom speed
+            tx.rotate(up, axisRotation.y * /*zoomSpeed **/ dt);
+            tx.rotate(cro::Transform::X_AXIS, axisRotation.x /** zoomSpeed*/ * dt);
         }
 
-        //we need to clamp this to TAU (or ideally +- PI) else more than one rotation
-        //introduces very visible jitter
-        //player.cameraYaw = std::fmod(player.cameraYaw + yawMove, cro::Util::Const::TAU);
-        controller.cameraYaw += yawMove;
-        if (controller.cameraYaw < -cro::Util::Const::PI)
-        {
-            controller.cameraYaw += cro::Util::Const::TAU;
-        }
-        else if (controller.cameraYaw > cro::Util::Const::PI)
-        {
-            controller.cameraYaw -= cro::Util::Const::TAU;
-        }
 
-        glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
-        glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
-
-        auto& tx = entity.getComponent<cro::Transform>();
-        auto rotation = yaw * tx.getRotation() * pitch;
-        tx.setRotation(rotation);
-
-
-        //we only want to rotate around the yaw when walking
-        rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), controller.cameraYaw, glm::vec3(0.f, 1.f, 0.f));
-        glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
-        glm::vec3 rightVector = rotation * glm::vec3(1.f, 0.f, 0.f);
+        //this only applies if we weren't 'flying' where the only rotation is around Y
+        //rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), controller.cameraYaw, glm::vec3(0.f, 1.f, 0.f));
+        //glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
+        //glm::vec3 rightVector = rotation * glm::vec3(1.f, 0.f, 0.f);
 
 
         //walking speed in metres per second
         float moveSpeed = controller.moveSpeed * dt;
-        if (input.buttonFlags & Input::Flags::Sprint)
+        if (m_input.buttonFlags & Input::Flags::Sprint)
         {
             moveSpeed *= FlyMultiplier;
         }
-        if (input.buttonFlags & Input::Flags::Walk)
+        if (m_input.buttonFlags & Input::Flags::Walk)
         {
             moveSpeed *= 0.05f;
         }
 
-        if (controller.flyMode)
+        //move in the direction we're facing
+        auto forwardVector = tx.getForwardVector();
+        auto rightVector = tx.getRightVector();
+
+        //TODO the forward and right vectors should
+        //be combined into a single direction and normalised...
+        if (m_input.buttonFlags & Input::Forward)
         {
-            forwardVector = tx.getForwardVector();
-            rightVector = tx.getRightVector();
+            tx.move(forwardVector * moveSpeed * m_analogueMultiplier);
+        }
+        if (m_input.buttonFlags & Input::Backward)
+        {
+            tx.move(-forwardVector * moveSpeed * m_analogueMultiplier);
         }
 
-        if (input.buttonFlags & Input::Forward)
+        if (m_input.buttonFlags & Input::Left)
         {
-            tx.move(forwardVector * moveSpeed);
+            tx.move(-rightVector * moveSpeed * m_analogueMultiplier);
         }
-        if (input.buttonFlags & Input::Backward)
+        if (m_input.buttonFlags & Input::Right)
         {
-            tx.move(-forwardVector * moveSpeed);
-        }
-
-        if (input.buttonFlags & Input::Left)
-        {
-            tx.move(-rightVector * moveSpeed);
-        }
-        if (input.buttonFlags & Input::Right)
-        {
-            tx.move(rightVector * moveSpeed);
+            tx.move(rightVector * moveSpeed * m_analogueMultiplier);
         }
 
-        if (controller.flyMode)
+        //although... this is always up and down
+        if (m_input.buttonFlags & Input::Up)
         {
-            if (input.buttonFlags & Input::Up)
-            {
-                tx.move(glm::vec3(0.f, 1.f, 0.f) * moveSpeed);
-            }
-            if (input.buttonFlags & Input::Down)
-            {
-                tx.move(glm::vec3(0.f, -1.f, 0.f) * moveSpeed);
-            }
+            tx.move(glm::vec3(0.f, 1.f, 0.f) * moveSpeed);
+        }
+        if (m_input.buttonFlags & Input::Down)
+        {
+            tx.move(glm::vec3(0.f, -1.f, 0.f) * moveSpeed);
         }
 
 
@@ -416,13 +460,91 @@ void FpsCameraSystem::process(float dt)
         {
             tx.move({ 0.f, MinHeight - diff, 0.f });
         }
-
-
-        //TODO check zoom buttons
     }
 }
 
+void FpsCameraSystem::setActivePlayer(std::int32_t p)
+{
+    m_playerID = p;
+    m_thumbsticks = {};
+    m_input.buttonFlags = 0;
+}
+
 //private
+void FpsCameraSystem::checkControllerInput(float dt)
+{
+    static constexpr float MinAcceleration = 0.5f;
+    if (m_input.buttonFlags & (Input::Left | Input::Right | Input::Forward | Input::Backward))
+    {
+        m_inputAcceleration = std::min(1.f, m_inputAcceleration + dt);
+    }
+    else
+    {
+        m_inputAcceleration = 0.f;
+    }
+
+    //default amount from keyboard input, is overwritten
+    //by controller if there is any controller input.
+    m_analogueMultiplier = MinAcceleration + ((1.f - MinAcceleration) * m_inputAcceleration);
+
+    //left stick
+    auto startInput = m_input.buttonFlags;
+    float xPos = m_thumbsticks.getValue(cro::GameController::AxisLeftX);
+
+    if (xPos < -LeftThumbDeadZone)
+    {
+        m_input.buttonFlags |= Input::Left;
+    }
+    else if (m_input.prevStick & Input::Left)
+    {
+        m_input.buttonFlags &= ~Input::Left;
+    }
+
+    if (xPos > LeftThumbDeadZone)
+    {
+        m_input.buttonFlags |= Input::Right;
+    }
+    else if (m_input.prevStick & Input::Right)
+    {
+        m_input.buttonFlags &= ~Input::Right;
+    }
+
+    float yPos = m_thumbsticks.getValue(cro::GameController::AxisLeftY);
+
+    
+    if (yPos < -LeftThumbDeadZone)
+    {
+        m_input.buttonFlags |= Input::Forward;
+    }
+    else if (m_input.prevStick & Input::Forward)
+    {
+        m_input.buttonFlags &= ~Input::Forward;
+    }
+
+    if (yPos > LeftThumbDeadZone)
+    {
+        m_input.buttonFlags |= Input::Backward;
+    }
+    else if (m_input.prevStick & Input::Backward)
+    {
+        m_input.buttonFlags &= ~Input::Backward;
+    }
+
+
+    //calc multiplier from magnitude
+    float len2 = (xPos * xPos) + (yPos * yPos);
+    static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);
+    if (len2 > MinLen2)
+    {
+        m_analogueMultiplier = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax), 5.f));
+    }
+
+    if (startInput ^ m_input.buttonFlags)
+    {
+        m_input.prevStick = m_input.buttonFlags;
+    }
+}
+
 void FpsCameraSystem::onEntityAdded(cro::Entity entity)
 {
     entity.getComponent<FpsCamera>().resetOrientation(entity);

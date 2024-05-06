@@ -799,6 +799,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonB:
             m_buttonStates.buttonB = false;
+            if (m_photoMode)
+            {
+                if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+                    || m_humanCount == 1)
+                {
+                    toggleFreeCam();
+                }
+            }
             break;
         }
     }
@@ -2246,9 +2254,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkVisSystem>(mb, MapSize, &m_terrainBuilder);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
-//#ifdef CRO_DEBUG_
-    m_gameScene.addSystem<FpsCameraSystem>(mb, m_collisionMesh, m_sharedData.inputBinding);
-//#endif
+    m_gameScene.addSystem<FpsCameraSystem>(mb, m_collisionMesh, m_sharedData.inputBinding)->setHumanCount(m_humanCount);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);

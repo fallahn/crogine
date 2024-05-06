@@ -755,6 +755,10 @@ void GolfState::toggleFreeCam()
         m_resolutionUpdate.targetFade = 0.2f;
 
         setUIHidden(true);
+
+        //TODO this is used to select which controller to use, so we should be setting
+        //the controller ID here with the last active ID if there's only one human player
+        m_gameScene.getSystem<FpsCameraSystem>()->setActivePlayer(m_currentPlayer.player);
     }
     else
     {
