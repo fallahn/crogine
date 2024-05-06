@@ -105,7 +105,7 @@ public:
 
     void doFastStroke(float hook, float power); //performed by 'fast' CPU
 
-
+    std::int32_t getLastActiveController() const;
 private:
     const SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;

@@ -954,7 +954,14 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
                 auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
 
-                cro::GameController::rumbleStart(activeControllerID(m_sharedData.inputBinding.playerID), strLow, strHigh, 200);
+                if (m_humanCount == 1)
+                {
+                    cro::GameController::rumbleStart(cro::GameController::controllerID(m_inputParser.getLastActiveController()), strLow, strHigh, 200);
+                }
+                else
+                {
+                    cro::GameController::rumbleStart(activeControllerID(m_sharedData.inputBinding.playerID), strLow, strHigh, 200);
+                }
             }
 
             //auto skip if fast CPU is on

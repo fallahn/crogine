@@ -82,6 +82,9 @@ public:
     //allows any controller input if there's a single human on a client
     void setHumanCount(std::int32_t c) { m_humanCount = c; }
 
+    //whichever controller ID took the shot (ID, NOT index)
+    std::int32_t getLastActiveController() const;
+
 private:
     const SharedStateData& m_sharedData;
     std::int32_t m_enabled;

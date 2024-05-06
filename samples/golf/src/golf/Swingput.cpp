@@ -50,6 +50,8 @@ namespace
     }debugOutput;
 #endif
 
+    std::int32_t lastActiveID = -1;
+
     constexpr std::int16_t MinTriggerMove = 16000;
 
     constexpr float MaxMouseDraw = 20.f;
@@ -295,6 +297,8 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
                             {
                                 m_hook += (xAmount * 0.31f);
                             }
+
+                            lastActiveID = evt.caxis.which;
                         }
 
                         //see if we started moving back after beginning the power mode
@@ -436,6 +440,11 @@ void Swingput::setEnabled(std::int32_t enabled)
     m_lastLT = 0;
     m_lastRT = 0;
     m_thumbsticks.reset();
+}
+
+std::int32_t Swingput::getLastActiveController() const
+{
+    return lastActiveID;
 }
 
 //private

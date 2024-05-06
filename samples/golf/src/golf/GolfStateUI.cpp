@@ -4040,8 +4040,10 @@ void GolfState::updateSkipMessage(float dt)
                     if (cro::GameController::getControllerCount() != 0
                         && m_skipState.displayControllerMessage)
                     {
+                        auto idx = m_humanCount == 1 ? cro::GameController::controllerID(m_inputParser.getLastActiveController()) : activeControllerID(m_currentPlayer.player);
+
                         //set correct button icon
-                        if (cro::GameController::hasPSLayout(activeControllerID(m_currentPlayer.player)))
+                        if (cro::GameController::hasPSLayout(idx))
                         {
                             data.buttonIndex = 1; //used as animation ID
                         }

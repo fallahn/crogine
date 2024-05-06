@@ -66,6 +66,8 @@ namespace
     static constexpr float MinBarSpeed = 0.9f; //base speed of power bar up to level 10
 
     const cro::Time DoubleTapTime = cro::milliseconds(200);
+
+    std::int32_t lastActiveController = -1;
 }
 
 InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
@@ -332,6 +334,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                 if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
                     m_inputFlags &= ~InputFlag::Action;
+                    lastActiveController = evt.cbutton.which;
                 }
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::NextClub])
                 {
@@ -840,6 +843,11 @@ void InputParser::doFastStroke(float accuracy, float power)
     msg->type = GolfEvent::HitBall;
 }
 
+std::int32_t InputParser::getLastActiveController() const
+{
+    return lastActiveController;
+}
+
 //private
 void InputParser::updateDistanceEstimation()
 {
@@ -1042,10 +1050,10 @@ void InputParser::updateStroke(float dt)
                             m_state = State::Flight;
                             m_hook = m_swingput.getHook();
 
+                            lastActiveController = m_swingput.getLastActiveController();
+
                             auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                             msg->type = GolfEvent::HitBall;
-
-                            //TODO read hook value from swingput
                         }
                         else
                         {
