@@ -1154,6 +1154,12 @@ void GolfState::handleMessage(const cro::Message& msg)
         switch(data.type)
         {
         default: break;
+        case SceneEvent::RequestToggleFreecam:
+            if (!m_textChat.isVisible())
+            {
+                toggleFreeCam();
+            }
+            break;
         case SceneEvent::PlayerRotate:
             if (m_activeAvatar)
             {

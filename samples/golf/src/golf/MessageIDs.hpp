@@ -105,6 +105,7 @@ struct SceneEvent
         TransitionComplete,
         RequestSwitchCamera,
         RequestToggleMinimap,
+        RequestToggleFreecam,
         PlayerIdle,
         PlayerRotate,
         PlayerBad,
