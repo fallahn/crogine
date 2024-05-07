@@ -4,15 +4,6 @@ cmake_minimum_required(VERSION 3.5.0)
 if(APPLE)
   #required for std::filesystem
   SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
-
-  #force macOS to use homebrew installed libs, eg OpenAL
-  SET(CMAKE_PREFIX_PATH 
-	"/opt/homebrew"
-	"/opt/homebrew/opt/openal-soft/include"
-	"/opt/homebrew/opt/openal-soft/lib"
-	"/usr/local"
-	"/usr/local/opt/openal-soft/include"
-	"/usr/local/opt/openal-soft/lib")
   SET(CMAKE_FIND_FRAMEWORK LAST)
 endif()
 
@@ -81,16 +72,13 @@ SET (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 SET (OpenGL_GL_PREFERENCE "GLVND")
 
-find_package(SDL2 REQUIRED)
+find_package(SDL2 MODULE REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(OPUS REQUIRED)
 
 if(USE_OPENAL)
-#we were using mojoal on mac but now trying to get openal-soft to work from brew
-  #if(NOT APPLE)
-    find_package(OpenAL REQUIRED)
-  #endif()
+  find_package(OpenAL REQUIRED)
 else()
   find_package(SDL2_mixer REQUIRED)
 endif()
@@ -112,18 +100,13 @@ if(MSVC)
   include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
 elseif(LINUX)
   include_directories(${LIBUNWIND_INCLUDE_DIRS})
-elseif(APPLE)
-  include_directories(/usr/local/opt/openal-soft/include)
-  link_directories(/usr/local/opt/openal-soft/lib)
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 
 if(USE_OPENAL)
-  #if(NOT APPLE)
-    include_directories(${OPENAL_INCLUDE_DIR})
-  #endif()
+  include_directories(${OPENAL_INCLUDE_DIR})
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_openal})
 else()
   include_directories(${SDL2_MIXER_INCLUDE_DIR})
@@ -163,9 +146,7 @@ if(NOT TARGET crogine)
     ${OPENGL_LIBRARIES})
 
   if(USE_OPENAL)
-    #if(NOT APPLE)
-      target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY})
-    #endif()
+    target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY})
   else()
     target_link_libraries(${PROJECT_NAME} ${SDL2_MIXER_LIBRARY})
   endif()
