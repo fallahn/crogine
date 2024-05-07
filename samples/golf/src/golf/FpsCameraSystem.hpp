@@ -73,7 +73,7 @@ public:
     void process(float) override;
 
     void setHumanCount(std::int32_t c) { m_humanCount = c; }
-    void setActivePlayer(std::int32_t p);
+    void setControllerID(std::int32_t p);
 
 private:
 
@@ -81,7 +81,7 @@ private:
     const InputBinding& m_inputBinding;
 
     std::int32_t m_humanCount;
-    std::int32_t m_playerID;
+    std::int32_t m_controllerID;
 
     struct Input final
     {

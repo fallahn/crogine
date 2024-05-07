@@ -1166,6 +1166,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (!m_textChat.isVisible())
             {
                 toggleFreeCam();
+                m_gameScene.getSystem<FpsCameraSystem>()->setControllerID(data.data);
             }
             break;
         case SceneEvent::PlayerRotate:

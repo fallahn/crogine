@@ -30,6 +30,7 @@ source distribution.
 #include "FpsCameraSystem.hpp"
 #include "CollisionMesh.hpp"
 #include "InputBinding.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Keyboard.hpp>
@@ -50,7 +51,7 @@ FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, c
     m_collisionMesh     (cm),
     m_inputBinding      (ib),
     m_humanCount        (1),
-    m_playerID          (0),
+    m_controllerID      (0),
     m_analogueMultiplier(1.f),
     m_inputAcceleration (0.f)
 {
@@ -61,10 +62,12 @@ FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, c
 //public
 void FpsCameraSystem::handleEvent(const cro::Event& evt)
 {
+    //hmmm what happens if we unplug this controller?
+    //I guess keyboard is the default in this case
     const auto acceptInput = [&](std::int32_t joyID)
         {
             return m_humanCount == 1
-                || cro::GameController::controllerID(evt.cbutton.which) == activeControllerID(m_playerID);
+                || joyID == m_controllerID;
         };
 
     switch (evt.type)
@@ -207,7 +210,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             case cro::GameController::ButtonY:
                 m_input.buttonFlags |= Input::Flags::Walk;
                 break;
-            case cro::GameController::DPadUp:
+            /*case cro::GameController::DPadUp:
                 m_input.buttonFlags |= Input::Flags::Forward;
                 break;
             case cro::GameController::DPadDown:
@@ -218,7 +221,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 break;
             case cro::GameController::DPadRight:
                 m_input.buttonFlags |= Input::Flags::Right;
-                break;
+                break;*/
             case cro::GameController::ButtonRightShoulder:
                 m_input.buttonFlags |= Input::Flags::ZoomIn;
                 break;
@@ -248,7 +251,14 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             case cro::GameController::ButtonY:
                 m_input.buttonFlags &= ~Input::Flags::Walk;
                 break;
-            case cro::GameController::DPadUp:
+            case cro::GameController::DPadDown:
+            {
+                auto* msg = postMessage<SceneEvent>(cl::MessageID::SceneMessage);
+                msg->type = SceneEvent::RequestToggleFreecam;
+                msg->data = evt.cbutton.button;
+            }
+                break;
+            /*case cro::GameController::DPadUp:
                 m_input.buttonFlags &= ~Input::Flags::Forward;
                 break;
             case cro::GameController::DPadDown:
@@ -259,7 +269,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 break;
             case cro::GameController::DPadRight:
                 m_input.buttonFlags &= ~Input::Flags::Right;
-                break;
+                break;*/
             case cro::GameController::ButtonRightShoulder:
                 m_input.buttonFlags &= ~Input::Flags::ZoomIn;
                 break;
@@ -279,21 +289,21 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             case cro::GameController::TriggerLeft:
                 if (evt.caxis.value > MinTriggerMovement)
                 {
-                    m_input.buttonFlags |= Input::Flags::Up;
-                }
-                else
-                {
-                    m_input.buttonFlags &= ~Input::Flags::Up;
-                }
-                break;
-            case cro::GameController::TriggerRight:
-                if (evt.caxis.value > MinTriggerMovement)
-                {
                     m_input.buttonFlags |= Input::Flags::Down;
                 }
                 else
                 {
                     m_input.buttonFlags &= ~Input::Flags::Down;
+                }
+                break;
+            case cro::GameController::TriggerRight:
+                if (evt.caxis.value > MinTriggerMovement)
+                {
+                    m_input.buttonFlags |= Input::Flags::Up;
+                }
+                else
+                {
+                    m_input.buttonFlags &= ~Input::Flags::Up;
                 }
                 break;
             case cro::GameController::AxisLeftX:
@@ -463,9 +473,9 @@ void FpsCameraSystem::process(float dt)
     }
 }
 
-void FpsCameraSystem::setActivePlayer(std::int32_t p)
+void FpsCameraSystem::setControllerID(std::int32_t p)
 {
-    m_playerID = p;
+    m_controllerID = p;
     m_thumbsticks = {};
     m_input.buttonFlags = 0;
 }

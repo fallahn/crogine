@@ -314,9 +314,6 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == cro::GameController::DPadDown)
                 {
                     //m_inputFlags |= InputFlag::Down;
-                    //toggles freecam
-                    auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
-                    msg->type = SceneEvent::RequestToggleFreecam;
                 }
 
                 /*else if (evt.cbutton.button == cro::GameController::ButtonRightStick)
@@ -380,6 +377,10 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == cro::GameController::DPadDown)
                 {
                     //m_inputFlags &= ~InputFlag::Down;
+                    //toggles freecam
+                    auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                    msg->type = SceneEvent::RequestToggleFreecam;
+                    msg->data = evt.cbutton.which;
                 }
 
                 else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
