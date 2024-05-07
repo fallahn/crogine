@@ -56,12 +56,12 @@ And configure CMake
 
 ```shell
 mkdir build && cd build
-cmake .. -D MACOS_BUNDLE=true -G Xcode
+cmake .. -G Xcode
 ```
 
 Alternatively you might have some luck with
 ```
-cmake .. -D MACOS_BUNDLE=true -G Xcode -D CMAKE_C_COMPILER="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc" -D CMAKE_CXX_COMPILER="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++"
+cmake .. -G Xcode -D CMAKE_C_COMPILER="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc" -D CMAKE_CXX_COMPILER="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++"
 ```
 
 To build a universal binary include the define (requires cmake 3.18 and higher and Xcode 12)
