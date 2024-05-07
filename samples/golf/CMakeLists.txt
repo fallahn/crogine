@@ -16,7 +16,7 @@ if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
-option(USE_NEWSFEED "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl" ON)
+#option(USE_NEWSFEED "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl" ON)
 option(USE_STEAM "Enable the steamworks SDK" OFF)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
@@ -34,11 +34,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
 endif()
 
-if(USE_NEWSFEED)
-  #add_definitions(-DUSE_RSS) #doesn't work?
-  add_compile_definitions(USE_RSS)
-  #add_compile_definitions(-DUSE_RSS) #can't find a definitive answer on this...
-endif()
+#if(USE_NEWSFEED)
+#  add_compile_definitions(USE_RSS)
+#endif()
 
 
 
@@ -54,7 +52,7 @@ find_package(OpenGL REQUIRED)
 find_package(Bullet REQUIRED)
 find_package(SQLite3 REQUIRED)
 
-if(USE_NEWSFEED)
+if(NOT USE_STEAM)
   find_package(CURL REQUIRED)
 endif()
 
@@ -111,10 +109,11 @@ include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
 SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SQLITE_SRC})
-if(USE_NEWSFEED)
+#Steam version actually uses this too now...
+#if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
-endif()
+#endif()
 
 if(USE_STEAM)
   #include source of workshop, libgns
@@ -180,12 +179,14 @@ if (TARGET crogine)
  target_link_libraries(${PROJECT_NAME} crogine)
 endif()
 
-if(USE_NEWSFEED)
-  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
-endif()
+#if(USE_NEWSFEED)
+#  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
+#endif()
 
 if(USE_STEAM)
   target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
+else()
+  target_link_libraries(${PROJECT_NAME} CURL::libcurl)
 endif()
 
 if(APPLE)

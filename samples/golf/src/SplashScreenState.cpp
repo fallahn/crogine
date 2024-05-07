@@ -177,7 +177,7 @@ bool SplashState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::MessageOverlay);
         }
 #ifdef USE_GNS
-#undef USE_RSS
+//#undef USE_RSS
         else
         {
             if (!Social::isSteamdeck())
@@ -186,12 +186,12 @@ bool SplashState::handleEvent(const cro::Event& evt)
             }
         }
 #endif
-#ifdef USE_RSS
+//#ifdef USE_RSS
         else
         {
             requestStackPush(StateID::News);
         }
-#endif
+//#endif
     }
 
     m_uiScene.forwardEvent(evt);
@@ -227,7 +227,7 @@ bool SplashState::simulate(float dt)
             requestStackPush(StateID::MessageOverlay);
         }
 #ifdef USE_GNS
-#undef USE_RSS
+//#undef USE_RSS
         else
         {
             if (!Social::isSteamdeck())
@@ -236,12 +236,12 @@ bool SplashState::simulate(float dt)
             }
         }
 #endif
-#ifdef USE_RSS
-    else
-    {
-        requestStackPush(StateID::News);
-    }
-#endif
+//#ifdef USE_RSS
+        else
+        {
+            requestStackPush(StateID::News);
+        }
+//#endif
     }
 
     return false;
@@ -415,12 +415,12 @@ void SplashState::loadAssets()
                             m_sharedData.errorMessage = "Welcome";
                             requestStackPush(StateID::MessageOverlay);
                         }
-#ifdef USE_RSS
+//#ifdef USE_RSS
                         else
                         {
                             requestStackPush(StateID::News);
                         }
-#endif
+//#endif
                     }
                 }
                 break;
