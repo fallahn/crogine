@@ -176,7 +176,7 @@ bool SplashState::handleEvent(const cro::Event& evt)
             m_sharedData.errorMessage = "Welcome";
             requestStackPush(StateID::MessageOverlay);
         }
-#ifdef USE_GNS
+//#ifdef USE_GNS
 //#undef USE_RSS
         else
         {
@@ -185,12 +185,12 @@ bool SplashState::handleEvent(const cro::Event& evt)
                 requestStackPush(StateID::News);
             }
         }
-#endif
+//#endif
 //#ifdef USE_RSS
-        else
-        {
-            requestStackPush(StateID::News);
-        }
+        //else
+        //{
+        //    requestStackPush(StateID::News);
+        //}
 //#endif
     }
 
@@ -226,7 +226,7 @@ bool SplashState::simulate(float dt)
             m_sharedData.errorMessage = "Welcome";
             requestStackPush(StateID::MessageOverlay);
         }
-#ifdef USE_GNS
+//#ifdef USE_GNS
 //#undef USE_RSS
         else
         {
@@ -235,12 +235,12 @@ bool SplashState::simulate(float dt)
                 requestStackPush(StateID::News);
             }
         }
-#endif
+//#endif
 //#ifdef USE_RSS
-        else
-        {
-            requestStackPush(StateID::News);
-        }
+        //else
+        //{
+        //    requestStackPush(StateID::News);
+        //}
 //#endif
     }
 
