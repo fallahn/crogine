@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -149,7 +149,8 @@ namespace cro
         {
             enum
             {
-                FullScreenToggled
+                FullScreenToggled,
+                ScreenshotTaken //note that files are written asynchronously and may not be available when this message is received
             }type = FullScreenToggled;
         };
 

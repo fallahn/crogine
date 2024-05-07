@@ -68,6 +68,8 @@ static void winFPE(int)
 #include <SDL_joystick.h>
 #include <SDL_filesystem.h>
 
+#include <future>
+
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
 #include "../detail/fa-regular-400.hpp"
@@ -538,46 +540,63 @@ bool App::isValid()
 
 void App::saveScreenshot()
 {
+    //wait for any previous operation
+    static std::future<void> writeResult;
+    if (writeResult.valid())
+    {
+        writeResult.wait();
+    }
+
+    //TODO this assumes we're calling this with the main buffer
+    //active - if a texture buffer is currently active we should be
+    //checking the size of that at the very least...
     auto size = m_window.getSize();
-    std::vector<GLubyte> buffer(size.x * size.y * 4);
+    static std::vector<GLubyte> buffer;
+    buffer.resize(size.x * size.y * 4);
+
     glCheck(glPixelStorei(GL_PACK_ALIGNMENT, 1));
     glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
 
-    //flip row order
-    stbi_flip_vertically_on_write(1);
+    postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::ScreenshotTaken;
 
-    auto d = SysTime::now();
-    std::stringstream ss;
-    ss << std::setw(2) << std::setfill('0') << d.year() << "/"
-        << std::setw(2) << std::setfill('0') << d.months() << "/"
-        << d.days();
-    
-        
-    std::string filename = "screenshot_" + ss.str() + "_" + SysTime::timeString() + ".png";
-    std::replace(filename.begin(), filename.end(), '/', '_');
-    std::replace(filename.begin(), filename.end(), ':', '_');
 
-    auto outPath = getPreferencePath()+ "screenshots/";
-    std::replace(outPath.begin(), outPath.end(), '\\', '/');
+    writeResult = std::async(std::launch::async, [size]() {
+        //flip row order
+        stbi_flip_vertically_on_write(1);
 
-    if (!FileSystem::directoryExists(outPath))
-    {
-        FileSystem::createDirectory(outPath);
-    }
+        auto d = SysTime::now();
+        std::stringstream ss;
+        ss << std::setw(2) << std::setfill('0') << d.year() << "/"
+            << std::setw(2) << std::setfill('0') << d.months() << "/"
+            << d.days();
 
-    filename = outPath + filename;
 
-    RaiiRWops out;
-    out.file = SDL_RWFromFile(filename.c_str(), "w");
-    if (out.file)
-    {
-        stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
-        LogI << "Saved " << filename << std::endl;
-    }
-    else
-    {
-        LogE << SDL_GetError() << std::endl;
-    }
+        std::string filename = "screenshot_" + ss.str() + "_" + SysTime::timeString() + ".png";
+        std::replace(filename.begin(), filename.end(), '/', '_');
+        std::replace(filename.begin(), filename.end(), ':', '_');
+
+        auto outPath = getPreferencePath() + "screenshots/";
+        std::replace(outPath.begin(), outPath.end(), '\\', '/');
+
+        if (!FileSystem::directoryExists(outPath))
+        {
+            FileSystem::createDirectory(outPath);
+        }
+
+        filename = outPath + filename;
+
+        RaiiRWops out;
+        out.file = SDL_RWFromFile(filename.c_str(), "w");
+        if (out.file)
+        {
+            stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
+            LogI << "Saved " << filename << std::endl;
+        }
+        else
+        {
+            LogE << SDL_GetError() << std::endl;
+        }
+        });
 }
 
 //protected
