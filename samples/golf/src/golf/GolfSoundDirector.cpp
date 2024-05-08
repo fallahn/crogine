@@ -173,6 +173,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/tutorial_appear.wav",
         "assets/golf/sound/menu/poke.wav",
         "assets/golf/sound/menu/skins.wav",
+        "assets/golf/sound/menu/snapshot.wav",
 
         "assets/golf/sound/ambience/crowd_clear_throat.wav",
         "assets/golf/sound/ambience/crowd_cough.wav",
@@ -211,6 +212,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cro::Message::SystemMessage:
+        {
+            const auto& data = msg.getData<cro::Message::SystemEvent>();
+            if (data.type == cro::Message::SystemEvent::ScreenshotTaken)
+            {
+                playSound(AudioID::Snapshot, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+            }
+        }
+            break;
         case Social::MessageID::SocialMessage:
         {
             const auto& data = msg.getData<Social::SocialEvent>();

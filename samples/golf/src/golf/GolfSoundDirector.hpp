@@ -158,6 +158,7 @@ public:
             Chat,
             Poke,
             SkinsWin,
+            Snapshot,
 
             CrowdClearThroat,
             CrowdCough,

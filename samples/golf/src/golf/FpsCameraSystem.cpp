@@ -163,8 +163,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         {
         default: break;
         case 0:
-            //m_input.buttonFlags |= Input::Sprint;
-            //TODO make this take a screenshot
+            Social::takeScreenshot();
             break;
         case 1:
             m_input.buttonFlags |= Input::Sprint;
@@ -198,10 +197,12 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             switch (evt.cbutton.button)
             {
             default: break;
-            /*case cro::GameController::ButtonA:
-                m_input.buttonFlags |= Input::Flags::Up;
+            case cro::GameController::ButtonA:
+                //m_input.buttonFlags |= Input::Flags::Up;
+                Social::takeScreenshot();
                 break;
-            case cro::GameController::ButtonB:
+            /*case cro::GameController::ButtonB:
+                //this quits the mode
                 m_input.buttonFlags |= Input::Flags::Down;
                 break;*/
             case cro::GameController::ButtonX:
