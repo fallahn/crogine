@@ -463,35 +463,54 @@ void FpsCameraSystem::process(float dt)
         auto forwardVector = tx.getForwardVector();
         auto rightVector = tx.getRightVector();
 
-        //TODO the forward and right vectors should
+        //the forward and right vectors should
         //be combined into a single direction and normalised...
+
+        glm::vec3 movement = glm::vec3(0.f);
         if (m_input.buttonFlags & Input::Forward)
         {
-            tx.move(forwardVector * moveSpeed * m_analogueMultiplier);
+            movement += forwardVector;
         }
         if (m_input.buttonFlags & Input::Backward)
         {
-            tx.move(-forwardVector * moveSpeed * m_analogueMultiplier);
+            movement -= forwardVector;
         }
 
         if (m_input.buttonFlags & Input::Left)
         {
-            tx.move(-rightVector * moveSpeed * m_analogueMultiplier);
+            movement -= rightVector;
         }
         if (m_input.buttonFlags & Input::Right)
         {
-            tx.move(rightVector * moveSpeed * m_analogueMultiplier);
+            movement += rightVector;
         }
 
-        //although... this is always up and down
         if (m_input.buttonFlags & Input::Up)
         {
-            tx.move(glm::vec3(0.f, 1.f, 0.f) * moveSpeed);
+            movement += cro::Transform::Y_AXIS;
         }
         if (m_input.buttonFlags & Input::Down)
         {
-            tx.move(glm::vec3(0.f, -1.f, 0.f) * moveSpeed);
+            movement -= cro::Transform::Y_AXIS;
         }
+
+
+        if (glm::length2(movement) != 0)
+        {
+            movement = glm::normalize(movement) * moveSpeed * m_analogueMultiplier;
+            tx.move(movement);
+        }
+
+
+        //although... this is always up and down
+        //if (m_input.buttonFlags & Input::Up)
+        //{
+        //    tx.move(glm::vec3(0.f, 1.f, 0.f) * moveSpeed);
+        //}
+        //if (m_input.buttonFlags & Input::Down)
+        //{
+        //    tx.move(glm::vec3(0.f, -1.f, 0.f) * moveSpeed);
+        //}
 
 
         //clamp above the ground
@@ -500,7 +519,14 @@ void FpsCameraSystem::process(float dt)
         if (auto diff = pos.y - result.height; diff < MinHeight)
         {
             tx.move({ 0.f, MinHeight - diff, 0.f });
+            pos = tx.getPosition();
         }
+
+        //and within the map
+        pos.x = std::clamp(pos.x, 0.f, static_cast<float>(MapSize.x));
+        pos.y = std::min(pos.y, 80.f);
+        pos.z = std::clamp(pos.z, -static_cast<float>(MapSize.y), 0.f);
+        tx.setPosition(pos);
     }
 }
 

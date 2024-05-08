@@ -4479,9 +4479,6 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     std::uint8_t hole = (holeInfo & 0xff00) >> 8;
     m_holeData[hole].par = (holeInfo & 0x00ff);
 
-    const auto location = "Hole " + std::to_string(hole+1) + ", " + m_courseTitle;
-    m_gameScene.getSystem<FpsCameraSystem>()->setLocation(location);
-
     //mark all holes complete - this fudges any missing
     //scores on the scoreboard... we shouldn't really have to do this :(
     if (hole > m_currentHole)
@@ -5020,6 +5017,10 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
         auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
         data.string = "Hole: " + std::to_string(holeNumber);
         e.getComponent<cro::Callback>().active = true;
+
+        //while we're here set the screenshot location, save recalculating the hole number
+        const auto location = data.string + ", " + m_courseTitle;
+        m_gameScene.getSystem<FpsCameraSystem>()->setLocation(location);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
