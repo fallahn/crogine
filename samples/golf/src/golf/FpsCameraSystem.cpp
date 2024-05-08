@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Keyboard.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
 
@@ -42,6 +43,7 @@ namespace
 {
     constexpr float FlyMultiplier = 15.f;
     constexpr float MinHeight = 0.3f;
+    constexpr std::int32_t WheelZoomMultiplier = 4;
 
     constexpr std::int16_t MinTriggerMovement = 12000;
 }
@@ -162,11 +164,11 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         switch (evt.button.button)
         {
         default: break;
-        case 0:
-            Social::takeScreenshot();
-            break;
-        case 1:
+        case SDL_BUTTON_RIGHT:
             m_input.buttonFlags |= Input::Sprint;
+            break;
+        case SDL_BUTTON_LEFT:
+            Social::takeScreenshot();
             break;
         }
         break;
@@ -174,11 +176,11 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         switch (evt.button.button)
         {
         default: break;
-        case 0:
-            //m_input.buttonFlags &= ~Input::Sprint;
-            break;
-        case 1:
+        case SDL_BUTTON_RIGHT:
             m_input.buttonFlags &= ~Input::Sprint;
+            break;
+        case SDL_BUTTON_LEFT:
+            //m_input.buttonFlags &= ~Input::Sprint;
             break;
         }
         break;
@@ -186,6 +188,9 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         m_input.xMove += evt.motion.xrel;
         m_input.yMove += evt.motion.yrel;
     break;
+    case SDL_MOUSEWHEEL:
+        m_input.wheel = evt.wheel.y * WheelZoomMultiplier;
+        break;
 
 
     //parse controller presses into corresponding inputs
@@ -326,20 +331,42 @@ void FpsCameraSystem::process(float dt)
     auto& entities = getEntities();
     for (auto entity : entities)
     {
-        //TODO check zoom buttons - we need to do this first so we can create a zoom speed multiplier for cam rotation
-
-
         auto& controller = entity.getComponent<FpsCamera>();
+
+        //check zoom buttons - we need to do this first so we can create a zoom speed multiplier for cam rotation
+        //TODO this is also duplicated in drone controls in InputParser, we ought to share this
+        float zoom = 0.f;
+        if ((m_input.buttonFlags & Input::ZoomIn)
+            || m_input.wheel > 0)
+        {
+            zoom = dt * std::max(1, m_input.wheel);
+        }
+        else if ((m_input.buttonFlags & Input::ZoomOut)
+            || m_input.wheel < 0)
+        {
+            zoom = -dt * std::max(1, std::abs(m_input.wheel));
+        }
+        m_input.wheel = 0;
+
+        if (zoom)
+        {
+            controller.zoomProgress = std::clamp(controller.zoomProgress + zoom, 0.f, 1.f);
+            controller.fov = glm::mix(FpsCamera::MinZoom, FpsCamera::MaxZoom, cro::Util::Easing::easeOutExpo(cro::Util::Easing::easeInQuad(controller.zoomProgress)));
+            entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
+        }
+        float zoomSpeed = 1.f - controller.zoomProgress;
+        zoomSpeed = 0.15f + (0.85f * zoomSpeed);
+
         auto& tx = entity.getComponent<cro::Transform>();
 
         //do mouselook if there's any recorded movement
         if (m_input.xMove + m_input.yMove != 0)
         {
             static constexpr float MoveScale = 0.004f;
-            float pitchMove = static_cast<float>(-m_input.yMove) * MoveScale * m_sharedData.mouseSpeed;
+            float pitchMove = static_cast<float>(-m_input.yMove) * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
             pitchMove *= m_sharedData.invertY ? -1.f : 1.f;
 
-            float yawMove = static_cast<float>(-m_input.xMove) * MoveScale * m_sharedData.mouseSpeed;
+            float yawMove = static_cast<float>(-m_input.xMove) * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
             yawMove *= m_sharedData.invertX ? -1.f : 1.f;
 
             m_input.xMove = m_input.yMove = 0;
@@ -410,9 +437,8 @@ void FpsCameraSystem::process(float dt)
             auto invRotation = glm::inverse(tx.getRotation());
             auto up = invRotation * cro::Transform::Y_AXIS;
 
-            //TODO implement zoom speed
-            tx.rotate(up, axisRotation.y * /*zoomSpeed **/ dt);
-            tx.rotate(cro::Transform::X_AXIS, axisRotation.x /** zoomSpeed*/ * dt);
+            tx.rotate(up, axisRotation.y * zoomSpeed * dt);
+            tx.rotate(cro::Transform::X_AXIS, axisRotation.x * zoomSpeed * dt);
         }
 
 

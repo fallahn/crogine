@@ -38,7 +38,11 @@ source distribution.
 
 struct FpsCamera final
 {
-    float fov = 1.5f;
+    static constexpr float MaxZoom = 0.25f; //multiplier of shared data FOV
+    static constexpr float MinZoom = 1.f;
+
+    float fov = MinZoom;
+    float zoomProgress = 0.f; //0 - 1
 
     float cameraPitch = 0.f; //used to clamp camera
     float cameraYaw = 0.f; //used to calc forward vector
@@ -96,7 +100,7 @@ private:
             Walk       = 0x800,
         };
 
-        std::uint32_t timeStamp = 0;
+        std::int32_t wheel = 0;
         std::uint16_t buttonFlags = 0;
         std::uint16_t prevStick = 0; //previous flags used by left thumb stick
         std::int8_t xMove = 0;

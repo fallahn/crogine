@@ -412,10 +412,12 @@ void GolfState::createCameras()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback =
-        [&](cro::Camera& cam)
+        [&, camEnt](cro::Camera& cam)
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-            cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, m_shadowQuality.cascadeCount);
+            cam.setPerspective(m_sharedData.fov * camEnt.getComponent<FpsCamera>().fov * cro::Util::Const::degToRad,
+                vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f,
+                m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
