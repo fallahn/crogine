@@ -1655,6 +1655,15 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
     }
         break;
+    case cro::Message::SystemMessage:
+    {
+        const auto& data = msg.getData<cro::Message::SystemEvent>();
+        if (data.type == cro::Message::SystemEvent::ScreenshotTaken)
+        {
+            floatingMessage("Screenshot Saved");
+        }
+    }
+        break;
     case MessageID::AchievementMessage:
     {
         const auto& data = msg.getData<AchievementEvent>();

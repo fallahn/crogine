@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/core/String.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-
+#include <crogine/gui/GuiClient.hpp>
 
 struct FpsCamera final
 {
@@ -48,7 +48,7 @@ struct FpsCamera final
     float cameraPitch = 0.f; //used to clamp camera
     float cameraYaw = 0.f; //used to calc forward vector
 
-    float moveSpeed = 3.f; //units per second
+    float moveSpeed = 5.f; //units per second
 
 
     //if setting a transform manually on an entity which uses this component
@@ -63,7 +63,7 @@ struct FpsCamera final
 
 class CollisionMesh;
 struct SharedStateData;
-class FpsCameraSystem final : public cro::System
+class FpsCameraSystem final : public cro::System, public cro::GuiClient
 {
 public:
     FpsCameraSystem(cro::MessageBus&, const CollisionMesh&, const SharedStateData&);
@@ -114,6 +114,10 @@ private:
 
     float m_analogueMultiplier;
     float m_inputAcceleration;
+
+    float m_forwardAmount;
+    float m_sideAmount;
+    float m_upAmount;
 
     cro::String m_screenshotLocation;
 

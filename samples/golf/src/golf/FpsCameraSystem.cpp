@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/core/Keyboard.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
 
@@ -54,11 +55,26 @@ FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, c
     m_sharedData        (sd),
     m_humanCount        (1),
     m_controllerID      (0),
+    m_triggerAmount     (0),
     m_analogueMultiplier(1.f),
-    m_inputAcceleration (0.f)
+    m_inputAcceleration (0.f),
+    m_forwardAmount     (1.f),
+    m_sideAmount        (1.f),
+    m_upAmount          (1.f)
 {
     requireComponent<FpsCamera>();
     requireComponent<cro::Transform>();
+
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("FPS Cam"))
+    //        {
+    //            ImGui::Text("Multiplier %3.5f", m_analogueMultiplier);
+    //            //ImGui::Text("Forward %3.5f", fwd);
+    //            //ImGui::Text("Side %3.5f", swd);
+    //        }
+    //        ImGui::End();
+    //    });
 }
 
 //public
@@ -296,7 +312,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 if (evt.caxis.value > MinTriggerMovement)
                 {
                     m_input.buttonFlags |= Input::Flags::Down;
-                    m_triggerAmount -= evt.caxis.value;
+                    m_triggerAmount = evt.caxis.value;
                 }
                 else
                 {
@@ -307,7 +323,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 if (evt.caxis.value > MinTriggerMovement)
                 {
                     m_input.buttonFlags |= Input::Flags::Up;
-                    m_triggerAmount += evt.caxis.value;
+                    m_triggerAmount = evt.caxis.value;
                 }
                 else
                 {
@@ -464,8 +480,8 @@ void FpsCameraSystem::process(float dt)
         
 
         //move in the direction we're facing
-        auto forwardVector = tx.getForwardVector();
-        auto rightVector = tx.getRightVector();
+        auto forwardVector = tx.getForwardVector() * m_forwardAmount;
+        auto rightVector = tx.getRightVector() * m_sideAmount;
         glm::vec3 movement(0.f);
 
         if (m_input.buttonFlags & Input::Forward)
@@ -485,8 +501,15 @@ void FpsCameraSystem::process(float dt)
         {
             movement += rightVector;
         }
-        movement *= m_analogueMultiplier;
+        
+        if (glm::length2(movement) != 0)
+        {
+            movement = glm::normalize(movement) * moveSpeed * m_analogueMultiplier;
+            tx.move(movement);
+        }
 
+
+        movement = glm::vec3(0.f);
         if (m_input.buttonFlags & Input::Up)
         {
             movement += cro::Transform::Y_AXIS;
@@ -495,14 +518,10 @@ void FpsCameraSystem::process(float dt)
         {
             movement -= cro::Transform::Y_AXIS;
         }
-
         if (glm::length2(movement) != 0)
         {
-            movement = glm::normalize(movement) * moveSpeed;
-            tx.move(movement);
+            tx.move(movement * moveSpeed * m_upAmount);
         }
-
-
 
         //clamp above the ground
         auto pos = tx.getPosition();
@@ -535,10 +554,17 @@ void FpsCameraSystem::checkControllerInput(float dt)
     if (m_input.buttonFlags & (Input::Left | Input::Right | Input::Forward | Input::Backward))
     {
         m_inputAcceleration = std::min(1.f, m_inputAcceleration + dt);
+        m_forwardAmount = 1.f;
+        m_sideAmount = 1.f;
     }
     else
     {
         m_inputAcceleration = 0.f;
+    }
+
+    if (m_input.buttonFlags & (Input::Up | Input::Down))
+    {
+        m_upAmount = 1.f;
     }
 
     //default amount from keyboard input, is overwritten
@@ -593,6 +619,13 @@ void FpsCameraSystem::checkControllerInput(float dt)
     if (len2 > MinLen2)
     {
         m_analogueMultiplier = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax), 5.f));
+        m_forwardAmount = std::abs(yPos / cro::GameController::AxisMax);
+        m_sideAmount = std::abs(xPos / cro::GameController::AxisMax);
+    }
+
+    if (m_triggerAmount)
+    {
+        m_upAmount = static_cast<float>(m_triggerAmount) / cro::GameController::AxisMax;
     }
 
     if (startInput ^ m_input.buttonFlags)
