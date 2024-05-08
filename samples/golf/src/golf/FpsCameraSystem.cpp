@@ -296,6 +296,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 if (evt.caxis.value > MinTriggerMovement)
                 {
                     m_input.buttonFlags |= Input::Flags::Down;
+                    m_triggerAmount -= evt.caxis.value;
                 }
                 else
                 {
@@ -306,6 +307,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 if (evt.caxis.value > MinTriggerMovement)
                 {
                     m_input.buttonFlags |= Input::Flags::Up;
+                    m_triggerAmount += evt.caxis.value;
                 }
                 else
                 {
@@ -459,14 +461,13 @@ void FpsCameraSystem::process(float dt)
             moveSpeed *= 0.05f;
         }
 
+        
+
         //move in the direction we're facing
         auto forwardVector = tx.getForwardVector();
         auto rightVector = tx.getRightVector();
+        glm::vec3 movement(0.f);
 
-        //the forward and right vectors should
-        //be combined into a single direction and normalised...
-
-        glm::vec3 movement = glm::vec3(0.f);
         if (m_input.buttonFlags & Input::Forward)
         {
             movement += forwardVector;
@@ -484,6 +485,7 @@ void FpsCameraSystem::process(float dt)
         {
             movement += rightVector;
         }
+        movement *= m_analogueMultiplier;
 
         if (m_input.buttonFlags & Input::Up)
         {
@@ -494,23 +496,12 @@ void FpsCameraSystem::process(float dt)
             movement -= cro::Transform::Y_AXIS;
         }
 
-
         if (glm::length2(movement) != 0)
         {
-            movement = glm::normalize(movement) * moveSpeed * m_analogueMultiplier;
+            movement = glm::normalize(movement) * moveSpeed;
             tx.move(movement);
         }
 
-
-        //although... this is always up and down
-        //if (m_input.buttonFlags & Input::Up)
-        //{
-        //    tx.move(glm::vec3(0.f, 1.f, 0.f) * moveSpeed);
-        //}
-        //if (m_input.buttonFlags & Input::Down)
-        //{
-        //    tx.move(glm::vec3(0.f, -1.f, 0.f) * moveSpeed);
-        //}
 
 
         //clamp above the ground
@@ -556,8 +547,8 @@ void FpsCameraSystem::checkControllerInput(float dt)
 
     //left stick
     auto startInput = m_input.buttonFlags;
-    float xPos = m_thumbsticks.getValue(cro::GameController::AxisLeftX);
 
+    float xPos = m_thumbsticks.getValue(cro::GameController::AxisLeftX);
     if (xPos < -LeftThumbDeadZone)
     {
         m_input.buttonFlags |= Input::Left;
@@ -577,8 +568,6 @@ void FpsCameraSystem::checkControllerInput(float dt)
     }
 
     float yPos = m_thumbsticks.getValue(cro::GameController::AxisLeftY);
-
-    
     if (yPos < -LeftThumbDeadZone)
     {
         m_input.buttonFlags |= Input::Forward;

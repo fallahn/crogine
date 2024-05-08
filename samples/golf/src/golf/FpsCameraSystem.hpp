@@ -110,6 +110,8 @@ private:
     }m_input;
     
     Thumbsticks m_thumbsticks;
+    std::int16_t m_triggerAmount;
+
     float m_analogueMultiplier;
     float m_inputAcceleration;
 
