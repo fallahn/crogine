@@ -29,8 +29,8 @@ source distribution.
 
 #include "FpsCameraSystem.hpp"
 #include "CollisionMesh.hpp"
-#include "InputBinding.hpp"
 #include "MessageIDs.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Keyboard.hpp>
@@ -46,10 +46,10 @@ namespace
     constexpr std::int16_t MinTriggerMovement = 12000;
 }
 
-FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, const InputBinding& ib)
+FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, const SharedStateData& sd)
     : cro::System       (mb, typeid(FpsCameraSystem)),
     m_collisionMesh     (cm),
-    m_inputBinding      (ib),
+    m_sharedData        (sd),
     m_humanCount        (1),
     m_controllerID      (0),
     m_analogueMultiplier(1.f),
@@ -74,39 +74,39 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
     {
     default: break;
     case SDL_KEYDOWN:
-        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up])
         {
             //actually forward...
             m_input.buttonFlags |= Input::Forward;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
         {
             //actually backward...
             m_input.buttonFlags |= Input::Backward;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
         {
             m_input.buttonFlags |= Input::Left;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
         {
             m_input.buttonFlags |= Input::Right;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
         {
             //actually up...
             m_input.buttonFlags |= Input::Up;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::EmoteMenu])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::EmoteMenu])
         {
             //actually down
             m_input.buttonFlags |= Input::Down;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
             m_input.buttonFlags |= Input::ZoomIn;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
             m_input.buttonFlags |= Input::ZoomOut;
         }
@@ -117,39 +117,39 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
 
         break;
     case SDL_KEYUP:
-        if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Up])
         {
             //actually forward...
             m_input.buttonFlags &= ~Input::Forward;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Down])
         {
             //actually backward...
             m_input.buttonFlags &= ~Input::Backward;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
         {
             m_input.buttonFlags &= ~Input::Left;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
         {
             m_input.buttonFlags &= ~Input::Right;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
         {
             //actually up...
             m_input.buttonFlags &= ~Input::Up;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::EmoteMenu])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::EmoteMenu])
         {
             //actually down
             m_input.buttonFlags &= ~Input::Down;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
         {
             m_input.buttonFlags &= ~Input::ZoomIn;
         }
-        else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
         {
             m_input.buttonFlags &= ~Input::ZoomOut;
         }
@@ -326,7 +326,7 @@ void FpsCameraSystem::process(float dt)
     auto& entities = getEntities();
     for (auto entity : entities)
     {
-        //TODO check zoom buttons - we need to do this first so wew can create a zoom speed multiplier for cam rotation
+        //TODO check zoom buttons - we need to do this first so we can create a zoom speed multiplier for cam rotation
 
 
         auto& controller = entity.getComponent<FpsCamera>();
@@ -336,10 +336,11 @@ void FpsCameraSystem::process(float dt)
         if (m_input.xMove + m_input.yMove != 0)
         {
             static constexpr float MoveScale = 0.004f;
-            float pitchMove = static_cast<float>(-m_input.yMove) * MoveScale * controller.lookSensitivity;
-            pitchMove *= controller.yInvert;
+            float pitchMove = static_cast<float>(-m_input.yMove) * MoveScale * m_sharedData.mouseSpeed;
+            pitchMove *= m_sharedData.invertY ? -1.f : 1.f;
 
-            float yawMove = static_cast<float>(-m_input.xMove) * MoveScale * controller.lookSensitivity;
+            float yawMove = static_cast<float>(-m_input.xMove) * MoveScale * m_sharedData.mouseSpeed;
+            yawMove *= m_sharedData.invertX ? -1.f : 1.f;
 
             m_input.xMove = m_input.yMove = 0;
 
@@ -390,12 +391,15 @@ void FpsCameraSystem::process(float dt)
 
             if (std::abs(controllerX) > LeftThumbDeadZone)
             {
-                //hmmm we want to read axis inversion from the settings...
                 axisRotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
+                axisRotation.y *= m_sharedData.invertX ? -1.f : 1.f;
+                axisRotation.y *= m_sharedData.mouseSpeed;
             }
             if (std::abs(controllerY) > LeftThumbDeadZone)
             {
                 axisRotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
+                axisRotation.x *= m_sharedData.invertY ? -1.f : 1.f;
+                axisRotation.x *= m_sharedData.mouseSpeed;
             }
 
             if (auto len2 = glm::length2(axisRotation); len2 != 0)

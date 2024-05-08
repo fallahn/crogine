@@ -3212,12 +3212,12 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     auto swingputText = createText(glm::vec2(20.f, 124.f), ss.str());*/
 
 
-    createText(glm::vec2(20.f, 148.f), "Zoom Map:\nDrone View:\nRotate Camera:");
-    createText(glm::vec2(100.f, 148.f), "L3 (Hold) or F6\nR3 or 1\nRight Stick or 4/5");
+    createText(glm::vec2(20.f, 156.f), "Zoom Map:\nDrone View:\nFree Cam:\nRotate Camera:");
+    createText(glm::vec2(100.f, 156.f), "R3 or F6\nDPad Up or 1\nDPad Down or 3\nRight Stick or 4/5");
 
     std::stringstream st;
     st.precision(2);
-    st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
+    st << "Look Sensitivity: " << m_sharedData.mouseSpeed;
     auto mouseText = createText(glm::vec2(20.f, 96.f), st.str());
     createText(glm::vec2(32.f, 63.f), "Invert X");
     createText(glm::vec2(32.f, 47.f), "Invert Y");
@@ -3272,7 +3272,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
             std::stringstream st;
             st.precision(2);
-            st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
+            st << "Look Sensitivity: " << m_sharedData.mouseSpeed;
 
             //some versions of gcc complain about this so hack around
             //it by making a copy
@@ -3430,7 +3430,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //invert X
     entity = createSquareHighlight(glm::vec2(17.f, 54.f));
-    entity.setLabel("Invert the controller X axis when playing Billiards");
+    entity.setLabel("Invert the controller X axis when in camera mode");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlInvX);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlVib, CtrlInvY);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlY, CtrlLookL);
@@ -3582,7 +3582,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //invert Y
     entity = createSquareHighlight(glm::vec2(17.f, 38.f));
-    entity.setLabel("Invert the controller Y axis when playing Billiards");
+    entity.setLabel("Invert the controller Y axis when in camera mode");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlInvY);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlAltPower, CtrlReset);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlB, CtrlInvX);

@@ -1389,12 +1389,15 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
     auto controllerY = getAxisPosition(yAxis);
     if (std::abs(controllerX) > LeftThumbDeadZone)
     {
-        //hmmm we want to read axis inversion from the settings...
         rotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
+        rotation.y *= m_sharedData.invertX ? -1.f : 1.f;
+        rotation.y *= m_sharedData.mouseSpeed;
     }
     if (std::abs(controllerY) > LeftThumbDeadZone)
     {
         rotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
+        rotation.x *= m_sharedData.invertY ? -1.f : 1.f;
+        rotation.x *= m_sharedData.mouseSpeed;
     }
 
     if (auto len2 = glm::length2(rotation); len2 != 0)

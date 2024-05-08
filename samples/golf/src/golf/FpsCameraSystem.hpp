@@ -44,12 +44,7 @@ struct FpsCamera final
     float cameraYaw = 0.f; //used to calc forward vector
 
     float moveSpeed = 3.f; //units per second
-    float lookSensitivity = 0.5f; //0 - 1
-    float yInvert = 1.f; //-1 to invert axis
 
-    std::int32_t controllerIndex = 0; //which controller to accept input from. Keyboard input is always sent to controller 0
-
-    bool flyMode = true;
 
     //if setting a transform manually on an entity which uses this component
     //call this once with the entity to reset the orientation to the new transform.
@@ -62,11 +57,11 @@ struct FpsCamera final
 };
 
 class CollisionMesh;
-struct InputBinding;
+struct SharedStateData;
 class FpsCameraSystem final : public cro::System
 {
 public:
-    FpsCameraSystem(cro::MessageBus&, const CollisionMesh&, const InputBinding&);
+    FpsCameraSystem(cro::MessageBus&, const CollisionMesh&, const SharedStateData&);
 
     void handleEvent(const cro::Event&);
 
@@ -78,7 +73,7 @@ public:
 private:
 
     const CollisionMesh& m_collisionMesh;
-    const InputBinding& m_inputBinding;
+    const SharedStateData& m_sharedData;
 
     std::int32_t m_humanCount;
     std::int32_t m_controllerID;
