@@ -32,6 +32,7 @@ source distribution.
 #include "Thumbsticks.hpp"
 
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/String.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
@@ -73,6 +74,7 @@ public:
 
     void setHumanCount(std::int32_t c) { m_humanCount = c; }
     void setControllerID(std::int32_t p);
+    void setLocation(const cro::String& l) { m_screenshotLocation = l; }
 
 private:
 
@@ -110,6 +112,8 @@ private:
     Thumbsticks m_thumbsticks;
     float m_analogueMultiplier;
     float m_inputAcceleration;
+
+    cro::String m_screenshotLocation;
 
     void checkControllerInput(float);
     void onEntityAdded(cro::Entity) override;

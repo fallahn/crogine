@@ -168,7 +168,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             m_input.buttonFlags |= Input::Sprint;
             break;
         case SDL_BUTTON_LEFT:
-            Social::takeScreenshot();
+            Social::takeScreenshot(m_screenshotLocation);
             break;
         }
         break;
@@ -204,7 +204,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             default: break;
             case cro::GameController::ButtonA:
                 //m_input.buttonFlags |= Input::Flags::Up;
-                Social::takeScreenshot();
+                Social::takeScreenshot(m_screenshotLocation);
                 break;
             /*case cro::GameController::ButtonB:
                 //this quits the mode

@@ -4479,6 +4479,9 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     std::uint8_t hole = (holeInfo & 0xff00) >> 8;
     m_holeData[hole].par = (holeInfo & 0x00ff);
 
+    const auto location = "Hole " + std::to_string(hole+1) + ", " + m_courseTitle;
+    m_gameScene.getSystem<FpsCameraSystem>()->setLocation(location);
+
     //mark all holes complete - this fudges any missing
     //scores on the scoreboard... we shouldn't really have to do this :(
     if (hole > m_currentHole)
