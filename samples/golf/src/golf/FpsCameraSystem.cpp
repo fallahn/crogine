@@ -547,10 +547,20 @@ void FpsCameraSystem::process(float dt)
         }
         
 
-        if (glm::length2(movement) != 0)
+        auto vMovement = glm::vec3(0.f);
+        if (m_input.buttonFlags & Input::Up)
+        {
+            vMovement += cro::Transform::Y_AXIS;
+        }
+        if (m_input.buttonFlags & Input::Down)
+        {
+            vMovement -= cro::Transform::Y_AXIS;
+        }
+
+        //apply acceleration if *any* movement
+        if (glm::length2(movement + vMovement) != 0)
         {
             static constexpr float SprintAcceleration = 25.f;
-
             //smooth sprint multiplier
             if (m_input.buttonFlags & Input::Sprint)
             {
@@ -560,9 +570,6 @@ void FpsCameraSystem::process(float dt)
             {
                 m_sprintMultiplier = std::max(1.f, m_sprintMultiplier - ((dt * SprintAcceleration) * 3.f));
             }
-
-            movement = glm::normalize(movement) * moveSpeed * m_analogueMultiplier * m_sprintMultiplier;
-            tx.move(movement);
         }
         else
         {
@@ -570,22 +577,15 @@ void FpsCameraSystem::process(float dt)
         }
 
 
-        movement = glm::vec3(0.f);
-        if (m_input.buttonFlags & Input::Up)
-        {
-            movement += cro::Transform::Y_AXIS;
-        }
-        if (m_input.buttonFlags & Input::Down)
-        {
-            movement -= cro::Transform::Y_AXIS;
-        }
         if (glm::length2(movement) != 0)
         {
-            if (m_input.buttonFlags & Input::Sprint)
-            {
-                movement *= MaxSprintMultiplier / 2.f;
-            }
-            tx.move(movement * moveSpeed * m_upAmount);
+            movement = glm::normalize(movement) * moveSpeed * m_analogueMultiplier * m_sprintMultiplier;
+            tx.move(movement);
+        }
+
+        if (glm::length2(vMovement) != 0)
+        {
+            tx.move(vMovement * moveSpeed * m_upAmount * m_sprintMultiplier);
         }
 
         //clamp above the ground

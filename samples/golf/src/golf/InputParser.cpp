@@ -308,12 +308,21 @@ void InputParser::handleEvent(const cro::Event& evt)
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadUp)
                 {
-                    //m_inputFlags |= InputFlag::Up;
-                    toggleDroneCam();
+                    if (isSpinputActive())
+                    {
+                        m_inputFlags |= InputFlag::Up;
+                    }
+                    else
+                    {
+                        toggleDroneCam();
+                    }
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadDown)
                 {
-                    //m_inputFlags |= InputFlag::Down;
+                    if (isSpinputActive())
+                    {
+                        m_inputFlags |= InputFlag::Down;
+                    }
                 }
 
                 /*else if (evt.cbutton.button == cro::GameController::ButtonRightStick)
@@ -321,11 +330,11 @@ void InputParser::handleEvent(const cro::Event& evt)
                     toggleDroneCam();
                 }*/
                 //people say this happens accidentally, so let's use a timer
-                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                /*else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
                 {
                     m_inputFlags |= InputFlag::MiniMap;
                     m_minimapToggleTimer.restart();
-                }
+                }*/
             }
         }
         else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -372,21 +381,25 @@ void InputParser::handleEvent(const cro::Event& evt)
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadUp)
                 {
-                    //m_inputFlags &= ~InputFlag::Up;
+                    m_inputFlags &= ~InputFlag::Up;
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadDown)
                 {
-                    //m_inputFlags &= ~InputFlag::Down;
-                    //toggles freecam
-                    auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
-                    msg->type = SceneEvent::RequestToggleFreecam;
-                    msg->data = evt.cbutton.which;
+                    m_inputFlags &= ~InputFlag::Down;
+
+                    if (!isSpinputActive())
+                    {
+                        //toggles freecam
+                        auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                        msg->type = SceneEvent::RequestToggleFreecam;
+                        msg->data = evt.cbutton.which;
+                    }
                 }
 
-                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                /*else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
                 {
                     m_inputFlags &= ~InputFlag::MiniMap;
-                }
+                }*/
             }
         }
 
