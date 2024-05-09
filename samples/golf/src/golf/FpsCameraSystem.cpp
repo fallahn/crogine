@@ -47,6 +47,40 @@ namespace
     constexpr std::int32_t WheelZoomMultiplier = 4;
 
     constexpr std::int16_t MinTriggerMovement = 12000;
+
+    struct RollingAvg final
+    {
+        static constexpr std::size_t AvgSize = 3;
+        std::array<float, AvgSize> vals = {};
+
+        std::int32_t idx = 0;
+        float total = 0.f;
+
+        RollingAvg()
+        {
+            std::fill(vals.begin(), vals.end(), 0.f);
+        }
+
+        float getAvg()
+        {
+            total += vals[idx];
+            auto retVal = total / AvgSize;
+
+
+            idx = (idx + 1) % AvgSize;
+            total -= vals[idx];
+            vals[idx] = 0;
+
+            return retVal;
+        }
+
+        void addValue(std::int8_t v)
+        {
+            vals[idx] += v;
+        }
+    };
+    RollingAvg xAvg;
+    RollingAvg yAvg;
 }
 
 FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, const SharedStateData& sd)
@@ -69,9 +103,12 @@ FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, c
     //    {
     //        if (ImGui::Begin("FPS Cam"))
     //        {
-    //            ImGui::Text("Multiplier %3.5f", m_analogueMultiplier);
+    //            //ImGui::Text("Multiplier %3.5f", m_analogueMultiplier);
     //            //ImGui::Text("Forward %3.5f", fwd);
     //            //ImGui::Text("Side %3.5f", swd);
+
+    //            ImGui::Text("X Avg: %3.3f", xAvg.total / RollingAvg::AvgSize);
+    //            ImGui::Text("X Move: %d", xDebug);
     //        }
     //        ImGui::End();
     //    });
@@ -203,6 +240,9 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
     case SDL_MOUSEMOTION:
         m_input.xMove += evt.motion.xrel;
         m_input.yMove += evt.motion.yrel;
+
+        xAvg.addValue(evt.motion.xrel);
+        yAvg.addValue(evt.motion.yrel);
     break;
     case SDL_MOUSEWHEEL:
         m_input.wheel = evt.wheel.y * WheelZoomMultiplier;
@@ -378,13 +418,16 @@ void FpsCameraSystem::process(float dt)
         auto& tx = entity.getComponent<cro::Transform>();
 
         //do mouselook if there's any recorded movement
+        auto yMove = -yAvg.getAvg(); //this makes sure to reset and increment the current frame
+        auto xMove = -xAvg.getAvg();
+
         if (m_input.xMove + m_input.yMove != 0)
         {
-            static constexpr float MoveScale = 0.004f;
-            float pitchMove = static_cast<float>(-m_input.yMove) * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
+            static constexpr float MoveScale = 0.002f;
+            float pitchMove = yMove * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
             pitchMove *= m_sharedData.invertY ? -1.f : 1.f;
 
-            float yawMove = static_cast<float>(-m_input.xMove) * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
+            float yawMove = xMove * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
             yawMove *= m_sharedData.invertX ? -1.f : 1.f;
 
             m_input.xMove = m_input.yMove = 0;
