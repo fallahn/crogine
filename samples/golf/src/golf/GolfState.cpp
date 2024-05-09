@@ -433,9 +433,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     const auto toggleMiniZoom = [&]()
         {
-            auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
-            dir = (dir == 0) ? 1 : 0;
-            m_mapRoot.getComponent<cro::Callback>().active = true;
+            if (!m_photoMode)
+            {
+                auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+                dir = (dir == 0) ? 1 : 0;
+                m_mapRoot.getComponent<cro::Callback>().active = true;
+            }
         };
 
     if (evt.type == SDL_KEYUP)
@@ -806,6 +809,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 {
                     toggleFreeCam();
                 }
+            }
+            break;
+        case cro::GameController::ButtonRightStick:
+            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+                || m_humanCount == 1)
+            {
+                toggleMiniZoom();
             }
             break;
         }

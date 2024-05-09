@@ -269,10 +269,10 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 //this quits the mode
                 m_input.buttonFlags |= Input::Flags::Down;
                 break;*/
-            case cro::GameController::ButtonX:
+            case cro::GameController::ButtonLeftStick:
                 m_input.buttonFlags |= Input::Flags::Sprint;
                 break;
-            case cro::GameController::ButtonY:
+            case cro::GameController::ButtonX:
                 m_input.buttonFlags |= Input::Flags::Walk;
                 break;
             /*case cro::GameController::DPadUp:
@@ -310,10 +310,10 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
             case cro::GameController::ButtonB:
                 m_input.buttonFlags &= ~Input::Flags::Down;
                 break;*/
-            case cro::GameController::ButtonX:
+            case cro::GameController::ButtonLeftStick:
                 m_input.buttonFlags &= ~Input::Flags::Sprint;
                 break;
-            case cro::GameController::ButtonY:
+            case cro::GameController::ButtonX:
                 m_input.buttonFlags &= ~Input::Flags::Walk;
                 break;
             case cro::GameController::DPadDown:
