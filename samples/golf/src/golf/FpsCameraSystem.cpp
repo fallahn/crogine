@@ -42,7 +42,7 @@ source distribution.
 
 namespace
 {
-    constexpr float FlyMultiplier = 15.f;
+    constexpr float MaxSprintMultiplier = 15.f;
     constexpr float MinHeight = 0.3f;
     constexpr std::int32_t WheelZoomMultiplier = 4;
 
@@ -90,6 +90,7 @@ FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, c
     m_humanCount        (1),
     m_controllerID      (0),
     m_triggerAmount     (0),
+    m_sprintMultiplier  (1.f),
     m_analogueMultiplier(1.f),
     m_inputAcceleration (0.f),
     m_forwardAmount     (1.f),
@@ -511,10 +512,10 @@ void FpsCameraSystem::process(float dt)
 
         //walking speed in metres per second
         float moveSpeed = controller.moveSpeed * dt;
-        if (m_input.buttonFlags & Input::Flags::Sprint)
+        /*if (m_input.buttonFlags & Input::Flags::Sprint)
         {
-            moveSpeed *= FlyMultiplier;
-        }
+            moveSpeed *= m_sprintMultiplier;
+        }*/
         if (m_input.buttonFlags & Input::Flags::Walk)
         {
             moveSpeed *= 0.05f;
@@ -545,10 +546,27 @@ void FpsCameraSystem::process(float dt)
             movement += rightVector;
         }
         
+
         if (glm::length2(movement) != 0)
         {
-            movement = glm::normalize(movement) * moveSpeed * m_analogueMultiplier;
+            static constexpr float SprintAcceleration = 25.f;
+
+            //smooth sprint multiplier
+            if (m_input.buttonFlags & Input::Sprint)
+            {
+                m_sprintMultiplier = std::min(MaxSprintMultiplier, m_sprintMultiplier + (dt * SprintAcceleration));
+            }
+            else
+            {
+                m_sprintMultiplier = std::max(1.f, m_sprintMultiplier - ((dt * SprintAcceleration) * 3.f));
+            }
+
+            movement = glm::normalize(movement) * moveSpeed * m_analogueMultiplier * m_sprintMultiplier;
             tx.move(movement);
+        }
+        else
+        {
+            m_sprintMultiplier = 1.f;
         }
 
 
@@ -563,6 +581,10 @@ void FpsCameraSystem::process(float dt)
         }
         if (glm::length2(movement) != 0)
         {
+            if (m_input.buttonFlags & Input::Sprint)
+            {
+                movement *= MaxSprintMultiplier / 2.f;
+            }
             tx.move(movement * moveSpeed * m_upAmount);
         }
 
