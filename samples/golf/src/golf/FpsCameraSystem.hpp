@@ -53,15 +53,6 @@ struct FpsCamera final
     float moveSpeed = 5.f; //units per second
 
 
-    //if setting a transform manually on an entity which uses this component
-    //call this once with the entity to reset the orientation to the new transform.
-    //TODO remove this
-    void resetOrientation(cro::Entity entity)
-    {
-        auto rotation = glm::eulerAngles(entity.getComponent<cro::Transform>().getRotation());
-        //cam.cameraPitch = rotation.x;
-        cameraYaw = rotation.y;
-    }
 
     struct State final
     {
@@ -77,19 +68,22 @@ struct FpsCamera final
     {
         glm::vec3 startPosition = glm::vec3(0.f);
         glm::quat startRotation = cro::Transform::QUAT_IDENTITY;
+        float startFov = 1.f;
 
         glm::vec3 endPosition = glm::vec3(0.f);
         glm::quat endRotation = cro::Transform::QUAT_IDENTITY;
+        float endFov = 1.f;
 
         float progress = 0.f;
 
     std::function<void()> completionCallback;
     }transition;
 
-    void startTransition(glm::vec3 pos, glm::quat rot)
+    void startTransition(glm::vec3 pos, glm::quat rot, float f)
     {
         transition.startPosition = pos;
         transition.startRotation = rot;
+        transition.startFov = fov;
         transition.progress = 0.f;
         state = State::Enter;
     }
@@ -98,6 +92,7 @@ struct FpsCamera final
     {
         transition.endPosition = pos;
         transition.endRotation = rot;
+        transition.endFov = fov;
         transition.progress = 1.f;
         state = State::Exit;
     }
@@ -165,7 +160,6 @@ private:
     cro::String m_screenshotLocation;
 
     void checkControllerInput(float);
-    void onEntityAdded(cro::Entity) override;
 
     void enterAnim(cro::Entity, float);
     void exitAnim(cro::Entity, float);

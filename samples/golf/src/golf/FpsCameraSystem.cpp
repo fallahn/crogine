@@ -464,7 +464,7 @@ void FpsCameraSystem::process(float dt)
 
                 //we need to clamp this to TAU (or ideally +- PI) else more than one rotation
                 //introduces very visible jitter
-                //player.cameraYaw = std::fmod(player.cameraYaw + yawMove, cro::Util::Const::TAU);
+
                 controller.cameraYaw += yawMove;
                 if (controller.cameraYaw < -cro::Util::Const::PI)
                 {
@@ -515,18 +515,10 @@ void FpsCameraSystem::process(float dt)
             }
 
 
-            //this only applies if we weren't 'flying' where the only rotation is around Y
-            //rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), controller.cameraYaw, glm::vec3(0.f, 1.f, 0.f));
-            //glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
-            //glm::vec3 rightVector = rotation * glm::vec3(1.f, 0.f, 0.f);
-
 
             //walking speed in metres per second
             float moveSpeed = controller.moveSpeed * dt;
-            /*if (m_input.buttonFlags & Input::Flags::Sprint)
-            {
-                moveSpeed *= m_sprintMultiplier;
-            }*/
+
             if (m_input.buttonFlags & Input::Flags::Walk)
             {
                 moveSpeed *= 0.05f;
@@ -711,11 +703,6 @@ void FpsCameraSystem::checkControllerInput(float dt)
     }
 }
 
-void FpsCameraSystem::onEntityAdded(cro::Entity entity)
-{
-    entity.getComponent<FpsCamera>().resetOrientation(entity);
-}
-
 void FpsCameraSystem::enterAnim(cro::Entity entity, float dt)
 {
     auto& fpsCam = entity.getComponent<FpsCamera>();
@@ -729,6 +716,12 @@ void FpsCameraSystem::enterAnim(cro::Entity entity, float dt)
     auto& tx = entity.getComponent<cro::Transform>();
     tx.setPosition(pos);
     tx.setRotation(rot);
+
+    if (fpsCam.fov != fpsCam.transition.endFov)
+    {
+        fpsCam.fov = glm::mix(fpsCam.transition.startFov, fpsCam.transition.endFov, t);
+        entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
+    }
 
     if (fpsCam.transition.progress == 1)
     {
@@ -749,6 +742,12 @@ void FpsCameraSystem::exitAnim(cro::Entity entity, float dt)
     auto& tx = entity.getComponent<cro::Transform>();
     tx.setPosition(pos);
     tx.setRotation(rot);
+
+    if (fpsCam.fov != fpsCam.transition.startFov)
+    {
+        fpsCam.fov = glm::mix(fpsCam.transition.startFov, fpsCam.transition.endFov, t);
+        entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
+    }
 
     if (fpsCam.transition.progress == 0)
     {

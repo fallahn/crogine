@@ -742,12 +742,13 @@ void GolfState::toggleFreeCam()
 
         const auto pos = m_defaultCam.getComponent<cro::Transform>().getWorldPosition();
         const auto rot = m_defaultCam.getComponent<cro::Transform>().getWorldRotation();
-        m_freeCam.getComponent<FpsCamera>().startTransition(pos, rot);
+        const auto fov = m_defaultCam.getComponent<CameraFollower::ZoomData>().fov;
+        m_freeCam.getComponent<FpsCamera>().startTransition(pos, rot, fov);
 
         m_freeCam.getComponent<cro::Transform>().setPosition(pos);
         m_freeCam.getComponent<cro::Transform>().setRotation(rot);
         m_freeCam.getComponent<cro::Camera>().active = true;
-
+        m_freeCam.getComponent<cro::Camera>().resizeCallback(m_freeCam.getComponent<cro::Camera>());
         
         //reduce fade distance
         m_resolutionUpdate.targetFade = 0.2f;

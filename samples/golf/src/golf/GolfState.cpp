@@ -5779,13 +5779,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 
 
-    //get the world pos of the player cam and set it to the free cam
-    //TODO get FOV
+    //reset the freecam based on new player position
     auto fcPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
     fcPos.y += 1.f;
     auto fcRot = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldRotation();
     m_freeCam.getComponent<FpsCamera>().transition.endPosition = fcPos;
     m_freeCam.getComponent<FpsCamera>().transition.endRotation = fcRot;
+    m_freeCam.getComponent<FpsCamera>().transition.endFov = 1.f;
+    m_freeCam.getComponent<cro::Camera>().resizeCallback(m_freeCam.getComponent<cro::Camera>());
 }
 
 void GolfState::predictBall(float powerPct)
