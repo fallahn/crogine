@@ -33,6 +33,8 @@ source distribution.
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/String.hpp>
+#include <crogine/detail/glm/gtc/quaternion.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -53,11 +55,51 @@ struct FpsCamera final
 
     //if setting a transform manually on an entity which uses this component
     //call this once with the entity to reset the orientation to the new transform.
+    //TODO remove this
     void resetOrientation(cro::Entity entity)
     {
         auto rotation = glm::eulerAngles(entity.getComponent<cro::Transform>().getRotation());
         //cam.cameraPitch = rotation.x;
         cameraYaw = rotation.y;
+    }
+
+    struct State final
+    {
+        enum
+        {
+            Enter, Active, Exit
+        };
+    };
+    std::int32_t state = State::Enter;
+
+    //used for transition to/from camera
+    struct Transition final
+    {
+        glm::vec3 startPosition = glm::vec3(0.f);
+        glm::quat startRotation = cro::Transform::QUAT_IDENTITY;
+
+        glm::vec3 endPosition = glm::vec3(0.f);
+        glm::quat endRotation = cro::Transform::QUAT_IDENTITY;
+
+        float progress = 0.f;
+
+    std::function<void()> completionCallback;
+    }transition;
+
+    void startTransition(glm::vec3 pos, glm::quat rot)
+    {
+        transition.startPosition = pos;
+        transition.startRotation = rot;
+        transition.progress = 0.f;
+        state = State::Enter;
+    }
+
+    void endTransition(glm::vec3 pos, glm::quat rot)
+    {
+        transition.endPosition = pos;
+        transition.endRotation = rot;
+        transition.progress = 1.f;
+        state = State::Exit;
     }
 };
 
@@ -124,4 +166,7 @@ private:
 
     void checkControllerInput(float);
     void onEntityAdded(cro::Entity) override;
+
+    void enterAnim(cro::Entity, float);
+    void exitAnim(cro::Entity, float);
 };

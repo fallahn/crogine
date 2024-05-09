@@ -42,6 +42,8 @@ source distribution.
 
 namespace
 {
+    constexpr float TransitionSpeed = 5.f;
+
     constexpr float MaxSprintMultiplier = 15.f;
     constexpr float MinHeight = 0.3f;
     constexpr std::int32_t WheelZoomMultiplier = 4;
@@ -392,216 +394,226 @@ void FpsCameraSystem::process(float dt)
     {
         auto& controller = entity.getComponent<FpsCamera>();
 
-        //check zoom buttons - we need to do this first so we can create a zoom speed multiplier for cam rotation
-        //TODO this is also duplicated in drone controls in InputParser, we ought to share this
-        float zoom = 0.f;
-        if ((m_input.buttonFlags & Input::ZoomIn)
-            || m_input.wheel > 0)
+        if (controller.state == FpsCamera::State::Enter)
         {
-            zoom = dt * std::max(1, m_input.wheel);
+            enterAnim(entity, dt);
         }
-        else if ((m_input.buttonFlags & Input::ZoomOut)
-            || m_input.wheel < 0)
+        else if (controller.state == FpsCamera::State::Exit)
         {
-            zoom = -dt * std::max(1, std::abs(m_input.wheel));
-        }
-        m_input.wheel = 0;
-
-        if (zoom)
-        {
-            controller.zoomProgress = std::clamp(controller.zoomProgress + zoom, 0.f, 1.f);
-            controller.fov = glm::mix(FpsCamera::MinZoom, FpsCamera::MaxZoom, cro::Util::Easing::easeOutExpo(cro::Util::Easing::easeInQuad(controller.zoomProgress)));
-            entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
-        }
-        float zoomSpeed = 1.f - controller.zoomProgress;
-        zoomSpeed = 0.15f + (0.85f * zoomSpeed);
-
-        auto& tx = entity.getComponent<cro::Transform>();
-
-        //do mouselook if there's any recorded movement
-        auto yMove = -yAvg.getAvg(); //this makes sure to reset and increment the current frame
-        auto xMove = -xAvg.getAvg();
-
-        if (m_input.xMove + m_input.yMove != 0)
-        {
-            static constexpr float MoveScale = 0.002f;
-            float pitchMove = yMove * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
-            pitchMove *= m_sharedData.invertY ? -1.f : 1.f;
-
-            float yawMove = xMove * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
-            yawMove *= m_sharedData.invertX ? -1.f : 1.f;
-
-            m_input.xMove = m_input.yMove = 0;
-
-            //clamp pitch
-            float newPitch = controller.cameraPitch + pitchMove;
-            const float clamp = 1.4f;
-            if (newPitch > clamp)
-            {
-                pitchMove -= (newPitch - clamp);
-                controller.cameraPitch = clamp;
-            }
-            else if (newPitch < -clamp)
-            {
-                pitchMove -= (newPitch + clamp);
-                controller.cameraPitch = -clamp;
-            }
-            else
-            {
-                controller.cameraPitch = newPitch;
-            }
-
-            //we need to clamp this to TAU (or ideally +- PI) else more than one rotation
-            //introduces very visible jitter
-            //player.cameraYaw = std::fmod(player.cameraYaw + yawMove, cro::Util::Const::TAU);
-            controller.cameraYaw += yawMove;
-            if (controller.cameraYaw < -cro::Util::Const::PI)
-            {
-                controller.cameraYaw += cro::Util::Const::TAU;
-            }
-            else if (controller.cameraYaw > cro::Util::Const::PI)
-            {
-                controller.cameraYaw -= cro::Util::Const::TAU;
-            }
-
-            glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
-            glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
-
-            auto rotation = tx.getRotation();
-            rotation = yaw * rotation * pitch;
-            tx.setRotation(rotation);
+            exitAnim(entity, dt);
         }
         else
         {
-            //see if we have any gamepad input
-            auto controllerX = m_thumbsticks.getValue(cro::GameController::AxisRightX);
-            auto controllerY = m_thumbsticks.getValue(cro::GameController::AxisRightY);
-            glm::vec2 axisRotation = glm::vec2(0.f);
-
-            if (std::abs(controllerX) > LeftThumbDeadZone)
+            //check zoom buttons - we need to do this first so we can create a zoom speed multiplier for cam rotation
+            float zoom = 0.f;
+            if ((m_input.buttonFlags & Input::ZoomIn)
+                || m_input.wheel > 0)
             {
-                axisRotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
-                axisRotation.y *= m_sharedData.invertX ? -1.f : 1.f;
-                axisRotation.y *= m_sharedData.mouseSpeed;
+                zoom = dt * std::max(1, m_input.wheel);
             }
-            if (std::abs(controllerY) > LeftThumbDeadZone)
+            else if ((m_input.buttonFlags & Input::ZoomOut)
+                || m_input.wheel < 0)
             {
-                axisRotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
-                axisRotation.x *= m_sharedData.invertY ? -1.f : 1.f;
-                axisRotation.x *= m_sharedData.mouseSpeed;
+                zoom = -dt * std::max(1, std::abs(m_input.wheel));
             }
+            m_input.wheel = 0;
 
-            if (auto len2 = glm::length2(axisRotation); len2 != 0)
+            if (zoom)
             {
-                axisRotation = glm::normalize(axisRotation) * std::min(1.f, std::pow(std::sqrt(len2), 5.f));
+                controller.zoomProgress = std::clamp(controller.zoomProgress + zoom, 0.f, 1.f);
+                controller.fov = glm::mix(FpsCamera::MinZoom, FpsCamera::MaxZoom, cro::Util::Easing::easeOutExpo(cro::Util::Easing::easeInQuad(controller.zoomProgress)));
+                entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
             }
+            float zoomSpeed = 1.f - controller.zoomProgress;
+            zoomSpeed = 0.15f + (0.85f * zoomSpeed);
 
-            auto invRotation = glm::inverse(tx.getRotation());
-            auto up = invRotation * cro::Transform::Y_AXIS;
+            auto& tx = entity.getComponent<cro::Transform>();
 
-            tx.rotate(up, axisRotation.y * zoomSpeed * dt);
-            tx.rotate(cro::Transform::X_AXIS, axisRotation.x * zoomSpeed * dt);
-        }
+            //do mouselook if there's any recorded movement
+            auto yMove = -yAvg.getAvg(); //this makes sure to reset and increment the current frame
+            auto xMove = -xAvg.getAvg();
 
-
-        //this only applies if we weren't 'flying' where the only rotation is around Y
-        //rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), controller.cameraYaw, glm::vec3(0.f, 1.f, 0.f));
-        //glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
-        //glm::vec3 rightVector = rotation * glm::vec3(1.f, 0.f, 0.f);
-
-
-        //walking speed in metres per second
-        float moveSpeed = controller.moveSpeed * dt;
-        /*if (m_input.buttonFlags & Input::Flags::Sprint)
-        {
-            moveSpeed *= m_sprintMultiplier;
-        }*/
-        if (m_input.buttonFlags & Input::Flags::Walk)
-        {
-            moveSpeed *= 0.05f;
-        }
-
-        
-
-        //move in the direction we're facing
-        auto forwardVector = tx.getForwardVector() * m_forwardAmount;
-        auto rightVector = tx.getRightVector() * m_sideAmount;
-        glm::vec3 movement(0.f);
-
-        if (m_input.buttonFlags & Input::Forward)
-        {
-            movement += forwardVector;
-        }
-        if (m_input.buttonFlags & Input::Backward)
-        {
-            movement -= forwardVector;
-        }
-
-        if (m_input.buttonFlags & Input::Left)
-        {
-            movement -= rightVector;
-        }
-        if (m_input.buttonFlags & Input::Right)
-        {
-            movement += rightVector;
-        }
-        
-
-        auto vMovement = glm::vec3(0.f);
-        if (m_input.buttonFlags & Input::Up)
-        {
-            vMovement += cro::Transform::Y_AXIS;
-        }
-        if (m_input.buttonFlags & Input::Down)
-        {
-            vMovement -= cro::Transform::Y_AXIS;
-        }
-
-        //apply acceleration if *any* movement
-        if (glm::length2(movement + vMovement) != 0)
-        {
-            static constexpr float SprintAcceleration = 25.f;
-            //smooth sprint multiplier
-            if (m_input.buttonFlags & Input::Sprint)
+            if (m_input.xMove + m_input.yMove != 0)
             {
-                m_sprintMultiplier = std::min(MaxSprintMultiplier, m_sprintMultiplier + (dt * SprintAcceleration));
+                static constexpr float MoveScale = 0.002f;
+                float pitchMove = yMove * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
+                pitchMove *= m_sharedData.invertY ? -1.f : 1.f;
+
+                float yawMove = xMove * MoveScale * m_sharedData.mouseSpeed * zoomSpeed;
+                yawMove *= m_sharedData.invertX ? -1.f : 1.f;
+
+                m_input.xMove = m_input.yMove = 0;
+
+                //clamp pitch
+                float newPitch = controller.cameraPitch + pitchMove;
+                const float clamp = 1.4f;
+                if (newPitch > clamp)
+                {
+                    pitchMove -= (newPitch - clamp);
+                    controller.cameraPitch = clamp;
+                }
+                else if (newPitch < -clamp)
+                {
+                    pitchMove -= (newPitch + clamp);
+                    controller.cameraPitch = -clamp;
+                }
+                else
+                {
+                    controller.cameraPitch = newPitch;
+                }
+
+                //we need to clamp this to TAU (or ideally +- PI) else more than one rotation
+                //introduces very visible jitter
+                //player.cameraYaw = std::fmod(player.cameraYaw + yawMove, cro::Util::Const::TAU);
+                controller.cameraYaw += yawMove;
+                if (controller.cameraYaw < -cro::Util::Const::PI)
+                {
+                    controller.cameraYaw += cro::Util::Const::TAU;
+                }
+                else if (controller.cameraYaw > cro::Util::Const::PI)
+                {
+                    controller.cameraYaw -= cro::Util::Const::TAU;
+                }
+
+                glm::quat pitch = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitchMove, glm::vec3(1.f, 0.f, 0.f));
+                glm::quat yaw = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yawMove, glm::vec3(0.f, 1.f, 0.f));
+
+                auto rotation = tx.getRotation();
+                rotation = yaw * rotation * pitch;
+                tx.setRotation(rotation);
             }
             else
             {
-                m_sprintMultiplier = std::max(1.f, m_sprintMultiplier - ((dt * SprintAcceleration) * 3.f));
+                //see if we have any gamepad input
+                auto controllerX = m_thumbsticks.getValue(cro::GameController::AxisRightX);
+                auto controllerY = m_thumbsticks.getValue(cro::GameController::AxisRightY);
+                glm::vec2 axisRotation = glm::vec2(0.f);
+
+                if (std::abs(controllerX) > LeftThumbDeadZone)
+                {
+                    axisRotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
+                    axisRotation.y *= m_sharedData.invertX ? -1.f : 1.f;
+                    axisRotation.y *= m_sharedData.mouseSpeed;
+                }
+                if (std::abs(controllerY) > LeftThumbDeadZone)
+                {
+                    axisRotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
+                    axisRotation.x *= m_sharedData.invertY ? -1.f : 1.f;
+                    axisRotation.x *= m_sharedData.mouseSpeed;
+                }
+
+                if (auto len2 = glm::length2(axisRotation); len2 != 0)
+                {
+                    axisRotation = glm::normalize(axisRotation) * std::min(1.f, std::pow(std::sqrt(len2), 5.f));
+                }
+
+                auto invRotation = glm::inverse(tx.getRotation());
+                auto up = invRotation * cro::Transform::Y_AXIS;
+
+                tx.rotate(up, axisRotation.y * zoomSpeed * dt);
+                tx.rotate(cro::Transform::X_AXIS, axisRotation.x * zoomSpeed * dt);
             }
-        }
-        else
-        {
-            m_sprintMultiplier = 1.f;
-        }
 
 
-        if (glm::length2(movement) != 0)
-        {
-            movement = glm::normalize(movement) * moveSpeed * m_analogueMultiplier * m_sprintMultiplier;
-            tx.move(movement);
-        }
+            //this only applies if we weren't 'flying' where the only rotation is around Y
+            //rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), controller.cameraYaw, glm::vec3(0.f, 1.f, 0.f));
+            //glm::vec3 forwardVector = rotation * glm::vec3(0.f, 0.f, -1.f);
+            //glm::vec3 rightVector = rotation * glm::vec3(1.f, 0.f, 0.f);
 
-        if (glm::length2(vMovement) != 0)
-        {
-            tx.move(vMovement * moveSpeed * m_upAmount * m_sprintMultiplier);
-        }
 
-        //clamp above the ground
-        auto pos = tx.getPosition();
-        auto result = m_collisionMesh.getTerrain(pos);
-        if (auto diff = pos.y - result.height; diff < MinHeight)
-        {
-            tx.move({ 0.f, MinHeight - diff, 0.f });
-            pos = tx.getPosition();
-        }
+            //walking speed in metres per second
+            float moveSpeed = controller.moveSpeed * dt;
+            /*if (m_input.buttonFlags & Input::Flags::Sprint)
+            {
+                moveSpeed *= m_sprintMultiplier;
+            }*/
+            if (m_input.buttonFlags & Input::Flags::Walk)
+            {
+                moveSpeed *= 0.05f;
+            }
 
-        //and within the map
-        pos.x = std::clamp(pos.x, 0.f, static_cast<float>(MapSize.x));
-        pos.y = std::min(pos.y, 80.f);
-        pos.z = std::clamp(pos.z, -static_cast<float>(MapSize.y), 0.f);
-        tx.setPosition(pos);
+
+
+            //move in the direction we're facing
+            auto forwardVector = tx.getForwardVector() * m_forwardAmount;
+            auto rightVector = tx.getRightVector() * m_sideAmount;
+            glm::vec3 movement(0.f);
+
+            if (m_input.buttonFlags & Input::Forward)
+            {
+                movement += forwardVector;
+            }
+            if (m_input.buttonFlags & Input::Backward)
+            {
+                movement -= forwardVector;
+            }
+
+            if (m_input.buttonFlags & Input::Left)
+            {
+                movement -= rightVector;
+            }
+            if (m_input.buttonFlags & Input::Right)
+            {
+                movement += rightVector;
+            }
+
+
+            auto vMovement = glm::vec3(0.f);
+            if (m_input.buttonFlags & Input::Up)
+            {
+                vMovement += cro::Transform::Y_AXIS;
+            }
+            if (m_input.buttonFlags & Input::Down)
+            {
+                vMovement -= cro::Transform::Y_AXIS;
+            }
+
+            //apply acceleration if *any* movement
+            if (glm::length2(movement + vMovement) != 0)
+            {
+                static constexpr float SprintAcceleration = 25.f;
+                //smooth sprint multiplier
+                if (m_input.buttonFlags & Input::Sprint)
+                {
+                    m_sprintMultiplier = std::min(MaxSprintMultiplier, m_sprintMultiplier + (dt * SprintAcceleration));
+                }
+                else
+                {
+                    m_sprintMultiplier = std::max(1.f, m_sprintMultiplier - ((dt * SprintAcceleration) * 3.f));
+                }
+            }
+            else
+            {
+                m_sprintMultiplier = 1.f;
+            }
+
+
+            if (glm::length2(movement) != 0)
+            {
+                movement = glm::normalize(movement) * moveSpeed * m_analogueMultiplier * m_sprintMultiplier;
+                tx.move(movement);
+            }
+
+            if (glm::length2(vMovement) != 0)
+            {
+                tx.move(vMovement * moveSpeed * m_upAmount * m_sprintMultiplier);
+            }
+
+            //clamp above the ground
+            auto pos = tx.getPosition();
+            auto result = m_collisionMesh.getTerrain(pos);
+            if (auto diff = pos.y - result.height; diff < MinHeight)
+            {
+                tx.move({ 0.f, MinHeight - diff, 0.f });
+                pos = tx.getPosition();
+            }
+
+            //and within the map
+            pos.x = std::clamp(pos.x, 0.f, static_cast<float>(MapSize.x));
+            pos.y = std::min(pos.y, 80.f);
+            pos.z = std::clamp(pos.z, -static_cast<float>(MapSize.y), 0.f);
+            tx.setPosition(pos);
+        }
     }
 }
 
@@ -702,4 +714,44 @@ void FpsCameraSystem::checkControllerInput(float dt)
 void FpsCameraSystem::onEntityAdded(cro::Entity entity)
 {
     entity.getComponent<FpsCamera>().resetOrientation(entity);
+}
+
+void FpsCameraSystem::enterAnim(cro::Entity entity, float dt)
+{
+    auto& fpsCam = entity.getComponent<FpsCamera>();
+
+    fpsCam.transition.progress = std::min(1.f, fpsCam.transition.progress + (dt * TransitionSpeed));
+    
+    const auto t = cro::Util::Easing::easeOutExpo(fpsCam.transition.progress);
+    auto pos = glm::mix(fpsCam.transition.startPosition, fpsCam.transition.endPosition, t);
+    auto rot = glm::slerp(fpsCam.transition.startRotation, fpsCam.transition.endRotation, t);
+
+    auto& tx = entity.getComponent<cro::Transform>();
+    tx.setPosition(pos);
+    tx.setRotation(rot);
+
+    if (fpsCam.transition.progress == 1)
+    {
+        fpsCam.state = FpsCamera::State::Active;
+    }
+}
+
+void FpsCameraSystem::exitAnim(cro::Entity entity, float dt)
+{
+    auto& fpsCam = entity.getComponent<FpsCamera>();
+
+    fpsCam.transition.progress = std::max(0.f, fpsCam.transition.progress - (dt * TransitionSpeed));
+
+    const auto t = cro::Util::Easing::easeInQuint(fpsCam.transition.progress);
+    auto pos = glm::mix(fpsCam.transition.startPosition, fpsCam.transition.endPosition, t);
+    auto rot = glm::slerp(fpsCam.transition.startRotation, fpsCam.transition.endRotation, t);
+
+    auto& tx = entity.getComponent<cro::Transform>();
+    tx.setPosition(pos);
+    tx.setRotation(rot);
+
+    if (fpsCam.transition.progress == 0)
+    {
+        fpsCam.transition.completionCallback();
+    }
 }

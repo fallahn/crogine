@@ -731,10 +731,6 @@ void GolfState::toggleFreeCam()
         }
     }
 
-    //static std::size_t prevCam = 0; //need to restore this when switching back
-
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
 
     m_photoMode = !m_photoMode;
     if (m_photoMode)
@@ -743,49 +739,72 @@ void GolfState::toggleFreeCam()
         m_defaultCam.getComponent<cro::Camera>().active = false;
         m_gameScene.setActiveListener(m_freeCam);
 
-        auto tx = glm::lookAt(m_currentPlayer.position + glm::vec3(0.f, 3.f, 0.f), m_holeData[m_currentHole].pin, glm::vec3(0.f, 1.f, 0.f));
-        m_freeCam.getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
 
+        const auto pos = m_defaultCam.getComponent<cro::Transform>().getWorldPosition();
+        const auto rot = m_defaultCam.getComponent<cro::Transform>().getWorldRotation();
+        m_freeCam.getComponent<FpsCamera>().startTransition(pos, rot);
 
-        m_freeCam.getComponent<FpsCamera>().resetOrientation(m_freeCam);
+        m_freeCam.getComponent<cro::Transform>().setPosition(pos);
+        m_freeCam.getComponent<cro::Transform>().setRotation(rot);
         m_freeCam.getComponent<cro::Camera>().active = true;
 
-        //hide stroke indicator
-        cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Model>().setHidden(true); };
-
+        
         //reduce fade distance
         m_resolutionUpdate.targetFade = 0.2f;
 
         setUIHidden(true);
+
+        //hide stroke indicator
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+        cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Model>().setHidden(true); };
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        m_gameScene.setSystemActive<FpsCameraSystem>(m_photoMode);
+        m_gameScene.getSystem<FpsCameraSystem>()->process(0.f);
+
+        m_waterEnt.getComponent<cro::Callback>().active = false;
+        m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
+        cro::App::getWindow().setMouseCaptured(true);
     }
     else
     {
-        m_gameScene.setActiveCamera(m_defaultCam);
-        m_gameScene.setActiveListener(m_defaultCam);
+        const auto pos = m_freeCam.getComponent<cro::Transform>().getWorldPosition();
+        const auto rot = m_freeCam.getComponent<cro::Transform>().getWorldRotation();
+        m_freeCam.getComponent<FpsCamera>().endTransition(pos, rot);
 
-        m_defaultCam.getComponent<cro::Camera>().active = true;
-        m_freeCam.getComponent<cro::Camera>().active = false;
-
-        //restore fade distance
-        m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
-
-        //unhide UI
-        setUIHidden(false);
-
-
-        //and stroke indicator
-        cmd.action = [&](cro::Entity e, float)
+        m_freeCam.getComponent<FpsCamera>().transition.completionCallback =
+            [&]()
             {
-                auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
-                e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
+                m_gameScene.setActiveCamera(m_defaultCam);
+                m_gameScene.setActiveListener(m_defaultCam);
+
+                m_defaultCam.getComponent<cro::Camera>().active = true;
+                m_freeCam.getComponent<cro::Camera>().active = false;
+
+                //restore fade distance
+                m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
+
+                //unhide UI
+                setUIHidden(false);
+
+                //and stroke indicator
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
+                        e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
+                    };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                m_gameScene.setSystemActive<FpsCameraSystem>(false);
+
+                m_waterEnt.getComponent<cro::Callback>().active = true;
+                m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
+                cro::App::getWindow().setMouseCaptured(false);
             };
     }
-    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-    m_gameScene.setSystemActive<FpsCameraSystem>(m_photoMode);
-    m_waterEnt.getComponent<cro::Callback>().active = !m_photoMode;
-    m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
-    cro::App::getWindow().setMouseCaptured(m_photoMode);
 }
 
 void GolfState::applyShadowQuality()

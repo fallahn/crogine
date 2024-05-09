@@ -5681,7 +5681,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::NewPlayer, 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
 
-
     //this is just so that the particle director knows if we're on a new hole
     if (glm::length2(m_currentPlayer.position - m_holeData[m_currentHole].tee) < (0.05f * 0.05f))
     {
@@ -5777,6 +5776,16 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
 
     retargetMinimap(false); //must do this after current player position is set...
+
+
+
+    //get the world pos of the player cam and set it to the free cam
+    //TODO get FOV
+    auto fcPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
+    fcPos.y += 1.f;
+    auto fcRot = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldRotation();
+    m_freeCam.getComponent<FpsCamera>().transition.endPosition = fcPos;
+    m_freeCam.getComponent<FpsCamera>().transition.endRotation = fcRot;
 }
 
 void GolfState::predictBall(float powerPct)
