@@ -283,6 +283,7 @@ struct ShaderID final
         Target,
         Bow,
         Noise,
+        BoxBlur,
         TreesetLeaf,
         TreesetBranch,
         TreesetShadow,

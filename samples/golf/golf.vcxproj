@@ -885,6 +885,7 @@
     <None Include="src\golf\ProfileEnum.inl" />
     <None Include="src\golf\shaders\BeaconShader.inl" />
     <None Include="src\golf\shaders\BillboardShader.inl" />
+    <None Include="src\golf\shaders\Blur.inl" />
     <None Include="src\golf\shaders\CelShader.inl" />
     <None Include="src\golf\shaders\CloudShader.inl" />
     <None Include="src\golf\shaders\CompositeShader.inl" />

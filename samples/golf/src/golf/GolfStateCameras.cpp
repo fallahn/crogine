@@ -83,6 +83,9 @@ void GolfState::createCameras()
                     m_lightBlurTextures[LightMapID::Scene].setSmooth(true);
                     m_lightBlurQuads[LightMapID::Scene].setTexture(m_gameSceneMRTexture.getTexture(MRTIndex::Light), usize / 4u);
                     m_lightBlurQuads[LightMapID::Scene].setShader(m_resources.shaders.get(ShaderID::Blur));
+
+                    m_focusTexture.create(usize.x / 4, usize.y / 4, false);
+                    m_focusQuad.setTexture(m_gameSceneMRTexture.getTexture());
                 }
                 else
                 {
@@ -102,11 +105,18 @@ void GolfState::createCameras()
                         m_gameSceneTexture.create(ctx)
                         && m_sharedData.multisamples != 0
                         && !m_sharedData.pixelScale;
+                    
 
                     m_renderTarget.clear = std::bind(&cro::RenderTexture::clear, &m_gameSceneTexture, std::placeholders::_1);
                     m_renderTarget.display = std::bind(&cro::RenderTexture::display, &m_gameSceneTexture);
                     m_renderTarget.getSize = std::bind(&cro::RenderTexture::getSize, &m_gameSceneTexture);
+
+                    m_focusTexture.create(ctx.width / 4, ctx.height / 4, false);
+                    m_focusQuad.setTexture(m_gameSceneTexture.getTexture());
                 }
+                m_focusTexture.setSmooth(true);
+                m_focusQuad.setScale(glm::vec2(0.25f));
+                m_focusQuad.setShader(m_resources.shaders.get(ShaderID::Blur));
 
                 auto invScale = (maxScale + 1.f) - scale;
                 glCheck(glPointSize(invScale * BallPointSize));

@@ -239,13 +239,8 @@ void GolfState::registerDebugCommands()
     //    {
     //        if (ImGui::Begin("asefsd"))
     //        {
-    //            if (m_defaultCam.isValid())
-    //            {
-    //                auto fov = m_defaultCam.getComponent<CameraFollower::ZoomData>().fov;
-    //                auto target = m_defaultCam.getComponent<CameraFollower::ZoomData>().target;
-    //                ImGui::Text("Target: %3.3f, FOV: %3.3f", target, fov);
-    //            }
-    //            //ImGui::Text("Hook %3.3f", m_inputParser.getHook());
+    //            auto size = glm::vec2(m_focusTexture.getSize()) * 4.f;
+    //            ImGui::Image(m_focusTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
     //        }
     //        ImGui::End();        
     //    });

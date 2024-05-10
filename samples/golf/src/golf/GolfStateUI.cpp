@@ -245,6 +245,9 @@ void GolfState::buildUI()
         m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_lightTexture", lightID));
         m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_blurTexture", blurID));
         m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_maskTexture", m_gameSceneMRTexture.getTexture(MRTIndex::Normal)));
+
+        //entity.getComponent<cro::Drawable2D>().bindUniform("u_dofTexture", cro::TextureID(m_focusTexture.getTexture()));
+        //m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_dofTexture", cro::TextureID(m_focusTexture.getTexture())));
     }
     else
     {
@@ -256,6 +259,9 @@ void GolfState::buildUI()
 
         entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
         m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
+
+        //entity.getComponent<cro::Drawable2D>().bindUniform("u_dofTexture", cro::TextureID(m_focusTexture.getTexture()));
+        //m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_dofTexture", cro::TextureID(m_focusTexture.getTexture())));
     }    
 
 

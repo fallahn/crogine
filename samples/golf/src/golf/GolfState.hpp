@@ -165,6 +165,10 @@ private:
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
 
+    //renders 'out of focus'
+    cro::RenderTexture m_focusTexture;
+    cro::SimpleQuad m_focusQuad;
+
     struct LightMapID final
     {
         enum

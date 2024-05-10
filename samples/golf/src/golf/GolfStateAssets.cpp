@@ -69,6 +69,7 @@ namespace
 #include "shaders/WaterShader.inl"
 #include "shaders/PostProcess.inl"
 #include "shaders/Glass.inl"
+#include "shaders/Blur.inl"
 }
 
 void GolfState::loadAssets()
@@ -1689,8 +1690,10 @@ void GolfState::loadMaterials()
     m_postProcesses[PostID::Noise].shader = shader;
 
 
-    //light blur
-    if (m_sharedData.nightTime)
+
+
+    //light blur (also dof blur)
+    //if (m_sharedData.nightTime)
     {
         m_resources.shaders.loadFromString(ShaderID::Blur, BlurVert, BlurFrag);
         shader = &m_resources.shaders.get(ShaderID::Blur);

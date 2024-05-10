@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -162,6 +162,7 @@ namespace cro
         \returns true if successful else returns false
         */
         bool saveToFile(const std::string& path) const;
+
 
     private:
         std::uint32_t m_samples;

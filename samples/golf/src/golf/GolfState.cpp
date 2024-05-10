@@ -2236,6 +2236,9 @@ void GolfState::render()
         }
     }
 
+    //m_focusTexture.clear();
+    //m_focusQuad.draw();
+    //m_focusTexture.display();
 
 #ifndef CRO_DEBUG_
     if (m_roundEnded /* && !m_sharedData.tutorial */)

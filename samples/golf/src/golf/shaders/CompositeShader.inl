@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -105,6 +105,7 @@ void main()
 inline const std::string CompositeFrag = 
 R"(
 uniform sampler2D u_texture;
+uniform sampler2D u_dofTexture;
 uniform sampler2D u_depthTexture;
 uniform sampler2D u_lightTexture;
 uniform sampler2D u_blurTexture;
@@ -139,6 +140,9 @@ void main()
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
     colour.rgb = dim(colour.rgb);
 
+//vec4 dofcolour = TEXTURE(u_dofTexture, v_texCoord) * v_colour;
+//dofcolour.rgb = dim(dofcolour.rgb);
+
     float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
     float d = getDistance(depthSample);
     float fogMix = fogAmount(d);
@@ -149,6 +153,8 @@ void main()
 
     fogMix *= fogAddition;
 #endif
+
+//colour = mix(colour, dofcolour, d);
 
     colour = mix(colour, FogColour * u_lightColour, fogMix);
 
@@ -163,5 +169,5 @@ void main()
 #endif
 
     FRAG_OUT = vec4(colour.rgb, 1.0);
-    //FRAG_OUT = mix(colour, vec4(d,d,d,1.0), u_density / 10.0);
+    //FRAG_OUT = mix(vec4(colour.rgb, 1.0), vec4(d,d,d,1.0), 0.99);
 })";
