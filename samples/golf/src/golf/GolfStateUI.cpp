@@ -4383,7 +4383,7 @@ void GolfState::buildTrophyScene()
                     {
                         e.getComponent<cro::ParticleEmitter>().start();
                         
-                        const float r = static_cast<float>(cro::Util::Random::value(-2,2)) / 10.f;
+                        const float r = static_cast<float>(cro::Util::Random::value(-4,4)) / 10.f;
                         e.getComponent<cro::AudioEmitter>().setPitch(1.f + r);
 
                         if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)

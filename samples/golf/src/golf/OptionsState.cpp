@@ -3400,7 +3400,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
                 std::stringstream st;
                 st.precision(2);
-                st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
+                st << "Look Sensitivity: " << m_sharedData.mouseSpeed;
                 mouseText.getComponent<cro::Text>().setString(st.str());
 
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
@@ -3421,7 +3421,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
                 std::stringstream st;
                 st.precision(2);
-                st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
+                st << "Look Sensitivity " << m_sharedData.mouseSpeed;
                 mouseText.getComponent<cro::Text>().setString(st.str());
 
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();

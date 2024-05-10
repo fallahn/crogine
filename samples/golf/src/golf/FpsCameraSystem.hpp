@@ -79,6 +79,15 @@ struct FpsCamera final
     std::function<void()> completionCallback;
     }transition;
 
+    void resetTransition(glm::vec3 pos, glm::quat rot)
+    {
+        transition.endPosition = pos;
+        transition.endRotation = rot;
+        transition.endFov = 1.f;
+        fov = 1.f;
+        zoomProgress = 0.f;
+    }
+
     void startTransition(glm::vec3 pos, glm::quat rot, float f)
     {
         transition.startPosition = pos;
