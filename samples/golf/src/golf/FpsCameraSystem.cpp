@@ -594,12 +594,12 @@ void FpsCameraSystem::process(float dt)
             //clamp above the ground
             auto pos = tx.getPosition();
             auto result = m_collisionMesh.getTerrain(pos);
-            if (auto diff = pos.y - result.height; diff < MinHeight)
+            if (auto diff = pos.y - std::max(WaterLevel, result.height); diff < MinHeight)
             {
                 tx.move({ 0.f, MinHeight - diff, 0.f });
                 pos = tx.getPosition();
             }
-
+            
             //and within the map
             pos.x = std::clamp(pos.x, 0.f, static_cast<float>(MapSize.x));
             pos.y = std::min(pos.y, 80.f);

@@ -239,20 +239,13 @@ void GolfState::registerDebugCommands()
     //    {
     //        if (ImGui::Begin("asefsd"))
     //        {
-    //            /*if (m_drone.isValid())
+    //            if (m_defaultCam.isValid())
     //            {
-    //                auto pos = m_drone.getComponent<cro::Transform>().getPosition();
-    //                float height = pos.y - m_collisionMesh.getTerrain(pos).height;
-    //                ImGui::Text("height %3.3f", height);
-    //            }*/
-    //            /*ImGui::Text("Shader ID %d", m_targetShader.shaderID);
-    //            ImGui::Text("Shader Uniform %d", m_targetShader.vpUniform);
-    //            ImGui::Text("Position %3.2f, %3.2f, %3.2f", m_targetShader.position.x, m_targetShader.position.y, m_targetShader.position.z);
-    //            ImGui::Text("Size %3.3f", m_targetShader.size);*/
-    //            
-    //            /*const auto* system = m_gameScene.getSystem<ChunkVisSystem>();
-    //            ImGui::Text("Visible Chunks %d", system->getIndexList().size());*/
-    //            ImGui::Text("Hook %3.3f", m_inputParser.getHook());
+    //                auto fov = m_defaultCam.getComponent<CameraFollower::ZoomData>().fov;
+    //                auto target = m_defaultCam.getComponent<CameraFollower::ZoomData>().target;
+    //                ImGui::Text("Target: %3.3f, FOV: %3.3f", target, fov);
+    //            }
+    //            //ImGui::Text("Hook %3.3f", m_inputParser.getHook());
     //        }
     //        ImGui::End();        
     //    });

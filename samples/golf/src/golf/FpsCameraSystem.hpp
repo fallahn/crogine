@@ -92,7 +92,7 @@ struct FpsCamera final
     {
         transition.startPosition = pos;
         transition.startRotation = rot;
-        transition.startFov = fov;
+        transition.startFov = f;
         transition.progress = 0.f;
         state = State::Enter;
     }
