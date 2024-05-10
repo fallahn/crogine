@@ -465,12 +465,15 @@ private:
     std::size_t m_scoreColumnCount;
     LeaderboardTexture m_leaderboardTexture;
 
+    //TODO refactor this into an array?
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
     cro::Entity m_minimapEnt;
     cro::Entity m_miniGreenEnt;
     cro::Entity m_miniGreenIndicatorEnt;
     cro::Entity m_scoreboardEnt;
+    cro::Entity m_droneTextEnt;
+    cro::Entity m_freecamMenuEnt;
     std::uint8_t m_readyQuitFlags;
 
     void buildUI();

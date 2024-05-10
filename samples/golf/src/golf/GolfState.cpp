@@ -1226,6 +1226,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 setUIHidden(true);
+                m_droneTextEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_droneTextEnt.getComponent<cro::Callback>().active = true;
             }
             else if (data.data == CameraID::Player
                 && m_currentCamera == CameraID::Drone)

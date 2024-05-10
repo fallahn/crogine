@@ -303,6 +303,48 @@ void GolfState::buildUI()
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
+    //shown when drone cam is active
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().absolutePosition = { 10.f, 32.f };
+    entity.getComponent<UIElement>().depth = 8.1f;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setString("DRONE CAM");
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.addComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            static constexpr float FlashTime = 0.5f;
+            static float currTime = 0.f;
+
+            currTime += dt;
+            if (currTime > FlashTime)
+            {
+                currTime -= FlashTime;
+                auto facing = e.getComponent<cro::Drawable2D>().getFacing();
+                facing = facing == cro::Drawable2D::Facing::Front ? cro::Drawable2D::Facing::Back : cro::Drawable2D::Facing::Front;
+                e.getComponent<cro::Drawable2D>().setFacing(facing);
+            }
+        };
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_droneTextEnt = entity;
+
+    //info menu shown when in freecam mode
+    cro::SpriteSheet freecamSheet;
+    freecamSheet.loadFromFile("assets/golf/sprites/freecam.spt", m_resources.textures);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().absolutePosition = { 10.f, 32.f };
+    entity.getComponent<UIElement>().depth = 8.1f;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = freecamSheet.getSprite("freecam");
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_freecamMenuEnt = entity;
+
+
     //player's name
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -4743,6 +4785,10 @@ void GolfState::setUIHidden(bool hidden)
         auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
         origin.z = 0.5f;
         m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
+
+        m_droneTextEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        m_droneTextEnt.getComponent<cro::Callback>().active = false;
+        m_freecamMenuEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 }
 
