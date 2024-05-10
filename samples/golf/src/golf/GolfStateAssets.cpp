@@ -1810,6 +1810,7 @@ void GolfState::loadSprites()
     m_sprites[SpriteID::Thinking] = spriteSheet.getSprite("thinking");
     m_sprites[SpriteID::Sleeping] = spriteSheet.getSprite("sleeping");
     m_sprites[SpriteID::Typing] = spriteSheet.getSprite("typing");
+    m_sprites[SpriteID::Freecam] = spriteSheet.getSprite("camera_icon");
     m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
     m_sprites[SpriteID::Bunker] = spriteSheet.getSprite("bunker");
     m_sprites[SpriteID::Foul] = spriteSheet.getSprite("foul");

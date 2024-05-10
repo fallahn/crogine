@@ -806,6 +806,11 @@ void GolfState::toggleFreeCam()
                 cro::App::getWindow().setMouseCaptured(false);
             };
     }
+
+    Activity a;
+    a.client = m_sharedData.clientConnection.connectionID;
+    a.type = m_photoMode ? Activity::FreecamStart : Activity::FreecamEnd;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void GolfState::applyShadowQuality()

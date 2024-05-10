@@ -417,6 +417,7 @@ private:
             Thinking,
             Sleeping,
             Typing,
+            Freecam,
             MessageBoard,
             Bunker,
             Foul,

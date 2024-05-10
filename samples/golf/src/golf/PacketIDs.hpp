@@ -80,7 +80,9 @@ struct Activity final
         PlayerChatStart,
         PlayerChatEnd,
         PlayerIdleStart,
-        PlayerIdleEnd
+        PlayerIdleEnd,
+        FreecamStart,
+        FreecamEnd
     };
     std::uint8_t type = 0;
     std::uint8_t client = 0;

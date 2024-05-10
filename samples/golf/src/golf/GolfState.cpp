@@ -3952,6 +3952,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             case Activity::PlayerIdleEnd:
                 spriteID = SpriteID::Sleeping;
                 break;
+            case Activity::FreecamStart:
+            case Activity::FreecamEnd:
+                spriteID = SpriteID::Freecam;
+                break;
             }
 
             if (data.client == m_currentPlayer.client
