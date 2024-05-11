@@ -4,6 +4,14 @@ cmake_minimum_required(VERSION 3.5.0)
 if(APPLE)
   #required for std::filesystem
   SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
+  SET(CMAKE_PREFIX_PATH 
+	"/opt/homebrew"
+	"/opt/homebrew/opt/openal-soft/include"
+	"/opt/homebrew/opt/openal-soft/lib"
+	"/usr/local"
+	"/usr/local/opt/openal-soft/include"
+	"/usr/local/opt/openal-soft/lib")
+
   SET(CMAKE_FIND_FRAMEWORK LAST)
 endif()
 
@@ -100,6 +108,9 @@ if(MSVC)
   include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
 elseif(LINUX)
   include_directories(${LIBUNWIND_INCLUDE_DIRS})
+elseif(APPLE)
+  include_directories(/usr/local/opt/openal-soft/include)
+  link_directories(/usr/local/opt/openal-soft/lib)
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
