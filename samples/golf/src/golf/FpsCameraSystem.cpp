@@ -48,7 +48,7 @@ namespace
     constexpr float MinHeight = 0.3f;
     constexpr std::int32_t WheelZoomMultiplier = 4;
 
-    constexpr std::int16_t MinTriggerMovement = 12000;
+    constexpr std::int16_t MinTriggerMovement = 4000;
 
     struct RollingAvg final
     {
@@ -425,7 +425,7 @@ void FpsCameraSystem::process(float dt)
                 entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
             }
             float zoomSpeed = 1.f - controller.zoomProgress;
-            zoomSpeed = 0.15f + (0.85f * zoomSpeed);
+            zoomSpeed = 0.2f + (0.8f * zoomSpeed);
 
             auto& tx = entity.getComponent<cro::Transform>();
 
@@ -528,7 +528,7 @@ void FpsCameraSystem::process(float dt)
 
             //move in the direction we're facing
             auto forwardVector = tx.getForwardVector() * m_forwardAmount;
-            auto rightVector = tx.getRightVector() * m_sideAmount;
+            auto rightVector = tx.getRightVector() * m_sideAmount * zoomSpeed;
             glm::vec3 movement(0.f);
 
             if (m_input.buttonFlags & Input::Forward)

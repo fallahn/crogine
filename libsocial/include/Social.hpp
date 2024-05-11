@@ -183,7 +183,7 @@ public:
     static void courseComplete(const std::string&, std::uint8_t);
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
-    static void takeScreenShot(const cro::String&) { cro::App::getInstance().saveScreenshot(); }
+    static void takeScreenshot(const cro::String&) { cro::App::getInstance().saveScreenshot(); }
     static constexpr std::uint32_t IconSize = 64;
     static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
