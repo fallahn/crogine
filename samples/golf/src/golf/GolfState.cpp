@@ -701,8 +701,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 }
                 break;
             }
-            [[fallthrough]];
-        case SDLK_p:
+            //[[fallthrough]];
+        //case SDLK_p:
             requestStackPush(StateID::Pause);
             break;
         case SDLK_SPACE:

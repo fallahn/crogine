@@ -472,7 +472,7 @@ void NewsState::buildScene()
 #ifdef USE_GNS
                 static constexpr std::size_t MaxItems = 1;
 #else
-                static constexpr std::size_t MaxItems = 6;
+                static constexpr std::size_t MaxItems = 5;
 #endif
                 for (auto i = 1u; i < items.size() && i < MaxItems; ++i)
                 {
@@ -547,7 +547,7 @@ void NewsState::buildScene()
 
     auto titleEnt = entity;
     entity = createSmallItem(glm::vec2(8.f, -12.f), "Join The Chat Room", titleEnt);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 5);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 6);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -559,7 +559,7 @@ void NewsState::buildScene()
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds,thumbEnt);
 
     entity = createSmallItem(glm::vec2(8.f, -23.f), "Join The Clubhouse", titleEnt);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 4);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 5);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -571,7 +571,20 @@ void NewsState::buildScene()
     bounds.bottom += bounds.height;
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
 
-    entity = createSmallItem(glm::vec2(8.f, -60.f), "Getting Started", titleEnt);
+    entity = createSmallItem(glm::vec2(8.f, -34.f), "Discord Server", titleEnt);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 4);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    cro::Util::String::parseURL("https://discord.gg/6x8efntStC");
+                }
+            });
+    //bounds.bottom += bounds.height;
+    entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
+
+    entity = createSmallItem(glm::vec2(8.f, -60.f), "How To Play Guide", titleEnt);
     entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 3);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -601,6 +614,19 @@ void NewsState::buildScene()
                     Social::showWebPage("https://steamcommunity.com/sharedfiles/filedetails/?id=2925549958");
                 }
             });
+#else
+    entity = createItem(glm::vec2(0.f, -95.f), "Discord Server", menuEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 1);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    cro::Util::String::parseURL("https://discord.gg/6x8efntStC");
+                }
+            });
+    centreText(entity);
 
 #endif
 
