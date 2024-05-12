@@ -447,51 +447,45 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_2:
-            if (!m_textChat.isVisible()
-                && !m_holeData[m_currentHole].puttFromTee)
-            {
-                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
-                    && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
-                {
-                    if (m_inputParser.getActive()
-                        && m_currentPlayer.terrain != TerrainID::Green)
-                    {
-                        //that's a lot of if's.
+        //case SDLK_2:
+        //    if (!m_textChat.isVisible()
+        //        && !m_holeData[m_currentHole].puttFromTee)
+        //    {
+        //        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+        //            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+        //        {
+        //            if (m_inputParser.getActive()
+        //                && m_currentPlayer.terrain != TerrainID::Green)
+        //            {
+        //                //that's a lot of if's.
 
-                        if (m_currentCamera == CameraID::Player)
-                        {
-                            setActiveCamera(CameraID::Bystander);
-                        }
-                        else if (m_currentCamera == CameraID::Bystander)
-                        {
-                            setActiveCamera(CameraID::Player);
-                        }
-                    }
-                }
-            }
-            break;
-        case SDLK_3:
+        //                if (m_currentCamera == CameraID::Player)
+        //                {
+        //                    setActiveCamera(CameraID::Bystander);
+        //                }
+        //                else if (m_currentCamera == CameraID::Bystander)
+        //                {
+        //                    setActiveCamera(CameraID::Player);
+        //                }
+        //            }
+        //        }
+        //    }
+        //    break;
+        //case SDLK_3:
+        case FixedKey::FreeCam:
             if (!m_textChat.isVisible())
             {
                 toggleFreeCam();
             }
             break;
-            //4&5 rotate camera
-        case SDLK_6:
-            if (!m_textChat.isVisible())
-            {
-                showMapOverview();
-            }
-            break;
+            //3&4 rotate camera
         case SDLK_TAB:
             showScoreboard(false);
             break;
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
             break;
-        case SDLK_KP_MULTIPLY:
-        case SDLK_F6:
+        case FixedKey::ZoomMinimap:
             toggleMiniZoom();
             break;
         case SDLK_F8:
@@ -714,20 +708,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE:
             toggleQuitReady();
             break;
-        case SDLK_7:
+        case FixedKey::EmoteApplaud:
         //case SDLK_KP_7: //don't do this, people use it as keybinds
             m_textChat.quickEmote(TextChat::Applaud);
             break;
-        case SDLK_8:
-        //case SDLK_KP_8:
+        case FixedKey::EmoteHappy:
             m_textChat.quickEmote(TextChat::Happy);
             break;
-        case SDLK_9:
-        //case SDLK_KP_9:
+        case FixedKey::EmoteLaughing:
             m_textChat.quickEmote(TextChat::Laughing);
             break;
-        case SDLK_0:
-        //case SDLK_KP_0:
+        case FixedKey::EmoteAngry:
             m_textChat.quickEmote(TextChat::Angry);
             break;
         }

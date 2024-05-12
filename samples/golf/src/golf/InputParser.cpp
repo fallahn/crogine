@@ -210,7 +210,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                     //cro::App::getWindow().setMouseCaptured(!m_isCPU);
                 }
             }
-            else if (evt.key.keysym.sym == SDLK_1)
+            else if (evt.key.keysym.sym == FixedKey::DroneCam)
             {
                 toggleDroneCam();
             }
@@ -489,11 +489,11 @@ float InputParser::getCamRotation() const
         && m_state == State::Aim
         && (m_inputFlags & ~(InputFlag::Up | InputFlag::Down)) == 0) //ignore these as right stick might set them
     {
-        if (cro::Keyboard::isKeyPressed(SDLK_4))
+        if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateLeft))
         {
             return 1.f;
         }
-        if (cro::Keyboard::isKeyPressed(SDLK_5))
+        if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateRight))
         {
             return -1.f;
         }

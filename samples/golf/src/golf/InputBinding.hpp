@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -103,4 +103,22 @@ struct InputBinding final
     std::int32_t playerID = 0;
 
     std::int32_t clubset = std::numeric_limits<std::int32_t>::max();
+};
+
+//these are the top row keys which can't be rebound
+struct FixedKey final
+{
+    enum
+    {
+        DroneCam            = SDLK_1,
+        FreeCam             = SDLK_2,
+        CameraRotateLeft    = SDLK_3,
+        CameraRotateRight   = SDLK_4,
+        ZoomMinimap         = SDLK_5,
+
+        EmoteApplaud        = SDLK_7,
+        EmoteLaughing       = SDLK_8,
+        EmoteHappy          = SDLK_9,
+        EmoteAngry          = SDLK_0
+    };
 };
