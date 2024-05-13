@@ -453,21 +453,21 @@ bool GolfState::handleEvent(const cro::Event& evt)
             case SDL_CONTROLLERBUTTONDOWN:
                 if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)))
                 {
-                    m_freeCam.getComponent<cro::SpriteAnimation>().play(2);
+                    m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(2);
                 }
                 else
                 {
-                    m_freeCam.getComponent<cro::SpriteAnimation>().play(1);
+                    m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(1);
                 }
                 break;
             case SDL_CONTROLLERAXISMOTION:
                 if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
                 {
-                    m_freeCam.getComponent<cro::SpriteAnimation>().play(2);
+                    m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(2);
                 }
                 else
                 {
-                    m_freeCam.getComponent<cro::SpriteAnimation>().play(1);
+                    m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(1);
                 }
                 break;
             }
@@ -914,10 +914,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
         m_skipState.displayControllerMessage = true;
-        setFreecamLayout();
 
         if (std::abs(evt.caxis.value) > 10000)
         {
+            setFreecamLayout();
             hideMouse();
             resetIdle();
         }
