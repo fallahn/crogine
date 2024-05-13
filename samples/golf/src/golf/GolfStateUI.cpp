@@ -42,6 +42,7 @@ source distribution.
 #include "NotificationSystem.hpp"
 #include "TrophyDisplaySystem.hpp"
 #include "FloatingTextSystem.hpp"
+#include "FpsCameraSystem.hpp"
 #include "PacketIDs.hpp"
 #include "MiniBallSystem.hpp"
 #include "BallSystem.hpp"
@@ -335,12 +336,26 @@ void GolfState::buildUI()
     cro::SpriteSheet freecamSheet;
     freecamSheet.loadFromFile("assets/golf/sprites/freecam.spt", m_resources.textures);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Transform>().setOrigin(glm::vec2(0.f, 150.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().absolutePosition = { 10.f, 10.f };
     entity.getComponent<UIElement>().depth = 8.1f;
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::Sprite>() = freecamSheet.getSprite("freecam");
+    const float offset = (entity.getComponent<UIElement>().absolutePosition.y * 2.f) +
+        entity.getComponent<cro::Sprite>().getTextureBounds().height;
+    entity.addComponent<cro::Callback>().function = 
+        [&, offset](cro::Entity e, float)
+        {
+            const auto amount = 1.f - m_freeCam.getComponent<FpsCamera>().transition.progress;
+            //const float offset = e.getComponent<UIElement>().absolutePosition.y +
+            //    e.getComponent<cro::Sprite>().getTextureBounds().height; //TODO we only need to measure this once...
+
+            const glm::vec2 origin(0.f, amount * offset);
+            e.getComponent<cro::Transform>().setOrigin(origin);
+        };
+
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_freecamMenuEnt = entity;
 
@@ -4788,7 +4803,6 @@ void GolfState::setUIHidden(bool hidden)
 
         m_droneTextEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         m_droneTextEnt.getComponent<cro::Callback>().active = false;
-        m_freecamMenuEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 }
 

@@ -441,6 +441,38 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         };
 
+    const auto setFreecamLayout = [&]()
+        {
+            switch (evt.type)
+            {
+            default: break;
+            case SDL_MOUSEMOTION:
+            case SDL_KEYDOWN:
+                m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(0);
+                break;
+            case SDL_CONTROLLERBUTTONDOWN:
+                if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)))
+                {
+                    m_freeCam.getComponent<cro::SpriteAnimation>().play(2);
+                }
+                else
+                {
+                    m_freeCam.getComponent<cro::SpriteAnimation>().play(1);
+                }
+                break;
+            case SDL_CONTROLLERAXISMOTION:
+                if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
+                {
+                    m_freeCam.getComponent<cro::SpriteAnimation>().play(2);
+                }
+                else
+                {
+                    m_freeCam.getComponent<cro::SpriteAnimation>().play(1);
+                }
+                break;
+            }
+        };
+
     if (evt.type == SDL_KEYUP)
     {
         //hideMouse(); //TODO this should only react to current keybindings
@@ -663,6 +695,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             resetIdle();
         }
         m_skipState.displayControllerMessage = false;
+        setFreecamLayout();
 
         switch (evt.key.keysym.sym)
         {
@@ -727,6 +760,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     {
         resetIdle();
         m_skipState.displayControllerMessage = true;
+        setFreecamLayout();
 
         switch (evt.cbutton.button)
         {
@@ -853,15 +887,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_MOUSEMOTION)
     {
+        setFreecamLayout();
         if (!m_photoMode
             && (evt.motion.state & SDL_BUTTON_RMASK) == 0)
         {
             cro::App::getWindow().setMouseCaptured(false);
         }
     }
-    else if (evt.type == SDL_JOYAXISMOTION)
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
         m_skipState.displayControllerMessage = true;
+        setFreecamLayout();
 
         if (std::abs(evt.caxis.value) > 10000)
         {

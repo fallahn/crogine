@@ -778,9 +778,8 @@ void GolfState::toggleFreeCam()
         m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
         cro::App::getWindow().setMouseCaptured(true);
 
-        //though this may not necessarily appear if the user has toggle visibility
-        //by flipping the sprite's Facing property
-        m_freecamMenuEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+        m_freecamMenuEnt.getComponent<cro::Callback>().active = true; //this does the show/hide animation
     }
     else
     {
@@ -818,6 +817,8 @@ void GolfState::toggleFreeCam()
                 m_waterEnt.getComponent<cro::Callback>().active = true;
                 m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
                 cro::App::getWindow().setMouseCaptured(false);
+
+                m_freecamMenuEnt.getComponent<cro::Callback>().active = false; //this does the show/hide animation
             };
     }
 
