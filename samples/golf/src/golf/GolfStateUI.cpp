@@ -398,7 +398,75 @@ void GolfState::buildUI()
     m_freecamMenuEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //up/down button text
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 119.f, 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    //entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setVerticalSpacing(5.f);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_freecamMenuEnt.getComponent<cro::Transform>().getScale().x != 0)
+            {
+                if (m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().id == 0)
+                {
+                    const auto Out = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]);
+                    const auto In = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]);
+                    const auto Down = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::EmoteMenu]);
+                    const auto Up = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]);
+                    e.getComponent<cro::Text>().setString(Out + "                 " + In + "\n" + Down + "                 " + Up);
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                }
+                else
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
+            }
+        };
+    m_freecamMenuEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //movement button text
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(28.f, 84.f, 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    //entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setVerticalSpacing(5.f);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_freecamMenuEnt.getComponent<cro::Transform>().getScale().x != 0)
+            {
+                if (m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().id == 0)
+                {
+                    const auto Left = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]);
+                    const auto Right = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]);
+                    const auto Up = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]);
+                    const auto Down = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
+                    auto str = Left + "," + Right + "," + Up + "," + Down;
+                    if (str.size() > 10) //a fudge because the string might be too long to fit
+                    {
+                        str = "Aim Keys";
+                    }
+                    e.getComponent<cro::Text>().setString(str);
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                }
+                else
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
+            }
+        };
+    m_freecamMenuEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //player's name
     entity = m_uiScene.createEntity();
@@ -4264,7 +4332,7 @@ void GolfState::catAuth()
                     if (e.getComponent<cro::Transform>().getPosition().x > (static_cast<float>(cro::App::getWindow().getSize().x)/* / m_viewScale.x*/) * 2.f)
                     {
                         state = 1;
-                        e.getComponent<cro::Transform>().setScale({ -m_viewScale.x, m_viewScale.y });
+                        e.getComponent<cro::Transform>().setScale({ -m_viewScale.x / 2.f, m_viewScale.y / 2.f });
                         e.getComponent<cro::Transform>().move({ 0.f, 120.f * m_viewScale.y });
                         e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                     }

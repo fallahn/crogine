@@ -68,8 +68,26 @@ namespace cro::Keyboard
     */
     static inline cro::String keyString(SDL_Keycode key)
     {
-        const auto* charArr = SDL_GetKeyName(key);
-        cro::String str = cro::String::fromUtf8(charArr, charArr + std::strlen(charArr));
-        return str;
+        switch (key)
+        {
+        default:
+        {
+            const auto* charArr = SDL_GetKeyName(key);
+            cro::String str = cro::String::fromUtf8(charArr, charArr + std::strlen(charArr));
+            return str;
+        }
+        case SDLK_LCTRL:
+            return "LCtrl";
+        case SDLK_RCTRL:
+            return "RCtrl";
+        case SDLK_LSHIFT:
+            return "LShift";
+        case SDLK_RSHIFT:
+            return "RShift";
+        case SDLK_LALT:
+            return "LAlt";
+        case SDLK_RALT:
+            return "RAlt";
+        }
     }
 }
