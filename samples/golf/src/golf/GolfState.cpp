@@ -473,6 +473,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         };
 
+    const auto toggleFreecamMenu = [&]()
+        {
+            if (m_photoMode)
+            {
+                auto& [dir, _] = m_freecamMenuEnt.getComponent<cro::Callback>().getUserData<FreecamHideData>();
+                dir = dir == 1 ? 0 : 1;
+            }
+        };
+
     if (evt.type == SDL_KEYUP)
     {
         //hideMouse(); //TODO this should only react to current keybindings
@@ -513,6 +522,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //3&4 rotate camera
         case SDLK_TAB:
             showScoreboard(false);
+            toggleFreecamMenu();
             break;
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
@@ -841,6 +851,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 || m_humanCount == 1)
             {
                 toggleMiniZoom();
+            }
+            break;
+        case cro::GameController::ButtonY:
+            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+                || m_humanCount == 1)
+            {
+                toggleFreecamMenu();
             }
             break;
         }

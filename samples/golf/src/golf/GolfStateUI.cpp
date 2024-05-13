@@ -302,7 +302,7 @@ void GolfState::buildUI()
 
     m_textChat.setRootNode(infoEnt);
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //shown when drone cam is active
     entity = m_uiScene.createEntity();
@@ -337,6 +337,7 @@ void GolfState::buildUI()
     freecamSheet.loadFromFile("assets/golf/sprites/freecam.spt", m_resources.textures);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin(glm::vec2(0.f, 150.f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().absolutePosition = { 10.f, 10.f };
     entity.getComponent<UIElement>().depth = 8.1f;
@@ -346,19 +347,58 @@ void GolfState::buildUI()
     const float offset = (entity.getComponent<UIElement>().absolutePosition.y * 2.f) +
         entity.getComponent<cro::Sprite>().getTextureBounds().height;
     entity.addComponent<cro::Callback>().function = 
-        [&, offset](cro::Entity e, float)
+        [&, offset](cro::Entity e, float dt)
         {
+            //this is the slide in/out anim
             const auto amount = 1.f - m_freeCam.getComponent<FpsCamera>().transition.progress;
-            //const float offset = e.getComponent<UIElement>().absolutePosition.y +
-            //    e.getComponent<cro::Sprite>().getTextureBounds().height; //TODO we only need to measure this once...
-
             const glm::vec2 origin(0.f, amount * offset);
             e.getComponent<cro::Transform>().setOrigin(origin);
+
+            //and then scale based on if we want to show the menu
+            auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<FreecamHideData>();
+            const float Speed = dt * 5.f;
+            if (direction == 0) //in
+            {
+                progress = std::min(1.f, progress + Speed);
+            }
+            else
+            {
+                progress = std::max(0.f, progress - Speed);
+            }
+            const float scale = cro::Util::Easing::easeOutBack(progress);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
         };
+    entity.getComponent<cro::Callback>().setUserData<FreecamHideData>();
 
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_freecamMenuEnt = entity;
 
+    //zoom amount text
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(m_freecamMenuEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 119.f, 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Zoom: 100%");
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_freecamMenuEnt.getComponent<cro::Transform>().getScale().x != 0)
+            {
+                const auto Zoom = (FpsCamera::MinZoom - m_freeCam.getComponent<FpsCamera>().fov) / (FpsCamera::MinZoom - FpsCamera::MaxZoom);
+                const std::int32_t Z = std::round(Zoom * 100.f);
+                e.getComponent<cro::Text>().setString("Zoom: " + std::to_string(Z) + "%");
+            }
+        };
+    m_freecamMenuEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //up/down button text
+    //movement button text
 
     //player's name
     entity = m_uiScene.createEntity();
@@ -879,7 +919,6 @@ void GolfState::buildUI()
     auto barEnt = entity;
 
     //displays the range of the selected putter
-    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width + 2.f, 12.f, 0.f });
     if (Social::isSteamdeck())
