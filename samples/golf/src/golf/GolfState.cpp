@@ -2034,10 +2034,12 @@ bool GolfState::simulate(float dt)
         updateSkipMessage(dt);
     }
 
-    updateSkybox(dt);
+    
     m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
+
+    updateSkybox(dt);
 
     //m_terrainChunker.update();//this needs to be done after the camera system is updated
 
@@ -2341,10 +2343,10 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
+    m_gameScene.addSystem<FpsCameraSystem>(mb, m_collisionMesh, m_sharedData)->setHumanCount(m_humanCount);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkVisSystem>(mb, MapSize, &m_terrainBuilder);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
-    m_gameScene.addSystem<FpsCameraSystem>(mb, m_collisionMesh, m_sharedData)->setHumanCount(m_humanCount);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
