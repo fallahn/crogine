@@ -115,7 +115,7 @@ struct FixedKey final
         CameraRotateLeft    = SDLK_3,
         CameraRotateRight   = SDLK_4,
         ZoomMinimap         = SDLK_5,
-
+        ToggleDOF           = SDLK_6,
         EmoteApplaud        = SDLK_7,
         EmoteLaughing       = SDLK_8,
         EmoteHappy          = SDLK_9,

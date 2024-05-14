@@ -223,6 +223,7 @@ private:
         enum
         {
             Noise, Composite,
+            CompositeDOF,
             Count
         };
     };
@@ -394,8 +395,10 @@ private:
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
     bool m_photoMode;
+    bool m_useDOF;
     bool m_restoreInput;
     void toggleFreeCam();
+    void enableDOF(bool);
     void applyShadowQuality();
 
     //scoring related stuff in GolfStateScoring.cpp

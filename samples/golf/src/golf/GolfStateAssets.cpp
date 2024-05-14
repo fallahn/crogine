@@ -1717,6 +1717,10 @@ void GolfState::loadMaterials()
     m_postProcesses[PostID::Composite].shader = shader;
     //depth uniform is set after creating the UI once we know the render texture is created
 
+    defines += "#define DOF\n";
+    m_resources.shaders.loadFromString(ShaderID::CompositeDOF, CompositeVert, CompositeFrag, "#define ZFAR 320.0\n" + defines);
+    shader = &m_resources.shaders.get(ShaderID::CompositeDOF);
+    m_postProcesses[PostID::CompositeDOF].shader = shader;
 
 
     //wireframe

@@ -185,6 +185,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_currentCamera         (CameraID::Player),
     m_idleTime              (cro::seconds(180.f)),
     m_photoMode             (false),
+    m_useDOF                (true),
     m_restoreInput          (false),
     m_activeAvatar          (nullptr),
     m_camRotation           (0.f),
@@ -482,6 +483,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         };
 
+    const auto toggleDOF = [&]()
+        {
+            if (m_photoMode)
+            {
+                m_useDOF = !m_useDOF;
+                enableDOF(m_useDOF);
+            }
+        };
+
     if (evt.type == SDL_KEYUP)
     {
         //hideMouse(); //TODO this should only react to current keybindings
@@ -524,11 +534,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showScoreboard(false);
             toggleFreecamMenu();
             break;
-        case SDLK_SPACE: //TODO this should read the keymap... but it's not const
-            closeMessage();
-            break;
         case FixedKey::ZoomMinimap:
             toggleMiniZoom();
+            break;
+        case FixedKey::ToggleDOF:
+            toggleDOF();
+            break;
+        case SDLK_SPACE: //TODO this should read the keymap... but it's not const
+            closeMessage();
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
@@ -851,6 +864,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 || m_humanCount == 1)
             {
                 toggleMiniZoom();
+            }
+            break;
+        case cro::GameController::ButtonX:
+            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+                || m_humanCount == 1)
+            {
+                toggleDOF();
             }
             break;
         case cro::GameController::ButtonY:
@@ -2282,9 +2302,12 @@ void GolfState::render()
         }
     }
 
-    //m_focusTexture.clear();
-    //m_focusQuad.draw();
-    //m_focusTexture.display();
+    if (m_photoMode && m_useDOF)
+    {
+        m_focusTexture.clear();
+        m_focusQuad.draw();
+        m_focusTexture.display();
+    }
 
 #ifndef CRO_DEBUG_
     if (m_roundEnded /* && !m_sharedData.tutorial */)

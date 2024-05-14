@@ -291,6 +291,7 @@ struct ShaderID final
         BallTrail,
         FXAA,
         Composite,
+        CompositeDOF,
         Blur,
         Flag,
         TV,

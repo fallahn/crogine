@@ -780,6 +780,7 @@ void GolfState::toggleFreeCam()
 
 
         m_freecamMenuEnt.getComponent<cro::Callback>().active = true; //this does the show/hide animation
+        enableDOF(m_useDOF);
     }
     else
     {
@@ -819,6 +820,8 @@ void GolfState::toggleFreeCam()
                 cro::App::getWindow().setMouseCaptured(false);
 
                 m_freecamMenuEnt.getComponent<cro::Callback>().active = false; //this does the show/hide animation
+
+                enableDOF(false);
             };
     }
 
@@ -826,6 +829,30 @@ void GolfState::toggleFreeCam()
     a.client = m_sharedData.clientConnection.connectionID;
     a.type = m_photoMode ? Activity::FreecamStart : Activity::FreecamEnd;
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void GolfState::enableDOF(bool enable)
+{
+    if (enable)
+    {
+        //use DOF shader
+        //m_freeCam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Composite];
+        m_freeCam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::CompositeDOF];
+        //m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_postProcesses[PostID::CompositeDOF].shader);
+        //m_courseEnt.getComponent<cro::Drawable2D>().bindUniform("u_dofTexture", cro::TextureID(m_focusTexture.getTexture()));
+    }
+    else
+    {
+        //regular composite
+        m_freeCam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Composite];
+        //m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_postProcesses[PostID::Composite].shader);
+    }
+
+    m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_freeCam.getComponent<TargetInfo>().postProcess->shader);
+    for (const auto& [n, v] : m_freeCam.getComponent<TargetInfo>().postProcess->uniforms)
+    {
+        m_courseEnt.getComponent<cro::Drawable2D>().bindUniform(n, v);
+    }
 }
 
 void GolfState::applyShadowQuality()

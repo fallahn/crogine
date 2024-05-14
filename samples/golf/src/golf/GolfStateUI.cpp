@@ -248,7 +248,12 @@ void GolfState::buildUI()
         m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_maskTexture", m_gameSceneMRTexture.getTexture(MRTIndex::Normal)));
 
         //entity.getComponent<cro::Drawable2D>().bindUniform("u_dofTexture", cro::TextureID(m_focusTexture.getTexture()));
-        //m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_dofTexture", cro::TextureID(m_focusTexture.getTexture())));
+        
+        m_postProcesses[PostID::CompositeDOF].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneMRTexture.getDepthTexture()));
+        m_postProcesses[PostID::CompositeDOF].uniforms.emplace_back(std::make_pair("u_lightTexture", lightID));
+        m_postProcesses[PostID::CompositeDOF].uniforms.emplace_back(std::make_pair("u_blurTexture", blurID));
+        m_postProcesses[PostID::CompositeDOF].uniforms.emplace_back(std::make_pair("u_maskTexture", m_gameSceneMRTexture.getTexture(MRTIndex::Normal)));
+        m_postProcesses[PostID::CompositeDOF].uniforms.emplace_back(std::make_pair("u_dofTexture", cro::TextureID(m_focusTexture.getTexture())));
     }
     else
     {
@@ -262,7 +267,8 @@ void GolfState::buildUI()
         m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
 
         //entity.getComponent<cro::Drawable2D>().bindUniform("u_dofTexture", cro::TextureID(m_focusTexture.getTexture()));
-        //m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_dofTexture", cro::TextureID(m_focusTexture.getTexture())));
+        m_postProcesses[PostID::CompositeDOF].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
+        m_postProcesses[PostID::CompositeDOF].uniforms.emplace_back(std::make_pair("u_dofTexture", cro::TextureID(m_focusTexture.getTexture())));
     }    
 
 
@@ -353,6 +359,10 @@ void GolfState::buildUI()
             const auto amount = 1.f - m_freeCam.getComponent<FpsCamera>().transition.progress;
             const glm::vec2 origin(0.f, amount * offset);
             e.getComponent<cro::Transform>().setOrigin(origin);
+
+            const float alpha = smoothstep(0.5f, 0.9f, m_freeCam.getComponent<FpsCamera>().transition.progress);
+            const cro::Colour c(1.f, 1.f, 1.f, alpha);
+            e.getComponent<cro::Sprite>().setColour(c);
 
             //and then scale based on if we want to show the menu
             auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<FreecamHideData>();
@@ -1171,9 +1181,9 @@ void GolfState::buildUI()
         float textureRatio = 1.f; //pixels per metre in the minimap texture * 2
     };
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setPosition({ 0.f, 82.f });
+    entity.addComponent<cro::Transform>();// .setPosition({ 0.f, 0.f, 0.2f });
     entity.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
-    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.1f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.05f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.05f, 0.f));
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::MinimapView));
     entity.addComponent<cro::Sprite>();

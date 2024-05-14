@@ -235,15 +235,15 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("asefsd"))
-    //        {
-    //            auto size = glm::vec2(m_focusTexture.getSize()) * 4.f;
-    //            ImGui::Image(m_focusTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
-    //        }
-    //        ImGui::End();        
-    //    });
+    /*registerWindow([&]() 
+        {
+            if (ImGui::Begin("asefsd"))
+            {
+                auto size = glm::vec2(m_focusTexture.getSize()) * 4.f;
+                ImGui::Image(m_focusTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
+            }
+            ImGui::End();        
+        });*/
 
     registerCommand("refresh_turn", [&](const std::string&)
         {
