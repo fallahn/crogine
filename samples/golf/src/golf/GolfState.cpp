@@ -2034,14 +2034,12 @@ bool GolfState::simulate(float dt)
         updateSkipMessage(dt);
     }
 
+    updateSkybox(dt);
     m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
     //m_terrainChunker.update();//this needs to be done after the camera system is updated
-
-    //do this last to ensure game scene camera is up to date
-    updateSkybox(dt);
 
 
 #ifndef CRO_DEBUG_
