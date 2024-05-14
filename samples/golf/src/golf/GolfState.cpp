@@ -185,7 +185,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_currentCamera         (CameraID::Player),
     m_idleTime              (cro::seconds(180.f)),
     m_photoMode             (false),
-    m_useDOF                (true),
+    m_useDOF                (false),
     m_restoreInput          (false),
     m_activeAvatar          (nullptr),
     m_camRotation           (0.f),
@@ -3991,6 +3991,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     cmd.action = [&,direction, spriteID](cro::Entity e, float)
                         {
                             auto& [dir, _, sprID] = e.getComponent<cro::Callback>().getUserData<CogitationData>();
+                            
+                            //if this is another sprite trying to 'out' then ignore it
+                            if (dir == 1 && sprID != spriteID)
+                            {
+                                return;
+                            }
+                            
+                            
                             dir = direction;
                             e.getComponent<cro::Callback>().active = true;
 
@@ -4024,10 +4032,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             case Activity::PlayerIdleEnd:
                 spriteID = SpriteID::Sleeping;
                 break;
-            /*case Activity::FreecamStart:
+            case Activity::FreecamStart:
             case Activity::FreecamEnd:
                 spriteID = SpriteID::Freecam;
-                break;*/
+                break;
             }
 
             if (data.client == m_currentPlayer.client

@@ -130,6 +130,7 @@ public:
     };
     Progress getProgress() const;
     cro::String getProgressString() const;
+    const std::string& getChallengeDescription() const;
 
 private:
     std::array<Challenge, ChallengeID::Count> m_challenges =

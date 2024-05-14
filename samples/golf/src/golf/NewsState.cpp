@@ -630,6 +630,47 @@ void NewsState::buildScene()
 
 #endif
 
+    //scrolls current challenge
+#ifdef USE_GNS
+    const auto ChallengePos = glm::vec3(0.f, -95.f, 0.2f);
+#else
+    const auto ChallengePos = glm::vec3(0.f, -79.f, 0.2f);
+#endif
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(ChallengePos);
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(188.f, 0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("This Month's Challenge: " + Social::getMonthlyChallenge().getChallengeDescription() + " - Check out the Clubhouse for your current progress");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt)
+        {
+            float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
+            xPos -= (dt * 50.f);
+
+            static constexpr float BGWidth = 352.f;
+
+            if (xPos < (-bounds.width))
+            {
+                xPos = BGWidth;
+            }
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            pos.x = std::round(xPos);
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            auto cropping = bounds;
+            cropping.left = -pos.x;
+            cropping.left += 12.f;
+            cropping.width = BGWidth;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+        };
+    menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //quit state
     entity = createItem(glm::vec2(0.f, -125.f), "Let's go!", menuEntity);
