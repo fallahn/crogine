@@ -350,7 +350,8 @@ void NewsState::buildScene()
         e.getComponent<cro::Text>().setString(label);
         e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         centreText(e);
-        e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
+        auto b = cro::Text::getLocalBounds(e);
+        e.addComponent<cro::UIInput>().area = b;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
@@ -433,8 +434,9 @@ void NewsState::buildScene()
                 ent.getComponent<cro::Text>().setVerticalSpacing(1.f);
                 ent.getComponent<cro::Text>().setFillColour(TextGoldColour);
                 ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-                ent.getComponent<cro::Transform>().setOrigin(glm::vec2(0.f));
+                ent.getComponent<cro::Transform>().setOrigin(glm::vec2(0.f)); //hm this actually upsets the uiinput area
                 ent.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+                ent.getComponent<cro::UIInput>().area.left -= ent.getComponent<cro::UIInput>().area.width / 2.f;
                 ent.getComponent<cro::UIInput>().setSelectionIndex(TitleButtonIndex);
                 ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
                     uiSystem.addCallback([&, url](cro::Entity e, cro::ButtonEvent evt)
@@ -684,7 +686,7 @@ void NewsState::buildScene()
                     quitState();
                 }
             });
-    centreText(entity);
+    //centreText(entity);
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
