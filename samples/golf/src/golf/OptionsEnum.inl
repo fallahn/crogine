@@ -78,6 +78,8 @@ enum OptionsIndex
     Controls = 300,
     CtrlThreshL,
     CtrlThreshR,
+    CtrlViewKeyb,
+    CtrlViewController,
     CtrlLookL,
     CtrlLookR,
     CtrlInvX,
