@@ -141,16 +141,16 @@ void main()
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
     colour.rgb = dim(colour.rgb);
 
-
     float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
     float d = getDistance(depthSample);
     float fogMix = fogAmount(d);
 
 #if defined(DOF)
-vec4 dofcolour = TEXTURE(u_dofTexture, v_texCoord) * v_colour;
-dofcolour.rgb = dim(dofcolour.rgb);
-colour = mix(colour, dofcolour, d);
+    vec4 dofcolour = TEXTURE(u_dofTexture, v_texCoord) * v_colour;
+    dofcolour.rgb = dim(dofcolour.rgb);
+    colour = mix(colour, dofcolour, d);
 #endif
+
 
 #if defined (LIGHT_COLOUR)
     float maskAmount = TEXTURE(u_maskTexture, v_texCoord).a;

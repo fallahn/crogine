@@ -821,8 +821,8 @@ void GolfState::toggleFreeCam()
 
                 m_freecamMenuEnt.getComponent<cro::Callback>().active = false; //this does the show/hide animation
 
-                enableDOF(false);
             };
+            enableDOF(false);
     }
 
     Activity a;
@@ -836,16 +836,12 @@ void GolfState::enableDOF(bool enable)
     if (enable)
     {
         //use DOF shader
-        //m_freeCam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Composite];
         m_freeCam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::CompositeDOF];
-        //m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_postProcesses[PostID::CompositeDOF].shader);
-        //m_courseEnt.getComponent<cro::Drawable2D>().bindUniform("u_dofTexture", cro::TextureID(m_focusTexture.getTexture()));
     }
     else
     {
         //regular composite
         m_freeCam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Composite];
-        //m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_postProcesses[PostID::Composite].shader);
     }
 
     m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_freeCam.getComponent<TargetInfo>().postProcess->shader);
