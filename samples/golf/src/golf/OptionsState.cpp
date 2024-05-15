@@ -1129,7 +1129,7 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowClose);
 
     entity = createTab(controlButtonEnt, 0, MenuID::Controls, TabAV);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, CtrlViewKeyb);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, CtrlLayout);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowAdvanced);
     entity = createTab(controlButtonEnt, 2, MenuID::Controls, TabAchievements);
     entity.getComponent<cro::UIInput>().setNextIndex(TabStats, CtrlRB);
@@ -2785,34 +2785,66 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     //switch between keyboard + cotroller view
     //TODO default this to controller on deck
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(16.f, 138.f, TextOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(12.f, 138.f, TextOffset));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = controllerSheet.getSprite("selection_buttons");
     entity.addComponent<cro::SpriteAnimation>();
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto selectionEnt = entity;
 
-    //highlight for keyboard controls
+    //highlight for keyboard controls TODO move + 95 for other position
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(-1.f, -1.f, TextOffset));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = controllerSheet.getSprite("keyboard_button");
+    entity.addComponent<cro::Sprite>() = controllerSheet.getSprite("controller_button");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
 
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlViewKeyb);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlViewController, CtrlLookL);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlViewController, TabAV);
+    entity.getComponent<cro::UIInput>().enabled = false; //this needs to be updated if we're defaulting to controller layout...
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLayout);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, CtrlLookL);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, TabAV);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelectID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected]= highlightUnselectID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&, selectionEnt](cro::Entity, cro::ButtonEvent evt) mutable
+    auto keybEnt = entity;
+    selectionEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    
+    
+
+    //highlight for gamepad controls
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(77.f, -1.f, TextOffset));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = controllerSheet.getSprite("controller_button");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLayout);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlLookR); //TODO prev/next should be first keybind
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, TabAV);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelectID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselectID;
+    auto gamepEnt = entity;
+    selectionEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    keybEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&, selectionEnt, gamepEnt](cro::Entity ent, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                //this basically swaps the button between the keyboard/controller inputs
+                gamepEnt.getComponent<cro::UIInput>().enabled = true;
+                ent.getComponent<cro::UIInput>().enabled = false;
+                m_scene.getSystem<cro::UISystem>()->selectByIndex(CtrlLookR);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                 for (auto e : bindingEnts)
                 {
@@ -2824,28 +2856,18 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             }
         });
 
-    selectionEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //highlight for gamepad controls
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(77.f, -1.f, TextOffset));
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = controllerSheet.getSprite("controller_button");
-    
-    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlViewController);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlViewKeyb, CtrlLookR);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlViewKeyb, TabAV);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelectID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselectID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&, selectionEnt](cro::Entity, cro::ButtonEvent evt) mutable
+
+    gamepEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&, selectionEnt, keybEnt](cro::Entity ent, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                keybEnt.getComponent<cro::UIInput>().enabled = true;
+                ent.getComponent<cro::UIInput>().enabled = false;
+                m_scene.getSystem<cro::UISystem>()->selectByIndex(CtrlLookL);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                 for (auto e : bindingEnts)
                 {
@@ -2864,7 +2886,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             }
         });
 
-    selectionEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //mouse input controls
@@ -3064,7 +3085,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity = createSquareHighlight(glm::vec2(11.f, 72.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLookL);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlInvX);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, CtrlViewKeyb);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, CtrlLayout);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, mouseText](cro::Entity, cro::ButtonEvent evt) mutable
         {
@@ -3085,7 +3106,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity = createSquareHighlight(glm::vec2(178.f, 72.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLookR);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlUp, CtrlVib);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookL, CtrlViewController);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookL, CtrlLayout);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, mouseText](cro::Entity, cro::ButtonEvent evt) mutable
         {
