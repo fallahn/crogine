@@ -98,6 +98,8 @@ struct CommandID final
             LobbyList    = 0x4,
             ServerInfo   = 0x8,
             PlayerConfig = 0x10,
+            InfoString   = PlayerConfig,
+
             PlayerName   = 0x20,
             PlayerAvatar = 0x40,
             UIElement    = 0x80,

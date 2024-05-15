@@ -128,10 +128,12 @@ private:
 
     std::array<std::string, InputBinding::Count> m_labelStrings = {};
 
-    cro::Entity m_psController;
+    /*cro::Entity m_psController;
     cro::Entity m_xboxController;
     cro::Entity m_psOverlay;
-    cro::Entity m_xboxOverlay;
+    cro::Entity m_xboxOverlay;*/
+
+    cro::Entity m_layoutEnt; //controller layouts
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
