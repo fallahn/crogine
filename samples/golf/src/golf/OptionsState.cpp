@@ -2629,9 +2629,13 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     infoEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, -4.f, TextOffset });
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(infoFont).setAlignment(cro::Text::Alignment::Centre);
-    if (!Social::isSteamdeck())
+    if (!Social::isSteamdeck()) //layout ent hasn't been assigned yet...
     {
         infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
+    }
+    else
+    {
+        infoEnt.getComponent<cro::Text>().setString(" ");
     }
     infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -2662,15 +2666,15 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
     auto unselectID = uiSystem.addCallback(
-        [infoEnt, buttonChangeEnt](cro::Entity e) mutable
+        [&, infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
-            if (Social::isSteamdeck())
+            if (m_layoutEnt.getComponent<cro::SpriteAnimation>().id == LayoutID::Keyboard)
             {
-                infoEnt.getComponent<cro::Text>().setString(" ");
+                infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
             }
             else
             {
-                infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
+                infoEnt.getComponent<cro::Text>().setString(" ");
             }
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
@@ -2792,9 +2796,9 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto selectionEnt = entity;
 
-    //highlight for keyboard controls TODO move + 95 for other position
+    //highlight for keyboard/controller display
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(-1.f, -1.f, TextOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(94.f, -1.f, TextOffset));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = controllerSheet.getSprite("controller_button");
@@ -2802,89 +2806,78 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().enabled = false; //this needs to be updated if we're defaulting to controller layout...
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLayout);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, CtrlLookL);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, TabAV);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelectID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected]= highlightUnselectID;
-    auto keybEnt = entity;
-    selectionEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    
-    
-
-    //highlight for gamepad controls
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(77.f, -1.f, TextOffset));
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = controllerSheet.getSprite("controller_button");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-
-    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLayout);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlLookR); //TODO prev/next should be first keybind
-    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, TabAV);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelectID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselectID;
-    auto gamepEnt = entity;
-    selectionEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-
-    keybEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&, selectionEnt, gamepEnt](cro::Entity ent, cro::ButtonEvent evt) mutable
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&, selectionEnt, infoEnt](cro::Entity ent, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
-                //this basically swaps the button between the keyboard/controller inputs
-                gamepEnt.getComponent<cro::UIInput>().enabled = true;
-                ent.getComponent<cro::UIInput>().enabled = false;
-                m_scene.getSystem<cro::UISystem>()->selectByIndex(CtrlLookR);
-
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                for (auto e : bindingEnts)
+                if (m_layoutEnt.getComponent<cro::SpriteAnimation>().id == LayoutID::Keyboard)
                 {
-                    e.getComponent<cro::UIInput>().enabled = true;
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    //switch to controller
+                    for (auto e : bindingEnts)
+                    {
+                        e.getComponent<cro::UIInput>().enabled = false;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    }
+
+                    auto controllerIndex = evt.type == SDL_CONTROLLERBUTTONDOWN ?
+                        cro::GameController::controllerID(evt.cbutton.which) : 0;
+
+                    std::size_t i = Social::isSteamdeck() ? LayoutID::Deck
+                        : cro::GameController::getControllerCount() == 0 ? LayoutID::XBox :
+                        cro::GameController::hasPSLayout(controllerIndex) ? LayoutID::PS : LayoutID::XBox;
+                    m_layoutEnt.getComponent<cro::SpriteAnimation>().play(i);
+                    selectionEnt.getComponent<cro::SpriteAnimation>().play(1);
+
+                    ent.getComponent<cro::Transform>().setPosition(glm::vec2(-1.f));
+                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlLookR);
+
+                    infoEnt.getComponent<cro::Text>().setString(" ");
                 }
-                m_layoutEnt.getComponent<cro::SpriteAnimation>().play(LayoutID::Keyboard);
-                selectionEnt.getComponent<cro::SpriteAnimation>().play(0);
+                else
+                {
+                    //switch to keyboard
+                    for (auto e : bindingEnts)
+                    {
+                        e.getComponent<cro::UIInput>().enabled = true;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    }
+                    m_layoutEnt.getComponent<cro::SpriteAnimation>().play(LayoutID::Keyboard);
+                    selectionEnt.getComponent<cro::SpriteAnimation>().play(0);
+
+                    ent.getComponent<cro::Transform>().setPosition(glm::vec2(94.f, -1.f));
+                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, CtrlLookL);
+
+                    infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
+                }
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //refresh the display
             }
         });
+    selectionEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-
-    gamepEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&, selectionEnt, keybEnt](cro::Entity ent, cro::ButtonEvent evt) mutable
+    //default to controller layout on deck
+    if (Social::isSteamdeck())
+    {
+        for (auto e : bindingEnts)
         {
-            if (activated(evt))
-            {
-                keybEnt.getComponent<cro::UIInput>().enabled = true;
-                ent.getComponent<cro::UIInput>().enabled = false;
-                m_scene.getSystem<cro::UISystem>()->selectByIndex(CtrlLookL);
+            e.getComponent<cro::UIInput>().enabled = false;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
 
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        m_layoutEnt.getComponent<cro::SpriteAnimation>().play(LayoutID::Deck);
+        selectionEnt.getComponent<cro::SpriteAnimation>().play(1);
 
-                for (auto e : bindingEnts)
-                {
-                    e.getComponent<cro::UIInput>().enabled = false;
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                }
-                
-                auto controllerIndex = evt.type == SDL_CONTROLLERBUTTONDOWN ?
-                    cro::GameController::controllerID(evt.cbutton.which) : 0;
-
-                std::size_t i = Social::isSteamdeck() ? LayoutID::Deck
-                    : cro::GameController::getControllerCount() == 0 ? LayoutID::XBox :
-                    cro::GameController::hasPSLayout(controllerIndex) ? LayoutID::PS : LayoutID::XBox;
-                m_layoutEnt.getComponent<cro::SpriteAnimation>().play(i);
-                selectionEnt.getComponent<cro::SpriteAnimation>().play(1);
-            }
-        });
+        entity.getComponent<cro::Transform>().setPosition(glm::vec2(-1.f));
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlLookR);
+    }
 
 
 
@@ -2921,7 +2914,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     createText(glm::vec2(112.f, 31.f), "Enable Swingput");
 
     //TODO don't duplicate these as they already exist in the AV menu
-    auto selectedID = uiSystem.addCallback([infoEnt](cro::Entity e) mutable
+    auto selectedID = uiSystem.addCallback([&, infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
@@ -2929,7 +2922,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
             if (e.getLabel().empty())
             {
-                if (Social::isSteamdeck())
+                if (m_layoutEnt.getComponent<cro::SpriteAnimation>().id != LayoutID::Keyboard)
                 {
                     infoEnt.getComponent<cro::Text>().setString(" ");
                 }
@@ -3339,11 +3332,15 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Callback>().active = true;
         });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = uiSystem.addCallback(
-        [infoEnt](cro::Entity e) mutable
+        [&,infoEnt](cro::Entity e) mutable
         {
-            if (!Social::isSteamdeck())
+            if (m_layoutEnt.getComponent<cro::SpriteAnimation>().id == LayoutID::Keyboard)
             {
                 infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
+            }
+            else
+            {
+                infoEnt.getComponent<cro::Text>().setString(" ");
             }
 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
