@@ -882,12 +882,12 @@ void OptionsState::buildScene()
     entity.getComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("audio_video");
-    entity.addComponent<PageButtons>();
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto videoEnt = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(-PanelPosition);
+    entity.addComponent<PageButtons>();
     createButtons(entity, MenuID::Video, selectedID, unselectedID, spriteSheet);
     videoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto videoButtonEnt = entity;

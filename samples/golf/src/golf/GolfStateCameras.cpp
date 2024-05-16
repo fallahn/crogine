@@ -440,6 +440,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
+    camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_freeCam = camEnt;
 
