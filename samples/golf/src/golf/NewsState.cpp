@@ -81,6 +81,37 @@ namespace
     };
     constexpr std::size_t TitleButtonIndex = 0;
     constexpr std::size_t QuitButtonIndex = 1000;
+
+    struct TextScrollCallback final
+    {
+        cro::FloatRect bounds;
+        explicit TextScrollCallback(cro::FloatRect b)
+            : bounds(b) {}
+
+        void operator ()(cro::Entity e, float dt)
+        {
+            float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
+            xPos -= (dt * 50.f);
+
+            static constexpr float BGWidth = 352.f;
+
+            if (xPos < (-bounds.width))
+            {
+                xPos = BGWidth;
+            }
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            pos.x = std::round(xPos);
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            auto cropping = bounds;
+            cropping.left = -pos.x;
+            cropping.left += 12.f;
+            cropping.width = BGWidth;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+        }
+    };
 }
 
 NewsState::NewsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -472,10 +503,34 @@ void NewsState::buildScene()
                 menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
 #ifdef USE_GNS
-                static constexpr std::size_t MaxItems = 1;
+                //scroll next three titles
+                if (items.size() > 1)
+                {
+                    cro::String prev("--- | Other News: ");
+                    for (auto i = 1; i < 4 && i < items.size(); ++i)
+                    {
+                        prev += items[i].title + " | ";
+                    }
+                    prev += "---";
+
+                    ent = m_scene.createEntity();
+                    ent.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 30.f, 0.2f));
+                    ent.getComponent<cro::Transform>().setOrigin(glm::vec2(188.f, 0.f));
+                    ent.addComponent<cro::Drawable2D>();
+                    ent.addComponent<cro::Text>(font).setString(prev);
+                    ent.getComponent<cro::Text>().setCharacterSize(UITextSize);
+                    ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                    auto b = cro::Text::getLocalBounds(ent);
+                    ent.addComponent<cro::Callback>().active = true;
+                    ent.getComponent<cro::Callback>().setUserData<float>(0.f);
+                    ent.getComponent<cro::Callback>().function = TextScrollCallback(b);
+
+                    menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                }
+
 #else
                 static constexpr std::size_t MaxItems = 5;
-#endif
+
                 for (auto i = 1u; i < items.size() && i < MaxItems; ++i)
                 {
                     ent = createItem(position, items[i].title, menuEntity);
@@ -503,6 +558,7 @@ void NewsState::buildScene()
                     menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                     position.y -= 14.f;
                 }
+#endif
             }
             else
             {
@@ -642,36 +698,14 @@ void NewsState::buildScene()
     entity.addComponent<cro::Transform>().setPosition(ChallengePos);
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(188.f, 0.f));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("This Month's Challenge: " + Social::getMonthlyChallenge().getChallengeDescription() + " - Check out the Clubhouse for your current progress");
+    entity.addComponent<cro::Text>(font).setString("            ----------- This Month's Challenge: " + Social::getMonthlyChallenge().getChallengeDescription() + " - Check out the Clubhouse for your current progress -----------");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [&, bounds](cro::Entity e, float dt)
-        {
-            float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
-            xPos -= (dt * 50.f);
+    entity.getComponent<cro::Callback>().function = TextScrollCallback(bounds);
 
-            static constexpr float BGWidth = 352.f;
-
-            if (xPos < (-bounds.width))
-            {
-                xPos = BGWidth;
-            }
-
-            auto pos = e.getComponent<cro::Transform>().getPosition();
-            pos.x = std::round(xPos);
-
-            e.getComponent<cro::Transform>().setPosition(pos);
-
-            auto cropping = bounds;
-            cropping.left = -pos.x;
-            cropping.left += 12.f;
-            cropping.width = BGWidth;
-            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
-        };
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //quit state
