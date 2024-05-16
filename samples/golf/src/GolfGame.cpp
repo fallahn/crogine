@@ -420,6 +420,14 @@ void GolfGame::handleMessage(const cro::Message& msg)
             //achievement is awarded by League class on completion
         }
     }
+    else if (msg.id == cro::Message::SystemMessage)
+    {
+        const auto& data = msg.getData<cro::Message::SystemEvent>();
+        if (data.type == cro::Message::SystemEvent::ScreenshotTaken)
+        {
+            m_progressIcon->showMessage(" ", "Screenshot Saved.");
+        }
+    }
 
     m_stateStack.handleMessage(msg);
 }

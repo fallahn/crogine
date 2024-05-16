@@ -53,6 +53,7 @@ private:
         {
             Hole,
             Ground,
+            Snapshot,
 
             Count
         };
