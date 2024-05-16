@@ -257,6 +257,33 @@ namespace
         cro::Entity target;
     };
 
+
+    struct TabID final
+    {
+        enum
+        {
+            AV, Controls, Achievements, Stats,
+            Count
+        };
+    };
+
+    struct ButtonID final
+    {
+        enum
+        {
+            Credits, Advanced, Apply, Quit,
+            Count
+        };
+    };
+
+    //used as a component by parent nodes to hold
+    //top and bottom row button entities
+    struct PageButtons final
+    {
+        std::array<cro::Entity, TabID::Count> tabs = {};
+        std::array<cro::Entity, ButtonID::Count> buttons = {};
+    };
+
     inline cro::String keyString(std::int32_t idx, const SharedStateData& sharedData)
     {
         return " (" + cro::Keyboard::keyString(sharedData.inputBinding.keys[idx]) + ")";
@@ -855,12 +882,12 @@ void OptionsState::buildScene()
     entity.getComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("audio_video");
+    entity.addComponent<PageButtons>();
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto videoEnt = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(-PanelPosition);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     createButtons(entity, MenuID::Video, selectedID, unselectedID, spriteSheet);
     videoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto videoButtonEnt = entity;
@@ -883,8 +910,8 @@ void OptionsState::buildScene()
     auto controlEnt = entity;
 
     entity = m_scene.createEntity();
+    entity.addComponent<PageButtons>();
     entity.addComponent<cro::Transform>().setPosition(-PanelPosition);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     createButtons(entity, MenuID::Controls, selectedID, unselectedID, spriteSheet);
     controlEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto controlButtonEnt = entity;
@@ -923,8 +950,8 @@ void OptionsState::buildScene()
     auto achEnt = entity;
 
     entity = m_scene.createEntity();
+    entity.addComponent<PageButtons>();
     entity.addComponent<cro::Transform>().setPosition(-PanelPosition);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     createButtons(entity, MenuID::Achievements, selectedID, unselectedID, spriteSheet);
     achEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto achButtonEnt = entity;
@@ -960,8 +987,8 @@ void OptionsState::buildScene()
     auto statsEnt = entity;
 
     entity = m_scene.createEntity();
+    entity.addComponent<PageButtons>();
     entity.addComponent<cro::Transform>().setPosition(-PanelPosition);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     createButtons(entity, MenuID::Stats, selectedID, unselectedID, spriteSheet);
     statsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto statsButtonEnt = entity;
@@ -1114,6 +1141,7 @@ void OptionsState::buildScene()
                 }
             });
 
+        parent.getComponent<PageButtons>().tabs[index] = ent;
         parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
         return ent;
@@ -1132,8 +1160,8 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, CtrlLayout);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowAdvanced);
     entity = createTab(controlButtonEnt, 2, MenuID::Controls, TabAchievements);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabStats, CtrlRB);
-    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, CtrlDown);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabStats, CtrlLB);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowApply);
     entity = createTab(controlButtonEnt, 3, MenuID::Controls, TabStats);
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, CtrlLB);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowClose);
@@ -1200,7 +1228,7 @@ void OptionsState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(createTabTip(ToolTipID::Stats, TabPositions[3]).getComponent<cro::Transform>());
 
     buildAVMenu(videoEnt, spriteSheet);
-    buildControlMenu(controlEnt, spriteSheet);
+    buildControlMenu(controlEnt, controlButtonEnt, spriteSheet);
     buildAchievementsMenu(achEnt, spriteSheet);
     buildStatsMenu(statsEnt, spriteSheet);
 
@@ -1639,6 +1667,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             }
             helpEnt.getComponent<cro::Transform>().setPosition(pos);
             helpEnt.getComponent<cro::Text>().setString(str);
+
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
     auto unselectedID = uiSystem.addCallback([helpEnt](cro::Entity e) mutable
@@ -2608,7 +2637,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 #endif
 }
 
-void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
+void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, const cro::SpriteSheet& spriteSheet)
 {
     auto parentBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
 
@@ -2780,11 +2809,22 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         InputBinding::NextClub,
         InputBinding::PrevClub,
     };
+
+    std::int32_t selectionIndex = CtrlA;
     for (auto i : KeyIndices)
     {
-        createHighlight(highlightPos, i);
+        auto h = createHighlight(highlightPos, i);
+        h.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
+        h.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, selectionIndex - 1);
+        h.getComponent<cro::UIInput>().setPrevIndex(CtrlLookR, selectionIndex + 1);
+
+        selectionIndex++;
         highlightPos.y += 12.f;
     }
+
+    bindingEnts[KeyIndices[0]].getComponent<cro::UIInput>().setNextIndex(CtrlLookL, WindowApply);
+    bindingEnts[KeyIndices.back()].getComponent<cro::UIInput>().setPrevIndex(CtrlLayout, TabAchievements);
+
 
     //switch between keyboard + cotroller view
     //TODO default this to controller on deck
@@ -2807,13 +2847,15 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLayout);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, CtrlLookL);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLB, CtrlLookL);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, TabAV);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelectID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected]= highlightUnselectID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&, selectionEnt, infoEnt](cro::Entity ent, cro::ButtonEvent evt) mutable
+        [&, selectionEnt, infoEnt, buttonEnt](cro::Entity ent, cro::ButtonEvent evt) mutable
         {
+            //buttonEnt has the component containing the entities for taband window buttons
+
             if (activated(evt))
             {
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
@@ -2825,6 +2867,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                     {
                         e.getComponent<cro::UIInput>().enabled = false;
                         e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        e.getComponent<cro::UIInput>().setGroup(MenuID::Dummy);
                     }
 
                     auto controllerIndex = evt.type == SDL_CONTROLLERBUTTONDOWN ?
@@ -2840,6 +2883,12 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                     ent.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlLookR);
 
                     infoEnt.getComponent<cro::Text>().setString(" ");
+
+                    buttonEnt.getComponent<PageButtons>().tabs[TabID::Achievements].getComponent<cro::UIInput>().setNextIndex(TabStats, WindowApply);
+                    buttonEnt.getComponent<PageButtons>().tabs[TabID::Stats].getComponent<cro::UIInput>().setNextIndex(TabAV, WindowClose);
+
+                    buttonEnt.getComponent<PageButtons>().buttons[ButtonID::Apply].getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, TabAchievements);
+                    buttonEnt.getComponent<PageButtons>().buttons[ButtonID::Quit].getComponent<cro::UIInput>().setPrevIndex(WindowApply, TabStats);
                 }
                 else
                 {
@@ -2848,14 +2897,21 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                     {
                         e.getComponent<cro::UIInput>().enabled = true;
                         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        e.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
                     }
                     m_layoutEnt.getComponent<cro::SpriteAnimation>().play(LayoutID::Keyboard);
                     selectionEnt.getComponent<cro::SpriteAnimation>().play(0);
 
                     ent.getComponent<cro::Transform>().setPosition(glm::vec2(94.f, -1.f));
-                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, CtrlLookL);
+                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlLB, CtrlLookL);
 
                     infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
+
+                    buttonEnt.getComponent<PageButtons>().tabs[TabID::Achievements].getComponent<cro::UIInput>().setNextIndex(TabStats, CtrlLB);
+                    buttonEnt.getComponent<PageButtons>().tabs[TabID::Stats].getComponent<cro::UIInput>().setNextIndex(TabAV, CtrlLB);
+
+                    buttonEnt.getComponent<PageButtons>().buttons[ButtonID::Apply].getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, CtrlA);
+                    buttonEnt.getComponent<PageButtons>().buttons[ButtonID::Quit].getComponent<cro::UIInput>().setPrevIndex(WindowApply, CtrlA);
                 }
                 m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //refresh the display
             }
@@ -2870,6 +2926,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         {
             e.getComponent<cro::UIInput>().enabled = false;
             e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            e.getComponent<cro::UIInput>().setGroup(MenuID::Dummy);
         }
 
         m_layoutEnt.getComponent<cro::SpriteAnimation>().play(LayoutID::Deck);
@@ -2877,6 +2934,12 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
         entity.getComponent<cro::Transform>().setPosition(glm::vec2(-1.f));
         entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlLookR);
+
+        buttonEnt.getComponent<PageButtons>().tabs[TabID::Achievements].getComponent<cro::UIInput>().setNextIndex(TabStats, WindowApply);
+        buttonEnt.getComponent<PageButtons>().tabs[TabID::Stats].getComponent<cro::UIInput>().setNextIndex(TabAV, WindowClose);
+
+        buttonEnt.getComponent<PageButtons>().buttons[ButtonID::Apply].getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, TabAchievements);
+        buttonEnt.getComponent<PageButtons>().buttons[ButtonID::Quit].getComponent<cro::UIInput>().setPrevIndex(WindowApply, TabStats);
     }
 
 
@@ -3908,7 +3971,8 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         break;
     }
     
-    
+    auto& pageButtons = parent.getComponent<PageButtons>();
+
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
     auto textHideCallback = [&, menuID](cro::Entity e, float)
@@ -3953,7 +4017,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     //hack to stop multiple instances covering each other when not active
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = textHideCallback;
-
+    pageButtons.buttons[ButtonID::Credits] = entity;
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -3961,6 +4025,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(78.f, 1.f));
     entity.addComponent<cro::Drawable2D>();
+    pageButtons.buttons[ButtonID::Advanced] = entity;
     
     if (Social::isSteamdeck())
     {
@@ -4047,6 +4112,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = textHideCallback;
+    pageButtons.buttons[ButtonID::Apply] = entity;
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //close
@@ -4075,6 +4141,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = textHideCallback;
+    pageButtons.buttons[ButtonID::Quit] = entity;
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 

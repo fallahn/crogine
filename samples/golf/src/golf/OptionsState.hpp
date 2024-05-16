@@ -133,7 +133,7 @@ private:
     void buildScene();
 
     void buildAVMenu(cro::Entity, const cro::SpriteSheet&);
-    void buildControlMenu(cro::Entity, const cro::SpriteSheet&);
+    void buildControlMenu(cro::Entity, cro::Entity, const cro::SpriteSheet&);
     void buildAchievementsMenu(cro::Entity, const cro::SpriteSheet&);
     void buildStatsMenu(cro::Entity, const cro::SpriteSheet&);
 

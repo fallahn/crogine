@@ -81,23 +81,24 @@ enum OptionsIndex
     CtrlLayout,
     CtrlLookL,
     CtrlLookR,
+    CtrlA,
+    CtrlB,
+    CtrlX,
+    CtrlY,
+    CtrlDown,
+    CtrlUp,
+    CtrlRight,
+    CtrlLeft,
+    CtrlRB,
+    CtrlLB,
     CtrlInvX,
     CtrlInvY,
     CtrlVib,
     CtrlAltPower,
     CtrlSwg,
     CtrlReset,
-    CtrlDown,
-    CtrlLeft,
-    CtrlRight,
-    CtrlUp,
-    CtrlRB,
     CtrlTab,
-    CtrlX,
-    CtrlLB,
-    CtrlY,
-    CtrlB,
-    CtrlA,
+
 
 
     
@@ -109,8 +110,8 @@ enum OptionsIndex
 
 
     Window = 1000,
-    WindowAdvanced,
     WindowCredits,
+    WindowAdvanced,
     WindowApply,
     WindowClose
 };
