@@ -53,7 +53,8 @@ struct ClubID final
         (1<<0), (1<<1), (1<<2),
         (1<<3), (1<<4), (1<<5),
         (1<<6), (1<<7), (1<<8),
-        (1<<9), (1<<10), (1<<11)
+        (1<<9), (1<<10), (1<<11),
+        (1 << 12)
     };
 
     static constexpr std::array<std::int32_t, 5u> LockedSet =
@@ -79,7 +80,7 @@ struct ClubID final
         Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
         Flags[SandWedge] | Flags[Putter];
 
-    static constexpr std::int32_t FullSet = 0x0FFF;
+    static constexpr std::int32_t FullSet = 0x1FFF;
 };
 
 class Club final

@@ -90,6 +90,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     //m_mouseMove         (0),
     //m_prevMouseMove     (0),
     m_isCPU             (false),
+    m_distanceToHole    (1000.f),
     m_holeDirection     (0.f),
     m_rotation          (0.f),
     m_maxRotation       (MaxRotation),
@@ -975,9 +976,12 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
+                const auto MinClub = m_terrain != TerrainID::Green && m_distanceToHole < 11.f ? 
+                    ClubID::Count : ClubID::Putter;
+                LogI << TerrainStrings[m_terrain] << ", " << m_distanceToHole << std::endl;
                 do
                 {
-                    auto clubCount = ClubID::Putter - m_firstClub;
+                    auto clubCount = MinClub - m_firstClub;
                     m_clubOffset = (m_clubOffset + 1) % clubCount;
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
@@ -993,9 +997,13 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
+                const auto MinClub = m_terrain != TerrainID::Green && m_distanceToHole < 11.f ?
+                    ClubID::Count : ClubID::Putter;
+
+                LogI << TerrainStrings[m_terrain] << ", " << m_distanceToHole << std::endl;
                 do
                 {
-                    auto clubCount = ClubID::Putter - m_firstClub;
+                    auto clubCount = MinClub - m_firstClub;
                     m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
@@ -1003,7 +1011,6 @@ void InputParser::updateStroke(float dt)
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU? 0 : 1;
-
                 updateDistanceEstimation();
                 beginIcon();
             }

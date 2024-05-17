@@ -51,6 +51,7 @@ public:
 
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
+    void setDistanceToHole(float d) { m_distanceToHole = d; }
     void setClub(float); //picks closest club to given distance
     float getYaw() const; //yaw in world space (includes facing direction)
     float getRotation() const; //relative rotation
@@ -132,6 +133,7 @@ private:
     bool m_isCPU;
     cro::Clock m_doubleTapClock; //prevent accidentally double tapping action
 
+    float m_distanceToHole;
     float m_holeDirection; //radians
     float m_rotation; //+- max rads
     float m_maxRotation;

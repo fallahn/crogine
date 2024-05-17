@@ -4332,6 +4332,8 @@ void MenuState::updateUnlockedItems()
         {
             clubFlags = ClubID::DefaultSet;
         }
+        //this is a fudge for people ho miss putters from their set...
+        clubFlags |= ClubID::Flags[ClubID::Putter];
         auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / 5));
         for (auto i = 0u; i < clubCount; ++i)
         {

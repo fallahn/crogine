@@ -3895,7 +3895,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
                     break;
                 case 1:
-                    m_sharedData.inputBinding.clubset = ClubID::DefaultSet | ClubID::FiveWood | ClubID::FourIron | ClubID::SixIron;
+                    m_sharedData.inputBinding.clubset = ClubID::DefaultSet | (1<<ClubID::FiveWood) | (1<<ClubID::FourIron) | (1<<ClubID::SixIron);
                     break;
                 case 2:
                     m_sharedData.inputBinding.clubset = ClubID::FullSet;
@@ -5412,6 +5412,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU, lie);
+    m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && m_allowAchievements);
 
