@@ -978,12 +978,14 @@ void InputParser::updateStroke(float dt)
             {
                 const auto MinClub = m_terrain != TerrainID::Green && m_distanceToHole < 11.f ? 
                     ClubID::Count : ClubID::Putter;
-                LogI << TerrainStrings[m_terrain] << ", " << m_distanceToHole << std::endl;
+
                 do
                 {
                     auto clubCount = MinClub - m_firstClub;
+                    m_clubOffset = m_currentClub - m_firstClub;
                     m_clubOffset = (m_clubOffset + 1) % clubCount;
                     m_currentClub = m_firstClub + m_clubOffset;
+                    LogI << Clubs[m_currentClub].getLabel() << std::endl;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
 
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
@@ -1000,7 +1002,7 @@ void InputParser::updateStroke(float dt)
                 const auto MinClub = m_terrain != TerrainID::Green && m_distanceToHole < 11.f ?
                     ClubID::Count : ClubID::Putter;
 
-                LogI << TerrainStrings[m_terrain] << ", " << m_distanceToHole << std::endl;
+
                 do
                 {
                     auto clubCount = MinClub - m_firstClub;

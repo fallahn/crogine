@@ -653,13 +653,15 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
 
         if (ball.state == Ball::State::Idle)
         {
+            const bool isPutt = input.clubID == ClubID::Putter;
+
             ball.velocity = input.impulse;
-            ball.state = ball.terrain == TerrainID::Green ? Ball::State::Putt : Ball::State::Flight;
+            ball.state = isPutt ? Ball::State::Putt : Ball::State::Flight;
             //this is a kludge to wait for the anim before hitting the ball
             //Ideally we want to read the frame data from the avatar
             //as well as account for a frame of interp delay on the client
             //at the very least we should add the client ping to this
-            ball.delay = ball.terrain == TerrainID::Green ? 0.05f : 1.17f;
+            ball.delay = isPutt ? 0.05f : 1.17f;
             ball.delay += static_cast<float>(m_sharedData.clients[input.clientID].peer.getRoundTripTime()) / 1000.f;
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
 
@@ -683,7 +685,7 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             {
                 m_playerInfo[0].holeScore[m_currentHole]++;
 
-                auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Swing;
+                auto animID = isPutt ? AnimationID::Putt : AnimationID::Swing;
                 m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                 m_turnTimer.restart(); //don't time out mid-shot...

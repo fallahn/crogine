@@ -5909,6 +5909,7 @@ void GolfState::predictBall(float powerPct)
     update.clientID = m_sharedData.localConnectionData.connectionID;
     update.playerID = m_currentPlayer.player;
     update.impulse = impulse;
+    update.clubID = static_cast<std::uint8_t>(club);
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPrediction, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
@@ -5928,6 +5929,7 @@ void GolfState::hitBall()
     update.playerID = m_currentPlayer.player;
     update.impulse = impulse;
     update.spin = spin;
+    update.clubID = static_cast<std::uint8_t>(club);
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
