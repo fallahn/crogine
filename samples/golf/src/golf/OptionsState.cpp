@@ -359,7 +359,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         else
         {
             //cancel the input
-            updateKeybind(evt.key.keysym.sym);
+            updateKeybind(/*evt.key.keysym.sym*/SDLK_ESCAPE);
         }
     };
 
@@ -2753,7 +2753,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                 {
                     m_updatingKeybind = true;
 
-                    infoEnt.getComponent<cro::Text>().setString("Press a Key");
+                    infoEnt.getComponent<cro::Text>().setString("Press a Key (Escape to Cancel)");
 
                     m_bindingIndex = keyIndex;
 
