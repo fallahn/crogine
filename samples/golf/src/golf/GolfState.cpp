@@ -4013,7 +4013,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             auto& [dir, _, sprID] = e.getComponent<cro::Callback>().getUserData<CogitationData>();
                             
                             //if this is another sprite trying to 'out' then ignore it
-                            if (dir == 1 && sprID != spriteID)
+                            if (direction == 1 && sprID != spriteID)
                             {
                                 return;
                             }
