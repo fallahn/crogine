@@ -71,7 +71,7 @@ namespace
 
     static constexpr std::array<float, TerrainID::Count> Friction =
     {
-        0.1f, 0.96f,
+        0.1f, 0.975f,
         0.986f, 0.1f,
         0.001f, 0.001f,
         0.958f,

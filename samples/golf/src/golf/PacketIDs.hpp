@@ -186,7 +186,8 @@ namespace PacketID
         BallPrediction, //< InputUpdate if from client, vec3 if from server
         PlayerXP, //<uint16 level << 8 | client - used to share client xp/level info
         ChatMessage, //TextMessage struct
-        DronePosition //< compressed vec3 from host rebroadcast to clients
+        DronePosition, //< compressed vec3 from host rebroadcast to clients
+        ClubChanged //< updates putt cam on remote clients: uint8 club | uint8 client
     };
 }
 

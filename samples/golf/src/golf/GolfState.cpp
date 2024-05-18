@@ -1443,7 +1443,11 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             if (m_currentPlayer.terrain != TerrainID::Green)
             {
-                togglePuttingView(getClub() == ClubID::Putter);
+                auto club = getClub();
+                togglePuttingView(club == ClubID::Putter);
+
+                std::uint16_t p = (club & 0xff) << 8 | m_sharedData.localConnectionData.connectionID;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubChanged, p, net::NetFlag::Reliable);
             }
         }
         break;
@@ -3788,6 +3792,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ClubChanged:
+        {
+            std::uint16_t data = evt.packet.as<std::uint16_t>();
+            if ((data & 0x00ff) != m_sharedData.localConnectionData.connectionID)
+            {
+                auto club = (data & 0xff00) >> 8;
+                togglePuttingView(club == ClubID::Putter);
+            }
+        }
+            break;
         case PacketID::CAT:
             catAuth();
             break;

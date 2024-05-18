@@ -350,6 +350,9 @@ void GolfState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ClubChanged:
+            m_sharedData.host.broadcastPacket(PacketID::ClubChanged, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::DronePosition:
             m_sharedData.host.broadcastPacket(PacketID::DronePosition, evt.packet.as<std::array<std::int16_t, 3u>>(), net::NetFlag::Unreliable);
             break;
