@@ -384,6 +384,12 @@ private:
     static const cro::Time DefaultIdleTime;
     cro::Time m_idleTime;
     void resetIdle();
+
+    struct PuttViewState final
+    {
+        bool isPuttView = false;
+        bool isBusy = false;
+    }m_puttViewState;
     void togglePuttingView(bool); //only used when switching to putter manually
     void createTransition(const ActivePlayer&);
     void startFlyBy();

@@ -985,7 +985,6 @@ void InputParser::updateStroke(float dt)
                     m_clubOffset = m_currentClub - m_firstClub;
                     m_clubOffset = (m_clubOffset + 1) % clubCount;
                     m_currentClub = m_firstClub + m_clubOffset;
-                    LogI << Clubs[m_currentClub].getLabel() << std::endl;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
 
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);

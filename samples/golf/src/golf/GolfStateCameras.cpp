@@ -998,6 +998,16 @@ void GolfState::togglePuttingView(bool putt)
     createTransition()
     */
 
+    if (m_puttViewState.isBusy ||
+        m_puttViewState.isPuttView == putt)
+    {
+        return;
+    }
+
+    m_puttViewState.isBusy = true;
+    m_puttViewState.isPuttView = putt;
+
+
     //set the target zoom on the player camera
     float zoom = 1.f;
     if (putt)
@@ -1116,7 +1126,37 @@ void GolfState::togglePuttingView(bool putt)
         }
     }
 
-    m_inputParser.setSuspended(true);
+    
+    //if this the local client disable the input while playing the animation
+    //and update the stroke arc if visible
+    if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+    {
+        m_inputParser.setSuspended(true);
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::StrokeIndicator;
+        cmd.action = [&, putt](cro::Entity e, float)
+            {
+                //fudgy way of changing the render type when putting
+                if (putt)
+                {
+                    e.getComponent<cro::Model>().getMeshData().indexData[0].primitiveType = GL_TRIANGLES;
+                }
+                else
+                {
+                    e.getComponent<cro::Model>().getMeshData().indexData[0].primitiveType = GL_LINE_STRIP;
+                }
+            };
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        cmd.targetFlags = CommandID::StrokeArc;
+        cmd.action = [&, putt](cro::Entity e, float)
+            {
+                e.getComponent<cro::Model>().setHidden(putt);
+            };
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+
 
     //creates an entity which calls setCamPosition() in an
     //interpolated manner until we reach the dest,
@@ -1140,7 +1180,12 @@ void GolfState::togglePuttingView(bool putt)
                 targetInfo.startOffset = targetInfo.targetOffset;
 
                 m_cameras[CameraID::Player].getComponent<cro::Callback>().getUserData<float>() = DefaultZoomSpeed;
-                m_inputParser.setSuspended(false);
+                
+                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+                {
+                    m_inputParser.setSuspended(false);
+                }
+                m_puttViewState.isBusy = false;
 
                 e.getComponent<cro::Callback>().active = false;
                 m_gameScene.destroyEntity(e);

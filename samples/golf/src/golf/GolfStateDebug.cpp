@@ -235,22 +235,22 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("asefsd"))
-            {
-                auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
-                ImGui::Text("Cam: %3.3f, %3.3f, % 3.3f", pos.x, pos.y, pos.z);
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("asefsd"))
+    //        {
+    //            auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
+    //            ImGui::Text("Cam: %3.3f, %3.3f, % 3.3f", pos.x, pos.y, pos.z);
 
-                if (ImGui::Button("switch view"))
-                {
-                    static bool putt = true;
-                    togglePuttingView(putt);
-                    putt = !putt;
-                }
-            }
-            ImGui::End();        
-        });
+    //            if (ImGui::Button("switch view"))
+    //            {
+    //                static bool putt = true;
+    //                togglePuttingView(putt);
+    //                putt = !putt;
+    //            }
+    //        }
+    //        ImGui::End();        
+    //    });
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

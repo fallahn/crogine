@@ -1440,6 +1440,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                     retargetMinimap(false);
                 }
             }
+
+            if (m_currentPlayer.terrain != TerrainID::Green)
+            {
+                togglePuttingView(getClub() == ClubID::Putter);
+            }
         }
         break;
         case GolfEvent::BallLanded:
