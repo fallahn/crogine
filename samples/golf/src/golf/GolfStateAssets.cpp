@@ -1958,7 +1958,7 @@ void GolfState::loadModels()
                                 //but we have a, uh.. 'handy' handle (to the hands)
                                 if (m_activeAvatar->hands)
                                 {
-                                    //we have to free this up alse the model might
+                                    //we have to free this up else the model might
                                     //become attached to two avatars...
                                     m_activeAvatar->hands->setModel({});
                                 }

@@ -37,6 +37,7 @@ source distribution.
 #include "CallbackData.hpp"
 #include "MessageIDs.hpp"
 #include "TextAnimCallback.hpp"
+#include "Clubs.hpp"
 
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -993,7 +994,7 @@ void GolfState::togglePuttingView(bool putt)
     /*
     NOTE this is only used when manually switching to a putter
     if it is currently available. Landing on the green will
-    automatically set the camera in the putt position via
+    automatically set the camera to the putt position via
     createTransition()
     */
 
@@ -1022,24 +1023,29 @@ void GolfState::togglePuttingView(bool putt)
         if (putt)
         {
             auto scale = m_activeAvatar->model.getComponent<cro::Transform>().getScale();
-            scale.y = 0.f;
-            scale.z = 0.f;
+            scale.y = scale.z = 0.f;
             m_activeAvatar->model.getComponent<cro::Transform>().setScale(scale);
             m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
-
-            //if (m_activeAvatar->hands)
-            //{
-            //    //we have to free this up alse the model might
-            //    //become attached to two avatars...
-            //    m_activeAvatar->hands->setModel({});
-            //}
+            m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0;
         }
         else
         {
-            m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
+            //the hide callback will have removed the club model
+            if (getClub() <= ClubID::FiveWood)
+            {
+                m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
+            }
+            else
+            {
+                m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
+            }
+            m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
+
+            m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
             m_activeAvatar->model.getComponent<cro::Callback>().active = true;
             m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);
         }
+
     }
 
 
