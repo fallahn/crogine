@@ -338,15 +338,11 @@ private:
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint16_t, bool forceTransition = false); //(number << 8) | par
-    void setCameraPosition(glm::vec3, float, float);
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
     void predictBall(float);
     void hitBall();
     void updateActor(const ActorInfo&);
-
-    void createTransition(const ActivePlayer&);
-    void startFlyBy();
     std::int32_t getClub() const;
 
 
@@ -388,6 +384,11 @@ private:
     static const cro::Time DefaultIdleTime;
     cro::Time m_idleTime;
     void resetIdle();
+    void togglePuttingView(bool); //only used when switching to putter manually
+    void createTransition(const ActivePlayer&);
+    void startFlyBy();
+    void setCameraPosition(glm::vec3, float, float);
+
 
     //follows the ball mid-flight
     cro::Entity m_flightCam;

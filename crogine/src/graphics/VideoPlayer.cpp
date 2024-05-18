@@ -113,11 +113,11 @@ void cro::audioCallback(plm_t*, plm_samples_t* samples, void* user)
 }
 
 VideoPlayer::VideoPlayer()
-    : m_plm				(nullptr),
+    : m_plm             (nullptr),
     m_looped            (false),
-    m_timeAccumulator	(0.f),
-    m_frameTime			(0.f),
-    m_state				(State::Stopped)
+    m_timeAccumulator   (0.f),
+    m_frameTime         (0.f),
+    m_state             (State::Stopped)
 {
     //TODO we don't really want to create a shader for EVERY instance
     //but on the other hand why would I play a lot of videos at once?
@@ -164,13 +164,13 @@ bool VideoPlayer::loadFromFile(const std::string& path)
     if (m_state == State::Playing)
     {
         stop();
-    }	
+    }   
     
     if (m_plm)
     {
         plm_destroy(m_plm);
         m_plm = nullptr;
-    }	
+    }   
     
     
     if (m_shader.getGLHandle() == 0)
