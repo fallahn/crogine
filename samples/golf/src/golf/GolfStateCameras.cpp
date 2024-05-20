@@ -1002,7 +1002,7 @@ void GolfState::togglePuttingView(bool putt)
 
     if (m_puttViewState.isBusy ||
         m_puttViewState.isPuttView == putt ||
-        !m_inputParser.getActive())
+        !m_puttViewState.isEnabled)
     {
         return;
     }

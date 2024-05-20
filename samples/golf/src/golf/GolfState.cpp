@@ -5383,6 +5383,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     Club::setClubLevel(isCPU ? m_sharedData.clubLimit ? m_sharedData.clubSet : m_cpuGolfer.getClubLevel() : m_sharedData.clubSet); //do this first else setActive has the wrong estimation distance
     auto lie = m_avatars[player.client][player.player].ballModel.getComponent<ClientCollider>().lie;
 
+    m_puttViewState.isEnabled = true;
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU, lie);
     m_inputParser.setDistanceToHole(glm::length(m_holeData[m_currentHole].pin - player.position));
@@ -5906,6 +5907,7 @@ void GolfState::hitBall()
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
+    m_puttViewState.isEnabled = false;
     m_inputParser.setActive(false, m_currentPlayer.terrain);
     m_restoreInput = false;
     m_achievementTracker.hadBackspin = (spin.y < 0);

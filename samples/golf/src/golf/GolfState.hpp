@@ -389,6 +389,7 @@ private:
     {
         bool isPuttView = false;
         bool isBusy = false;
+        bool isEnabled = false;
     }m_puttViewState;
     void togglePuttingView(bool); //only used when switching to putter manually
     void createTransition(const ActivePlayer&);
