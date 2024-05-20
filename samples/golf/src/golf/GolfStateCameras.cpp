@@ -729,7 +729,8 @@ void GolfState::updateCameraHeight(float movement)
 {
     //lets the player move the camera up and down when putting
     if (m_currentCamera == CameraID::Player
-        && m_currentPlayer.terrain == TerrainID::Green)
+        && (m_currentPlayer.terrain == TerrainID::Green
+            || getClub() == ClubID::Putter))
     {
         auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
 
@@ -1000,7 +1001,8 @@ void GolfState::togglePuttingView(bool putt)
     */
 
     if (m_puttViewState.isBusy ||
-        m_puttViewState.isPuttView == putt)
+        m_puttViewState.isPuttView == putt ||
+        !m_inputParser.getActive())
     {
         return;
     }

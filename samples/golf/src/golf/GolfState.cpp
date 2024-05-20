@@ -4027,6 +4027,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             if (sprID != spriteID)
                             {
                                 e.getComponent<cro::Sprite>() = m_sprites[spriteID];
+                                e.getComponent<cro::SpriteAnimation>().play(0);
                                 sprID = spriteID;
                             }
                         };
