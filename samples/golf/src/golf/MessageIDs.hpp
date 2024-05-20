@@ -112,7 +112,9 @@ struct SceneEvent
         MinimapUpdated,
         ChatMessage,
         Poke,
-        PlayerEliminated
+        PlayerEliminated,
+        PlayerLifeLost,
+        PlayerLifeGained
     }type = TransitionComplete;
 
     //union

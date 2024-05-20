@@ -62,7 +62,7 @@ struct PlayerStatus final : public ActivePlayer
     bool targetHit = false;
     bool eliminated = false;
     std::uint8_t totalScore = 0;
-    std::uint8_t skins = 0;
+    std::uint8_t skins = 0; //stores number of lives in elimination mode
     std::uint8_t matchWins = 0;
     bool readyQuit = false; //used at round end to see if all players want to skip scores
 };

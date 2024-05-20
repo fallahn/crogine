@@ -1765,7 +1765,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
 
 #ifdef USE_GNS
-    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+    if (m_sharedData.leagueRoundID == LeagueRoundID::Club
+        && m_sharedData.scoreType == ScoreType::Stroke)
     {
         Social::incCompletionCount(m_sharedData.mapDirectory, m_sharedData.holeCount);
     }
@@ -2774,7 +2775,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     switch (m_sharedData.scoreType)
                     {
                     default: //dear future me: the default type should *ALWAYS* be the same as stroke type. Everywhere.
-                    case ScoreType::BattleRoyale:
+                    case ScoreType::Elimination:
                     case ScoreType::MultiTarget:
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
@@ -2808,7 +2809,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     switch (m_sharedData.scoreType)
                     {
                     default:
-                    case ScoreType::BattleRoyale:
+                    case ScoreType::Elimination:
                     case ScoreType::MultiTarget:
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
@@ -2843,7 +2844,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
             case ScoreType::MultiTarget:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
@@ -2885,7 +2886,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
@@ -2906,7 +2907,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
@@ -3145,7 +3146,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         switch (m_sharedData.scoreType)
         {
         default:
-        case ScoreType::BattleRoyale:
+        case ScoreType::Elimination:
         case ScoreType::MultiTarget:
         case ScoreType::ShortRound:
         case ScoreType::Stroke:
@@ -3237,7 +3238,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
             case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:

@@ -1,3 +1,32 @@
+/*-----------------------------------------------------------------------
+
+Matt Marchant 2021 - 2024
+http://trederia.blogspot.com
+
+Super Video Golf - zlib licence.
+
+This software is provided 'as-is', without any express or
+implied warranty.In no event will the authors be held
+liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented;
+you must not claim that you wrote the original software.
+If you use this software in a product, an acknowledgment
+in the product documentation would be appreciated but
+is not required.
+
+2. Altered source versions must be plainly marked as such,
+and must not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any
+source distribution.
+
+-----------------------------------------------------------------------*/
+
 #include "../PacketIDs.hpp"
 #include "../BallSystem.hpp"
 #include "../Clubs.hpp"
@@ -129,38 +158,29 @@ void GolfState::handleRules(const GolfBallEvent& data)
                 m_playerInfo[0].holeScore[m_currentHole] = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? 6 : 12;
             }
             break;
-        case ScoreType::BattleRoyale:
-            //check if all other players already holed and eliminate remaining
-            if (m_eliminationStarted)
+        case ScoreType::Elimination:
+            //check player score and update lives if necessary
+            if (m_playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par)
             {
-                auto sortData = m_playerInfo; //don't sort on the live data
-                std::sort(sortData.begin(), sortData.end(), [](const PlayerStatus& a, const PlayerStatus& b)
-                    {
-                        if (!a.eliminated && !b.eliminated)
-                        {
-                            return a.distanceToHole > b.distanceToHole;
-                        }
+                m_playerInfo[0].skins--;
+                std::uint16_t packet = ((m_playerInfo[0].client << 8) | m_playerInfo[0].player);
+                auto packetID = PacketID::LifeLost;
 
-                        return !a.eliminated;
-                    });
-
-                if (sortData[1].distanceToHole == 0)
+                //if no lives left, eliminate
+                if (m_playerInfo[0].skins == 0)
                 {
-                    auto eliminee = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), 
-                        [&](const PlayerStatus ps)
-                        {
-                            return ps.client == sortData[0].client && ps.player == sortData[0].player;                    
-                        });
-                    eliminee->eliminated = true;
-                    eliminee->holeScore[m_currentHole] = m_holeData[m_currentHole].puttFromTee ? 6 : 12;
-                    eliminee->distanceToHole = 0.f;
-
-                    std::uint16_t packet = ((sortData[0].client << 8) | sortData[0].player);
-                    m_sharedData.host.broadcastPacket(PacketID::Elimination, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                    //LogI << (int)sortData[0].player << " was eliminated" << std::endl;
+                    m_playerInfo[0].eliminated = true;
+                    packetID = PacketID::Elimination;
                 }
+                m_sharedData.host.broadcastPacket(packetID, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
+            else if (m_playerInfo[0].holeScore[m_currentHole] < m_holeData[m_currentHole].par - 1)
+            {
+                m_playerInfo[0].skins++;
+                std::uint16_t packet = ((m_playerInfo[0].client << 8) | m_playerInfo[0].player);
+                m_sharedData.host.broadcastPacket(PacketID::LifeGained, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+
             break;
         }
     }
@@ -201,7 +221,7 @@ bool GolfState::summariseRules()
 {
     bool gameFinished = false;
 
-    if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+    if (m_sharedData.scoreType == ScoreType::Elimination)
     {
         if (m_playerInfo.size() == 1
             || m_playerInfo[1].eliminated)

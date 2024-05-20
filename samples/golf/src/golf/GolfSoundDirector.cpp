@@ -633,9 +633,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::AudioEmitter>().setPitch(pitch);
                 }
             }
-            else if (data.type == SceneEvent::PlayerEliminated)
+            else if (data.type == SceneEvent::PlayerEliminated
+                || data.type == SceneEvent::PlayerLifeLost)
             {
                 playSound(AudioID::NearMiss, glm::vec3(0.f), 1.f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            }
+            else if (data.type == SceneEvent::PlayerLifeGained)
+            {
+                playSoundDelayed(AudioID::ApplausePlus, glm::vec3(0.f), 0.6f, MixerChannel::Effects);
+                applaud();
             }
             else if (data.type == SceneEvent::Poke)
             {

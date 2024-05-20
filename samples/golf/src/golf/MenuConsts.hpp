@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -61,7 +61,7 @@ struct FontID final
     };
 };
 
-static const std::array<std::string, ScoreType::Count> ScoreTypes =
+static inline const std::array<std::string, ScoreType::Count> ScoreTypes =
 {
     "Stroke Play", 
     "Stableford", 
@@ -70,27 +70,27 @@ static const std::array<std::string, ScoreType::Count> ScoreTypes =
     "Skins",
     "Multi-target",
     "Short Round",
-    /*
     "Elimination",
+    /*
     "Bingo Bango Bongo",
     "Nearest the Pin",
     "Longest Drive",
     */
 };
 
-static const std::array<std::string, GimmeSize::Count> GimmeString =
+static inline const std::array<std::string, GimmeSize::Count> GimmeString =
 {
     "No Gimme",
     "Inside The Leather",
     "Inside The Putter"
 };
 
-static const std::array<std::string, 3u> CourseTypes =
+static inline const std::array<std::string, 3u> CourseTypes =
 {
     "Official Courses", "User Courses", "Workshop Courses"
 };
 
-static const std::array<std::string, ScoreType::Count> RuleDescriptions =
+static inline const std::array<std::string, ScoreType::Count> RuleDescriptions =
 {
 #ifdef USE_GNS
     "The player with the fewest total strokes wins.\nSolo or network play scores contribute to the\nmonthly and all time leaderboards.\nContributes to the Club League.\n\nRecommended for solo play or 2+ players.",
@@ -108,13 +108,15 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected.Contributes to the Club League.\n\nRecommended for solo play or 2+ players.",
 #endif
 
+    "The round is scored as Stroke Play, however each\nplayer has 2 \'lives\'. Scoring par or worse\non a hole loses 1 life, while scoring an eagle\n or better awards 1 life. The game ends when one\nplayer remains, or all holes have been played.\nMinimum 2 players, recommended for 4+ players."
     /*
-    "Elimination mode. The round is played as Stroke\nPlay, however after the first hole the last\nplayer to hole out each turn is eliminated.\nThe game is won by the final remaining player.\n\nMinimum 3 players, recommended for 4+ players."
     "The first player on the green scores Bingo, the\nplayer closest to the pin when all players are on\nthe green scores Bango and first to hole out wins\nBongo. Not recommended for putting courses.",
     "Each player has one stroke to get as near to the\npin as possible. The winner is the player with the\nshortest total distance.\nGreat for casual play.",
     "Each player has one stroke to make the longest\ndrive possible while staying on the fairway.\nThe winner is the player with the longest total\ndistance.",
     */
 };
+
+//NOTE min player count is part of the ScoreType struct
 
 static constexpr std::array<glm::vec3, 8u> EmotePositions =
 {

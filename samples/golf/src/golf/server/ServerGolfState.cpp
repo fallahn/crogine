@@ -95,7 +95,7 @@ GolfState::GolfState(SharedData& sd)
     m_scoreboardTime        (0.f),
     m_scoreboardReadyFlags  (0),
     m_gameStarted           (false),
-    m_eliminationStarted    (false),
+    //m_eliminationStarted    (false),
     m_allMapsLoaded         (false),
     m_skinsFinals           (false),
     m_currentHole           (0),
@@ -830,7 +830,7 @@ void GolfState::setNextPlayer(bool newHole)
                     });
             }
         }
-        else if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+        else if (m_sharedData.scoreType == ScoreType::Elimination)
         {
             //make sure eliminated are last before sorting by distance
             std::sort(m_playerInfo.begin(), m_playerInfo.end(),
@@ -906,8 +906,8 @@ void GolfState::setNextPlayer(bool newHole)
 
 
     if (m_playerInfo[0].distanceToHole == 0 //all players must be in the hole
-        || (m_sharedData.scoreType == ScoreType::BattleRoyale && m_playerInfo.size() == 1) //players have quit the game so attempt next hole
-        || (m_sharedData.scoreType == ScoreType::BattleRoyale && m_playerInfo[1].eliminated)) //(which triggers the rules to end the game)
+        || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo.size() == 1) //players have quit the game so attempt next hole
+        || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo[1].eliminated)) //(which triggers the rules to end the game)
     {
         setNextHole();
     }
@@ -973,7 +973,7 @@ void GolfState::setNextHole()
     m_allMapsLoaded = false;
     m_scoreboardTime = 0.f;
 
-    m_eliminationStarted = true;
+    //m_eliminationStarted = true;
 
     m_currentHole++;
     if (m_currentHole < m_holeData.size()
@@ -1062,8 +1062,8 @@ void GolfState::setNextHole()
 
         m_scoreboardReadyFlags = 0;
 
-        //if this is battle royale set all eliminated players to forfeit
-        if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+        //if this is elimination set all eliminated players to forfeit
+        if (m_sharedData.scoreType == ScoreType::Elimination)
         {
             for (auto& p : m_playerInfo)
             {
@@ -1355,6 +1355,12 @@ void GolfState::initScene()
                 player.player = j;
                 player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
+
+                if (m_sharedData.scoreType == ScoreType::Elimination)
+                {
+                    //store the number of lives in the skins
+                    player.skins = 2;
+                }
             }
         }
     }

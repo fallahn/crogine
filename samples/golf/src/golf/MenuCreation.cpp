@@ -3204,7 +3204,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     switch (m_sharedData.scoreType)
                     {
                     default:
-                    case ScoreType::BattleRoyale:
+                    case ScoreType::Elimination:
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
                     case ScoreType::MultiTarget:
@@ -3246,7 +3246,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 {
                 default:
                 case ScoreType::Stroke:
-                case ScoreType::BattleRoyale:
+                case ScoreType::Elimination:
                 case ScoreType::ShortRound:
                 case ScoreType::MultiTarget:
                     return a.score < b.score;
@@ -3265,7 +3265,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
             case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
@@ -4749,7 +4749,7 @@ void MenuState::createPreviousScoreCard()
         }
     }
 
-    if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+    if (m_sharedData.scoreType == ScoreType::Elimination)
     {
         //use the number of holes actually played
         holeCount = m_sharedData.holesPlayed + 1;
@@ -4782,7 +4782,7 @@ void MenuState::createPreviousScoreCard()
                 switch (m_sharedData.scoreType)
                 {
                 default:
-                case ScoreType::BattleRoyale:
+                case ScoreType::Elimination:
                 case ScoreType::MultiTarget:
                 case ScoreType::Stroke:
                 case ScoreType::ShortRound:
@@ -4856,7 +4856,7 @@ void MenuState::createPreviousScoreCard()
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
@@ -4893,7 +4893,7 @@ void MenuState::createPreviousScoreCard()
     //TODO we could do all the updates in one iter over the Entries
     //but this is all in the loading screen so... meh
 
-    bool page2 = m_sharedData.scoreType == ScoreType::BattleRoyale ?
+    bool page2 = m_sharedData.scoreType == ScoreType::Elimination ?
         backCount != 0
         : m_sharedData.holeCount == 0;
 
@@ -4963,7 +4963,7 @@ void MenuState::createPreviousScoreCard()
     case 1:
         holeCount = frontCount;
         
-        if (m_sharedData.scoreType == ScoreType::BattleRoyale
+        if (m_sharedData.scoreType == ScoreType::Elimination
             && m_sharedData.reverseCourse)
         {
             parOffset = 9;
@@ -4972,7 +4972,7 @@ void MenuState::createPreviousScoreCard()
         break;
     case 2:
         //back 9
-        if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+        if (m_sharedData.scoreType == ScoreType::Elimination)
         {
             parOffset = m_sharedData.reverseCourse ? 0 : 9;
         }
@@ -5187,7 +5187,7 @@ void MenuState::createPreviousScoreCard()
         switch (m_sharedData.scoreType)
         {
         default:
-        case ScoreType::BattleRoyale:
+        case ScoreType::Elimination:
         case ScoreType::MultiTarget:
         case ScoreType::Stroke:
         case ScoreType::ShortRound:
@@ -5242,7 +5242,7 @@ void MenuState::createPreviousScoreCard()
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
             case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:

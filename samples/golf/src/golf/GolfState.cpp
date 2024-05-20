@@ -3832,6 +3832,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             std::uint8_t p = d & 0xff;
             std::uint8_t c = (d >> 8) & 0xff;
 
+            c = std::clamp(c, std::uint8_t(0), std::uint8_t(ConstVal::MaxClients - 1));
+            p = std::clamp(p, std::uint8_t(0), std::uint8_t(ConstVal::MaxPlayers - 1));
+
             if (c == m_sharedData.clientConnection.connectionID)
             {
                 if (!m_sharedData.connectionData[c].playerData[p].isCPU)
@@ -3872,14 +3875,36 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 }
             }
             
-            c = std::clamp(c, std::uint8_t(0), std::uint8_t(ConstVal::MaxClients - 1));
-            p = std::clamp(p, std::uint8_t(0), std::uint8_t(ConstVal::MaxPlayers - 1));
-
             cro::String s = m_sharedData.connectionData[c].playerData[p].name;
             s += " was eliminated.";
             showNotification(s);
 
             postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::PlayerEliminated;
+        }
+            break;
+        case PacketID::LifeGained:
+        case PacketID::LifeLost:
+        {
+            auto d = evt.packet.as<std::uint16_t>();
+            std::uint8_t p = d & 0xff;
+            std::uint8_t c = (d >> 8) & 0xff;
+
+            c = std::clamp(c, std::uint8_t(0), std::uint8_t(ConstVal::MaxClients - 1));
+            p = std::clamp(p, std::uint8_t(0), std::uint8_t(ConstVal::MaxPlayers - 1));
+
+            cro::String s = m_sharedData.connectionData[c].playerData[p].name;
+            if (evt.packet.getID() == PacketID::LifeGained)
+            {
+                s += " gained a life!";
+                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::PlayerLifeGained;
+            }
+            else
+            {
+                s += " lost a life";
+                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::PlayerLifeLost;
+            }
+
+            showNotification(s);
         }
             break;
         case PacketID::WeatherChange:
