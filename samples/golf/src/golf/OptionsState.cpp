@@ -734,21 +734,30 @@ void OptionsState::updateKeybind(SDL_Keycode key)
         keys[m_bindingIndex] = key;
     }
 
-    auto index = m_bindingIndex;
-    m_bindingIndex = -1;
-
-    //actually update the info text
+    //update the info text
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::InfoString;
-    cmd.action = [&,index, key](cro::Entity e, float)
+    cmd.action = [key](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString("Set to (" + cro::Keyboard::keyString(key) + ")");
+        if (key != SDLK_ESCAPE
+            && key != SDLK_BACKSPACE)
+        {
+            e.getComponent<cro::Text>().setString("Set to (" + cro::Keyboard::keyString(key) + ")");
+        }
+        else
+        {
+            e.getComponent<cro::Text>().setString(" ");
+        }
 
         //reset any existing callback so that it doesn't timeout
         //and set the wrong string
         e.getComponent<cro::Callback>().active = false;
     };
     m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    
+
+    //auto index = m_bindingIndex;
+    m_bindingIndex = -1;
 }
 
 void OptionsState::buildScene()
