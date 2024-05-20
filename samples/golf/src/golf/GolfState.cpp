@@ -372,13 +372,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
 
     //handle this first in case the input parser is currently suspended
+    bool emoteHandled = false;
     if (m_photoMode)
     {
         m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
     }
     else
     {
-        if (!m_emoteWheel.handleEvent(evt))
+        if (emoteHandled = m_emoteWheel.handleEvent(evt) || m_emoteWheel.currentScale != 0; !emoteHandled)
         {
             m_inputParser.handleEvent(evt);
         }
@@ -434,7 +435,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     const auto toggleMiniZoom = [&]()
         {
-            if (!m_photoMode)
+            if (!m_photoMode && !emoteHandled)
             {
                 auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
                 dir = (dir == 0) ? 1 : 0;
@@ -524,7 +525,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
         //    break;
         //case SDLK_3:
         case FixedKey::FreeCam:
-            if (!m_textChat.isVisible())
+            if (!m_textChat.isVisible()
+                && !emoteHandled)
             {
                 toggleFreeCam();
             }
