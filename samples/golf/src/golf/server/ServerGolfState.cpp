@@ -1359,7 +1359,7 @@ void GolfState::initScene()
                 if (m_sharedData.scoreType == ScoreType::Elimination)
                 {
                     //store the number of lives in the skins
-                    player.skins = 2;
+                    player.skins = StartLives;
                 }
             }
         }

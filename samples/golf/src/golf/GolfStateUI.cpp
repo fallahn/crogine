@@ -2724,6 +2724,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         std::int32_t parDiff = 0;
         std::uint8_t client = 0;
         std::uint8_t player = 0;
+        std::uint8_t lives = 0;
     };
 
     std::vector<ScoreEntry> scores;
@@ -2742,6 +2743,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             entry.name = client.playerData[i].name;
             entry.client = clientID;
             entry.player = i;
+            entry.lives = client.playerData[i].skinScore; //mostly ignored, except in Elimination
 
             bool overPar = false;
 
@@ -3150,18 +3152,45 @@ void GolfState::updateScoreboard(bool updateParDiff)
         case ScoreType::MultiTarget:
         case ScoreType::ShortRound:
         case ScoreType::Stroke:
+        {
+            std::size_t strLen = 0;
             if (scores[i].parDiff > 0)
             {
-                totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
+                const cro::String str = " (+" + std::to_string(scores[i].parDiff) + ")";
+                strLen = str.size();
+                totalString += str;
             }
             else if (scores[i].parDiff < 0)
             {
-                totalString += " (" + std::to_string(scores[i].parDiff) + ")";
+                const cro::String str = " (" + std::to_string(scores[i].parDiff) + ")";
+                strLen = str.size();
+                totalString += str;
             }
             else
             {
-                totalString += " (0)";
+                const cro::String str = " (0)";
+                strLen = str.size();
+                totalString += str;
             }
+
+            if (m_sharedData.scoreType == ScoreType::Elimination)
+            {
+                cro::String str;
+                for (auto i = 0; i < 10 - strLen; ++i)
+                {
+                    str += " ";
+                }
+                if (scores[i].lives == 1)
+                {
+                    str += "1 Life";
+                }
+                else
+                {
+                    str += std::to_string(scores[i].lives) + " Lives";
+                }
+                totalString += str;
+            }
+        }
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
@@ -3242,19 +3271,46 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
+            {
+                std::size_t strLen = 0;
                 totalString += separator + std::to_string(scores[i].total);
                 if (scores[i].parDiff > 0)
                 {
-                    totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
+                    const cro::String str = " (+" + std::to_string(scores[i].parDiff) + ")";
+                    strLen = str.size();
+                    totalString += str;
                 }
                 else if (scores[i].parDiff < 0)
                 {
-                    totalString += " (" + std::to_string(scores[i].parDiff) + ")";
+                    const cro::String str = " (" + std::to_string(scores[i].parDiff) + ")";
+                    strLen = str.size();
+                    totalString += str;
                 }
                 else
                 {
-                    totalString += " (0)";
+                    const cro::String str = " (0)";
+                    strLen = str.size();
+                    totalString += str;
                 }
+
+                if (m_sharedData.scoreType == ScoreType::Elimination)
+                {
+                    cro::String str;
+                    for (auto i = 0; i < 8 - strLen; ++i)
+                    {
+                        str += " ";
+                    }
+                    if (scores[i].lives == 1)
+                    {
+                        str += "1 Life";
+                    }
+                    else
+                    {
+                        str += std::to_string(scores[i].lives) + " Lives";
+                    }
+                    totalString += str;
+                }
+            }
                 break;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
@@ -3943,7 +3999,27 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         }
         else
         {
-            textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
+            if (m_sharedData.scoreType == ScoreType::Elimination)
+            {
+                cro::String str = ScoreTypes[m_sharedData.scoreType] + ": ";
+
+                auto lives = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].skinScore;
+                std::string l(u8"♥");
+                /*if (lives == 1)
+                {
+                    l = u8"♥";
+                }
+                else
+                {
+                    l = u8"♥♥♥";
+                }*/
+                str += std::to_string(lives);
+                textEnt3.getComponent<cro::Text>().setString(str + cro::String::fromUtf8(l.begin(), l.end()));
+            }
+            else
+            {
+                textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
+            }
         }
         break;
     case MessageBoardID::Eliminated:

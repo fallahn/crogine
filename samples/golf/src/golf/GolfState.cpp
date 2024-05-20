@@ -292,7 +292,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             for (auto i = 0u; i < c.playerCount; ++i)
             {
                 c.playerData[i].matchScore = 0;
-                c.playerData[i].skinScore = 0;
+                c.playerData[i].skinScore = m_sharedData.scoreType == ScoreType::Elimination ? StartLives : 0;
 
                 if (c.playerData[i].isCPU)
                 {

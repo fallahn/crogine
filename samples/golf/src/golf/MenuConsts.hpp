@@ -108,7 +108,7 @@ static inline const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected.Contributes to the Club League.\n\nRecommended for solo play or 2+ players.",
 #endif
 
-    "The round is scored as Stroke Play, however each\nplayer has 2 \'lives\'. Scoring par or worse\non a hole loses 1 life, while scoring an eagle\n or better awards 1 life. The game ends when one\nplayer remains, or all holes have been played.\nMinimum 2 players, recommended for 4+ players."
+    "The round is scored as Stroke Play, however\neach player has 2 \'lives\'. Scoring par or worse\non a hole loses 1 life, while scoring an eagle\n or better awards 1 life. The game ends when one\nplayer remains, or all holes have been played.\nMinimum 2 players, recommended for 4+ players."
     /*
     "The first player on the green scores Bingo, the\nplayer closest to the pin when all players are on\nthe green scores Bango and first to hole out wins\nBongo. Not recommended for putting courses.",
     "Each player has one stroke to get as near to the\npin as possible. The winner is the player with the\nshortest total distance.\nGreat for casual play.",
