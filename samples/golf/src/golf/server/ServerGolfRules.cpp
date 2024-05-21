@@ -74,6 +74,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
                     m_sharedData.host.broadcastPacket(packetID, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     
                     //forfeit the rest of the hole
+                    m_playerInfo[0].holeScore[m_currentHole]++;
                     m_playerInfo[0].position = m_holeData[m_currentHole].pin;
                     m_playerInfo[0].distanceToHole = 0;
                 }
