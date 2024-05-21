@@ -1344,6 +1344,43 @@ void GolfState::buildUI()
     auto mapEnt = entity;
     m_minimapEnt = entity;
 
+    //mini wind icon
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 300.f, 300.f, 0.02f });
+    entity.getComponent<cro::Transform>().setOrigin({ 2.5f, 5.5f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(20.f));
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(2.5f, 4.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(2.5f, 11.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(5.f, 0.f), cro::Colour::White)        
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&,windEnt](cro::Entity e, float dt)
+        {
+            static constexpr float BaseScale = 20.f;
+            e.getComponent<cro::Transform>().setScale(windEnt.getComponent<cro::Transform>().getScale() * BaseScale);
+
+            auto c = windEnt.getComponent<cro::Text>().getFillColour();
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour = c;
+            }
+
+            const float rotation = std::atan2(-m_windUpdate.windVector.z, m_windUpdate.windVector.x)
+                + m_minimapZoom.tilt
+                - (cro::Util::Const::PI / 2.f);
+
+            float& currRotation = e.getComponent<float>();
+            currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * (dt * 4.f);
+            e.getComponent<cro::Transform>().setRotation(currRotation);
+        };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //mini flag icon
     entity = m_uiScene.createEntity();
