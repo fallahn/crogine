@@ -56,6 +56,29 @@ void GolfState::handleRules(const GolfBallEvent& data)
         switch (m_sharedData.scoreType)
         {
         default: break;
+        case ScoreType::Elimination:
+            if (data.terrain != TerrainID::Hole)
+            {
+                if (m_playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par)
+                {
+                    m_playerInfo[0].skins--;
+                    std::uint16_t packet = ((m_playerInfo[0].client << 8) | m_playerInfo[0].player);
+                    auto packetID = PacketID::LifeLost;
+
+                    //if no lives left, eliminate
+                    if (m_playerInfo[0].skins == 0)
+                    {
+                        m_playerInfo[0].eliminated = true;
+                        packetID = PacketID::Elimination;
+                    }
+                    m_sharedData.host.broadcastPacket(packetID, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    
+                    //forfeit the rest of the hole
+                    m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+                    m_playerInfo[0].distanceToHole = 0;
+                }
+            }
+            break;
         case ScoreType::Match:
         case ScoreType::Skins:
             if (m_playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
@@ -66,7 +89,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
             break;
         case ScoreType::NearestThePin:
             //we may be in the hole so make sure we dont sqrt(0)
-            if (data.terrain < TerrainID::Water
+            /*if (data.terrain < TerrainID::Water
                 || data.terrain == TerrainID::Hole)
             {
                 auto l2 = glm::length(data.position - m_holeData[m_currentHole].pin);
@@ -78,7 +101,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
             else
             {
                 m_playerInfo[0].distanceScore[m_currentHole] = 666.f;
-            }
+            }*/
             break;
         case ScoreType::LongestDrive:
             if (data.terrain == TerrainID::Fairway)

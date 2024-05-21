@@ -3153,7 +3153,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         case ScoreType::ShortRound:
         case ScoreType::Stroke:
         {
-            std::size_t strLen = 0;
+            std::size_t strLen = scores[i].frontNine < 10 ? 0 : 1;
             if (scores[i].parDiff > 0)
             {
                 const cro::String str = " (+" + std::to_string(scores[i].parDiff) + ")";
@@ -3272,7 +3272,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
             {
-                std::size_t strLen = 0;
+                std::size_t strLen = scores[i].backNine < 10 ? 0 : 1;
                 totalString += separator + std::to_string(scores[i].total);
                 if (scores[i].parDiff > 0)
                 {
