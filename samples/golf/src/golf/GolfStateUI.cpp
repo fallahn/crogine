@@ -4004,17 +4004,12 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 cro::String str = ScoreTypes[m_sharedData.scoreType] + ": ";
 
                 auto lives = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].skinScore;
-                std::string l(u8"♥");
-                /*if (lives == 1)
-                {
-                    l = u8"♥";
-                }
-                else
-                {
-                    l = u8"♥♥♥";
-                }*/
+
                 str += std::to_string(lives);
-                textEnt3.getComponent<cro::Text>().setString(str + cro::String::fromUtf8(l.begin(), l.end()));
+                //str += std::uint32_t(0x2764); //red heart
+                //str += std::uint32_t(0xfe0f);
+                str += std::uint32_t(0x1F497); //growing heart
+                textEnt3.getComponent<cro::Text>().setString(str);
             }
             else
             {
