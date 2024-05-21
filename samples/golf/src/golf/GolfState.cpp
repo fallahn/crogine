@@ -203,6 +203,13 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         sd.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
     }
 
+    if (sd.scoreType == ScoreType::ClubShuffle)
+    {
+        //hmm this isn't properly random as every player
+        //on this client still gets the same set...
+        sd.inputBinding.clubset = ClubID::getRandomSet();
+    }
+
     sd.holesPlayed = 0;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
@@ -3933,19 +3940,22 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 m_sharedData.clubSet = clubSet;
                 Club::setClubLevel(clubSet);
 
-                //hmm this should be read from whichever player is setting the limit
-                switch (clubSet)
+                if (m_sharedData.scoreType != ScoreType::ClubShuffle)
                 {
-                default: break;
-                case 0:
-                    m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
-                    break;
-                case 1:
-                    m_sharedData.inputBinding.clubset = ClubID::DefaultSet | (1<<ClubID::FiveWood) | (1<<ClubID::FourIron) | (1<<ClubID::SixIron);
-                    break;
-                case 2:
-                    m_sharedData.inputBinding.clubset = ClubID::FullSet;
-                    break;
+                    //hmm this should be read from whichever player is setting the limit
+                    switch (clubSet)
+                    {
+                    default: break;
+                    case 0:
+                        m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
+                        break;
+                    case 1:
+                        m_sharedData.inputBinding.clubset = ClubID::DefaultSet | (1 << ClubID::FiveWood) | (1 << ClubID::FourIron) | (1 << ClubID::SixIron);
+                        break;
+                    case 2:
+                        m_sharedData.inputBinding.clubset = ClubID::FullSet;
+                        break;
+                    }
                 }
             }
         }

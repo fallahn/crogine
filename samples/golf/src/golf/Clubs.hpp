@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <string>
 #include <array>
@@ -50,11 +51,11 @@ struct ClubID final
     
     static constexpr std::array<std::int32_t, ClubID::Count> Flags =
     {
-        (1<<0), (1<<1), (1<<2),
-        (1<<3), (1<<4), (1<<5),
-        (1<<6), (1<<7), (1<<8),
-        (1<<9), (1<<10), (1<<11),
-        (1 << 12)
+        (1<<Driver),     (1<<ThreeWood), (1<<FiveWood),
+        (1<<FourIron),   (1<<FiveIron),  (1<<SixIron),
+        (1<<SevenIron),  (1<<EightIron), (1<<NineIron),
+        (1<<PitchWedge), (1<<GapWedge),  (1<<SandWedge),
+        (1<<Putter)
     };
 
     static constexpr std::array<std::int32_t, 5u> LockedSet =
@@ -76,11 +77,21 @@ struct ClubID final
     }
 
     static constexpr std::int32_t DefaultSet =
-        Flags[Driver] | Flags[ThreeWood] | Flags[FiveIron] |
+        Flags[Driver]    | Flags[ThreeWood]  | Flags[FiveIron] |
         Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
         Flags[SandWedge] | Flags[Putter];
 
     static constexpr std::int32_t FullSet = 0x1FFF;
+
+    static inline std::int32_t getRandomSet()
+    {
+        std::int32_t retVal = Flags[Driver] | Flags[Putter];
+        retVal |= (1 << cro::Util::Random::value(ThreeWood, FiveWood));
+        retVal |= (1 << cro::Util::Random::value(FourIron, NineIron));
+        retVal |= (1 << cro::Util::Random::value(PitchWedge, SandWedge));
+
+        return retVal;
+    }
 };
 
 class Club final

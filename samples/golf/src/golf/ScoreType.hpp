@@ -45,8 +45,10 @@ namespace ScoreType
         ShortRound,
         
         Elimination,
+        ClubShuffle,
 
         Count,
+
         BBB,
         NearestThePin,
         LongestDrive,
@@ -54,7 +56,7 @@ namespace ScoreType
 
     static const inline std::array<std::int32_t, Count> PlayerCount =
     {
-        1,1,1, 1,1,1,1,2 //3
+        1,1,1,1,1,1,1,2, 1,//2,2,2
     };
 }
 
