@@ -96,7 +96,7 @@ struct ScoreUpdate final
     std::uint8_t stroke = 0;
     std::uint8_t hole = 0;
     std::uint8_t score = 0; //running stroke player score
-    std::uint8_t matchScore = 0;
+    std::uint8_t matchScore = 0; //hmm this could be a union?
     std::uint8_t skinsScore = 0;
     std::uint8_t padding = 0;
 };

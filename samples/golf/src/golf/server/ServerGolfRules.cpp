@@ -89,8 +89,9 @@ void GolfState::handleRules(const GolfBallEvent& data)
             break;
         case ScoreType::NearestThePin:
             //we may be in the hole so make sure we dont sqrt(0)
-            /*if (data.terrain < TerrainID::Water
-                || data.terrain == TerrainID::Hole)
+            if ((data.terrain < TerrainID::Water
+                && data.terrain != TerrainID::Hole)
+                || data.terrain == TerrainID::Stone)
             {
                 auto l2 = glm::length(data.position - m_holeData[m_currentHole].pin);
                 if (l2 != 0)
@@ -100,8 +101,8 @@ void GolfState::handleRules(const GolfBallEvent& data)
             }
             else
             {
-                m_playerInfo[0].distanceScore[m_currentHole] = 666.f;
-            }*/
+                m_playerInfo[0].distanceScore[m_currentHole] = m_holeData[m_currentHole].distanceToPin;
+            }
             break;
         case ScoreType::LongestDrive:
             if (data.terrain == TerrainID::Fairway)
@@ -204,6 +205,9 @@ void GolfState::handleRules(const GolfBallEvent& data)
                 m_sharedData.host.broadcastPacket(PacketID::LifeGained, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
 
+            break;
+        case ScoreType::NearestThePin:
+            m_playerInfo[0].distanceScore[m_currentHole] = m_holeData[m_currentHole].distanceToPin;
             break;
         }
     }

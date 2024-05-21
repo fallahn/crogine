@@ -48,15 +48,15 @@ namespace ScoreType
         ClubShuffle,
 
         Count,
+        NearestThePin,
 
         BBB,
-        NearestThePin,
         LongestDrive,
     };
 
     static const inline std::array<std::int32_t, Count> PlayerCount =
     {
-        1,1,1,1,1,1,1,2, 1,//2,2,2
+        1,1,1,1,1,1,1,2,1,//2,//2,2
     };
 }
 

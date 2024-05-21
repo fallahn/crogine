@@ -4586,7 +4586,7 @@ void GolfState::handleMaxStrokes(std::uint8_t reason)
                 showNotification("Stroke Limit Reached.");
             }
             break;
-        case ScoreType::LongestDrive:
+        case ScoreType::LongestDrive: //this shouldn't ever reach here in this game mode
         case ScoreType::NearestThePin:
             //do nothing, this is integral behavior
             return;

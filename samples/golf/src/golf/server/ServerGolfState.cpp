@@ -64,6 +64,7 @@ namespace
 {
     constexpr float MaxScoreboardTime = 10.f;
     constexpr std::uint8_t MaxStrokes = 12;
+    constexpr std::uint8_t MaxNTPStrokes = 2; //nearest the pin
     constexpr std::uint8_t MaxRandomTargets = 2;
     const cro::Time TurnTime = cro::seconds(90.f);
     const cro::Time WarnTime = cro::seconds(10.f);
@@ -184,7 +185,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             case ScoreType::Stableford:
                 maxStrokes = m_holeData[m_currentHole].par + 1;
                 break;
-            case ScoreType::NearestThePin:
+            //case ScoreType::NearestThePin:
             case ScoreType::LongestDrive:
                 //each player only has one turn
                 maxStrokes = 1;
@@ -844,6 +845,20 @@ void GolfState::setNextPlayer(bool newHole)
                     return !a.eliminated;
                 });
         }
+        else if (m_sharedData.scoreType == ScoreType::NearestThePin)
+        {
+            //make sure player hasn't completed all turns
+            std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+                [&](const PlayerStatus& a, const PlayerStatus& b)
+                {
+                    if (a.holeScore[m_currentHole] < MaxNTPStrokes && b.holeScore[m_currentHole] < MaxNTPStrokes)
+                    {
+                        return a.distanceToHole > b.distanceToHole;
+                    }
+
+                    return a.holeScore[m_currentHole] < MaxNTPStrokes;
+                });
+        }
         else
         {
             if (m_skinsFinals)
@@ -904,8 +919,9 @@ void GolfState::setNextPlayer(bool newHole)
         }
     }
 
-
+    //TODO move this to some game rule check function
     if (m_playerInfo[0].distanceToHole == 0 //all players must be in the hole
+        || (m_sharedData.scoreType == ScoreType::NearestThePin && m_playerInfo[0].holeScore[m_currentHole] == 2) //all players must have taken their turn
         || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo.size() == 1) //players have quit the game so attempt next hole
         || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo[1].eliminated)) //(which triggers the rules to end the game)
     {
@@ -961,6 +977,7 @@ void GolfState::setNextHole()
         su.matchScore = player.matchWins;
         su.skinsScore = player.skins;
         su.stroke = player.holeScore[scoreHole];
+        su.distanceScore = player.distanceScore[scoreHole];
 
         m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
@@ -1278,6 +1295,8 @@ bool GolfState::validateMap()
                 }
             }
         }
+
+        holeData.distanceToPin = glm::length(holeData.pin - holeData.tee);
 
         if (propCount != MaxProps)
         {
