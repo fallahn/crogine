@@ -3180,6 +3180,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     {
         std::uint8_t clientID = 0;
         std::uint8_t playerID = 0;
+        std::uint8_t lives = 0;
         std::int8_t score = 0;
     };
 
@@ -3205,6 +3206,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     {
                     default:
                     case ScoreType::Elimination:
+                        info.lives = m_sharedData.connectionData[i].playerData[j].skinScore;
+                        [[fallthrough]];
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
                     case ScoreType::MultiTarget:
@@ -3245,8 +3248,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 switch (m_sharedData.scoreType)
                 {
                 default:
-                case ScoreType::Stroke:
                 case ScoreType::Elimination:
+                    if (a.score == b.score)
+                    {
+                        return a.lives > b.lives;
+                    }
+                    [[fallthrough]];
+                case ScoreType::Stroke:
                 case ScoreType::ShortRound:
                 case ScoreType::MultiTarget:
                     return a.score < b.score;
@@ -4766,6 +4774,7 @@ void MenuState::createPreviousScoreCard()
         std::int32_t totalFront = 0;
         std::int32_t totalBack = 0;
         std::int32_t roundScore = 0; //rule type, ie par diff or match points
+        std::uint8_t lives = 0;
     };
 
     std::vector<Entry> scoreEntries;
@@ -4783,6 +4792,8 @@ void MenuState::createPreviousScoreCard()
                 {
                 default:
                 case ScoreType::Elimination:
+                    entry.lives = m_sharedData.connectionData[i].playerData[j].skinScore;
+                    [[fallthrough]];
                 case ScoreType::MultiTarget:
                 case ScoreType::Stroke:
                 case ScoreType::ShortRound:
@@ -4857,6 +4868,11 @@ void MenuState::createPreviousScoreCard()
             {
             default:
             case ScoreType::Elimination:
+                if (a.total == b.total)
+                {
+                    return a.lives > b.lives;
+                }
+                [[fallthrough]];
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:

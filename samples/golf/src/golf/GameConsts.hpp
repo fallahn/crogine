@@ -64,7 +64,7 @@ source distribution.
 #include <array>
 
 static inline constexpr std::int32_t CrowdDensityCount = 4;
-static inline constexpr std::uint8_t StartLives = 2;
+static inline constexpr std::uint8_t StartLives = 3;
 
 static constexpr float MaxBallRadius = 0.07f;
 static constexpr float GreenCamRadiusLarge = 45.f;
