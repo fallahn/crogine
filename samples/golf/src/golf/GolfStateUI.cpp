@@ -2969,6 +2969,11 @@ void GolfState::updateScoreboard(bool updateParDiff)
             {
             default:
             case ScoreType::Elimination:
+                if (a.total == b.total)
+                {
+                    return a.lives > b.lives;
+                }
+                [[fallthrough]];
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
@@ -3212,23 +3217,24 @@ void GolfState::updateScoreboard(bool updateParDiff)
         case ScoreType::ShortRound:
         case ScoreType::Stroke:
         {
-            std::size_t strLen = scores[i].frontNine < 10 ? 0 : 1;
+            std::size_t strLen = scores[i].frontNine < 10 ? 0 : 
+                scores[i].frontNine < 100 ? 1 : 2;
             if (scores[i].parDiff > 0)
             {
                 const cro::String str = " (+" + std::to_string(scores[i].parDiff) + ")";
-                strLen = str.size();
+                strLen += str.size();
                 totalString += str;
             }
             else if (scores[i].parDiff < 0)
             {
                 const cro::String str = " (" + std::to_string(scores[i].parDiff) + ")";
-                strLen = str.size();
+                strLen += str.size();
                 totalString += str;
             }
             else
             {
                 const cro::String str = " (0)";
-                strLen = str.size();
+                strLen = +str.size();
                 totalString += str;
             }
 
@@ -3331,24 +3337,25 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
             {
-                std::size_t strLen = scores[i].backNine < 10 ? 0 : 1;
+                std::size_t strLen = scores[i].backNine < 10 ? 0 :
+                    scores[i].backNine < 100 ? 1 : 2;
                 totalString += separator + std::to_string(scores[i].total);
                 if (scores[i].parDiff > 0)
                 {
                     const cro::String str = " (+" + std::to_string(scores[i].parDiff) + ")";
-                    strLen = str.size();
+                    strLen += str.size();
                     totalString += str;
                 }
                 else if (scores[i].parDiff < 0)
                 {
                     const cro::String str = " (" + std::to_string(scores[i].parDiff) + ")";
-                    strLen = str.size();
+                    strLen += str.size();
                     totalString += str;
                 }
                 else
                 {
                     const cro::String str = " (0)";
-                    strLen = str.size();
+                    strLen += str.size();
                     totalString += str;
                 }
 

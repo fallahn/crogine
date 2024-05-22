@@ -234,7 +234,7 @@ void DrivingState::createUI()
     };
     auto courseEnt = entity;
     m_courseEntity = entity;
-    createPlayer(courseEnt);
+    createPlayer();
     createBall(); //hmmm should probably be in createScene()?
 
     //info panel background - vertices are set in resize callback

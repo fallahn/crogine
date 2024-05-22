@@ -463,6 +463,21 @@ void InputParser::setClub(float dist)
             && m_currentClub != m_firstClub);//prevent inf loop
     }
 
+    //fudge to prevent picking driver in clubset shuffle mode
+    if (m_sharedData.scoreType == ScoreType::ClubShuffle)
+    {
+        if ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0)
+        {
+            auto old = m_currentClub;
+
+            do
+            {
+                m_currentClub = (m_currentClub + 1) % ClubID::Count;
+            } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0
+                && m_currentClub != old);
+        }
+    }
+
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 

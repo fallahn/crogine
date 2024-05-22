@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -242,7 +242,7 @@ inline const std::string CelVertexShader = R"(
 
 inline const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
-    uniform vec4 u_lightColour;
+    uniform vec4 u_lightColour = vec4(1.0);
 
 #include SCALE_BUFFER
 
@@ -695,5 +695,5 @@ inline const std::string CelFragmentShader = R"(
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, targetColour + FRAG_OUT.rgb, targetAmount);
 #endif
-
+//FRAG_OUT += vec4(1.0, 0.0, 0.0, 1.0);
     })";

@@ -192,7 +192,7 @@ private:
     void createScene();
     void createFoliage(cro::Entity);
     void createClouds();
-    void createPlayer(cro::Entity);
+    void createPlayer();
     void createBall();
     void createFlag();
     void startTransition();

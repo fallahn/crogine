@@ -840,6 +840,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
             Achievements::resetAchievement(AchievementStrings[AchievementID::JoinTheClub]);
             break;
 #endif
+        case SDLK_SPACE:
+            cro::App::getInstance().resetFrameTime();
+            break;
         case SDLK_F2:
             requestStackPush(StateID::Profile);
             break;

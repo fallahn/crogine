@@ -434,7 +434,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F5:
 
             break;
-        case SDLK_F6:
+        case FixedKey::ZoomMinimap:
         case SDLK_KP_MULTIPLY:
             toggleMiniZoom();
             break;
@@ -576,7 +576,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         pauseGame();
     }
 #ifdef CRO_DEBUG_
-    m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
+    //m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
 #endif
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -1049,6 +1049,7 @@ void DrivingState::loadAssets()
     m_defaultMaskMap.loadFromImage(defaultMask);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    //m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
@@ -1731,7 +1732,10 @@ void DrivingState::createScene()
             && data.currentTime > data.TotalTime / 2.f)
         {
             //play the music
-            e.getComponent<cro::AudioEmitter>().play();
+            if (cro::AudioMixer::getVolume(MixerChannel::UserMusic) == 0)
+            {
+                e.getComponent<cro::AudioEmitter>().play();
+            }
         }
 
         float progress = cro::Util::Easing::easeInOutQuad(data.currentTime / data.TotalTime);
@@ -2179,7 +2183,7 @@ void DrivingState::createClouds()
     }
 }
 
-void DrivingState::createPlayer(cro::Entity courseEnt)
+void DrivingState::createPlayer()
 {
     //load from avatar info
     const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
@@ -2207,6 +2211,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         av.setColour(pc::ColourKey::Index(j), playerData.avatarFlags[j]);
     }
     av.apply(&m_sharedData.avatarTextures[0][0]);
+
+
 
     //3D Player Model
     cro::ModelDefinition md(m_resources);
@@ -2249,8 +2255,9 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     //avatar requirement is single material
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
     applyMaterialData(md, material);
-    material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][0]); //there's only ever goingto be one player so just use the first tex
+    material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][0]); //there's only ever going to be one player so just use the first tex
     entity.getComponent<cro::Model>().setMaterial(0, material);
+
 
     std::fill(m_avatar.animationIDs.begin(), m_avatar.animationIDs.end(), AnimationID::Invalid);
     if (entity.hasComponent<cro::Skeleton>())
