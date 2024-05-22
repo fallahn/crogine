@@ -1347,18 +1347,36 @@ void GolfState::buildUI()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
 
+    std::vector<cro::Vertex2D> verts;
+    std::vector<cro::Vertex2D> verts2;
+    spriteSheet.getSprite("miniwind_outer").getVertexData(verts);
+    spriteSheet.getSprite("miniwind_inner").getVertexData(verts2);
+
+    if (!verts.empty() && !verts.empty())
+    {
+        verts.push_back(verts.back());
+        verts.push_back(verts2.front());
+        verts.push_back(verts2[0]);
+        verts.push_back(verts2[1]);
+        verts.push_back(verts2[2]);
+        verts.push_back(verts2[3]);
+    }
+    bounds = spriteSheet.getSprite("miniwind_inner").getTextureBounds();
+
+    //just to stop iteration breaking in the callback
+    //if the sprite fails to load for some reason
+    if (verts.empty())
+    {
+        verts.resize(4);
+    }
+
     //mini wind icon
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 300.f, 300.f, 0.02f });
-    entity.getComponent<cro::Transform>().setOrigin({ 2.5f, 5.5f });
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(20.f));
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::White),
-            cro::Vertex2D(glm::vec2(2.5f, 4.f), cro::Colour::White),
-            cro::Vertex2D(glm::vec2(2.5f, 11.f), cro::Colour::White),
-            cro::Vertex2D(glm::vec2(5.f, 0.f), cro::Colour::White)        
-        });
+    entity.addComponent<cro::Drawable2D>() .setVertexData(verts);
+    entity.getComponent<cro::Drawable2D>().setTexture(spriteSheet.getTexture());
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
@@ -1368,14 +1386,15 @@ void GolfState::buildUI()
             e.getComponent<cro::Transform>().setScale(windEnt.getComponent<cro::Transform>().getScale() * BaseScale);
 
             auto c = windEnt.getComponent<cro::Text>().getFillColour();
-            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+
+            for (auto v = verts.rbegin(); v < verts.rbegin() + 4; ++v)
             {
-                v.colour = c;
+                v->colour = c;
             }
 
             const float rotation = std::atan2(-m_windUpdate.windVector.z, m_windUpdate.windVector.x)
-                + m_minimapZoom.tilt;//
-               // - (cro::Util::Const::PI / 2.f);
+                + m_minimapZoom.tilt;
 
             float& currRotation = e.getComponent<float>();
             currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * (dt * 4.f);
