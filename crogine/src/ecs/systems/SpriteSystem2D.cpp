@@ -64,28 +64,7 @@ void SpriteSystem2D::process(float)
             else
             {
                 //rebuild the sprite
-                auto subRect = sprite.m_textureRect;
-                verts.resize(4);
-
-                verts[0].position = { 0.f, subRect.height };
-                verts[1].position = { 0.f, 0.f };
-                verts[2].position = { subRect.width, subRect.height };
-                verts[3].position = { subRect.width, 0.f };
-
-                //update vert coords
-                if (sprite.m_texture)
-                {
-                    glm::vec2 texSize = sprite.m_texture->getSize();
-                    verts[0].UV = { subRect.left / texSize.x, (subRect.bottom + subRect.height) / texSize.y };
-                    verts[1].UV = { subRect.left / texSize.x, subRect.bottom / texSize.y };
-                    verts[2].UV = { (subRect.left + subRect.width) / texSize.x, (subRect.bottom + subRect.height) / texSize.y };
-                    verts[3].UV = { (subRect.left + subRect.width) / texSize.x, subRect.bottom / texSize.y };
-                }
-                //update colour
-                verts[0].colour = sprite.m_colour;
-                verts[1].colour = sprite.m_colour;
-                verts[2].colour = sprite.m_colour;
-                verts[3].colour = sprite.m_colour;
+                sprite.getVertexData(verts);
 
                 drawable.setTexture(sprite.m_texture);
                 drawable.updateLocalBounds();

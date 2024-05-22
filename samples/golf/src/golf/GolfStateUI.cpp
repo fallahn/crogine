@@ -1344,6 +1344,9 @@ void GolfState::buildUI()
     auto mapEnt = entity;
     m_minimapEnt = entity;
 
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
+
     //mini wind icon
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 300.f, 300.f, 0.02f });
@@ -1371,8 +1374,8 @@ void GolfState::buildUI()
             }
 
             const float rotation = std::atan2(-m_windUpdate.windVector.z, m_windUpdate.windVector.x)
-                + m_minimapZoom.tilt
-                - (cro::Util::Const::PI / 2.f);
+                + m_minimapZoom.tilt;//
+               // - (cro::Util::Const::PI / 2.f);
 
             float& currRotation = e.getComponent<float>();
             currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * (dt * 4.f);

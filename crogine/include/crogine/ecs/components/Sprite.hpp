@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/Vertex2D.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
@@ -176,6 +177,13 @@ namespace cro
         */
         const std::vector<Animation>& getAnimations() const { return m_animations; }
 
+
+        /*!
+        \brief Fills the given vector with vertex data which represents this
+        sprite. By default this expects a render mode of GL_TRIANGLESTRIP
+        \param dst Destination vector of Vertex2D
+        */
+        void getVertexData(std::vector<Vertex2D>& dst) const;
 
     private:
         FloatRect m_textureRect;
