@@ -59,7 +59,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
         case ScoreType::Elimination:
             if (data.terrain != TerrainID::Hole)
             {
-                if (m_playerInfo[0].holeScore[m_currentHole] == /*m_holeData[m_currentHole].par -1*/3) //never going to finish under par
+                if (m_playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par -1) //never going to finish under par
                 {
                     m_playerInfo[0].skins--;
                     std::uint16_t packet = ((m_playerInfo[0].client << 8) | m_playerInfo[0].player);
@@ -185,7 +185,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
             break;
         case ScoreType::Elimination:
             //check player score and update lives if necessary
-            if (m_playerInfo[0].holeScore[m_currentHole] >= /*m_holeData[m_currentHole].par*/4)
+            if (m_playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par)
             {
                 m_playerInfo[0].skins--;
                 std::uint16_t packet = ((m_playerInfo[0].client << 8) | m_playerInfo[0].player);

@@ -205,8 +205,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     if (sd.scoreType == ScoreType::ClubShuffle)
     {
-        //hmm this isn't properly random as every player
-        //on this client still gets the same set...
         sd.inputBinding.clubset = ClubID::getRandomSet();
     }
 
@@ -5354,6 +5352,11 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    if (m_sharedData.scoreType == ScoreType::ClubShuffle)
+    {
+        m_sharedData.inputBinding.clubset = ClubID::getRandomSet();
+    }
+
     m_buttonStates = {};
 
     cro::App::getWindow().setMouseCaptured(true);

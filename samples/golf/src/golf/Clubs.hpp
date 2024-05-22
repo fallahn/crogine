@@ -85,7 +85,7 @@ struct ClubID final
 
     static inline std::int32_t getRandomSet()
     {
-        std::int32_t retVal = Flags[Driver] | Flags[Putter];
+        std::int32_t retVal = /*Flags[Driver] | */Flags[Putter];
         retVal |= (1 << cro::Util::Random::value(ThreeWood, FiveWood));
         retVal |= (1 << cro::Util::Random::value(FourIron, NineIron));
         retVal |= (1 << cro::Util::Random::value(PitchWedge, SandWedge));
