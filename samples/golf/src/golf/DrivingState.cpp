@@ -130,6 +130,32 @@ namespace
 #define DEBUG_DRAW false
 #endif
 
+    const std::string DebugFrag = R"(
+
+#if defined (VERTEX_COLOURED)
+VARYING_IN vec4 v_colour;
+#else
+uniform sampler2D u_diffuseMap;
+VARYING_IN vec2 v_texCoord;
+#endif
+
+VARYING_IN vec3 v_normal;
+
+OUTPUT
+
+void main()
+{
+    vec3 normal = normalize(v_normal);
+    float amount = clamp(dot(normal, vec3(0.0, 1.0, 0.0)), 0.0, 1.0);
+#if defined (VERTEX_COLOURED)
+    FRAG_OUT = v_colour;
+#else
+    FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord);
+#endif
+    FRAG_OUT.rgb *= amount;
+}
+)";
+
     cro::Box BillBox;
     bool prevBillBox = false;
     std::vector<float> noiseTable;
@@ -1013,7 +1039,7 @@ void DrivingState::loadAssets()
     {
         m_resources.shaders.addInclude(name, str);
     }
-
+    
     //models
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n" + wobble);
@@ -2232,7 +2258,7 @@ void DrivingState::createPlayer()
         scale = std::min(1.f, scale + (dt * 2.f));
 
         auto dir = e.getComponent<cro::Transform>().getScale().x; //might be flipped
-        e.getComponent<cro::Transform>().setScale(glm::vec2(dir, cro::Util::Easing::easeOutBounce(scale)));
+        e.getComponent<cro::Transform>().setScale(glm::vec3(dir, cro::Util::Easing::easeOutBounce(scale), scale));
 
         if (scale == 1)
         {

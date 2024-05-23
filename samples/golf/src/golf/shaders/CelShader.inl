@@ -126,6 +126,7 @@ inline const std::string CelVertexShader = R"(
         mat4 worldMatrix = u_worldMatrix;
         mat4 worldViewMatrix = u_worldViewMatrix;
         mat3 normalMatrix = u_normalMatrix;
+        //mat3 normalMatrix = transpose(inverse(mat3(u_worldMatrix)));
     #endif
 
     #if defined (VATS)
@@ -481,6 +482,7 @@ inline const std::string CelFragmentShader = R"(
         tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2);
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt * effectAmount);
+
 
 #if !defined(HOLE_HEIGHT)
 

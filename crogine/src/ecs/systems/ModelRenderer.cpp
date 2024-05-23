@@ -167,8 +167,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             const auto& tx = entity.getComponent<Transform>();
             const glm::mat4 worldMat = tx.getWorldTransform();
             const glm::mat4 worldView = pass.viewMatrix * worldMat;
-            //hmm for some reason doing this only once breaks rendering
-            //const glm::mat4 normalMat = glm::inverseTranspose(glm::mat3(worldMat));
+            const glm::mat3 normalMat = glm::inverseTranspose(glm::mat3(worldMat));
 
 #ifndef PLATFORM_DESKTOP
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
@@ -191,7 +190,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
                 glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
                 glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-                glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
+                glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(normalMat)));
 
                 applyBlendMode(model.m_materials[Mesh::IndexData::Final][i]/*.blendMode*/);
 
