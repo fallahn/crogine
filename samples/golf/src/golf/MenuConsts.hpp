@@ -106,10 +106,10 @@ static inline const std::array<std::string, ScoreType::Count> RuleDescriptions =
 #ifdef USE_GNS
     "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected, and scores are omitted from\nthe leaderboards. Contributes to the Club League.\nRecommended for solo play or 2+ players.",
 #else
-    "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected.Contributes to the Club League.\n\nRecommended for solo play or 2+ players.",
+    "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected. Contributes to the Club League.\n\nRecommended for solo play or 2+ players.",
 #endif
 
-    "The round is scored as Stroke Play, however\neach player has 2 \'lives\'. Scoring par or worse\non a hole loses 1 life, while scoring an eagle\n or better awards 1 life. The game ends when one\nplayer remains, or all holes have been played.\nMinimum 2 players, recommended for 4+ players.",
+    "Scored as Stroke Play, however each player has\n2-5 \'lives\', depending on player count. Scoring par\nor worse on a hole loses 1 life, while scoring an\neagle or better awards 1 life. The game ends when\none player remains, or all holes have been played.\nMinimum 2 players, recommended for 4+ players.",
     "Each player has a Putter plus one random Wood,\nIron and Wedge. Scoring is regular Stroke Play.\nNote that these rules are ignored on putting\ncourses for obvious reasons.\n\nRecommended for 2-4 players.",
     /*
     "Each player has two strokes to get as near\nto the pin as possible. The winner is the player\nwith the shortest total distance. If the\nball goes in the cup the player forfeits that hole.\n\nGreat for casual play, minimum 2 players.",

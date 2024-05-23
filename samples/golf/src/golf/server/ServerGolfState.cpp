@@ -1363,6 +1363,7 @@ void GolfState::initScene()
 
     m_mapDataValid = m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[0]);
     
+    auto startLives = StartLives;
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
     {
         if (m_sharedData.clients[i].connected)
@@ -1375,12 +1376,17 @@ void GolfState::initScene()
                 player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
 
-                if (m_sharedData.scoreType == ScoreType::Elimination)
-                {
-                    //store the number of lives in the skins
-                    player.skins = StartLives;
-                }
+                startLives = std::max(startLives - 1, 2);
             }
+        }
+    }
+
+    if (m_sharedData.scoreType == ScoreType::Elimination)
+    {
+        //store the number of lives in the skins
+        for (auto& player : m_playerInfo)
+        {
+            player.skins = startLives;
         }
     }
     std::shuffle(m_playerInfo.begin(), m_playerInfo.end(), cro::Util::Random::rndEngine);

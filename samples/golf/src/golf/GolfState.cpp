@@ -270,15 +270,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 #endif
 
-    /*switch (sd.scoreType)
-    {
-    default:
-        m_allowAchievements = m_allowAchievements;
-        break;
-    case ScoreType::ShortRound:
-        m_allowAchievements = false;
-        break;
-    }*/
 
     //This is set when setting active player.
     Achievements::setActive(m_allowAchievements);
@@ -288,6 +279,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //is first created.
     std::int32_t clientCount = 0;
     std::int32_t cpuCount = 0;
+    std::uint8_t startLives = StartLives;
     for (auto& c : sd.connectionData)
     {
         if (c.playerCount != 0)
@@ -297,15 +289,30 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             for (auto i = 0u; i < c.playerCount; ++i)
             {
                 c.playerData[i].matchScore = 0;
-                c.playerData[i].skinScore = m_sharedData.scoreType == ScoreType::Elimination ? StartLives : 0;
+                c.playerData[i].skinScore = 0;
 
                 if (c.playerData[i].isCPU)
                 {
                     cpuCount++;
                 }
+                startLives = std::max(startLives - 1, 2);
             }
         }
     }
+
+    //this initial value doesn't come from the server
+    //until that player takes their turn, so we set it here
+    if (sd.scoreType == ScoreType::Elimination)
+    {
+        for (auto& c : sd.connectionData)
+        {
+            for (auto& p : c.playerData)
+            {
+                p.skinScore = startLives;
+            }
+        }
+    }
+
     if (clientCount > /*ConstVal::MaxClients*/3) //achievement is for 4
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::BetterWithFriends]);
@@ -3910,6 +3917,17 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 s += " lost a life";
                 postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::PlayerLifeLost;
+
+                if (c == m_sharedData.localConnectionData.connectionID)
+                {
+                    if (m_currentPlayer.terrain != TerrainID::Hole)
+                    {
+                        //penalty won't have come from the server yet so
+                        //update the score that the message board displays correctly
+                        m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]++;
+                        showMessageBoard(MessageBoardID::HoleScore);
+                    }
+                }
             }
 
             showNotification(s);

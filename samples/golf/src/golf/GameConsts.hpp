@@ -64,7 +64,9 @@ source distribution.
 #include <array>
 
 static inline constexpr std::int32_t CrowdDensityCount = 4;
-static inline constexpr std::uint8_t StartLives = 3;
+//decreased for each additional player to a minimum of 2
+//so max is actually 5 because we always have at least 2 players
+static inline constexpr std::uint8_t StartLives = 7;
 
 static constexpr float MaxBallRadius = 0.07f;
 static constexpr float GreenCamRadiusLarge = 45.f;
