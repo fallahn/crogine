@@ -72,8 +72,8 @@ static inline const std::array<std::string, ScoreType::Count> ScoreTypes =
     "Short Round",
     "Elimination",
     "Clubset Shuffle",
-    /*
     "Nearest the Pin",
+    /*
     "Bingo Bango Bongo",
     "Longest Drive",
     */
@@ -111,8 +111,8 @@ static inline const std::array<std::string, ScoreType::Count> RuleDescriptions =
 
     "Scored as Stroke Play, however each player has\n2-5 \'lives\', depending on player count. Scoring par\nor worse on a hole loses 1 life, while scoring an\neagle or better awards 1 life. The game ends when\none player remains, or all holes have been played.\nMinimum 2 players, recommended for 4+ players.",
     "Each player has a Putter plus one random Wood,\nIron and Wedge. Scoring is regular Stroke Play.\nNote that these rules are ignored on putting\ncourses for obvious reasons.\n\nRecommended for 2-4 players.",
-    /*
     "Each player has two strokes to get as near\nto the pin as possible. The winner is the player\nwith the shortest total distance. If the\nball goes in the cup the player forfeits that hole.\n\nGreat for casual play, minimum 2 players.",
+    /*
     "The first player on the green scores Bingo, the\nplayer closest to the pin when all players are on\nthe green scores Bango and first to hole out wins\nBongo. Not recommended for putting courses.",
     "Each player has one stroke to make the longest\ndrive possible while staying on the fairway.\nThe winner is the player with the longest total\ndistance.",
     */

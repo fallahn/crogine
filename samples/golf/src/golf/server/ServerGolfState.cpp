@@ -64,7 +64,6 @@ namespace
 {
     constexpr float MaxScoreboardTime = 10.f;
     constexpr std::uint8_t MaxStrokes = 12;
-    constexpr std::uint8_t MaxNTPStrokes = 2; //nearest the pin
     constexpr std::uint8_t MaxRandomTargets = 2;
     const cro::Time TurnTime = cro::seconds(90.f);
     const cro::Time WarnTime = cro::seconds(10.f);
@@ -921,7 +920,7 @@ void GolfState::setNextPlayer(bool newHole)
 
     //TODO move this to some game rule check function
     if (m_playerInfo[0].distanceToHole == 0 //all players must be in the hole
-        || (m_sharedData.scoreType == ScoreType::NearestThePin && m_playerInfo[0].holeScore[m_currentHole] == 2) //all players must have taken their turn
+        || (m_sharedData.scoreType == ScoreType::NearestThePin && m_playerInfo[0].holeScore[m_currentHole] == MaxNTPStrokes) //all players must have taken their turn
         || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo.size() == 1) //players have quit the game so attempt next hole
         || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo[1].eliminated)) //(which triggers the rules to end the game)
     {
@@ -1310,6 +1309,12 @@ bool GolfState::validateMap()
 
 void GolfState::initScene()
 {
+    //make sure to ignore gimme radii on NTP...
+    if (m_sharedData.scoreType == ScoreType::NearestThePin)
+    {
+        m_sharedData.gimmeRadius = 0;
+    }
+
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<BallSystem>(mb)->setGimmeRadius(m_sharedData.gimmeRadius);

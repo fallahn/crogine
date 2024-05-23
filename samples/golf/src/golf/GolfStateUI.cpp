@@ -4092,7 +4092,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         }
         break;
     case MessageBoardID::Eliminated:
-        textEnt.getComponent<cro::Text>().setString("Eliminated!");
+    case MessageBoardID::NTPForfeit:
+        textEnt.getComponent<cro::Text>().setString(messageType == MessageBoardID::Eliminated ? "Eliminated!" : "Forfeit!");
         textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
         textEnt3.getComponent<cro::Text>().setString("Bad Luck!");
 

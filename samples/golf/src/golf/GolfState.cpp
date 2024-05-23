@@ -4207,87 +4207,94 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
                 break;
             case TerrainID::Hole:
-                if (m_sharedData.gameMode == GameMode::Tutorial)
+                if (m_sharedData.scoreType == ScoreType::NearestThePin)
                 {
-                    Achievements::setActive(true);
-                    Achievements::awardAchievement(AchievementStrings[AchievementID::CluedUp]);
-                    Achievements::setActive(m_allowAchievements);
+                    showMessageBoard(MessageBoardID::NTPForfeit);
+                    m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
                 }
-
-                bool special = false;
-                std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
-                if (score == 1)
+                else
                 {
-                    //moved to showMessageBoard where we assert we actually scored a HIO
-                    /*auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
-                    msg->type = GolfEvent::HoleInOne;
-                    msg->position = m_holeData[m_currentHole].pin;*/
+                    if (m_sharedData.gameMode == GameMode::Tutorial)
+                    {
+                        Achievements::setActive(true);
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::CluedUp]);
+                        Achievements::setActive(m_allowAchievements);
+                    }
+
+                    bool special = false;
+                    std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
+                    if (score == 1)
+                    {
+                        //moved to showMessageBoard where we assert we actually scored a HIO
+                        /*auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+                        msg->type = GolfEvent::HoleInOne;
+                        msg->position = m_holeData[m_currentHole].pin;*/
+                    }
+
+                    //check if this is our own score
+                    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+                    {
+                        if (m_currentHole == m_holeData.size() - 1)
+                        {
+                            //just completed the course
+                            if (m_currentHole == 17) //full round
+                            {
+                                auto old = Achievements::getActive();
+                                Achievements::setActive(m_allowAchievements);
+                                Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
+                                Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+                                Achievements::setActive(old);
+                            }
+
+                            if (m_sharedData.scoreType != ScoreType::Skins)
+                            {
+                                Social::awardXP(XPValues[XPID::CompleteCourse] / (18 / m_holeData.size()), XPStringID::CourseComplete);
+                            }
+                        }
+
+                        //check putt distance / if this was in fact a putt
+                        if (getClub() == ClubID::Putter)
+                        {
+                            if (glm::length(update.position - m_currentPlayer.position) > LongPuttDistance)
+                            {
+                                Achievements::incrementStat(StatStrings[StatID::LongPutts]);
+                                Achievements::awardAchievement(AchievementStrings[AchievementID::PuttStar]);
+                                Social::awardXP((XPValues[XPID::Special] / 4) * 3, XPStringID::LongPutt);
+                                Social::getMonthlyChallenge().updateChallenge(ChallengeID::One, 0);
+                                special = true;
+                            }
+                        }
+                        else
+                        {
+                            if (getClub() > ClubID::NineIron)
+                            {
+                                Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
+                                Achievements::incrementStat(StatStrings[StatID::ChipIns]);
+                                Social::awardXP(XPValues[XPID::Special], XPStringID::TopChip);
+                            }
+
+                            if (m_achievementTracker.hadBackspin)
+                            {
+                                Achievements::awardAchievement(AchievementStrings[AchievementID::SpinClass]);
+                                Social::awardXP((XPValues[XPID::Special] * 5) / 2, XPStringID::BackSpinSkill);
+                            }
+                            else if (m_achievementTracker.hadTopspin)
+                            {
+                                Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::TopSpinSkill);
+                            }
+                        }
+
+                        //really we want to do this in any mode if holed without a gimme
+                        //however there's no real way to distinguish atm
+                        if (m_sharedData.gimmeRadius == 0)
+                        {
+                            Social::awardXP(25, XPStringID::NoGimme);
+                        }
+                    }
+
+                    showMessageBoard(MessageBoardID::HoleScore, special);
+                    m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
                 }
-
-                //check if this is our own score
-                if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
-                {
-                    if (m_currentHole == m_holeData.size() - 1)
-                    {
-                        //just completed the course
-                        if (m_currentHole == 17) //full round
-                        {
-                            auto old = Achievements::getActive();
-                            Achievements::setActive(m_allowAchievements);
-                            Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
-                            Achievements::setActive(old);
-                        }
-
-                        if (m_sharedData.scoreType != ScoreType::Skins)
-                        {
-                            Social::awardXP(XPValues[XPID::CompleteCourse] / (18 / m_holeData.size()), XPStringID::CourseComplete);
-                        }
-                    }
-
-                    //check putt distance / if this was in fact a putt
-                    if (getClub() == ClubID::Putter)
-                    {
-                        if (glm::length(update.position - m_currentPlayer.position) > LongPuttDistance)
-                        {
-                            Achievements::incrementStat(StatStrings[StatID::LongPutts]);
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::PuttStar]);
-                            Social::awardXP((XPValues[XPID::Special] / 4) * 3, XPStringID::LongPutt);
-                            Social::getMonthlyChallenge().updateChallenge(ChallengeID::One, 0);
-                            special = true;
-                        }
-                    }
-                    else
-                    {
-                        if (getClub() > ClubID::NineIron)
-                        {
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
-                            Achievements::incrementStat(StatStrings[StatID::ChipIns]);
-                            Social::awardXP(XPValues[XPID::Special], XPStringID::TopChip);
-                        }
-
-                        if (m_achievementTracker.hadBackspin)
-                        {
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::SpinClass]);
-                            Social::awardXP((XPValues[XPID::Special] * 5) / 2, XPStringID::BackSpinSkill);
-                        }
-                        else if (m_achievementTracker.hadTopspin)
-                        {
-                            Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::TopSpinSkill);
-                        }
-                    }
-
-                    //really we want to do this in any mode if holed without a gimme
-                    //however there's no real way to distinguish atm
-                    if (m_sharedData.gimmeRadius == 0)
-                    {
-                        Social::awardXP(25, XPStringID::NoGimme);
-                    }
-                }
-
-                showMessageBoard(MessageBoardID::HoleScore, special);
-                m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
-
                 break;
             }
 
@@ -5611,6 +5618,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
                 //aim for whichever is closer (target or pin)
                 //if (glm::length2(target - player.position) < glm::length2(m_holeData[m_currentHole].pin - player.position))
                 {
+                    if (m_sharedData.scoreType == ScoreType::NearestThePin)
+                    {
+                        //don't aim for the hole, just close by
+                        target -= glm::normalize(targetPoint) * 0.082f;
+                    }
+
                     m_cpuGolfer.activate(target, midTarget, m_holeData[m_currentHole].puttFromTee);
                 }
                 /*else
