@@ -2784,11 +2784,17 @@ void GolfState::updateScoreboard(bool updateParDiff)
     {
         cro::String name;
         std::vector<std::int32_t> holes;
+        std::vector<float> distances;
         std::vector<bool> holeComplete;
         std::int32_t frontNine = 0;
         std::int32_t backNine = 0;
         std::int32_t total = 0;
         std::int32_t parDiff = 0;
+
+        float totalDistance = 0.f;
+        float frontNineDistance = 0.f;
+        float backNineDistance = 0.f;
+
         std::uint8_t client = 0;
         std::uint8_t player = 0;
         std::uint8_t lives = 0;
@@ -2819,6 +2825,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 auto s = client.playerData[i].holeScores[j];
                 entry.holes.push_back(s);
                 entry.holeComplete.push_back(client.playerData[i].holeComplete[j]);
+
+                auto f = client.playerData[i].distanceScores[j];
+                entry.distances.push_back(f);
 
                 std::int32_t stableScore = 0;
 
@@ -2870,6 +2879,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     case ScoreType::Skins:
                         entry.frontNine = client.playerData[i].skinScore;
                         break;
+                    case ScoreType::NearestThePin:
+                        entry.frontNineDistance += f;
+                        break;
                     }
 
                 }
@@ -2904,6 +2916,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     case ScoreType::Skins:
                         entry.backNine = client.playerData[i].skinScore;
                         break;
+                    case ScoreType::NearestThePin:
+                        entry.backNineDistance += f;
+                        break;
                     }
                 }
             }
@@ -2936,6 +2951,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Match:
                 //entry.total = entry.frontNine;
                 entry.total = client.playerData[i].matchScore;
+                break;
+            case ScoreType::NearestThePin:
+                entry.totalDistance = entry.frontNineDistance + entry.backNineDistance;
                 break;
             }
 
@@ -2991,6 +3009,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Skins:
             case ScoreType::Match:
                 return b.total < a.total;
+            case ScoreType::NearestThePin:
+                return a.totalDistance < b.totalDistance;
             }
         });
 
@@ -3014,6 +3034,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         break;
     case ScoreType::Stableford:
     case ScoreType::StablefordPro:
+    case ScoreType::NearestThePin:
         nameString += " ";
         break;
     }
@@ -3040,6 +3061,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
+        case ScoreType::NearestThePin:
             nameString += " ";
             break;
         }
@@ -3069,6 +3091,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
+        case ScoreType::NearestThePin:
             scoreString += " ";
             break;
         }
@@ -3112,6 +3135,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     }
                 }
                 break;
+            case ScoreType::NearestThePin:
+                scoreString += "-";
+                break;
             }
         }
 
@@ -3135,6 +3161,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     break;
                 case ScoreType::Stableford:
                 case ScoreType::StablefordPro:
+                case ScoreType::NearestThePin:
                     scoreString += " ";
                     break;
                 }
@@ -3176,6 +3203,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                             }
                         }
                         break;
+                    case ScoreType::NearestThePin:
+                        scoreString += "-";
+                        break;
                     }
                 }
             }
@@ -3211,11 +3241,24 @@ void GolfState::updateScoreboard(bool updateParDiff)
             totalString += " ";
         }
         break;
+    case ScoreType::NearestThePin:
+        totalString += " ";
+        break;
     }
 
     for (auto i = 0u; i < playerCount; ++i)
     {
-        totalString += "\n" + std::to_string(scores[i].frontNine);
+        if (m_sharedData.scoreType == ScoreType::NearestThePin)
+        {
+            std::stringstream ss;
+            ss.precision(2);
+            ss << scores[i].frontNineDistance;
+            totalString += "\n" + ss.str();
+        }
+        else
+        {
+            totalString += "\n" + std::to_string(scores[i].frontNine);
+        }
 
         switch (m_sharedData.scoreType)
         {
@@ -3287,6 +3330,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 totalString += " SKINS";
             }
             break;
+        case ScoreType::NearestThePin:
+            totalString += " Metres";
+            break;
         }
     }
 
@@ -3330,13 +3376,25 @@ void GolfState::updateScoreboard(bool updateParDiff)
         case ScoreType::StablefordPro:
             totalString += "B9 - FINAL";
             break;
+        case ScoreType::NearestThePin:
+
+            break;
         }
         
         for (auto i = 0u; i < playerCount; ++i)
         {
-            separator = getSeparator(scores[i].backNine);
-            totalString += "\n" + std::to_string(scores[i].backNine);
-
+            if (m_sharedData.scoreType == ScoreType::NearestThePin)
+            {
+                std::stringstream ss;
+                ss.precision(2);
+                ss << scores[i].backNineDistance;
+                totalString += "\n" + ss.str();
+            }
+            else
+            {
+                separator = getSeparator(scores[i].backNine);
+                totalString += "\n" + std::to_string(scores[i].backNine);
+            }
             switch (m_sharedData.scoreType)
             {
             default:
@@ -3422,6 +3480,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 {
                     totalString += " SKINS";
                 }
+                break;
+            case ScoreType::NearestThePin:
+                totalString += " Metres";
                 break;
             }
         }
@@ -4093,10 +4154,19 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         break;
     case MessageBoardID::Eliminated:
     case MessageBoardID::NTPForfeit:
-        textEnt.getComponent<cro::Text>().setString(messageType == MessageBoardID::Eliminated ? "Eliminated!" : "Forfeit!");
-        textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
-        textEnt3.getComponent<cro::Text>().setString("Bad Luck!");
-
+    case MessageBoardID::NTPDistance:
+        if (messageType == MessageBoardID::NTPDistance)
+        {
+            textEnt.getComponent<cro::Text>().setString("Nearest The Pin");
+            textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            textEnt3.getComponent<cro::Text>().setString("Distance: " + std::to_string(glm::length(m_holeData[m_currentHole].pin/*hmm, we need to fetch the ball's position from somewhere*/)));
+        }
+        else
+        {
+            textEnt.getComponent<cro::Text>().setString(messageType == MessageBoardID::Eliminated ? "Eliminated!" : "Forfeit!");
+            textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            textEnt3.getComponent<cro::Text>().setString("Bad Luck!");
+        }
         imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::BounceAnim];
         imgEnt.addComponent<cro::SpriteAnimation>().play(0);
         imgEnt.getComponent<cro::Transform>().setPosition({ 86.f, 25.f, 0.1f });
