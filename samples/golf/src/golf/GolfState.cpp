@@ -3925,7 +3925,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         //penalty won't have come from the server yet so
                         //update the score that the message board displays correctly
                         m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]++;
-                        showMessageBoard(MessageBoardID::HoleScore);
+                        //showMessageBoard(MessageBoardID::HoleScore); //hmm we might want a separate case for this so that it doesn't tigger the appause audio
                     }
                 }
             }
