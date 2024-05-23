@@ -142,7 +142,7 @@ namespace
     std::uint32_t depthUpdateCount = 1;
 
     float godmode = 1.f;
-    std::int32_t survivorXP = 5;
+    std::int32_t survivorXP = 25;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -211,7 +211,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     sd.holesPlayed = 0;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
-    survivorXP = 5;
+    survivorXP = 25;
     godmode = 1.f;
     registerCommand("god", [](const std::string&)
         {
@@ -3845,6 +3845,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 if (!m_sharedData.connectionData[c].playerData[p].isCPU)
                 {
                     showMessageBoard(MessageBoardID::Eliminated);
+                    survivorXP = 0; //prevents awarding this on other player's elimination after we're eliminated.
                 }
 
                 //for everyone on this client who isn't the eliminated player
@@ -3854,7 +3855,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         !m_sharedData.connectionData[c].playerData[i].isCPU)
                     {
                         //we might be inactive between turns...
-                        if (m_allowAchievements)
+                        if (m_allowAchievements
+                            && survivorXP != 0)
                         {
                             auto active = Achievements::getActive();
                             Achievements::setActive(true);
@@ -3869,7 +3871,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             else
             {
                 //we might be inactive between turns...
-                if (m_allowAchievements)
+                if (m_allowAchievements
+                    && survivorXP != 0)
                 {
                     auto active = Achievements::getActive();
                     Achievements::setActive(true);
