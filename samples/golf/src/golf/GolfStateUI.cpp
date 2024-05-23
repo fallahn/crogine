@@ -1350,7 +1350,15 @@ void GolfState::buildUI()
     std::vector<cro::Vertex2D> verts;
     std::vector<cro::Vertex2D> verts2;
     spriteSheet.getSprite("miniwind_outer").getVertexData(verts);
-    spriteSheet.getSprite("miniwind_inner").getVertexData(verts2);
+    //spriteSheet.getSprite("miniwind_inner").getVertexData(verts2);
+    static constexpr glm::vec2 ArrowOrigin(7.5f); //ugh, such hackery.
+    verts2 =
+    {
+        cro::Vertex2D(glm::vec2(-5.5, 2.5f) + ArrowOrigin, glm::vec2(0.f)),
+        cro::Vertex2D(glm::vec2(-2.5f, 0.f) + ArrowOrigin, glm::vec2(0.f)),
+        cro::Vertex2D(glm::vec2(5.5f, 0.f) + ArrowOrigin, glm::vec2(0.f)),
+        cro::Vertex2D(glm::vec2(-5.5f, -2.5f) + ArrowOrigin, glm::vec2(0.f))
+    };
 
     if (!verts.empty() && !verts.empty())
     {
