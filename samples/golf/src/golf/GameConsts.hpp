@@ -756,10 +756,10 @@ static inline void createSwingputMeter(cro::Entity entity, InputParser& inputPar
             verts[15].position.y = height;
         };
 
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-        entity.addComponent<UIElement>().depth = 0.2f;
-        entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
-        entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
 }
 
 //applies material data loaded in a model definition such as texture info to custom materials

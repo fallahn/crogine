@@ -38,23 +38,37 @@ void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity
 
     if (m3uPlaylist.getTrackCount() == 0)
     {
-#ifdef USE_GNS
-        auto soundtrackPath = Social::getSoundTrackPath();
-        LogI << "Soundtrack is at " << soundtrackPath << std::endl;
-#endif
-
-        //look in the fallback dir
-        const auto MusicDir = "assets/golf/sound/music/";
-        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
-        {
-            const auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + MusicDir);
-            for (const auto& file : files)
+        const auto loadFiles = [&](const std::string& path, const std::string& root)
             {
-                //this checks the file has a valid extension
-                //and limits the number of files loaded
-                m3uPlaylist.addTrack(MusicDir + file);
+                const auto files = cro::FileSystem::listFiles(path);
+                for (const auto& file : files)
+                {
+                    //this checks the file has a valid extension
+                    //and limits the number of files loaded
+                    m3uPlaylist.addTrack(root + file);
+                }
+                m3uPlaylist.shuffle();
+            };
+
+
+#ifdef USE_GNS
+        //see if the soundtrack is installed and prefer that
+        auto soundtrackPath = Social::getSoundTrackPath();
+        if (!soundtrackPath.empty()
+            && cro::FileSystem::directoryExists(soundtrackPath + u8"/mp3/"))
+        {
+            loadFiles(soundtrackPath + u8"/mp3/", soundtrackPath + u8"/mp3/");
+        }
+
+        if (m3uPlaylist.getTrackCount() == 0)
+#endif
+        {
+            //look in the fallback dir
+            const auto MusicDir = "assets/golf/sound/music/";
+            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
+            {
+                loadFiles(cro::FileSystem::getResourcePath() + MusicDir, MusicDir);
             }
-            m3uPlaylist.shuffle();
         }
     }
 
