@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GameConsts.hpp"
+#include "Social.hpp"
 #include "../M3UPlaylist.hpp"
 
 void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity gameMusic)
@@ -37,6 +38,11 @@ void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity
 
     if (m3uPlaylist.getTrackCount() == 0)
     {
+#ifdef USE_GNS
+        auto soundtrackPath = Social::getSoundTrackPath();
+        LogI << "Soundtrack is at " << soundtrackPath << std::endl;
+#endif
+
         //look in the fallback dir
         const auto MusicDir = "assets/golf/sound/music/";
         if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))

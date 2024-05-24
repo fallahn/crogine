@@ -179,6 +179,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_holeToModelRatio      (1.f),
     m_currentHole           (0),
     m_distanceToHole        (1.f), //don't init to 0 in case we get div0
+    m_NTPDistance           (1.f), //don't init to 0 in case we get div0
     m_resumedFromSave       (false),
     m_terrainBuilder        (sd, m_holeData),
     m_audioPath             ("assets/golf/sound/ambience.xas"),
@@ -1530,31 +1531,31 @@ void GolfState::handleMessage(const cro::Message& msg)
             entity.getComponent<cro::Callback>().setUserData<float>(1.5f);
             entity.getComponent<cro::Callback>().function =
                 [&](cro::Entity e, float dt)
-            {
-                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                currTime -= dt;
-
-                if (currTime < 0)
                 {
-                    setActiveCamera(CameraID::Player);
-                    e.getComponent<cro::Callback>().active = false;
-                    m_gameScene.destroyEntity(e);
+                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                    currTime -= dt;
+
+                    if (currTime < 0)
+                    {
+                        setActiveCamera(CameraID::Player);
+                        e.getComponent<cro::Callback>().active = false;
+                        m_gameScene.destroyEntity(e);
 
 
-                    //hide the flight cam
-                    cro::Command cmd;
-                    cmd.targetFlags = CommandID::UI::MiniGreen;
-                    cmd.action = [&](cro::Entity en, float)
-                        {
-                            //if (m_currentPlayer.terrain != TerrainID::Green)
+                        //hide the flight cam
+                        cro::Command cmd;
+                        cmd.targetFlags = CommandID::UI::MiniGreen;
+                        cmd.action = [&](cro::Entity en, float)
                             {
-                                en.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
-                                en.getComponent<cro::Callback>().active = true;
-                            }
-                        };
-                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-                }
-            };
+                                //if (m_currentPlayer.terrain != TerrainID::Green)
+                                {
+                                    en.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
+                                    en.getComponent<cro::Callback>().active = true;
+                                }
+                            };
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    }
+                };
 
             if (data.terrain == TerrainID::Fairway)
             {
@@ -1565,6 +1566,13 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 //red channel triggers noise effect
                 m_miniGreenEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan);
+            }
+            else if (m_sharedData.scoreType == ScoreType::NearestThePin
+                && data.terrain != TerrainID::Hole)
+            {
+                //display the distance travelled
+                m_NTPDistance = std::sqrt(data.pinDistance);
+                showMessageBoard(MessageBoardID::NTPDistance);
             }
 
 #ifdef PATH_TRACING
@@ -3925,7 +3933,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         //penalty won't have come from the server yet so
                         //update the score that the message board displays correctly
                         m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]++;
-                        //showMessageBoard(MessageBoardID::HoleScore); //hmm we might want a separate case for this so that it doesn't tigger the appause audio
+                        showMessageBoard(MessageBoardID::EliminatedStroke); //hmm we might want a separate case for this so that it doesn't trigger the appause audio
                     }
                 }
             }
@@ -4211,6 +4219,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 {
                     showMessageBoard(MessageBoardID::NTPForfeit);
                     m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
+                    //so the scoreboard can show a forfeit
+                    m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] = MaxNTPStrokes + 1;
                 }
                 else
                 {

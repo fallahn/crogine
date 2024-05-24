@@ -4765,6 +4765,7 @@ void MenuState::createPreviousScoreCard()
         backCount = std::max(0, holeCount - frontCount);
     }
 
+    //hmmm we're basically repeating the same thing here as in the Scoreboard update in GolfStateUI
     struct Entry final
     {
         std::uint32_t client = 0; //use this to index directly into name data, save making a copy
@@ -4775,6 +4776,11 @@ void MenuState::createPreviousScoreCard()
         std::int32_t totalBack = 0;
         std::int32_t roundScore = 0; //rule type, ie par diff or match points
         std::uint8_t lives = 0;
+
+        std::array<float, 18> distanceScores = {};
+        float totalDistance = 0.f;
+        float frontDistance = 0.f;
+        float backDistance = 0.f;
     };
 
     std::vector<Entry> scoreEntries;
@@ -4809,54 +4815,80 @@ void MenuState::createPreviousScoreCard()
                 case ScoreType::Stableford:
                     //do nothing, we re-calc below
                     break;
+                case ScoreType::NearestThePin:
+                    
+                    break;
                 }
 
                 //These should be fine from the last round as they aren't
                 //cleared and resized until the beginning of the next one
                 //also means there are only as many scores as there are holes.
                 auto k = 0;
-                for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
+                if (m_sharedData.scoreType == ScoreType::NearestThePin)
                 {
-                    if (m_sharedData.scoreType == ScoreType::Stableford
-                        || m_sharedData.scoreType == ScoreType::StablefordPro)
+                    for (auto score : m_sharedData.connectionData[i].playerData[j].distanceScores)
                     {
-                        auto diff = static_cast<std::int32_t>(score) - courseData.parVals[k];
-                        auto stableScore = 2 - diff;
-
-                        if (m_sharedData.scoreType == ScoreType::Stableford)
-                        {
-                            stableScore = std::max(0, stableScore);
-                        }
-                        else if (stableScore < 2)
-                        {
-                            stableScore -= 2;
-                        }
-
-                        entry.holeScores[k] = stableScore;
-                        entry.total += stableScore;
+                        //need to track this so we know if player forfeited
+                        entry.holeScores[k] = m_sharedData.connectionData[i].playerData[j].holeScores[k];
+                        
+                        entry.distanceScores[k] = score;
+                        entry.totalDistance += score;
                         if (k < 9)
                         {
-                            entry.totalFront += stableScore;
+                            entry.frontDistance += score;
                         }
                         else
                         {
-                            entry.totalBack += stableScore;
+                            entry.backDistance += score;
                         }
+                        k++;
                     }
-                    else
+                }
+                else
+                {
+                    for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
                     {
-                        entry.holeScores[k] = score;
-                        entry.total += score;
-                        if (k < 9)
+                        if (m_sharedData.scoreType == ScoreType::Stableford
+                            || m_sharedData.scoreType == ScoreType::StablefordPro)
                         {
-                            entry.totalFront += score;
+                            auto diff = static_cast<std::int32_t>(score) - courseData.parVals[k];
+                            auto stableScore = 2 - diff;
+
+                            if (m_sharedData.scoreType == ScoreType::Stableford)
+                            {
+                                stableScore = std::max(0, stableScore);
+                            }
+                            else if (stableScore < 2)
+                            {
+                                stableScore -= 2;
+                            }
+
+                            entry.holeScores[k] = stableScore;
+                            entry.total += stableScore;
+                            if (k < 9)
+                            {
+                                entry.totalFront += stableScore;
+                            }
+                            else
+                            {
+                                entry.totalBack += stableScore;
+                            }
                         }
                         else
                         {
-                            entry.totalBack += score;
+                            entry.holeScores[k] = score;
+                            entry.total += score;
+                            if (k < 9)
+                            {
+                                entry.totalFront += score;
+                            }
+                            else
+                            {
+                                entry.totalBack += score;
+                            }
                         }
+                        k++;
                     }
-                    k++;
                 }
             }
         }
@@ -4883,6 +4915,8 @@ void MenuState::createPreviousScoreCard()
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
                 return a.total > b.total;
+            case ScoreType::NearestThePin:
+                return a.totalDistance < b.totalDistance;
             }
         });
 
@@ -4921,6 +4955,7 @@ void MenuState::createPreviousScoreCard()
         break;
     case ScoreType::Stableford:
     case ScoreType::StablefordPro:
+    case ScoreType::NearestThePin:
         str += " ";
         break;
     }
@@ -4946,6 +4981,7 @@ void MenuState::createPreviousScoreCard()
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
+        case ScoreType::NearestThePin:
             str += " ";
             break;
         }
@@ -5034,6 +5070,7 @@ void MenuState::createPreviousScoreCard()
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
+        case ScoreType::NearestThePin:
             str += " ";
             break;
         }
@@ -5074,6 +5111,23 @@ void MenuState::createPreviousScoreCard()
                     redStr += "\n" + std::to_string(score);
                 }
                 break;
+            case ScoreType::NearestThePin:
+                if (score > MaxNTPStrokes)
+                {
+                    str += "\n";
+                    redStr += "\nF";
+                }
+                else if(score != 0)
+                {
+                    str += "\n-";
+                    redStr += "\n";
+                }
+                else
+                {
+                    str += "\n";
+                    redStr += "\n";
+                }
+                break;
             }
         }
 
@@ -5103,6 +5157,7 @@ void MenuState::createPreviousScoreCard()
                     break;
                 case ScoreType::Stableford:
                 case ScoreType::StablefordPro:
+                case ScoreType::NearestThePin:
                     str += " ";
                     break;
                 }
@@ -5137,6 +5192,23 @@ void MenuState::createPreviousScoreCard()
                         {
                             str += "\n";
                             redStr += "\n" + std::to_string(score);
+                        }
+                        break;
+                    case ScoreType::NearestThePin:
+                        if (score > MaxNTPStrokes)
+                        {
+                            str += "\n";
+                            redStr += "\nF";
+                        }
+                        else if (score != 0)
+                        {
+                            str += "\n-";
+                            redStr += "\n";
+                        }
+                        else
+                        {
+                            str += "\n";
+                            redStr += "\n";
                         }
                         break;
                     }
@@ -5194,6 +5266,9 @@ void MenuState::createPreviousScoreCard()
             str += " ";
         }
         break;
+    case ScoreType::NearestThePin:
+        str += " ";
+        break;
     }
 
     for (const auto& entry : scoreEntries)
@@ -5226,6 +5301,14 @@ void MenuState::createPreviousScoreCard()
             break;
         case ScoreType::Skins:
             str += " - " + std::to_string(entry.roundScore) + " SKINS";
+            break;
+        case ScoreType::NearestThePin:
+        {
+            std::stringstream ss;
+            ss.precision(2);
+            ss << std::fixed << entry.totalDistance;
+            str += " - " + ss.str() + " METRES";
+        }
             break;
         }
     }
@@ -5286,6 +5369,14 @@ void MenuState::createPreviousScoreCard()
             case ScoreType::Skins:
                 str += " - " + std::to_string(entry.roundScore) + " SKINS";
                 break;
+            case ScoreType::NearestThePin:
+            {
+                std::stringstream ss;
+                ss.precision(2);
+                ss << std::fixed << entry.totalDistance;
+                str += " - " + ss.str() + " METRES";
+            }
+            break;
             }
         }
     }

@@ -234,6 +234,7 @@ private:
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
     float m_distanceToHole;
+    float m_NTPDistance; //in NTP mode how far away from the pin the shot landed
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
     bool m_resumedFromSave;
@@ -500,8 +501,9 @@ private:
     {
         Bunker, Scrub, Water,
         PlayerName, HoleScore,
-        Gimme, Eliminated, NTPForfeit,
-        NTPDistance
+        Gimme, 
+        Eliminated, EliminatedStroke,
+        NTPForfeit, NTPDistance
     };
     void showMessageBoard(MessageBoardID, bool special = false);
     void floatingMessage(const std::string&);
@@ -620,6 +622,7 @@ private:
         std::uint8_t client = 0;
         std::uint8_t player = 0;
         std::int32_t score = 0;
+        float distance = 0.f;
     };
     std::vector<StatBoardEntry> m_statBoardScores;
 

@@ -2962,6 +2962,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             leaderboardEntry.client = clientID;
             leaderboardEntry.player = i;
             leaderboardEntry.score = entry.total;
+            leaderboardEntry.distance = entry.totalDistance;
         }
         clientID++;
     }
@@ -2983,6 +2984,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Match:
             case ScoreType::Skins:
                 return b.score < a.score;
+            case ScoreType::NearestThePin:
+                return a.distance < b.distance;
             }
         });
     //LOG("Table Update", cro::Logger::Type::Info);
@@ -3014,6 +3017,18 @@ void GolfState::updateScoreboard(bool updateParDiff)
             }
         });
 
+
+    const auto formatDistance = [](float d)
+        {
+            d *= 100.f;
+            d = std::round(d);
+            d /= 100.f;
+
+            std::stringstream ss;
+            ss.precision(2);
+            ss << std::fixed << d;
+            return ss.str();
+        };
 
     std::size_t page2 = 0;
     static constexpr std::size_t MaxCols = 9;
@@ -3136,7 +3151,17 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 }
                 break;
             case ScoreType::NearestThePin:
-                scoreString += "-";
+                if (s > MaxNTPStrokes)
+                {
+                    redScoreString += "F";
+                }
+                else
+                {
+                    if (s != 0)
+                    {
+                        scoreString += "-";
+                    }
+                }
                 break;
             }
         }
@@ -3204,7 +3229,17 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         }
                         break;
                     case ScoreType::NearestThePin:
-                        scoreString += "-";
+                        if (s > MaxNTPStrokes)
+                        {
+                            redScoreString += "F";
+                        }
+                        else
+                        {
+                            if (s != 0)
+                            {
+                                scoreString += "-";
+                            }
+                        }
                         break;
                     }
                 }
@@ -3250,10 +3285,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
     {
         if (m_sharedData.scoreType == ScoreType::NearestThePin)
         {
-            std::stringstream ss;
-            ss.precision(2);
-            ss << scores[i].frontNineDistance;
-            totalString += "\n" + ss.str();
+            totalString += "\n" + formatDistance(scores[i].frontNineDistance);
         }
         else
         {
@@ -3331,7 +3363,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             }
             break;
         case ScoreType::NearestThePin:
-            totalString += " Metres";
+            totalString += " METRES";
             break;
         }
     }
@@ -3385,10 +3417,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         {
             if (m_sharedData.scoreType == ScoreType::NearestThePin)
             {
-                std::stringstream ss;
-                ss.precision(2);
-                ss << scores[i].backNineDistance;
-                totalString += "\n" + ss.str();
+                totalString += "\n" + formatDistance(scores[i].backNineDistance);
             }
             else
             {
@@ -3482,7 +3511,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 }
                 break;
             case ScoreType::NearestThePin:
-                totalString += " Metres";
+                totalString += " METRES";
                 break;
             }
         }
@@ -3814,6 +3843,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
     default: break;
     case MessageBoardID::HoleScore:
     case MessageBoardID::Gimme:
+    case MessageBoardID::EliminatedStroke:
     {
         std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
         auto overPar = score - m_holeData[m_currentHole].par;
@@ -4157,9 +4187,13 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
     case MessageBoardID::NTPDistance:
         if (messageType == MessageBoardID::NTPDistance)
         {
+            std::stringstream ss;
+            ss.precision(2);
+            ss << std::fixed << m_NTPDistance << "m";
+
             textEnt.getComponent<cro::Text>().setString("Nearest The Pin");
             textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
-            textEnt3.getComponent<cro::Text>().setString("Distance: " + std::to_string(glm::length(m_holeData[m_currentHole].pin/*hmm, we need to fetch the ball's position from somewhere*/)));
+            textEnt3.getComponent<cro::Text>().setString("Distance: " + ss.str());
         }
         else
         {

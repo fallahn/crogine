@@ -94,7 +94,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
                 && data.terrain != TerrainID::Hole)
                 || data.terrain == TerrainID::Stone)
             {
-                auto l2 = glm::length(data.position - m_holeData[m_currentHole].pin);
+                auto l2 = glm::length2(data.position - m_holeData[m_currentHole].pin);
                 if (l2 != 0)
                 {
                     m_playerInfo[0].distanceScore[m_currentHole] = std::sqrt(l2);
@@ -209,7 +209,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
             break;
         case ScoreType::NearestThePin:
             m_playerInfo[0].distanceScore[m_currentHole] = m_holeData[m_currentHole].distanceToPin;
-            m_playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes;
+            m_playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes + 1;
             break;
         }
     }
