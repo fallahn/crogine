@@ -278,6 +278,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //do this first so scores are reset before scoreboard
     //is first created.
+    std::int32_t playerCount = 0;
     std::int32_t clientCount = 0;
     std::int32_t cpuCount = 0;
     std::uint8_t startLives = StartLives;
@@ -297,12 +298,19 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     cpuCount++;
                 }
                 startLives = std::max(startLives - 1, 2);
+
+                playerCount++;
             }
         }
     }
 
     //this initial value doesn't come from the server
     //until that player takes their turn, so we set it here
+    if (playerCount == 4)
+    {
+        startLives++;
+    }
+
     if (sd.scoreType == ScoreType::Elimination)
     {
         for (auto& c : sd.connectionData)
@@ -5599,11 +5607,25 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     if (localPlayer
         && isCPU)
     {
+        const auto getTargetOffset = [&](glm::vec3 t)
+            {
+                if (m_sharedData.scoreType == ScoreType::NearestThePin)
+                {
+                    auto o = glm::normalize(player.position - t) * 0.12f;
+                    auto temp = o.x;
+                    o.x = -o.z;
+                    o.z = temp;
+                    o *= (cro::Util::Random::value(0, 1) == 0) ? -1.f : 1.f;
+                    return o;
+                }
+                return glm::vec3(0.f);
+            };
+
         //if the CPU is smart enough always go for the hole if we can
         if (m_cpuGolfer.getSkillIndex() > 3)
         {
             //fallback is used when repeatedly launching the ball into the woods...
-            m_cpuGolfer.activate(clubTarget, midTarget, m_holeData[m_currentHole].puttFromTee);
+            m_cpuGolfer.activate(clubTarget + getTargetOffset(clubTarget), midTarget + getTargetOffset(midTarget), m_holeData[m_currentHole].puttFromTee);
         }
 
         else
@@ -5621,20 +5643,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
             if (targetAngle < m_inputParser.getMaxRotation())
             {
-                m_cpuGolfer.activate(clubTarget, midTarget, m_holeData[m_currentHole].puttFromTee);
+                m_cpuGolfer.activate(clubTarget + getTargetOffset(clubTarget), midTarget + getTargetOffset(midTarget), m_holeData[m_currentHole].puttFromTee);
             }
             else
             {
                 //aim for whichever is closer (target or pin)
                 //if (glm::length2(target - player.position) < glm::length2(m_holeData[m_currentHole].pin - player.position))
                 {
-                    if (m_sharedData.scoreType == ScoreType::NearestThePin)
-                    {
-                        //don't aim for the hole, just close by
-                        target -= glm::normalize(targetPoint) * 0.082f;
-                    }
-
-                    m_cpuGolfer.activate(target, midTarget, m_holeData[m_currentHole].puttFromTee);
+                    m_cpuGolfer.activate(target + getTargetOffset(target), midTarget + getTargetOffset(midTarget), m_holeData[m_currentHole].puttFromTee);
                 }
                 /*else
                 {

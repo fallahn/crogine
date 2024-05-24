@@ -65,8 +65,8 @@ source distribution.
 
 static inline constexpr std::int32_t CrowdDensityCount = 4;
 //decreased for each additional player to a minimum of 2
-//so max is actually 5 because we always have at least 2 players
-static inline constexpr std::uint8_t StartLives = 7;
+//so max is actually 4 because we always have at least 2 players
+static inline constexpr std::uint8_t StartLives = 6;
 static inline constexpr std::uint8_t MaxNTPStrokes = 2; //nearest the pin
 
 static constexpr float MaxBallRadius = 0.07f;

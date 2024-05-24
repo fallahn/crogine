@@ -1386,6 +1386,12 @@ void GolfState::initScene()
         }
     }
 
+    //fudgenstein
+    if (m_playerInfo.size() == 4)
+    {
+        startLives++;
+    }
+
     if (m_sharedData.scoreType == ScoreType::Elimination)
     {
         //store the number of lives in the skins

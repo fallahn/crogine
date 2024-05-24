@@ -5273,7 +5273,14 @@ void MenuState::createPreviousScoreCard()
 
     for (const auto& entry : scoreEntries)
     {
-        str += "\n" + std::to_string(entry.totalFront);
+        if (m_sharedData.scoreType == ScoreType::NearestThePin)
+        {
+            str += "\n ";
+        }
+        else
+        {
+            str += "\n" + std::to_string(entry.totalFront);
+        }
 
         switch (m_sharedData.scoreType)
         {
@@ -5307,7 +5314,7 @@ void MenuState::createPreviousScoreCard()
             std::stringstream ss;
             ss.precision(2);
             ss << std::fixed << entry.totalDistance;
-            str += " - " + ss.str() + " METRES";
+            str += ss.str() + " METRES";
         }
             break;
         }
@@ -5336,7 +5343,14 @@ void MenuState::createPreviousScoreCard()
 
         for (const auto& entry : scoreEntries)
         {
-            str += "\n" + std::to_string(entry.totalBack);
+            if (m_sharedData.scoreType == ScoreType::NearestThePin)
+            {
+                str += "\n ";
+            }
+            else
+            {
+                str += "\n" + std::to_string(entry.totalBack);
+            }
 
             switch (m_sharedData.scoreType)
             {
@@ -5374,7 +5388,7 @@ void MenuState::createPreviousScoreCard()
                 std::stringstream ss;
                 ss.precision(2);
                 ss << std::fixed << entry.totalDistance;
-                str += " - " + ss.str() + " METRES";
+                str += ss.str() + " METRES";
             }
             break;
             }
