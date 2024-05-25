@@ -341,7 +341,7 @@ GameController::DSEffect GameController::DSEffect::createFeedback(std::uint8_t p
     std::uint32_t forceZones = 0u;
     std::uint16_t activeZones = 0u;
 
-    for (int i = position; i < 10u; i++)
+    for (auto i = position; i < 10u; i++)
     {
         forceZones |= std::uint32_t(forceValue << (3 * i));
         activeZones |= std::uint16_t(1 << i);
@@ -504,12 +504,12 @@ GameController::DSEffect GameController::DSEffect::createMultiVibration(const st
     }
 
 
-    retVal.params[0] = (byte)((activeZones >> 0) & 0xff);
-    retVal.params[1] = (byte)((activeZones >> 8) & 0xff);
-    retVal.params[2] = (byte)((strengthZones >> 0) & 0xff);
-    retVal.params[3] = (byte)((strengthZones >> 8) & 0xff);
-    retVal.params[4] = (byte)((strengthZones >> 16) & 0xff);
-    retVal.params[5] = (byte)((strengthZones >> 24) & 0xff);
+    retVal.params[0] = std::uint8_t((activeZones >> 0) & 0xff);
+    retVal.params[1] = std::uint8_t((activeZones >> 8) & 0xff);
+    retVal.params[2] = std::uint8_t((strengthZones >> 0) & 0xff);
+    retVal.params[3] = std::uint8_t((strengthZones >> 8) & 0xff);
+    retVal.params[4] = std::uint8_t((strengthZones >> 16) & 0xff);
+    retVal.params[5] = std::uint8_t((strengthZones >> 24) & 0xff);
     //retVal.params[6] = 0;
     //retVal.params[7] = 0;
     retVal.params[8] = frequency;
