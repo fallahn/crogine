@@ -120,33 +120,87 @@ namespace cro
             DSTriggerBoth  = DSTriggerLeft | DSTriggerRight
         };
 
-        //NOTE that A/B variants appear to do nothing unless
-        //the relative values are set in the DSEffect struct
         enum
         {
-            DSModeOff     = 0x00,
-            DSModeRigid   = 0x01,
-            DSModePulse   = 0x02,
-            DSModeRigidA  = 0x01 | 0x20,
-            DSModeRigidB  = 0x01 | 0x04,
-            DSModeRigidAB = 0x01 | 0x04 | 0x20,
-            DSModePulseA  = 0x02 | 0x20,
-            DSModePulseB  = 0x02 | 0x04,
-            DSModePulseAB = 0x02 | 0x04 | 0x20
+            DSModeOff            = 0x05,
+            DSModeFeedback       = 0x21,
+            DSModeWeapon         = 0x25,
+            DSModeVibrate        = 0x26,
+
+            DSModeFeedbackSimple = 0x01,
+            DSModeWeaponSimple   = 0x02,
+            DSModeVibrateSimple  = 0x06
         };
 
-        struct DSEffect final
+        /*!
+        \brief Used to supply effect parameters to DualSense trigger effects
+        */
+        struct CRO_EXPORT_API DSEffect final
         {
-            std::uint8_t startResistance = 0;
-            std::uint8_t effectForce = 0;
-            std::uint8_t rangeForce = 0;
-            std::uint8_t nearReleaseStrength = 0;
-            std::uint8_t middleReleaseStrength = 0;
-            std::uint8_t pressedStrength = 0;
-            std::uint8_t actuationFrequency = 0;
-
             //DSMode enum
-            std::uint8_t mode = 0;
+            std::uint8_t mode = DSModeOff;
+
+            //params vary based on the above mode
+            //so factory functions are provided for
+            //creating a variety of presets (below)
+            std::array<std::uint8_t, 10> params = {};
+
+            DSEffect() { std::fill(params.begin(), params.end(), 0); }
+            explicit DSEffect(std::uint8_t dsMode) : mode(dsMode) { std::fill(params.begin(), params.end(), 0); }
+
+            /*!
+            \brief Feedback effects resist movement atfer a given position
+            \param position Value between 0-9 at which to start resisting movement
+            \param strength The amount of resistance to apply. 0-8
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createFeedback(std::uint8_t position, std::uint8_t strength);
+
+            /*!
+            \brief Weapon effects resist movement between the given start and end position.
+            This is usually used to emulate the trigger of a gun for example.
+            \param startPosition The position at which the effect starts. Must be between 2-7
+            \param endPosition The position at which the effect ends. Must be between startPosition +1
+            and 8
+            \param strength The strength of the resistance to apply. 0-8
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createWeapon(std::uint8_t startPosition, std::uint8_t endPosition, std::uint8_t strength);
+
+            /*!
+            \brief Creates a vibration effect when the trigger is pressed beyond the given position
+            \param position The starting point for the effect. 0-9
+            \param strength The strength or amplitude of the vibration. 0-8
+            \param frequency The frequency of the vibration in hertz
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createVibration(std::uint8_t position, std::uint8_t strength, std::uint8_t frequency);
+
+            /*!
+            \brief Creates 10 regions of resistance when pressing the trigger.
+            \param values An array of 10 values between 0-8 representing the strength of each region
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createMultiFeedback(const std::array<std::uint8_t, 10u>& values);
+
+            /*!
+            \brief Creates a linear range of resistance from the given start position to the given
+            end position interpolated between the given start strength and the given end strength
+            \param startPosition The starting position of the effect 0-8
+            \param endPosition The end point of the effect (startPosition+1) - 9
+            \param startStrength The amount of resistance at the start point 1-8
+            \param endStrength The amount of resistance at the endPoint 1-8
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createSlopeFeedback(std::uint8_t startPosition, std::uint8_t endPosition, std::uint8_t startStrength, std::uint8_t endStrength);
+
+            /*!
+            \brief Creates a vibration effect of 10 varying strengths at the same frequency
+            \param strengths An array of 10 values representing the 10 ampltude/strengths. Values must be 0-8
+            \param frquency The frequency of the effect in hertz
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createMultiVibration(const std::array<std::uint8_t, 10u>& strengths, std::uint8_t frequency);
         };
 
         static constexpr std::int16_t AxisMax = 32767;

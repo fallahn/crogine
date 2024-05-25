@@ -96,9 +96,7 @@ InteriorMappingState::InteriorMappingState(cro::StateStack& stack, cro::State::C
                     ImGui::Text("Using controller %d", idx);
                     if (ImGui::Button("Apply Effect"))
                     {
-                        cro::GameController::DSEffect s;
-                        s.mode = cro::GameController::DSModePulse;
-                        cro::GameController::applyDSTriggerEffect(idx, cro::GameController::DSTriggerBoth, s);
+                        cro::GameController::applyDSTriggerEffect(idx, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createMultiVibration({0,0,8,8,8,8,8,4,4,0}, 25));
                     }
                     ImGui::SameLine();
                     if (ImGui::Button("Reset"))
