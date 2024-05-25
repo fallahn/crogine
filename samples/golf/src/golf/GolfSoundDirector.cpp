@@ -178,6 +178,11 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/ambience/crowd_clear_throat.wav",
         "assets/golf/sound/ambience/crowd_cough.wav",
         "assets/golf/sound/ambience/crowd_sigh.wav",
+
+        "assets/golf/sound/kudos/ntp01.wav",
+        "assets/golf/sound/kudos/ntp02.wav",
+        "assets/golf/sound/kudos/ntp03.wav",
+        "assets/golf/sound/kudos/ntp04.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -606,6 +611,14 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             if (data.type == SceneEvent::TransitionComplete)
             {
                 m_newHole = true;
+            }
+            else if (data.type == SceneEvent::TransitionStart
+                && data.data != 0) //current hole
+            {
+                if (m_sharedData.scoreType == ScoreType::NearestThePin)
+                {
+                    playSound(cro::Util::Random::value(AudioID::NTP01, AudioID::NTP04), glm::vec3(0.f));
+                }
             }
             else if (data.type == SceneEvent::PlayerIdle)
             {

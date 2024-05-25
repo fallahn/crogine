@@ -1722,6 +1722,7 @@ void GolfState::startFlyBy()
 
     auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
     msg->type = SceneEvent::TransitionStart;
+    msg->data = static_cast<std::int32_t>(m_currentHole);
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
