@@ -349,6 +349,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     registerDebugCommands(); //includes cubemap creation
 
     cro::App::getInstance().resetFrameTime();
+
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0,1,2));
+    }
 }
 
 GolfState::~GolfState()
@@ -356,6 +361,11 @@ GolfState::~GolfState()
 #ifdef USE_GNS
     Social::endStats();
 #endif
+
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
+    }
 }
 
 //public

@@ -809,6 +809,11 @@ void GolfState::toggleFreeCam()
 
         m_freecamMenuEnt.getComponent<cro::Callback>().active = true; //this does the show/hide animation
         enableDOF(m_useDOF);
+
+        for (auto i = 0; i < 4; ++i)
+        {
+            cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createFeedback(0, 1));
+        }
     }
     else
     {
@@ -850,7 +855,12 @@ void GolfState::toggleFreeCam()
                 m_freecamMenuEnt.getComponent<cro::Callback>().active = false; //this does the show/hide animation
 
             };
-            enableDOF(false);
+        enableDOF(false);
+
+        for (auto i = 0; i < 4; ++i)
+        {
+            cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
+        }
     }
 
     Activity a;

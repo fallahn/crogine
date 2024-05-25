@@ -295,6 +295,11 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });
     Social::getMonthlyChallenge().refresh();
 
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
+    }
+
 #ifdef CRO_DEBUG_
     m_sharedData.inputBinding.clubset = ClubID::FullSet;
     //registerWindow([&]()

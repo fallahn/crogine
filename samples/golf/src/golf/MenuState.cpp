@@ -172,6 +172,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f),
     m_scrollSpeed           (1.f)
 {
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
+    }
+
     checkCommandLine = false;
     sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;

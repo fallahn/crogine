@@ -94,11 +94,88 @@ InteriorMappingState::InteriorMappingState(cro::StateStack& stack, cro::State::C
                 if (cro::GameController::hasPSLayout(idx))
                 {
                     ImGui::Text("Using controller %d", idx);
-                    if (ImGui::Button("Apply Effect"))
+
+                    ImGui::BeginTabBar("Tabs");
+                    if (ImGui::BeginTabItem("Resist"))
                     {
-                        cro::GameController::applyDSTriggerEffect(idx, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createMultiVibration({0,0,8,8,8,8,8,4,4,0}, 25));
+                        static std::int32_t position = 0;
+                        static std::int32_t strength = 0;
+
+                        if (ImGui::InputInt("Position", &position))
+                        {
+                            position = std::clamp(position, 0, 9);
+                        }
+
+                        if (ImGui::InputInt("Strength", &strength))
+                        {
+                            strength = std::clamp(strength, 0, 8);
+                        }
+
+                        if (ImGui::Button("Apply Effect"))
+                        {
+                            cro::GameController::applyDSTriggerEffect(idx, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createFeedback(position, strength));
+                        }
+                        ImGui::EndTabItem();
                     }
-                    ImGui::SameLine();
+                    if (ImGui::BeginTabItem("Trigger"))
+                    {
+                        static std::int32_t positionA = 0;
+                        static std::int32_t positionB = 0;
+                        static std::int32_t strength = 0;
+
+                        if (ImGui::InputInt("Start", &positionA))
+                        {
+                            positionA = std::clamp(positionA, 2, 7);
+                        }
+
+                        if (ImGui::InputInt("End", &positionB))
+                        {
+                            positionB = std::clamp(positionB, positionA+1, 8);
+                        }
+
+                        if (ImGui::InputInt("Strength", &strength))
+                        {
+                            strength = std::clamp(strength, 0, 8);
+                        }
+
+                        if (ImGui::Button("Apply Effect"))
+                        {
+                            cro::GameController::applyDSTriggerEffect(idx, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(positionA, positionB, strength));
+                        }
+
+                        ImGui::EndTabItem();
+                    }
+                    if (ImGui::BeginTabItem("Vibrate"))
+                    {
+                        static std::int32_t position = 0;
+                        static std::int32_t strength = 0;
+                        static std::int32_t freq = 0;
+
+                        if (ImGui::InputInt("Position", &position))
+                        {
+                            position = std::clamp(position, 0, 9);
+                        }
+
+                        if (ImGui::InputInt("Strength", &strength))
+                        {
+                            strength = std::clamp(strength, 0, 8);
+                        }
+
+                        if (ImGui::InputInt("Freq", &freq))
+                        {
+                            freq = std::clamp(freq, 0, 255);
+                        }
+
+                        if (ImGui::Button("Apply Effect"))
+                        {
+                            cro::GameController::applyDSTriggerEffect(idx, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createVibration(position, strength, freq));
+                        }
+
+                        ImGui::EndTabItem();
+                    }
+                    ImGui::EndTabBar();
+
+                    
                     if (ImGui::Button("Reset"))
                     {
                         cro::GameController::applyDSTriggerEffect(idx, cro::GameController::DSTriggerBoth, {});
