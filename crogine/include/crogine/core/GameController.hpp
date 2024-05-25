@@ -113,6 +113,42 @@ namespace cro
             PaddleR5 = SDL_CONTROLLER_BUTTON_PADDLE3,
         };
 
+        enum
+        {
+            DSTriggerLeft  = 0x1,
+            DSTriggerRight = 0x2,
+            DSTriggerBoth  = DSTriggerLeft | DSTriggerRight
+        };
+
+        //NOTE that A/B variants appear to do nothing unless
+        //the relative values are set in the DSEffect struct
+        enum
+        {
+            DSModeOff     = 0x00,
+            DSModeRigid   = 0x01,
+            DSModePulse   = 0x02,
+            DSModeRigidA  = 0x01 | 0x20,
+            DSModeRigidB  = 0x01 | 0x04,
+            DSModeRigidAB = 0x01 | 0x04 | 0x20,
+            DSModePulseA  = 0x02 | 0x20,
+            DSModePulseB  = 0x02 | 0x04,
+            DSModePulseAB = 0x02 | 0x04 | 0x20
+        };
+
+        struct DSEffect final
+        {
+            std::uint8_t startResistance = 0;
+            std::uint8_t effectForce = 0;
+            std::uint8_t rangeForce = 0;
+            std::uint8_t nearReleaseStrength = 0;
+            std::uint8_t middleReleaseStrength = 0;
+            std::uint8_t pressedStrength = 0;
+            std::uint8_t actuationFrequency = 0;
+
+            //DSMode enum
+            std::uint8_t mode = 0;
+        };
+
         static constexpr std::int16_t AxisMax = 32767;
         static constexpr std::int16_t AxisMin = -32768;
 
@@ -263,6 +299,19 @@ namespace cro
         \param colour A cro::Colour containing the values with which to set the LED
         */
         static void setLEDColour(std::int32_t controllerIndex, cro::Colour colour);
+
+        /*!
+        \brief Applies a trigger effect to the given controller if it is a DualSense
+        compatible controller else does nothing.
+        \param controllerIndex Which controller to apply the effect to
+        \param triggers DSTrigger flags for which triggers to affect
+        \param settings DSEffect struct containing the parameters for the desired effect.
+        Note that a default constructed DSEEffect will reset the trigger state to none
+        \returns true if the effect was applied else false if the given controller index
+        was not valid or the controller is not a DualSense controller
+        */
+        static bool applyDSTriggerEffect(std::int32_t controllerIndex, std::int32_t triggers, const DSEffect& settings);
+
 
         /*!
         \brief Maximum number of game controllers which may be connected

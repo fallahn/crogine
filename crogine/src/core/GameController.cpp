@@ -288,3 +288,38 @@ void GameController::setLEDColour(std::int32_t controllerIndex, cro::Colour colo
         SDL_GameControllerSetLED(controller, colour.getRedByte(), colour.getGreenByte(), colour.getBlueByte());
     }
 }
+
+bool GameController::applyDSTriggerEffect(std::int32_t controllerIndex, std::int32_t triggers, const DSEffect& settings)
+{
+    struct DataPacket final
+    {
+        std::array<std::uint8_t, 3> header = { 0x02, 0x0c, 0x40 };
+        std::array<std::uint8_t, 67> data = {};
+
+        DataPacket() { std::fill(data.begin(), data.end(), 0); }
+    };
+
+    if (auto* controller = SDL_GameControllerFromInstanceID(controllerIndex); controller)
+    {
+        if (SDL_GameControllerGetType(controller) == SDL_CONTROLLER_TYPE_PS5)
+        {
+            DataPacket dataPacket;
+
+            if (triggers & DSTriggerRight)
+            {
+                dataPacket.data[8] = settings.mode;
+                std::memcpy(&dataPacket.data[9], &settings, 6);
+                dataPacket.data[17] = settings.actuationFrequency;
+            }
+            if (triggers & DSTriggerLeft)
+            {
+                dataPacket.data[19] = settings.mode;
+                std::memcpy(&dataPacket.data[20], &settings, 6);
+                dataPacket.data[27] = settings.actuationFrequency;
+            }
+            return SDL_GameControllerSendEffect(controller, &dataPacket.header[1], sizeof(DataPacket) - 1) == 0;
+        }
+        return false;
+    }
+    return false;
+}

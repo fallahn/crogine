@@ -25,189 +25,6 @@
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 
-namespace ds
-{
-    struct Trigger final
-    {
-        enum
-        {
-            Left, Right,
-
-            Count
-        };
-    };
-
-    struct TriggerMask final
-    {
-        static constexpr std::uint8_t Left  = 0x1;
-        static constexpr std::uint8_t Right = 0x2;
-        static constexpr std::uint8_t Both  = Left | Right;
-    };
-
-    struct Mode final
-    {
-        enum
-        {
-            Off,
-            Feedback,
-            Weapon,
-            Vibrate,
-            MultiPositionFeedback,
-            SlopFeedback,
-            MultiPositionVibrate
-        };
-    };
-
-    //sets all values to zero
-    struct ParamReset final
-    {
-        std::uint8_t padding[48] = { 0 };
-    };
-
-    //feedback parameters
-    //trigger pushes back against the player
-    //with stiffness applied at the provided position
-    struct ParamFeedback final
-    {
-        std::uint8_t position    =   0; //0-9 point at which push back starts to happen
-        std::uint8_t strength    =   0; //0-8 strength of push back
-        std::uint8_t padding[46] = { 0 };
-    };
-
-    //weapon parameters
-    //make the trigger act like a gun trigger
-    struct ParamWeapon final
-    {
-        std::uint8_t startPosition =   0; //2-7 start of trigger stiffness
-        std::uint8_t endPosition   =   0; //startPosition + (1-8) end of trigger stiffness
-        std::uint8_t strength      =   0; //0-8 strength of trigger push back
-        std::uint8_t padding[45]   = { 0 };
-    };
-
-    //vibration parameters
-    struct ParamVibrate final
-    {
-        std::uint8_t position    =   0; //0-9 position of trigger to start vibration
-        std::uint8_t strength    =   0; //0-8 stength of vibration
-        std::uint8_t frequency   =   0; //0-255 vibration frequency in hertz
-        std::uint8_t padding[45] = { 0 };
-    };
-
-    static constexpr std::int32_t NumFeedbackPositions = 10;
-
-    //set the strength of feedback at positions 0-NumFeedbackPositions
-    struct ParamMultiPosFeedback final
-    {
-        std::uint8_t strengths[NumFeedbackPositions] = { 0 };
-        std::uint8_t padding[38]                     = { 0 };
-    };
-
-
-    //parameters for slope feedback
-    //slope feedback has 3 points at which the feedback strength changes
-    struct ParamSlopeFeedback final
-    {
-        std::uint8_t startPosition =   0; //0-endPosition position at which strength starts changing
-        std::uint8_t endPosition   =   0; //startPosition + (1-9) positions at which strength stops changing
-        std::uint8_t startStrength =   0; //0-8 strength at start position
-        std::uint8_t endStrength   =   0; //0-8 strength at end position
-        std::uint8_t padding[44]   = { 0 };
-    };
-
-    //paramters for vibration with multiple points
-    struct ParamMultiPosVibrate final
-    {
-        std::uint8_t frequency                       =   0; //0-255 frequency of vibration
-        std::uint8_t strengths[NumFeedbackPositions] = { 0 }; //0-8 strength at each position
-        std::uint8_t padding[37]                     = { 0 };
-    };
-
-    //union of all param types
-    union EffectParams
-    {
-        ParamReset reset = {};
-        ParamFeedback feedback;
-        ParamWeapon weapon;
-        ParamVibrate vibrate;
-        ParamMultiPosFeedback multiPositionFeedback;
-        ParamSlopeFeedback slopeFeedback;
-        ParamMultiPosVibrate multiPositionVibrate;
-    };
-
-    //effect struct for mode and params
-    struct Effect final
-    {
-        std::uint8_t mode = 0;
-        const std::uint8_t Padding[4] = { 0 };
-        EffectParams parameters;
-    };
-    
-
-    //effect packet to send to the controller
-    struct EffectPacket final
-    {
-        std::uint8_t triggerMask = 0; //set to TriggerMask::Left, Right or Both
-        const std::uint8_t Padding[9] = { 0 };
-
-        Effect effects[Trigger::Count] = {};
-    };
-}
-
-
-typedef struct
-{
-    Uint8 ucEnableBits1;              /* 0 */
-    Uint8 ucEnableBits2;              /* 1 */
-    Uint8 ucRumbleRight;              /* 2 */
-    Uint8 ucRumbleLeft;               /* 3 */
-    Uint8 ucHeadphoneVolume;          /* 4 */
-    Uint8 ucSpeakerVolume;            /* 5 */
-    Uint8 ucMicrophoneVolume;         /* 6 */
-    Uint8 ucAudioEnableBits;          /* 7 */
-    Uint8 ucMicLightMode;             /* 8 */
-    Uint8 ucAudioMuteBits;            /* 9 */
-    Uint8 rgucRightTriggerEffect[11]; /* 10 */
-    Uint8 rgucLeftTriggerEffect[11];  /* 21 */
-    Uint8 rgucUnknown1[6];            /* 32 */
-    Uint8 ucLedFlags;                 /* 38 */
-    Uint8 rgucUnknown2[2];            /* 39 */
-    Uint8 ucLedAnim;                  /* 41 */
-    Uint8 ucLedBrightness;            /* 42 */
-    Uint8 ucPadLights;                /* 43 */
-    Uint8 ucLedRed;                   /* 44 */
-    Uint8 ucLedGreen;                 /* 45 */
-    Uint8 ucLedBlue;                  /* 46 */
-} DS5EffectsState_t;
-
-std::int32_t trigger_effect = 0;
-static void CyclePS5TriggerEffect(SDL_GameController* gameController)
-{
-    DS5EffectsState_t state;
-
-    /*
-    * Mode
-    * 
-    */
-
-    Uint8 effects[3][11] = {
-        /* Clear trigger effect */
-        { 0x05, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        /* Constant resistance across entire trigger pull */
-        { 0x01, 0, 110, 0, 0, 0, 0, 0, 0, 0, 0 },
-        /* Resistance and vibration when trigger is pulled */
-        { 0x06, 15, 63, 128, 0, 0, 0, 0, 0, 0, 0 },
-    };
-
-    trigger_effect = (trigger_effect + 1) % SDL_arraysize(effects);
-
-    SDL_zero(state);
-    state.ucEnableBits1 |= (0x04 | 0x08); /* Modify right and left trigger effect respectively */
-    SDL_memcpy(state.rgucRightTriggerEffect, effects[trigger_effect], sizeof(effects[trigger_effect]));
-    SDL_memcpy(state.rgucLeftTriggerEffect, effects[trigger_effect], sizeof(effects[trigger_effect]));
-    SDL_GameControllerSendEffect(gameController, &state, sizeof(state));
-}
-
-
 
 namespace
 {
@@ -263,32 +80,30 @@ InteriorMappingState::InteriorMappingState(cro::StateStack& stack, cro::State::C
         {
             if (ImGui::Begin("Controller"))
             {
-                if (cro::GameController::hasPSLayout(0))
+                std::int32_t idx = 0;
+                for (auto i = 0; i < 4; ++i)
                 {
+                    if (cro::GameController::hasPSLayout(i))
+                    {
+                        idx = 0;
+                        break;
+                    }
+                }
+
+
+                if (cro::GameController::hasPSLayout(idx))
+                {
+                    ImGui::Text("Using controller %d", idx);
                     if (ImGui::Button("Apply Effect"))
                     {
-                        if (auto* controller = SDL_GameControllerFromInstanceID(0); controller)
-                        {
-                            //ds::EffectPacket packet;
-                            //packet.triggerMask = 0x04 | 0x08;// ds::TriggerMask::Left;
-                            //packet.effects[ds::Trigger::Left].mode = ds::Mode::Vibrate;
-                            //packet.effects[ds::Trigger::Left].parameters.vibrate.frequency = 20;
-                            //packet.effects[ds::Trigger::Left].parameters.vibrate.position = 5;
-                            //packet.effects[ds::Trigger::Left].parameters.vibrate.strength = 8;
-
-                            //assert(SDL_GameControllerGetType(controller) == SDL_CONTROLLER_TYPE_PS5);
-
-                            //auto result = SDL_GameControllerSendEffect(controller, &packet, sizeof(ds::EffectPacket));
-                            //if (result == -1)
-                            //{
-                            //    LogI << "Controller doesn't support effect" << std::endl;
-                            //}
-                            CyclePS5TriggerEffect(controller);
-                        }
-                        else
-                        {
-                            LogI << "Controller is nullptr" << std::endl;
-                        }
+                        cro::GameController::DSEffect s;
+                        s.mode = cro::GameController::DSModePulse;
+                        cro::GameController::applyDSTriggerEffect(idx, cro::GameController::DSTriggerBoth, s);
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Reset"))
+                    {
+                        cro::GameController::applyDSTriggerEffect(idx, cro::GameController::DSTriggerBoth, {});
                     }
                 }
                 else
