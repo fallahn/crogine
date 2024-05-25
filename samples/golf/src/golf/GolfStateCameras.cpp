@@ -1038,6 +1038,26 @@ void GolfState::togglePuttingView(bool putt)
     m_cameras[CameraID::Player].getComponent<cro::Callback>().getUserData<float>() = PuttZoomSpeed;
 
 
+    //display the putting grid
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::SlopeIndicator;
+    cmd.action = [putt](cro::Entity e, float)
+        {
+            if (putt)
+            {
+                e.getComponent<cro::Model>().setHidden(!putt);
+                e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
+            }
+            else
+            {
+                e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
+            }
+            e.getComponent<cro::Callback>().active = true;
+        };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+
 
     //hide player avatar
     if (m_activeAvatar)
