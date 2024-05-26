@@ -35,12 +35,14 @@ source distribution.
 
 using namespace cro;
 
-DynamicAudioStream::DynamicAudioStream()
+DynamicAudioStream::DynamicAudioStream(std::uint32_t channelCount, std::uint32_t samplerate)
     : m_bufferedStream(nullptr)
 {
+    CRO_ASSERT(channelCount != 0 && channelCount < 3, "Only Mono or Stereo streams are supported");
+
     if (AudioRenderer::isValid())
     {
-        setID(AudioRenderer::getImpl<Detail::OpenALImpl>()->requestNewBufferableStream(&m_bufferedStream));
+        setID(AudioRenderer::getImpl<Detail::OpenALImpl>()->requestNewBufferableStream(&m_bufferedStream, channelCount, samplerate));
     }
 }
 
@@ -81,8 +83,8 @@ DynamicAudioStream& DynamicAudioStream::operator=(DynamicAudioStream&& other) no
 }
 
 //public
-void DynamicAudioStream::updateBuffer(const std::vector<std::uint8_t>& data)
+void DynamicAudioStream::updateBuffer(const int16_t* data, std::int32_t sampleCount)
 {
     CRO_ASSERT(m_bufferedStream, "");
-    m_bufferedStream->updateBuffer(data);
+    m_bufferedStream->updateBuffer(data, sampleCount);
 }

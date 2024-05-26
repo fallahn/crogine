@@ -95,7 +95,7 @@ namespace cro
             void deleteBuffer(std::int32_t) override;
 
             std::int32_t requestNewStream(const std::string&) override;
-            std::int32_t requestNewBufferableStream(BufferedStreamLoader** dst);
+            std::int32_t requestNewBufferableStream(BufferedStreamLoader** dst, std::uint32_t channels, std::uint32_t sampleRate);
             void deleteStream(std::int32_t) override;
 
             std::int32_t requestAudioSource(std::int32_t, bool) override;

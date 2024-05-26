@@ -57,6 +57,11 @@ namespace cro
         SoundRecorder& operator = (SoundRecorder&&) = delete;
 
         /*!
+        \brief Refreshes the list of devices
+        */
+        void refreshDeviceList();
+        
+        /*!
         \brief Lists available recording devices
         */
         const std::vector<std::string>& listDevices() const;
@@ -70,7 +75,7 @@ namespace cro
         \brief Attempts to open the device with the given name for recording.
         Use listDevices() to obtain a list of valid name strings
         */
-        bool openDevice(const std::string& device /*TODO set sample rate  and channel count*/);
+        bool openDevice(const std::string& device /*TODO set sample rate and channel count*/);
 
         /*!
         \brief Closes the current recording device or does nthing if no device is open
@@ -97,12 +102,42 @@ namespace cro
         bool isActive() const;
 
         /*!
-        \brief Returns the buffer of currently encoded opus packets
-        \param count Pointer to an int32_t which will be filled with the 
-        *number of packets* (not bytes) contained in the buffer.
-        TODO state packet size etc
+        \brief Resizes and fills the given buffer with opus encoded packets.
+
+        NOTE that this internally calls getPCMData() which will drain the
+        audio buffer, so you should either use just this function or
+        getPCMData() BUT NOT BOTH.
         */
-        const std::uint8_t* getEncodedPackets(std::int32_t* count) const;
+        void getEncodedPackets(std::vector<std::uint8_t>& dst) const;
+
+        /*!
+        \brief Returns a pointer to the raw captured PCM data (if any)
+        \param count Pointer to an int32_t which is filled with the
+        number of samples in the buffer.
+        NOTE that this is internally called by getEncodedPackets()
+        which will drain the audio buffer, so you should either use just
+        this function or getEncodedPackets() BUT NOT BOTH.
+        */
+        const std::int16_t* getPCMData(std::int32_t* count) const;
+
+        /*!
+        \brief Returns the number of audio channels with which the audio
+        will be captured
+        */
+        constexpr std::int32_t getChannelCount() const;
+
+        /*!
+        \brief Returns the samplerate at which the audio will be captured
+        */
+        constexpr std::int32_t getSampleRate() const;
+
+
+        /*!
+        TODO this doesn't really belong here per se, for now we're using it
+        to make sure packet decoding works correctly
+        */
+        std::vector<std::int16_t> decodePacket(const std::vector<std::uint8_t>&) const;
+
 
     private:
 
@@ -113,12 +148,16 @@ namespace cro
         bool m_active;
 
         void* m_encoder;
+        void* m_decoder;
 
         //buffer for PCM captured from device
         mutable std::vector<std::int16_t> m_pcmBuffer;
         mutable std::vector<std::int16_t> m_pcmDoubleBuffer;
         mutable std::uint32_t m_pcmBufferOffset;
         mutable bool m_pcmBufferReady;
+
+        mutable std::vector<std::int16_t> m_opusInBuffer;
+        mutable std::vector<std::uint8_t> m_opusOutBuffer;
 
         void enumerateDevices();
         bool openSelectedDevice();

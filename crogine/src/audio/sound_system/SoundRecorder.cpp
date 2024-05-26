@@ -48,16 +48,27 @@ source distribution.
 
 #define RECORDING_DEVICE static_cast<ALCdevice*>(m_recordingDevice)
 #define OPUS_ENCODER static_cast<OpusEncoder*>(m_encoder)
+#define OPUS_DECODER static_cast<OpusDecoder*>(m_decoder)
 
 using namespace cro;
 
 namespace
 {
     constexpr ALCsizei RECORD_BUFFER_SIZE = 4096;
-    constexpr std::uint32_t PCMBufferSize = 10240; //testing shows we cap either 220 or 441 frames at a time (@60hz)
-    constexpr std::uint32_t PCMBufferWrapSize = PCMBufferSize - (PCMBufferSize / 10); //so we want to wrap our pointer with enough room to spare
-    constexpr std::uint32_t SAMPLE_RATE = 22050;
+
+    //testing shows the capture buffer is directly related to sample rate, eg 480 samples (@60hz) for 24KHz sample rate
+    constexpr std::uint32_t CHANNEL_COUNT = 1;
+    constexpr std::uint32_t SAMPLE_RATE = 24000; //hmm opus doesn't support rates which aren't a multiple of 8000
     constexpr std::uint32_t SAMPLE_SIZE = sizeof(std::uint16_t);
+
+    constexpr std::uint32_t OPUS_FRAME_SIZE = SAMPLE_RATE / 25; //to make sure the buffer aligns with a whole frame this needs to be a multiple of the capture rate
+    constexpr std::uint32_t OPUS_MAX_FRAME_SIZE = OPUS_FRAME_SIZE * 3;
+    constexpr std::uint32_t OPUS_MAX_PACKET_SIZE = 1276 * 3;
+    constexpr std::uint32_t OPUS_BITRATE = 64000;
+
+    constexpr std::uint32_t PCMBufferWrapSize = OPUS_FRAME_SIZE * 10;
+    constexpr std::uint32_t PCMBufferSize = PCMBufferWrapSize + OPUS_MAX_FRAME_SIZE; //our capture buffer has a little space left over, just in case
+
 
     const std::string MissingDevice("No Device Active");
     const std::string DefaultDevice("Default");
@@ -73,12 +84,40 @@ SoundRecorder::SoundRecorder()
     m_recordingDevice   (nullptr),
     m_active            (false),
     m_encoder           (nullptr),
+    m_decoder           (nullptr),
     m_pcmBuffer         (PCMBufferSize),
     m_pcmDoubleBuffer   (PCMBufferSize),
     m_pcmBufferOffset   (0),
-    m_pcmBufferReady    (false)
+    m_pcmBufferReady    (false),
+    m_opusInBuffer      (OPUS_FRAME_SIZE),
+    m_opusOutBuffer     (OPUS_MAX_PACKET_SIZE)
 {
     enumerateDevices();
+
+    std::int32_t err = 0;
+    m_encoder = opus_encoder_create(SAMPLE_RATE, CHANNEL_COUNT, OPUS_APPLICATION_VOIP, &err);
+
+    if (err < 0)
+    {
+        LogE << "Unable to create Opus encoder, err: " << opus_strerror(err) << std::endl;
+        m_encoder = nullptr;
+    }
+    else
+    {
+        err = opus_encoder_ctl(OPUS_ENCODER, OPUS_SET_BITRATE(OPUS_BITRATE));
+        if (err < 0)
+        {
+            LogE << "Failed to set encoder bitrate to " << OPUS_BITRATE << ": " << opus_strerror(err) << std::endl;
+        }
+    }
+
+    //TODO move this to a util somewhere
+    m_decoder = opus_decoder_create(SAMPLE_RATE, CHANNEL_COUNT, &err);
+    if (err < 0)
+    {
+        LogE << "Unable to create Opus decoder, err: " << opus_strerror(err) << std::endl;
+        m_decoder = nullptr;
+    }
 
 #ifdef CRO_DEBUG_
     /*registerWindow([&]() 
@@ -96,9 +135,25 @@ SoundRecorder::~SoundRecorder()
 {
     stop();
     closeDevice();
+
+    if (m_encoder)
+    {
+        opus_encoder_destroy(OPUS_ENCODER);
+    }
+
+    if (m_decoder)
+    {
+        opus_decoder_destroy(OPUS_DECODER);
+    }
 }
 
 //public
+void SoundRecorder::refreshDeviceList()
+{
+    m_deviceList.clear();
+    enumerateDevices();
+}
+
 const std::vector<std::string>& SoundRecorder::listDevices() const
 {
     return m_deviceList;
@@ -187,7 +242,45 @@ bool SoundRecorder::isActive() const
     return m_active;
 }
 
-const std::uint8_t* SoundRecorder::getEncodedPackets(std::int32_t* count) const
+void SoundRecorder::getEncodedPackets(std::vector<std::uint8_t>& dst) const
+{
+    dst.clear();
+
+    if (!m_encoder)
+    {
+        return;
+    }
+
+    std::int32_t pcmCount = 0;
+    if (const auto* data = getPCMData(&pcmCount); data && pcmCount)
+    {
+        //TODO the inital buffer size can be greater than OPUS_FRAME_SIZE
+        //so we want to loop over the incloming data in frame size chunks (or less)
+
+        m_opusInBuffer.resize(pcmCount);
+
+        //opus uses big endian data
+        for (auto i = 0u; i < CHANNEL_COUNT * pcmCount; ++i)
+        {
+            m_opusInBuffer[i] = (data[sizeof(std::int16_t) * i + 1] << 8) | data[sizeof(std::int16_t) * i];
+        }
+
+        auto byteCount = opus_encode(OPUS_ENCODER, m_opusInBuffer.data(), pcmCount, m_opusOutBuffer.data(), OPUS_MAX_PACKET_SIZE);
+        if (byteCount > 0)
+        {
+            dst.resize(byteCount);
+            std::memcpy(dst.data(), m_opusOutBuffer.data(), byteCount);
+        }
+        else
+        {
+            LogI << opus_strerror(byteCount) << std::endl;
+        }
+    }
+    
+    return;
+}
+
+const std::int16_t* SoundRecorder::getPCMData(std::int32_t* count) const
 {
     if (m_recordingDevice && m_active)
     {
@@ -206,9 +299,9 @@ const std::uint8_t* SoundRecorder::getEncodedPackets(std::int32_t* count) const
 
             //return the largest initial buffer
             m_pcmDoubleBuffer.swap(m_pcmBuffer);
-            *count = static_cast<std::int32_t>(PCMBufferWrapSize + m_pcmBufferOffset);
+            *count = static_cast<std::int32_t>((PCMBufferWrapSize + m_pcmBufferOffset));
             m_pcmBufferOffset = 0;
-            return reinterpret_cast<std::uint8_t*>(m_pcmDoubleBuffer.data());
+            return m_pcmDoubleBuffer.data();
         }
 
         if (m_pcmBufferReady)
@@ -217,20 +310,53 @@ const std::uint8_t* SoundRecorder::getEncodedPackets(std::int32_t* count) const
             m_pcmDoubleBuffer.swap(m_pcmBuffer);
             *count = static_cast<std::int32_t>(m_pcmBufferOffset);
             m_pcmBufferOffset = 0;
-            return reinterpret_cast<std::uint8_t*>(m_pcmDoubleBuffer.data());
+            return m_pcmDoubleBuffer.data();
         }
-
-
-
-        //TODO once the pcm buffer reaches an encodable size
-        //encode the buffer and reset the buffer offset
     }
-
-
 
     *count = 0;
 
     return nullptr;
+}
+
+constexpr std::int32_t SoundRecorder::getChannelCount() const
+{
+    //ugh why cast WHHHYYY
+    return static_cast<std::int32_t>(CHANNEL_COUNT);
+}
+
+constexpr std::int32_t SoundRecorder::getSampleRate() const
+{
+    return static_cast<std::int32_t>(SAMPLE_RATE);
+}
+
+std::vector<std::int16_t> SoundRecorder::decodePacket(const std::vector<std::uint8_t>& packet) const
+{
+    std::vector<std::int16_t> retVal;
+
+    static std::vector<std::int16_t> decodeBuffer(OPUS_MAX_FRAME_SIZE);
+
+    if (m_decoder)
+    {
+        auto frameSize = opus_decode(OPUS_DECODER, packet.data(), packet.size(), decodeBuffer.data(), decodeBuffer.size(), 0);
+        if (frameSize > 0)
+        {
+            std::vector<std::uint8_t> bytesBuffer(OPUS_MAX_FRAME_SIZE * CHANNEL_COUNT * 2);
+
+            for (auto i = 0u; i < CHANNEL_COUNT * frameSize; ++i)
+            {
+                bytesBuffer[2 * i] = decodeBuffer[i] & 0xff;
+                bytesBuffer[2 * i + 1] = (decodeBuffer[i] >> 8) & 0xff;
+            }
+
+            retVal.resize(frameSize / sizeof(std::int16_t));
+            std::memcpy(retVal.data(), bytesBuffer.data(), frameSize);
+
+            return retVal;
+        }
+        return {};
+    }
+    return retVal;
 }
 
 //private
@@ -262,8 +388,6 @@ void SoundRecorder::enumerateDevices()
     }
 
     m_deviceList.push_back("No Audio Device Available");
-
-    
 }
 
 bool SoundRecorder::openSelectedDevice()

@@ -62,11 +62,12 @@ source distribution.
 
 namespace
 {
-
+    std::int32_t sampleCount = 0;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
+    m_audioStream   (m_soundRecorder.getChannelCount(), m_soundRecorder.getSampleRate()),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
     m_hosting       (false)
@@ -188,15 +189,24 @@ bool MenuState::simulate(float dt)
         }
     }
 
-    std::int32_t packetCount = 0;
-    const auto* d = m_soundRecorder.getEncodedPackets(&packetCount);
+    /*std::vector<std::uint8_t> packet;
+    m_soundRecorder.getEncodedPackets(packet);
+    sampleCount = packet.size();
 
-    static std::vector<std::uint8_t> tempBuffer;
-    if (packetCount != 0)
+    if (!packet.empty())
     {
-        tempBuffer.resize(packetCount * 2);
-        std::memcpy(tempBuffer.data(), d, tempBuffer.size());
-        m_audioStream.updateBuffer(tempBuffer);
+        auto pcm = m_soundRecorder.decodePacket(packet);
+        if (!pcm.empty())
+        {
+            m_audioStream.updateBuffer(pcm.data(), pcm.size());
+        }
+    }*/
+
+    const auto* d = m_soundRecorder.getPCMData(&sampleCount);
+
+    if (sampleCount)
+    {
+        m_audioStream.updateBuffer(d, sampleCount);
     }
 
     m_scene.simulate(dt);
@@ -388,65 +398,79 @@ void MenuState::registerUI()
         });
 #endif //CRO_DEBUG_
 
-        registerWindow([&]() 
+    registerWindow([&]() 
+        {
+            //ImGui::ShowDemoWindow();
+            if (ImGui::Begin("Sound Recorder"))
             {
-                if (ImGui::Begin("Sound Recorder"))
+                const auto& devices = m_soundRecorder.listDevices();
+
+                std::vector<const char*> items; //lol.
+                for (const auto& d : devices)
                 {
-                    const auto& devices = m_soundRecorder.listDevices();
+                    items.push_back(d.c_str());
+                }
 
-                    std::vector<const char*> items; //lol.
-                    for (const auto& d : devices)
+                static std::int32_t idx = 0;
+                if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
+                {
+                    for (auto n = 0u; n < items.size(); ++n)
                     {
-                        items.push_back(d.c_str());
-                    }
-
-                    static std::int32_t idx = 0;
-                    if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
-                    {
-                        for (auto n = 0u; n < items.size(); ++n)
+                        const bool selected = (idx == n);
+                        if (ImGui::Selectable(items[n], selected))
                         {
-                            const bool selected = (idx == n);
-                            if (ImGui::Selectable(items[n], selected))
-                            {
-                                idx = n;
-                            }
-
-                            if (selected)
-                            {
-                                ImGui::SetItemDefaultFocus();
-                            }
+                            idx = n;
                         }
-                        ImGui::EndListBox();
+
+                        if (selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
                     }
+                    ImGui::EndListBox();
+                }
 
-
+                static bool deviceOpen = false;
+                    
+                if (!deviceOpen)
+                {
                     if (ImGui::Button("Open Device"))
                     {
-                        m_soundRecorder.openDevice(devices[idx]);
+                        deviceOpen = m_soundRecorder.openDevice(devices[idx]);
                     }
-
-                    ImGui::SameLine();
+                }
+                else
+                {
                     if (ImGui::Button("Close Device"))
                     {
                         m_soundRecorder.closeDevice();
-                    }
-
-
-
-                    if (ImGui::Button("Start Recording"))
-                    {
-                        m_soundRecorder.start();
+                        deviceOpen = false;
                     }
 
                     ImGui::SameLine();
-                    if (ImGui::Button("Stop Recording"))
+
+                    if (!m_soundRecorder.isActive())
                     {
-                        m_soundRecorder.stop();
+                        if (ImGui::Button("Start Recording"))
+                        {
+                            m_soundRecorder.start();
+                        }
                     }
+                    else
+                    {
+                        if (ImGui::Button("Stop Recording"))
+                        {
+                            m_soundRecorder.stop();
+                        }
+                    }
+
+                    ImGui::SameLine();
+                    ImGui::Text("Samples captured %d", sampleCount);
                 }
-                ImGui::End();
+            }
+            ImGui::End();
             
-            });
+        });
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)

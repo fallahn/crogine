@@ -309,7 +309,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     return -1;
 }
 
-std::int32_t OpenALImpl::requestNewBufferableStream(BufferedStreamLoader** dstPtr)
+std::int32_t OpenALImpl::requestNewBufferableStream(BufferedStreamLoader** dstPtr, std::uint32_t channelCount, std::uint32_t sampleRate)
 {
     if (m_nextFreeStream >= m_streams.size())
     {
@@ -318,7 +318,7 @@ std::int32_t OpenALImpl::requestNewBufferableStream(BufferedStreamLoader** dstPt
     }
 
     auto& stream = getNextFreeStream();
-    stream.audioFile = std::make_unique<BufferedStreamLoader>();
+    stream.audioFile = std::make_unique<BufferedStreamLoader>(channelCount, sampleRate);
     *dstPtr = dynamic_cast<BufferedStreamLoader*>(stream.audioFile.get());
 
     if (initStream(stream))
