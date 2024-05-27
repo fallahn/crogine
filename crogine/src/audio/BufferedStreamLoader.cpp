@@ -36,7 +36,9 @@ using namespace cro::Detail;
 
 namespace
 {
-    std::vector<std::int16_t> silentBuffer(2048);
+    constexpr std::size_t SilentBufferSize = 2048;
+    std::vector<std::int16_t> silentBuffer(SilentBufferSize);
+
 }
 
 BufferedStreamLoader::BufferedStreamLoader(std::uint32_t channelCount, std::uint32_t sampleRate)
@@ -47,6 +49,7 @@ BufferedStreamLoader::BufferedStreamLoader(std::uint32_t channelCount, std::uint
     m_dataChunk.format = channelCount == 1 ? PCMData::Format::MONO16 : PCMData::Format::STEREO16;
     m_dataChunk.frequency = sampleRate;
 
+    silentBuffer.resize(SilentBufferSize * channelCount);
     std::fill(silentBuffer.begin(), silentBuffer.end(), 0);
 }
 
@@ -66,7 +69,7 @@ const PCMData& BufferedStreamLoader::getData(std::size_t, bool) const
     if (m_doubleBuffer.empty())
     {
         m_dataChunk.data = silentBuffer.data();
-        m_dataChunk.size = silentBuffer.size() * sizeof(std::uint16_t) * m_channelCount;
+        m_dataChunk.size = silentBuffer.size() * sizeof(std::uint16_t);
 
         return m_dataChunk;
     }
@@ -76,7 +79,7 @@ const PCMData& BufferedStreamLoader::getData(std::size_t, bool) const
     m_doubleBuffer.clear();
 
     m_dataChunk.data = m_buffer.data();
-    m_dataChunk.size = m_buffer.size() * sizeof(std::uint16_t) * m_channelCount;
+    m_dataChunk.size = m_buffer.size() * sizeof(std::uint16_t);
     
     return m_dataChunk;
 }
@@ -85,6 +88,6 @@ void BufferedStreamLoader::updateBuffer(const std::int16_t* data, std::int32_t s
 {
     std::scoped_lock l(m_mutex);
     auto oldSize = m_doubleBuffer.size();
-    m_doubleBuffer.resize(sampleCount + oldSize);
+    m_doubleBuffer.resize((sampleCount) + oldSize);
     std::memcpy(&m_doubleBuffer[oldSize], data, sampleCount * sizeof(std::int16_t));
 }

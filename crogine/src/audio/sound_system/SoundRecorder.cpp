@@ -123,7 +123,7 @@ bool SoundRecorder::openDevice(const std::string& device, std::int32_t channelCo
     CRO_ASSERT(channelCount == 1 || channelCount == 2, "Only mono and stereo are supported");
     m_channelCount = channelCount;
     m_sampleRate = sampleRate;
-    m_pcmBuffer.resize((sampleRate / 25) * channelCount);
+    m_pcmBuffer.resize((sampleRate / 25));
 
     if (!AudioRenderer::isValid())
     {
@@ -254,15 +254,18 @@ void SoundRecorder::enumerateDevices()
 
 bool SoundRecorder::openSelectedDevice()
 {
+    //TODO hmmm we appear to get a crash/heap corruption when setting this to stereo?
     if (!m_recordingDevice)
     {
+        const auto format = m_channelCount == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
+
         if (m_deviceIndex > -1)
         {
-            m_recordingDevice = alcCaptureOpenDevice(m_deviceList[m_deviceIndex].c_str(), m_sampleRate, m_channelCount == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, m_pcmBuffer.size() * 3);
+            m_recordingDevice = alcCaptureOpenDevice(m_deviceList[m_deviceIndex].c_str(), m_sampleRate, format, m_pcmBuffer.size() * 3);
         }
         else
         {
-            m_recordingDevice = alcCaptureOpenDevice(nullptr, m_sampleRate, m_channelCount == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, m_pcmBuffer.size() * 3);
+            m_recordingDevice = alcCaptureOpenDevice(nullptr, m_sampleRate, format, m_pcmBuffer.size() * 3);
         }
 
         if (!m_recordingDevice)

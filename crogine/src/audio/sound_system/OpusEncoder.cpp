@@ -40,7 +40,7 @@ using namespace cro;
 Opus::Opus(const Context& ctx)
     : m_encoder     (nullptr),
     m_decoder       (nullptr),
-    m_frameSize     ((ctx.sampleRate / 25) * ctx.channelCount),
+    m_frameSize     ((ctx.sampleRate / 25) /** ctx.channelCount*/),
     m_maxFrameSize  (m_frameSize * 3),
     m_outBuffer     (ctx.maxPacketSize),
     m_decodeBuffer  (m_maxFrameSize)
