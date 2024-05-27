@@ -46,6 +46,8 @@ source distribution.
 
 #include <opus.h>
 
+#include <cstring>
+
 #define RECORDING_DEVICE static_cast<ALCdevice*>(m_recordingDevice)
 #define OPUS_ENCODER static_cast<OpusEncoder*>(m_encoder)
 #define OPUS_DECODER static_cast<OpusDecoder*>(m_decoder)
@@ -54,8 +56,6 @@ using namespace cro;
 
 namespace
 {
-    constexpr ALCsizei RECORD_BUFFER_SIZE = 4096;
-
     //testing shows the capture buffer is directly related to sample rate, eg 480 samples (@60hz) for 24KHz sample rate
     constexpr std::uint32_t CHANNEL_COUNT = 1;
     constexpr std::uint32_t SAMPLE_RATE = 24000; //hmm opus doesn't support rates which aren't a multiple of 8000
@@ -66,9 +66,7 @@ namespace
     constexpr std::uint32_t OPUS_MAX_PACKET_SIZE = 1276 * 3;
     constexpr std::uint32_t OPUS_BITRATE = 64000;
 
-    constexpr std::uint32_t PCMBufferWrapSize = OPUS_FRAME_SIZE * 10;
-    constexpr std::uint32_t PCMBufferSize = PCMBufferWrapSize + OPUS_MAX_FRAME_SIZE; //our capture buffer has a little space left over, just in case
-
+    constexpr ALCsizei RECORD_BUFFER_SIZE = OPUS_MAX_FRAME_SIZE;
 
     const std::string MissingDevice("No Device Active");
     const std::string DefaultDevice("Default");
@@ -85,10 +83,7 @@ SoundRecorder::SoundRecorder()
     m_active            (false),
     m_encoder           (nullptr),
     m_decoder           (nullptr),
-    m_pcmBuffer         (PCMBufferSize),
-    m_pcmDoubleBuffer   (PCMBufferSize),
-    m_pcmBufferOffset   (0),
-    m_pcmBufferReady    (false),
+    m_pcmBuffer         (OPUS_FRAME_SIZE),
     m_opusInBuffer      (OPUS_FRAME_SIZE),
     m_opusOutBuffer     (OPUS_MAX_PACKET_SIZE)
 {
@@ -133,7 +128,7 @@ SoundRecorder::SoundRecorder()
 
 SoundRecorder::~SoundRecorder()
 {
-    stop();
+    //stop();
     closeDevice();
 
     if (m_encoder)
@@ -195,46 +190,11 @@ void SoundRecorder::closeDevice()
 {
     if (m_recordingDevice)
     {
+        alcCaptureStop(RECORDING_DEVICE);
         alcCaptureCloseDevice(RECORDING_DEVICE);
     }
-    m_recordingDevice = nullptr;
-}
-
-bool SoundRecorder::start()
-{
-    if (m_active)
-    {
-        return true;
-    }
-
-    if (!AudioRenderer::isValid())
-    {
-        LogE << "SoundRecorder::start(): No valid audio renderer available." << std::endl;
-        return false;
-    }
-
-    //opens device if not yet open
-    if (!openSelectedDevice())
-    {
-        return false;
-    }
-
-
-    alcCaptureStart(RECORDING_DEVICE);
-    m_active = true;
-    m_pcmBufferOffset = 0;
-
-    return true;
-}
-
-void SoundRecorder::stop()
-{
-    if (m_recordingDevice)
-    {
-        alcCaptureStop(RECORDING_DEVICE);
-    }
     m_active = false;
-    m_pcmBufferReady = false;
+    m_recordingDevice = nullptr;
 }
 
 bool SoundRecorder::isActive() const
@@ -255,14 +215,14 @@ void SoundRecorder::getEncodedPackets(std::vector<std::uint8_t>& dst) const
     if (const auto* data = getPCMData(&pcmCount); data && pcmCount)
     {
         //TODO the inital buffer size can be greater than OPUS_FRAME_SIZE
-        //so we want to loop over the incloming data in frame size chunks (or less)
+        //so we want to loop over the incoming data in frame size chunks (or less)
 
         m_opusInBuffer.resize(pcmCount);
 
-        //opus uses big endian data
+        //opus uses big endian data (BUT *DOES* IT???)
         for (auto i = 0u; i < CHANNEL_COUNT * pcmCount; ++i)
         {
-            m_opusInBuffer[i] = (data[sizeof(std::int16_t) * i + 1] << 8) | data[sizeof(std::int16_t) * i];
+            m_opusInBuffer[i] = data[i];// (data[sizeof(std::int16_t) * i + 1] << 8) | data[sizeof(std::int16_t) * i];
         }
 
         auto byteCount = opus_encode(OPUS_ENCODER, m_opusInBuffer.data(), pcmCount, m_opusOutBuffer.data(), OPUS_MAX_PACKET_SIZE);
@@ -282,40 +242,21 @@ void SoundRecorder::getEncodedPackets(std::vector<std::uint8_t>& dst) const
 
 const std::int16_t* SoundRecorder::getPCMData(std::int32_t* count) const
 {
-    if (m_recordingDevice && m_active)
+    if (m_recordingDevice)
     {
         ALCint sampleCount = 0;
-
         alcGetIntegerv(RECORDING_DEVICE, ALC_CAPTURE_SAMPLES, 1, &sampleCount);
-        alcCaptureSamples(RECORDING_DEVICE, m_pcmBuffer.data() + m_pcmBufferOffset, sampleCount);
 
-        auto lastOffset = m_pcmBufferOffset;
-        m_pcmBufferOffset = (m_pcmBufferOffset + sampleCount) % PCMBufferWrapSize;
-
-        if (m_pcmBufferOffset < lastOffset)
+        if (sampleCount >= OPUS_FRAME_SIZE)
         {
-            //we wrapped around so we must have a reasonable amount buffered
-            m_pcmBufferReady = true;
+            alcCaptureSamples(RECORDING_DEVICE, m_pcmBuffer.data(), OPUS_FRAME_SIZE);
 
-            //return the largest initial buffer
-            m_pcmDoubleBuffer.swap(m_pcmBuffer);
-            *count = static_cast<std::int32_t>((PCMBufferWrapSize + m_pcmBufferOffset));
-            m_pcmBufferOffset = 0;
-            return m_pcmDoubleBuffer.data();
-        }
-
-        if (m_pcmBufferReady)
-        {
-            //otherwise return whatever we have available to prevent drop outs
-            m_pcmDoubleBuffer.swap(m_pcmBuffer);
-            *count = static_cast<std::int32_t>(m_pcmBufferOffset);
-            m_pcmBufferOffset = 0;
-            return m_pcmDoubleBuffer.data();
+            *count = OPUS_FRAME_SIZE;
+            return m_pcmBuffer.data();
         }
     }
 
     *count = 0;
-
     return nullptr;
 }
 
@@ -350,7 +291,7 @@ std::vector<std::int16_t> SoundRecorder::decodePacket(const std::vector<std::uin
             }
 
             retVal.resize(frameSize / sizeof(std::int16_t));
-            std::memcpy(retVal.data(), bytesBuffer.data(), frameSize);
+            std::memcpy(retVal.data(), decodeBuffer.data(), frameSize);
 
             return retVal;
         }
@@ -406,6 +347,11 @@ bool SoundRecorder::openSelectedDevice()
         if (!m_recordingDevice)
         {
             LogE << "Failed opening device for recording" << std::endl;
+        }
+        else
+        {
+            m_active = true;
+            alcCaptureStart(RECORDING_DEVICE);
         }
     }
     return m_recordingDevice != nullptr;

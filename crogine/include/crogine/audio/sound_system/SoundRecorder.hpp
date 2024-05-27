@@ -72,28 +72,15 @@ namespace cro
         const std::string& getActiveDevice() const;
 
         /*!
-        \brief Attempts to open the device with the given name for recording.
+        \brief Attempts to open the device with the given name and starts recording.
         Use listDevices() to obtain a list of valid name strings
         */
         bool openDevice(const std::string& device /*TODO set sample rate and channel count*/);
 
         /*!
-        \brief Closes the current recording device or does nthing if no device is open
+        \brief Closes the current recording device or does nothing if no device is open
         */
         void closeDevice();
-
-        /*!
-        \brief Starts recording with the currently open device, or attempts to
-        open the last used device (or default device if no device was specified)
-        and starts recording.
-        \returns true if recording started or false if no device was available.
-        */
-        bool start();
-
-        /*!
-        \brief Stops recording if recording is active, else does nothing
-        */
-        void stop();
 
         /*!
         \brief Returns true if a device is open and capturing else
@@ -152,9 +139,6 @@ namespace cro
 
         //buffer for PCM captured from device
         mutable std::vector<std::int16_t> m_pcmBuffer;
-        mutable std::vector<std::int16_t> m_pcmDoubleBuffer;
-        mutable std::uint32_t m_pcmBufferOffset;
-        mutable bool m_pcmBufferReady;
 
         mutable std::vector<std::int16_t> m_opusInBuffer;
         mutable std::vector<std::uint8_t> m_opusOutBuffer;

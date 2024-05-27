@@ -63,6 +63,7 @@ source distribution.
 namespace
 {
     std::int32_t sampleCount = 0;
+    bool encodeAudio = false;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -144,7 +145,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
             break;
         case SDLK_p:
-            m_soundRecorder.stop();
+            //m_soundRecorder.stop();
             break;
         }
     }
@@ -157,7 +158,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             handleTextEdit(evt);
             break;
         case SDLK_p:
-            m_soundRecorder.start();
+            //m_soundRecorder.start();
             break;
         }
     }
@@ -189,25 +190,35 @@ bool MenuState::simulate(float dt)
         }
     }
 
-    /*std::vector<std::uint8_t> packet;
-    m_soundRecorder.getEncodedPackets(packet);
-    sampleCount = packet.size();
 
-    if (!packet.empty())
+    if (encodeAudio)
     {
-        auto pcm = m_soundRecorder.decodePacket(packet);
-        if (!pcm.empty())
+        std::vector<std::uint8_t> packet;
+        m_soundRecorder.getEncodedPackets(packet);
+        sampleCount = packet.size();
+
+        if (!packet.empty())
         {
-            m_audioStream.updateBuffer(pcm.data(), pcm.size());
+            auto pcm = m_soundRecorder.decodePacket(packet);
+            if (!pcm.empty())
+            {
+                m_audioStream.updateBuffer(pcm.data(), pcm.size());
+            }
         }
-    }*/
-
-    const auto* d = m_soundRecorder.getPCMData(&sampleCount);
-
-    if (sampleCount)
-    {
-        m_audioStream.updateBuffer(d, sampleCount);
     }
+    else
+    {
+        if (cro::Keyboard::isKeyPressed(SDLK_p))
+        {
+            const auto* d = m_soundRecorder.getPCMData(&sampleCount);
+
+            if (sampleCount)
+            {
+                m_audioStream.updateBuffer(d, sampleCount);
+            }
+        }
+    }
+
 
     m_scene.simulate(dt);
     return true;
@@ -449,18 +460,18 @@ void MenuState::registerUI()
 
                     ImGui::SameLine();
 
-                    if (!m_soundRecorder.isActive())
+                    if (!encodeAudio)
                     {
-                        if (ImGui::Button("Start Recording"))
+                        if (ImGui::Button("Use Opus"))
                         {
-                            m_soundRecorder.start();
+                            encodeAudio = true;
                         }
                     }
                     else
                     {
-                        if (ImGui::Button("Stop Recording"))
+                        if (ImGui::Button("Use PCM"))
                         {
-                            m_soundRecorder.stop();
+                            encodeAudio = false;
                         }
                     }
 
