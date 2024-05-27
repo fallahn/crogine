@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -129,6 +129,20 @@ bool Server::addLocalConnection(net::NetClient& client)
 #endif
 }
 
+bool Server::addLocalVoiceConnection(net::NetClient& client)
+{
+#ifdef USE_GNS
+    if (!m_running)
+    {
+        LOG("Server not running (voice connection)", cro::Logger::Type::Error);
+        return false;
+    }
+    return m_voiceHost.addLocalConnection(client);
+#else
+    return false;
+#endif
+}
+
 void Server::setHostID(std::uint64_t id)
 {
     m_sharedData.hostID = id;
@@ -142,13 +156,18 @@ void Server::setLeagueID(std::int32_t id)
 //private
 void Server::run()
 {
-    if (!m_sharedData.host.start(/*m_preferredIP*/"", ConstVal::GamePort, /*ConstVal::MaxClients*/m_maxConnections, 4))
+    if (!m_sharedData.host.start("", ConstVal::GamePort, m_maxConnections, 4))
     {
         m_running = false;
         cro::Logger::log("Failed to start host service", cro::Logger::Type::Error);
         return;
     }    
     
+    if (!m_voiceHost.start(ConstVal::VoicePort))
+    {
+        LogW << "Unable to start voice channel server" << std::endl;
+    }
+
     LOG("Server launched", cro::Logger::Type::Info);
 
     m_currentState = std::make_unique<sv::LobbyState>(m_sharedData);
@@ -169,6 +188,8 @@ void Server::run()
 
     while (m_running)
     {
+        m_voiceHost.update();
+
         while (!m_sharedData.messageBus.empty())
         {
             const auto& msg = m_sharedData.messageBus.poll();
@@ -327,6 +348,7 @@ void Server::run()
         c = {};
     }
 
+    m_voiceHost.stop();
     m_sharedData.host.stop();
 
     LOG("Server quit", cro::Logger::Type::Info);

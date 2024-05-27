@@ -753,6 +753,66 @@ bool GolfGame::initialise()
             }
         });
 
+    registerCommand("connect_voice", 
+        [&](const std::string&)
+        {
+            if (m_sharedData.clientConnection.connected)
+            {
+                if (m_sharedData.hosting)
+                {
+#ifdef USE_GNS
+                    if (m_sharedData.serverInstance.addLocalVoiceConnection(m_sharedData.voiceConnection.netClient))
+                    {
+                        m_sharedData.voiceConnection.connected = true;
+                        cro::Console::print("Connected to local voice server");
+                    }
+                    else
+                    {
+                        m_sharedData.voiceConnection.connected = false;
+                        cro::Console::print("Could not connect to local voice server");
+                    }
+#else
+                    m_sharedData.voiceConnection.connected = m_sharedData.voiceConnection.netClient.connect("255.255.255.255", ConstVal::VoicePort);
+                    if (!m_sharedData.voiceConnection.connected)
+                    {
+                        m_sharedData.voiceConnection.connected = m_sharedData.voiceConnection.netClient.connect("127.0.0.1", ConstVal::VoicePort);
+                    }
+#endif
+                }
+                else
+                {
+#ifdef USE_GNS
+                    if (m_sharedData.voiceConnection.netClient.connect(m_sharedData.clientConnection.hostID))
+                    {
+                        m_sharedData.voiceConnection.connected = true;
+                        m_sharedData.voiceConnection.hostID = m_sharedData.clientConnection.hostID;
+                        cro::Console::print("Connected to remote voice server");
+                    }
+                    else
+                    {
+                        m_sharedData.voiceConnection.connected = false;
+                        cro::Console::print("Could not connect to remote voice server");
+                    }
+#else
+                    m_sharedData.voiceConnection.connected = m_sharedData.voiceConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::VoicePort);
+#endif
+                }
+            }
+            else
+            {
+                cro::Console::print("Not connected to a server");
+            }
+        });
+
+    registerCommand("disconnect_voice", [&](const std::string&) 
+        {
+            if (m_sharedData.voiceConnection.connected)
+            {
+                m_sharedData.voiceConnection.netClient.disconnect();
+                m_sharedData.voiceConnection.connected = false;
+                cro::Console::print("Disconnected from voice server");
+            }        
+        });
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);

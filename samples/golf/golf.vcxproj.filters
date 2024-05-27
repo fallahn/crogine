@@ -453,6 +453,9 @@
     <ClCompile Include="src\golf\GameConsts.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\server\ServerVoice.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -928,6 +931,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\Thumbsticks.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\ServerVoice.hpp">
+      <Filter>Header Files\golf\server</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

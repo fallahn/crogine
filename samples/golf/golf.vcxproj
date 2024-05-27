@@ -680,6 +680,7 @@
     <ClCompile Include="src\golf\server\ServerGolfRules.cpp" />
     <ClCompile Include="src\golf\server\ServerGolfState.cpp" />
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
+    <ClCompile Include="src\golf\server\ServerVoice.cpp" />
     <ClCompile Include="src\golf\server\SnookerDirector.cpp" />
     <ClCompile Include="src\golf\SharedStateData.cpp" />
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
@@ -821,6 +822,7 @@
     <ClInclude Include="src\golf\server\ServerMessages.hpp" />
     <ClInclude Include="src\golf\server\ServerPacketData.hpp" />
     <ClInclude Include="src\golf\server\ServerState.hpp" />
+    <ClInclude Include="src\golf\server\ServerVoice.hpp" />
     <ClInclude Include="src\golf\server\SnookerDirector.hpp" />
     <ClInclude Include="src\golf\SharedCourseData.hpp" />
     <ClInclude Include="src\golf\SharedProfileData.hpp" />

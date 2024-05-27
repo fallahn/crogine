@@ -105,6 +105,28 @@ struct TextMessage final
     }
 };
 
+namespace VoicePacket
+{
+    enum
+    {
+        //identifies from which connection the voice packet arrived
+        //note that this isn't the same as ClientID rather just the
+        //order in which voice connections were made - not all client
+        //will want to connect, after all.
+        Client00,
+        Client01,
+        Client02,
+        Client03,
+        Client04,
+        Client05,
+        Client06,
+        Client07,
+
+        ClientConnect, //< uint8 index of voice channel which was assigned
+        ClientDisconnect, //< uint8 index of voice channel which disconnected
+    };
+}
+
 namespace PacketID
 {
     enum

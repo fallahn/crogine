@@ -115,7 +115,9 @@ struct SharedStateData final
 
         std::uint64_t hostID = 0;
         std::vector<net::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
-    }clientConnection;
+    };
+    ClientConnection clientConnection;
+    ClientConnection voiceConnection;
 
     //data of all players rx'd from server
     std::array<ConnectionData, ConstVal::MaxClients> connectionData = {};
