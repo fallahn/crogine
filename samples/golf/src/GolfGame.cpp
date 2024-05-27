@@ -810,6 +810,7 @@ bool GolfGame::initialise()
             {
                 m_sharedData.voiceConnection.netClient.disconnect();
                 m_sharedData.voiceConnection.connected = false;
+                m_sharedData.voiceConnection.connectionID = ConstVal::NullValue;
                 cro::Console::print("Disconnected from voice server");
             }        
         });

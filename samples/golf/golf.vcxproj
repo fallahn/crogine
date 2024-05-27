@@ -701,6 +701,7 @@
     <ClCompile Include="src\golf\UnlockState.cpp" />
     <ClCompile Include="src\golf\VatAnimationSystem.cpp" />
     <ClCompile Include="src\golf\VatFile.cpp" />
+    <ClCompile Include="src\golf\VoiceChat.cpp" />
     <ClCompile Include="src\golf\Weather.cpp" />
     <ClCompile Include="src\golf\WeatherAnimationSystem.cpp" />
     <ClCompile Include="src\golf\WeatherDirector.cpp" />
@@ -852,6 +853,7 @@
     <ClInclude Include="src\golf\Utility.hpp" />
     <ClInclude Include="src\golf\VatFile.hpp" />
     <ClInclude Include="src\golf\VatAnimationSystem.hpp" />
+    <ClInclude Include="src\golf\VoiceChat.hpp" />
     <ClInclude Include="src\golf\WeatherAnimationSystem.hpp" />
     <ClInclude Include="src\golf\WeatherDirector.hpp" />
     <ClInclude Include="src\golf\XPAwardStrings.hpp" />

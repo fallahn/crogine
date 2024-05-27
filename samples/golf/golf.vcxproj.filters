@@ -456,6 +456,9 @@
     <ClCompile Include="src\golf\server\ServerVoice.cpp">
       <Filter>Source Files\golf\server</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\VoiceChat.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -934,6 +937,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\server\ServerVoice.hpp">
       <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\VoiceChat.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

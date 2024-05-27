@@ -97,6 +97,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/UnlockState.cpp
   ${PROJECT_DIR}/golf/VatAnimationSystem.cpp
   ${PROJECT_DIR}/golf/VatFile.cpp
+  ${PROJECT_DIR}/golf/VoiceChat.cpp
   ${PROJECT_DIR}/golf/Weather.cpp
   ${PROJECT_DIR}/golf/WeatherAnimationSystem.cpp
   ${PROJECT_DIR}/golf/WeatherDirector.cpp

@@ -32,6 +32,8 @@ source distribution.
 
 #include <opus.h>
 
+#include <cstring>
+
 using namespace cro;
 
 #define OPUS_ENCODER static_cast<OpusEncoder*>(m_encoder)

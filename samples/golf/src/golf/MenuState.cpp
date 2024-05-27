@@ -158,6 +158,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_connectedClientCount  (0),
     m_connectedPlayerCount  (0),
     m_textChat              (m_uiScene, sd),
+    m_voiceChat             (m_sharedData),
     m_matchMaking           (context.appInstance.getMessageBus(), checkCommandLine),
     m_uiScene               (context.appInstance.getMessageBus(), 1024),
     m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
@@ -942,6 +943,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             showPlayerManagement();
             break;
+        case SDLK_k:
+            m_voiceChat.connect();
+            break;
+        case SDLK_l:
+            m_voiceChat.disconnect();
+            break;
+        case SDLK_j:
+            m_voiceChat.captureVoice();
+            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -1356,6 +1366,8 @@ bool MenuState::simulate(float dt)
             //handle events
             handleNetEvent(evt);
         }
+
+        m_voiceChat.process();
     }
 
     //update the scroll speed of lobby text
