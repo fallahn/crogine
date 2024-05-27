@@ -64,11 +64,15 @@ namespace
 {
     std::int32_t sampleCount = 0;
     bool encodeAudio = false;
+
+    constexpr std::int32_t ChannelCount = 1;
+    constexpr std::int32_t SampleRate = 24000;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
-    m_audioStream   (m_soundRecorder.getChannelCount(), m_soundRecorder.getSampleRate()),
+    m_encoder       ({}),
+    m_audioStream   (ChannelCount, SampleRate),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
     m_hosting       (false)
@@ -144,9 +148,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
-        case SDLK_p:
-            //m_soundRecorder.stop();
-            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -156,9 +157,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_BACKSPACE:
             handleTextEdit(evt);
-            break;
-        case SDLK_p:
-            //m_soundRecorder.start();
             break;
         }
     }
@@ -191,24 +189,24 @@ bool MenuState::simulate(float dt)
     }
 
 
-    if (encodeAudio)
+    if (cro::Keyboard::isKeyPressed(SDLK_p))
     {
-        std::vector<std::uint8_t> packet;
-        m_soundRecorder.getEncodedPackets(packet);
-        sampleCount = packet.size();
-
-        if (!packet.empty())
+        if (encodeAudio)
         {
-            auto pcm = m_soundRecorder.decodePacket(packet);
-            if (!pcm.empty())
+            std::vector<std::uint8_t> packet;
+            m_soundRecorder.getEncodedPacket(packet);
+            sampleCount = packet.size();
+
+            if (!packet.empty())
             {
-                m_audioStream.updateBuffer(pcm.data(), pcm.size());
+                auto pcm = m_encoder.decode(packet);
+                if (!pcm.empty())
+                {
+                    m_audioStream.updateBuffer(pcm.data(), pcm.size());
+                }
             }
         }
-    }
-    else
-    {
-        if (cro::Keyboard::isKeyPressed(SDLK_p))
+        else
         {
             const auto* d = m_soundRecorder.getPCMData(&sampleCount);
 
@@ -447,7 +445,7 @@ void MenuState::registerUI()
                 {
                     if (ImGui::Button("Open Device"))
                     {
-                        deviceOpen = m_soundRecorder.openDevice(devices[idx]);
+                        deviceOpen = m_soundRecorder.openDevice(devices[idx], ChannelCount, SampleRate, true);
                     }
                 }
                 else

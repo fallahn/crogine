@@ -44,29 +44,22 @@ source distribution.
 #include <AL/alc.h>
 #endif
 
-#include <opus.h>
-
 #include <cstring>
 
 #define RECORDING_DEVICE static_cast<ALCdevice*>(m_recordingDevice)
-#define OPUS_ENCODER static_cast<OpusEncoder*>(m_encoder)
-#define OPUS_DECODER static_cast<OpusDecoder*>(m_decoder)
+
 
 using namespace cro;
 
 namespace
 {
-    //testing shows the capture buffer is directly related to sample rate, eg 480 samples (@60hz) for 24KHz sample rate
-    constexpr std::uint32_t CHANNEL_COUNT = 1;
-    constexpr std::uint32_t SAMPLE_RATE = 24000; //hmm opus doesn't support rates which aren't a multiple of 8000
-    constexpr std::uint32_t SAMPLE_SIZE = sizeof(std::uint16_t);
+    constexpr std::array OPUS_SAMPLE_RATES =
+    {
+        8000, 12000, 16000, 24000, 48000
+    };
 
-    constexpr std::uint32_t OPUS_FRAME_SIZE = SAMPLE_RATE / 25; //to make sure the buffer aligns with a whole frame this needs to be a multiple of the capture rate
-    constexpr std::uint32_t OPUS_MAX_FRAME_SIZE = OPUS_FRAME_SIZE * 3;
     constexpr std::uint32_t OPUS_MAX_PACKET_SIZE = 1276 * 3;
     constexpr std::uint32_t OPUS_BITRATE = 64000;
-
-    constexpr ALCsizei RECORD_BUFFER_SIZE = OPUS_MAX_FRAME_SIZE;
 
     const std::string MissingDevice("No Device Active");
     const std::string DefaultDevice("Default");
@@ -81,38 +74,10 @@ SoundRecorder::SoundRecorder()
     : m_deviceIndex     (-1),
     m_recordingDevice   (nullptr),
     m_active            (false),
-    m_encoder           (nullptr),
-    m_decoder           (nullptr),
-    m_pcmBuffer         (OPUS_FRAME_SIZE),
-    m_opusInBuffer      (OPUS_FRAME_SIZE),
-    m_opusOutBuffer     (OPUS_MAX_PACKET_SIZE)
+    m_channelCount      (0),
+    m_sampleRate        (0)
 {
     enumerateDevices();
-
-    std::int32_t err = 0;
-    m_encoder = opus_encoder_create(SAMPLE_RATE, CHANNEL_COUNT, OPUS_APPLICATION_VOIP, &err);
-
-    if (err < 0)
-    {
-        LogE << "Unable to create Opus encoder, err: " << opus_strerror(err) << std::endl;
-        m_encoder = nullptr;
-    }
-    else
-    {
-        err = opus_encoder_ctl(OPUS_ENCODER, OPUS_SET_BITRATE(OPUS_BITRATE));
-        if (err < 0)
-        {
-            LogE << "Failed to set encoder bitrate to " << OPUS_BITRATE << ": " << opus_strerror(err) << std::endl;
-        }
-    }
-
-    //TODO move this to a util somewhere
-    m_decoder = opus_decoder_create(SAMPLE_RATE, CHANNEL_COUNT, &err);
-    if (err < 0)
-    {
-        LogE << "Unable to create Opus decoder, err: " << opus_strerror(err) << std::endl;
-        m_decoder = nullptr;
-    }
 
 #ifdef CRO_DEBUG_
     /*registerWindow([&]() 
@@ -128,18 +93,7 @@ SoundRecorder::SoundRecorder()
 
 SoundRecorder::~SoundRecorder()
 {
-    //stop();
     closeDevice();
-
-    if (m_encoder)
-    {
-        opus_encoder_destroy(OPUS_ENCODER);
-    }
-
-    if (m_decoder)
-    {
-        opus_decoder_destroy(OPUS_DECODER);
-    }
 }
 
 //public
@@ -164,8 +118,13 @@ const std::string& SoundRecorder::getActiveDevice() const
     return MissingDevice;
 }
 
-bool SoundRecorder::openDevice(const std::string& device)
+bool SoundRecorder::openDevice(const std::string& device, std::int32_t channelCount, std::int32_t sampleRate, bool createEncoder)
 {
+    CRO_ASSERT(channelCount == 1 || channelCount == 2, "Only mono and stereo are supported");
+    m_channelCount = channelCount;
+    m_sampleRate = sampleRate;
+    m_pcmBuffer.resize((sampleRate / 25) * channelCount);
+
     if (!AudioRenderer::isValid())
     {
         LogE << "SoundRecorder::openDevice(): No valid audio renderer available." << std::endl;
@@ -183,6 +142,20 @@ bool SoundRecorder::openDevice(const std::string& device)
         m_deviceIndex = -1;
     }
 
+
+    if (createEncoder &&
+        std::find(OPUS_SAMPLE_RATES.begin(), OPUS_SAMPLE_RATES.end(), sampleRate) != OPUS_SAMPLE_RATES.end())
+    {
+        //create the opus encoder and decoder
+        Opus::Context ctx;
+        ctx.channelCount = channelCount;
+        ctx.sampleRate = sampleRate;
+        ctx.bitrate = OPUS_BITRATE;
+        ctx.maxPacketSize = OPUS_MAX_PACKET_SIZE;
+
+        m_encoder = std::make_unique<Opus>(ctx);
+    }
+
     return openSelectedDevice();
 }
 
@@ -195,6 +168,7 @@ void SoundRecorder::closeDevice()
     }
     m_active = false;
     m_recordingDevice = nullptr;
+    m_encoder.reset();
 }
 
 bool SoundRecorder::isActive() const
@@ -202,42 +176,18 @@ bool SoundRecorder::isActive() const
     return m_active;
 }
 
-void SoundRecorder::getEncodedPackets(std::vector<std::uint8_t>& dst) const
+void SoundRecorder::getEncodedPacket(std::vector<std::uint8_t>& dst) const
 {
     dst.clear();
 
-    if (!m_encoder)
+    if (m_encoder)
     {
-        return;
-    }
-
-    std::int32_t pcmCount = 0;
-    if (const auto* data = getPCMData(&pcmCount); data && pcmCount)
-    {
-        //TODO the inital buffer size can be greater than OPUS_FRAME_SIZE
-        //so we want to loop over the incoming data in frame size chunks (or less)
-
-        m_opusInBuffer.resize(pcmCount);
-
-        //opus uses big endian data (BUT *DOES* IT???)
-        for (auto i = 0u; i < CHANNEL_COUNT * pcmCount; ++i)
+        std::int32_t pcmCount = 0;
+        if (const auto* data = getPCMData(&pcmCount); data && pcmCount)
         {
-            m_opusInBuffer[i] = data[i];// (data[sizeof(std::int16_t) * i + 1] << 8) | data[sizeof(std::int16_t) * i];
-        }
-
-        auto byteCount = opus_encode(OPUS_ENCODER, m_opusInBuffer.data(), pcmCount, m_opusOutBuffer.data(), OPUS_MAX_PACKET_SIZE);
-        if (byteCount > 0)
-        {
-            dst.resize(byteCount);
-            std::memcpy(dst.data(), m_opusOutBuffer.data(), byteCount);
-        }
-        else
-        {
-            LogI << opus_strerror(byteCount) << std::endl;
+            m_encoder->encode(data, pcmCount, dst);
         }
     }
-    
-    return;
 }
 
 const std::int16_t* SoundRecorder::getPCMData(std::int32_t* count) const
@@ -247,11 +197,11 @@ const std::int16_t* SoundRecorder::getPCMData(std::int32_t* count) const
         ALCint sampleCount = 0;
         alcGetIntegerv(RECORDING_DEVICE, ALC_CAPTURE_SAMPLES, 1, &sampleCount);
 
-        if (sampleCount >= OPUS_FRAME_SIZE)
+        if (sampleCount >= m_pcmBuffer.size())
         {
-            alcCaptureSamples(RECORDING_DEVICE, m_pcmBuffer.data(), OPUS_FRAME_SIZE);
+            alcCaptureSamples(RECORDING_DEVICE, m_pcmBuffer.data(), m_pcmBuffer.size());
 
-            *count = OPUS_FRAME_SIZE;
+            *count = static_cast<std::int32_t>(m_pcmBuffer.size());
             return m_pcmBuffer.data();
         }
     }
@@ -260,45 +210,16 @@ const std::int16_t* SoundRecorder::getPCMData(std::int32_t* count) const
     return nullptr;
 }
 
-constexpr std::int32_t SoundRecorder::getChannelCount() const
+std::int32_t SoundRecorder::getChannelCount() const
 {
-    //ugh why cast WHHHYYY
-    return static_cast<std::int32_t>(CHANNEL_COUNT);
+    return m_channelCount;
 }
 
-constexpr std::int32_t SoundRecorder::getSampleRate() const
+std::int32_t SoundRecorder::getSampleRate() const
 {
-    return static_cast<std::int32_t>(SAMPLE_RATE);
+    return m_sampleRate;
 }
 
-std::vector<std::int16_t> SoundRecorder::decodePacket(const std::vector<std::uint8_t>& packet) const
-{
-    std::vector<std::int16_t> retVal;
-
-    static std::vector<std::int16_t> decodeBuffer(OPUS_MAX_FRAME_SIZE);
-
-    if (m_decoder)
-    {
-        auto frameSize = opus_decode(OPUS_DECODER, packet.data(), packet.size(), decodeBuffer.data(), decodeBuffer.size(), 0);
-        if (frameSize > 0)
-        {
-            std::vector<std::uint8_t> bytesBuffer(OPUS_MAX_FRAME_SIZE * CHANNEL_COUNT * 2);
-
-            for (auto i = 0u; i < CHANNEL_COUNT * frameSize; ++i)
-            {
-                bytesBuffer[2 * i] = decodeBuffer[i] & 0xff;
-                bytesBuffer[2 * i + 1] = (decodeBuffer[i] >> 8) & 0xff;
-            }
-
-            retVal.resize(frameSize / sizeof(std::int16_t));
-            std::memcpy(retVal.data(), decodeBuffer.data(), frameSize);
-
-            return retVal;
-        }
-        return {};
-    }
-    return retVal;
-}
 
 //private
 void SoundRecorder::enumerateDevices()
@@ -337,11 +258,11 @@ bool SoundRecorder::openSelectedDevice()
     {
         if (m_deviceIndex > -1)
         {
-            m_recordingDevice = alcCaptureOpenDevice(m_deviceList[m_deviceIndex].c_str(), SAMPLE_RATE, AL_FORMAT_MONO16, RECORD_BUFFER_SIZE);
+            m_recordingDevice = alcCaptureOpenDevice(m_deviceList[m_deviceIndex].c_str(), m_sampleRate, m_channelCount == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, m_pcmBuffer.size() * 3);
         }
         else
         {
-            m_recordingDevice = alcCaptureOpenDevice(nullptr, SAMPLE_RATE, AL_FORMAT_MONO16, RECORD_BUFFER_SIZE);
+            m_recordingDevice = alcCaptureOpenDevice(nullptr, m_sampleRate, m_channelCount == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, m_pcmBuffer.size() * 3);
         }
 
         if (!m_recordingDevice)

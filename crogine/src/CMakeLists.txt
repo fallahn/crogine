@@ -15,6 +15,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/WavLoader.cpp
 
   ${PROJECT_DIR}/audio/sound_system/MusicPlayer.cpp
+  ${PROJECT_DIR}/audio/sound_system/OpusEncoder.cpp
   ${PROJECT_DIR}/audio/sound_system/SoundRecorder.cpp
   ${PROJECT_DIR}/audio/sound_system/SoundSource.cpp
   ${PROJECT_DIR}/audio/sound_system/SoundStream.cpp

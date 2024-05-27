@@ -32,8 +32,9 @@ source distribution.
 #include "StateIDs.hpp"
 #include "CommonConsts.hpp"
 
-#include <crogine/audio/sound_system/SoundRecorder.hpp>
 #include <crogine/audio/DynamicAudioStream.hpp>
+#include <crogine/audio/sound_system/SoundRecorder.hpp>
+#include <crogine/audio/sound_system/OpusEncoder.hpp>
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
@@ -91,6 +92,7 @@ public:
 
 private:
     cro::SoundRecorder m_soundRecorder;
+    cro::Opus m_encoder;
     cro::DynamicAudioStream m_audioStream;
     SharedStateData& m_sharedData;
 

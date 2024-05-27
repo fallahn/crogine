@@ -30,16 +30,18 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/audio/sound_system/OpusEncoder.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace cro
 {
     /*!
     \brief The sound recorder captures audio from the specified audio device
-    and encodes it to a stream of Opus packets.
+    and optionally creates an opus encoder for streaming audio
     */
     class CRO_EXPORT_API SoundRecorder
 #ifdef CRO_DEBUG_
@@ -73,9 +75,16 @@ namespace cro
 
         /*!
         \brief Attempts to open the device with the given name and starts recording.
+        \param device Name of the recording device to attempt to open
+        \param channels Number of channels to attempt to capture. Must be 1 (mono) or 2 (stereo)
+        \param sampleRate The sample rate at which to capture. To enable opus encoding this must be
+        8000, 12000, 16000, 24000 or 48000. Other samplerates can be used, but opus encoding will
+        be unavailable, even if createEncoder was true
+        \param createEncoder If true this will attempt to create an opus packet encoder to use with
+        getEncodedPacket(). However this will be ignored is sampleRate is not a compatible value.
         Use listDevices() to obtain a list of valid name strings
         */
-        bool openDevice(const std::string& device /*TODO set sample rate and channel count*/);
+        bool openDevice(const std::string& device, std::int32_t channels, std::int32_t sampleRate, bool createEncoder = false);
 
         /*!
         \brief Closes the current recording device or does nothing if no device is open
@@ -89,21 +98,25 @@ namespace cro
         bool isActive() const;
 
         /*!
-        \brief Resizes and fills the given buffer with opus encoded packets.
+        \brief Resizes and fills the given buffer with an opus encoded packet.
+
+        This is only available if the recording device was opened with a compatible
+        sample rate and creteEncoder set to true. Otherwise this function does nothing.
 
         NOTE that this internally calls getPCMData() which will drain the
         audio buffer, so you should either use just this function or
         getPCMData() BUT NOT BOTH.
         */
-        void getEncodedPackets(std::vector<std::uint8_t>& dst) const;
+        void getEncodedPacket(std::vector<std::uint8_t>& dst) const;
 
         /*!
         \brief Returns a pointer to the raw captured PCM data (if any)
         \param count Pointer to an int32_t which is filled with the
         number of samples in the buffer.
-        NOTE that this is internally called by getEncodedPackets()
-        which will drain the audio buffer, so you should either use just
-        this function or getEncodedPackets() BUT NOT BOTH.
+        NOTE that this is internally called by getEncodedPacket() if a
+        valid opus encoder is available which will drain the audio buffer,
+        so you should either use just this function or getEncodedPackets()
+        BUT NOT BOTH.
         */
         const std::int16_t* getPCMData(std::int32_t* count) const;
 
@@ -111,19 +124,12 @@ namespace cro
         \brief Returns the number of audio channels with which the audio
         will be captured
         */
-        constexpr std::int32_t getChannelCount() const;
+        std::int32_t getChannelCount() const;
 
         /*!
         \brief Returns the samplerate at which the audio will be captured
         */
-        constexpr std::int32_t getSampleRate() const;
-
-
-        /*!
-        TODO this doesn't really belong here per se, for now we're using it
-        to make sure packet decoding works correctly
-        */
-        std::vector<std::int16_t> decodePacket(const std::vector<std::uint8_t>&) const;
+        std::int32_t getSampleRate() const;
 
 
     private:
@@ -134,14 +140,11 @@ namespace cro
         void* m_recordingDevice;
         bool m_active;
 
-        void* m_encoder;
-        void* m_decoder;
+        std::int32_t m_channelCount;
+        std::int32_t m_sampleRate;
 
-        //buffer for PCM captured from device
         mutable std::vector<std::int16_t> m_pcmBuffer;
-
-        mutable std::vector<std::int16_t> m_opusInBuffer;
-        mutable std::vector<std::uint8_t> m_opusOutBuffer;
+        std::unique_ptr<Opus> m_encoder;
 
         void enumerateDevices();
         bool openSelectedDevice();

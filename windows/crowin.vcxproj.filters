@@ -741,6 +741,9 @@
     <ClInclude Include="..\crogine\include\crogine\gui\detail\imfilebrowser.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\OpusEncoder.hpp">
+      <Filter>Header Files\audio\sound system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1249,6 +1252,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\imgui\imfilebrowser.cpp">
       <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\sound_system\OpusEncoder.cpp">
+      <Filter>Source Files\audio\sound system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
