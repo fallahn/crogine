@@ -600,8 +600,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             else if (data.type == CollisionEvent::NearMiss)
             {
-                playSoundDelayed(AudioID::NearMiss, data.position, 0.5f, 1.f, MixerChannel::Effects);
-                //playSound(AudioID::NearHole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                if (m_sharedData.scoreType == ScoreType::NearestThePin)
+                {
+                    playSoundDelayed(AudioID::Applause, data.position, 0.5f, 1.f, MixerChannel::Effects);
+                }
+                else
+                {
+                    playSoundDelayed(AudioID::NearMiss, data.position, 0.5f, 1.f, MixerChannel::Effects);
+                    //playSound(AudioID::NearHole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                }
             }
         }
         break;

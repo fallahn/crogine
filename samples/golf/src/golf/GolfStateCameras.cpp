@@ -838,13 +838,25 @@ void GolfState::toggleFreeCam()
 
                 //and stroke indicator
                 cro::Command cmd;
-                cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+                cmd.targetFlags = CommandID::StrokeIndicator;
                 cmd.action = [&](cro::Entity e, float)
                     {
                         auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
                         e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
                     };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::StrokeArc;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        //don't show the arc if we're switching to putt view
+                        auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
+                        e.getComponent<cro::Model>().setHidden(!(localPlayer 
+                            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU
+                            && !m_puttViewState.isPuttView));
+                    };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
 
                 m_gameScene.setSystemActive<FpsCameraSystem>(false);
 
