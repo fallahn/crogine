@@ -4213,8 +4213,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         {
             std::stringstream ss;
             ss.precision(2);
-            ss << std::fixed << m_NTPDistance << "m";
-
+            if (m_sharedData.imperialMeasurements)
+            {
+                ss << std::fixed << m_NTPDistance * ToYards << "yds";
+            }
+            else
+            {
+                ss << std::fixed << m_NTPDistance << "m";
+            }
             textEnt.getComponent<cro::Text>().setString("Nearest The Pin");
             textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
             textEnt3.getComponent<cro::Text>().setString("Distance: " + ss.str());
