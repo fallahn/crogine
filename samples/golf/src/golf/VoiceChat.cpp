@@ -56,6 +56,11 @@ void VoiceChat::connect()
 
 void VoiceChat::disconnect()
 {
+    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    {
+        removeSource(i);
+    }
+
     cro::Console::doCommand("disconnect_voice");
     m_recorder.closeDevice();
 }
@@ -139,7 +144,7 @@ void VoiceChat::process()
                 addSource(i);
             }
 
-            for (auto j = 0u; j < buffCount; ++i)
+            for (auto j = 0u; j < buffCount; ++j)
             {
                 auto data = m_decoders[i]->decode(buff.front());
                 m_audioStreams[i]->updateBuffer(data.data(), data.size());

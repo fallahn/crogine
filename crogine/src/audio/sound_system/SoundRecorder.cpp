@@ -262,10 +262,12 @@ bool SoundRecorder::openSelectedDevice()
         if (m_deviceIndex > -1)
         {
             m_recordingDevice = alcCaptureOpenDevice(m_deviceList[m_deviceIndex].c_str(), m_sampleRate, format, m_pcmBuffer.size() * 3);
+            LogI << "Trying to open " << m_deviceList[m_deviceIndex].c_str() << std::endl;
         }
         else
         {
             m_recordingDevice = alcCaptureOpenDevice(nullptr, m_sampleRate, format, m_pcmBuffer.size() * 3);
+            LogI << "Trying to open default recording device" << std::endl;
         }
 
         if (!m_recordingDevice)
@@ -274,6 +276,7 @@ bool SoundRecorder::openSelectedDevice()
         }
         else
         {
+            LogI << "Opened device for recording" << std::endl;
             m_active = true;
             alcCaptureStart(RECORDING_DEVICE);
         }

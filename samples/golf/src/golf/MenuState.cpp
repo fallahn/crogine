@@ -950,9 +950,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_l:
             m_voiceChat.disconnect();
             break;
-        case SDLK_j:
-            m_voiceChat.captureVoice();
-            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -1353,6 +1350,11 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    if (cro::Keyboard::isKeyPressed(SDLK_j))
+    {
+        m_voiceChat.captureVoice();
+    }
+
     if (m_sharedData.clientConnection.connected)
     {
         for (const auto& evt : m_sharedData.clientConnection.eventBuffer)
@@ -2085,9 +2087,13 @@ void MenuState::setVoiceCallbacks()
             {
                 m_voiceEntities[idx] = m_backgroundScene.createEntity();
                 m_voiceEntities[idx].addComponent<cro::Transform>();
-                m_voiceEntities[idx].addComponent<cro::AudioEmitter>(*vc.getStream(idx)).setRolloff(0.f);
-                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setLooped(true);
+                m_voiceEntities[idx].addComponent<cro::AudioEmitter>().setSource(*vc.getStream(idx));
                 m_voiceEntities[idx].getComponent<cro::AudioEmitter>().play();
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setLooped(true);
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setRolloff(0.f);
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+
+                LogI << "Created voice entity" << std::endl;
             }
         };
     m_voiceChat.setCreationCallback(voiceCreate);
@@ -2102,6 +2108,8 @@ void MenuState::setVoiceCallbacks()
                 m_backgroundScene.simulate(0.f);
 
                 m_voiceEntities[idx] = {};
+
+                LogI << "Remove voice entity" << std::endl;
             }
         };
     m_voiceChat.setDeletionCallback(voiceDelete);
@@ -2736,7 +2744,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 void MenuState::finaliseGameJoin(std::uint64_t hostID)
 {
 #ifdef USE_GNS
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(hostID)));
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(hostID)), ConstVal::GamePort);
     m_sharedData.clientConnection.hostID = hostID;
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
@@ -2751,6 +2759,8 @@ void MenuState::finaliseGameJoin(std::uint64_t hostID)
         m_matchMaking.leaveLobby();
         return;
     }
+
+    cro::Console::doCommand("connect_voice");
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::ReadyButton;
