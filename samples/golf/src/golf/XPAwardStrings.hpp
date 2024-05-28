@@ -69,6 +69,7 @@ struct XPStringID final
 
         CareerRoundComplete,
         CareerSeasonComplete,
+        HoleWon,
 
         Count
     };
@@ -110,4 +111,5 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
 
     "Career Round Complete",
     "Career Season Complete",
+    "Hole Winner"
 };

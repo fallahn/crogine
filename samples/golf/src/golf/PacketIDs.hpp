@@ -145,7 +145,7 @@ namespace PacketID
         SetHole, //< uint16(uint8 hole | uint8 par)
         SetPar, //< uint8 par
         ScoreUpdate, //< ScoreUpdate struct
-        HoleWon, //< uint16 client OR'd player winning a match or skins point
+        HoleWon, //< uint16 client OR'd player winning a match or skins point, or NTP
         FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
         MaxStrokes, //< uint8 MaxStrokeID player reached stroke limit (so client can print message)

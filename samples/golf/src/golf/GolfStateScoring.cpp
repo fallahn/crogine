@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,8 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "MessageIDs.hpp"
 
+#include "XPAwardStrings.hpp"
+
 using namespace cl;
 
 void GolfState::updateHoleScore(std::uint16_t data)
@@ -38,6 +40,29 @@ void GolfState::updateHoleScore(std::uint16_t data)
     switch (m_sharedData.scoreType)
     {
     default: break;
+    case ScoreType::NearestThePin:
+    {
+        auto client = (data & 0xff00) >> 8;
+        auto player = (data & 0x00ff);
+
+        client = std::clamp(client, 0, static_cast<std::int32_t>(ConstVal::MaxClients));
+        player = std::clamp(player, 0, static_cast<std::int32_t>(ConstVal::MaxPlayers));
+
+        //award XP
+        if(m_sharedData.localConnectionData.connectionID == client
+            && !m_sharedData.localConnectionData.playerData[player].isCPU)
+        {
+            Social::awardXP(50, XPStringID::HoleWon);
+        }
+
+        showNotification(m_sharedData.connectionData[client].playerData[player].name + " won the hole!");
+
+        auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+        msg->type = GolfEvent::HoleWon;
+        msg->player = player;
+        msg->client = client;
+    }
+        break;
     case ScoreType::Skins:
     case ScoreType::Match:
     {

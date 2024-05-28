@@ -924,6 +924,20 @@ void GolfState::setNextPlayer(bool newHole)
         || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo.size() == 1) //players have quit the game so attempt next hole
         || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo[1].eliminated)) //(which triggers the rules to end the game)
     {
+        //if we're nearest the pin sort by closest player so current winner goes first
+        //and we can award something for winning the hole
+        if (m_sharedData.scoreType == ScoreType::NearestThePin)
+        {
+            std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+                [&](const PlayerStatus& a, const PlayerStatus& b)
+                {
+                    return (a.distanceScore[m_currentHole] < b.distanceScore[m_currentHole]);
+                });
+
+            std::uint16_t d = (std::uint16_t(m_playerInfo[0].client) << 8) | m_playerInfo[0].player;
+            m_sharedData.host.broadcastPacket(PacketID::HoleWon, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+
         setNextHole();
     }
     else
