@@ -782,7 +782,7 @@ bool GolfGame::initialise()
                 else
                 {
 #ifdef USE_GNS
-                    if (m_sharedData.voiceConnection.netClient.connect(m_sharedData.clientConnection.hostID, ConstVal::VoicePort))
+                    if (m_sharedData.voiceConnection.netClient.connect(CSteamID(uint64(m_sharedData.clientConnection.hostID)), ConstVal::VoicePort))
                     {
                         m_sharedData.voiceConnection.connected = true;
                         m_sharedData.voiceConnection.hostID = m_sharedData.clientConnection.hostID;
