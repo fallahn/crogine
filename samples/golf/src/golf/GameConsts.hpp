@@ -63,6 +63,8 @@ source distribution.
 #include <iomanip>
 #include <array>
 
+static inline constexpr float ToYards = 1.09361f;
+
 static inline constexpr std::int32_t CrowdDensityCount = 4;
 //decreased for each additional player to a minimum of 2
 //so max is actually 4 because we always have at least 2 players

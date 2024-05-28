@@ -5313,8 +5313,16 @@ void MenuState::createPreviousScoreCard()
         {
             std::stringstream ss;
             ss.precision(2);
-            ss << std::fixed << entry.totalDistance;
-            str += ss.str() + " METRES";
+            if (m_sharedData.imperialMeasurements)
+            {
+                ss << std::fixed << entry.totalDistance * ToYards;
+                str += ss.str() + " YARDS";
+            }
+            else
+            {
+                ss << std::fixed << entry.totalDistance;
+                str += ss.str() + " METRES";
+            }
         }
             break;
         }
@@ -5387,8 +5395,16 @@ void MenuState::createPreviousScoreCard()
             {
                 std::stringstream ss;
                 ss.precision(2);
-                ss << std::fixed << entry.totalDistance;
-                str += ss.str() + " METRES";
+                if (m_sharedData.imperialMeasurements)
+                {
+                    ss << std::fixed << entry.totalDistance * ToYards;
+                    str += ss.str() + " YARDS";
+                }
+                else
+                {
+                    ss << std::fixed << entry.totalDistance;
+                    str += ss.str() + " METRES";
+                }
             }
             break;
             }
