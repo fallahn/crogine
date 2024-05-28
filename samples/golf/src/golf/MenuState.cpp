@@ -200,6 +200,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         addSystems();
         loadAssets();
         createScene();
+        setVoiceCallbacks();
 
 #ifdef USE_GNS
         Social::findLeaderboards(Social::BoardType::Courses);
@@ -2073,6 +2074,37 @@ void MenuState::createClouds()
             modelIndex = (modelIndex + 1) % definitions.size();
         }
     }
+}
+
+void MenuState::setVoiceCallbacks()
+{
+    const auto voiceCreate =
+        [&](VoiceChat& vc, std::size_t idx)
+        {
+            if (!m_voiceEntities[idx].isValid())
+            {
+                m_voiceEntities[idx] = m_backgroundScene.createEntity();
+                m_voiceEntities[idx].addComponent<cro::Transform>();
+                m_voiceEntities[idx].addComponent<cro::AudioEmitter>(*vc.getStream(idx)).setRolloff(0.f);
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setLooped(true);
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().play();
+            }
+        };
+    m_voiceChat.setCreationCallback(voiceCreate);
+
+    const auto voiceDelete =
+        [&](std::size_t idx)
+        {
+            if (m_voiceEntities[idx].isValid())
+            {
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().stop();
+                m_backgroundScene.destroyEntity(m_voiceEntities[idx]);
+                m_backgroundScene.simulate(0.f);
+
+                m_voiceEntities[idx] = {};
+            }
+        };
+    m_voiceChat.setDeletionCallback(voiceDelete);
 }
 
 void MenuState::handleNetEvent(const net::NetEvent& evt)

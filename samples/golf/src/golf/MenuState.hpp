@@ -250,6 +250,8 @@ private:
     void loadAssets();
     void createScene();
     void createClouds();
+    void setVoiceCallbacks();
+    std::array<cro::Entity, ConstVal::MaxClients> m_voiceEntities;
 
     SharedCourseData m_sharedCourseData;
     

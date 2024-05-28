@@ -167,6 +167,11 @@ void VoiceChat::addSource(std::size_t idx)
 
         m_decoders[idx] = std::make_unique<cro::Opus>(ctx);
         m_audioStreams[idx] = std::make_unique<cro::DynamicAudioStream>(ChannelCount, SampleRate);
+
+        if (m_creationCallback)
+        {
+            m_creationCallback(*this, idx);
+        }
     }
 }
 
@@ -174,6 +179,11 @@ void VoiceChat::removeSource(std::size_t idx)
 {
     if (idx < ConstVal::MaxClients)
     {
+        if (m_deletionCallback)
+        {
+            m_deletionCallback(idx);
+        }
+
         m_decoders[idx].reset();
         m_audioStreams[idx].reset(); //HMMMM we need to ensure that any ent using this is destroyed first
         m_packetBuffers[idx] = {};

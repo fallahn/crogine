@@ -50,16 +50,22 @@ public:
 
     void process();
 
-    //TODO raise a message ofzo when a new stream is created/destroyed
-    //so that the active scene can act on it accordingly
     const cro::DynamicAudioStream* getStream(std::size_t idx) const;
 
+
+    //called immediately after audio streams are created
+    void setCreationCallback(std::function<void(VoiceChat&, std::size_t)> cb) { m_creationCallback = cb; }
+    //called immediately before audio streams are deleted
+    void setDeletionCallback(std::function<void(std::size_t)> cb) {m_deletionCallback = cb;}
 
 private:
     SharedStateData& m_sharedData;
 
     cro::SoundRecorder m_recorder;
     std::vector<std::uint8_t> m_opusPacket;
+
+    std::function<void(VoiceChat&, std::size_t)> m_creationCallback;
+    std::function<void(std::size_t)> m_deletionCallback;
 
     std::array<std::unique_ptr<cro::Opus>, ConstVal::MaxClients> m_decoders;
     std::array<std::unique_ptr<cro::DynamicAudioStream>, ConstVal::MaxClients> m_audioStreams;
