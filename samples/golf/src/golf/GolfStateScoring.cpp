@@ -45,8 +45,8 @@ void GolfState::updateHoleScore(std::uint16_t data)
         auto client = (data & 0xff00) >> 8;
         auto player = (data & 0x00ff);
 
-        client = std::clamp(client, 0, static_cast<std::int32_t>(ConstVal::MaxClients));
-        player = std::clamp(player, 0, static_cast<std::int32_t>(ConstVal::MaxPlayers));
+        client = std::clamp(client, 0, static_cast<std::int32_t>(ConstVal::MaxClients - 1));
+        player = std::clamp(player, 0, static_cast<std::int32_t>(ConstVal::MaxPlayers - 1));
 
         //award XP
         if(m_sharedData.localConnectionData.connectionID == client
@@ -85,8 +85,8 @@ void GolfState::updateHoleScore(std::uint16_t data)
         }
         else
         {
-            client = std::clamp(client, 0, static_cast<std::int32_t>(ConstVal::MaxClients));
-            player = std::clamp(player, 0, static_cast<std::int32_t>(ConstVal::MaxPlayers));
+            client = std::clamp(client, 0, static_cast<std::int32_t>(ConstVal::MaxClients - 1));
+            player = std::clamp(player, 0, static_cast<std::int32_t>(ConstVal::MaxPlayers - 1));
 
             auto txt = m_sharedData.connectionData[client].playerData[player].name;
             if (m_sharedData.scoreType == ScoreType::Match)

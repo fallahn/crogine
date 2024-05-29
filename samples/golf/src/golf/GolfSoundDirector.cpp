@@ -622,9 +622,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             else if (data.type == SceneEvent::TransitionStart
                 && data.data != 0) //current hole
             {
-                if (m_sharedData.scoreType == ScoreType::NearestThePin)
+                if (m_sharedData.scoreType == ScoreType::NearestThePin
+                    && cro::Util::Random::value(0, 3) == 0)
                 {
-                    playSound(cro::Util::Random::value(AudioID::NTP01, AudioID::NTP04), glm::vec3(0.f));
+                    playSoundDelayed(cro::Util::Random::value(AudioID::NTP01, AudioID::NTP04), glm::vec3(0.f), 1.2f, 1.5f);
                 }
             }
             else if (data.type == SceneEvent::PlayerIdle)

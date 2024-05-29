@@ -1074,7 +1074,14 @@ void GolfState::buildUI()
             float hTarget = estimatePuttPower();
             if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
             {
-                m_cpuGolfer.setPuttingPower(hTarget);
+                float cpuPower = hTarget;
+                if (m_sharedData.scoreType == ScoreType::NearestThePin
+                    && m_distanceToHole < 1)
+                {
+                    cpuPower *= 0.6f;
+                }
+
+                m_cpuGolfer.setPuttingPower(cpuPower);
             }
             hTarget *= BarWidth;
 

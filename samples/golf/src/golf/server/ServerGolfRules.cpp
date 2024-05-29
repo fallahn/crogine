@@ -297,35 +297,37 @@ bool GolfState::summariseRules()
             }
         }
 
-
-        //only score if no player tied
-        if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
-            sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
-            || (m_skinsFinals && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
+        if (m_sharedData.scoreType == ScoreType::Skins)
         {
-            auto player = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), [&sortData](const PlayerStatus& p)
-                {
-                    return p.client == sortData[0].client && p.player == sortData[0].player;
-                });
-
-            player->matchWins++;
-            player->skins += m_skinsPot;
-            m_skinsPot = 1;
-
-            sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
-
-            //send notification packet to clients that player won the hole
-            std::uint16_t data = (player->client << 8) | player->player;
-            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
-        else //increase the skins pot, but only if not repeating the final hole
-        {
-            if (!m_skinsFinals)
+            //only score if no player tied
+            if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
+                sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
+                || (m_skinsFinals && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
             {
-                m_skinsPot++;
+                auto player = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), [&sortData](const PlayerStatus& p)
+                    {
+                        return p.client == sortData[0].client && p.player == sortData[0].player;
+                    });
 
-                std::uint16_t data = 0xff00 | m_skinsPot;
+                player->matchWins++;
+                player->skins += m_skinsPot;
+                m_skinsPot = 1;
+
+                sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
+
+                //send notification packet to clients that player won the hole
+                std::uint16_t data = (player->client << 8) | player->player;
                 m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            else //increase the skins pot, but only if not repeating the final hole
+            {
+                if (!m_skinsFinals)
+                {
+                    m_skinsPot++;
+
+                    std::uint16_t data = 0xff00 | m_skinsPot;
+                    m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
             }
         }
 
