@@ -534,6 +534,20 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         }
                     }
                 }
+
+                //this is a forfeit
+                if (m_sharedData.scoreType == ScoreType::NearestThePin
+                    && data.terrain == TerrainID::Hole)
+                {
+                    if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                    {
+                        std::string emitterName = cro::Util::Random::value(0, 1) == 1 ? "bunker" : "scrub";
+                        if (m_playerVoices[idx].hasEmitter(emitterName))
+                        {
+                            playAvatarSoundDelayed(idx, emitterName, glm::vec3(0.f), 0.5f);
+                        }
+                    }
+                }
                 break;
             }
         }
