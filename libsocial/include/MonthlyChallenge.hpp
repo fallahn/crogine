@@ -138,7 +138,7 @@ private:
         Challenge(100, Challenge::Counter),
         Challenge(50, Challenge::Counter),
         Challenge(25, Challenge::Counter),
-        Challenge(0x7F, Challenge::Flag), //game mode count
+        Challenge(0x3FF, Challenge::Flag), //game mode count
         Challenge(0xfff, Challenge::Flag), //(1 << 0) - (1 << 11) course count
         Challenge(10, Challenge::Counter),
         Challenge(0x1fff, Challenge::Flag), //(1 << 0) - (1 << 12)

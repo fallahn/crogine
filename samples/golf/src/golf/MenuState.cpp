@@ -288,6 +288,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //also set if the player quit the game from the pause menu)
         if (sd.gameMode != GameMode::FreePlay)
         {
+            m_voiceChat.disconnect();
+
             sd.serverInstance.stop();
             sd.hosting = false;
 
@@ -2286,6 +2288,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
             m_sharedData.clientConnection.netClient.disconnect();
             m_sharedData.clientConnection.connected = false;
+
+            m_voiceChat.disconnect();
         }
             break;
         case PacketID::LobbyUpdate:
@@ -2666,6 +2670,8 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 #endif
     if (!m_sharedData.clientConnection.connected)
     {
+        m_voiceChat.disconnect();
+
         m_sharedData.serverInstance.stop();
         m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
             + std::to_string(ConstVal::GamePort)

@@ -154,6 +154,14 @@ namespace AchievementID
         AllTime,
         Vandal,
 
+        TopOfThePile,
+        Survivor,
+        LikeTotallyRandom,
+        PinKing,
+        ShortDistanceClara,
+        SnugAsABug,
+        HappySnapper,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

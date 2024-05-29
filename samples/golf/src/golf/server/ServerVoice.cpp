@@ -37,6 +37,14 @@ bool VoiceHost::start(std::uint16_t port)
 
 void VoiceHost::stop()
 {
+    for (auto& p : m_peers)
+    {
+        if (p)
+        {
+            m_host.disconnectLater(p);
+        }
+    }
+
     m_host.stop();
 }
 

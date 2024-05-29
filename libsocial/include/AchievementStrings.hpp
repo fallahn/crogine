@@ -144,7 +144,14 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "course_12_par",
     "semi_retired",
     "all_time_champ",
-    "vandal"
+    "vandal",
+    "top_pile",
+    "survivor",
+    "totally_random",
+    "pin_king",
+    "short_distance_clara",
+    "snug_bug",
+    "happy_snapper",
 };
 
 //appears on the notification
@@ -247,7 +254,14 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Master Course 12",
     "Semi-Retired",
     "All Time Champion",
-    "Vandal"
+    "Vandal",
+    "Top Of The Pile",
+    "Survivor",
+    "Like, Totally Random",
+    "Pin King",
+    "Short Distance Clara",
+    "Snug As A Bug",
+    "Happy Snapper"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -351,6 +365,13 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Complete Career Mode", false),
     std::make_pair("Get first place in every Career league", false),
     std::make_pair("Hit the camera drone 10 times", false),
+    std::make_pair("Win a round of Elimination", false),
+    std::make_pair("Survive 18 holes of Elimination", false),
+    std::make_pair("Win a round of Clubset Shuffle", false),
+    std::make_pair("Win a round of Nearest the Pin", false),
+    std::make_pair("Finish 9 holes with less than 15m in Nearest the Pin", false),
+    std::make_pair("Finish 18 holes with less than 15m in Nearest the Pin", false),
+    std::make_pair("Use the Freecam mode to take 15 screenshots", false),
 };
 
 //assuming trophies load correctly they are:
@@ -486,6 +507,14 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldCup ,
     TrophyID::Platinum,
     TrophyID::Platinum,
+
+    /*99*/TrophyID::GoldCup,
+    /*100*/TrophyID::Platinum,
+    /*101*/TrophyID::GoldFigure,
+    /*102*/TrophyID::GoldCup,
+    /*103*/TrophyID::SilverFigure,
+    /*104*/TrophyID::GoldFigure,
+    /*105*/TrophyID::BronzeCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

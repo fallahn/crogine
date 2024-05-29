@@ -50,19 +50,28 @@ VoiceChat::VoiceChat(SharedStateData& sd)
 //public
 void VoiceChat::connect()
 {
-    cro::Console::doCommand("connect_voice");
-    m_recorder.openDevice("", ChannelCount, SampleRate, true);
+    if (m_recorder.openDevice("", ChannelCount, SampleRate, true))
+    {
+        cro::Console::doCommand("connect_voice");
+    }
+    else
+    {
+        LogI << "Did not connect to voice channel, no recording device available" << std::endl;
+    }
 }
 
 void VoiceChat::disconnect()
 {
-    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    if (m_sharedData.voiceConnection.connectionID != ConstVal::NullValue)
     {
-        removeSource(i);
-    }
+        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+        {
+            removeSource(i);
+        }
 
-    cro::Console::doCommand("disconnect_voice");
-    m_recorder.closeDevice();
+        cro::Console::doCommand("disconnect_voice");
+        m_recorder.closeDevice();
+    }
 }
 
 void VoiceChat::captureVoice()
