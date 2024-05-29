@@ -181,8 +181,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
 
         "assets/golf/sound/kudos/ntp01.wav",
         "assets/golf/sound/kudos/ntp02.wav",
-        "assets/golf/sound/kudos/ntp03.wav",
-        "assets/golf/sound/kudos/ntp04.wav",
+
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -625,7 +624,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 if (m_sharedData.scoreType == ScoreType::NearestThePin
                     && cro::Util::Random::value(0, 3) == 0)
                 {
-                    playSoundDelayed(cro::Util::Random::value(AudioID::NTP01, AudioID::NTP04), glm::vec3(0.f), 1.2f, 1.5f);
+                    playSoundDelayed(cro::Util::Random::value(AudioID::NTP01, AudioID::NTP02), glm::vec3(0.f), 1.2f, 1.5f);
                 }
             }
             else if (data.type == SceneEvent::PlayerIdle)

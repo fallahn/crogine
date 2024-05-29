@@ -155,7 +155,7 @@ namespace
 
 ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedProfileData& sp)
     : cro::State        (ss, ctx),
-    m_uiScene           (ctx.appInstance.getMessageBus(), 384u),
+    m_uiScene           (ctx.appInstance.getMessageBus(), 1024),
     m_modelScene        (ctx.appInstance.getMessageBus(), 1024), //just because someone might be daft enough to install ALL the workshop items
     m_sharedData        (sd),
     m_profileData       (sp),

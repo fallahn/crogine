@@ -554,6 +554,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
+        case cro::GameController::ButtonRightStick:
+            toggleMiniZoom();
+            break;
         case cro::GameController::ButtonStart:
         case cro::GameController::ButtonGuide:
             pauseGame();

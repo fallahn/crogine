@@ -166,8 +166,6 @@ public:
 
             NTP01,
             NTP02,
-            NTP03,
-            NTP04,
 
             Count
         };
