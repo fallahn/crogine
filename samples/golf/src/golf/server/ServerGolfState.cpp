@@ -920,7 +920,7 @@ void GolfState::setNextPlayer(bool newHole)
 
     //TODO move this to some game rule check function
     if (m_playerInfo[0].distanceToHole == 0 //all players must be in the hole
-        || (m_sharedData.scoreType == ScoreType::NearestThePin && m_playerInfo[0].holeScore[m_currentHole] == MaxNTPStrokes) //all players must have taken their turn
+        || (m_sharedData.scoreType == ScoreType::NearestThePin && m_playerInfo[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
         || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo.size() == 1) //players have quit the game so attempt next hole
         || (m_sharedData.scoreType == ScoreType::Elimination && m_playerInfo[1].eliminated)) //(which triggers the rules to end the game)
     {
@@ -934,8 +934,12 @@ void GolfState::setNextPlayer(bool newHole)
                     return (a.distanceScore[m_currentHole] < b.distanceScore[m_currentHole]);
                 });
 
-            std::uint16_t d = (std::uint16_t(m_playerInfo[0].client) << 8) | m_playerInfo[0].player;
-            m_sharedData.host.broadcastPacket(PacketID::HoleWon, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            //don't send this if all players forfeit
+            if (m_playerInfo[0].holeScore[m_currentHole] == MaxNTPStrokes)
+            {
+                std::uint16_t d = (std::uint16_t(m_playerInfo[0].client) << 8) | m_playerInfo[0].player;
+                m_sharedData.host.broadcastPacket(PacketID::HoleWon, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
         }
 
         setNextHole();
