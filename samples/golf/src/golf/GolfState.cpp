@@ -5621,7 +5621,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             {
                 if (m_sharedData.scoreType == ScoreType::NearestThePin)
                 {
-                    auto o = glm::normalize(player.position - t) * 0.12f;
+                    auto o = glm::normalize(player.position - t) * (0.12f + (0.06f * std::min(5.f, m_distanceToHole / 5.f)));
                     auto temp = o.x;
                     o.x = -o.z;
                     o.z = temp;
