@@ -371,7 +371,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a round of Nearest the Pin", false),
     std::make_pair("Finish 9 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Finish 18 holes on a full size course with less than 15m in Nearest the Pin", false),
-    std::make_pair("Use the Freecam mode to take 15 screenshots", false),
+    std::make_pair("Take at least one screenshot on each course using freecam", false),
 };
 
 //assuming trophies load correctly they are:

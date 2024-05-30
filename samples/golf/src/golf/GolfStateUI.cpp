@@ -1897,6 +1897,15 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 case ScoreType::MultiTarget:
                     Achievements::awardAchievement(AchievementStrings[AchievementID::HitTheSpot]);
                     break;
+                case ScoreType::Elimination:
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::TopOfThePile]);
+                    break;
+                case ScoreType::ClubShuffle:
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::LikeTotallyRandom]);
+                    break;
+                case ScoreType::NearestThePin:
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::PinKing]);
+                    break;
                 }
             }
 
@@ -1968,6 +1977,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
                 {
                     Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
+                }
+                if (m_sharedData.scoreType == ScoreType::Elimination
+                    && m_currentHole >= 17) //not completely clear if this gets incremented all the way to 18 (pretty sure it doesn't)
+                {
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::Survivor]);
                 }
 
                 if (m_sharedData.nightTime)
