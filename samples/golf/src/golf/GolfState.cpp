@@ -4763,6 +4763,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     {
         m_achievementTracker.alwaysOnTheCourse = false;
         m_achievementTracker.twoShotsSpare = false;
+        m_achievementTracker.under15metres = false;
     }
 
     //CRO_ASSERT(hole < m_holeData.size(), "");

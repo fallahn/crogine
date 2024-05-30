@@ -2006,7 +2006,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
             //if we're stroke play see if we get the achievement
             //for coming in under par
             const auto pd = m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID];
-            //for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
             for(auto j = 0; j < pd.playerCount; ++j)
             {
                 const auto& p = pd.playerData[j];
@@ -2053,6 +2052,49 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     if (m_achievementTracker.twoShotsSpare)
                     {
                         Achievements::awardAchievement(AchievementStrings[AchievementID::GreensInRegulation]);
+                    }
+
+                    if (m_achievementTracker.under15metres
+                        && m_sharedData.scoreType == ScoreType::NearestThePin
+                        && CourseIDs.count(m_sharedData.mapDirectory) != 0)
+                    {
+                        float f = 0.f;
+                        for (auto s : p.distanceScores)
+                        {
+                            f += s;
+                        }
+
+                        if (f < 15.f)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::SnugAsABug]);
+                        }
+                    }
+                }
+            }
+        }
+        else if (m_holeData.size() == 9)
+        {
+            if (m_achievementTracker.under15metres
+                && m_sharedData.scoreType == ScoreType::NearestThePin
+                && CourseIDs.count(m_sharedData.mapDirectory) != 0)
+            {
+                const auto pd = m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID];
+                for (auto j = 0; j < pd.playerCount; ++j)
+                {
+                    const auto& p = pd.playerData[j];
+
+                    if (!p.isCPU)
+                    {
+                        auto f = 0.f;
+                        for (auto s = 0; s < 9; ++s)
+                        {
+                            f += p.distanceScores[s];
+                        }
+
+                        if (f < 15.f)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::ShortDistanceClara]);
+                        }
                     }
                 }
             }

@@ -602,6 +602,8 @@ private:
         bool twoShotsSpare = true; //greens in regulation
         bool alwaysOnTheCourse = true; //consistency
 
+        bool under15metres = true; //NTP total for full courses (puttFromTee sets this false)
+
         bool underTwoPutts = true;
         std::int32_t puttCount = 0; //no more than two putts on every hole
 
