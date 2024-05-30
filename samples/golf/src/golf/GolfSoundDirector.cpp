@@ -524,27 +524,28 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         playSound(AudioID::TerrainWater03, glm::vec3(0.f));
                     }
 
-                    if (data.terrain == TerrainID::Hole
-                        && data.club != ClubID::Putter)
+                    if (data.terrain == TerrainID::Hole)
                     {
-                        playSoundDelayed(AudioID::DriveGood, data.position, 2.4f, 1.f, MixerChannel::Voice);
-                        if (m_soundTimers[AudioID::ApplausePlus].elapsed() > ApplauseSoundTime)
+                        if (m_sharedData.scoreType == ScoreType::NearestThePin)
                         {
-                            playSoundDelayed(AudioID::ApplausePlus, data.position, 0.8f, 0.6f, MixerChannel::Effects);
+                            //this is a forfeit
+                            if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                            {
+                                std::string emitterName = cro::Util::Random::value(0, 1) == 1 ? "bunker" : "scrub";
+                                if (m_playerVoices[idx].hasEmitter(emitterName))
+                                {
+                                    playAvatarSoundDelayed(idx, emitterName, glm::vec3(0.f), 0.5f);
+                                }
+                            }
                         }
-                    }
-                }
-
-                //this is a forfeit
-                if (m_sharedData.scoreType == ScoreType::NearestThePin
-                    && data.terrain == TerrainID::Hole)
-                {
-                    if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
-                    {
-                        std::string emitterName = cro::Util::Random::value(0, 1) == 1 ? "bunker" : "scrub";
-                        if (m_playerVoices[idx].hasEmitter(emitterName))
+                        else if (data.club != ClubID::Putter)
                         {
-                            playAvatarSoundDelayed(idx, emitterName, glm::vec3(0.f), 0.5f);
+                            //this was a chip-in (or better!)
+                            playSoundDelayed(AudioID::DriveGood, data.position, 2.4f, 1.f, MixerChannel::Voice);
+                            if (m_soundTimers[AudioID::ApplausePlus].elapsed() > ApplauseSoundTime)
+                            {
+                                playSoundDelayed(AudioID::ApplausePlus, data.position, 0.8f, 0.6f, MixerChannel::Effects);
+                            }
                         }
                     }
                 }
