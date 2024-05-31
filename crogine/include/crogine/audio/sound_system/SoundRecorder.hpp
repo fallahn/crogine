@@ -136,7 +136,7 @@ namespace cro
         template <typename T>
         const T* getPCM(std::int32_t* count) const 
         {
-            static_assert(false, "Use template specialisation for float, int16 or uint8");
+            static_assert(sizeof(T) != sizeof(T), "Use template specialisation for float, int16 or uint8");
             return nullptr;
         }
 
