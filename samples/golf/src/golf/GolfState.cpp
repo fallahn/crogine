@@ -5618,10 +5618,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     if (localPlayer
         && isCPU)
     {
+        auto pft = m_holeData[m_currentHole].puttFromTee;
+
         const auto getTargetOffset = [&](glm::vec3 t)
             {
                 if (m_sharedData.scoreType == ScoreType::NearestThePin)
                 {
+                    //for some reason this stops the CPU just holing out all the time...
+                    pft = true;
+
                     auto o = glm::normalize(player.position - t) * (0.12f + (0.26f * std::min(1.f, m_distanceToHole / 5.f)));
                     auto temp = o.x;
                     o.x = -o.z;
@@ -5639,7 +5644,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         if (m_cpuGolfer.getSkillIndex() > 3)
         {
             //fallback is used when repeatedly launching the ball into the woods...
-            m_cpuGolfer.activate(cTarg, mTarg, m_holeData[m_currentHole].puttFromTee);
+            m_cpuGolfer.activate(cTarg, mTarg, pft);
         }
 
         else
@@ -5657,14 +5662,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
             if (targetAngle < m_inputParser.getMaxRotation())
             {
-                m_cpuGolfer.activate(cTarg, mTarg, m_holeData[m_currentHole].puttFromTee);
+                m_cpuGolfer.activate(cTarg, mTarg, pft);
             }
             else
             {
                 //aim for whichever is closer (target or pin)
                 //if (glm::length2(target - player.position) < glm::length2(m_holeData[m_currentHole].pin - player.position))
                 {
-                    m_cpuGolfer.activate(target + getTargetOffset(target), mTarg, m_holeData[m_currentHole].puttFromTee);
+                    m_cpuGolfer.activate(target + getTargetOffset(target), mTarg, pft);
                 }
                 /*else
                 {
