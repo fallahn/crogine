@@ -88,7 +88,24 @@ Opus::~Opus()
 //public
 void Opus::encode(const std::int16_t* data, std::int32_t dataSize, std::vector<std::uint8_t>& dst) const
 {
-    auto byteCount = opus_encode(OPUS_ENCODER, data, dataSize, m_outBuffer.data(), m_outBuffer.size());
+    //TODO FRAME SIZE is samples PER CHANNEL so if this is stereo then it will be HALF data size
+    auto byteCount = opus_encode(OPUS_ENCODER, data, m_frameSize, m_outBuffer.data(), m_outBuffer.size());
+    if (byteCount > 0)
+    {
+        dst.resize(byteCount);
+        std::memcpy(dst.data(), m_outBuffer.data(), byteCount);
+    }
+    else
+    {
+        dst.clear();
+        LogI << opus_strerror(byteCount) << std::endl;
+    }
+}
+
+void Opus::encode(const float* data, std::int32_t dataSize, std::vector<std::uint8_t>& dst) const
+{
+    //TODO FRAME SIZE is samples PER CHANNEL so if this is stereo then it will be HALF data size
+    auto byteCount = opus_encode_float(OPUS_ENCODER, data, m_frameSize, m_outBuffer.data(), m_outBuffer.size());
     if (byteCount > 0)
     {
         dst.resize(byteCount);

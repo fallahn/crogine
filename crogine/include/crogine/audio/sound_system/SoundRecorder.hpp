@@ -78,7 +78,7 @@ namespace cro
         \param device Name of the recording device to attempt to open
         \param channels Number of channels to attempt to capture. Must be 1 (mono) or 2 (stereo)
         \param sampleRate The sample rate at which to capture. To enable opus encoding this must be
-        8000, 12000, 16000, 24000 or 48000. Other samplerates can be used, but opus encoding will
+        8000, 12000, 16000, 24000 or 48000. Other sample rates can be used, but opus encoding will
         be unavailable, even if createEncoder was true
         \param createEncoder If true this will attempt to create an opus packet encoder to use with
         getEncodedPacket(). However this will be ignored is sampleRate is not a compatible value.
@@ -121,6 +121,26 @@ namespace cro
         const std::int16_t* getPCMData(std::int32_t* count) const;
 
         /*!
+        \brief Returns a pointer to the raw captured PCM data (if any)
+        \param count Pointer to an int32_t which is filled with the
+        number of samples in the buffer.
+
+        Audio is captured as float by default, calling this with int16
+        or uint8 will convert it on the fly.
+
+        NOTE that this is internally called by getEncodedPacket() if a
+        valid opus encoder is available which will drain the audio buffer,
+        so you should either use just this function or getEncodedPackets()
+        BUT NOT BOTH.
+        */
+        template <typename T>
+        const T* getPCM(std::int32_t* count) const 
+        {
+            static_assert(false, "Use template specialisation for float, int16 or uint8");
+            return nullptr;
+        }
+
+        /*!
         \brief Returns the number of audio channels with which the audio
         will be captured
         */
@@ -146,7 +166,30 @@ namespace cro
         mutable std::vector<std::int16_t> m_pcmBuffer;
         std::unique_ptr<Opus> m_encoder;
 
+        std::vector<float> m_captureBuffer;
+        std::vector<std::int16_t> m_shortConversionBuffer;
+        std::vector<std::uint8_t> m_byteConversionBuffer;
+        void updateCaptureBuffer();
+
         void enumerateDevices();
         bool openSelectedDevice();
     };
+
+    template <>
+    inline const float* SoundRecorder::getPCM(std::int32_t* count) const
+    {
+        return nullptr;
+    }
+
+    template<>
+    inline const std::int16_t* SoundRecorder::getPCM(std::int32_t* count) const
+    {
+        return nullptr;
+    }
+
+    template<>
+    inline const std::uint8_t* SoundRecorder::getPCM(std::int32_t* count) const
+    {
+        return nullptr;
+    }
 }

@@ -68,9 +68,19 @@ namespace cro
         \param data Pointer to PCM data to encode
         \param dataSize Size of data array
         \param dst A vector of bytes into which the packet is placed.
-        This will be empty if no encoding occurred/
+        This will be empty if no encoding occurred
         */
         void encode(const std::int16_t* data, std::int32_t dataSize, std::vector<std::uint8_t>& dst) const;
+
+        /*!
+        \brief Encodes the given floating point pcm data using the context settings
+        supplied in the constructor.
+        \param data Pointer to PCM data to encode
+        \param dataSize Size of data array
+        \param dst A vector of bytes into which the packet is placed.
+        This will be empty if no encoding occurred
+        */
+        void encode(const float* data, std::int32_t dataSize, std::vector<std::uint8_t>& dst) const;
 
         /*!
         \brief Attempts to decode the given opus packet using the channel count and sample rate

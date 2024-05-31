@@ -2766,8 +2766,6 @@ void MenuState::finaliseGameJoin(std::uint64_t hostID)
         return;
     }
 
-    cro::Console::doCommand("connect_voice");
-
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::ReadyButton;
     cmd.action = [&](cro::Entity e, float)

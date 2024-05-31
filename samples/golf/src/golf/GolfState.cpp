@@ -5622,7 +5622,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             {
                 if (m_sharedData.scoreType == ScoreType::NearestThePin)
                 {
-                    auto o = glm::normalize(player.position - t) * (0.12f + (0.06f * std::min(5.f, m_distanceToHole / 5.f)));
+                    auto o = glm::normalize(player.position - t) * (0.12f + (0.26f * std::min(1.f, m_distanceToHole / 5.f)));
                     auto temp = o.x;
                     o.x = -o.z;
                     o.z = temp;
@@ -5632,18 +5632,21 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
                 return glm::vec3(0.f);
             };
 
+        const auto cTarg = clubTarget + getTargetOffset(clubTarget);
+        const auto mTarg = midTarget + getTargetOffset(midTarget);
+
         //if the CPU is smart enough always go for the hole if we can
         if (m_cpuGolfer.getSkillIndex() > 3)
         {
             //fallback is used when repeatedly launching the ball into the woods...
-            m_cpuGolfer.activate(clubTarget + getTargetOffset(clubTarget), midTarget + getTargetOffset(midTarget), m_holeData[m_currentHole].puttFromTee);
+            m_cpuGolfer.activate(cTarg, mTarg, m_holeData[m_currentHole].puttFromTee);
         }
 
         else
         {
             //if the player can rotate enough prefer the hole as the target
-            auto pin = clubTarget - player.position;
-            auto targetPoint = target - player.position;
+            auto pin = cTarg - player.position;
+            auto targetPoint = (target + getTargetOffset(target)) - player.position;
 
             auto p = glm::normalize(glm::vec2(pin.x, -pin.z));
             auto t = glm::normalize(glm::vec2(targetPoint.x, -targetPoint.z));
@@ -5654,14 +5657,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
             if (targetAngle < m_inputParser.getMaxRotation())
             {
-                m_cpuGolfer.activate(clubTarget + getTargetOffset(clubTarget), midTarget + getTargetOffset(midTarget), m_holeData[m_currentHole].puttFromTee);
+                m_cpuGolfer.activate(cTarg, mTarg, m_holeData[m_currentHole].puttFromTee);
             }
             else
             {
                 //aim for whichever is closer (target or pin)
                 //if (glm::length2(target - player.position) < glm::length2(m_holeData[m_currentHole].pin - player.position))
                 {
-                    m_cpuGolfer.activate(target + getTargetOffset(target), midTarget + getTargetOffset(midTarget), m_holeData[m_currentHole].puttFromTee);
+                    m_cpuGolfer.activate(target + getTargetOffset(target), mTarg, m_holeData[m_currentHole].puttFromTee);
                 }
                 /*else
                 {

@@ -30,6 +30,8 @@ source distribution.
 #include <crogine/audio/sound_system/SoundRecorder.hpp>
 #include <crogine/gui/Gui.hpp>
 
+#include <SDL_audio.h>
+
 #include "../ALCheck.hpp"
 #include "../AudioRenderer.hpp"
 
@@ -53,6 +55,13 @@ using namespace cro;
 
 namespace
 {
+    void captureCallback(void* userdata, Uint8* stream, int len)
+    {
+        //TODO userdata points to struct containing pointers
+        //to the capture buffer and a mutex because this is on another thread
+        //struct can also index available samples, current position etc
+    }
+
     constexpr std::array OPUS_SAMPLE_RATES =
     {
         8000, 12000, 16000, 24000, 48000
@@ -128,6 +137,12 @@ bool SoundRecorder::openDevice(const std::string& device, std::int32_t channelCo
     if (!AudioRenderer::isValid())
     {
         LogE << "SoundRecorder::openDevice(): No valid audio renderer available." << std::endl;
+        return false;
+    }
+
+    if (m_deviceList.empty())
+    {
+        LogE << "SoundRecorder::openDevice(): No recording devices are available" << std::endl;
         return false;
     }
 
@@ -240,10 +255,14 @@ void SoundRecorder::enumerateDevices()
             next += (len + 2);
         }
         
-        /*const auto* defaultDevice = alcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
-        if (defaultDevice)
+        /*const auto deviceCount = SDL_GetNumAudioDevices(SDL_TRUE);
+        for (auto i = 0; i < deviceCount; ++i)
         {
-            m_deviceList.push_back(std::string(defaultDevice));
+            const auto* name = SDL_GetAudioDeviceName(i, SDL_TRUE);
+            if (name)
+            {
+                m_deviceList.push_back(name);
+            }
         }*/
 
         return;
@@ -280,6 +299,27 @@ bool SoundRecorder::openSelectedDevice()
             m_active = true;
             alcCaptureStart(RECORDING_DEVICE);
         }
+
+
+        /*SDL_AudioSpec recordingSpec = {};
+        SDL_AudioSpec receivedSpec = {};
+
+        recordingSpec.freq = m_sampleRate;
+        recordingSpec.format = AUDIO_F32;
+        recordingSpec.channels = m_channelCount;
+        recordingSpec.samples = m_sampleRate / 25;
+        recordingSpec.callback = captureCallback;
+
+        if (m_deviceIndex > -1)
+        {
+            m_recordingDevice = SDL_OpenAudioDevice(m_deviceList[m_deviceIndex].c_str(), SDL_TRUE, &recordingSpec, &receivedSpec, SDL_FALSE);
+        }
+        else
+        {
+            m_recordingDevice = SDL_OpenAudioDevice(nullptr, SDL_TRUE, &recordingSpec, &receivedSpec, SDL_FALSE);
+        }
+        m_active = (m_recordingDevice != 0);*/
+
     }
     return m_recordingDevice != nullptr;
 }
