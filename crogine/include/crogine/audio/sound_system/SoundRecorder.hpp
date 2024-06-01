@@ -63,11 +63,40 @@ namespace cro::Detail
 
 namespace cro
 {
+    class CRO_EXPORT_API BaseEffect
+    {
+    public:
+        BaseEffect(std::int32_t samplesRate, std::int32_t channels);
+        virtual ~BaseEffect() {}
+
+        virtual void process(std::vector<float>&) = 0;
+
+    protected:
+        //by optionally calling tick() during process with the
+        //number of samples provided, we can regularly call this
+        //with a fixed time-step to apply parameters such as filter
+        //changes within a custom effect.
+        virtual void processEffect() {};
+
+    private:
+
+        const std::int32_t m_sampleRate;
+        const std::int32_t m_channels;
+
+        //by passing in the number of samples processed
+        //we can calculate based on the channels and sample
+        //rate how much relative time of the waveform has
+        //passed and enter it into an accumulator to create
+        //a fixed step update to process custom effect parameters
+        std::int32_t m_accumulator;
+        void tick(std::int32_t);
+    };
+
     /*!
     \brief The sound recorder captures audio from the specified audio device
     and optionally creates an opus encoder for streaming audio
     */
-    class CRO_EXPORT_API SoundRecorder
+    class CRO_EXPORT_API SoundRecorder final
 #ifdef CRO_DEBUG_
         : public cro::GuiClient
 #endif
@@ -145,10 +174,19 @@ namespace cro
         std::int32_t getChannelCount() const;
 
         /*!
-        \brief Returns the samplerate at which the audio will be captured
+        \brief Returns the sample rate at which the audio will be captured
         */
         std::int32_t getSampleRate() const;
 
+
+        template <typename T>
+        T* insertEffect()
+        {
+            static_assert(std::is_base_of<BaseEffect, T>::value, "Must be an effect type");
+            auto effect = std::make_unique<T>(m_sampleRate, m_channelCount);
+            m_processEffects.emplace_back(std::move(effect));
+            return m_processEffects.back().get();
+        }
 
     private:
 
@@ -163,7 +201,7 @@ namespace cro
         std::int32_t m_frameSize;
 
         std::unique_ptr<Opus> m_encoder;
-
+        std::vector<std::unique_ptr<BaseEffect>> m_processEffects;
 
         std::vector<float> m_circularBuffer;
         SDL_AudioStream* m_captureStream;

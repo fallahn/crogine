@@ -136,19 +136,19 @@ SoundRecorder::SoundRecorder()
     enumerateDevices();
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Sound Recorder Debug"))
-            {
-                /*SDL_LockAudioDevice(m_recordingDevice);
-                ImGui::PlotLines("Input Buffer", m_captureContext.circularBuffer, m_captureContext.BufferSize);
-                SDL_UnlockAudioDevice(m_recordingDevice);*/
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Sound Recorder Debug"))
+    //        {
+    //            /*SDL_LockAudioDevice(m_recordingDevice);
+    //            ImGui::PlotLines("Input Buffer", m_captureContext.circularBuffer, m_captureContext.BufferSize);
+    //            SDL_UnlockAudioDevice(m_recordingDevice);*/
 
-                //ImGui::Text("PCM Buffer Size %d", pcmBufferCaptureSize);
-                //ImGui::PlotLines("Process Buffer", m_processBuffer.data(), m_processBuffer.size());
-            }
-            ImGui::End();
-        });
+    //            //ImGui::Text("PCM Buffer Size %d", pcmBufferCaptureSize);
+    //            //ImGui::PlotLines("Process Buffer", m_processBuffer.data(), m_processBuffer.size());
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -316,7 +316,11 @@ bool SoundRecorder::hasProcessedBuffer() const
             SDL_UnlockAudioDevice(m_recordingDevice);
 
 
-            //TODO run the copied buffer through the effects chain
+            //run the copied buffer through the effects chain
+            for (auto& effect : m_processEffects)
+            {
+                effect->process(m_processBuffer);
+            }
 
             return true;
         }
@@ -429,4 +433,27 @@ bool SoundRecorder::openSelectedDevice()
     }
 
     return m_recordingDevice != 0;
+}
+
+
+//TODO move this somewhere
+BaseEffect::BaseEffect(std::int32_t sampleRate, std::int32_t channelCount)
+    : m_sampleRate  (sampleRate),
+    m_channels      (channelCount),
+    m_accumulator   (0)
+{
+
+}
+
+//private
+void BaseEffect::tick(std::int32_t tickCount)
+{
+    //TODO calc some sort of timestep from the samplerate
+    const auto step = 1000;
+    m_accumulator += step;
+    while (m_accumulator > step)
+    {
+        m_accumulator -= step;
+        processEffect();
+    }
 }
