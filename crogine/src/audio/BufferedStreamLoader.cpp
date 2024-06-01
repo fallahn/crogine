@@ -89,5 +89,5 @@ void BufferedStreamLoader::updateBuffer(const std::int16_t* data, std::int32_t s
     std::scoped_lock l(m_mutex);
     auto oldSize = m_doubleBuffer.size();
     m_doubleBuffer.resize((sampleCount * m_channelCount) + oldSize);
-    std::memcpy(&m_doubleBuffer[oldSize], data, sampleCount * m_channelCount * sizeof(std::int16_t));
+    std::memcpy(&m_doubleBuffer[oldSize], data, (sampleCount * m_channelCount) * sizeof(std::int16_t));
 }

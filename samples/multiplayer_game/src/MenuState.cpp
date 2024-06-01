@@ -65,13 +65,12 @@ namespace
     std::int32_t sampleCount = 0;
     bool encodeAudio = false;
 
-    constexpr std::int32_t ChannelCount = 1;
+    constexpr std::int32_t ChannelCount = 2;
     constexpr std::int32_t SampleRate = 24000;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
-    m_encoder       ({}),
     m_audioStream   (ChannelCount, SampleRate),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
@@ -199,10 +198,10 @@ bool MenuState::simulate(float dt)
 
             if (!packet.empty())
             {
-                auto pcm = m_encoder.decode(packet);
+                auto pcm = m_encoder->decode(packet);
                 if (!pcm.empty())
                 {
-                    m_audioStream.updateBuffer(pcm.data(), pcm.size());
+                    m_audioStream.updateBuffer(pcm.data(), m_encoder->getFrameSize());
                 }
             }
         }
@@ -451,6 +450,12 @@ void MenuState::registerUI()
                     if (ImGui::Button("Open Device"))
                     {
                         deviceOpen = m_soundRecorder.openDevice(devices[idx], ChannelCount, SampleRate, true);
+
+                        //TODO we should have some mechanism to make sure the decoder
+                        //uses the same context used to create the encoder.
+                        cro::Opus::Context ctx;
+                        ctx.channelCount = ChannelCount;
+                        m_encoder = std::make_unique<cro::Opus>(ctx);
                     }
                 }
                 else

@@ -90,6 +90,8 @@ namespace cro
         */
         std::vector<std::int16_t> decode(const std::vector<std::uint8_t>& packet) const;
 
+        std::uint32_t getFrameSize() const { return m_frameSize; }
+
     private:
 
         void* m_encoder;

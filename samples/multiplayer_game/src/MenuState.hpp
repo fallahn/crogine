@@ -92,7 +92,7 @@ public:
 
 private:
     cro::SoundRecorder m_soundRecorder;
-    cro::Opus m_encoder;
+    std::unique_ptr<cro::Opus> m_encoder;
     cro::DynamicAudioStream m_audioStream;
     SharedStateData& m_sharedData;
 
