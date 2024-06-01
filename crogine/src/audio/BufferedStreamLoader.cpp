@@ -69,7 +69,7 @@ const PCMData& BufferedStreamLoader::getData(std::size_t, bool) const
     if (m_doubleBuffer.empty())
     {
         m_dataChunk.data = silentBuffer.data();
-        m_dataChunk.size = silentBuffer.size() * sizeof(std::uint16_t);
+        m_dataChunk.size = silentBuffer.size() * sizeof(std::int16_t);
 
         return m_dataChunk;
     }
@@ -79,7 +79,7 @@ const PCMData& BufferedStreamLoader::getData(std::size_t, bool) const
     m_doubleBuffer.clear();
 
     m_dataChunk.data = m_buffer.data();
-    m_dataChunk.size = m_buffer.size() * sizeof(std::uint16_t);
+    m_dataChunk.size = m_buffer.size() * sizeof(std::int16_t);
     
     return m_dataChunk;
 }
@@ -88,6 +88,6 @@ void BufferedStreamLoader::updateBuffer(const std::int16_t* data, std::int32_t s
 {
     std::scoped_lock l(m_mutex);
     auto oldSize = m_doubleBuffer.size();
-    m_doubleBuffer.resize((sampleCount) + oldSize);
-    std::memcpy(&m_doubleBuffer[oldSize], data, sampleCount * sizeof(std::int16_t));
+    m_doubleBuffer.resize((sampleCount * m_channelCount) + oldSize);
+    std::memcpy(&m_doubleBuffer[oldSize], data, sampleCount * m_channelCount * sizeof(std::int16_t));
 }

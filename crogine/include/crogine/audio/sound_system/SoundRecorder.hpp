@@ -33,9 +33,33 @@ source distribution.
 #include <crogine/audio/sound_system/OpusEncoder.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
+#include <SDL_audio.h>
+
 #include <vector>
 #include <string>
 #include <memory>
+
+
+
+//this is used to retreive data from the callback
+namespace cro::Detail
+{
+    struct CaptureContext final
+    {
+        SDL_AudioStream* conversionStream = nullptr;
+        float* circularBuffer = nullptr;
+        std::int32_t bufferInput = 0; //this is where the next block of data is inserted
+        std::int32_t bufferOutput = 0; //this is the next available index to be read - reset when the buffer wraps
+        std::int32_t buffAvailable = 0;
+        std::int32_t BufferSize = 0; //number of SAMPLES * channelCount - ie size of the array
+        std::int32_t FrameStride = 0; //number of entries in the circular buffer to step with 1 frame
+        std::int32_t FrameSizeBytes = 0; //when the conversion stream has this much available it's inserted into the circular buffer.
+
+        explicit CaptureContext(std::int32_t bs, std::int32_t fs)
+            : bufferInput(fs), BufferSize(bs), FrameStride(fs), FrameSizeBytes(fs * sizeof(float)) {}
+    };
+}
+
 
 namespace cro
 {
@@ -102,43 +126,17 @@ namespace cro
 
         This is only available if the recording device was opened with a compatible
         sample rate and creteEncoder set to true. Otherwise this function does nothing.
-
-        NOTE that this internally calls getPCMData() which will drain the
-        audio buffer, so you should either use just this function or
-        getPCMData() BUT NOT BOTH.
         */
         void getEncodedPacket(std::vector<std::uint8_t>& dst) const;
 
         /*!
         \brief Returns a pointer to the raw captured PCM data (if any)
         \param count Pointer to an int32_t which is filled with the
-        number of samples in the buffer.
-        NOTE that this is internally called by getEncodedPacket() if a
-        valid opus encoder is available which will drain the audio buffer,
-        so you should either use just this function or getEncodedPackets()
-        BUT NOT BOTH.
+        number of *samples* in the buffer. (Note the total size is
+        samples * channel count)
         */
         const std::int16_t* getPCMData(std::int32_t* count) const;
 
-        /*!
-        \brief Returns a pointer to the raw captured PCM data (if any)
-        \param count Pointer to an int32_t which is filled with the
-        number of samples in the buffer.
-
-        Audio is captured as float by default, calling this with int16
-        or uint8 will convert it on the fly.
-
-        NOTE that this is internally called by getEncodedPacket() if a
-        valid opus encoder is available which will drain the audio buffer,
-        so you should either use just this function or getEncodedPackets()
-        BUT NOT BOTH.
-        */
-        template <typename T>
-        const T* getPCM(std::int32_t* count) const 
-        {
-            static_assert(sizeof(T) != sizeof(T), "Use template specialisation for float, int16 or uint8");
-            return nullptr;
-        }
 
         /*!
         \brief Returns the number of audio channels with which the audio
@@ -157,39 +155,27 @@ namespace cro
         std::vector<std::string> m_deviceList;
         std::int32_t m_deviceIndex;
 
-        void* m_recordingDevice;
+        std::int32_t m_recordingDevice;
         bool m_active;
 
         std::int32_t m_channelCount;
         std::int32_t m_sampleRate;
+        std::int32_t m_frameSize;
 
-        mutable std::vector<std::int16_t> m_pcmBuffer;
         std::unique_ptr<Opus> m_encoder;
 
-        std::vector<float> m_captureBuffer;
-        std::vector<std::int16_t> m_shortConversionBuffer;
-        std::vector<std::uint8_t> m_byteConversionBuffer;
-        void updateCaptureBuffer();
+
+        std::vector<float> m_circularBuffer;
+        SDL_AudioStream* m_captureStream;
+        mutable Detail::CaptureContext m_captureContext;
+
+        mutable std::vector<float> m_processBuffer; //1 frame's worth of audio post-effects processing
+        bool hasProcessedBuffer() const; //false if there's not enough to process else true if there's a frame in the process buffer
+
+        SDL_AudioStream* m_outputStream;
+        mutable std::vector<std::int16_t> m_outputBuffer;
 
         void enumerateDevices();
         bool openSelectedDevice();
     };
-
-    template <>
-    inline const float* SoundRecorder::getPCM(std::int32_t* count) const
-    {
-        return nullptr;
-    }
-
-    template<>
-    inline const std::int16_t* SoundRecorder::getPCM(std::int32_t* count) const
-    {
-        return nullptr;
-    }
-
-    template<>
-    inline const std::uint8_t* SoundRecorder::getPCM(std::int32_t* count) const
-    {
-        return nullptr;
-    }
 }

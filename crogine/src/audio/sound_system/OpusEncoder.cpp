@@ -44,8 +44,9 @@ Opus::Opus(const Context& ctx)
     m_decoder       (nullptr),
     m_frameSize     ((ctx.sampleRate / 25) /** ctx.channelCount*/),
     m_maxFrameSize  (m_frameSize * 3),
+    m_channelCount  (ctx.channelCount),
     m_outBuffer     (ctx.maxPacketSize),
-    m_decodeBuffer  (m_maxFrameSize)
+    m_decodeBuffer  (m_maxFrameSize * ctx.channelCount)
 {
     std::int32_t err = 0;
     m_encoder = opus_encoder_create(ctx.sampleRate, ctx.channelCount, OPUS_APPLICATION_VOIP, &err);
@@ -86,9 +87,8 @@ Opus::~Opus()
 }
 
 //public
-void Opus::encode(const std::int16_t* data, std::int32_t dataSize, std::vector<std::uint8_t>& dst) const
+void Opus::encode(const std::int16_t* data, std::vector<std::uint8_t>& dst) const
 {
-    //TODO FRAME SIZE is samples PER CHANNEL so if this is stereo then it will be HALF data size
     auto byteCount = opus_encode(OPUS_ENCODER, data, m_frameSize, m_outBuffer.data(), m_outBuffer.size());
     if (byteCount > 0)
     {
@@ -102,9 +102,8 @@ void Opus::encode(const std::int16_t* data, std::int32_t dataSize, std::vector<s
     }
 }
 
-void Opus::encode(const float* data, std::int32_t dataSize, std::vector<std::uint8_t>& dst) const
+void Opus::encode(const float* data, std::vector<std::uint8_t>& dst) const
 {
-    //TODO FRAME SIZE is samples PER CHANNEL so if this is stereo then it will be HALF data size
     auto byteCount = opus_encode_float(OPUS_ENCODER, data, m_frameSize, m_outBuffer.data(), m_outBuffer.size());
     if (byteCount > 0)
     {
@@ -124,11 +123,11 @@ std::vector<std::int16_t> Opus::decode(const std::vector<std::uint8_t>& packet) 
 
     if (m_decoder)
     {
-        auto sampleCount = opus_decode(OPUS_DECODER, packet.data(), packet.size(), m_decodeBuffer.data(), m_decodeBuffer.size(), 0);
+        auto sampleCount = opus_decode(OPUS_DECODER, packet.data(), packet.size(), m_decodeBuffer.data(), m_frameSize, 0);
         if (sampleCount > 0)
         {
-            retVal.resize(sampleCount);
-            std::memcpy(retVal.data(), m_decodeBuffer.data(), sampleCount * sizeof(std::int16_t));
+            retVal.resize(sampleCount * m_channelCount);
+            std::memcpy(retVal.data(), m_decodeBuffer.data(), retVal.size() * sizeof(std::int16_t));
 
             return retVal;
         }

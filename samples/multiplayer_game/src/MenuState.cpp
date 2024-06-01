@@ -439,6 +439,11 @@ void MenuState::registerUI()
                     ImGui::EndListBox();
                 }
 
+                if (ImGui::Button("Refresh"))
+                {
+                    m_soundRecorder.refreshDeviceList();
+                }
+
                 static bool deviceOpen = false;
                     
                 if (!deviceOpen)

@@ -65,22 +65,22 @@ namespace cro
         /*!
         \brief Encodes the given pcm data using the context settings
         supplied in the constructor.
-        \param data Pointer to PCM data to encode
-        \param dataSize Size of data array
+        \param data Pointer to PCM data to encode. This should contain enough
+        data to fill one frame, which is calculated as (sampleRate / 25) * channelCount
         \param dst A vector of bytes into which the packet is placed.
         This will be empty if no encoding occurred
         */
-        void encode(const std::int16_t* data, std::int32_t dataSize, std::vector<std::uint8_t>& dst) const;
+        void encode(const std::int16_t* data, std::vector<std::uint8_t>& dst) const;
 
         /*!
         \brief Encodes the given floating point pcm data using the context settings
         supplied in the constructor.
-        \param data Pointer to PCM data to encode
-        \param dataSize Size of data array
+        \param data Pointer to PCM data to encode.This should contain enough
+        data to fill one frame, which is calculated as (sampleRate / 25) * channelCount
         \param dst A vector of bytes into which the packet is placed.
         This will be empty if no encoding occurred
         */
-        void encode(const float* data, std::int32_t dataSize, std::vector<std::uint8_t>& dst) const;
+        void encode(const float* data, std::vector<std::uint8_t>& dst) const;
 
         /*!
         \brief Attempts to decode the given opus packet using the channel count and sample rate
@@ -97,6 +97,7 @@ namespace cro
 
         const std::uint32_t m_frameSize;
         const std::uint32_t m_maxFrameSize;
+        const std::uint32_t m_channelCount;
 
         mutable std::vector<std::uint8_t> m_outBuffer;
         mutable std::vector<std::int16_t> m_decodeBuffer;
