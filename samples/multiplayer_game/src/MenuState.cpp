@@ -57,15 +57,18 @@ source distribution.
 #include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/util/Wavetable.hpp>
+#include <crogine/audio/sound_system/effects_chain/VolumeEffect.hpp>
 
 #include <cstring>
 
 namespace
 {
+    //used in the gui. Don't do this. Bad.
     std::int32_t sampleCount = 0;
     bool encodeAudio = false;
+    cro::VolumeEffect* volumeEffect = nullptr;
 
-    constexpr std::int32_t ChannelCount = 2;
+    constexpr std::int32_t ChannelCount = 1;
     constexpr std::int32_t SampleRate = 24000;
 }
 
@@ -282,7 +285,7 @@ void MenuState::createScene()
     entity.addComponent<cro::AudioEmitter>().setSource(m_audioStream);
     entity.getComponent<cro::AudioEmitter>().play();
     entity.getComponent<cro::AudioEmitter>().setLooped(true); //hmmm what do we need to do to not make this necessary?
-
+    volumeEffect = m_soundRecorder.insertEffect<cro::VolumeEffect>();
 
 
     //set a custom camera so the scene doesn't overwrite the viewport
@@ -484,7 +487,16 @@ void MenuState::registerUI()
                     }
 
                     ImGui::SameLine();
-                    ImGui::Text("Samples captured %d", sampleCount);
+
+                    float vol = volumeEffect->getGain();
+                    if (ImGui::SliderFloat("Volume", &vol, 0.f, 1.5f))
+                    {
+                        volumeEffect->setGain(vol);
+                    }
+
+                    ImGui::ProgressBar(volumeEffect->getVULeft());
+                    //ImGui::SameLine();
+                    ImGui::Text("Peak: %3.3f", volumeEffect->getVUDecibelsLeft());
                 }
             }
             ImGui::End();

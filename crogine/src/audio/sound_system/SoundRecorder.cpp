@@ -246,6 +246,11 @@ void SoundRecorder::closeDevice()
         SDL_FreeAudioStream(m_outputStream);
     }
 
+    for (auto& effect : m_processEffects)
+    {
+        effect->reset();
+    }
+
     m_active = false;
 
     m_recordingDevice = 0;
@@ -426,6 +431,12 @@ bool SoundRecorder::openSelectedDevice()
         }
         else
         {
+            for (auto& effect : m_processEffects)
+            {
+                effect->reset();
+                effect->setAudioParameters(m_sampleRate, m_channelCount);
+            }
+
             SDL_PauseAudioDevice(m_recordingDevice, SDL_FALSE);
         }
         m_active = (m_recordingDevice != 0);
@@ -433,27 +444,4 @@ bool SoundRecorder::openSelectedDevice()
     }
 
     return m_recordingDevice != 0;
-}
-
-
-//TODO move this somewhere
-BaseEffect::BaseEffect(std::int32_t sampleRate, std::int32_t channelCount)
-    : m_sampleRate  (sampleRate),
-    m_channels      (channelCount),
-    m_accumulator   (0)
-{
-
-}
-
-//private
-void BaseEffect::tick(std::int32_t tickCount)
-{
-    //TODO calc some sort of timestep from the samplerate
-    const auto step = 1000;
-    m_accumulator += step;
-    while (m_accumulator > step)
-    {
-        m_accumulator -= step;
-        processEffect();
-    }
 }

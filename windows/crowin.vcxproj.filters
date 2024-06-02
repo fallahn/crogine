@@ -106,6 +106,12 @@
     <Filter Include="Source Files\audio\sound system">
       <UniqueIdentifier>{e33ca178-38c9-4a99-9be5-21c1e03f0dbb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\audio\sound system\effects chain">
+      <UniqueIdentifier>{de62451a-4650-4df0-8ab0-1b85802bc7d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\audio\sound system\effects chain">
+      <UniqueIdentifier>{f30d9079-45dd-45f9-a64f-2d84589e1096}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\crogine\include\crogine\Config.hpp">
@@ -744,6 +750,12 @@
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\OpusEncoder.hpp">
       <Filter>Header Files\audio\sound system</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\effects_chain\BaseEffect.hpp">
+      <Filter>Header Files\audio\sound system\effects chain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\effects_chain\VolumeEffect.hpp">
+      <Filter>Header Files\audio\sound system\effects chain</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1255,6 +1267,12 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\sound_system\OpusEncoder.cpp">
       <Filter>Source Files\audio\sound system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\sound_system\effects_chain\BaseEffect.cpp">
+      <Filter>Source Files\audio\sound system\effects chain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\sound_system\effects_chain\VolumeEffect.cpp">
+      <Filter>Source Files\audio\sound system\effects chain</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

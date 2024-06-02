@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/audio/sound_system/OpusEncoder.hpp>
+#include <crogine/audio/sound_system/effects_chain/BaseEffect.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <SDL_audio.h>
@@ -63,35 +64,6 @@ namespace cro::Detail
 
 namespace cro
 {
-    class CRO_EXPORT_API BaseEffect
-    {
-    public:
-        BaseEffect(std::int32_t samplesRate, std::int32_t channels);
-        virtual ~BaseEffect() {}
-
-        virtual void process(std::vector<float>&) = 0;
-
-    protected:
-        //by optionally calling tick() during process with the
-        //number of samples provided, we can regularly call this
-        //with a fixed time-step to apply parameters such as filter
-        //changes within a custom effect.
-        virtual void processEffect() {};
-
-    private:
-
-        const std::int32_t m_sampleRate;
-        const std::int32_t m_channels;
-
-        //by passing in the number of samples processed
-        //we can calculate based on the channels and sample
-        //rate how much relative time of the waveform has
-        //passed and enter it into an accumulator to create
-        //a fixed step update to process custom effect parameters
-        std::int32_t m_accumulator;
-        void tick(std::int32_t);
-    };
-
     /*!
     \brief The sound recorder captures audio from the specified audio device
     and optionally creates an opus encoder for streaming audio
@@ -179,13 +151,25 @@ namespace cro
         std::int32_t getSampleRate() const;
 
 
-        template <typename T>
-        T* insertEffect()
+        /*!
+        \brief Add an effect to the effect chain which processes the recorded audio
+        \param T must be a type which derives from BaseEffect
+        \param Args Optional arugments which are passed to the effect constructor
+        \returns A pointer to the newly created effect. Use this to set any paramerters
+        on the effect. As effects are owned by the SoundRecorder these pointers are invalid
+        once the SoundRecorder goes out of scope.
+        */
+        template <typename T, typename... Args>
+        T* insertEffect(Args... a)
         {
             static_assert(std::is_base_of<BaseEffect, T>::value, "Must be an effect type");
-            auto effect = std::make_unique<T>(m_sampleRate, m_channelCount);
+
+            auto effect = std::make_unique<T>(a...);
+            effect->setAudioParameters(m_sampleRate, m_channelCount);
+
+            auto* retVal = effect.get();
             m_processEffects.emplace_back(std::move(effect));
-            return m_processEffects.back().get();
+            return retVal;
         }
 
     private:
