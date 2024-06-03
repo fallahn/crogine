@@ -100,7 +100,7 @@ static inline const std::array<std::string, ScoreType::Count> RuleDescriptions =
 #endif
     "Stroke play rules, however par is scored at\n2 points, with one extra point awarded for every\nstroke under par. Max strokes are reached when\nthere are no more points available. The player with\nthe most points wins. Contributes to the Club League.\nRecommended for solo play or 2+ players.",
     "Stableford rules, however one point for every\nstroke over par is deducted instead of reaching\nthe stroke limit. The player with the most points wins.\nContributes to the Club League.\n\nRecommended for solo play or 2+ players.",
-    "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.\n\n\nRecommended for 2-4 players.",
+    "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.\n\nA head to head round, 2 players only.",
     "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.\nTies are resolved with a sudden death round.\n\nRecommended for 2-4 players.",
     "Stroke play, but each player must hit the mid-point\ntarget before reaching the green. Not hitting the\ntarget forfeits the hole. Round times are usually\nlonger than average. Par is increased by one\non larger courses.\nRecommended for 2-4 players.",
 #ifdef USE_GNS
@@ -117,6 +117,9 @@ static inline const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "Each player has one stroke to make the longest\ndrive possible while staying on the fairway.\nThe winner is the player with the longest total\ndistance.",
     */
 };
+
+static const inline cro::String MinPlayerWarning("NEED MORE PLAYERS");
+static const inline cro::String MaxPlayerWarning("TOO MANY PLAYERS");
 
 //NOTE min player count is part of the ScoreType struct
 

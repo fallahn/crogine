@@ -3052,7 +3052,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     if (m_sharedData.hosting)
                     {
                         //prevents starting the game if a game mode requires a certain number of players
-                        if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
+                        if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
+                            || m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])
                         {
                             m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
                             m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();

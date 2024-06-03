@@ -2284,9 +2284,18 @@ void MenuState::updateLobbyAvatars()
 
         m_connectedClientCount = clientCount;
         m_connectedPlayerCount = playerCount;
-        if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
+        if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
+            || m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])
         {
             m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType])
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MinPlayerWarning);
+            }
+            else
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MaxPlayerWarning);
+            }
         }
         else
         {
