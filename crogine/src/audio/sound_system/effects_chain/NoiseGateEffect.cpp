@@ -29,6 +29,8 @@ source distribution.
 
 #include <crogine/audio/sound_system/effects_chain/NoiseGateEffect.hpp>
 
+#include <cmath>
+
 using namespace cro;
 
 namespace
@@ -39,6 +41,7 @@ namespace
 NoiseGateEffect::NoiseGateEffect()
     : m_gain        (0.f),
     m_thresholdCount(0),
+    m_thresholdTime (0),
     m_threshold     (0.f),
     m_decay         (0),
     m_decayFrames   (0),
