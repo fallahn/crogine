@@ -490,7 +490,7 @@ GameController::DSEffect GameController::DSEffect::createMultiVibration(const st
 
     retVal.mode = DSModeVibrate;
 
-    std::uint8_t strengthZones = 0;
+    std::uint32_t strengthZones = 0;
     std::uint16_t activeZones = 0;
 
     for (auto i = 0u; i < values.size(); i++)

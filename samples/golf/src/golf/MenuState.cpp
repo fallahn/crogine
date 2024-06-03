@@ -2489,7 +2489,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         }
             break;
         case PacketID::ScoreType:
-            m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
+            m_sharedData.scoreType = evt.packet.as<std::uint8_t>() % ScoreType::Count;
             {
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Menu::ScoreType;
@@ -2523,6 +2523,13 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 auto strGameType = std::to_string(ConstVal::MaxClients) + " - " + ScoreTypes[m_sharedData.scoreType];
 
                 Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
+
+                //hide the ticker if not stroke play
+                if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
+                {
+                    const float scale = m_sharedData.scoreType == ScoreType::Stroke ? 1.f : 0.f;
+                    m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                }
             }
             break;
         case PacketID::NightTime:
