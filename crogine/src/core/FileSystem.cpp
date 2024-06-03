@@ -127,7 +127,7 @@ std::string FileSystem::getFileName(const std::string& path)
     //TODO this doesn't actually check that there is a file at the
     //end of the path, or that it's even a valid path...
     
-    static auto searchFunc = [](const char separator, const std::string& path)->std::string
+    static const auto searchFunc = [](const char separator, const std::string& path)->std::string
     {
         std::size_t i = path.rfind(separator, path.length());
         if (i != std::string::npos)

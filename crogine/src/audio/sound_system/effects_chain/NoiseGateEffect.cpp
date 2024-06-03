@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/audio/sound_system/effects_chain/NoiseGateEffect.hpp>
 
 #include <cmath>
+#include <algorithm>
 
 using namespace cro;
 
@@ -43,11 +44,11 @@ NoiseGateEffect::NoiseGateEffect()
     m_thresholdCount(0),
     m_thresholdTime (0),
     m_threshold     (0.f),
-    m_decay         (0),
+    m_decay         (20),
     m_decayFrames   (0),
     m_decayCount    (0),
     m_decayStep     (0.f),
-    m_attack        (0),
+    m_attack        (10),
     m_attackFrames  (0),
     m_attackCount   (0),
     m_attackStep    (0.f),
@@ -128,6 +129,11 @@ void NoiseGateEffect::process(std::vector<float>& data)
     {
         f *= m_gain;
     }
+}
+
+void NoiseGateEffect::setThreshold(float t)
+{
+    m_threshold = std::clamp(t, 0.f, 1.f);
 }
 
 void NoiseGateEffect::setDecayTime(std::uint16_t d)

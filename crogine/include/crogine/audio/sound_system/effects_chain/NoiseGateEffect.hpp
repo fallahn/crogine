@@ -63,7 +63,6 @@ namespace cro
         */
         float getThreshold() const { return m_threshold; }
 
-
         /*!
         \brief Sets the decay time, in milliseconds, of the gate closing.
         This is internally calculated by the number of frames of audio, so

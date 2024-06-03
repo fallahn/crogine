@@ -497,6 +497,13 @@ void MenuState::registerUI()
                         volumeEffect->setGain(vol);
                     }
 
+                    float thresh = noiseGateEffect->getThreshold();
+                    if (ImGui::SliderFloat("Gate Threshold", &thresh, 0.f, 1.f))
+                    {
+                        noiseGateEffect->setThreshold(thresh);
+                    }
+
+
                     ImGui::ProgressBar(volumeEffect->getVULeft());
                     //ImGui::SameLine();
                     ImGui::Text("Peak: %3.3f", volumeEffect->getVUDecibelsLeft());
