@@ -538,7 +538,7 @@ void MessageOverlayState::buildScene()
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, -4.f));
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\n career progress including\nall of your unlocked items.");
+        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\n career progress, preserving\nany unlocked items.");
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
@@ -572,10 +572,10 @@ void MessageOverlayState::buildScene()
 
                         Career::instance().reset();
 
-                        Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
+                        /*Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
                         Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
                         Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);
-                        Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);
+                        Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);*/
 
                         requestStackClear();
                         requestStackPush(StateID::SplashScreen);
