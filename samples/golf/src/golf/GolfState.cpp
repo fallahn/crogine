@@ -4220,7 +4220,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
             default: break;
             case TerrainID::Bunker:
-                showMessageBoard(MessageBoardID::Bunker);
+                if (m_sharedData.scoreType != ScoreType::NearestThePin) //just because the messages overlap
+                {
+                    showMessageBoard(MessageBoardID::Bunker);
+                }
                 break;
             case TerrainID::Scrub:
                 showMessageBoard(MessageBoardID::Scrub);
