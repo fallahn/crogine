@@ -38,7 +38,8 @@ namespace cro
     /*!
     \brief Simple effect which controls the gain of the incoming
     recorded audio, and demonstrates a possible implementation
-    of the BaseEffect API
+    of the BaseEffect API. Generally this would be added last to
+    the effects chain
     */
     class CRO_EXPORT_API VolumeEffect final : public BaseEffect
     {

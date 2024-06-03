@@ -155,9 +155,14 @@ namespace cro
         \brief Add an effect to the effect chain which processes the recorded audio
         \param T must be a type which derives from BaseEffect
         \param Args Optional arugments which are passed to the effect constructor
-        \returns A pointer to the newly created effect. Use this to set any paramerters
+        \returns A pointer to the newly created effect. Use this to set any parameters
         on the effect. As effects are owned by the SoundRecorder these pointers are invalid
         once the SoundRecorder goes out of scope.
+
+        Effects are applied to the recorded signal in the order in which they are added
+        with this function. As such you'll probably want to make sure to add effects like
+        the volume control last, so that it is applied after any other effects such as
+        the noise gate.
         */
         template <typename T, typename... Args>
         T* insertEffect(Args... a)

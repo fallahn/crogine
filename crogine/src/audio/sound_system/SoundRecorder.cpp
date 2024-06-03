@@ -433,8 +433,8 @@ bool SoundRecorder::openSelectedDevice()
         {
             for (auto& effect : m_processEffects)
             {
-                effect->reset();
                 effect->setAudioParameters(m_sampleRate, m_channelCount);
+                effect->reset(); //do this second as resetting parameters might require knowinf the above values
             }
 
             SDL_PauseAudioDevice(m_recordingDevice, SDL_FALSE);

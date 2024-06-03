@@ -58,6 +58,7 @@ source distribution.
 
 #include <crogine/util/Wavetable.hpp>
 #include <crogine/audio/sound_system/effects_chain/VolumeEffect.hpp>
+#include <crogine/audio/sound_system/effects_chain/NoiseGateEffect.hpp>
 
 #include <cstring>
 
@@ -67,6 +68,7 @@ namespace
     std::int32_t sampleCount = 0;
     bool encodeAudio = false;
     cro::VolumeEffect* volumeEffect = nullptr;
+    cro::NoiseGateEffect* noiseGateEffect = nullptr;
 
     constexpr std::int32_t ChannelCount = 1;
     constexpr std::int32_t SampleRate = 24000;
@@ -285,6 +287,7 @@ void MenuState::createScene()
     entity.addComponent<cro::AudioEmitter>().setSource(m_audioStream);
     entity.getComponent<cro::AudioEmitter>().play();
     entity.getComponent<cro::AudioEmitter>().setLooped(true); //hmmm what do we need to do to not make this necessary?
+    noiseGateEffect = m_soundRecorder.insertEffect<cro::NoiseGateEffect>();
     volumeEffect = m_soundRecorder.insertEffect<cro::VolumeEffect>();
 
 

@@ -21,6 +21,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/sound_system/SoundStream.cpp
 
   ${PROJECT_DIR}/audio/sound_system/effects_chain/BaseEffect.cpp
+  ${PROJECT_DIR}/audio/sound_system/effects_chain/NoiseGateEffect.cpp
   ${PROJECT_DIR}/audio/sound_system/effects_chain/VolumeEffect.cpp
   
   ${PROJECT_DIR}/core/App.cpp
