@@ -452,6 +452,9 @@ void App::run()
         Logger::log("App initialise() returned false.", Logger::Type::Error, Logger::Output::All);
     }
 
+    static constexpr std::int32_t MaxFrames = 4; //for every fixed update render no more than these frames
+    std::int32_t framesRendered = 0;
+
     while (m_running)
     {
         timeSinceLastUpdate += frameClock.restart();
@@ -466,15 +469,20 @@ void App::run()
             handleMessages();
 
             simulate(frameTime);
+
+            framesRendered = 0;
         }
 
-        doImGui();
+        if (framesRendered++ < MaxFrames)
+        {
+            doImGui();
 
-        ImGui::Render();
-        m_window.clear();
-        render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        m_window.display();
+            ImGui::Render();
+            m_window.clear();
+            render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            m_window.display();
+        }
     }
 
     saveSettings();
