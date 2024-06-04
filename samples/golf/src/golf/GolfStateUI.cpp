@@ -1873,7 +1873,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
         {
             auto isCPU = m_sharedData.localConnectionData.playerData[m_statBoardScores[0].player].isCPU;
             if (!isCPU
-                && m_statBoardScores[0].score != m_statBoardScores[1].score) //don't award if drawn in first position
+                && (m_statBoardScores[0].score != m_statBoardScores[1].score //don't award if drawn in first position
+                    || m_sharedData.scoreType == ScoreType::NearestThePin)) //unless this is NTP because the holes scores don't count
             {
                 //remember this is auto-disabled if the player is not the only one on the client
                 Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
