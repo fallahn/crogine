@@ -56,17 +56,21 @@ void VolumeEffect::process(std::vector<float>& buffer)
     for (auto i = 0u; i < buffer.size(); i += getChannelCount())
     {
         buffer[i] *= m_gain;
-        m_VU[0] += std::abs(buffer[i]);
+
+
+        m_VU[0] += (buffer[i] * buffer[i]);
 
         if (getChannelCount() == 2)
         {
             buffer[i+1] *= m_gain;
-            m_VU[1] += std::abs(buffer[i + 1]);
+
+
+            m_VU[1] += (buffer[i + 1] * buffer[i + 1]);
         }
     }
 
-    m_VU[0] /= (buffer.size() / getChannelCount()); 
-    m_VU[1] /= (buffer.size() / getChannelCount());
+    m_VU[0] = std::sqrt(m_VU[0] / (buffer.size() / getChannelCount()));
+    m_VU[1] = std::sqrt(m_VU[1] / (buffer.size() / getChannelCount()));
 
     tick(buffer.size());
 }

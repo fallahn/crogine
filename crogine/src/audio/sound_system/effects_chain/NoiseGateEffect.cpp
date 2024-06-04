@@ -66,7 +66,7 @@ void NoiseGateEffect::process(std::vector<float>& data)
         //count the number of samples above or below thresh
         for (auto i = 0u; i < data.size(); i += getChannelCount())
         {
-            if (std::abs(data[i]) > m_threshold)
+            if (/*std::abs*/(data[i] * data[i]) > m_threshold)
             {
                 m_thresholdCount = std::min(m_thresholdCount + 1, ThresholdLimit);
             }
