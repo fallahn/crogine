@@ -2354,4 +2354,10 @@ void MenuState::updateLobbyAvatars()
             };
     }
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
+    {
+        const auto scale = m_sharedData.scoreType == ScoreType::Stroke ? 1.f : 0.f;
+        m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    }
 }
