@@ -4694,6 +4694,11 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
+    if (m_sharedData.scoreType == ScoreType::ClubShuffle)
+    {
+        m_sharedData.inputBinding.clubset = ClubID::getRandomSet();
+    }
+
     std::uint8_t hole = (holeInfo & 0xff00) >> 8;
     m_holeData[hole].par = (holeInfo & 0x00ff);
 
@@ -5412,10 +5417,10 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
-    if (m_sharedData.scoreType == ScoreType::ClubShuffle)
+    /*if (m_sharedData.scoreType == ScoreType::ClubShuffle)
     {
         m_sharedData.inputBinding.clubset = ClubID::getRandomSet();
-    }
+    }*/
 
     m_buttonStates = {};
 

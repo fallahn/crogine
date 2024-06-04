@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/audio/sound_system/effects_chain/NoiseGateEffect.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <cmath>
 #include <algorithm>
@@ -66,14 +67,16 @@ void NoiseGateEffect::process(std::vector<float>& data)
         //count the number of samples above or below thresh
         for (auto i = 0u; i < data.size(); i += getChannelCount())
         {
-            if (/*std::abs*/(data[i] * data[i]) > m_threshold)
-            {
-                m_thresholdCount = std::min(m_thresholdCount + 1, ThresholdLimit);
-            }
-            else
-            {
-                m_thresholdCount = std::max(m_thresholdCount - 1, -ThresholdLimit);
-            }
+            //if (/*std::abs*/(data[i] * data[i]) > m_threshold)
+            //{
+            //    m_thresholdCount = std::min(m_thresholdCount + 1, ThresholdLimit);
+            //}
+            //else
+            //{
+            //    m_thresholdCount = std::max(m_thresholdCount - 1, -ThresholdLimit);
+            //}
+
+            m_thresholdCount = std::clamp(m_thresholdCount + cro::Util::Maths::sgn(std::abs(data[i]) - m_threshold), -ThresholdLimit, ThresholdLimit);
 
             if (m_state == State::Open
                 && m_thresholdCount < -m_thresholdTime)

@@ -486,12 +486,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 #endif
 
 #if defined USE_WORKSHOP && !defined __APPLE__
-    registerCommand("workshop",
-        [&](const std::string&)
-        {
-            requestStackClear();
-            requestStackPush(StateID::Workshop);
-        });
+    if (!Social::isSteamdeck())
+    {
+        registerCommand("workshop",
+            [&](const std::string&)
+            {
+                requestStackClear();
+                requestStackPush(StateID::Workshop);
+            });
+    }
 #endif
 
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
