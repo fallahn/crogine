@@ -66,7 +66,7 @@ endif()
 
 if(USE_STEAM)
 
-  add_compile_definitions(USE_GNS)
+  add_compile_definitions(USE_GNS USE_WORKSHOP)
 
   include(FetchContent)
   FetchContent_Declare(libgns
