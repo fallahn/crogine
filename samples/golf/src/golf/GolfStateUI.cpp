@@ -2397,7 +2397,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         case ScoreType::StablefordPro:
         case ScoreType::ShortRound:
         {
-            const auto& league = Career::instance().getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
+            const auto& league = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
             const auto pos = league.getCurrentPosition();
             const auto lastSeason = league.getCurrentSeason();
 
@@ -5194,7 +5194,7 @@ void GolfState::updateLeague()
         }
 
         League* league = nullptr;
-        League clubLeague(LeagueRoundID::Club);
+        League clubLeague(LeagueRoundID::Club, m_sharedData);
 
         if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
         {
@@ -5202,7 +5202,7 @@ void GolfState::updateLeague()
         }
         else
         {
-            league = &Career::instance().getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
+            league = &Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
         }
 
         //we assume that as achievments are allowed that
@@ -5235,7 +5235,7 @@ void GolfState::updateLeague()
             std::int32_t bestCount = 0;
             for (auto i = 0u; i < 6u; ++i)
             {
-                bestCount += Career::instance().getLeagueTables()[i].getCurrentBest();
+                bestCount += Career::instance(m_sharedData).getLeagueTables()[i].getCurrentBest();
             }
 
             if (bestCount == 6)

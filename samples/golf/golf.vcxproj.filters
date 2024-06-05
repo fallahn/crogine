@@ -459,6 +459,9 @@
     <ClCompile Include="src\golf\VoiceChat.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\LeagueNames.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -939,6 +942,9 @@
       <Filter>Header Files\golf\server</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\VoiceChat.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\LeagueNames.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>

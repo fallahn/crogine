@@ -337,7 +337,7 @@ void CareerState::buildScene()
                     if (currIdx != 0 &&
                         currIdx == m_maxLeagueIndex - 1)
                     {
-                        if (Career::instance().getLeagueTables()[currIdx].getCurrentIteration() == 0)
+                        if (Career::instance(m_sharedData).getLeagueTables()[currIdx].getCurrentIteration() == 0)
                         {
                             m_sharedData.leagueRoundID = std::min(std::int32_t(LeagueRoundID::RoundSix), m_sharedData.leagueRoundID + 1);
                         }
@@ -360,7 +360,7 @@ void CareerState::buildScene()
                     {
                         auto idx = m_sharedData.leagueRoundID - LeagueRoundID::RoundOne;
                         if (idx == 0 && m_progressPositions[idx] == 0 //no completed holes
-                            && Career::instance().getLeagueTables()[idx].getCurrentIteration() == 0)
+                            && Career::instance(m_sharedData).getLeagueTables()[idx].getCurrentIteration() == 0)
                         {
                             //if we're on the first league/season show the info
                             enterInfoCallback();
@@ -516,8 +516,8 @@ void CareerState::buildScene()
 
 
     //league items
-    const auto& leagueData = Career::instance().getLeagueData();
-    const auto& leagueTables = Career::instance().getLeagueTables();
+    const auto& leagueData = Career::instance(m_sharedData).getLeagueData();
+    const auto& leagueTables = Career::instance(m_sharedData).getLeagueTables();
     glm::vec3 position = LeagueListPosition;
 
     //active league highlight
@@ -1840,8 +1840,8 @@ void CareerState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&
 
 void CareerState::selectLeague(std::size_t idx)
 {
-    const auto& leagueData = Career::instance().getLeagueData()[idx];
-    const auto& league = Career::instance().getLeagueTables()[idx];
+    const auto& leagueData = Career::instance(m_sharedData).getLeagueData()[idx];
+    const auto& league = Career::instance(m_sharedData).getLeagueTables()[idx];
 
     const auto playlistIdx = league.getCurrentIteration() % Career::MaxLeagues;
     const auto& courseData = m_sharedData.courseData->courseData[leagueData.playlist[playlistIdx].courseID];

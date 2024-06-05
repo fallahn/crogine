@@ -33,6 +33,7 @@ source distribution.
 #include "Networking.hpp"
 #include "CommonConsts.hpp"
 #include "PlayerData.hpp"
+#include "LeagueNames.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/core/String.hpp>
@@ -275,4 +276,6 @@ struct SharedStateData final
     
     std::vector<glm::uvec2> resolutions;
     std::vector<std::string> resolutionStrings;
+
+    LeagueNames leagueNames;
 };

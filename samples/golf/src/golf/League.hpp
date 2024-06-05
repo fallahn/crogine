@@ -85,13 +85,14 @@ struct LeagueRoundID final
     };
 };
 
+struct SharedStateData;
 class League final
 {
 public:
     static constexpr std::size_t PlayerCount = 15u;
     static constexpr std::int32_t MaxIterations = 24;
 
-    explicit League(std::int32_t leagueID);
+    explicit League(std::int32_t leagueID, const SharedStateData&);
     //hmmm given that there should only be once instance of any table at a time
     //should we not at least make this move-only? Or even a dreaded singleton???
     void reset();
@@ -115,6 +116,7 @@ public:
 private:
     const std::int32_t m_id;
     const std::int32_t m_maxIterations;
+    const SharedStateData& m_sharedData;
     
     std::array<LeaguePlayer, PlayerCount> m_players = {};
     std::int32_t m_playerScore;

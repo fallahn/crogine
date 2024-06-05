@@ -516,9 +516,9 @@ void MessageOverlayState::buildScene()
                         //m_sharedData.gameMode = GameMode::Tutorial;
 
                         Social::resetProfile();
-                        Career::instance().reset();
+                        Career::instance(m_sharedData).reset();
 
-                        League l(LeagueRoundID::Club);
+                        League l(LeagueRoundID::Club, m_sharedData);
                         l.reset();
                         
                         cro::App::quit();
@@ -570,7 +570,7 @@ void MessageOverlayState::buildScene()
                         //if for some reason we're resetting mid-game
                         m_sharedData.gameMode = GameMode::Tutorial;
 
-                        Career::instance().reset();
+                        Career::instance(m_sharedData).reset();
 
                         /*Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
                         Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);

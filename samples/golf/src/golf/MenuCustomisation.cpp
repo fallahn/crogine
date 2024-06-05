@@ -329,12 +329,12 @@ void MenuState::createBallScene()
 
     const std::array<League, 6u> Leagues =
     {
-        League(LeagueRoundID::RoundOne),
-        League(LeagueRoundID::RoundTwo),
-        League(LeagueRoundID::RoundThree),
-        League(LeagueRoundID::RoundFour),
-        League(LeagueRoundID::RoundFive),
-        League(LeagueRoundID::RoundSix)
+        League(LeagueRoundID::RoundOne, m_sharedData),
+        League(LeagueRoundID::RoundTwo, m_sharedData),
+        League(LeagueRoundID::RoundThree, m_sharedData),
+        League(LeagueRoundID::RoundFour, m_sharedData),
+        League(LeagueRoundID::RoundFive, m_sharedData),
+        League(LeagueRoundID::RoundSix, m_sharedData)
     };
     const std::array<std::string, 6u> LeaguePaths =
     {
@@ -589,12 +589,12 @@ void MenuState::parseAvatarDirectory()
 {
     const std::array<League, 6u> Leagues =
     {
-        League(LeagueRoundID::RoundOne),
-        League(LeagueRoundID::RoundTwo),
-        League(LeagueRoundID::RoundThree),
-        League(LeagueRoundID::RoundFour),
-        League(LeagueRoundID::RoundFive),
-        League(LeagueRoundID::RoundSix)
+        League(LeagueRoundID::RoundOne, m_sharedData),
+        League(LeagueRoundID::RoundTwo, m_sharedData),
+        League(LeagueRoundID::RoundThree, m_sharedData),
+        League(LeagueRoundID::RoundFour, m_sharedData),
+        League(LeagueRoundID::RoundFive, m_sharedData),
+        League(LeagueRoundID::RoundSix, m_sharedData)
     };
 
     m_sharedData.avatarInfo.clear();

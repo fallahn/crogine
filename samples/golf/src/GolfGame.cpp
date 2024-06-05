@@ -700,14 +700,14 @@ bool GolfGame::initialise()
         });
 
     registerCommand("reset_leagues", 
-        [](const std::string&)
+        [&](const std::string&)
         {
             if (cro::FileSystem::showMessageBox("Information", "This will reset the leagues and close the game", cro::FileSystem::ButtonType::OK, cro::FileSystem::IconType::Warning))
             {
-                League l(LeagueRoundID::Club);
+                League l(LeagueRoundID::Club, m_sharedData);
                 l.reset();
 
-                Career::instance().reset();
+                Career::instance(m_sharedData).reset();
 
                 Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
                 Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
@@ -1434,6 +1434,16 @@ void GolfGame::loadPreferences()
                     }
                 }
             }
+        }
+
+        path = Social::getBaseContentPath() + "league_names.txt";
+        if (!cro::FileSystem::fileExists(path))
+        {
+            m_sharedData.leagueNames.write(path);
+        }
+        else
+        {
+            m_sharedData.leagueNames.read(path);
         }
     }
 

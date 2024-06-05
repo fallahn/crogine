@@ -148,7 +148,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
             {
                 if (ImGui::Begin("League", &showStats))
                 {
-                    static League league(LeagueRoundID::Club);
+                    static League league(LeagueRoundID::Club, m_sharedData);
 
                     const auto& entries = league.getTable();
                     for (const auto& e : entries)
@@ -656,7 +656,7 @@ void LeagueState::buildScene()
 
 bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet, std::int32_t leagueIndex)
 {
-    League league(leagueIndex);
+    League league(leagueIndex, m_sharedData);
 
     m_leagueNodes[leagueIndex] = m_scene.createEntity();
     m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(m_leagueNodes[leagueIndex].addComponent<cro::Transform>());
@@ -788,7 +788,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
         if (entries[i].name > -1)
         {
-            str += RandomNames[entries[i].name];
+            str += m_sharedData.leagueNames[entries[i].name];
         }
         else
         {

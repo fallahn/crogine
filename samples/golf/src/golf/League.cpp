@@ -31,8 +31,8 @@ source distribution.
 #include "Social.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
-#include "RandNames.hpp"
 #include "XPAwardStrings.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/App.hpp>
@@ -102,9 +102,10 @@ namespace
     constexpr std::uint8_t VersionNumber = 1;
 }
 
-League::League(std::int32_t id)
+League::League(std::int32_t id, const SharedStateData& sd)
     : m_id                  (id),
     m_maxIterations         (id == LeagueRoundID::Club ? MaxIterations : MaxIterations / 4),
+    m_sharedData            (sd),
     m_playerScore           (0),
     m_currentIteration      (0),
     m_currentSeason         (1),
@@ -473,13 +474,13 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
                 m_previousResults = "Previous Season's Results";
                 for (auto i = 0u; i < buff.size(); ++i)
                 {
-                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(RandomNames.size()) - 1);
+                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(PlayerCount) - 1);
 
                     m_previousResults += " -~- ";
                     m_previousResults += std::to_string(i + 1);
                     if (buff[i].nameIndex > -1)
                     {
-                        m_previousResults += ". " + RandomNames[buff[i].nameIndex];
+                        m_previousResults += ". " + m_sharedData.leagueNames[buff[i].nameIndex];
                     }
                     else
                     {

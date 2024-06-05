@@ -56,7 +56,7 @@ namespace
     };
 }
 
-Career::Career()
+Career::Career(const SharedStateData& sd)
 {
     for (auto i = 0u; i < MaxLeagues; ++i)
     {
@@ -69,7 +69,7 @@ Career::Career()
             m_leagues[i].playlist[j].courseID = static_cast<std::uint8_t>(CourseIDs[i][j % 2]); //alternate courses
         }
 
-        m_leagueTables.emplace_back(m_leagues[i].leagueID);
+        m_leagueTables.emplace_back(m_leagues[i].leagueID, sd);
     }
 }
 
