@@ -1876,6 +1876,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
+    if (m_sharedData.scoreType != ScoreType::Stroke)
+    {
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
