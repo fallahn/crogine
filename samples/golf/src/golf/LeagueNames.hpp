@@ -38,7 +38,7 @@ class LeagueNames final
 public:
     LeagueNames();
 
-    bool read(const std::string&);
+    void read(const std::string&);
     bool write(const std::string&) const;
 
     const cro::String& operator[](std::size_t) const;

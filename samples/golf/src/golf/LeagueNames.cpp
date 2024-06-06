@@ -29,6 +29,7 @@ source distribution.
 
 #include "LeagueNames.hpp"
 #include "RandNames.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Log.hpp>
@@ -49,13 +50,14 @@ LeagueNames::LeagueNames()
 }
 
 //public
-bool LeagueNames::read(const std::string& path)
+void LeagueNames::read(const std::string& path)
 {
+    std::size_t currName = 0;
+
     cro::RaiiRWops rFile;
     rFile.file = SDL_RWFromFile(path.c_str(), "r");
     if (rFile.file)
     {
-        std::size_t currName = 0;
         std::size_t read = 0;
         std::uint8_t b = 0;
         std::vector<std::uint8_t> buffer;
@@ -63,11 +65,12 @@ bool LeagueNames::read(const std::string& path)
         do
         {
             read = SDL_RWread(rFile.file, &b, 1, 1);
-            if (b != NewLine)
+            if (b != NewLine
+                && buffer.size() < ConstVal::MaxNameChars)
             {
                 buffer.push_back(b);
             }
-            else
+            else if (!buffer.empty())
             {
                 m_names[currName++] = cro::String::fromUtf8(buffer.begin(), buffer.end());
                 buffer.clear();
@@ -75,7 +78,14 @@ bool LeagueNames::read(const std::string& path)
         } while (currName < MaxNames && read != 0);
     }
 
-    return false;
+    if (currName < MaxNames)
+    {
+        //fill out remaining with RandNames
+        for (auto i = currName; i < MaxNames; ++i)
+        {
+            m_names[i] = RandomNames[i];
+        }
+    }
 }
 
 bool LeagueNames::write(const std::string& path) const
