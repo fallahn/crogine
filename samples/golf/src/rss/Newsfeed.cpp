@@ -44,7 +44,7 @@ namespace
 {
     std::size_t writeCallback(char* contents, std::size_t size, std::size_t numMem, void* outStr)
     {
-        //hmm, surely there's a bettre way to concat this?
+        //hmm, surely there's a better way to concat this?
         for (auto i = 0u; i < size * numMem; ++i)
         {
             static_cast<std::vector<std::uint8_t>*>(outStr)->push_back(contents[i]);
