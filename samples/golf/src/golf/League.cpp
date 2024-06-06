@@ -129,7 +129,7 @@ void League::reset()
         float dist = static_cast<float>(nameIndex) / PlayerCount;
 
         player = {};
-        player.skill = std::round(dist * (SkillCentre - 1) + 1);
+        player.skill = std::round(dist * (SkillCentre - 2)) + 2;
         player.curve = std::round(dist * MaxCurve) + (player.skill % 2);
         player.curve = player.curve + cro::Util::Random::value(-1, 1);
         player.curve = std::clamp(player.curve, 0, MaxCurve);
@@ -599,6 +599,10 @@ void League::decreaseDifficulty()
         for (auto j = 0; j < failureMagnitude; ++j)
         {
             m_players[i].quality = std::max(MinQuality, m_players[i].quality - ((0.02f * ((PlayerCount - 1)-i)) / 10.f));
+            if (cro::Util::Random::value(0, 1) == 0)
+            {
+                m_players[i].skill = std::min(SkillCentre, m_players[i].skill + 1);
+            }
         }
     }
     LogI << "League reduced." << std::endl;
