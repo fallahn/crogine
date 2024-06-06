@@ -214,62 +214,64 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 
         for (auto i = 0u; i < holeCount; ++i)
         {
-            //calc aim accuracy
-            float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
+            calculateHoleScore(player, i, parVals[i]);
 
-            //calc power accuracy
-            float power = 1.f - PowerSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
+            ////calc aim accuracy
+            //float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
 
-            float quality = aim * power;
+            ////calc power accuracy
+            //float power = 1.f - PowerSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
 
-            //outlier for cock-up
-            if (cro::Util::Random::value(0, 49) < player.outlier)
-            {
-                float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
-                quality *= errorAmount;
-            }
+            //float quality = aim * power;
 
-            //pass through active curve
-            quality = applyCurve(quality, MaxCurve - player.curve) * player.quality;
+            ////outlier for cock-up
+            //if (cro::Util::Random::value(0, 49) < player.outlier)
+            //{
+            //    float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
+            //    quality *= errorAmount;
+            //}
 
-            
-            //calc ideal
-            float ideal = 3.f; //triple bogey
-            switch (parVals[i])
-            {
-            default:
-            case 2:
-                ideal += 1.f; //1 under par etc
-                break;
-            case 3:
-            case 4:
-                ideal += 2.f;
-                break;
-            case 5:
-                ideal += 3.f;
-                break;
-            }
+            ////pass through active curve
+            //quality = applyCurve(quality, MaxCurve - player.curve) * player.quality;
 
-            
-            //find range of triple bogey - ideal
-            float score = std::round(ideal * quality);
-            score -= 2.f; //average out to birdie
+            //
+            ////calc ideal
+            //float ideal = 3.f; //triple bogey
+            //switch (parVals[i])
+            //{
+            //default:
+            //case 2:
+            //    ideal += 1.f; //1 under par etc
+            //    break;
+            //case 3:
+            //case 4:
+            //    ideal += 2.f;
+            //    break;
+            //case 5:
+            //    ideal += 3.f;
+            //    break;
+            //}
 
-            //then use the player skill chance to decide if we got an eagle
-            if (cro::Util::Random::value(1, 10) > player.skill)
-            {
-                score -= 1.f;
-            }
+            //
+            ////find range of triple bogey - ideal
+            //float score = std::round(ideal * quality);
+            //score -= 2.f; //average out to birdie
 
-            //add player score to player total
-            std::int32_t holeScore = -score;
+            ////then use the player skill chance to decide if we got an eagle
+            //if (cro::Util::Random::value(1, 10) > player.skill)
+            //{
+            //    score -= 1.f;
+            //}
 
-            //convert to stableford where par == 2
-            holeScore = std::max(0, 2 - holeScore);
-            playerTotal += holeScore;
+            ////add player score to player total
+            //std::int32_t holeScore = -score;
+
+            ////convert to stableford where par == 2
+            //holeScore = std::max(0, 2 - holeScore);
+            //playerTotal += holeScore;
         }
 
-        player.currentScore += playerTotal;
+        //player.currentScore += playerTotal;
         player.previousPosition = p++;
     }
 
@@ -497,6 +499,64 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
 }
 
 //private
+void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::int32_t par)
+{
+    //calc aim accuracy
+    float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
+
+    //calc power accuracy
+    float power = 1.f - PowerSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
+
+    float quality = aim * power;
+
+    //outlier for cock-up
+    if (cro::Util::Random::value(0, 49) < player.outlier)
+    {
+        float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
+        quality *= errorAmount;
+    }
+
+    //pass through active curve
+    quality = applyCurve(quality, MaxCurve - player.curve) * player.quality;
+
+
+    //calc ideal
+    float ideal = 3.f; //triple bogey
+    switch (par)
+    {
+    default:
+    case 2:
+        ideal += 1.f; //1 under par etc
+        break;
+    case 3:
+    case 4:
+        ideal += 2.f;
+        break;
+    case 5:
+        ideal += 3.f;
+        break;
+    }
+
+
+    //find range of triple bogey - ideal
+    float score = std::round(ideal * quality);
+    score -= 2.f; //average out to birdie
+
+    //then use the player skill chance to decide if we got an eagle
+    if (cro::Util::Random::value(1, 10) > player.skill)
+    {
+        score -= 1.f;
+    }
+
+    //add player score to player total
+    std::int32_t holeScore = -score;
+
+    //convert to stableford where par == 2
+    holeScore = std::max(0, 2 - holeScore);
+    //playerTotal += holeScore;
+    player.currentScore += holeScore;
+}
+
 void League::increaseDifficulty()
 {
     //increase ALL player quality, but show a bigger improvement near the bottom

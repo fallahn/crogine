@@ -4495,9 +4495,8 @@ void MenuState::updateUnlockedItems()
         Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);
     }
 
-    //career items are driven directly by the league file status
-    //rather than these flags - they're just use to stop the
-    //unlock animation playing every single time.
+    //career items will check the league status for unlocks
+    //if these flags are unavailable when setting item lock status
 
     //career balls
     const std::array<League, 6u> Leagues =

@@ -131,6 +131,8 @@ private:
     mutable cro::String m_previousResults;
     mutable std::int32_t m_previousPosition;
 
+    void calculateHoleScore(LeaguePlayer&, std::uint32_t hole, std::int32_t par);
+
     void increaseDifficulty();
     void decreaseDifficulty();
     std::string getFilePath(const std::string& fileName) const;
