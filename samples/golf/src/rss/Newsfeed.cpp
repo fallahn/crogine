@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/util/String.hpp>
 
 #include <cstring>
+#include <regex>
 
 namespace
 {
@@ -120,6 +121,8 @@ bool RSSFeed::parseFeed(const std::vector<std::uint8_t>& src)
 
     {
         std::scoped_lock<std::mutex> lock(m_mutex);
+        const std::regex matchTags("\\<.*?\\>");
+
         for (const auto item : channel.children("item"))
         {
             auto& i = m_items.emplace_back();
@@ -132,15 +135,22 @@ bool RSSFeed::parseFeed(const std::vector<std::uint8_t>& src)
             i.date = i.date.substr(0, 16);
 
             s = item.child("description").child_value();
-            i.description = cro::String::fromUtf8(s, s + std::strlen(s));
+
+            std::string desc = s; //ugh I *know* this is going to mangle unicode chars...
+            cro::Util::String::replace(desc, "<br>", " ");
+            cro::Util::String::replace(desc, "<li>", "\n - ");
+            cro::Util::String::replace(desc, "</li>", " ");
+            
+            desc = std::regex_replace(desc, matchTags, "");
+            i.description = cro::String::fromUtf8(/*s, s + std::strlen(s)*/desc.begin(), desc.end());
 
             cro::Util::String::replace(i.description, "&#039;", "'");
-            cro::Util::String::replace(i.description, "<p>", "");
-            cro::Util::String::replace(i.description, "</p>", "");
-            cro::Util::String::replace(i.description, "<br>", " ");
-            cro::Util::String::replace(i.description, "<ul class=\"bb_ul\">", " "); //sigh... wish this didn't have to be so specific...
-            cro::Util::String::replace(i.description, "<li>", "\n - ");
-            cro::Util::String::replace(i.description, "</li>", " ");
+            //cro::Util::String::replace(i.description, "<p>", "");
+            //cro::Util::String::replace(i.description, "</p>", "");
+            //cro::Util::String::replace(i.description, "<br>", " ");
+            //cro::Util::String::replace(i.description, "<ul class=\"bb_ul\">", " "); //sigh... wish this didn't have to be so specific...
+            //cro::Util::String::replace(i.description, "<li>", "\n - ");
+            //cro::Util::String::replace(i.description, "</li>", " ");
 
             //steam puts this odd message in on items when first posted - this
             //hacks around getting rid of it

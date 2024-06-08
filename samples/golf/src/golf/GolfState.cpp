@@ -4323,7 +4323,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         }
                     }
 
+                    //TODO this is a hack to stop the board showing when fouling out
+                    //really we want to find a way to differentiate and show thie in legit cases.
                     showMessageBoard(MessageBoardID::HoleScore, special);
+
                     m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
                 }
                 break;

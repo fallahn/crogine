@@ -1288,8 +1288,7 @@ void ProfileState::buildScene()
                                     {
                                         if (submitted)
                                         {
-                                            std::string s(buffer);
-                                            *m_textEdit.string = cro::String::fromUtf8(s.begin(), s.end());
+                                            *m_textEdit.string = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
                                             applyTextEdit();
                                             refreshNameString();
                                         }
