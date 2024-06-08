@@ -268,6 +268,16 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
         else if (data.type == GolfBallEvent::Landed)
         {
+            if (m_sharedData.scoreType == ScoreType::Elimination)
+            {
+                if (data.terrain == TerrainID::Hole
+                    && (m_playerInfo[0].eliminated || m_playerInfo[0].matchWins)) //tagged as lost a life
+                {
+                    m_playerInfo[0].matchWins = 0;
+                    return;
+                }
+            }
+
             //immediate, pre-pause event when the ball stops moving
             BallUpdate bu;
             bu.terrain = data.terrain;
@@ -290,6 +300,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         else if (data.type == GolfBallEvent::Gimme)
         {
             m_playerInfo[0].holeScore[m_currentHole]++;
+
             std::uint16_t inf = (m_playerInfo[0].client << 8) | m_playerInfo[0].player;
             m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
 
@@ -1106,6 +1117,7 @@ void GolfState::setNextHole()
                     p.holeScore[m_currentHole] = m_holeData[m_currentHole].puttFromTee ? 6 : 12;
                     p.distanceToHole = 0.f;
                 }
+                p.matchWins = 0; //reset any elimination flags
             }
         }
     }

@@ -4177,11 +4177,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             showNotification(m_sharedData.connectionData[client].playerData[player].name + " took a Gimme");
 
-            //inflate this so that the message board is correct - the update will come
-            //in to assert this is correct afterwards
-            m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole]++;
             m_sharedData.connectionData[client].playerData[player].holeComplete[m_currentHole] = true;
-            showMessageBoard(MessageBoardID::Gimme);
+            
+            if (m_sharedData.scoreType != ScoreType::Elimination //this is messed up otherwise
+                || m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole] < m_holeData[m_currentHole].par-1)
+            {
+                //inflate this so that the message board is correct - the update will come
+                //in to assert this is correct afterwards
+                m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole]++;
+                showMessageBoard(MessageBoardID::Gimme);
+            }
 
             if (client == m_sharedData.localConnectionData.connectionID)
             {
@@ -4323,7 +4328,6 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         }
                     }
 
-                    //TODO this is a hack to stop the board showing when fouling out
                     //really we want to find a way to differentiate and show thie in legit cases.
                     showMessageBoard(MessageBoardID::HoleScore, special);
 

@@ -63,7 +63,7 @@ struct PlayerStatus final : public ActivePlayer
     bool eliminated = false;
     std::uint8_t totalScore = 0;
     std::uint8_t skins = 0; //stores number of lives in elimination mode
-    std::uint8_t matchWins = 0;
+    std::uint8_t matchWins = 0; //used as a 'life lost' flag in elimination
     bool readyQuit = false; //used at round end to see if all players want to skip scores
 };
 

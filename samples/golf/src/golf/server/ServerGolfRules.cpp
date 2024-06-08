@@ -77,6 +77,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
                     m_playerInfo[0].holeScore[m_currentHole]++;
                     m_playerInfo[0].position = m_holeData[m_currentHole].pin;
                     m_playerInfo[0].distanceToHole = 0;
+                    m_playerInfo[0].matchWins = 1; //flags this is a life lost
                 }
             }
             break;
@@ -198,6 +199,8 @@ void GolfState::handleRules(const GolfBallEvent& data)
                     packetID = PacketID::Elimination;
                 }
                 m_sharedData.host.broadcastPacket(packetID, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                m_playerInfo[0].matchWins = 1; //marks player as having just lost a life
             }
             else if (m_playerInfo[0].holeScore[m_currentHole] < m_holeData[m_currentHole].par - 1)
             {
