@@ -35,8 +35,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
-#include "League.hpp"
 #include "RandNames.hpp"
+#include "Career.hpp"
 
 #ifdef USE_GNS
 #include <DebugUtil.hpp>
@@ -104,6 +104,11 @@ namespace
     static constexpr float VerticalSpacing = 13.f;
     static constexpr float TextTop = 268.f;
 
+    struct ScrollData final
+    {
+        cro::FloatRect bounds = {};
+        float xPos = 0.f;
+    };
 
     constexpr std::size_t LeagueButtonIndex = 0;
     constexpr std::size_t InfoButtonIndex = 1;
@@ -302,8 +307,22 @@ bool LeagueState::handleEvent(const cro::Event& evt)
 
 void LeagueState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == Social::MessageID::SocialMessage)
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::PlayerNameChanged)
+        {
+            //LogI << "Player name was changed" << std::endl;
+            //hmm this gets missed because we're in a cached state
+            for (auto i = 1; i < LeagueRoundID::Count; ++i)
+            {
+                const auto& league = Career::instance(m_sharedData).getLeagueTables()[i-1];
+                refreshNameList(i, league);
+            }
+        }
+    }
 #ifdef USE_GNS
-    if (msg.id == Social::MessageID::StatsMessage)
+    else if (msg.id == Social::MessageID::StatsMessage)
     {
         const auto& data = msg.getData<Social::StatEvent>();
         if (data.type == Social::StatEvent::LeagueReceived)
@@ -320,7 +339,6 @@ void LeagueState::handleMessage(const cro::Message& msg)
             updateLeagueText();
         }
     }
-
 #endif
 
     m_scene.forwardMessage(msg);
@@ -398,8 +416,15 @@ void LeagueState::buildScene()
                     Social::setStatus(Social::InfoID::Menu, { "Browsing League Table" });
                 }
 #ifdef USE_GNS
+                //remote steam list
                 updateLeagueText();
 #endif
+                //in case we changed our profile name
+                for (auto i = 1; i < LeagueRoundID::Count; ++i)
+                {
+                    const auto& league = Career::instance(m_sharedData).getLeagueTables()[i-1];
+                    refreshNameList(i, league);
+                }
 
                 activateTab(TabID::League);
                 m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -765,48 +790,21 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
     stripeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    cro::String playerName;
-    if (Social::isAvailable())
-    {
-        playerName = Social::getPlayerName();
-    }
-    else
-    {
-        playerName = m_sharedData.localConnectionData.playerData[0].name;
-    }
 
-    cro::String str;
-    for (auto i = 0u; i < entries.size(); ++i)
-    {
-        if (i < 9)
-        {
-            str += " ";
-        }
-        
-        str += std::to_string(i + 1);
-        str += ". ";
-
-        if (entries[i].name > -1)
-        {
-            str += m_sharedData.leagueNames[entries[i].name];
-        }
-        else
-        {
-            str += playerName;
-        }
-        str += "\n";
-    }
-
+    //name column
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 86.f, TextTop + 1.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString(str);
+    entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_nameLists[leagueIndex] = entity;
 
-    str.clear();
+
+    //points column
+    cro::String str;
     for (const auto& e : entries)
     {
         if (e.score < 100)
@@ -829,59 +827,57 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //check if a previous season exists and scroll the results
-    str = league.getPreviousResults(playerName);
-    if (!str.empty())
-    {
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.1f });
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString(str);
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    //check if a previous season exists and scroll the results (updated by refreshNameList())
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(/*str*/" ");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
 
-        entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-        m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-        bounds = cro::Text::getLocalBounds(entity);
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-        entity.getComponent<cro::Callback>().function =
-            [&, bounds, leagueIndex](cro::Entity e, float dt)
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<ScrollData>();
+    entity.getComponent<cro::Callback>().function =
+        [&, leagueIndex](cro::Entity e, float dt)
+        {
+            float scale = m_leagueNodes[leagueIndex].getComponent<cro::Transform>().getScale().x;
+            if (scale == 0)
             {
-                float scale = m_leagueNodes[leagueIndex].getComponent<cro::Transform>().getScale().x;
-                if (scale == 0)
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                auto& [bounds, xPos] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
+                xPos -= (dt * 50.f);
+
+                static constexpr float BGWidth = 494.f;
+
+                if (xPos < (-bounds.width))
                 {
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    xPos = BGWidth;
                 }
-                else
-                {
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
-                    float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
-                    xPos -= (dt * 50.f);
+                auto pos = e.getComponent<cro::Transform>().getPosition();
+                pos.x = std::round(xPos);
 
-                    static constexpr float BGWidth = 494.f;
+                e.getComponent<cro::Transform>().setPosition(pos);
 
-                    if (xPos < (-bounds.width))
-                    {
-                        xPos = BGWidth;
-                    }
+                auto cropping = bounds;
+                cropping.left = -pos.x;
+                cropping.left += 6.f;
+                cropping.width = BGWidth;
+                e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+            }
+        };
+    m_nameScrollers[leagueIndex] = entity;
 
-                    auto pos = e.getComponent<cro::Transform>().getPosition();
-                    pos.x = std::round(xPos);
-
-                    e.getComponent<cro::Transform>().setPosition(pos);
-
-                    auto cropping = bounds;
-                    cropping.left = -pos.x;
-                    cropping.left += 6.f;
-                    cropping.width = BGWidth;
-                    e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
-                }
-            };
-    }
+    refreshNameList(leagueIndex, league);
 
     return leagueIndex < LeagueRoundID::RoundOne || league.getCurrentBest() < 4;
 }
@@ -964,6 +960,58 @@ Can you top the every league table by the end of the season? Good luck!
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_tabNodes[TabID::Info].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+void LeagueState::refreshNameList(std::int32_t leagueIndex, const League& league)
+{
+    if (m_nameLists[leagueIndex].isValid())
+    {
+        const auto& entries = league.getSortedTable();
+
+        cro::String playerName;
+        if (Social::isAvailable())
+        {
+            playerName = Social::getPlayerName();
+        }
+        else
+        {
+            playerName = m_sharedData.localConnectionData.playerData[0].name;
+        }
+
+        cro::String str;
+        for (auto i = 0u; i < entries.size(); ++i)
+        {
+            if (i < 9)
+            {
+                str += " ";
+            }
+
+            str += std::to_string(i + 1);
+            str += ". ";
+
+            if (entries[i].name > -1)
+            {
+                str += m_sharedData.leagueNames[entries[i].name];
+            }
+            else
+            {
+                str += playerName;
+            }
+            str += "\n";
+        }
+        m_nameLists[leagueIndex].getComponent<cro::Text>().setString(str);
+
+
+        str = league.getPreviousResults(playerName);
+        if (str.empty())
+        {
+            str = " ";
+            LogI << "String is empty" << std::endl;
+        }
+        m_nameScrollers[leagueIndex].getComponent<cro::Text>().setString(str);
+        auto bounds = cro::Text::getLocalBounds(m_nameScrollers[leagueIndex]);
+        m_nameScrollers[leagueIndex].getComponent<cro::Callback>().getUserData<ScrollData>().bounds = bounds;
+    }
 }
 
 #ifdef USE_GNS

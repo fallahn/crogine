@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "League.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -112,6 +113,10 @@ private:
     void buildScene();
     bool createLeagueTab(cro::Entity, const cro::SpriteSheet&, std::int32_t);
     void createInfoTab(cro::Entity);
+
+    std::array<cro::Entity, LeagueID::Count> m_nameLists = {};
+    std::array<cro::Entity, LeagueID::Count> m_nameScrollers = {};
+    void refreshNameList(std::int32_t leagueID, const League&);
 
 #ifdef USE_GNS
 

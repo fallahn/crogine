@@ -118,6 +118,8 @@ namespace
         //ew.
         return static_cast<std::int32_t>(std::pow((static_cast<float>(level) / XPx), XPy));
     }
+
+    cro::String socialName;
 }
 
 cro::Image Social::userIcon;
@@ -127,7 +129,7 @@ cro::String Social::getPlayerName()
 #ifdef USE_GJS
     return GJ::getActiveName();
 #else
-    return {};
+    return socialName;
 #endif
 }
 
@@ -135,7 +137,10 @@ void Social::setPlayerName(const cro::String& name)
 {
 #ifdef USE_GJS
     GJ::setActiveName(name);
+#else
+    socialName = name;
 #endif
+    cro::App::postMessage<SocialEvent>(Social::MessageID::SocialMessage)->type = SocialEvent::PlayerNameChanged;
 }
 
 bool Social::isValid()

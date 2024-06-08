@@ -1696,8 +1696,16 @@ void GolfGame::loadAvatars()
                 pd = PlayerData();
                 pd.profileID = uid;
             }
-            //always use the current Steam user name
-            pd.name = Social::getPlayerName();
+
+            if (!pd.name.empty())
+            {
+                Social::setPlayerName(pd.name);
+            }
+            else
+            {
+                //always use the current Steam user name
+                pd.name = Social::getPlayerName();
+            }
             pd.saveProfile();
 
             m_profileData.playerProfiles.push_back(pd);

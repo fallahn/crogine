@@ -251,6 +251,20 @@ void CareerState::handleMessage(const cro::Message& msg)
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         }
     }
+    else if (msg.id == Social::MessageID::SocialMessage)
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::PlayerNameChanged)
+        {
+            m_playerName.getComponent<cro::Text>().setString(Social::getPlayerName());
+            for (auto& table : Career::instance(m_sharedData).getLeagueTables())
+            {
+                //this is misleading - it says it's cont however it updates the
+                //internal string data with the player's name...
+                table.getPreviousResults(Social::getPlayerName());
+            }
+        }
+    }
 
     m_scene.forwardMessage(msg);
 }
@@ -644,6 +658,7 @@ void CareerState::buildScene()
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_playerName = entity;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);

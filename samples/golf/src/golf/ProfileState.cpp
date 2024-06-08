@@ -732,6 +732,11 @@ void ProfileState::buildScene()
                     refreshSwatch();
                 }
                 m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.ballColour);
+
+                m_menuEntities[EntityID::NameText].getComponent<cro::Text>().setString(m_activeProfile.name);
+                centreText(m_menuEntities[EntityID::NameText]);
+                m_previousName = m_activeProfile.name;
+
                 refreshBio();
             }
             break;
@@ -1265,7 +1270,7 @@ void ProfileState::buildScene()
     nameButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
-                if (!m_activeProfile.isSteamID &&
+                if (/*!m_activeProfile.isSteamID &&*/
                     activated(evt))
                 {
                     auto& callback = m_menuEntities[EntityID::NameText].getComponent<cro::Callback>();
@@ -1475,6 +1480,12 @@ void ProfileState::buildScene()
                         m_mugshotUpdated = false;
                     }
 
+                    if (m_activeProfile.isSteamID
+                        && m_activeProfile.name != Social::getPlayerName())
+                    {
+                        Social::setPlayerName(m_activeProfile.name);
+                    }
+
                     quitState();
                 }
             });
@@ -1494,6 +1505,7 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
+                    m_activeProfile.name = m_previousName;
                     quitState();
                 }
             });
@@ -3621,7 +3633,6 @@ bool ProfileState::applyTextEdit()
         m_textEdit.entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         m_textEdit.entity.getComponent<cro::Text>().setString(*m_textEdit.string);
         m_textEdit.entity.getComponent<cro::Callback>().active = false;
-
 
         //send this as a command to delay it by a frame - doesn't matter who receives it :)
         cro::Command cmd;

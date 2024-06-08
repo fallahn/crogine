@@ -115,7 +115,8 @@ public:
             PlayerAchievement, //as in we should cheer, not an actual achievement
             MonthlyProgress,
             LeagueProgress,
-            LobbyUpdated
+            LobbyUpdated,
+            PlayerNameChanged
         }type = LevelUp;
         std::int32_t level = 0; //if monthly progress then current value
         std::int32_t reason = -1; //if monthly progress then target value
