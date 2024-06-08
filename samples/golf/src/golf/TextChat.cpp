@@ -586,7 +586,7 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote)
             };
 
         //this only shows the overlay as Steam takes care of dismissing it
-        Social::showChatInput(cb);
+        Social::showChatInput(cb, "Chat");
     }
     else
 #endif

@@ -728,13 +728,11 @@ void ProfileState::buildScene()
                     setHairIndex(indexFromHairID(m_activeProfile.hairID));
                     setBallIndex(indexFromBallID(m_activeProfile.ballID) % m_ballModels.size());
                     refreshMugshot();
-                    refreshNameString();
                     refreshSwatch();
                 }
                 m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.ballColour);
 
-                m_menuEntities[EntityID::NameText].getComponent<cro::Text>().setString(m_activeProfile.name);
-                centreText(m_menuEntities[EntityID::NameText]);
+                refreshNameString();
                 m_previousName = m_activeProfile.name;
 
                 refreshBio();
@@ -1282,9 +1280,35 @@ void ProfileState::buildScene()
 
                         if (evt.type == SDL_CONTROLLERBUTTONUP)
                         {
-                            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
-                            msg->type = SystemEvent::RequestOSK;
-                            msg->data = 0;
+#ifdef USE_GNS
+                            if (Social::isSteamdeck())
+                            {
+                                const auto cb =
+                                    [&](bool submitted, const char* buffer)
+                                    {
+                                        if (submitted)
+                                        {
+                                            std::string s(buffer);
+                                            *m_textEdit.string = cro::String::fromUtf8(s.begin(), s.end());
+                                            applyTextEdit();
+                                            refreshNameString();
+                                        }
+                                        else
+                                        {
+                                            cancelTextEdit();
+                                        }
+                                    };
+
+                                //this only shows the overlay as Steam takes care of dismissing it
+                                Social::showChatInput(cb, "Enter Name", ConstVal::MaxNameChars);
+                            }
+                            else
+#endif
+                            {
+                                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                                msg->type = SystemEvent::RequestOSK;
+                                msg->data = 0;
+                            }
                         }
                     }
                     else
