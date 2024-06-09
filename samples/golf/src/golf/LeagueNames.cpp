@@ -30,6 +30,7 @@ source distribution.
 #include "LeagueNames.hpp"
 #include "RandNames.hpp"
 #include "CommonConsts.hpp"
+#include "Social.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Log.hpp>
@@ -38,6 +39,8 @@ namespace
 {
     constexpr std::size_t MaxNames = 15;
     constexpr std::uint8_t NewLine = '\n';
+
+    const std::string FileName = "league_names.txt";
 }
 
 LeagueNames::LeagueNames()
@@ -50,8 +53,10 @@ LeagueNames::LeagueNames()
 }
 
 //public
-void LeagueNames::read(const std::string& path)
+void LeagueNames::read()
 {
+    const auto path = Social::getBaseContentPath() + FileName;
+
     std::size_t currName = 0;
 
     cro::RaiiRWops rFile;
@@ -66,13 +71,15 @@ void LeagueNames::read(const std::string& path)
         {
             read = SDL_RWread(rFile.file, &b, 1, 1);
             if (b != NewLine
-                && buffer.size() < ConstVal::MaxNameChars)
+                && buffer.size() < ConstVal::MaxStringChars * 2) //*sigh* this are probably multi-byte...
             {
                 buffer.push_back(b);
             }
             else if (!buffer.empty())
             {
-                m_names[currName++] = cro::String::fromUtf8(buffer.begin(), buffer.end());
+                m_names[currName] = cro::String::fromUtf8(buffer.begin(), buffer.end());
+                m_names[currName] = m_names[currName].substr(0, ConstVal::MaxStringChars);
+                currName++;
                 buffer.clear();
             }
         } while (currName < MaxNames && read != 0);
@@ -88,8 +95,10 @@ void LeagueNames::read(const std::string& path)
     }
 }
 
-bool LeagueNames::write(const std::string& path) const
+bool LeagueNames::write() const
 {
+    const auto path = Social::getBaseContentPath() + FileName;
+
     cro::RaiiRWops rFile;
     rFile.file = SDL_RWFromFile(path.c_str(), "w");
     if (rFile.file)

@@ -1439,11 +1439,11 @@ void GolfGame::loadPreferences()
         path = Social::getBaseContentPath() + "league_names.txt";
         if (!cro::FileSystem::fileExists(path))
         {
-            m_sharedData.leagueNames.write(path);
+            m_sharedData.leagueNames.write();
         }
         else
         {
-            m_sharedData.leagueNames.read(path);
+            m_sharedData.leagueNames.read();
         }
     }
 

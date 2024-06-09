@@ -29,7 +29,6 @@ source distribution.
 
 #include "LeagueState.hpp"
 #include "SharedStateData.hpp"
-#include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
@@ -137,7 +136,9 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_sharedData            (sd),
     m_viewScale             (2.f),
     m_currentTab            (0),
-    m_currentLeague         (0)
+    m_currentLeague         (0),
+    m_editName              (false),
+    m_activeName            (nullptr)
 {
     ctx.mainWindow.setMouseCaptured(false);
 #ifdef USE_GNS
@@ -199,6 +200,55 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
             }
         });
 
+    registerWindow([&]()
+        {
+            constexpr glm::vec2 WindowSize(200.f, 80.f);
+            const auto WindowPos = (glm::vec2(cro::App::getWindow().getSize()) - WindowSize) / 2.f;
+
+            const auto acceptInput = [&]() 
+                {
+                    if (m_nameBuffer[0] != 0)
+                    {
+                        *m_activeName = cro::String::fromUtf8(m_nameBuffer.data(), m_nameBuffer.data() + std::strlen(m_nameBuffer.data()));
+                        *m_activeName = m_activeName->substr(0, ConstVal::MaxStringChars);
+                        m_sharedData.leagueNames.write();
+                        m_activeName = nullptr;
+                        refreshNameList(m_currentLeague, League(m_currentLeague, m_sharedData));
+                    }
+                    m_nameBuffer[0] = 0;
+                    m_editName = false;
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                };
+
+            if (m_editName)
+            {
+                ImGui::SetNextWindowSize({ WindowSize.x, WindowSize.y });
+                ImGui::SetNextWindowPos({ WindowPos.x, WindowPos.y });
+
+                ImGui::Begin("Enter Name", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+                //ImGui::SetKeyboardFocusHere(); //hm, we want to only trigger this when the window first opens, but that requires faff tracking state
+                if (ImGui::InputText("##", m_nameBuffer.data(), m_nameBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue))
+                {
+                    acceptInput();
+                }
+                if (ImGui::Button("OK", {88.f, 0.f}))
+                {
+                    acceptInput();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel", {88.f, 0.f}))
+                {
+                    m_nameBuffer[0] = 0;
+                    m_editName = false;
+                    m_activeName = nullptr;
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+                ImGui::End();
+            }
+        });
+
     buildScene();
 }
 
@@ -209,6 +259,44 @@ bool LeagueState::handleEvent(const cro::Event& evt)
         || ImGui::GetIO().WantCaptureMouse
         || m_rootNode.getComponent<cro::Callback>().active)
     {
+        return false;
+    }
+
+    //name edit box is open
+    if (m_editName)
+    {
+        const auto quitEdit = [&]()
+            {
+                m_editName = false;
+                m_activeName = nullptr;
+                m_nameBuffer[0] = 0;
+
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            };
+
+        switch (evt.type)
+        {
+        default: break;
+        case SDL_CONTROLLERBUTTONUP:
+            if (evt.cbutton.button == cro::GameController::ButtonB)
+            {
+                quitEdit();
+            }
+            break;
+        case SDL_KEYUP:
+            if (evt.key.keysym.sym == SDLK_ESCAPE)
+            {
+                quitEdit();
+            }
+            break;
+        case SDL_MOUSEBUTTONUP:
+            if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                quitEdit();
+            }
+            break;
+        }
+
         return false;
     }
 
@@ -1277,7 +1365,23 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                     {
                         //launch name editor for this index
                         auto& names = m_sharedData.leagueNames;
-                        LogI << "Edit " << names[league.getSortedTable()[idx].name].toAnsiString() << std::endl;
+                        m_activeName = &names[league.getSortedTable()[idx].name];
+                        auto utf = m_activeName->toUtf8();
+
+                        if (utf.size() < m_nameBuffer.size())
+                        {
+                            std::memcpy(m_nameBuffer.data(), utf.data(), utf.size());
+                            m_nameBuffer[utf.size()] = 0;
+                            m_editName = true;
+
+                            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                        }
+                        else
+                        {
+                            m_activeName = nullptr;
+                            LogE << "Can't edit name - string is too long." << std::endl;
+                            m_audioEnts[AudioID::No].getComponent<cro::AudioEmitter>().play();
+                        }
                     }
                     else
                     {

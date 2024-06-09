@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "League.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -117,6 +118,11 @@ private:
     std::array<cro::Entity, LeagueID::Count> m_nameLists = {};
     std::array<cro::Entity, LeagueID::Count> m_nameScrollers = {};
     void refreshNameList(std::int32_t leagueID, const League&);
+
+    bool m_editName;
+    cro::String* m_activeName;
+    std::array<char, ConstVal::MaxStringChars * 2>  m_nameBuffer = {}; //hmmm this has to allow for multi-byte chars
+
 
 #ifdef USE_GNS
 
