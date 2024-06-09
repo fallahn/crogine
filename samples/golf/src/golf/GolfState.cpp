@@ -466,7 +466,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     const auto toggleMiniZoom = [&]()
         {
-            if (!m_photoMode && !emoteHandled)
+            if (!m_photoMode && !emoteHandled
+                && !m_inputParser.isSwingputActive())
             {
                 auto& [_, dir] = m_mapRoot.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
                 dir = (dir == 0) ? 1 : 0;
