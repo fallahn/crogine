@@ -246,7 +246,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                     acceptInput();
                 }
                 ImGui::PopItemWidth();
-                if (ImGui::Button("OK", {88.f, 0.f}))
+                if (ImGui::Button("OK #", {88.f, 0.f}))
                 {
                     acceptInput();
                 }
@@ -1373,9 +1373,9 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
         {
             if (activated(evt))
             {
+                auto idx = e.getComponent<cro::UIInput>().getSelectionIndex() - NameButtonIndex;
                 if (m_currentLeague < LeagueID::Global)
                 {
-                    auto idx = e.getComponent<cro::UIInput>().getSelectionIndex() - NameButtonIndex;
                     const auto league = League(m_currentLeague, m_sharedData);
 
                     if (league.getSortedTable()[idx].name != -1)
@@ -1436,12 +1436,12 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                         m_audioEnts[AudioID::No].getComponent<cro::AudioEmitter>().play();
                     }
                 }
+#ifdef USE_GNS
                 else
                 {
-                    //play the 'no' noise
-                    //TODO could we launch a steam window or something with player info?
-                    m_audioEnts[AudioID::No].getComponent<cro::AudioEmitter>().play();
+                    Social::showLeaguePlayer(idx);
                 }
+#endif
             }
         });
 
