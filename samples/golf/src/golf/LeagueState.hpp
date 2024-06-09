@@ -42,10 +42,11 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 struct SharedStateData;
+struct SharedProfileData;
 class LeagueState final : public cro::State, public cro::ConsoleClient, public cro::GuiClient
 {
 public:
-    LeagueState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    LeagueState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedProfileData&);
 
     bool handleEvent(const cro::Event&) override;
 
@@ -61,6 +62,7 @@ private:
 
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
+    SharedProfileData& m_profileData;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final

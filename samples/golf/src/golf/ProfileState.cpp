@@ -719,7 +719,8 @@ void ProfileState::buildScene()
 
                 //assume we launched from a cached state and update
                 //local profile data if necessary
-                if (m_activeProfile.profileID != m_profileData.playerProfiles[m_profileData.activeProfileIndex].profileID)
+                //if (m_activeProfile.profileID != m_profileData.playerProfiles[m_profileData.activeProfileIndex].profileID) //this returns wrong result if the profile has the same id but needs refreshing, eg player name was changed
+                if (m_activeProfile.name != m_profileData.playerProfiles[m_profileData.activeProfileIndex].name)
                 {
                     m_activeProfile = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
 

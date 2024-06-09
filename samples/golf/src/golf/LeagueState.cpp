@@ -36,6 +36,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "RandNames.hpp"
 #include "Career.hpp"
+#include "SharedProfileData.hpp"
 
 #ifdef USE_GNS
 #include <DebugUtil.hpp>
@@ -130,10 +131,11 @@ namespace
     bool showStats = false;
 }
 
-LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
+LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedProfileData& sp)
     : cro::State            (ss, ctx),
     m_scene                 (ctx.appInstance.getMessageBus(), 480),
     m_sharedData            (sd),
+    m_profileData           (sp),
     m_viewScale             (2.f),
     m_currentTab            (0),
     m_currentLeague         (0),
@@ -211,9 +213,19 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                     {
                         *m_activeName = cro::String::fromUtf8(m_nameBuffer.data(), m_nameBuffer.data() + std::strlen(m_nameBuffer.data()));
                         *m_activeName = m_activeName->substr(0, ConstVal::MaxStringChars);
-                        m_sharedData.leagueNames.write();
+
+                        if (m_activeName == &m_profileData.playerProfiles[0].name)
+                        {
+                            m_profileData.playerProfiles[0].saveProfile();
+                            Social::setPlayerName(*m_activeName); //this raises a message to refresh any text which uses the name string
+                        }
+                        else
+                        {
+                            m_sharedData.leagueNames.write();
+                            refreshNameList(m_currentLeague, League(m_currentLeague, m_sharedData));
+                        }                        
+
                         m_activeName = nullptr;
-                        refreshNameList(m_currentLeague, League(m_currentLeague, m_sharedData));
                     }
                     m_nameBuffer[0] = 0;
                     m_editName = false;
@@ -228,10 +240,12 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 
                 ImGui::Begin("Enter Name", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
                 //ImGui::SetKeyboardFocusHere(); //hm, we want to only trigger this when the window first opens, but that requires faff tracking state
+                ImGui::PushItemWidth(176.f);
                 if (ImGui::InputText("##", m_nameBuffer.data(), m_nameBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue))
                 {
                     acceptInput();
                 }
+                ImGui::PopItemWidth();
                 if (ImGui::Button("OK", {88.f, 0.f}))
                 {
                     acceptInput();
@@ -402,13 +416,14 @@ void LeagueState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<Social::SocialEvent>();
         if (data.type == Social::SocialEvent::PlayerNameChanged)
         {
-            //LogI << "Player name was changed" << std::endl;
-            //hmm this gets missed because we're in a cached state
             for (auto i = 1; i < LeagueRoundID::Count; ++i)
             {
                 const auto& league = Career::instance(m_sharedData).getLeagueTables()[i-1];
                 refreshNameList(i, league);
             }
+
+            League l(LeagueID::Club, m_sharedData);
+            refreshNameList(LeagueID::Club, l);
         }
     }
 #ifdef USE_GNS
@@ -517,6 +532,8 @@ void LeagueState::buildScene()
                     const auto& league = Career::instance(m_sharedData).getLeagueTables()[i-1];
                     refreshNameList(i, league);
                 }
+                League l(LeagueID::Club, m_sharedData);
+                refreshNameList(LeagueID::Club, l);
 
                 activateTab(TabID::League);
                 m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -1366,48 +1383,56 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                         //launch name editor for this index
                         auto& names = m_sharedData.leagueNames;
                         m_activeName = &names[league.getSortedTable()[idx].name];
-                        auto utf = m_activeName->toUtf8();
-
-                        if (utf.size() < m_nameBuffer.size())
-                        {
-                            std::memcpy(m_nameBuffer.data(), utf.data(), utf.size());
-                            m_nameBuffer[utf.size()] = 0;
-
-                            if (Social::isSteamdeck())
-                            {
-                                const auto cb = [&](bool accepted, const char* buff)
-                                    {
-                                        if (accepted
-                                            && buff[0] != 0)
-                                        {
-                                            *m_activeName = cro::String::fromUtf8(buff, buff + std::strlen(buff));
-                                            *m_activeName = m_activeName->substr(0, ConstVal::MaxStringChars);
-                                            m_sharedData.leagueNames.write();
-                                            m_activeName = nullptr;
-                                            refreshNameList(m_currentLeague, League(m_currentLeague, m_sharedData));
-                                        }
-                                        m_nameBuffer[0] = 0;
-                                        m_editName = false;
-                                    };
-                                Social::showChatInput(cb, "Enter Name", m_nameBuffer.size());
-                            }
-                            else
-                            {
-                                m_editName = true;
-                            }
-
-                            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-                        }
-                        else
-                        {
-                            m_activeName = nullptr;
-                            LogE << "Can't edit name - string is too long." << std::endl;
-                            m_audioEnts[AudioID::No].getComponent<cro::AudioEmitter>().play();
-                        }
                     }
                     else
                     {
-                        //play 'no' noise - this is the player name
+                        m_activeName = &m_profileData.playerProfiles[0].name;
+                    }
+
+                    auto utf = m_activeName->toUtf8();
+                    if (utf.size() < m_nameBuffer.size())
+                    {
+                        std::memcpy(m_nameBuffer.data(), utf.data(), utf.size());
+                        m_nameBuffer[utf.size()] = 0;
+
+                        if (Social::isSteamdeck())
+                        {
+                            const auto cb = [&](bool accepted, const char* buff)
+                                {
+                                    if (accepted
+                                        && buff[0] != 0)
+                                    {
+                                        *m_activeName = cro::String::fromUtf8(buff, buff + std::strlen(buff));
+                                        *m_activeName = m_activeName->substr(0, ConstVal::MaxStringChars);
+
+                                        if (m_activeName == &m_profileData.playerProfiles[0].name)
+                                        {
+                                            m_profileData.playerProfiles[0].saveProfile();
+                                            Social::setPlayerName(*m_activeName);
+                                        }
+                                        else
+                                        {
+                                            m_sharedData.leagueNames.write();
+                                            refreshNameList(m_currentLeague, League(m_currentLeague, m_sharedData));
+                                        }
+                                        m_activeName = nullptr;
+                                    }
+                                    m_nameBuffer[0] = 0;
+                                    m_editName = false;
+                                };
+                            Social::showChatInput(cb, "Enter Name", m_nameBuffer.size());
+                        }
+                        else
+                        {
+                            m_editName = true;
+                        }
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    }
+                    else
+                    {
+                        m_activeName = nullptr;
+                        LogE << "Can't edit name - string is too long." << std::endl;
                         m_audioEnts[AudioID::No].getComponent<cro::AudioEmitter>().play();
                     }
                 }
