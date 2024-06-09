@@ -1372,7 +1372,29 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                         {
                             std::memcpy(m_nameBuffer.data(), utf.data(), utf.size());
                             m_nameBuffer[utf.size()] = 0;
-                            m_editName = true;
+
+                            if (Social::isSteamdeck())
+                            {
+                                const auto cb = [&](bool accepted, const char* buff)
+                                    {
+                                        if (accepted
+                                            && buff[0] != 0)
+                                        {
+                                            *m_activeName = cro::String::fromUtf8(buff, buff + std::strlen(buff));
+                                            *m_activeName = m_activeName->substr(0, ConstVal::MaxStringChars);
+                                            m_sharedData.leagueNames.write();
+                                            m_activeName = nullptr;
+                                            refreshNameList(m_currentLeague, League(m_currentLeague, m_sharedData));
+                                        }
+                                        m_nameBuffer[0] = 0;
+                                        m_editName = false;
+                                    };
+                                Social::showChatInput(cb, "Enter Name", m_nameBuffer.size());
+                            }
+                            else
+                            {
+                                m_editName = true;
+                            }
 
                             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                         }

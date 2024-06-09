@@ -1289,6 +1289,7 @@ void ProfileState::buildScene()
                                         if (submitted)
                                         {
                                             *m_textEdit.string = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
+                                            *m_textEdit.string = m_textEdit.string->substr(0, ConstVal::MaxStringChars);
                                             applyTextEdit();
                                             refreshNameString();
                                         }
@@ -1299,7 +1300,7 @@ void ProfileState::buildScene()
                                     };
 
                                 //this only shows the overlay as Steam takes care of dismissing it
-                                Social::showChatInput(cb, "Enter Name", ConstVal::MaxNameChars);
+                                Social::showChatInput(cb, "Enter Name", ConstVal::MaxStringChars * 2);
                             }
                             else
 #endif
