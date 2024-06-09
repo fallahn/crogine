@@ -116,6 +116,8 @@ namespace
     constexpr std::size_t LeftButtonIndex = RightButtonIndex + LeagueRoundID::Count + 1; //plus online monthly
     constexpr std::size_t CloseButtonIndex = LeftButtonIndex + 1;
 
+    constexpr std::size_t NameButtonIndex = CloseButtonIndex + 5;
+
     struct MenuID final
     {
         enum
@@ -376,6 +378,8 @@ void LeagueState::buildScene()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+    m_audioEnts[AudioID::No] = m_scene.createEntity();
+    m_audioEnts[AudioID::No].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("nope");
 
 
     struct RootCallbackData final
@@ -615,7 +619,7 @@ void LeagueState::buildScene()
 
     m_tabButtons[InfoButtonIndex] = createTabButton(MenuID::League, MenuID::Info);
     m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setNextIndex(RightButtonIndex, CloseButtonIndex);
-    m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(RightButtonIndex, RightButtonIndex );
+    m_tabButtons[InfoButtonIndex].getComponent<cro::UIInput>().setPrevIndex(NameButtonIndex + 15, NameButtonIndex + 15);
 
     m_tabButtons[LeagueButtonIndex] = createTabButton(MenuID::Info, MenuID::League);
     m_tabButtons[LeagueButtonIndex].getComponent<cro::UIInput>().setNextIndex(InfoButtonIndex, CloseButtonIndex);
@@ -1212,7 +1216,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
 
     buttonRight.addComponent<cro::UIInput>().area = spriteRight.getTextureBounds();
     buttonRight.getComponent<cro::UIInput>().setSelectionIndex(RightButtonIndex);
-    buttonRight.getComponent<cro::UIInput>().setNextIndex(LeftButtonIndex, InfoButtonIndex);
+    buttonRight.getComponent<cro::UIInput>().setNextIndex(LeftButtonIndex, NameButtonIndex);
     buttonRight.getComponent<cro::UIInput>().setPrevIndex(LeftButtonIndex, CloseButtonIndex);
     buttonRight.getComponent<cro::UIInput>().setGroup(MenuID::League);
     buttonRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
@@ -1231,7 +1235,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
 
     buttonLeft.addComponent<cro::UIInput>().area = spriteLeft.getTextureBounds();
     buttonLeft.getComponent<cro::UIInput>().setSelectionIndex(LeftButtonIndex);
-    buttonLeft.getComponent<cro::UIInput>().setNextIndex(RightButtonIndex, InfoButtonIndex);
+    buttonLeft.getComponent<cro::UIInput>().setNextIndex(RightButtonIndex, NameButtonIndex);
     buttonLeft.getComponent<cro::UIInput>().setPrevIndex(RightButtonIndex, CloseButtonIndex);
     buttonLeft.getComponent<cro::UIInput>().setGroup(MenuID::League);
     buttonLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
@@ -1246,6 +1250,85 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                 switchLeague(Page::Back);
             }
         });
+
+
+    //name change buttons
+    unselected = uiSystem.addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+    selected = uiSystem.addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+
+    auto activate = uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                if (m_currentLeague < LeagueID::Global)
+                {
+                    auto idx = e.getComponent<cro::UIInput>().getSelectionIndex() - NameButtonIndex;
+                    const auto league = League(m_currentLeague, m_sharedData);
+
+                    if (league.getSortedTable()[idx].name != -1)
+                    {
+                        //launch name editor for this index
+                        auto& names = m_sharedData.leagueNames;
+                        LogI << "Edit " << names[league.getSortedTable()[idx].name].toAnsiString() << std::endl;
+                    }
+                    else
+                    {
+                        //play 'no' noise - this is the player name
+                        m_audioEnts[AudioID::No].getComponent<cro::AudioEmitter>().play();
+                    }
+                }
+                else
+                {
+                    //play the 'no' noise
+                    //TODO could we launch a steam window or something with player info?
+                    m_audioEnts[AudioID::No].getComponent<cro::AudioEmitter>().play();
+                }
+            }
+        });
+
+
+    glm::vec3 pos(63.f, 255.f, 0.2f);
+    std::vector<cro::Entity> temp;
+    auto sprite = spriteSheet.getSprite("name_highlight");
+    auto bounds = sprite.getTextureBounds();
+
+    for (auto i = 0u; i < 16u; ++i)
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(pos);
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>(); 
+        entity.addComponent<cro::Sprite>() = sprite;
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setSelectionIndex(NameButtonIndex + i);
+        entity.getComponent<cro::UIInput>().setNextIndex((NameButtonIndex + i) + 1);
+        entity.getComponent<cro::UIInput>().setPrevIndex((NameButtonIndex + i) - 1);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::League);
+
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = activate;
+
+
+        m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        pos.y -= 13.f;
+
+        temp.push_back(entity);
+    }
+
+    temp[0].getComponent<cro::UIInput>().setPrevIndex(RightButtonIndex, RightButtonIndex);
+    temp.back().getComponent<cro::UIInput>().setNextIndex(InfoButtonIndex, InfoButtonIndex);
 }
 
 void LeagueState::activateTab(std::int32_t tabID)
