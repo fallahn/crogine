@@ -392,7 +392,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 TextChat::~TextChat()
 {
 #ifdef USE_GNS
-    Social::hideChatInput();
+    Social::hideTextInput();
 #endif
 }
 
@@ -586,7 +586,7 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote)
             };
 
         //this only shows the overlay as Steam takes care of dismissing it
-        Social::showChatInput(cb, "Chat");
+        Social::showTextInput(cb, "Chat");
     }
     else
 #endif

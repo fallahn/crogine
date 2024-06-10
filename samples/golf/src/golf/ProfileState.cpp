@@ -1301,7 +1301,8 @@ void ProfileState::buildScene()
                                     };
 
                                 //this only shows the overlay as Steam takes care of dismissing it
-                                Social::showChatInput(cb, "Enter Name", ConstVal::MaxStringChars * 2);
+                                const auto utf = m_activeProfile.name.toUtf8();
+                                Social::showTextInput(cb, "Enter Name", ConstVal::MaxStringChars * 2, reinterpret_cast<const char*>(utf.data()));
                             }
                             else
 #endif

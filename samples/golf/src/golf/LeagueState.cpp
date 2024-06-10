@@ -246,7 +246,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                     acceptInput();
                 }
                 ImGui::PopItemWidth();
-                if (ImGui::Button("OK #", {88.f, 0.f}))
+                if (ImGui::Button("OK ##", {88.f, 0.f}))
                 {
                     acceptInput();
                 }
@@ -1115,7 +1115,7 @@ void LeagueState::refreshNameList(std::int32_t leagueIndex, const League& league
         if (str.empty())
         {
             str = " ";
-            LogI << "String is empty" << std::endl;
+            //LogI << "String is empty" << std::endl;
         }
         m_nameScrollers[leagueIndex].getComponent<cro::Text>().setString(str);
         auto bounds = cro::Text::getLocalBounds(m_nameScrollers[leagueIndex]);
@@ -1394,7 +1394,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                     {
                         std::memcpy(m_nameBuffer.data(), utf.data(), utf.size());
                         m_nameBuffer[utf.size()] = 0;
-
+#ifdef USE_GNS
                         if (Social::isSteamdeck())
                         {
                             const auto cb = [&](bool accepted, const char* buff)
@@ -1420,14 +1420,15 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                                     m_nameBuffer[0] = 0;
                                     m_editName = false;
                                 };
-                            Social::showChatInput(cb, "Enter Name", m_nameBuffer.size());
+                            Social::showTextInput(cb, "Enter Name", m_nameBuffer.size(), m_nameBuffer.data());
                         }
                         else
+#endif
                         {
                             m_editName = true;
                         }
 
-                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                     else
                     {
