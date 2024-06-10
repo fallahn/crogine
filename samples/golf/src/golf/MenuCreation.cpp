@@ -4302,9 +4302,10 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
         {
             if (updateScoreboard)
             {
+                const float scale = m_sharedData.scoreType == ScoreType::Stroke ? 1.f : 0.f;
                 auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
-                m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setPosition(glm::vec2(200.f, 0.f));
             }
         }

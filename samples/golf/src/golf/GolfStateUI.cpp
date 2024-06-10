@@ -3992,7 +3992,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         //if this is a local player update achievements
         if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
         {
-            if (m_achievementTracker.hadFoul && overPar < 1)
+            if (m_achievementTracker.hadFoul && overPar < 1
+                && m_sharedData.scoreType != ScoreType::Elimination)
             {
                 Achievements::awardAchievement(AchievementStrings[AchievementID::Boomerang]);
                 Social::getMonthlyChallenge().updateChallenge(ChallengeID::Five, 0);

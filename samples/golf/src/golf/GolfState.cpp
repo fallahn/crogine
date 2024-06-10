@@ -208,6 +208,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         sd.inputBinding.clubset = ClubID::getRandomSet();
     }
+    else if (sd.scoreType == ScoreType::NearestThePin)
+    {
+        //the server will have reset this so let's manually sync
+        sd.gimmeRadius = 0;
+    }
 
     sd.holesPlayed = 0;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
