@@ -1060,7 +1060,7 @@ void GolfGame::initFonts()
 
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
-    //const std::string winPath = "assets/golf/fonts/Twemoji.Mozilla.ttf";
+    //const std::string winPath = "assets/golf/fonts/OpenMoji.ttf";
     //const std::string winPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
     
     if (cro::FileSystem::fileExists(winPath))
@@ -1079,14 +1079,17 @@ void GolfGame::initFonts()
     else
 #endif
     {
+        const std::string path = "assets/golf/fonts/OpenMoji.ttf";
+        //const std::string path = "assets/golf/fonts/NotoEmoji-Regular.ttf";
+
         for (const auto& r : Ranges)
         {
             ctx.codepointRange = r;
-            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
-            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
-            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(path, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
 
-            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
         }
     }
 }

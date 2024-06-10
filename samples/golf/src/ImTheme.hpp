@@ -138,8 +138,10 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     else
 #endif
     {
-        fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/NotoEmoji-Regular.ttf").c_str(), 13.f, &config, rangesB.data());
-        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF((rp + "assets/golf/fonts/NotoEmoji-Regular.ttf").c_str(), 18.0f, &configB, rangesB.data());
+        const std::string path = "assets/golf/fonts/OpenMoji.ttf";
+        //const std::string path = "assets/golf/fonts/NotoEmoji-Regular.ttf";
+        fonts->AddFontFromFileTTF((rp + path).c_str(), 13.f, &config, rangesB.data());
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF((rp + path).c_str(), 18.0f, &configB, rangesB.data());
         sd.chatFonts.buttonHeight = 30.f;
     }
 
