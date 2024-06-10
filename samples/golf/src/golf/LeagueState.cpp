@@ -204,7 +204,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 
     registerWindow([&]()
         {
-            constexpr glm::vec2 WindowSize(200.f, 80.f);
+            const glm::vec2 WindowSize = glm::vec2(200.f, 80.f) * m_viewScale.x;
             const auto WindowPos = (glm::vec2(cro::App::getWindow().getSize()) - WindowSize) / 2.f;
 
             const auto acceptInput = [&]() 
@@ -235,23 +235,26 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 
             if (m_editName)
             {
-                ImGui::SetNextWindowSize({ WindowSize.x, WindowSize.y });
+                ImGui::SetNextWindowSize({ WindowSize.x, /*WindowSize.y*/0.f });
                 ImGui::SetNextWindowPos({ WindowPos.x, WindowPos.y });
+
+                ImGui::GetFont()->Scale *= m_viewScale.x;
+                ImGui::PushFont(ImGui::GetFont());
 
                 ImGui::Begin("Enter Name", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
                 //ImGui::SetKeyboardFocusHere(); //hm, we want to only trigger this when the window first opens, but that requires faff tracking state
-                ImGui::PushItemWidth(176.f);
+                ImGui::PushItemWidth(176.f * m_viewScale.x);
                 if (ImGui::InputText("##", m_nameBuffer.data(), m_nameBuffer.size(), ImGuiInputTextFlags_EnterReturnsTrue))
                 {
                     acceptInput();
                 }
                 ImGui::PopItemWidth();
-                if (ImGui::Button("OK ##", {88.f, 0.f}))
+                if (ImGui::Button("OK ##", {88.f * m_viewScale.x, 0.f}))
                 {
                     acceptInput();
                 }
                 ImGui::SameLine();
-                if (ImGui::Button("Cancel", {88.f, 0.f}))
+                if (ImGui::Button("Cancel", {88.f * m_viewScale.x, 0.f}))
                 {
                     m_nameBuffer[0] = 0;
                     m_editName = false;
@@ -260,6 +263,9 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
                 ImGui::End();
+
+                ImGui::GetFont()->Scale = 1.f;
+                ImGui::PopFont();
             }
         });
 

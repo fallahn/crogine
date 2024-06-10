@@ -96,6 +96,8 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     style.Colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.2000000029802322f, 0.2000000029802322f, 0.2000000029802322f, 0.3499999940395355f);
 
 
+    //ImGui::GetIO().FontGlobalScale = 2.f;
+
     //load specific fonts
     auto* fonts = ImGui::GetIO().Fonts;
     //fonts->AddFontDefault(); //this is already be done by cro, and will break the font if done again

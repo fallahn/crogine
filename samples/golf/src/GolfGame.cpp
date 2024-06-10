@@ -315,6 +315,8 @@ void GolfGame::handleMessage(const cro::Message& msg)
             {
                 recreatePostProcess();
             }
+            //ImGui::GetStyle().ScaleAllSizes(getViewScale());
+            //ImGui::GetIO().FontGlobalScale = getViewScale();
         }
     }
     else if (msg.id == MessageID::SystemMessage)
@@ -1058,6 +1060,7 @@ void GolfGame::initFonts()
 
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    //const std::string winPath = "assets/golf/fonts/Twemoji.Mozilla.ttf";
     //const std::string winPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
     
     if (cro::FileSystem::fileExists(winPath))
