@@ -120,6 +120,7 @@ private:
     std::array<cro::Entity, LeagueID::Count> m_nameLists = {};
     std::array<cro::Entity, LeagueID::Count> m_nameScrollers = {};
     void refreshNameList(std::int32_t leagueID, const League&);
+    void refreshAllNameLists();
 
     bool m_editName;
     cro::String* m_activeName;

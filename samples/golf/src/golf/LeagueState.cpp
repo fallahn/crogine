@@ -222,7 +222,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                         else
                         {
                             m_sharedData.leagueNames.write();
-                            refreshNameList(m_currentLeague, League(m_currentLeague, m_sharedData));
+                            refreshAllNameLists();
                         }                        
 
                         m_activeName = nullptr;
@@ -422,14 +422,7 @@ void LeagueState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<Social::SocialEvent>();
         if (data.type == Social::SocialEvent::PlayerNameChanged)
         {
-            for (auto i = 1; i < LeagueRoundID::Count; ++i)
-            {
-                const auto& league = Career::instance(m_sharedData).getLeagueTables()[i-1];
-                refreshNameList(i, league);
-            }
-
-            League l(LeagueID::Club, m_sharedData);
-            refreshNameList(LeagueID::Club, l);
+            refreshAllNameLists();
         }
     }
 #ifdef USE_GNS
@@ -533,13 +526,7 @@ void LeagueState::buildScene()
                 updateLeagueText();
 #endif
                 //in case we changed our profile name
-                for (auto i = 1; i < LeagueRoundID::Count; ++i)
-                {
-                    const auto& league = Career::instance(m_sharedData).getLeagueTables()[i-1];
-                    refreshNameList(i, league);
-                }
-                League l(LeagueID::Club, m_sharedData);
-                refreshNameList(LeagueID::Club, l);
+                refreshAllNameLists();
 
                 activateTab(TabID::League);
                 m_leagueNodes[m_currentLeague].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -1129,6 +1116,18 @@ void LeagueState::refreshNameList(std::int32_t leagueIndex, const League& league
     }
 }
 
+void LeagueState::refreshAllNameLists()
+{
+    for (auto i = 1; i < LeagueRoundID::Count; ++i)
+    {
+        const auto& league = Career::instance(m_sharedData).getLeagueTables()[i - 1];
+        refreshNameList(i, league);
+    }
+
+    League l(LeagueID::Club, m_sharedData);
+    refreshNameList(LeagueID::Club, l);
+}
+
 #ifdef USE_GNS
 void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
@@ -1419,7 +1418,7 @@ void LeagueState::addLeagueButtons(const cro::SpriteSheet& spriteSheet)
                                         else
                                         {
                                             m_sharedData.leagueNames.write();
-                                            refreshNameList(m_currentLeague, League(m_currentLeague, m_sharedData));
+                                            refreshAllNameLists();
                                         }
                                         m_activeName = nullptr;
                                     }
