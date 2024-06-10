@@ -52,7 +52,10 @@ void GolfState::updateHoleScore(std::uint16_t data)
         if(m_sharedData.localConnectionData.connectionID == client
             && !m_sharedData.localConnectionData.playerData[player].isCPU)
         {
+            auto active = Achievements::getActive();
+            Achievements::setActive(m_allowAchievements);
             Social::awardXP(50, XPStringID::HoleWon);
+            Achievements::setActive(active);
         }
 
         showNotification(m_sharedData.connectionData[client].playerData[player].name + " won the hole!");

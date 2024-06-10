@@ -1069,6 +1069,22 @@ void GolfState::togglePuttingView(bool putt)
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
+    //hmm sometimes the pointer is reset before we can
+    //hide the model, so let's just hide ALL the models
+    if (putt)
+    {
+        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+        {
+            for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+            {
+                static constexpr glm::vec3 Scale(1.f, 0.f, 0.f);
+                m_avatars[i][j].model.getComponent<cro::Transform>().setScale(Scale);
+                m_avatars[i][j].model.getComponent<cro::Model>().setHidden(true);
+                m_avatars[i][j].model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0;
+            }
+        }
+    }
+
 
 
     //hide player avatar

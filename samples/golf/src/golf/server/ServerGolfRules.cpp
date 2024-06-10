@@ -211,7 +211,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
 
             break;
         case ScoreType::NearestThePin:
-            m_playerInfo[0].distanceScore[m_currentHole] = m_holeData[m_currentHole].distanceToPin;
+            m_playerInfo[0].distanceScore[m_currentHole] = m_holeData[m_currentHole].distanceToPin / 2.f;
             m_playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes + 1;
             break;
         }
