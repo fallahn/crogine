@@ -1080,14 +1080,14 @@ void GolfGame::initFonts()
 #endif
     {
         const std::string path = "assets/golf/fonts/OpenMoji.ttf";
-        //const std::string path = "assets/golf/fonts/NotoEmoji-Regular.ttf";
+        const std::string monoPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
 
         for (const auto& r : Ranges)
         {
             ctx.codepointRange = r;
             m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(path, ctx);
             m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
-            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(monoPath, ctx);
 
             m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
         }
