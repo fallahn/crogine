@@ -85,6 +85,8 @@ struct LeagueRoundID final
     };
 };
 
+using HoleScores = std::array<std::int32_t, 18>;
+
 struct SharedStateData;
 class League final
 {
@@ -113,6 +115,17 @@ public:
     std::int32_t getMaxIterations() const { return m_maxIterations; }
     std::int32_t reward(std::int32_t position) const;
 
+    //calculates the hole score for all CPU players
+    void updateHoleScores(std::uint32_t hole, std::int32_t par);
+    
+    //used when upgrading existing league system to this one
+    //to fill out any missing scores when resuming an old save game
+    //we assume thet size of parVals is the number of holes to be updated
+    void retrofitHoleScores(const std::vector<std::int32_t>& parVals);
+
+    //indexed by player name index
+    const std::array<HoleScores, PlayerCount>& getHoleScores() const { return m_holeScores; }
+
 private:
     const std::int32_t m_id;
     const std::int32_t m_maxIterations;
@@ -131,6 +144,8 @@ private:
     mutable cro::String m_previousResults;
     mutable std::int32_t m_previousPosition;
 
+    std::array<HoleScores, PlayerCount> m_holeScores = {};
+
     void calculateHoleScore(LeaguePlayer&, std::uint32_t hole, std::int32_t par);
 
     void increaseDifficulty();
@@ -142,4 +157,6 @@ private:
 
     void read();
     void write();
+    void assertDB();
+    void updateDB();
 };

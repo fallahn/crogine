@@ -34,6 +34,7 @@ source distribution.
 #include "SpectatorAnimCallback.hpp"
 #include "PropFollowSystem.hpp"
 #include "PoissonDisk.hpp"
+#include "Career.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -1383,6 +1384,15 @@ void GolfState::loadMap()
                 }
 
                 m_resumedFromSave = true;
+
+                //this might be an upgrade from the old league system
+                //so we need to fill in the in-progress scores
+                std::vector<std::int32_t> parVals;
+                for (auto i = 0u; i < m_currentHole; ++i)
+                {
+                    parVals.push_back(m_holeData[i].par);
+                    Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne].retrofitHoleScores(parVals);
+                }
             }
         }
     }

@@ -5029,6 +5029,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     };
 
     m_currentHole = hole;
+    updateLeagueHole(); //requires current hole
     startFlyBy(); //requires current hole
 
     //restore the drone if someone hit it

@@ -629,6 +629,7 @@ private:
     std::vector<StatBoardEntry> m_statBoardScores;
 
     void updateLeague();
+    void updateLeagueHole();
     void setUIHidden(bool hidden);
 
     struct GamepadNotify final

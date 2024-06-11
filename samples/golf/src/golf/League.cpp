@@ -58,6 +58,7 @@ namespace
     };
 
     const std::string FileName("lea.gue");
+    const std::string DBName("db.dat");
 
     constexpr std::int32_t MaxCurve = 5;
 
@@ -116,6 +117,11 @@ League::League(std::int32_t id, const SharedStateData& sd)
     m_previousPosition      (17)
 {
     CRO_ASSERT(id < LeagueRoundID::Count, "");
+
+    for (auto& scores : m_holeScores)
+    {
+        std::fill(scores.begin(), scores.end(), 0);
+    }
 
     read();
 }
@@ -188,6 +194,11 @@ void League::reset()
         std::filesystem::remove(path, ec);
     }
 
+    for (auto& scores : m_holeScores)
+    {
+        std::fill(scores.begin(), scores.end(), 0);
+    }
+
     write();
 }
 
@@ -206,72 +217,18 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 
     CRO_ASSERT(holeCount == 6 || holeCount == 9 || holeCount == 12 || holeCount == 18, "");
 
-    //update all the player scores
+    //update all the player totals based on running scores
     std::int32_t p = 0;
     for (auto& player : m_players)
     {
-        std::int32_t playerTotal = 0;
-
         for (auto i = 0u; i < holeCount; ++i)
         {
-            calculateHoleScore(player, i, parVals[i]);
-
-            ////calc aim accuracy
-            //float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
-
-            ////calc power accuracy
-            //float power = 1.f - PowerSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
-
-            //float quality = aim * power;
-
-            ////outlier for cock-up
-            //if (cro::Util::Random::value(0, 49) < player.outlier)
-            //{
-            //    float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
-            //    quality *= errorAmount;
-            //}
-
-            ////pass through active curve
-            //quality = applyCurve(quality, MaxCurve - player.curve) * player.quality;
-
-            //
-            ////calc ideal
-            //float ideal = 3.f; //triple bogey
-            //switch (parVals[i])
-            //{
-            //default:
-            //case 2:
-            //    ideal += 1.f; //1 under par etc
-            //    break;
-            //case 3:
-            //case 4:
-            //    ideal += 2.f;
-            //    break;
-            //case 5:
-            //    ideal += 3.f;
-            //    break;
-            //}
-
-            //
-            ////find range of triple bogey - ideal
-            //float score = std::round(ideal * quality);
-            //score -= 2.f; //average out to birdie
-
-            ////then use the player skill chance to decide if we got an eagle
-            //if (cro::Util::Random::value(1, 10) > player.skill)
-            //{
-            //    score -= 1.f;
-            //}
-
-            ////add player score to player total
-            //std::int32_t holeScore = -score;
-
-            ////convert to stableford where par == 2
-            //holeScore = std::max(0, 2 - holeScore);
-            //playerTotal += holeScore;
+            auto holeScore = m_holeScores[player.nameIndex][i] - parVals[i];
+            //convert to stableford where par == 2 points
+            holeScore = std::max(0, 2 - holeScore);
+            player.currentScore += holeScore;
         }
 
-        //player.currentScore += playerTotal;
         player.previousPosition = p++;
     }
 
@@ -438,6 +395,12 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     }
 
     createSortedTable();
+
+    //reset the hole scores for the next round
+    for (auto& scores : m_holeScores)
+    {
+        std::fill(scores.begin(), scores.end(), 0);
+    }
     write();
 }
 
@@ -450,6 +413,37 @@ std::int32_t League::reward(std::int32_t position) const
     case 2:
     case 3:
         return XPAmount[position - 1] + (m_id * XPMultiplier[position - 1]);
+    }
+}
+
+void League::updateHoleScores(std::uint32_t hole, std::int32_t par)
+{
+    for (auto& player : m_players)
+    {
+        calculateHoleScore(player, hole, par);
+    }
+    updateDB();
+}
+
+void League::retrofitHoleScores(const std::vector<std::int32_t>& parVals)
+{
+    bool writeWhenDone = false;
+    for (auto i = 0u; i < parVals.size(); ++i)
+    {
+        if (m_holeScores[0][i] == 0)
+        {
+            for (auto& player : m_players)
+            {
+                calculateHoleScore(player, i, parVals[i]);
+            }
+            LogI << "Retrofit " << parVals.size() << " scores for hole " << i+1 << std::endl;
+            writeWhenDone = true;
+        }
+    }
+
+    if (writeWhenDone)
+    {
+        updateDB();
     }
 }
 
@@ -551,10 +545,14 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     //add player score to player total
     std::int32_t holeScore = -score;
 
-    //convert to stableford where par == 2
-    holeScore = std::max(0, 2 - holeScore);
-    //playerTotal += holeScore;
-    player.currentScore += holeScore;
+    //write this to the hole scores which get saved in a file / used to display on scoreboard
+    CRO_ASSERT(player.nameIndex != -1, "this shouldn't be a human player");
+    m_holeScores[player.nameIndex][hole] = holeScore + par;
+
+    ////convert to stableford where par == 2 points
+    //holeScore = std::max(0, 2 - holeScore);
+    ////playerTotal += holeScore;
+    //player.currentScore += holeScore;
 }
 
 void League::increaseDifficulty()
@@ -711,6 +709,8 @@ void League::createSortedTable()
 
 void League::read()
 {
+    assertDB();
+
     const auto path = getFilePath(FileName);
     if (cro::FileSystem::fileExists(path))
     {
@@ -814,6 +814,34 @@ void League::read()
                 break;
             }
         }
+
+
+        //read hole scores from DB
+        const auto dbPath = Social::getBaseContentPath() + DBName;
+        constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
+        cro::RaiiRWops dbFile;
+        dbFile.file = SDL_RWFromFile(dbPath.c_str(), "rb");
+        if (dbFile.file)
+        {
+            const auto dbSize = dbFile.file->seek(dbFile.file, 0, RW_SEEK_END);
+            if (dbSize != DBSize)
+            {
+                //close the file and delete it
+                SDL_RWclose(dbFile.file);
+
+                LogE << "DB File size incorrect, DB will be reset" << std::endl;
+
+                std::error_code ec;
+                std::filesystem::remove(dbPath, ec);
+                assertDB();
+            }
+            else
+            {
+                auto startPoint = m_id * sizeof(m_holeScores);
+                dbFile.file->seek(dbFile.file, startPoint, RW_SEEK_SET);
+                SDL_RWread(dbFile.file, m_holeScores.data(), sizeof(m_holeScores), 1);
+            }
+        }
     }
     else
     {
@@ -858,9 +886,85 @@ void League::write()
         file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
 
         file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
+
+        //write hole scores to db
+        updateDB();
     }
     else
     {
         LogE << "Couldn't open " << path << " for writing" << std::endl;
+    }
+}
+
+void League::assertDB()
+{
+    const auto path = Social::getBaseContentPath() + DBName;
+    if (!cro::FileSystem::fileExists(path))
+    {
+        //hmm what do if we failed creating this? I guess the read/write ops
+        //will fail anyway when they can't open the file, so no harm, just
+        //no player scores either...
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        if (file.file)
+        {
+            //create an empty file big enough to store all the arrays
+            constexpr auto size = LeagueRoundID::Count * sizeof(m_holeScores);
+            std::vector<std::uint8_t> nullData(size);
+            std::fill(nullData.begin(), nullData.end(), 0);
+
+            SDL_RWwrite(file.file, nullData.data(), size, 1);
+
+            LogI << "Created new league DB" << std::endl;
+        }
+        else
+        {
+            LogE << "Unable to create player database for League" << std::endl;
+        }
+    }
+}
+
+void League::updateDB()
+{
+    const auto dbPath = Social::getBaseContentPath() + DBName;
+    constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
+
+    //hmm SDL doesn't let us write to arbitrary positions in the file
+    //so we have to open it, read the entire thing, update the local data
+    //then write the whole ting back again D:
+    std::vector<std::uint8_t> temp(DBSize);
+    std::fill(temp.begin(), temp.end(), 0);
+
+    cro::RaiiRWops dbFile;
+    dbFile.file = SDL_RWFromFile(dbPath.c_str(), "rb");
+    if (dbFile.file)
+    {
+        const auto dbSize = dbFile.file->seek(dbFile.file, 0, RW_SEEK_END);
+        if (dbSize != DBSize)
+        {
+            //close the file and delete it
+            SDL_RWclose(dbFile.file);
+
+            LogE << "DB File size incorrect, DB will be reset" << std::endl;
+
+            std::error_code ec;
+            std::filesystem::remove(dbPath, ec);
+            assertDB();
+        }
+        else
+        {
+            SDL_RWread(dbFile.file, temp.data(), DBSize, 1);
+            SDL_RWclose(dbFile.file);
+
+            dbFile.file = SDL_RWFromFile(dbPath.c_str(), "wb");
+            if (dbFile.file)
+            {
+                auto startPoint = m_id * sizeof(m_holeScores);
+                std::memcpy(&temp[startPoint], m_holeScores.data(), sizeof(m_holeScores));
+
+                SDL_RWwrite(dbFile.file, temp.data(), DBSize, 1);
+                LogI << "Wrote updated DB" << std::endl;
+            }
+        }
     }
 }

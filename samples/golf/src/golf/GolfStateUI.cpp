@@ -5247,6 +5247,42 @@ void GolfState::updateLeague()
     }
 }
 
+void GolfState::updateLeagueHole()
+{
+    //if this is allowed then we assume there's only one human player
+    if (m_allowAchievements)
+    {
+        switch (m_sharedData.leagueRoundID)
+        {
+        default: break;
+        case LeagueRoundID::RoundOne:
+        case LeagueRoundID::RoundTwo:
+        case LeagueRoundID::RoundThree:
+        case LeagueRoundID::RoundFour:
+        case LeagueRoundID::RoundFive:
+        case LeagueRoundID::RoundSix:
+        {
+            auto& league = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
+            //this may have been saved previously
+            if (league.getHoleScores()[0][m_currentHole] == 0)
+            {
+                league.updateHoleScores(m_currentHole, m_holeData[m_currentHole].par);
+            }
+        }
+            break;
+        case LeagueRoundID::Club:
+        {
+            League league(m_sharedData.leagueRoundID, m_sharedData);
+            if (league.getHoleScores()[0][m_currentHole] == 0)
+            {
+                league.updateHoleScores(m_currentHole, m_holeData[m_currentHole].par);
+            }
+        }
+            break;
+        }
+    }
+}
+
 void GolfState::setUIHidden(bool hidden)
 {
     if (hidden)
