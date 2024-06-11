@@ -236,28 +236,28 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("asefsd"))
-            {
-                /*auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
-                ImGui::Text("Cam: %3.3f, %3.3f, % 3.3f", pos.x, pos.y, pos.z);
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("asefsd"))
+    //        {
+    //            /*auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
+    //            ImGui::Text("Cam: %3.3f, %3.3f, % 3.3f", pos.x, pos.y, pos.z);
 
-                if (ImGui::Button("switch view"))
-                {
-                    static bool putt = true;
-                    togglePuttingView(putt);
-                    putt = !putt;
-                }*/
+    //            if (ImGui::Button("switch view"))
+    //            {
+    //                static bool putt = true;
+    //                togglePuttingView(putt);
+    //                putt = !putt;
+    //            }*/
 
-                /*const auto& scores = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne].getHoleScores();
-                for (auto& score : scores)
-                {
-                    ImGui::Text("%d, %d, %d, %d, %d, %d, %d, %d, %d", score[0], score[1], score[2], score[3], score[4], score[5], score[6], score[7], score[8]);
-                }*/
-            }
-            ImGui::End();        
-        });
+    //            /*const auto& scores = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne].getHoleScores();
+    //            for (auto& score : scores)
+    //            {
+    //                ImGui::Text("%d, %d, %d, %d, %d, %d, %d, %d, %d", score[0], score[1], score[2], score[3], score[4], score[5], score[6], score[7], score[8]);
+    //            }*/
+    //        }
+    //        ImGui::End();        
+    //    });
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

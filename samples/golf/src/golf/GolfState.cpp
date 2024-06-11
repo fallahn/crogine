@@ -4773,7 +4773,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     }
 
     updateScoreboard();
-    m_achievementTracker.hadFoul = m_resumedFromSave;// false;
+    m_achievementTracker.hadFoul = false;// m_resumedFromSave;// false;
     m_achievementTracker.bullseyeChallenge = false; //monthly challenge is OK
     m_achievementTracker.puttCount = m_resumedFromSave ? 2 : 0;
 
