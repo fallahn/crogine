@@ -4596,6 +4596,16 @@ void MenuState::updateUnlockedItems()
                             //this was the last league so show the credits
                             m_sharedData.showCredits = true;
                         }
+                        else
+                        {
+                            //show the padlock for unlocking the next league
+                            if (Leagues[i].getCurrentSeason() == 1) //only do this the first time
+                            {
+                                auto& u = m_sharedData.unlockedItems.emplace_back();
+                                u.id = ul::UnlockID::CareerLeague;
+                                u.xp = 100;
+                            }
+                        }
                         break;
                     }
                 }
