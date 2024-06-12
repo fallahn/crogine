@@ -4334,7 +4334,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         }
                     }
 
-                    //really we want to find a way to differentiate and show thie in legit cases.
+                    updateLeagueHole(); //requires current hole
+
+                    //really we want to find a way to differentiate and show this in legit cases.
                     showMessageBoard(MessageBoardID::HoleScore, special);
 
                     m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
@@ -5029,7 +5031,6 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     };
 
     m_currentHole = hole;
-    updateLeagueHole(); //requires current hole
     startFlyBy(); //requires current hole
 
     //restore the drone if someone hit it

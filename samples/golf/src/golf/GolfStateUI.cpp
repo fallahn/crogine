@@ -2162,17 +2162,29 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
             m_trophies[i].trophy.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
             //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
-            m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
-            m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
 
-            m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
-            auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
-            bounds.bottom = bounds.height * m_statBoardScores[i].player;
-            m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
+            if (m_statBoardScores[i].client != ConstVal::NullValue) //this should never be false with a club league...
+            {
+                m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
+                m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
 
-            //choose the relevant player from the sheet
-            bounds = getAvatarBounds(m_statBoardScores[i].player);
-            m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
+                m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
+                auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
+                bounds.bottom = bounds.height * m_statBoardScores[i].player;
+                m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
+            
+                //choose the relevant player from the sheet
+                bounds = getAvatarBounds(m_statBoardScores[i].player);
+                m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
+            }
+            else
+            {
+                //this is a league player so there's nothing to show...
+                m_trophies[i].avatar.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_trophies[i].label.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_trophies[i].badge.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+            
         }
         m_trophyScene.getActiveCamera().getComponent<cro::Camera>().active = true;
     }
@@ -2791,7 +2803,8 @@ void GolfState::createScoreboard()
             {
                 auto [client, player] = e.getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>();
 
-                if (m_sharedData.connectionData[client].playerData[player].isCPU)
+                if (client == ConstVal::NullValue || //might be a league player
+                    m_sharedData.connectionData[client].playerData[player].isCPU)
                 {
                     e.getComponent<cro::SpriteAnimation>().play(5);
                 }
@@ -2878,8 +2891,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
         {
             auto& entry = scores.emplace_back();
             entry.name = client.playerData[i].name;
-            entry.client = clientID;
-            entry.player = i;
+            entry.client = clientID; //used to display whether or not this is CPU or a netstrength icon
+            entry.player = i; //see above
             entry.lives = client.playerData[i].skinScore; //mostly ignored, except in Elimination
 
             bool overPar = false;
@@ -3031,6 +3044,67 @@ void GolfState::updateScoreboard(bool updateParDiff)
         clientID++;
     }
 
+    //if we're in a career game include the CPU playre scores
+    if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+    {
+        playerCount += League::PlayerCount;
+
+        const auto& league = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne]; //this is daft, we need to fix it
+        const auto& leagueScores = league.getHoleScores();
+
+        //this should only ever be stroke play, so some assumptions are made here
+        for (auto i = 0u; i < leagueScores.size(); ++i)
+        {
+            auto& entry = scores.emplace_back();
+            entry.name = m_sharedData.leagueNames[i];
+            entry.client = 0;// ConstVal::NullValue;
+            entry.player = 0;// ConstVal::NullValue;
+
+            bool overPar = false;
+
+            for (auto j = 0u; j < /*leagueScores[i].size()*/m_holeData.size(); ++j)
+            {
+                auto s = leagueScores[i][j];
+                entry.holes.push_back(s);
+                entry.holeComplete.push_back(s != 0);
+
+                if (s)
+                {
+                    if (updateParDiff
+                        || j < (m_currentHole)
+                        || entry.holeComplete.back())
+                    {
+                        auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
+
+                        entry.parDiff += diff;
+                        overPar = (diff > 0);
+                    }
+                }
+
+                //assuming stroke score
+                if (j < 9)
+                {
+                    entry.frontNine += leagueScores[i][j];
+                }
+                else
+                {
+                    entry.backNine += leagueScores[i][j];
+                }
+            }
+
+            entry.total = entry.frontNine + entry.backNine;
+
+
+            //auto& leaderboardEntry = m_statBoardScores.emplace_back();
+            //leaderboardEntry.client = 0; //trophies aren't displayed in career games
+            //leaderboardEntry.player = 0;
+            //leaderboardEntry.score = entry.total;
+            //leaderboardEntry.distance = entry.totalDistance;
+        }
+    }
+
+
+
     //tracks stats and decides on trophy layout on round end (see showCountdown())
     std::sort(m_statBoardScores.begin(), m_statBoardScores.end(),
         [&](const StatBoardEntry& a, const StatBoardEntry& b)
@@ -3121,8 +3195,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
     for (auto i = 0u; i < playerCount; ++i)
     {
         nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
-        m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>()
-            = std::make_pair(scores[i].client, scores[i].player);
+
+        if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+        {
+            m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>()
+                = std::make_pair(scores[i].client, scores[i].player);
+        }
     }
     if (page2)
     {
@@ -5249,37 +5327,47 @@ void GolfState::updateLeague()
 
 void GolfState::updateLeagueHole()
 {
-    //if this is allowed then we assume there's only one human player
-    if (m_allowAchievements)
+    switch (m_sharedData.scoreType)
     {
-        switch (m_sharedData.leagueRoundID)
+    default: break;
+    case ScoreType::Stroke:
+    case ScoreType::ShortRound:
+    case ScoreType::Stableford:
+    case ScoreType::StablefordPro:
+        //if this is allowed then we assume there's only one human player
+        if (m_allowAchievements)
         {
-        default: break;
-        case LeagueRoundID::RoundOne:
-        case LeagueRoundID::RoundTwo:
-        case LeagueRoundID::RoundThree:
-        case LeagueRoundID::RoundFour:
-        case LeagueRoundID::RoundFive:
-        case LeagueRoundID::RoundSix:
-        {
-            auto& league = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
-            //this may have been saved previously
-            if (league.getHoleScores()[0][m_currentHole] == 0)
+            switch (m_sharedData.leagueRoundID)
             {
-                league.updateHoleScores(m_currentHole, m_holeData[m_currentHole].par);
+            default: break;
+            case LeagueRoundID::RoundOne:
+            case LeagueRoundID::RoundTwo:
+            case LeagueRoundID::RoundThree:
+            case LeagueRoundID::RoundFour:
+            case LeagueRoundID::RoundFive:
+            case LeagueRoundID::RoundSix:
+            {
+                auto& league = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne];
+                //this may have been saved previously
+                if (league.getHoleScores()[0][m_currentHole] == 0)
+                {
+                    league.updateHoleScores(m_currentHole, m_holeData[m_currentHole].par);
+                    updateScoreboard();
+                }
+            }
+            break;
+            case LeagueRoundID::Club:
+            {
+                League league(m_sharedData.leagueRoundID, m_sharedData);
+                if (league.getHoleScores()[0][m_currentHole] == 0)
+                {
+                    league.updateHoleScores(m_currentHole, m_holeData[m_currentHole].par);
+                }
+            }
+            break;
             }
         }
-            break;
-        case LeagueRoundID::Club:
-        {
-            League league(m_sharedData.leagueRoundID, m_sharedData);
-            if (league.getHoleScores()[0][m_currentHole] == 0)
-            {
-                league.updateHoleScores(m_currentHole, m_holeData[m_currentHole].par);
-            }
-        }
-            break;
-        }
+        break;
     }
 }
 
