@@ -1888,21 +1888,29 @@ void CareerState::selectLeague(std::size_t idx)
     {
         str += " (Hole " + std::to_string(m_progressPositions[idx]) + ")";
     }
-    str += "\nCurrent Position: " + std::to_string(league.getCurrentPosition());
-    switch (league.getCurrentPosition())
+
+    if (league.getCurrentScore() == 0)
     {
-    default:
-        str += "th";
-        break;
-    case 1:
-        str += "st";
-        break;
-    case 2:
-        str += "nd";
-        break;
-    case 3:
-        str += "rd";
-        break;
+        str += "\n";
+    }
+    else
+    {
+        str += "\nCurrent Position: " + std::to_string(league.getCurrentPosition());
+        switch (league.getCurrentPosition())
+        {
+        default:
+            str += "th";
+            break;
+        case 1:
+            str += "st";
+            break;
+        case 2:
+            str += "nd";
+            break;
+        case 3:
+            str += "rd";
+            break;
+        }
     }
 
     if (league.getCurrentSeason() > 1)

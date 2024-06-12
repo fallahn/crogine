@@ -873,7 +873,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
         entity.addComponent<cro::Transform>().setPosition(spritePos);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("progress");
-        entity.addComponent<cro::SpriteAnimation>().play(entry.positionChange);
+        entity.addComponent<cro::SpriteAnimation>().play(entry.score == 0 ? 1 : entry.positionChange);
         m_leagueNodes[leagueIndex].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         spritePos.y -= VerticalSpacing;
