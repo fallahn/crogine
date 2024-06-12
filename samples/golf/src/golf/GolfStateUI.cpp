@@ -2240,11 +2240,13 @@ void GolfState::showCountdown(std::uint8_t seconds)
         red.setAlpha(0.4f);
 
         auto& ents = m_scoreboardEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
-        for (auto i = 0u; i < ents.size(); ++i)
+        for (auto i = 1u; i < ents.size() - 1; ++i)
         {
             ents[i].getComponent<cro::Text>().setFillColour(dark);
             ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setFillColour(red);
         }
+        ents[0].getComponent<cro::Text>().setFillColour(dark); //no red text on first column!
+        ents.back().getComponent<cro::Text>().setFillColour(dark); //no red text on final column!
     }
 
     bool personalBest = false;

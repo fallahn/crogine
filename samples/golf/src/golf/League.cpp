@@ -223,8 +223,8 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     {
         for (auto i = 0u; i < holeCount; ++i)
         {
-            auto holeScore = m_holeScores[player.nameIndex][i] - parVals[i];
             //convert to stableford where par == 2 points
+            auto holeScore = m_holeScores[player.nameIndex][i] - parVals[i];
             holeScore = std::max(0, 2 - holeScore);
             player.currentScore += holeScore;
         }
@@ -544,15 +544,20 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
 
     //add player score to player total
     std::int32_t holeScore = -score;
+    holeScore += par;
+
+    //too many HIOs - so only a 1/10 chance we get to keep it
+    if (holeScore == 1)
+    {
+        if (cro::Util::Random::value(0, 9) != 0)
+        {
+            holeScore += (par - 2);
+        }
+    }
 
     //write this to the hole scores which get saved in a file / used to display on scoreboard
     CRO_ASSERT(player.nameIndex != -1, "this shouldn't be a human player");
-    m_holeScores[player.nameIndex][hole] = holeScore + par;
-
-    ////convert to stableford where par == 2 points
-    //holeScore = std::max(0, 2 - holeScore);
-    ////playerTotal += holeScore;
-    //player.currentScore += holeScore;
+    m_holeScores[player.nameIndex][hole] = holeScore;// +par;
 }
 
 void League::increaseDifficulty()
