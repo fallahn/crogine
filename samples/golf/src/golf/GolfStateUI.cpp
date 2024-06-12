@@ -2224,7 +2224,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         leagueEntity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing * 2.f);
         leagueEntity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
 
-        //attaches to scoreboard
+        //attaches to scoreboard - hmm surely this can go directly to m_scoreboardEnt?
         cmd.targetFlags = CommandID::UI::Scoreboard;
         cmd.action =
             [leagueEntity](cro::Entity e, float) mutable
@@ -2232,6 +2232,19 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 e.getComponent<cro::Transform>().addChild(leagueEntity.getComponent<cro::Transform>());
             };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        //dim the score text which gets in the way of the message
+        auto dark = LeaderboardTextDark;
+        dark.setAlpha(0.4f);
+        auto red = TextHighlightColour;
+        red.setAlpha(0.4f);
+
+        auto& ents = m_scoreboardEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+        for (auto i = 0u; i < ents.size(); ++i)
+        {
+            ents[i].getComponent<cro::Text>().setFillColour(dark);
+            ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setFillColour(red);
+        }
     }
 
     bool personalBest = false;
@@ -2282,7 +2295,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
     };
 
-    //attach to the scoreboard
+    //attach to the scoreboard - surelt we can do this directly with m_scoreboardEnt?
     cmd.targetFlags = CommandID::UI::Scoreboard;
     cmd.action =
         [entity](cro::Entity e, float) mutable
