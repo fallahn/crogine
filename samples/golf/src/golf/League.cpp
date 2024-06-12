@@ -551,7 +551,7 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     {
         if (cro::Util::Random::value(0, 9) != 0)
         {
-            holeScore += (par - 2);
+            holeScore += std::min(1, (par - 2));
         }
     }
 
