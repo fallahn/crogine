@@ -436,7 +436,7 @@ void League::retrofitHoleScores(const std::vector<std::int32_t>& parVals)
             {
                 calculateHoleScore(player, i, parVals[i]);
             }
-            LogI << "Retrofit " << parVals.size() << " scores for hole " << i+1 << std::endl;
+            //LogI << "Retrofit " << parVals.size() << " scores for hole " << i+1 << std::endl;
             writeWhenDone = true;
         }
     }
@@ -963,7 +963,7 @@ void League::updateDB()
                 std::memcpy(&temp[startPoint], m_holeScores.data(), sizeof(m_holeScores));
 
                 SDL_RWwrite(dbFile.file, temp.data(), DBSize, 1);
-                LogI << "Wrote updated DB" << std::endl;
+                //LogI << "Wrote updated DB" << std::endl;
             }
         }
     }

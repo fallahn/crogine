@@ -128,6 +128,16 @@ namespace
         std::make_pair("course_12", AchievementID::Complete12),
     };
 
+    //used in netstat icon callback
+    struct NetStatData final
+    {
+        std::uint8_t client = 0;
+        std::uint8_t player = 0;
+        bool leaguePlayer = false;
+        NetStatData(std::uint8_t cl, std::uint8_t pl, bool lp)
+            : client(cl), player(pl), leaguePlayer(lp) {}
+    };
+
     static constexpr float ColumnWidth = 20.f;
     static constexpr float ColumnHeight = 276.f;
     static constexpr float ColumnMargin = 6.f;
@@ -2198,10 +2208,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
         //otherwise show some stats about how we did in the league
         leagueEntity = m_uiScene.createEntity();
-        leagueEntity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 183.f, 0.23f });
+        leagueEntity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 183.f, 1.8f });
         leagueEntity.addComponent<cro::Drawable2D>();
         leagueEntity.addComponent<UIElement>().absolutePosition = { 200.f, 183.f };
-        leagueEntity.getComponent<UIElement>().depth = 0.23f;
+        leagueEntity.getComponent<UIElement>().depth = 1.8f;
         leagueEntity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
             {
                 e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f });
@@ -2784,70 +2794,104 @@ void GolfState::createScoreboard()
     ents.back().getComponent<UIElement>().absolutePosition = ColumnPositions.back() - glm::vec2(0.f, UITextPosV);
 
 
-    //net strength icons
+    //net strength icons - note that this works by creating an instance for EVERY player
+    //and then sets the animation/avatar texture based on current score positions - the
+    //icons themselves DON'T MOVE. As such these need to be identical for human and league
+    //players alike.
     glm::vec3 iconPos(8.f, 235.f, 2.2f);
-    static constexpr float IconSpacing = 14.f;
-    for (const auto& c : m_sharedData.connectionData)
-    {
-        for (auto j = 0u; j < c.playerCount; ++j)
+    const auto createIcon = [&](std::uint8_t cl, std::uint8_t pl, bool lp) 
         {
-            entity = m_uiScene.createEntity();
+            auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(iconPos);
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("strength_meter");
             entity.addComponent<cro::SpriteAnimation>();
             //this is set active only when scoreboard is visible
-            entity.addComponent<cro::Callback>().setUserData<std::pair<std::uint8_t, std::uint8_t>>(c.connectionID, j);
+            entity.addComponent<cro::Callback>().setUserData<NetStatData>(cl, pl, lp);
             entity.getComponent<cro::Callback>().function =
                 [&, iconPos](cro::Entity e, float)
-            {
-                auto [client, player] = e.getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>();
-
-                if (client == ConstVal::NullValue || //might be a league player
-                    m_sharedData.connectionData[client].playerData[player].isCPU)
                 {
-                    e.getComponent<cro::SpriteAnimation>().play(5);
-                }
-                else
-                {
-                    auto idx = m_sharedData.connectionData[client].pingTime / 60;
-                    e.getComponent<cro::SpriteAnimation>().play(std::min(4u, idx));
-                }
+                    auto [client, player, leaguePlayer] = e.getComponent<cro::Callback>().getUserData<NetStatData>();
 
-                auto pos = iconPos;
-                pos.x += 366.f + (scoreboardExpansion * 2.f);
-                e.getComponent<cro::Transform>().setPosition(pos);
-            };
+                    if (leaguePlayer ||
+                        m_sharedData.connectionData[client].playerData[player].isCPU)
+                    {
+                        e.getComponent<cro::SpriteAnimation>().play(5);
+                    }
+                    else
+                    {
+                        auto idx = m_sharedData.connectionData[client].pingTime / 60;
+                        e.getComponent<cro::SpriteAnimation>().play(std::min(4u, idx));
+                    }
+
+                    auto pos = iconPos;
+                    pos.x += 366.f + (scoreboardExpansion * 2.f);
+                    e.getComponent<cro::Transform>().setPosition(pos);
+                };
             bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             m_netStrengthIcons.push_back(entity);
 
-            auto barEnt = entity;
+            return entity;
+        };
+    const auto createAvatar = [&](cro::Entity barEnt, std::uint8_t cl, std::uint8_t pl)
+        {
+            static constexpr glm::vec2 AVScale = glm::vec2(14.f) / LabelIconSize;
 
-            //player avatar icon
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setScale(glm::vec2(14.f) / LabelIconSize);
+            entity.addComponent<cro::Transform>().setScale(AVScale);
             entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[c.connectionID].getTexture());
-            entity.getComponent<cro::Sprite>().setTextureRect(getAvatarBounds(j));
+            entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[cl].getTexture());
+            entity.getComponent<cro::Sprite>().setTextureRect(getAvatarBounds(pl));
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
                 [&, barEnt](cro::Entity e, float)
-            {
-                if (barEnt.destroyed())
                 {
-                    e.getComponent<cro::Callback>().active = false;
-                    m_uiScene.destroyEntity(e);
-                    return;
-                }
+                    if (barEnt.destroyed())
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                        return;
+                    }
 
-                //these are set on the ent by updating the scoreboard, rather than rearranging entity positions
-                auto [client, player] = barEnt.getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>();
-                e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[client].getTexture(), false);
-                e.getComponent<cro::Sprite>().setTextureRect(getAvatarBounds(player));
-                e.getComponent<cro::Transform>().setPosition({ -(367.f + (scoreboardExpansion * 2.f)), 2.f });
-            };
+                    //these are set on the ent by updating the scoreboard, rather than rearranging entity positions
+                    auto [client, player, leaguePlayer] = barEnt.getComponent<cro::Callback>().getUserData<NetStatData>();
+                    if (leaguePlayer)
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[client].getTexture(), false);
+                        e.getComponent<cro::Sprite>().setTextureRect(getAvatarBounds(player));
+                        e.getComponent<cro::Transform>().setPosition({ -(367.f + (scoreboardExpansion * 2.f)), 2.f });
+                        e.getComponent<cro::Transform>().setScale(AVScale);
+                    }
+                };
             barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        };
 
+    static constexpr float IconSpacing = 14.f;
+    for (const auto& c : m_sharedData.connectionData)
+    {
+        for (auto j = 0u; j < c.playerCount; ++j)
+        {
+            //strength bar icon
+            auto barEnt = createIcon(c.connectionID, j, false);
+
+            //player avatar icon
+            createAvatar(barEnt, c.connectionID, j);
+
+            iconPos.y -= IconSpacing;
+        }
+    }
+
+    if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+    {
+        //create 'net strength' icons to display CPU status
+        //as well as pad out the net status vector to the correct size
+        for (auto i = 0u; i < League::PlayerCount; ++i)
+        {
+            createAvatar(createIcon(0,0,true), 0, 0);            
             iconPos.y -= IconSpacing;
         }
     }
@@ -2875,6 +2919,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
         std::uint8_t client = 0;
         std::uint8_t player = 0;
         std::uint8_t lives = 0;
+
+        bool leaguePlayer = false;
     };
 
     std::vector<ScoreEntry> scores;
@@ -3057,8 +3103,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
         {
             auto& entry = scores.emplace_back();
             entry.name = m_sharedData.leagueNames[i];
-            entry.client = 0;// ConstVal::NullValue;
+            entry.client = 0;// ConstVal::NullValue; //can't set this to NullValue as something indexes from it some (I can't find it) but the OOR causes a crash elsewhere
             entry.player = 0;// ConstVal::NullValue;
+            entry.leaguePlayer = true;
 
             bool overPar = false;
 
@@ -3094,9 +3141,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
             entry.total = entry.frontNine + entry.backNine;
 
-
+            //trophies aren't displayed in career games
             //auto& leaderboardEntry = m_statBoardScores.emplace_back();
-            //leaderboardEntry.client = 0; //trophies aren't displayed in career games
+            //leaderboardEntry.client = 0; 
             //leaderboardEntry.player = 0;
             //leaderboardEntry.score = entry.total;
             //leaderboardEntry.distance = entry.totalDistance;
@@ -3195,12 +3242,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
     for (auto i = 0u; i < playerCount; ++i)
     {
         nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
-
-        if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
-        {
-            m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>()
-                = std::make_pair(scores[i].client, scores[i].player);
-        }
+        m_netStrengthIcons[i].getComponent<cro::Callback>().setUserData<NetStatData>(scores[i].client, scores[i].player, scores[i].leaguePlayer);
     }
     if (page2)
     {

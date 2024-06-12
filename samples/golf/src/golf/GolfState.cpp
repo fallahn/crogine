@@ -4220,6 +4220,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         Social::getMonthlyChallenge().updateChallenge(ChallengeID::Seven, 0);
                         m_achievementTracker.nearMissChallenge = false;
                     }
+
+                    updateLeagueHole();
                 }
             }
         }
