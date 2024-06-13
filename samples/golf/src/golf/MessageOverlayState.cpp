@@ -569,6 +569,8 @@ void MessageOverlayState::buildScene()
                         //menu state to remove any existing connection/server instance
                         //if for some reason we're resetting mid-game
                         m_sharedData.gameMode = GameMode::Tutorial;
+                        m_sharedData.leagueTable = 0; //must reset this else league browser tries to open non-existent table
+                        m_sharedData.leagueRoundID = 0;
 
                         Career::instance(m_sharedData).reset();
 
