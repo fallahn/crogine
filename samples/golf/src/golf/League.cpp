@@ -416,11 +416,11 @@ std::int32_t League::reward(std::int32_t position) const
     }
 }
 
-void League::updateHoleScores(std::uint32_t hole, std::int32_t par)
+void League::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar)
 {
     for (auto& player : m_players)
     {
-        calculateHoleScore(player, hole, par);
+        calculateHoleScore(player, hole, par, overPar);
     }
     updateDB();
 }
@@ -434,7 +434,7 @@ void League::retrofitHoleScores(const std::vector<std::int32_t>& parVals)
         {
             for (auto& player : m_players)
             {
-                calculateHoleScore(player, i, parVals[i]);
+                calculateHoleScore(player, i, parVals[i], false);
             }
             //LogI << "Retrofit " << parVals.size() << " scores for hole " << i+1 << std::endl;
             writeWhenDone = true;
@@ -493,13 +493,20 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
 }
 
 //private
-void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::int32_t par)
+void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::int32_t par, bool overPar)
 {
+    auto skill = player.skill;
+    if (overPar)
+    {
+        //have a little leniency on the player
+        skill++;
+    }
+
     //calc aim accuracy
-    float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
+    float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-skill, skill)];
 
     //calc power accuracy
-    float power = 1.f - PowerSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
+    float power = 1.f - PowerSkill[SkillCentre + cro::Util::Random::value(-skill, skill)];
 
     float quality = aim * power;
 
@@ -537,7 +544,7 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     score -= 2.f; //average out to birdie
 
     //then use the player skill chance to decide if we got an eagle
-    if (cro::Util::Random::value(1, 10) > player.skill)
+    if (cro::Util::Random::value(1, 10) > skill)
     {
         score -= 1.f;
     }
@@ -546,10 +553,12 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     std::int32_t holeScore = -score;
     holeScore += par;
 
-    //too many HIOs - so only a 1/10 chance we get to keep it
+    //too many HIOs - so only a 1/4 chance we get to keep it
+    //at high skills, 1/12 at low skill
     if (holeScore == 1)
     {
-        if (cro::Util::Random::value(0, 9) != 0)
+        const auto hioSkill = SkillCentre - player.skill;
+        if (cro::Util::Random::value(0, (4 + hioSkill)) != 0)
         {
             holeScore += std::min(1, (par - 2));
         }

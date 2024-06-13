@@ -116,7 +116,7 @@ public:
     std::int32_t reward(std::int32_t position) const;
 
     //calculates the hole score for all CPU players
-    void updateHoleScores(std::uint32_t hole, std::int32_t par);
+    void updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar);
     
     //used when upgrading existing league system to this one
     //to fill out any missing scores when resuming an old save game
@@ -146,7 +146,7 @@ private:
 
     std::array<HoleScores, PlayerCount> m_holeScores = {};
 
-    void calculateHoleScore(LeaguePlayer&, std::uint32_t hole, std::int32_t par);
+    void calculateHoleScore(LeaguePlayer&, std::uint32_t hole, std::int32_t par, bool overPar);
 
     void increaseDifficulty();
     void decreaseDifficulty();

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -136,7 +136,7 @@ void ClientCollisionSystem::process(float)
             else if (oldNear 
                 && !collider.nearHole 
                 //&& collider.terrain == TerrainID::Green
-                && m_club == ClubID::Putter
+                //&& m_club == ClubID::Putter
                 //&& position.y > m_holeData[m_holeIndex].pin.y
                 /*&& result.height >= (position.y - (Ball::Radius / 2.f))*/)
             {

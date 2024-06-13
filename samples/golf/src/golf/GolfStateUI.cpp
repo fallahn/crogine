@@ -5394,6 +5394,9 @@ void GolfState::updateLeagueHole()
         //if this is allowed then we assume there's only one human player
         if (m_allowAchievements)
         {
+            const auto playerScore = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
+            const auto par = m_holeData[m_currentHole].par;
+
             switch (m_sharedData.leagueRoundID)
             {
             default: break;
@@ -5408,7 +5411,7 @@ void GolfState::updateLeagueHole()
                 //this may have been saved previously
                 if (league.getHoleScores()[0][m_currentHole] == 0)
                 {
-                    league.updateHoleScores(m_currentHole, m_holeData[m_currentHole].par);
+                    league.updateHoleScores(m_currentHole, par, playerScore > par);
                     updateScoreboard();
                 }
             }
@@ -5418,7 +5421,7 @@ void GolfState::updateLeagueHole()
                 League league(m_sharedData.leagueRoundID, m_sharedData);
                 if (league.getHoleScores()[0][m_currentHole] == 0)
                 {
-                    league.updateHoleScores(m_currentHole, m_holeData[m_currentHole].par);
+                    league.updateHoleScores(m_currentHole, par, playerScore > par);
                 }
             }
             break;
