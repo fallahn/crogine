@@ -3865,11 +3865,11 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
     downHighlight.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, ScrollUp);
     downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatDown]);
 
-    //reset stats button
+    //reset career button
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ std::round(cropping.width / 3.f), -16.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_button");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_career");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3884,24 +3884,24 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
             {
                 if (activated(evt))
                 {
-                    m_sharedData.errorMessage = "reset_profile";
+                    m_sharedData.errorMessage = "reset_career";
                     requestStackPush(StateID::MessageOverlay);
                 }
             });
 
 
-    //reset career button
+    //reset profile button
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ std::round((cropping.width / 3.f) * 2.f), -16.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_career");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_button");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = createHighlight({ std::round((cropping.width / 3.f) * 2.f), -16.f }, "reset_button_highlight");
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
-    entity.getComponent<cro::UIInput>().setSelectionIndex(ResetCareer);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ResetCareer); //stats/career buttons were swapped
     entity.getComponent<cro::UIInput>().setNextIndex(ScrollDown, WindowApply);
     entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, TabAchievements);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -3909,7 +3909,7 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
             {
                 if (activated(evt))
                 {
-                    m_sharedData.errorMessage = "reset_career";
+                    m_sharedData.errorMessage = "reset_profile";
                     requestStackPush(StateID::MessageOverlay);
                 }
             });
