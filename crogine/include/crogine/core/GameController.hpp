@@ -212,6 +212,12 @@ namespace cro
         static constexpr std::int16_t TriggerDeadZone = 30;
 
         /*!
+        \brief Maximum number of game controllers which may be connected
+        Note that this does not include joystick devices.
+        */
+        static constexpr std::int32_t MaxControllers = 12;
+
+        /*!
         \brief Returns the event ID associated with the controller at the given index
         Events such as SDL_CONTROLLERBUTTONDOWN do not contain the ControllerID in the
         button.which field, rather the underlying ID of the device. This function returns
@@ -368,11 +374,12 @@ namespace cro
 
 
         /*!
-        \brief Maximum number of game controllers which may be connected
-        Note that this does not include joystick devices.
+        \brief Returns the player index of the last controller to recieve an event
         */
-        static constexpr std::int32_t MaxControllers = 12;
-    private:
+        static std::int32_t getLastControllerID() { return m_lastControllerIndex; }
 
+    private:
+        friend class App;
+        static std::int32_t m_lastControllerIndex; //tracks which controller last had input
     };
 }

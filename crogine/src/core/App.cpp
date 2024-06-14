@@ -660,6 +660,15 @@ void App::handleEvents()
                     saveSettings();
                 }
             }
+            [[fallthrough]];
+        case SDL_CONTROLLERBUTTONDOWN:
+            GameController::m_lastControllerIndex = GameController::controllerID(evt.cbutton.which);
+            break;
+        case SDL_CONTROLLERAXISMOTION:
+            if (std::abs(evt.caxis.value) > GameController::RightThumbDeadZone)
+            {
+                GameController::m_lastControllerIndex = GameController::controllerID(evt.caxis.which);
+            }
             break;
         case SDL_KEYUP:
             switch (evt.key.keysym.sym)

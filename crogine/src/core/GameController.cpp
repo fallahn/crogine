@@ -33,6 +33,8 @@ source distribution.
 
 using namespace cro;
 
+std::int32_t GameController::m_lastControllerIndex = 0;
+
 std::int32_t GameController::deviceID(std::int32_t controllerID)
 {
     CRO_ASSERT(App::m_instance, "No app running");

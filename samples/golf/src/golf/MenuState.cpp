@@ -519,62 +519,19 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     registerCommand("dump_monthly", [](const std::string&) {Social::dumpMonthlyToText(); });
 #endif
 
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("buns"))
-            {
-                /*ImGui::ColorButton("cb", C);
-                if (ImGui::SliderFloat("Strength", &strength, 0.f, 1.f))
-                {
-                    C.x = 1.f - std::pow(1.f - strength, 3.f);
-                    C.y = std::pow(1.f - strength, 5.f);
-                    C.z = 1.f - std::pow(1.f - (0.1f + (strength * 0.9f)), 40.f);
-                }
-
-                ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());*/
-
-                //auto size = glm::vec2(m_ballThumbTexture.getSize());
-                //ImGui::Image(m_ballThumbTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
-
-                auto size = glm::vec2(LabelTextureSize) * 2.f;
-                /*auto size = glm::vec2(256.f);
-                auto* tex = Achievements::getIcon(AchievementStrings[1]).texture;
-                if (tex)*/
-                for(const auto& t : m_sharedData.nameTextures)
-                {
-                    ImGui::Image(t.getTexture()/**tex*/, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::SameLine();
-                }
-            }
-            ImGui::End();
-        }, true);
-
+#endif
     //registerWindow([&]() 
     //    {
-    //        if (ImGui::Begin("Debug"))
+    //        if (ImGui::Begin("buns"))
     //        {
-    //            //ImGui::Text("Course Index %u", m_sharedData.courseIndex);
-    //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-    //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //            //auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
-    //            //float maxDist = cam.getMaxShadowDistance();
-    //            //if (ImGui::SliderFloat("Dist", &maxDist, 1.f, cam.getFarPlane()))
-    //            //{
-    //            //    cam.setMaxShadowDistance(maxDist);
-    //            //}
-
-    //            //float exp = cam.getShadowExpansion();
-    //            //if (ImGui::SliderFloat("Exp", &exp, 0.f, 100.f))
-    //            //{
-    //            //    cam.setShadowExpansion(exp);
-    //            //}
-
-    //            //ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //            cro::AudioMixer::printDebug();
+    //            for (auto i = 0u; i < cro::GameController::getControllerCount(); ++i)
+    //            {
+    //                ImGui::Text("%s", cro::GameController::getName(i).c_str());
+    //            }
     //        }
     //        ImGui::End();
-    //    }/*, true*/);
-#endif
+    //    });
+
 }
 
 MenuState::~MenuState()
