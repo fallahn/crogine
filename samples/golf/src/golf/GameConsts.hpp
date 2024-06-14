@@ -372,6 +372,17 @@ static inline float getWindMultiplier(float ballHeight, float distanceToPin)
 
 static inline std::int32_t activeControllerID(std::int32_t bestMatch)
 {
+    /*
+    So this may not ring entirely true, however, assuming the
+    Steam Deck controller is always 0 (it might not be) we want
+    to favour all other controller first if, say the Deck is docked
+    or using and external controller. 
+    */
+    if (Social::isSteamdeck() && cro::GameController::getControllerCount() > 1)
+    {
+        return 1;
+    }
+
     if (cro::GameController::isConnected(bestMatch))
     {
         return bestMatch;

@@ -5044,7 +5044,7 @@ void GolfState::buildTrophyScene()
                         
                         const float r = static_cast<float>(cro::Util::Random::value(-6,6)) / 10.f;
                         e.getComponent<cro::AudioEmitter>().setPitch(1.f + r);
-                        LogI << e.getComponent<cro::AudioEmitter>().getPitch() << std::endl;
+
                         if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
                         {
                             e.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -356,7 +356,6 @@ GameController::DSEffect GameController::DSEffect::createFeedback(std::uint8_t p
 
     return retVal;
 }
-
 
 GameController::DSEffect GameController::DSEffect::createWeapon(std::uint8_t startPosition, std::uint8_t endPosition, std::uint8_t strength)
 {
