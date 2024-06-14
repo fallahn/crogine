@@ -71,7 +71,7 @@ void ClientCollisionSystem::process(float)
     {
         auto& collider = entity.getComponent<ClientCollider>();
         const auto& tx = entity.getComponent<cro::Transform>();
-        auto position = tx.getPosition();
+        const auto position = tx.getPosition();
 
         //skip if not near the ground
         if (!collider.active
@@ -112,6 +112,7 @@ void ClientCollisionSystem::process(float)
         }
 
         collider.terrain = result.terrain;
+        const float currentLevel = position.y - result.height;
 
         if (collider.terrain == TerrainID::Green)
         {
@@ -135,6 +136,7 @@ void ClientCollisionSystem::process(float)
             //or a near miss
             else if (oldNear 
                 && !collider.nearHole 
+                && currentLevel < 0.1f
                 //&& collider.terrain == TerrainID::Green
                 //&& m_club == ClubID::Putter
                 //&& position.y > m_holeData[m_holeIndex].pin.y
@@ -184,7 +186,7 @@ void ClientCollisionSystem::process(float)
         };
 
         static constexpr float CollisionLevel = 0.45f;
-        float currentLevel = position.y - result.height;
+        
 
         std::int32_t direction = 0;
         if (currentLevel < collider.previousHeight)
