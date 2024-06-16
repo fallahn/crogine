@@ -70,6 +70,7 @@ static inline constexpr std::int32_t CrowdDensityCount = 4;
 //so max is actually 4 because we always have at least 2 players
 static inline constexpr std::uint8_t StartLives = 6;
 static inline constexpr std::uint8_t MaxNTPStrokes = 2; //nearest the pin
+static inline constexpr std::int32_t CareerLeagueThreshold = 6; //placing higher than this unlocks next league
 
 static constexpr float MaxBallRadius = 0.07f;
 static constexpr float GreenCamRadiusLarge = 45.f;

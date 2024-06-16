@@ -4586,6 +4586,7 @@ void MenuState::updateUnlockedItems()
                     case 1:
                     case 2:
                     case 3:
+                    {
                         leagueFlags |= flag;
                         auto& item = m_sharedData.unlockedItems.emplace_back();
                         item.id = ul::UnlockID::CareerGold + (position - 1);
@@ -4596,10 +4597,14 @@ void MenuState::updateUnlockedItems()
                             //this was the last league so show the credits
                             m_sharedData.showCredits = true;
                         }
-                        else
+                    }
+                        [[fallthrough]];
+                    case 4:
+                    case 5:
+                        if (i < (Leagues.size() - 1))
                         {
                             //show the padlock for unlocking the next league
-                            if (Leagues[i].getCurrentSeason() == 1) //only do this the first time
+                            if (Leagues[i].getCurrentSeason() == 2) //only do this the first time
                             {
                                 auto& u = m_sharedData.unlockedItems.emplace_back();
                                 u.id = ul::UnlockID::CareerLeague;

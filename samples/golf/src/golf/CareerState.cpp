@@ -555,7 +555,7 @@ void CareerState::buildScene()
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
 
-        const bool unlocked = (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < 4)));
+        const bool unlocked = (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < CareerLeagueThreshold)));
 
         //league titles, listed on left
         entity = m_scene.createEntity();
@@ -1681,7 +1681,7 @@ Unlike Free Play mode you can leave a Career round at any time, and resume it ag
 you're ready. Career mode will even remember which hole you're on!
 
 Standard league rules apply (see the league table for more information). Finish the current
-league in the top 3 to unlock the next stage. You can return to an unlocked league at any
+league in the top 5 to unlock the next stage. You can return to an unlocked league at any
 time if you want to try and improve your existing score.
 
 Finish a league in the top 3 to unlock a new ball, in the top 2 to unlock a new piece of

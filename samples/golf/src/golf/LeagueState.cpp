@@ -981,7 +981,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
     refreshNameList(leagueIndex, league);
 
-    return leagueIndex < LeagueRoundID::RoundOne || league.getCurrentBest() < 4;
+    return leagueIndex < LeagueRoundID::RoundOne || league.getCurrentBest() < CareerLeagueThreshold;
 }
 
 void LeagueState::createInfoTab(cro::Entity parent)

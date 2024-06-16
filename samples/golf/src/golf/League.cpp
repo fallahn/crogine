@@ -132,10 +132,10 @@ void League::reset()
     std::int32_t nameIndex = 0;
     for (auto& player : m_players)
     {
-        float dist = static_cast<float>(nameIndex) / PlayerCount;
+        float dist = static_cast<float>(std::min(nameIndex, static_cast<std::int32_t>(PlayerCount / 3))) / PlayerCount;
 
         player = {};
-        player.skill = std::round(dist * (SkillCentre - 2)) + 2;
+        player.skill = std::round(dist * (SkillCentre - 1)) + 1;
         player.curve = std::round(dist * MaxCurve) + (player.skill % 2);
         player.curve = player.curve + cro::Util::Random::value(-1, 1);
         player.curve = std::clamp(player.curve, 0, MaxCurve);
@@ -496,17 +496,30 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
 void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::int32_t par, bool overPar)
 {
     auto skill = player.skill;
-    if (overPar)
+    if (overPar
+        && m_sharedData.clubSet != 2)
     {
         //have a little leniency on the player
         skill++;
     }
 
+    //CPU players exhibit better skill when playing with longer club sets
+    auto skillOffset = cro::Util::Random::value(0, 2) == 0 ? 0 : 1;
+    if (m_sharedData.clubSet == 1)
+    {
+        auto s = std::max(1, skill - 1);
+        skillOffset = cro::Util::Random::value(-s, s);
+    }
+    else if (m_sharedData.clubSet == 0)
+    {
+        skillOffset = cro::Util::Random::value(-skill, skill);
+    }
+
     //calc aim accuracy
-    float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-skill, skill)];
+    float aim = 1.f - AimSkill[SkillCentre + skillOffset];
 
     //calc power accuracy
-    float power = 1.f - PowerSkill[SkillCentre + cro::Util::Random::value(-skill, skill)];
+    float power = 1.f - PowerSkill[SkillCentre + skillOffset];
 
     float quality = aim * power;
 
