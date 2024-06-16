@@ -622,7 +622,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     {
                         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-                        if (cro::GameController::hasPSLayout(0))
+                        if (hasPSLayout(0))
                         {
                             e.getComponent<cro::SpriteAnimation>().play(1);
                         }

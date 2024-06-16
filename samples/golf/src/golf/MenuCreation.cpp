@@ -1787,7 +1787,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         {
             if (cro::GameController::isConnected(0))
             {
-                if (cro::GameController::hasPSLayout(0))
+                if (hasPSLayout(0))
                 {
                     e.getComponent<cro::SpriteAnimation>().play(1);
                 }

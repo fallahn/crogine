@@ -31,6 +31,21 @@ source distribution.
 #include "Social.hpp"
 #include "../M3UPlaylist.hpp"
 
+#ifdef USE_GNS
+#include "Input.hpp"
+#endif
+
+bool hasPSLayout(std::int32_t controllerID)
+{
+#ifdef USE_GNS
+    if (Social::isSteamdeck())
+    {
+        return Input::isPSController(cro::GameController::getSteamHandle(controllerID));  
+    }
+#endif
+    return cro::GameController::hasPSLayout(controllerID);
+}
+
 void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity gameMusic)
 {
     //parse any music files into a playlist

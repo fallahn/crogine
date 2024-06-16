@@ -324,6 +324,20 @@ bool GameController::applyDSTriggerEffect(std::int32_t controllerIndex, std::int
     return false;
 }
 
+std::uint64_t GameController::getSteamHandle(std::int32_t controllerID)
+{
+    if (controllerID < 0 || controllerID >= MaxControllers)
+    {
+        return 0;
+    }
+    
+    if (auto* c = App::m_instance->m_controllers[controllerID].controller; c != nullptr)
+    {
+        return SDL_GameControllerGetSteamHandle(c);
+    }
+    return 0;
+}
+
 //factory functions for DSEffect - based on https://gist.github.com/Nielk1/6d54cc2c00d2201ccb8c2720ad7538db (MIT)
 GameController::DSEffect GameController::DSEffect::createFeedback(std::uint8_t position, std::uint8_t strength)
 {

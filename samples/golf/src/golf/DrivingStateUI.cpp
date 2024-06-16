@@ -2785,7 +2785,7 @@ void DrivingState::updateSkipMessage(float dt)
                         && m_skipState.displayControllerMessage)
                     {
                         //set correct button icon
-                        if (cro::GameController::hasPSLayout(activeControllerID(0)))
+                        if (hasPSLayout(activeControllerID(0)))
                         {
                             data.buttonIndex = 1; //used as animation ID
                         }

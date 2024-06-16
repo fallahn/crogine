@@ -4702,7 +4702,7 @@ void GolfState::updateSkipMessage(float dt)
                         auto idx = m_humanCount == 1 ? cro::GameController::controllerID(m_inputParser.getLastActiveController()) : activeControllerID(m_currentPlayer.player);
 
                         //set correct button icon
-                        if (cro::GameController::hasPSLayout(idx))
+                        if (hasPSLayout(idx))
                         {
                             data.buttonIndex = 1; //used as animation ID
                         }
@@ -5770,7 +5770,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 targetScale = targetScale == 1.f ? 0.f : 1.f;
 
                 {
-                    auto anim = cro::GameController::hasPSLayout(controllerID) ? 1 : 0;
+                    auto anim = hasPSLayout(controllerID) ? 1 : 0;
                     for (auto i = 4u; i < buttonNodes.size(); ++i)
                     {
                         buttonNodes[i].getComponent<cro::SpriteAnimation>().play(anim);

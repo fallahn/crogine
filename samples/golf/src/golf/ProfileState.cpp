@@ -222,7 +222,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     {
         if (controllerID > -1)
         {
-            if (cro::GameController::hasPSLayout(controllerID))
+            if (hasPSLayout(controllerID))
             {
                 m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(PSString);
             }

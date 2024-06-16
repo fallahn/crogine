@@ -490,7 +490,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(0);
                 break;
             case SDL_CONTROLLERBUTTONDOWN:
-                if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)))
+                if (hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)))
                 {
                     m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(2);
                 }
@@ -500,7 +500,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 }
                 break;
             case SDL_CONTROLLERAXISMOTION:
-                if (cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
+                if (hasPSLayout(cro::GameController::controllerID(evt.caxis.which)))
                 {
                     m_freecamMenuEnt.getComponent<cro::SpriteAnimation>().play(2);
                 }

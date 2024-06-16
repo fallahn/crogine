@@ -397,6 +397,8 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
     return 0;
 }
 
+bool hasPSLayout(std::int32_t controllerID);
+
 template <typename T>
 constexpr T interpolate(T a, T b, float t)
 {

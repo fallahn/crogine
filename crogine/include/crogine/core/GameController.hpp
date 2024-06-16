@@ -372,11 +372,16 @@ namespace cro
         */
         static bool applyDSTriggerEffect(std::int32_t controllerIndex, std::int32_t triggers, const DSEffect& settings);
 
-
         /*!
         \brief Returns the player index of the last controller to recieve an event
         */
         static std::int32_t getLastControllerID() { return m_lastControllerIndex; }
+
+        /*!
+        \brief Returns thet Steam input ID of this controller if we're on a Steam deck
+        else returns zero
+        */
+        static  std::uint64_t getSteamHandle(std::int32_t controllerID);
 
     private:
         friend class App;

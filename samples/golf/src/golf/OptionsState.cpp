@@ -344,7 +344,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         {
             std::size_t i = Social::isSteamdeck() ? LayoutID::Deck
                 : cro::GameController::getControllerCount() == 0 ? LayoutID::XBox :
-                cro::GameController::hasPSLayout(controllerID) ? LayoutID::PS : LayoutID::XBox;
+                hasPSLayout(controllerID) ? LayoutID::PS : LayoutID::XBox;
             m_layoutEnt.getComponent<cro::SpriteAnimation>().play(i);
         }
         m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces refresh
@@ -2884,7 +2884,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
                     std::size_t i = Social::isSteamdeck() ? LayoutID::Deck
                         : cro::GameController::getControllerCount() == 0 ? LayoutID::XBox :
-                        cro::GameController::hasPSLayout(controllerIndex) ? LayoutID::PS : LayoutID::XBox;
+                        hasPSLayout(controllerIndex) ? LayoutID::PS : LayoutID::XBox;
                     m_layoutEnt.getComponent<cro::SpriteAnimation>().play(i);
                     selectionEnt.getComponent<cro::SpriteAnimation>().play(1);
 

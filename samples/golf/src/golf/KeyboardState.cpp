@@ -187,7 +187,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
     const auto updateButtonAnim = [&](std::int32_t joyID)
         {
             auto id = cro::GameController::controllerID(joyID);
-            auto anim = cro::GameController::hasPSLayout(id) ? 1 : 0;
+            auto anim = hasPSLayout(id) ? 1 : 0;
 
             for (auto& e : m_buttonEnts)
             {

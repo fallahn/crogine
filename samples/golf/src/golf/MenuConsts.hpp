@@ -43,8 +43,7 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 
 #ifdef USE_GNS
-//#define IS_PS(x) Input::isPSController(x)
-#define IS_PS(x) cro::GameController::hasPSLayout(x)
+#define IS_PS(x) hasPSLayout(x)
 #else
 #define IS_PS(x) cro::GameController::hasPSLayout(x)
 #endif
