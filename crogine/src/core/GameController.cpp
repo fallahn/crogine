@@ -333,7 +333,14 @@ std::uint64_t GameController::getSteamHandle(std::int32_t controllerID)
     
     if (auto* c = App::m_instance->m_controllers[controllerID].controller; c != nullptr)
     {
-        return SDL_GameControllerGetSteamHandle(c);
+        if constexpr (SDL_MINOR_VERSION < 30)
+        {
+            return 0;
+}
+        else
+        {
+            return SDL_GameControllerGetSteamHandle(c);
+        }
     }
     return 0;
 }
