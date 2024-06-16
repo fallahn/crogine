@@ -326,6 +326,9 @@ bool GameController::applyDSTriggerEffect(std::int32_t controllerIndex, std::int
 
 std::uint64_t GameController::getSteamHandle(std::int32_t controllerID)
 {
+#if SDL_MINOR_VERSION < 30
+            return 0;
+#else
     if (controllerID < 0 || controllerID >= MaxControllers)
     {
         return 0;
@@ -333,16 +336,10 @@ std::uint64_t GameController::getSteamHandle(std::int32_t controllerID)
     
     if (auto* c = App::m_instance->m_controllers[controllerID].controller; c != nullptr)
     {
-        if constexpr (SDL_MINOR_VERSION < 30)
-        {
-            return 0;
-}
-        else
-        {
             return SDL_GameControllerGetSteamHandle(c);
-        }
     }
     return 0;
+#endif
 }
 
 //factory functions for DSEffect - based on https://gist.github.com/Nielk1/6d54cc2c00d2201ccb8c2720ad7538db (MIT)
