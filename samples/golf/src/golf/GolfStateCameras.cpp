@@ -1077,8 +1077,9 @@ void GolfState::togglePuttingView(bool putt)
         {
             for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
             {
-                static constexpr glm::vec3 Scale(1.f, 0.f, 0.f);
-                m_avatars[i][j].model.getComponent<cro::Transform>().setScale(Scale);
+                auto scale = m_avatars[i][j].model.getComponent<cro::Transform>().getScale();
+                scale.y = scale.z = 0.f; //don't mutate x... it controls which way they're facing
+                m_avatars[i][j].model.getComponent<cro::Transform>().setScale(scale);
                 m_avatars[i][j].model.getComponent<cro::Model>().setHidden(true);
                 m_avatars[i][j].model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0;
             }

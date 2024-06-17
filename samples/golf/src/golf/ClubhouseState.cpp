@@ -387,7 +387,8 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
                     if (m_arcadeIndexKey == ArcadeKey.size())
                     {
                         //MAGIC
-                        if (m_arcadeEnt.isValid())
+                        if (m_arcadeEnt.isValid()
+                            && !m_arcadeEnt.getComponent<cro::UIInput>().enabled)
                         {
                             m_arcadeEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                             m_arcadeEnt.getComponent<cro::UIInput>().enabled = true;
