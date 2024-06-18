@@ -827,6 +827,19 @@ void MenuState::parseAvatarDirectory()
                 m_profileData.hairDefs.push_back(md);
             }
         }
+
+        //make sure the avatar info is the same size as hair info as indexFromHairID()
+        //has to return a valid index based on m_sharedData.hairInfo into avatar.hairModels
+        for (auto& avatar : m_playerAvatars)
+        {
+            if (avatar.hairModels.size() < m_sharedData.hairInfo.size())
+            {
+                for (auto i = avatar.hairModels.size(); i < m_sharedData.hairInfo.size(); ++i)
+                {
+                    avatar.hairModels.emplace_back();
+                }
+            }
+        }
     }
 
     //now load extra hair so it's available in-game
