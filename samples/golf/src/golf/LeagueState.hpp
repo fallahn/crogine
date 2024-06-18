@@ -117,6 +117,7 @@ private:
     bool createLeagueTab(cro::Entity, const cro::SpriteSheet&, std::int32_t);
     void createInfoTab(cro::Entity);
 
+    float m_scrollMultiplier;
     std::array<cro::Entity, LeagueID::Count> m_nameLists = {};
     std::array<cro::Entity, LeagueID::Count> m_nameScrollers = {};
     void refreshNameList(std::int32_t leagueID, const League&);

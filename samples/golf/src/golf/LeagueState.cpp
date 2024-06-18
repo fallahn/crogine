@@ -139,6 +139,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_viewScale             (2.f),
     m_currentTab            (0),
     m_currentLeague         (0),
+    m_scrollMultiplier      (1.f),
     m_editName              (false),
     m_activeName            (nullptr)
 {
@@ -450,6 +451,18 @@ void LeagueState::handleMessage(const cro::Message& msg)
 
 bool LeagueState::simulate(float dt)
 {
+    //update the scroll speed of lobby text
+    m_scrollMultiplier = 1.f;
+    if (auto amt = cro::GameController::getAxisPosition(0, cro::GameController::AxisRightX);
+        amt > cro::GameController::LeftThumbDeadZone)
+    {
+        m_scrollMultiplier += 4.f * (static_cast<float>(amt) / cro::GameController::AxisMax);
+    }
+    else if (amt < -cro::GameController::LeftThumbDeadZone)
+    {
+        m_scrollMultiplier -= 0.5f * (static_cast<float>(amt) / cro::GameController::AxisMin);
+    }
+
     m_scene.simulate(dt);
     return true;
 }
@@ -956,7 +969,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
                 auto& [bounds, xPos] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
-                xPos -= (dt * 50.f);
+                xPos -= (dt * 50.f) * m_scrollMultiplier;
 
                 static constexpr float BGWidth = 494.f;
 
