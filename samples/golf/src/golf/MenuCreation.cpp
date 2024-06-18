@@ -3411,6 +3411,12 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         m_matchMaking.setGameConnectionCount(connectionCount);
     }
 
+    if (cd.connectionID != m_sharedData.clientConnection.connectionID)
+    {
+        //this is someone else so play notification
+        postMessage<SystemEvent>(cl::MessageID::SystemMessage)->type = SystemEvent::LobbyEntered;
+    }
+
     //new players won't have other levels
     std::uint16_t xp = (Social::getLevel() << 8) | m_sharedData.clientConnection.connectionID;
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerXP, xp, net::NetFlag::Reliable, ConstVal::NetChannelReliable);

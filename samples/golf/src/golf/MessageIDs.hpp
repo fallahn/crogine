@@ -160,7 +160,8 @@ struct SystemEvent final
         RestartActiveMode, //currently just driving range, but might apply somewhere else one day :)
         RequestOSK,
         SubmitOSK, //OSK was closed and there's data in the buffer to be read
-        CancelOSK
+        CancelOSK,
+        LobbyEntered //someone other than us joined the lobby
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };

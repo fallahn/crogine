@@ -50,6 +50,7 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/ball/holed.wav",
         "assets/golf/sound/ball/drop.wav",
         "assets/golf/sound/menu/snapshot.wav",
+        "assets/golf/sound/menu/lobby.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -134,6 +135,15 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
             }
         }
         break;
+        case cl::MessageID::SystemMessage:
+        {
+            const auto& data = msg.getData<SystemEvent>();
+            if (data.type == SystemEvent::LobbyEntered)
+            {
+                playSound(AudioID::Lobby, 0.5f);
+            }
+        }
+            break;
         }
     }
 }

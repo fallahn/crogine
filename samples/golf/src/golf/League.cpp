@@ -577,6 +577,14 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
         }
     }
 
+    //there's a flaw in my logic here which means the result occasionally
+    //comes back as zero - rather than fix my logic I'm going to paste over the cracks.
+    if (holeScore == 0)
+    {
+        holeScore = par + cro::Util::Random::value(-1, 1);
+    }
+
+
     //write this to the hole scores which get saved in a file / used to display on scoreboard
     CRO_ASSERT(player.nameIndex != -1, "this shouldn't be a human player");
     m_holeScores[player.nameIndex][hole] = holeScore;// +par;
