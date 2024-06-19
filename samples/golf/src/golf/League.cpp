@@ -100,7 +100,7 @@ namespace
 
     //used to version the league data file
     constexpr std::uint32_t VersionMask = 0x000000ff;
-    constexpr std::uint8_t VersionNumber = 1;
+    constexpr std::uint8_t VersionNumber = 2;
 }
 
 League::League(std::int32_t id, const SharedStateData& sd)
@@ -129,52 +129,8 @@ League::League(std::int32_t id, const SharedStateData& sd)
 //public
 void League::reset()
 {
-    std::int32_t nameIndex = 0;
-    for (auto& player : m_players)
-    {
-        float dist = static_cast<float>(std::min(nameIndex, static_cast<std::int32_t>(PlayerCount / 3))) / PlayerCount;
-
-        player = {};
-        player.skill = std::round(dist * (SkillCentre - 1)) + 1;
-        player.curve = std::round(dist * MaxCurve) + (player.skill % 2);
-        player.curve = player.curve + cro::Util::Random::value(-1, 1);
-        player.curve = std::clamp(player.curve, 0, MaxCurve);
-        player.outlier = cro::Util::Random::value(1, 10);
-        player.nameIndex = nameIndex++;
-
-        //this starts small and increase as
-        //player level is increased
-        player.quality = BaseQuality - (0.01f * (player.nameIndex / 2));
-    }
-
-    //for career leagues we want to increase the initial difficulty
-    //as it remains at that level between seasons
-    std::int32_t maxIncrease = 0;
-    switch (m_id)
-    {
-    default: break;
-    case LeagueRoundID::RoundTwo:
-        maxIncrease = 2;
-        break;
-    case LeagueRoundID::RoundThree:
-        maxIncrease = 4;
-        break;
-    case LeagueRoundID::RoundFour:
-        maxIncrease = 6;
-        break;
-    case LeagueRoundID::RoundFive:
-        maxIncrease = 8;
-        break;
-    case LeagueRoundID::RoundSix:
-        maxIncrease = 10;
-        break;
-    }
-
-    for (auto i = 0; i < maxIncrease; ++i)
-    {
-        increaseDifficulty();
-    }
-
+    rollPlayers();
+   
     createSortedTable();
 
     m_currentIteration = 0;
@@ -590,6 +546,55 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     m_holeScores[player.nameIndex][hole] = holeScore;// +par;
 }
 
+void League::rollPlayers()
+{
+    std::int32_t nameIndex = 0;
+    for (auto& player : m_players)
+    {
+        float dist = static_cast<float>(std::min(nameIndex, static_cast<std::int32_t>(PlayerCount / 3))) / PlayerCount;
+
+        player = {};
+        player.skill = std::round(dist * (SkillCentre - 1)) + 1;
+        player.curve = std::round(dist * MaxCurve) + (player.skill % 2);
+        player.curve = player.curve + cro::Util::Random::value(-1, 1);
+        player.curve = std::clamp(player.curve, 0, MaxCurve);
+        player.outlier = cro::Util::Random::value(1, 10);
+        player.nameIndex = nameIndex++;
+
+        //this starts small and increase as
+        //player level is increased
+        player.quality = BaseQuality - (0.01f * (player.nameIndex / 2));
+    }
+
+    //for career leagues we want to increase the initial difficulty
+    //as it remains at that level between seasons
+    std::int32_t maxIncrease = 0;
+    switch (m_id)
+    {
+    default: break;
+    case LeagueRoundID::RoundTwo:
+        maxIncrease = 2;
+        break;
+    case LeagueRoundID::RoundThree:
+        maxIncrease = 3;
+        break;
+    case LeagueRoundID::RoundFour:
+        maxIncrease = 4;
+        break;
+    case LeagueRoundID::RoundFive:
+        maxIncrease = 6;
+        break;
+    case LeagueRoundID::RoundSix:
+        maxIncrease = 8;
+        break;
+    }
+
+    for (auto i = 0; i < maxIncrease; ++i)
+    {
+        increaseDifficulty();
+    }
+}
+
 void League::increaseDifficulty()
 {
     //increase ALL player quality, but show a bigger improvement near the bottom
@@ -746,6 +751,8 @@ void League::read()
 {
     assertDB();
 
+    bool rerollPlayers = false;
+
     const auto path = getFilePath(FileName);
     if (cro::FileSystem::fileExists(path))
     {
@@ -846,6 +853,10 @@ void League::read()
                 //we added position tracking, so need to set our previous position
                 m_lastIterationPosition = m_currentPosition;
                 createSortedTable(); //this needs to be rebuilt now it knows what the last iteration ought to be
+                [[fallthrough]]; //if we're on V0 we definitely want to fall through to V1
+            case 1:
+                //updated league rule wants regenned players
+                rerollPlayers = true;
                 break;
             }
         }
@@ -882,6 +893,13 @@ void League::read()
     {
         //create a fresh league
         reset();
+    }
+
+    if (rerollPlayers)
+    {
+        LogI << "Updated league to version 2" << std::endl;
+        rollPlayers();
+        write();
     }
 }
 
