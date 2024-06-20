@@ -291,10 +291,18 @@ void FreePlayState::buildScene()
 
 
     //decription text
-    cro::String desc = "Play on any course, in 10\ndifferent game modes including:\nStroke Play, Match Play, Skins,\nStableford, Elimination and more.";
+    cro::String desc = 
+R"(Play on any course, in 10 different game modes including: 
+Stroke Play, Match Play, Skins, Stableford, Elimination, Multi-Target,
+Nearest the Pin and more.)";
 
 #ifdef USE_GNS
-    desc += "\nAnd...\nCompete in the Club League\nand the online leaderboards for\nMonthly and All Time best scores.";
+    desc += R"(
+
+And...
+When playing Stroke Play you'll automatically compete in the Club League
+as well as the online global leaderboards for the Monthly and All Time
+best scores.)";
 #endif
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
