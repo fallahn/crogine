@@ -272,13 +272,15 @@ void FreePlayState::buildScene()
 
    
     //background
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
+    //cro::SpriteSheet spriteSheet;
+    //spriteSheet.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
+
+    const auto& tex = m_sharedData.sharedResources->textures.get("assets/golf/images/freeplay_menu.png");
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    entity.addComponent<cro::Sprite>(tex);// = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
@@ -287,10 +289,32 @@ void FreePlayState::buildScene()
     menuEntity.addComponent<cro::Transform>();
     rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
+
+    //decription text
+    cro::String desc = "Play on any course, in 10\ndifferent game modes including:\nStroke Play, Match Play, Skins,\nStableford, Elimination and more.";
+
+#ifdef USE_GNS
+    desc += "\nAnd...\nCompete in the Club League\nand the online leaderboards for\nMonthly and All Time best scores.";
+#endif
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto descText = m_scene.createEntity();
+    descText.addComponent<cro::Transform>().setPosition({ /*-83.f*/0.f, 66.f });
+    descText.addComponent<cro::Drawable2D>();
+    descText.addComponent<cro::Text>(smallFont);
+    descText.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    descText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    descText.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    descText.getComponent<cro::Text>().setVerticalSpacing(-2.f);
+    descText.getComponent<cro::Text>().setString(desc);
+    menuEntity.getComponent<cro::Transform>().addChild(descText.getComponent<cro::Transform>());
+
+
+
     auto helpText = m_scene.createEntity();
     helpText.addComponent<cro::Transform>().setOrigin({0.f, 0.f, -0.2f});
     helpText.addComponent<cro::Drawable2D>();
-    helpText.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info));
+    helpText.addComponent<cro::Text>(smallFont);
     helpText.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     helpText.getComponent<cro::Text>().setFillColour(TextNormalColour);
     helpText.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -354,9 +378,9 @@ void FreePlayState::buildScene()
     };
 
 
-    glm::vec2 position(0.f, 23.f);
+    glm::vec2 position(0.f, -23.f);
     static constexpr float ItemHeight = 10.f;
-    //tutorial button
+    //create game
     entity = createItem(position, "Create Game", menuEntity);
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -388,7 +412,7 @@ void FreePlayState::buildScene()
             });
     position.y -= ItemHeight;
 
-    //driving range
+    //join game
     entity = createItem(position, "Join Game", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -414,7 +438,7 @@ void FreePlayState::buildScene()
 
 
     //back button
-    entity = createItem(glm::vec2(0.f, -28.f), "Back", menuEntity);
+    entity = createItem(glm::vec2(0.f, -74.f), "Back", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
             {
