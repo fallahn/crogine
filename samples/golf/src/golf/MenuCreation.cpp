@@ -4614,7 +4614,7 @@ void MenuState::updateUnlockedItems()
                             {
                                 auto& u = m_sharedData.unlockedItems.emplace_back();
                                 u.id = ul::UnlockID::CareerLeague;
-                                u.xp = 100;
+                                //u.xp = 100; //this doesn't actually award XP, it just sets the text
                             }
                         }
                         break;

@@ -307,6 +307,6 @@ namespace ul
         { ModelID::CareerFirst,   "First Place!",   "New Headwear!" }, //these get overwritten with XP value
         { ModelID::CareerSecond,  "Second Place!",  "New Headwear!" },
         { ModelID::CareerThird,   "Third Place!",   "New Headwear!" },
-        { ModelID::Padlock,   "Unlocked",   "New League!" },
+        { ModelID::Padlock,       "New League",     "Now Available!" },
     };
 }
