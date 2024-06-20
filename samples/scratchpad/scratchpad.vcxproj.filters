@@ -133,6 +133,12 @@
     <Filter Include="Source Files\endless">
       <UniqueIdentifier>{78467010-56b5-44ab-ba21-40029ebe776f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\arc">
+      <UniqueIdentifier>{80610277-fb83-4b06-a8c3-0af7c14d6753}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\arc">
+      <UniqueIdentifier>{afd80b6d-c065-44ab-b616-7e607b4d737b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -266,6 +272,9 @@
     </ClCompile>
     <ClCompile Include="src\endless\EndlessDrivingState.cpp">
       <Filter>Source Files\endless</Filter>
+    </ClCompile>
+    <ClCompile Include="src\arc\ArcState.cpp">
+      <Filter>Source Files\arc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -445,6 +454,9 @@
     </ClInclude>
     <ClInclude Include="src\endless\TrackSprite.hpp">
       <Filter>Header Files\endless</Filter>
+    </ClInclude>
+    <ClInclude Include="src\arc\ArcState.hpp">
+      <Filter>Header Files\arc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

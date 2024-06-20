@@ -37,6 +37,7 @@ namespace States
         {
             MainMenu,
             AnimBlend,
+            Arc,
             BatCat,
             Billiards,
             Bounce,
