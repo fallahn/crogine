@@ -36,6 +36,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "Utility.hpp"
+#include "CallbackData.hpp"
 #include "MenuCallbacks.hpp"
 #include "MenuConsts.hpp"
 #include "TextAnimCallback.hpp"
@@ -661,7 +662,47 @@ void CareerState::buildScene()
     m_playerName = entity;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //ticker for freeplay reminder
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    position.x += 100.f;
+    position.y += LeagueLineSpacing + 1.f;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Freeplay mode!");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<ScrollData>();
+    entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& [bounds, xPos] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
+            xPos -= (dt * 30.f);
+
+            static constexpr float BGWidth = 198.f;
+
+            if (xPos < (-bounds.width))
+            {
+                xPos = BGWidth + 20.f;
+            }
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            pos.x = std::round(xPos);
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            auto cropping = bounds;
+            cropping.left = -pos.x;
+            cropping.left += 20.f;
+            cropping.width = BGWidth;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //gimme
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 72.f, 96.f, 0.1f });

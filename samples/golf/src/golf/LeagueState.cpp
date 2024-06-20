@@ -32,6 +32,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
+#include "CallbackData.hpp"
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
 #include "RandNames.hpp"
@@ -104,11 +105,6 @@ namespace
     static constexpr float VerticalSpacing = 13.f;
     static constexpr float TextTop = 268.f;
 
-    struct ScrollData final
-    {
-        cro::FloatRect bounds = {};
-        float xPos = 0.f;
-    };
 
     constexpr std::size_t LeagueButtonIndex = 0;
     constexpr std::size_t InfoButtonIndex = 1;
