@@ -129,7 +129,7 @@ League::League(std::int32_t id, const SharedStateData& sd)
 //public
 void League::reset()
 {
-    rollPlayers();
+    rollPlayers(true);
    
     createSortedTable();
 
@@ -546,12 +546,20 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     m_holeScores[player.nameIndex][hole] = holeScore;// +par;
 }
 
-void League::rollPlayers()
+void League::rollPlayers(bool resetScores)
 {
     std::int32_t nameIndex = 0;
     for (auto& player : m_players)
     {
         float dist = static_cast<float>(std::min(nameIndex, static_cast<std::int32_t>(PlayerCount / 3))) / PlayerCount;
+
+        std::int32_t oldScore = 0;
+        std::int32_t oldPosition = 0;
+        if (!resetScores)
+        {
+            oldScore = player.currentScore;
+            oldPosition = player.previousPosition;
+        }
 
         player = {};
         player.skill = std::round(dist * (SkillCentre - 1)) + 1;
@@ -564,6 +572,9 @@ void League::rollPlayers()
         //this starts small and increase as
         //player level is increased
         player.quality = BaseQuality - (0.01f * (player.nameIndex / 2));
+
+        player.currentScore = oldScore;
+        player.previousPosition = oldPosition;
     }
 
     //for career leagues we want to increase the initial difficulty
@@ -897,8 +908,7 @@ void League::read()
 
     if (rerollPlayers)
     {
-        LogI << "Updated league to version 2" << std::endl;
-        rollPlayers();
+        rollPlayers(false);
         write();
     }
 }

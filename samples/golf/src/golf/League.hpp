@@ -148,7 +148,7 @@ private:
 
     void calculateHoleScore(LeaguePlayer&, std::uint32_t hole, std::int32_t par, bool overPar);
 
-    void rollPlayers();
+    void rollPlayers(bool resetScores);
     void increaseDifficulty();
     void decreaseDifficulty();
     std::string getFilePath(const std::string& fileName) const;
