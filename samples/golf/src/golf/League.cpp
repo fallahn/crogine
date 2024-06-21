@@ -562,7 +562,7 @@ void League::rollPlayers(bool resetScores)
         }
 
         player = {};
-        player.skill = std::round(dist * (SkillCentre - 1)) + 1;
+        player.skill = std::round(dist * (SkillCentre - 2)) + 2;
         player.curve = std::round(dist * MaxCurve) + (player.skill % 2);
         player.curve = player.curve + cro::Util::Random::value(-1, 1);
         player.curve = std::clamp(player.curve, 0, MaxCurve);
