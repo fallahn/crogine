@@ -346,6 +346,7 @@
   <ItemGroup>
     <ClInclude Include="src\animblend\AnimBlendState.hpp" />
     <ClInclude Include="src\arc\ArcState.hpp" />
+    <ClInclude Include="src\arc\ExportHeader.hpp" />
     <ClInclude Include="src\batcat\BatcatState.hpp" />
     <ClInclude Include="src\batcat\icon.hpp" />
     <ClInclude Include="src\batcat\LoadingScreen.hpp" />

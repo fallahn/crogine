@@ -458,6 +458,9 @@
     <ClInclude Include="src\arc\ArcState.hpp">
       <Filter>Header Files\arc</Filter>
     </ClInclude>
+    <ClInclude Include="src\arc\ExportHeader.hpp">
+      <Filter>Header Files\arc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">

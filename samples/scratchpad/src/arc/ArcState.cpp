@@ -1,6 +1,7 @@
 //Auto-generated source file for Scratchpad Stub 20/06/2024, 15:19:50
 
 #include "ArcState.hpp"
+#include "ExportHeader.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -21,22 +22,6 @@
 
 namespace
 {
-    struct ClubID final
-    {
-        enum
-        {
-            Driver, ThreeWood, FiveWood,
-            FourIron, FiveIron, SixIron,
-            SevenIron, EightIron, NineIron,
-            PitchWedge, GapWedge, SandWedge,
-            Putter,
-
-            Count
-        };
-    };
-
-    //---------------------------
-
     struct Stat final
     {
         constexpr Stat() = default;
@@ -133,19 +118,6 @@ namespace
     Power multiplier: How much the default power if modified to reach the target amount
     Target multiplier: How much the target distance is modified, so we can update the range indicator
     */
-    struct ShotModifier final
-    {
-        float angle = 0.f;
-        float powerMultiplier = 1.f;
-        float targetMultiplier = 1.f;
-    };
-
-    struct ModifierGroup final
-    {
-        const std::array<ShotModifier, ClubID::Count> DefaultModifier = {}; //leaves the default shot
-        std::array<ShotModifier, ClubID::Count> punchModifier = {};
-        std::array<ShotModifier, ClubID::Count> flopModifier = {};
-    };
     std::array<ModifierGroup, LevelID::Count> levelModifiers = {};
 }
 
@@ -353,7 +325,8 @@ void ArcState::createUI()
 
                 if (ImGui::Button("Export Header"))
                 {
-                    //TODO write data as a header files
+                    writeHeader(levelModifiers);
+                    cro::FileSystem::showNotification("Complete", "Wrote Header File");
                 }
             }
             ImGui::End();
