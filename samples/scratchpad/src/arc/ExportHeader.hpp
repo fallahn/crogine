@@ -100,7 +100,7 @@ static inline void writeHeader(const std::array<ModifierGroup, 3>& data)
             outFile << "}\n\nstatic constexpr std::array<ShotModifier, ClubID::Count> " << FlopStrings[i++] << " = \n{\n";
             for (const auto& mod : group.flopModifier)
             {
-                outFile << "    ShotModifier(" << mod.angle << "f, " << mod.powerMultiplier << "f, " << mod.targetMultiplier << ")f,\n";
+                outFile << "    ShotModifier(" << mod.angle << "f, " << mod.powerMultiplier << "f, " << mod.targetMultiplier << "f),\n";
             }
             outFile << "}\n\n";
         }

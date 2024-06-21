@@ -228,15 +228,24 @@ void ArcState::createUI()
 
     registerWindow([&]() 
         {
+            static constexpr float MaxZoom = 20.f;
+            const auto reZoom = [&]()
+                {
+                    const auto ScreenSize = static_cast<float>(cro::App::getWindow().getSize().x);
+                    m_zoom = std::clamp(ScreenSize / (m_distances[ShotType::Punch] + 20.f), 0.5f, MaxZoom);
+                    m_plotEntity.getComponent<cro::Transform>().setScale(glm::vec2(m_zoom));
+                };
+
             ImGui::SetNextWindowSize({ 342.f, 350.f });
             if (ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
             {
                 //select club ID
                 if (ImGui::InputInt("Club:", &m_clubID))
                 {
-                    m_clubID = (m_clubID + ClubID::Count) % ClubID::Count;
+                    m_clubID = (m_clubID + (ClubID::Count - 1)) % (ClubID::Count - 1);
                     writeSettings();
                     plotArc();
+                    reZoom();
                 }
                 ImGui::SameLine();
                 ImGui::Text("%s", Clubs[m_clubID].name.c_str());
@@ -247,6 +256,7 @@ void ArcState::createUI()
                     m_clubLevel = (m_clubLevel + LevelID::Count) % LevelID::Count;
                     writeSettings();
                     plotArc();
+                    reZoom();
                 }
                 ImGui::SameLine();
                 ImGui::Text("%s", LevelStrings[m_clubLevel].c_str());
@@ -317,9 +327,9 @@ void ArcState::createUI()
             if (ImGui::Begin("Also Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
             {
                 //zoom
-                if (ImGui::SliderFloat("Zoom", &m_zoom, 0.5f, 3.f))
+                if (ImGui::SliderFloat("Zoom", &m_zoom, 0.5f, MaxZoom))
                 {
-                    m_zoom = std::clamp(m_zoom, 0.5f, 3.f);
+                    m_zoom = std::clamp(m_zoom, 0.5f, MaxZoom);
                     m_plotEntity.getComponent<cro::Transform>().setScale(glm::vec2(m_zoom));
                 }
 
@@ -417,6 +427,7 @@ void ArcState::writeSettings()
     if (outFile.file)
     {
         SDL_RWwrite(outFile.file, levelModifiers.data(), sizeof(levelModifiers), 1);
+        LogI << "Updated Settings" << std::endl;
     }
 }
 
