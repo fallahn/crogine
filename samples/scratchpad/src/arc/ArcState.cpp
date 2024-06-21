@@ -17,6 +17,7 @@
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 namespace
 {
@@ -108,19 +109,15 @@ namespace
         Club(ClubID::Putter,     "Putter ",      0.f)
     };
 
-    constexpr glm::vec2 Gravity(0.f, -9.8f);
+    constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
+    constexpr float Dampening = 0.33f;
 
-    /*
-    Impulse = vec2(1.f, 0.f) * rotation(club.angle) * clubStats[club].stat[level].power;
-    
-    vel = impulse
-    while(pos.y > 0)
+    const std::array<std::string, 3u> LevelStrings =
     {
-        pos += vel * dt
-        vel += Gravity * dt
-    }
-
-    */
+        std::string("Novice"),
+        std::string("Expert"),
+        std::string("Pro"),
+    };
 }
 
 
@@ -128,7 +125,10 @@ namespace
 ArcState::ArcState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus())
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_clubID        (0),
+    m_clubLevel     (0),
+    m_zoom          (2.5f)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -222,31 +222,70 @@ void ArcState::createUI()
 {
     registerWindow([&]() 
         {
-            //select club ID
-            //select club novice/expert/pro
+            ImGui::SetNextWindowSize({ 316.f, 200.f });
+            if (ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+            {
+                //select club ID
+                if (ImGui::InputInt("Club:", &m_clubID))
+                {
+                    m_clubID = (m_clubID + ClubID::Count) % ClubID::Count;
+                    plotArc();
+                }
+                ImGui::SameLine();
+                ImGui::Text("%s", Clubs[m_clubID].name.c_str());
 
-            //plot button to calc arc
+                //select club novice/expert/pro
+                if (ImGui::InputInt("Level:", &m_clubLevel))
+                {
+                    m_clubLevel = (m_clubLevel + 3) % 3;
+                    plotArc();
+                }
+                ImGui::SameLine();
+                ImGui::Text("%s", LevelStrings[m_clubLevel].c_str());
 
-            //angle for flop
-            //power multiplier for flop
+                static constexpr float ColourSize = 12.f;
+                ImGui::ColorButton("##0", { 0.f, 1.f, 0.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
+                ImGui::Text("Default Distance: %3.2f, Target: %3.2f", m_distances[ShotType::Default], ClubStats[m_clubID].stats[m_clubLevel].target);
+                ImGui::ColorButton("##1", { 1.f, 0.f, 0.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
+                ImGui::Text("Punch Distance:   %3.2f, Target: %3.2f", m_distances[ShotType::Punch], ClubStats[m_clubID].stats[m_clubLevel].target);
+                ImGui::ColorButton("##2", { 0.f, 0.f, 1.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
+                ImGui::Text("Flop Distance:    %3.2f, Target: %3.2f", m_distances[ShotType::Flop], ClubStats[m_clubID].stats[m_clubLevel].target);
 
-            //angle for punch
-            //power multiplier for punch
-    
+                //angle for flop
+                //power multiplier for flop
 
-            //default to 2px per metre and control to scale view
-            //OR auto scale view to fit result
+                //angle for punch
+                //power multiplier for punch
 
+
+                //plot button to calc arc
+                if (ImGui::Button("Refresh"))
+                {
+                    plotArc();
+                }
+
+
+                ImGui::Separator();
+
+                //zoom
+                if (ImGui::SliderFloat("Zoom", &m_zoom, 0.5f, 3.f))
+                {
+                    m_zoom = std::clamp(m_zoom, 0.5f, 3.f);
+                    m_plotEntity.getComponent<cro::Transform>().setScale(glm::vec2(m_zoom));
+                }
+            }
+            ImGui::End();
         });
 
-    //entity @ 0,0 with line strip vert array
-    //green default arc
-    //red punch
-    //blue flop
 
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 10.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(m_zoom));
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    m_plotEntity = entity;
+    plotArc();
 
-
-    auto resize = [](cro::Camera& cam)
+    auto resize = [&](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = {0.f, 0.f, 1.f, 1.f};
@@ -256,4 +295,58 @@ void ArcState::createUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
+}
+
+void ArcState::plotArc()
+{
+    //green default arc
+    //red punch
+    //blue flop
+
+    const std::array<cro::Colour, ShotType::Count> Colours =
+    {
+        cro::Colour::Green, cro::Colour::Blue, cro::Colour::Red
+    };
+
+    std::vector<cro::Vertex2D> verts;
+
+    const auto genVerts = [&](float angle, float power, std::int32_t shotType)
+        {
+            glm::vec3 impulse = glm::vec3(1.f, 0.f, 0.f) * glm::rotate(cro::Transform::QUAT_IDENTITY, -angle, cro::Transform::Z_AXIS);
+            impulse *= power;
+
+            verts.emplace_back(glm::vec2(0.f), cro::Colour::Transparent);
+            verts.emplace_back(glm::vec2(0.f), Colours[shotType]);
+            glm::vec3 pos(0.f);
+
+            static constexpr float Step = 1.f / 60.f; //TODO make this variable?
+            static constexpr std::int32_t MaxStep = 700;
+            std::int32_t stepCount = 0;
+
+            do
+            {
+                pos += impulse * Step;
+                impulse += Gravity * Step;
+
+                if (pos.y < 0.f)
+                {
+                    pos.y = 0.f;
+                    impulse = glm::reflect(impulse, cro::Transform::Y_AXIS);
+                    impulse *= Dampening;
+                }
+
+                verts.emplace_back(glm::vec2(pos.x, pos.y), Colours[shotType]);
+                stepCount++;
+
+            } while ((glm::length2(impulse) > 0.01f) && stepCount < MaxStep);
+
+            verts.emplace_back(pos, cro::Colour::Transparent);
+            m_distances[shotType] = pos.x;
+        };
+
+    genVerts(Clubs[m_clubID].angle, ClubStats[m_clubID].stats[m_clubLevel].power, ShotType::Default);
+    genVerts(1.f, 50.f, ShotType::Punch);
+    genVerts(1.2f, 30.f, ShotType::Flop);
+
+    m_plotEntity.getComponent<cro::Drawable2D>().setVertexData(verts);
 }

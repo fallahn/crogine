@@ -27,9 +27,25 @@ private:
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
+    std::int32_t m_clubID;
+    std::int32_t m_clubLevel;
+    float m_zoom;
+    cro::Entity m_plotEntity;
+
+    struct ShotType final
+    {
+        enum
+        {
+            Default, Flop, Punch,
+            Count
+        };
+    };
+    std::array<float, ShotType::Count> m_distances = {};
+
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
 
+    void plotArc();
 };
