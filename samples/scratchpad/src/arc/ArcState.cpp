@@ -142,9 +142,9 @@ namespace
 
     struct ModifierGroup final
     {
-        std::array<ShotModifier, ClubID::Count> DefaultModifier = {}; //leaves the default shot
-        std::array<ShotModifier, ClubID::Count> PunchModifier = {};
-        std::array<ShotModifier, ClubID::Count> FlopModifier = {};
+        const std::array<ShotModifier, ClubID::Count> DefaultModifier = {}; //leaves the default shot
+        std::array<ShotModifier, ClubID::Count> punchModifier = {};
+        std::array<ShotModifier, ClubID::Count> flopModifier = {};
     };
     std::array<ModifierGroup, LevelID::Count> levelModifiers = {};
 }
@@ -256,7 +256,7 @@ void ArcState::createUI()
 
     registerWindow([&]() 
         {
-            ImGui::SetNextWindowSize({ 316.f, 200.f });
+            ImGui::SetNextWindowSize({ 342.f, 350.f });
             if (ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
             {
                 //select club ID
@@ -279,35 +279,81 @@ void ArcState::createUI()
                 ImGui::SameLine();
                 ImGui::Text("%s", LevelStrings[m_clubLevel].c_str());
 
-                static constexpr float ColourSize = 12.f;
-                ImGui::ColorButton("##0", { 0.f, 1.f, 0.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
-                ImGui::Text("Default Distance: %3.2f, Target: %3.2f", m_distances[ShotType::Default], ClubStats[m_clubID].stats[m_clubLevel].target);
-                ImGui::ColorButton("##1", { 1.f, 0.f, 0.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
-                ImGui::Text("Punch Distance:   %3.2f, Target: %3.2f", m_distances[ShotType::Punch], ClubStats[m_clubID].stats[m_clubLevel].target);
-                ImGui::ColorButton("##2", { 0.f, 0.f, 1.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
-                ImGui::Text("Flop Distance:    %3.2f, Target: %3.2f", m_distances[ShotType::Flop], ClubStats[m_clubID].stats[m_clubLevel].target);
-
-                //angle for flop
-                //power multiplier for flop
-
-                //angle for punch
-                //power multiplier for punch
-
-
-                //plot button to calc arc
-                if (ImGui::Button("Refresh"))
+                //flop settings
+                ImGui::NewLine();
+                ImGui::Text("Flop");
+                static constexpr float MaxAngle = cro::Util::Const::PI / 2.f;
+                const float MinAngle = Clubs[m_clubID].angle;
+                
+                static constexpr float MinPower = 0.1f;
+                static constexpr float MaxPower = 1.5f;
+                
+                auto& flopModifier = levelModifiers[m_clubLevel].flopModifier[m_clubID];
+                if (ImGui::SliderFloat("Angle Offset##0", &flopModifier.angle, -MinAngle, MaxAngle - MinAngle))
                 {
+                    flopModifier.angle = std::clamp(flopModifier.angle, -MinAngle, MaxAngle - MinAngle);
                     plotArc();
                 }
 
+                if (ImGui::SliderFloat("Power Modifier##0", &flopModifier.powerMultiplier, MinPower, MaxPower))
+                {
+                    flopModifier.powerMultiplier = std::clamp(flopModifier.powerMultiplier, MinPower, MaxPower);
+                    plotArc();
+                }
+
+                if (ImGui::SliderFloat("Target Modifier##0", &flopModifier.targetMultiplier, MinPower, MaxPower))
+                {
+                    flopModifier.targetMultiplier = std::clamp(flopModifier.targetMultiplier, MinPower, MaxPower);
+                    plotArc();
+                }
+
+                //punch settings
+                ImGui::Separator();
+                ImGui::Text("Punch");
+                auto& punchModifier = levelModifiers[m_clubLevel].punchModifier[m_clubID];
+                if (ImGui::SliderFloat("Angle Offset##1", &punchModifier.angle, -MinAngle, MaxAngle - MinAngle))
+                {
+                    punchModifier.angle = std::clamp(punchModifier.angle, -MinAngle, MaxAngle - MinAngle);
+                    plotArc();
+                }
+
+                if (ImGui::SliderFloat("Power Modifier##1", &punchModifier.powerMultiplier, MinPower, MaxPower))
+                {
+                    punchModifier.powerMultiplier = std::clamp(punchModifier.powerMultiplier, MinPower, MaxPower);
+                    plotArc();
+                }
+
+                if (ImGui::SliderFloat("Target Modifier##1", &punchModifier.targetMultiplier, MinPower, MaxPower))
+                {
+                    punchModifier.targetMultiplier = std::clamp(punchModifier.targetMultiplier, MinPower, MaxPower);
+                    plotArc();
+                }
 
                 ImGui::Separator();
 
+                static constexpr float ColourSize = 12.f;
+                ImGui::ColorButton("##0", { 0.f, 1.f, 0.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
+                ImGui::Text("Default Distance: %3.2f, Target: %3.2f", m_distances[ShotType::Default], ClubStats[m_clubID].stats[m_clubLevel].target);
+                ImGui::ColorButton("##2", { 0.f, 0.f, 1.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
+                ImGui::Text("Flop Distance:    %3.2f, Target: %3.2f", m_distances[ShotType::Flop], ClubStats[m_clubID].stats[m_clubLevel].target * flopModifier.targetMultiplier);
+                ImGui::ColorButton("##1", { 1.f, 0.f, 0.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
+                ImGui::Text("Punch Distance:   %3.2f, Target: %3.2f", m_distances[ShotType::Punch], ClubStats[m_clubID].stats[m_clubLevel].target * punchModifier.targetMultiplier);
+            }
+            ImGui::End();
+
+            ImGui::SetNextWindowSize({ 200.f, 100.f });
+            if (ImGui::Begin("Also Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+            {
                 //zoom
                 if (ImGui::SliderFloat("Zoom", &m_zoom, 0.5f, 3.f))
                 {
                     m_zoom = std::clamp(m_zoom, 0.5f, 3.f);
                     m_plotEntity.getComponent<cro::Transform>().setScale(glm::vec2(m_zoom));
+                }
+
+                if (ImGui::Button("Export Header"))
+                {
+                    //TODO write data as a header files
                 }
             }
             ImGui::End();
@@ -355,7 +401,7 @@ void ArcState::plotArc()
             verts.emplace_back(glm::vec2(0.f), Colours[shotType]);
             glm::vec3 pos(0.f);
 
-            static constexpr float Step = 1.f / 60.f; //TODO make this variable?
+            static constexpr float Step = 1.f / 30.f; //TODO make this variable?
             static constexpr std::int32_t MaxStep = 700;
             std::int32_t stepCount = 0;
 
@@ -381,8 +427,12 @@ void ArcState::plotArc()
         };
 
     genVerts(Clubs[m_clubID].angle, ClubStats[m_clubID].stats[m_clubLevel].power, ShotType::Default);
-    genVerts(1.f, 50.f, ShotType::Punch);
-    genVerts(1.2f, 30.f, ShotType::Flop);
+
+    const auto& flopModifier = levelModifiers[m_clubLevel].flopModifier[m_clubID];
+    genVerts(Clubs[m_clubID].angle + flopModifier.angle, ClubStats[m_clubID].stats[m_clubLevel].power * flopModifier.powerMultiplier, ShotType::Flop);
+    
+    const auto& punchModifier = levelModifiers[m_clubLevel].punchModifier[m_clubID];
+    genVerts(Clubs[m_clubID].angle + punchModifier.angle, ClubStats[m_clubID].stats[m_clubLevel].power * punchModifier.powerMultiplier, ShotType::Punch);
 
     m_plotEntity.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
