@@ -583,20 +583,20 @@ void League::rollPlayers(bool resetScores)
     switch (m_id)
     {
     default: break;
-    case LeagueRoundID::RoundTwo:
-        maxIncrease = 2;
+    //case LeagueRoundID::RoundTwo:
+    //    maxIncrease = 2;
         break;
     case LeagueRoundID::RoundThree:
-        maxIncrease = 3;
+        maxIncrease = 2;
         break;
     case LeagueRoundID::RoundFour:
-        maxIncrease = 4;
+        maxIncrease = 3;
         break;
     case LeagueRoundID::RoundFive:
-        maxIncrease = 6;
+        maxIncrease = 3;
         break;
     case LeagueRoundID::RoundSix:
-        maxIncrease = 8;
+        maxIncrease = 4;
         break;
     }
 
