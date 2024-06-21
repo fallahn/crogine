@@ -13,6 +13,7 @@ class ArcState final : public cro::State, public cro::GuiClient
 {
 public:
     ArcState(cro::StateStack&, cro::State::Context);
+    ~ArcState();
 
     cro::StateID getStateID() const override { return States::ScratchPad::Arc; }
 
@@ -48,4 +49,6 @@ private:
     void createUI();
 
     void plotArc();
+    void writeSettings();
+    void readSettings();
 };

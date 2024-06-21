@@ -84,7 +84,7 @@ namespace
         float angle = 0.f;
 
         Club(std::int32_t i, const std::string& n, float a)
-            : id(i), name(n),angle(a* cro::Util::Const::degToRad) {}
+            : id(i), name(n), angle(a* cro::Util::Const::degToRad) {}
     };
 
 
@@ -110,17 +110,44 @@ namespace
     };
 
     constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
-    constexpr float Dampening = 0.33f;
+    constexpr float Dampening = 0.33f; //velocity reduction on bounce
 
-    const std::array<std::string, 3u> LevelStrings =
+    struct LevelID final
+    {
+        enum
+        {
+            Novice, Expert, Pro,
+            Count
+        };
+    };
+
+    const std::array<std::string, LevelID::Count> LevelStrings =
     {
         std::string("Novice"),
         std::string("Expert"),
         std::string("Pro"),
     };
+
+    /*
+    Angle increase: How much the angle is raised (flop) or lowered (punch)
+    Power multiplier: How much the default power if modified to reach the target amount
+    Target multiplier: How much the target distance is modified, so we can update the range indicator
+    */
+    struct ShotModifier final
+    {
+        float angle = 0.f;
+        float powerMultiplier = 1.f;
+        float targetMultiplier = 1.f;
+    };
+
+    struct ModifierGroup final
+    {
+        std::array<ShotModifier, ClubID::Count> DefaultModifier = {}; //leaves the default shot
+        std::array<ShotModifier, ClubID::Count> PunchModifier = {};
+        std::array<ShotModifier, ClubID::Count> FlopModifier = {};
+    };
+    std::array<ModifierGroup, LevelID::Count> levelModifiers = {};
 }
-
-
 
 ArcState::ArcState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
@@ -136,6 +163,11 @@ ArcState::ArcState(cro::StateStack& stack, cro::State::Context context)
         createScene();
         createUI();
     });
+}
+
+ArcState::~ArcState()
+{
+    writeSettings();
 }
 
 //public
@@ -220,6 +252,8 @@ void ArcState::createScene()
 
 void ArcState::createUI()
 {
+    readSettings();
+
     registerWindow([&]() 
         {
             ImGui::SetNextWindowSize({ 316.f, 200.f });
@@ -229,6 +263,7 @@ void ArcState::createUI()
                 if (ImGui::InputInt("Club:", &m_clubID))
                 {
                     m_clubID = (m_clubID + ClubID::Count) % ClubID::Count;
+                    writeSettings();
                     plotArc();
                 }
                 ImGui::SameLine();
@@ -237,7 +272,8 @@ void ArcState::createUI()
                 //select club novice/expert/pro
                 if (ImGui::InputInt("Level:", &m_clubLevel))
                 {
-                    m_clubLevel = (m_clubLevel + 3) % 3;
+                    m_clubLevel = (m_clubLevel + LevelID::Count) % LevelID::Count;
+                    writeSettings();
                     plotArc();
                 }
                 ImGui::SameLine();
@@ -300,8 +336,8 @@ void ArcState::createUI()
 void ArcState::plotArc()
 {
     //green default arc
-    //red punch
     //blue flop
+    //red punch
 
     const std::array<cro::Colour, ShotType::Count> Colours =
     {
@@ -350,3 +386,32 @@ void ArcState::plotArc()
 
     m_plotEntity.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
+
+void ArcState::writeSettings()
+{
+    cro::RaiiRWops outFile;
+    outFile.file = SDL_RWFromFile("clubsettings.set", "wb");
+    if (outFile.file)
+    {
+        SDL_RWwrite(outFile.file, levelModifiers.data(), sizeof(levelModifiers), 1);
+    }
+}
+
+void ArcState::readSettings()
+{
+    cro::RaiiRWops inFile;
+    inFile.file = SDL_RWFromFile("clubsettings.set", "rb");
+    if (inFile.file)
+    {
+        auto size = SDL_RWseek(inFile.file, 0, RW_SEEK_END);
+        if (size == sizeof(levelModifiers))
+        {
+            SDL_RWseek(inFile.file, 0, RW_SEEK_SET);
+            SDL_RWread(inFile.file, levelModifiers.data(), size, 1);
+        }
+        else
+        {
+            LogW << "Club data was invalid size, expected " << sizeof(levelModifiers) << ", got " << size << std::endl;
+        }
+    }
+} 
