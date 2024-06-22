@@ -300,9 +300,9 @@ Nearest the Pin and more.)";
     desc += R"(
 
 And...
-When playing Stroke Play you'll automatically compete in the Club League
-as well as the online global leaderboards for the Monthly and All Time
-best scores.)";
+When playing Stroke Play you'll automatically compete in the Global
+League as well as the online global leaderboards for the Monthly and
+All Time best scores.)";
 #endif
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
