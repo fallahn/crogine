@@ -5397,6 +5397,21 @@ void GolfState::updateLeagueHole()
             const auto playerScore = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
             const auto par = m_holeData[m_currentHole].par;
 
+            //calc the likelyhood of wind affecting the CPU score
+            auto holeDir = m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin;
+            holeDir.y = 0.f;
+
+            auto windDir = m_windUpdate.windVector;
+            windDir.y = 0.f;
+
+            const float headWind = (glm::dot(glm::normalize(holeDir), glm::normalize(windDir)) + 1.f) * 0.5f;
+
+            static constexpr float BaseReduction = 0.9f;
+            float resultF = headWind * BaseReduction * m_windUpdate.windVector.y;
+            resultF /= (1.f + static_cast<float>(m_sharedData.clubSet));
+
+            const std::int32_t windChance = static_cast<std::int32_t>(std::round(resultF * 100.f));
+
             switch (m_sharedData.leagueRoundID)
             {
             default: break;
@@ -5411,7 +5426,7 @@ void GolfState::updateLeagueHole()
                 //this may have been saved previously
                 if (league.getHoleScores()[0][m_currentHole] == 0)
                 {
-                    league.updateHoleScores(m_currentHole, par, playerScore > par);
+                    league.updateHoleScores(m_currentHole, par, playerScore > par, windChance);
                     updateScoreboard();
                 }
             }
@@ -5421,7 +5436,7 @@ void GolfState::updateLeagueHole()
                 League league(m_sharedData.leagueRoundID, m_sharedData);
                 if (league.getHoleScores()[0][m_currentHole] == 0)
                 {
-                    league.updateHoleScores(m_currentHole, par, playerScore > par);
+                    league.updateHoleScores(m_currentHole, par, playerScore > par, windChance);
                 }
             }
             break;

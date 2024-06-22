@@ -372,11 +372,17 @@ std::int32_t League::reward(std::int32_t position) const
     }
 }
 
-void League::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar)
+void League::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance)
 {
+    windChance = std::clamp(windChance, 1, 100);
     for (auto& player : m_players)
     {
         calculateHoleScore(player, hole, par, overPar);
+
+        if (cro::Util::Random::value(0, 99) < windChance)
+        {
+            m_holeScores[player.nameIndex][hole]++;
+        }
     }
     updateDB();
 }

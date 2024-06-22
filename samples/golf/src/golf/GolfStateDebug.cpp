@@ -236,28 +236,31 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("asefsd"))
-    //        {
-    //            /*auto pos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
-    //            ImGui::Text("Cam: %3.3f, %3.3f, % 3.3f", pos.x, pos.y, pos.z);
+    /*registerWindow([&]() 
+        {
+            if (ImGui::Begin("asefsd"))
+            {
+                auto holeDir = m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin;
+                holeDir.y = 0.f;
 
-    //            if (ImGui::Button("switch view"))
-    //            {
-    //                static bool putt = true;
-    //                togglePuttingView(putt);
-    //                putt = !putt;
-    //            }*/
+                auto windDir = m_windUpdate.windVector;
+                windDir.y = 0.f;
 
-    //            /*const auto& scores = Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne].getHoleScores();
-    //            for (auto& score : scores)
-    //            {
-    //                ImGui::Text("%d, %d, %d, %d, %d, %d, %d, %d, %d", score[0], score[1], score[2], score[3], score[4], score[5], score[6], score[7], score[8]);
-    //            }*/
-    //        }
-    //        ImGui::End();        
-    //    });
+                const float headWind = (glm::dot(glm::normalize(holeDir), glm::normalize(windDir)) + 1.f) * 0.5f;
+
+                static constexpr float BaseReduction = 0.9f;
+                float resultF = headWind * BaseReduction * m_windUpdate.windVector.y;
+                resultF /= (1.f + static_cast<float>(m_sharedData.clubSet));
+
+                const std::int32_t resultI = static_cast<std::int32_t>(std::round(resultF * 100.f));
+
+                ImGui::Text("Headwind %3.1f", headWind);
+                ImGui::Text("Strength %3.1f", m_windUpdate.windVector.y);
+
+                ImGui::Text("Likelyhood %d%", resultI);
+            }
+            ImGui::End();
+        });*/
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

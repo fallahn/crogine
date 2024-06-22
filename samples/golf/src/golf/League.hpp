@@ -116,7 +116,7 @@ public:
     std::int32_t reward(std::int32_t position) const;
 
     //calculates the hole score for all CPU players
-    void updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar);
+    void updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance);
     
     //used when upgrading existing league system to this one
     //to fill out any missing scores when resuming an old save game
