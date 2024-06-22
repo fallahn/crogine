@@ -991,7 +991,7 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
-                const auto MinClub = m_terrain != TerrainID::Green && m_distanceToHole < 11.f ? 
+                const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ? 
                     ClubID::Count : ClubID::Putter;
 
                 do
@@ -1013,7 +1013,7 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
-                const auto MinClub = m_terrain != TerrainID::Green && m_distanceToHole < 11.f ?
+                const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ?
                     ClubID::Count : ClubID::Putter;
 
 
