@@ -544,7 +544,7 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     //comes back as zero - rather than fix my logic I'm going to paste over the cracks.
     if (holeScore == 0)
     {
-        holeScore = par + cro::Util::Random::value(-1, 1);
+        holeScore = std::max(2, par + cro::Util::Random::value(-1, 1));
     }
 
 
