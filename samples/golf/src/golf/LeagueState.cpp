@@ -1176,7 +1176,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     stripeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto statusString = "To compete complete all 36 rounds in Freeplay";
+    auto statusString = "To compete play through all 36 rounds in Freeplay";
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 52.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
