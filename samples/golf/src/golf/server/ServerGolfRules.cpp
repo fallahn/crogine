@@ -103,7 +103,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
             }
             else
             {
-                m_playerInfo[0].distanceScore[m_currentHole] = m_holeData[m_currentHole].distanceToPin;
+                m_playerInfo[0].distanceScore[m_currentHole] = 10.f;//approx radius if green m_holeData[m_currentHole].distanceToPin;
             }
             break;
         case ScoreType::LongestDrive:

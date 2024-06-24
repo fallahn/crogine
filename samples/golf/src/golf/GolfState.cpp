@@ -594,13 +594,26 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 cro::Console::doCommand("build_cubemaps");
             }
             break;
-#ifdef CRO_DEBUG_
         case SDLK_F2:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::GotoHole), net::NetFlag::Reliable);
+            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::GotoHole), net::NetFlag::Reliable);
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::PuttingLabel;
+            cmd.action =
+                [](cro::Entity e, float)
+                {
+                    auto facing = e.getComponent<cro::Drawable2D>().getFacing();
+                    facing = facing == cro::Drawable2D::Facing::Back ? cro::Drawable2D::Facing::Front : cro::Drawable2D::Facing::Back;
+                    e.getComponent<cro::Drawable2D>().setFacing(facing);
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
             break;
         case SDLK_F3:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::NextPlayer), net::NetFlag::Reliable);
+            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::NextPlayer), net::NetFlag::Reliable);
+            setUIHidden(m_courseEnt.getComponent<cro::Transform>().getOrigin().z > 0);
             break;
+#ifdef CRO_DEBUG_
         case SDLK_F4:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::GotoGreen), net::NetFlag::Reliable);
             break;
@@ -3560,6 +3573,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Drawable2D>().setTexture(&m_sharedData.nameTextures[info.clientID].getTexture());
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     //entity.getComponent<cro::Drawable2D>().setCullingEnabled(false);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttingLabel;
     entity.getComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(0.f, textureRect.height), glm::vec2(0.f, uvRect.bottom + uvRect.height), BaseColour),
@@ -3622,7 +3636,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 //to prevent blocking the view
                 float halfPos = labelPos.x - halfWidth;
                 float amount = std::min(1.f, std::max(0.f, std::abs(halfPos) / halfWidth));
-                amount = 0.1f + (smoothstep(0.12f, 0.26f, amount) * 0.85f); //remember tex size is probably a lot wider than the window
+                amount = /*0.1f +*/ (smoothstep(0.14f, 0.26f, amount) * /*0.85f*/0.95f); //remember tex size is probably a lot wider than the window
                 alpha *= amount;
 
                 //and hide if near the tee

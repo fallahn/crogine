@@ -85,7 +85,8 @@ struct CommandID final
             WindEffect           = 0x1000000,
             PuttPower            = 0x2000000,
             TerrainType          = 0x4000000,
-            AFKWarn              = 0x8000000
+            AFKWarn              = 0x8000000,
+            PuttingLabel         = 0x10000000, //29
         };
     };
 
