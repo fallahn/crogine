@@ -17,29 +17,11 @@
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
-#include <crogine/util/Constants.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
 namespace
 {
-    struct Stat final
-    {
-        constexpr Stat() = default;
-        constexpr Stat(float p, float t) : power(p), target(t) {}
-        float power = 0.f; //impulse strength
-        float target = 0.f; //distance target
-    };
-
-    struct ClubStat final
-    {
-        constexpr ClubStat(Stat a, Stat b, Stat c)
-            : stats() {
-            stats = { a, b, c };
-        }
-        std::array<Stat, 3> stats = {};
-    };
-
-    constexpr std::array<ClubStat, ClubID::Count> ClubStats =
+    std::array<ClubStat, ClubID::Count> ClubStats =
     {
         ClubStat({44.f,   220.f},{46.18f, 240.f},{48.2f,  260.f}), //123
         ClubStat({39.6f,  180.f},{42.08f, 200.f},{44.24f, 220.f}), //123
@@ -62,18 +44,7 @@ namespace
 
     //--------------------------
 
-    struct Club final
-    {
-        std::int32_t id = 0;
-        std::string name;
-        float angle = 0.f;
-
-        Club(std::int32_t i, const std::string& n, float a)
-            : id(i), name(n), angle(a* cro::Util::Const::degToRad) {}
-    };
-
-
-    static const std::array<Club, ClubID::Count> Clubs =
+    std::array<Club, ClubID::Count> Clubs =
     {
         Club(ClubID::Driver,    "Driver ", 45.f),
         Club(ClubID::ThreeWood, "3 Wood ", 45.f),
@@ -335,8 +306,8 @@ void ArcState::createUI()
 
                 if (ImGui::Button("Export Header"))
                 {
-                    writeHeader(levelModifiers);
-                    cro::FileSystem::showNotification("Complete", "Wrote Header File");
+                    writeHeader(levelModifiers, Clubs, ClubStats);
+                    cro::FileSystem::showMessageBox("Complete", "Wrote Header File");
                 }
             }
             ImGui::End();
@@ -428,6 +399,19 @@ void ArcState::writeSettings()
     {
         SDL_RWwrite(outFile.file, levelModifiers.data(), sizeof(levelModifiers), 1);
         LogI << "Updated Settings" << std::endl;
+        SDL_RWclose(outFile.file);
+    }
+
+    outFile.file = SDL_RWFromFile("clubstats.set", "wb");
+    if (outFile.file)
+    {
+        SDL_RWwrite(outFile.file, ClubStats.data(), sizeof(ClubStats), 1);
+        for (const auto& club : Clubs)
+        {
+            SDL_RWwrite(outFile.file, &club.angle, sizeof(float), 1);
+        }
+        LogI << "Updated Stats" << std::endl;
+        SDL_RWclose(outFile.file);
     }
 }
 
@@ -446,6 +430,27 @@ void ArcState::readSettings()
         else
         {
             LogW << "Club data was invalid size, expected " << sizeof(levelModifiers) << ", got " << size << std::endl;
+        }
+        SDL_RWclose(inFile.file);
+    }
+
+    inFile.file = SDL_RWFromFile("clubstats.set", "rb");
+    if (inFile.file)
+    {
+        constexpr auto expected = sizeof(ClubStats) + (sizeof(float) * Clubs.size());
+        auto size = SDL_RWseek(inFile.file, 0, RW_SEEK_END);
+        if (size == expected)
+        {
+            SDL_RWseek(inFile.file, 0, RW_SEEK_SET);
+            SDL_RWread(inFile.file, ClubStats.data(), size, 1);
+            for (auto i = 0u; i < Clubs.size(); ++i)
+            {
+                SDL_RWread(inFile.file, &Clubs[i].angle, sizeof(float), 1);
+            }
+        }
+        else
+        {
+            LogW << "Club stats was invalid size, expected " << expected << ", got " << size << std::endl;
         }
     }
 } 
