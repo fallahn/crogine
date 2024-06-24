@@ -748,6 +748,7 @@
     <ClInclude Include="src\golf\ClientPacketData.hpp" />
     <ClInclude Include="src\golf\CloudSystem.hpp" />
     <ClInclude Include="src\golf\ClubhouseState.hpp" />
+    <ClInclude Include="src\golf\ClubModifiers.hpp" />
     <ClInclude Include="src\golf\Clubs.hpp" />
     <ClInclude Include="src\golf\CollisionMesh.hpp" />
     <ClInclude Include="src\golf\CommandIDs.hpp" />

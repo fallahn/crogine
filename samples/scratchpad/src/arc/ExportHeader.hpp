@@ -68,7 +68,8 @@ R"(struct ShotModifier final
     float angle = 0.f;
     float powerMultiplier = 1.f;
     float targetMultiplier = 1.f;
-    ShotModifier(float a, float p, float t)
+    ShotModifier() = default;
+    constexpr ShotModifier(float a, float p, float t)
         : angle(a), powerMultiplier(p), targetMultiplier(t){}
 };
 
@@ -79,7 +80,7 @@ struct ModifierGroup final
     std::array<ShotModifier, ClubID::Count> flopModifier = {};
 
     ModifierGroup() = default;
-    ModifierGroup(const std::array<ShotModifier, ClubID::Count>& p, const std::array<ShotModifier, ClubID::Count>& f)
+    constexpr ModifierGroup(const std::array<ShotModifier, ClubID::Count>& p, const std::array<ShotModifier, ClubID::Count>& f)
         : punchModifier(p), flopModifier(f) {}
 };
 
@@ -95,28 +96,32 @@ R"(static constexpr std::array<ModifierGroup, 3u> LevelModifiers =
 };
 )";
 
+static inline constexpr std::array<float, ClubID::Count> SideSpin =
+{ 0.3f, 0.35f, 0.45f, 0.45f, 0.5f, 0.55f, 0.6f, 0.75f, 0.8f, 0.05f, 0.05f, 0.05f, 0.f };
+
+static inline constexpr std::array<float, ClubID::Count> TopSpin =
+{ 0.5f, 0.55f, 0.55f, 0.78f, 0.78f, 0.8f, 0.8f, 0.85f, 0.85f, 0.9f, 0.93f, 0.95f, 0.f };
+
+static inline const std::array<std::string, ClubID::Count> ClubStrings =
+{
+    "Club(ClubID::Driver,    \"Driver \", ",
+    "Club(ClubID::ThreeWood, \"3 Wood \", ",
+    "Club(ClubID::FiveWood,  \"5 Wood \", ",
 
 
-    static inline const std::array<std::string, ClubID::Count> ClubStrings =
-    {
-        "Club(ClubID::Driver,    \"Driver \", ",
-        "Club(ClubID::ThreeWood, \"3 Wood \", ",
-        "Club(ClubID::FiveWood,  \"5 Wood \", ",
+    "Club(ClubID::FourIron,  \"4 Iron \", ",
+    "Club(ClubID::FiveIron,  \"5 Iron \", ",
+    "Club(ClubID::SixIron,   \"6 Iron \", ",
+    "Club(ClubID::SevenIron, \"7 Iron \", ",
+    "Club(ClubID::EightIron, \"8 Iron \", ",
+    "Club(ClubID::NineIron,  \"9 Iron \", ",
 
 
-        "Club(ClubID::FourIron,  \"4 Iron \", ",
-        "Club(ClubID::FiveIron,  \"5 Iron \", ",
-        "Club(ClubID::SixIron,   \"6 Iron \", ",
-        "Club(ClubID::SevenIron, \"7 Iron \", ",
-        "Club(ClubID::EightIron, \"8 Iron \", ",
-        "Club(ClubID::NineIron,  \"9 Iron \", ",
-
-
-        "Club(ClubID::PitchWedge, \"Pitch Wedge \", ",
-        "Club(ClubID::GapWedge,   \"Gap Wedge \",   ",
-        "Club(ClubID::SandWedge,  \"Sand Wedge \",  ",
-        "Club(ClubID::Putter,     \"Putter \",      "
-    };
+    "Club(ClubID::PitchWedge, \"Pitch Wedge \", ",
+    "Club(ClubID::GapWedge,   \"Gap Wedge \",   ",
+    "Club(ClubID::SandWedge,  \"Sand Wedge \",  ",
+    "Club(ClubID::Putter,     \"Putter \",      "
+};
 
 
 
@@ -154,30 +159,30 @@ static inline void writeHeader(const std::array<ModifierGroup, 3>& data,
                 outFile << "    ShotModifier("<< mod.angle << "f, " << mod.powerMultiplier << "f, " << mod.targetMultiplier << "f),\n";
             }
 
-            outFile << "}\n\nstatic constexpr std::array<ShotModifier, ClubID::Count> " << FlopStrings[i++] << " = \n{\n";
+            outFile << "};\n\nstatic constexpr std::array<ShotModifier, ClubID::Count> " << FlopStrings[i++] << " = \n{\n";
             for (const auto& mod : group.flopModifier)
             {
                 outFile << "    ShotModifier(" << mod.angle << "f, " << mod.powerMultiplier << "f, " << mod.targetMultiplier << "f),\n";
             }
-            outFile << "}\n\n";
+            outFile << "};\n\n";
         }
 
         outFile << ArrayData;
-
+        outFile << "/*\n";
 
         //club set data
         i = 0;
-        outFile << "\n\nconst std::array<Club, ClubID::Count> Clubs =\n{";
+        outFile << "\n\nstatic inline const std::array<Club, ClubID::Count> Clubs =\n{";
         for (const auto& club : clubs)
         {
-            outFile << "\n    " << ClubStrings[i] << (clubs[i].angle * cro::Util::Const::radToDeg) << "f),";
+            outFile << "\n    " << ClubStrings[i] << (clubs[i].angle * cro::Util::Const::radToDeg) << "f, " << SideSpin[i] << "f, " << TopSpin[i] << "f),";
             i++;
         }
         outFile << "\n};";
 
         //clubstats
         i = 0;
-        outFile << "\n\nconstexpr std::array<ClubStat, ClubID::Count> ClubStats = \n{";
+        outFile << "\n\nstatic inline constexpr std::array<ClubStat, ClubID::Count> ClubStats = \n{";
         for (const auto& stat : clubStats)
         {
             outFile << "\n    ClubStat({ " << clubStats[i].stats[0].power << "f, " << clubStats[i].stats[0].target << "f }, ";
@@ -186,6 +191,6 @@ static inline void writeHeader(const std::array<ModifierGroup, 3>& data,
 
             i++;
         }
-        outFile << "\n};";
+        outFile << "\n};\n*/";
     }
 }

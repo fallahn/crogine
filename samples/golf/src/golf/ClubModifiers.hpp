@@ -1,3 +1,32 @@
+/*-----------------------------------------------------------------------
+
+Matt Marchant 2021 - 2024
+http://trederia.blogspot.com
+
+Super Video Golf - zlib licence.
+
+This software is provided 'as-is', without any express or
+implied warranty.In no event will the authors be held
+liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented;
+you must not claim that you wrote the original software.
+If you use this software in a product, an acknowledgment
+in the product documentation would be appreciated but
+is not required.
+
+2. Altered source versions must be plainly marked as such,
+and must not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any
+source distribution.
+
+-----------------------------------------------------------------------*/
+
 #include "Clubs.hpp"
 
 struct ShotModifier final
@@ -5,7 +34,8 @@ struct ShotModifier final
     float angle = 0.f;
     float powerMultiplier = 1.f;
     float targetMultiplier = 1.f;
-    ShotModifier(float a, float p, float t)
+    ShotModifier() = default;
+    constexpr ShotModifier(float a, float p, float t)
         : angle(a), powerMultiplier(p), targetMultiplier(t){}
 };
 
@@ -16,11 +46,11 @@ struct ModifierGroup final
     std::array<ShotModifier, ClubID::Count> flopModifier = {};
 
     ModifierGroup() = default;
-    ModifierGroup(const std::array<ShotModifier, ClubID::Count>& p, const std::array<ShotModifier, ClubID::Count>& f)
+    constexpr ModifierGroup(const std::array<ShotModifier, ClubID::Count>& p, const std::array<ShotModifier, ClubID::Count>& f)
         : punchModifier(p), flopModifier(f) {}
 };
 
-static constexpr std::array<ShotModifier, ClubID::Count> pA = 
+static constexpr std::array<ShotModifier, ClubID::Count> pA =
 {
     ShotModifier(-0.287f, 1.439f, 1.048f),
     ShotModifier(-0.259f, 1.286f, 1.061f),
@@ -35,9 +65,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> pA =
     ShotModifier(-0.686f, 1.217f, 1.333f),
     ShotModifier(-0.686f, 1.306f, 1.500f),
     ShotModifier(0.000f, 1.000f, 1.000f),
-}
+};
 
-static constexpr std::array<ShotModifier, ClubID::Count> fA = 
+static constexpr std::array<ShotModifier, ClubID::Count> fA =
 {
     ShotModifier(0.294f, 0.879f, 0.910f),
     ShotModifier(0.244f, 0.898f, 0.891f),
@@ -52,9 +82,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> fA =
     ShotModifier(0.305f, 1.095f, 0.504f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
-}
+};
 
-static constexpr std::array<ShotModifier, ClubID::Count> pB = 
+static constexpr std::array<ShotModifier, ClubID::Count> pB =
 {
     ShotModifier(-0.245f, 1.333f, 1.041f),
     ShotModifier(-0.229f, 1.238f, 1.054f),
@@ -69,9 +99,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> pB =
     ShotModifier(-0.496f, 1.075f, 1.313f),
     ShotModifier(-0.686f, 1.306f, 1.500f),
     ShotModifier(0.000f, 1.000f, 1.000f),
-}
+};
 
-static constexpr std::array<ShotModifier, ClubID::Count> fB = 
+static constexpr std::array<ShotModifier, ClubID::Count> fB =
 {
     ShotModifier(0.350f, 0.885f, 0.918f),
     ShotModifier(0.282f, 0.912f, 0.898f),
@@ -86,9 +116,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> fB =
     ShotModifier(0.320f, 1.143f, 0.504f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
-}
+};
 
-static constexpr std::array<ShotModifier, ClubID::Count> pC = 
+static constexpr std::array<ShotModifier, ClubID::Count> pC =
 {
     ShotModifier(-0.236f, 1.327f, 1.075f),
     ShotModifier(-0.274f, 1.306f, 1.041f),
@@ -103,9 +133,9 @@ static constexpr std::array<ShotModifier, ClubID::Count> pC =
     ShotModifier(-0.511f, 1.061f, 1.285f),
     ShotModifier(-0.686f, 1.306f, 1.500f),
     ShotModifier(0.000f, 1.000f, 1.000f),
-}
+};
 
-static constexpr std::array<ShotModifier, ClubID::Count> fC = 
+static constexpr std::array<ShotModifier, ClubID::Count> fC =
 {
     ShotModifier(0.351f, 0.891f, 0.925f),
     ShotModifier(0.290f, 0.912f, 0.912f),
@@ -120,7 +150,7 @@ static constexpr std::array<ShotModifier, ClubID::Count> fC =
     ShotModifier(0.320f, 1.129f, 0.490f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
-}
+};
 
 static constexpr std::array<ModifierGroup, 3u> LevelModifiers =
 {
@@ -129,7 +159,7 @@ static constexpr std::array<ModifierGroup, 3u> LevelModifiers =
     ModifierGroup(pC, fC)
 };
 
-
+/*
 const std::array<Club, ClubID::Count> Clubs =
 {
     Club(ClubID::Driver,    "Driver ", 28.992f),
@@ -163,3 +193,4 @@ constexpr std::array<ClubStat, ClubID::Count> ClubStats =
     ClubStat({ 10.300f, 10.000f }, { 10.300f, 10.000f }, { 10.300f, 10.000f }),
     ClubStat({ 9.110f, 10.000f }, { 9.110f, 10.000f }, { 9.110f, 10.000f }),
 };
+*/

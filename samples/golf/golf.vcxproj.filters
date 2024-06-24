@@ -947,6 +947,9 @@
     <ClInclude Include="src\golf\LeagueNames.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\ClubModifiers.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

@@ -5894,7 +5894,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (m_drone.isValid())
         {
-            static constexpr float MinDroneHeight = 20.f;
             auto t = m_collisionMesh.getTerrain(pos);
             if (pos.y - t.height < MinDroneHeight)
             {
