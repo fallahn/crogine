@@ -42,6 +42,7 @@ private:
         };
     };
     std::array<float, ShotType::Count> m_distances = {};
+    std::array<float, ShotType::Count> m_heights = {};
 
     bool m_plotFlop;
     bool m_plotPunch;

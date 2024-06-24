@@ -67,6 +67,7 @@ namespace
 
     constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
     constexpr float Dampening = 0.33f; //velocity reduction on bounce
+    static constexpr float ColourSize = 12.f;
 
     struct LevelID final
     {
@@ -286,7 +287,6 @@ void ArcState::createUI()
 
                 ImGui::Separator();
 
-                static constexpr float ColourSize = 12.f;
                 ImGui::ColorButton("##0", { 0.f, 1.f, 0.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
                 ImGui::Text("Default Distance: %3.2f, Target: %3.2f", m_distances[ShotType::Default], ClubStats[m_clubID].stats[m_clubLevel].target);
                 ImGui::ColorButton("##2", { 0.f, 0.f, 1.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
@@ -325,10 +325,11 @@ void ArcState::createUI()
             }
             ImGui::End();
 
-            ImGui::SetNextWindowSize({ 342.f, 110.f });
+            ImGui::SetNextWindowSize({ 342.f, 140.f });
             if (ImGui::Begin("Base Stat Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
             {
-                float* dst = &ClubStats[m_clubID].stats[m_clubLevel].power;
+                //just lock these so we don't accidentally change them
+                /*float* dst = &ClubStats[m_clubID].stats[m_clubLevel].power;
                 if (ImGui::SliderFloat("Base Power", dst, 0.1f, 60.f))
                 {
                     *dst = std::clamp(*dst, 0.1f, 60.f);
@@ -340,7 +341,14 @@ void ArcState::createUI()
                 {
                     *dst = std::clamp(*dst, 0.1f, cro::Util::Const::PI / 2.f);
                     plotArc();
-                }
+                }*/
+
+                ImGui::ColorButton("##01", { 0.f, 1.f, 0.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
+                ImGui::Text("Default Height: %3.2f", m_heights[ShotType::Default]);
+                ImGui::ColorButton("##21", { 0.f, 0.f, 1.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
+                ImGui::Text("Flop Height:    %3.2f", m_heights[ShotType::Flop]);
+                ImGui::ColorButton("##11", { 1.f, 0.f, 0.f, 0.f }, 0, { ColourSize, ColourSize }); ImGui::SameLine();
+                ImGui::Text("Punch Height:   %3.2f", m_heights[ShotType::Punch]);
             }
             ImGui::End();
         });
@@ -380,6 +388,8 @@ void ArcState::plotArc()
 
     const auto genVerts = [&](float angle, float power, std::int32_t shotType)
         {
+            m_heights[shotType] = 0.f;
+
             glm::vec3 impulse = glm::vec3(1.f, 0.f, 0.f) * glm::rotate(cro::Transform::QUAT_IDENTITY, -angle, cro::Transform::Z_AXIS);
             impulse *= power;
 
@@ -401,6 +411,10 @@ void ArcState::plotArc()
                     pos.y = 0.f;
                     impulse = glm::reflect(impulse, cro::Transform::Y_AXIS);
                     impulse *= Dampening;
+                }
+                else if (pos.y > m_heights[shotType])
+                {
+                    m_heights[shotType] = pos.y;
                 }
 
                 verts.emplace_back(glm::vec2(pos.x, pos.y), Colours[shotType]);
