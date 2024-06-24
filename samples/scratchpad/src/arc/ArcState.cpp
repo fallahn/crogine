@@ -98,7 +98,9 @@ ArcState::ArcState(cro::StateStack& stack, cro::State::Context context)
     m_uiScene       (context.appInstance.getMessageBus()),
     m_clubID        (0),
     m_clubLevel     (0),
-    m_zoom          (2.5f)
+    m_zoom          (2.5f),
+    m_plotFlop      (true),
+    m_plotPunch     (true)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -208,7 +210,7 @@ void ArcState::createUI()
                 };
 
             ImGui::SetNextWindowSize({ 342.f, 350.f });
-            if (ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+            if (ImGui::Begin("Flop/Punch Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
             {
                 //select club ID
                 if (ImGui::InputInt("Club:", &m_clubID))
@@ -294,9 +296,20 @@ void ArcState::createUI()
             }
             ImGui::End();
 
-            ImGui::SetNextWindowSize({ 200.f, 100.f });
-            if (ImGui::Begin("Also Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+            ImGui::SetNextWindowSize({ 220.f, 120.f });
+            if (ImGui::Begin("View/Export", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
             {
+                if (ImGui::Checkbox("Plot Flop", &m_plotFlop))
+                {
+                    plotArc();
+                }
+                ImGui::SameLine();
+                if (ImGui::Checkbox("Plot Punch", &m_plotPunch))
+                {
+                    plotArc();
+                }
+
+
                 //zoom
                 if (ImGui::SliderFloat("Zoom", &m_zoom, 0.5f, MaxZoom))
                 {
@@ -308,6 +321,25 @@ void ArcState::createUI()
                 {
                     writeHeader(levelModifiers, Clubs, ClubStats);
                     cro::FileSystem::showMessageBox("Complete", "Wrote Header File");
+                }
+            }
+            ImGui::End();
+
+            ImGui::SetNextWindowSize({ 342.f, 110.f });
+            if (ImGui::Begin("Base Stat Controls", nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
+            {
+                float* dst = &ClubStats[m_clubID].stats[m_clubLevel].power;
+                if (ImGui::SliderFloat("Base Power", dst, 0.1f, 60.f))
+                {
+                    *dst = std::clamp(*dst, 0.1f, 60.f);
+                    plotArc();
+                }
+
+                dst = &Clubs[m_clubID].angle;
+                if (ImGui::SliderFloat("Base Angle", dst, 0.1f, cro::Util::Const::PI / 2.f))
+                {
+                    *dst = std::clamp(*dst, 0.1f, cro::Util::Const::PI / 2.f);
+                    plotArc();
                 }
             }
             ImGui::End();
@@ -382,11 +414,17 @@ void ArcState::plotArc()
 
     genVerts(Clubs[m_clubID].angle, ClubStats[m_clubID].stats[m_clubLevel].power, ShotType::Default);
 
-    const auto& flopModifier = levelModifiers[m_clubLevel].flopModifier[m_clubID];
-    genVerts(Clubs[m_clubID].angle + flopModifier.angle, ClubStats[m_clubID].stats[m_clubLevel].power * flopModifier.powerMultiplier, ShotType::Flop);
-    
-    const auto& punchModifier = levelModifiers[m_clubLevel].punchModifier[m_clubID];
-    genVerts(Clubs[m_clubID].angle + punchModifier.angle, ClubStats[m_clubID].stats[m_clubLevel].power * punchModifier.powerMultiplier, ShotType::Punch);
+    if (m_plotFlop)
+    {
+        const auto& flopModifier = levelModifiers[m_clubLevel].flopModifier[m_clubID];
+        genVerts(Clubs[m_clubID].angle + flopModifier.angle, ClubStats[m_clubID].stats[m_clubLevel].power * flopModifier.powerMultiplier, ShotType::Flop);
+    }
+
+    if (m_plotPunch)
+    {
+        const auto& punchModifier = levelModifiers[m_clubLevel].punchModifier[m_clubID];
+        genVerts(Clubs[m_clubID].angle + punchModifier.angle, ClubStats[m_clubID].stats[m_clubLevel].power * punchModifier.powerMultiplier, ShotType::Punch);
+    }
 
     m_plotEntity.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
@@ -442,7 +480,7 @@ void ArcState::readSettings()
         if (size == expected)
         {
             SDL_RWseek(inFile.file, 0, RW_SEEK_SET);
-            SDL_RWread(inFile.file, ClubStats.data(), size, 1);
+            SDL_RWread(inFile.file, ClubStats.data(), sizeof(ClubStats), 1);
             for (auto i = 0u; i < Clubs.size(); ++i)
             {
                 SDL_RWread(inFile.file, &Clubs[i].angle, sizeof(float), 1);

@@ -43,6 +43,9 @@ private:
     };
     std::array<float, ShotType::Count> m_distances = {};
 
+    bool m_plotFlop;
+    bool m_plotPunch;
+
     void addSystems();
     void loadAssets();
     void createScene();
