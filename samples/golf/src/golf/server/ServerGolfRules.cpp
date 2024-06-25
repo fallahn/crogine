@@ -300,7 +300,12 @@ bool GolfState::summariseRules()
             }
         }
 
-        if (m_sharedData.scoreType == ScoreType::Skins)
+        //hmm this used to apply to ALL score types before 
+        //elimination mode shanghaid some of the playerInfo fields
+        //so... are these the only two score types relevant here to
+        //do we need to allow all but exclude elimination (and maybe NTP)?
+        if (m_sharedData.scoreType == ScoreType::Skins
+            || m_sharedData.scoreType == ScoreType::Match)
         {
             //only score if no player tied
             if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
