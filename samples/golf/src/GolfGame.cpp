@@ -1702,7 +1702,8 @@ void GolfGame::loadAvatars()
                 pd.profileID = uid;
             }
 
-            if (!pd.name.empty())
+            if (!pd.name.empty()
+                && pd.isCustomName)
             {
                 Social::setPlayerName(pd.name);
             }
@@ -1729,10 +1730,7 @@ void GolfGame::loadAvatars()
     }
 
     m_profileData.playerProfiles[0].isSteamID = true;
-    if (!m_profileData.playerProfiles[0].isCustomName)
-    {
-        m_profileData.playerProfiles[0].name = Social::getPlayerName();
-    }
+
 #endif
 
     auto profileDirs = cro::FileSystem::listDirectories(path);
