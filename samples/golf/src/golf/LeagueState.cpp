@@ -197,10 +197,10 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                 }
                 ImGui::End();
             }
-        });
+    //    });
 
-    registerWindow([&]()
-        {
+    //registerWindow([&]()
+    //    {
             const glm::vec2 WindowSize = glm::vec2(200.f, 80.f) * m_viewScale.x;
             const auto WindowPos = (glm::vec2(cro::App::getWindow().getSize()) - WindowSize) / 2.f;
 

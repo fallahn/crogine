@@ -254,7 +254,15 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                 //used to detect if we had any input
                 auto buffSize = m_inputBuffer.size();
 
-                ImGui::SetNextWindowSize({ 600.f, 340.f });
+                const auto viewScale = getViewScale();
+                const glm::vec2 WindowSize = glm::vec2(480.f, 340.f) * viewScale;
+
+                ImGui::SetNextWindowSize({ WindowSize.x, WindowSize.y });
+                ImGui::GetFont()->Scale *= viewScale;
+                ImGui::PushFont(ImGui::GetFont());
+
+                m_sharedData.chatFonts.buttonLarge->Scale *= viewScale;
+
                 if (ImGui::Begin("Chat Window", &m_visible, ImGuiWindowFlags_NoCollapse))
                 {
                     if (m_showShortcuts)
@@ -262,7 +270,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         ImGui::Text("Quick Emotes: ");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-                        if (ImGui::Button(m_buttonStrings.applaud.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight)))
+                        if (ImGui::Button(m_buttonStrings.applaud.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Applaud);
                             m_visible = false;
@@ -271,7 +279,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         showToolTip("Applaud - Shortcut: Number 7");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-                        if (ImGui::Button(m_buttonStrings.happy.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight)))
+                        if (ImGui::Button(m_buttonStrings.happy.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Happy);
                             m_visible = false;
@@ -280,7 +288,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         showToolTip("Happy - Shortcut: Number 8");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-                        if (ImGui::Button(m_buttonStrings.laughing.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight)))
+                        if (ImGui::Button(m_buttonStrings.laughing.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Laughing);
                             m_visible = false;
@@ -289,7 +297,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         showToolTip("Laughing - Shortcut: Number 9");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-                        if (ImGui::Button(m_buttonStrings.angry.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight)))
+                        if (ImGui::Button(m_buttonStrings.angry.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Angry);
                             m_visible = false;
@@ -298,7 +306,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         showToolTip("Grumpy - Shortcut: Number 0");
                         ImGui::Separator();
                     }
-
+                    
                     const float reserveHeight = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f,0.f,0.f,0.4f));
                     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
@@ -345,13 +353,13 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 
                     m_focusInput = false;
 
-                    //emoji keypad popout
                     ImGui::SameLine();
                     if (ImGui::Button("Send"))
                     {
                         sendTextChat();
                     }
 
+                    //emoji keypad popout
                     if (ImGui::BeginPopup("emote_popup"))
                     {
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
@@ -375,6 +383,11 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     }
                 }
                 ImGui::End();
+
+                m_sharedData.chatFonts.buttonLarge->Scale = 1.f;
+
+                ImGui::GetFont()->Scale = 1.f;
+                ImGui::PopFont();
 
                 //notification packets to tell clients if someone is typing
                 if (m_inputBuffer.size() != buffSize)
