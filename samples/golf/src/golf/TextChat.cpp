@@ -261,12 +261,13 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                 ImGui::GetFont()->Scale *= viewScale;
                 ImGui::PushFont(ImGui::GetFont());
 
-                m_sharedData.chatFonts.buttonLarge->Scale *= viewScale;
+                m_sharedData.chatFonts.buttonLarge->Scale = 0.5f * viewScale;
 
-                if (ImGui::Begin("Chat Window", &m_visible, ImGuiWindowFlags_NoCollapse))
+                if (ImGui::Begin("Chat Window", &m_visible, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize))
                 {
                     if (m_showShortcuts)
                     {
+                        //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.f, -4.f });
                         ImGui::Text("Quick Emotes: ");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
@@ -305,6 +306,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         ImGui::PopFont();
                         showToolTip("Grumpy - Shortcut: Number 0");
                         ImGui::Separator();
+                        //ImGui::PopStyleVar();
                     }
                     
                     const float reserveHeight = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -366,7 +368,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 
                         for (auto i = 0; i < 25; ++i)
                         {
-                            if (ImGui::Button(Emotes[i].icon.data()))
+                            if (ImGui::Button(Emotes[i].icon.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                             {
                                 for (auto cp : Emotes[i].icon)
                                 {
@@ -384,7 +386,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                 }
                 ImGui::End();
 
-                m_sharedData.chatFonts.buttonLarge->Scale = 1.f;
+                m_sharedData.chatFonts.buttonLarge->Scale = 0.5f;
 
                 ImGui::GetFont()->Scale = 1.f;
                 ImGui::PopFont();

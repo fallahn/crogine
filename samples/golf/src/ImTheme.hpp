@@ -132,17 +132,17 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     if (cro::FileSystem::fileExists(winPath))
     {
         fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());
-        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(winPath.c_str(), 16.f, &configB, rangesB.data());
-        sd.chatFonts.buttonHeight = 28.f;
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(winPath.c_str(), 32.f, &configB, rangesB.data());
+        sd.chatFonts.buttonHeight = 22.f;
     }
     else
 #endif
     {
         const std::string path = "assets/golf/fonts/OpenMoji.ttf";
         //const std::string path = "assets/golf/fonts/NotoEmoji-Regular.ttf";
-        fonts->AddFontFromFileTTF((rp + path).c_str(), 13.f, &config, rangesB.data());
-        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF((rp + path).c_str(), 18.0f, &configB, rangesB.data());
-        sd.chatFonts.buttonHeight = 30.f;
+        fonts->AddFontFromFileTTF((rp + path).c_str(), 10.f, &config, rangesB.data());
+        sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF((rp + path).c_str(), 32.0f, &configB, rangesB.data());
+        sd.chatFonts.buttonHeight = 24.f;// 30.f;
     }
 
     fonts->Build();
