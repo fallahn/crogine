@@ -131,7 +131,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
     if (cro::FileSystem::fileExists(winPath))
     {
-        fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());
+        fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());// ->Scale = 0.5f;
         sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF(winPath.c_str(), 32.f, &configB, rangesB.data());
         sd.chatFonts.buttonHeight = 22.f;
     }
