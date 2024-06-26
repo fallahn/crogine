@@ -531,12 +531,12 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     //too many HIOs
     if (holeScore == 1)
     {
-        //players with skill 0 (0 good, 2 bad) + good clubs have 50/50 chance of keeping the HIO
-        //players with skill 2 and short clubs have 1/10 chance of keeping the HIO
+        //players with skill 0 (0 good, 2 bad) + good clubs have better chance of keeping the HIO
+        //players with skill 2 and short clubs have worse chance of keeping the HIO
         const auto hioSkill = (player.skill + (2 - m_sharedData.clubSet)) * 2;
-        if (cro::Util::Random::value(0, (1 + hioSkill)) != 0)
+        if (cro::Util::Random::value(0, (3 + hioSkill)) != 0)
         {
-            holeScore += std::min(1, (par - 2));
+            holeScore += std::max(1, (par - 2));
         }
     }
 
