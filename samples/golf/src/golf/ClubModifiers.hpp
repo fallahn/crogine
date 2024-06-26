@@ -69,12 +69,12 @@ static constexpr std::array<ShotModifier, ClubID::Count> pA =
 
 static constexpr std::array<ShotModifier, ClubID::Count> fA =
 {
-    ShotModifier(0.294f, 0.879f, 0.910f),
-    ShotModifier(0.244f, 0.898f, 0.891f),
-    ShotModifier(0.274f, 0.911f, 0.871f),
-    ShotModifier(0.343f, 0.918f, 0.789f),
-    ShotModifier(0.344f, 0.905f, 0.776f),
-    ShotModifier(0.351f, 0.884f, 0.755f),
+    ShotModifier(0.058f, 0.920f, 0.910f),
+    ShotModifier(0.061f, 0.925f, 0.891f),
+    ShotModifier(0.053f, 0.911f, 0.871f),
+    ShotModifier(0.190f, 0.877f, 0.789f),
+    ShotModifier(0.245f, 0.878f, 0.776f),
+    ShotModifier(0.282f, 0.864f, 0.755f),
     ShotModifier(0.328f, 0.857f, 0.725f),
     ShotModifier(0.343f, 0.850f, 0.701f),
     ShotModifier(0.373f, 0.837f, 0.674f),
@@ -103,16 +103,16 @@ static constexpr std::array<ShotModifier, ClubID::Count> pB =
 
 static constexpr std::array<ShotModifier, ClubID::Count> fB =
 {
-    ShotModifier(0.350f, 0.885f, 0.918f),
-    ShotModifier(0.282f, 0.912f, 0.898f),
-    ShotModifier(0.275f, 0.912f, 0.877f),
-    ShotModifier(0.328f, 0.919f, 0.803f),
-    ShotModifier(0.358f, 0.912f, 0.789f),
-    ShotModifier(0.351f, 0.898f, 0.776f),
-    ShotModifier(0.351f, 0.877f, 0.752f),
+    ShotModifier(0.030f, 0.939f, 0.918f),
+    ShotModifier(0.076f, 0.926f, 0.905f),
+    ShotModifier(0.100f, 0.905f, 0.877f),
+    ShotModifier(0.160f, 0.885f, 0.803f),
+    ShotModifier(0.183f, 0.871f, 0.789f),
+    ShotModifier(0.206f, 0.864f, 0.776f),
+    ShotModifier(0.229f, 0.850f, 0.752f),
     ShotModifier(0.274f, 0.850f, 0.728f),
     ShotModifier(0.328f, 0.844f, 0.708f),
-    ShotModifier(0.374f, 1.041f, 0.470f),
+    ShotModifier(0.305f, 0.905f, 0.470f),
     ShotModifier(0.320f, 1.143f, 0.504f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
@@ -137,16 +137,16 @@ static constexpr std::array<ShotModifier, ClubID::Count> pC =
 
 static constexpr std::array<ShotModifier, ClubID::Count> fC =
 {
-    ShotModifier(0.351f, 0.891f, 0.925f),
-    ShotModifier(0.290f, 0.912f, 0.912f),
-    ShotModifier(0.298f, 0.932f, 0.891f),
-    ShotModifier(0.259f, 0.905f, 0.817f),
-    ShotModifier(0.312f, 0.912f, 0.803f),
-    ShotModifier(0.335f, 0.898f, 0.789f),
-    ShotModifier(0.344f, 0.891f, 0.776f),
-    ShotModifier(0.320f, 0.871f, 0.755f),
-    ShotModifier(0.343f, 0.857f, 0.728f),
-    ShotModifier(0.374f, 1.075f, 0.504f),
+    ShotModifier(0.054f, 0.932f, 0.925f),
+    ShotModifier(0.061f, 0.932f, 0.912f),
+    ShotModifier(0.069f, 0.925f, 0.891f),
+    ShotModifier(0.137f, 0.885f, 0.817f),
+    ShotModifier(0.167f, 0.878f, 0.803f),
+    ShotModifier(0.213f, 0.871f, 0.789f),
+    ShotModifier(0.244f, 0.864f, 0.776f),
+    ShotModifier(0.251f, 0.857f, 0.755f),
+    ShotModifier(0.290f, 0.843f, 0.728f),
+    ShotModifier(0.275f, 0.898f, 0.504f),
     ShotModifier(0.320f, 1.129f, 0.490f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
@@ -158,39 +158,3 @@ static constexpr std::array<ModifierGroup, 3u> LevelModifiers =
     ModifierGroup(pB, fB),
     ModifierGroup(pC, fC)
 };
-
-/*
-const std::array<Club, ClubID::Count> Clubs =
-{
-    Club(ClubID::Driver,    "Driver ", 28.992f),
-    Club(ClubID::ThreeWood, "3 Wood ", 32.315f),
-    Club(ClubID::FiveWood,  "5 Wood ", 34.721f),
-    Club(ClubID::FourIron,  "4 Iron ", 37.586f),
-    Club(ClubID::FiveIron,  "5 Iron ", 37.128f),
-    Club(ClubID::SixIron,   "6 Iron ", 36.326f),
-    Club(ClubID::SevenIron, "7 Iron ", 35.924f),
-    Club(ClubID::EightIron, "8 Iron ", 35.924f),
-    Club(ClubID::NineIron,  "9 Iron ", 35.523f),
-    Club(ClubID::PitchWedge, "Pitch Wedge ", 56.895f),
-    Club(ClubID::GapWedge,   "Gap Wedge ",   62.452f),
-    Club(ClubID::SandWedge,  "Sand Wedge ",  60.000f),
-    Club(ClubID::Putter,     "Putter ",      0.000f),
-};
-
-constexpr std::array<ClubStat, ClubID::Count> ClubStats = 
-{
-    ClubStat({ 47.199f, 220.000f }, { 49.378f, 240.000f }, { 51.398f, 260.000f }),
-    ClubStat({ 41.344f, 180.000f }, { 43.534f, 200.000f }, { 45.694f, 220.000f }),
-    ClubStat({ 37.172f, 150.000f }, { 38.402f, 160.000f }, { 40.533f, 180.000f }),
-    ClubStat({ 35.149f, 140.000f }, { 36.490f, 150.000f }, { 37.690f, 160.000f }),
-    ClubStat({ 33.869f, 130.000f }, { 35.440f, 140.000f }, { 36.490f, 150.000f }),
-    ClubStat({ 32.850f, 120.000f }, { 34.160f, 130.000f }, { 35.440f, 140.000f }),
-    ClubStat({ 31.330f, 110.000f }, { 32.850f, 120.000f }, { 34.160f, 130.000f }),
-    ClubStat({ 29.910f, 100.000f }, { 31.330f, 110.000f }, { 32.850f, 120.000f }),
-    ClubStat({ 28.400f, 90.000f }, { 29.910f, 100.000f }, { 31.621f, 110.000f }),
-    ClubStat({ 25.491f, 70.000f }, { 26.562f, 75.000f }, { 27.460f, 80.000f }),
-    ClubStat({ 17.691f, 30.000f }, { 18.239f, 32.000f }, { 19.140f, 35.000f }),
-    ClubStat({ 10.300f, 10.000f }, { 10.300f, 10.000f }, { 10.300f, 10.000f }),
-    ClubStat({ 9.110f, 10.000f }, { 9.110f, 10.000f }, { 9.110f, 10.000f }),
-};
-*/
