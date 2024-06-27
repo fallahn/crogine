@@ -48,6 +48,10 @@ source distribution.
 
 namespace
 {
+    //this is static so the preference is remember between
+    //instances
+    bool closeOnSend = false;
+
     static void showToolTip(const char* desc)
     {
         if (ImGui::BeginItemTooltip())
@@ -277,7 +281,8 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 
                 m_sharedData.chatFonts.buttonLarge->Scale = 0.5f * viewScale;
 
-                if (ImGui::Begin("Chat Window", /*&m_visible*/nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+                if (ImGui::Begin("Chat Window", nullptr, 
+                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
                 {
                     if (m_showShortcuts)
                     {
@@ -323,7 +328,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         //ImGui::PopStyleVar();
                     }
                     
-                    const float reserveHeight = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+                    const float reserveHeight = (ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing()) * 2.f;
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f,0.f,0.f,0.4f));
                     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
                     ImGui::PopStyleColor();
@@ -368,7 +373,6 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         {
                             ImGui::OpenPopup("emote_popup");
                         }
-
                         m_focusInput = false;
 
                         ImGui::SameLine();
@@ -376,6 +380,8 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         {
                             sendTextChat();
                         }
+
+                        ImGui::Checkbox("Close On Send", &closeOnSend);
 
                         //emoji keypad popout
                         if (ImGui::BeginPopup("emote_popup"))
@@ -746,7 +752,11 @@ void TextChat::sendTextChat()
         m_scrollToEnd = true;
 
         //m_visible = false;
-        m_animDir = 0;
+        
+        if (closeOnSend || Social::isSteamdeck())
+        {
+            m_animDir = 0;
+        }
 
         endChat();
     }

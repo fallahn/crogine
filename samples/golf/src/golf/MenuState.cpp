@@ -648,7 +648,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     }
                     else
                     {
-                        e.getComponent<cro::Text>().setString("Shift+F8 to Chat");
+                        e.getComponent<cro::Text>().setString("Press F4 to Chat");
                     }
                 };
             }
@@ -748,7 +748,8 @@ bool MenuState::handleEvent(const cro::Event& evt)
         && evt.type != SDL_CONTROLLERBUTTONDOWN
         && evt.type != SDL_CONTROLLERBUTTONUP)
     {
-        if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+        if (/*cro::Console::isVisible() &&*/
+            (cro::ui::wantsMouse() || cro::ui::wantsKeyboard()))
         {
             if (evt.type == SDL_KEYUP)
             {

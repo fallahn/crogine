@@ -2235,8 +2235,12 @@ void DrivingState::createPlayer()
         return 0;
     };
 
+#ifdef USE_GNS
+    const auto& playerData = m_profileData.playerProfiles[0]; //prefer steam profile
+#else
     auto playerIndex = cro::Util::Random::value(0u, m_profileData.playerProfiles.size() - 1);
     const auto& playerData = m_profileData.playerProfiles[playerIndex];
+#endif
     auto idx = indexFromSkinID(playerData.skinID);
 
     ProfileTexture av(m_sharedData.avatarInfo[idx].texturePath);
