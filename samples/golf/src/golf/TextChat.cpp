@@ -287,7 +287,6 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     if (m_showShortcuts
                         && !Social::isSteamdeck())
                     {
-                        //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.f, -4.f });
                         ImGui::Text("Quick Emotes: ");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
@@ -326,7 +325,6 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         ImGui::PopFont();
                         showToolTip("Grumpy - Shortcut: Number 0");
                         ImGui::Separator();
-                        //ImGui::PopStyleVar();
                     }
                     
                     const float reserveHeight = (ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing()) * 2.f;
@@ -611,7 +609,7 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckIn
 #ifdef USE_GNS
     if (Social::isSteamdeck()
         && enableDeckInput
-        && !m_visible)
+        /*&& !m_visible*/)
     {
         beginChat();
 
@@ -640,7 +638,7 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckIn
         }
         else
         {
-            m_visible = (!m_visible && !Social::isSteamdeck());
+            m_visible = (!m_visible /*&& !Social::isSteamdeck()*/);
             m_focusInput = m_visible;
 
             if (m_visible)
@@ -754,7 +752,7 @@ void TextChat::sendTextChat()
 
         //m_visible = false;
         
-        if (closeOnSend || Social::isSteamdeck())
+        if (closeOnSend /*|| Social::isSteamdeck()*/)
         {
             m_animDir = 0;
         }

@@ -836,13 +836,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
-        case cro::GameController::ButtonRightStick:
-            //can't use sticks because they are used on the emote wheel
-            //showMapOverview();
-            break;
         case cro::GameController::ButtonTrackpad:
-        case cro::GameController::PaddleR5:
-            toggleMiniZoom();
+            m_textChat.toggleWindow(false, true, false);
             break;
         case cro::GameController::ButtonBack:
             if (!m_textChat.isVisible())
@@ -866,10 +861,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_buttonStates.buttonA = true;
             toggleQuitReady();
             break;
-        //case cro::GameController::ButtonTrackpad:
-        /*case cro::GameController::PaddleR4:
-            m_textChat.toggleWindow(true, true);
-            break;*/
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -878,9 +869,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
-        case SDL_CONTROLLER_BUTTON_MISC1:
-            //m_textChat.toggleWindow();
-            break;
         case cro::GameController::ButtonBack:
             showScoreboard(false);
             break;

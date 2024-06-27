@@ -1000,13 +1000,20 @@ bool MenuState::handleEvent(const cro::Event& evt)
             case cro::GameController::ButtonGuide:
                 togglePreviousScoreCard();
                 break;
-            case cro::GameController::ButtonTrackpad:
-                //case cro::GameController::PaddleR4:
+            }
+        }
+
+        //we have to do this separately because it should be allowed when chat window is open
+        if (m_currentMenu == MenuID::Lobby)
+        {
+            switch (evt.cbutton.button)
+            {
+            default:  break;
             case cro::GameController::ButtonY:
-                if (m_currentMenu == MenuID::Lobby)
-                {
-                    m_textChat.toggleWindow(true, false);
-                }
+                m_textChat.toggleWindow(true, false);
+                break;
+            case cro::GameController::ButtonTrackpad:
+                m_textChat.toggleWindow(false, false, false);
                 break;
             }
         }
