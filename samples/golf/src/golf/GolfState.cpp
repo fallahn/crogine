@@ -416,11 +416,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else
     {
-        if (emoteHandled = m_emoteWheel.handleEvent(evt) || m_emoteWheel.currentScale != 0; !emoteHandled)
+        if (emoteHandled = m_emoteWheel.handleEvent(evt) || m_emoteWheel.currentScale != 0; 
+            !emoteHandled && !m_textChat.isVisible())
         {
             m_inputParser.handleEvent(evt);
         }
     }
+
 
 
     const auto scrollScores = [&](std::int32_t step)
@@ -884,7 +886,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonStart:
         case cro::GameController::ButtonGuide:
-            requestStackPush(StateID::Pause);
+            if (!m_textChat.isVisible())
+            {
+                requestStackPush(StateID::Pause);
+            }
             break;
         case cro::GameController::ButtonA:
             if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))

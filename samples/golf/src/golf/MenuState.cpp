@@ -972,39 +972,43 @@ bool MenuState::handleEvent(const cro::Event& evt)
     {
         setChatHint(true, evt.cbutton.which);
         cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+
+        if (!m_textChat.isVisible())
         {
-        default: 
-            //cro::Console::show();
-            
-            break;
-        case cro::GameController::ButtonBack:
-            showOptions();
-            break;
-        case cro::GameController::ButtonStart:
-            showPlayerManagement();
-            break;
-            //leave the current menu when B is pressed.
-        case cro::GameController::ButtonB:
-            quitMenu();
-            break;
-        case cro::GameController::ButtonRightShoulder:
-            doNext();
-            break;
-        case cro::GameController::ButtonLeftShoulder:
-            doPrev();
-            break;
-        case cro::GameController::ButtonGuide:
-            togglePreviousScoreCard();
-            break;
-        case cro::GameController::ButtonTrackpad:
-        //case cro::GameController::PaddleR4:
-        case cro::GameController::ButtonY:
-            if (m_currentMenu == MenuID::Lobby)
+            switch (evt.cbutton.button)
             {
-                m_textChat.toggleWindow(true, false);
+            default:
+                //cro::Console::show();
+
+                break;
+            case cro::GameController::ButtonBack:
+                showOptions();
+                break;
+            case cro::GameController::ButtonStart:
+                showPlayerManagement();
+                break;
+                //leave the current menu when B is pressed.
+            case cro::GameController::ButtonB:
+                quitMenu();
+                break;
+            case cro::GameController::ButtonRightShoulder:
+                doNext();
+                break;
+            case cro::GameController::ButtonLeftShoulder:
+                doPrev();
+                break;
+            case cro::GameController::ButtonGuide:
+                togglePreviousScoreCard();
+                break;
+            case cro::GameController::ButtonTrackpad:
+                //case cro::GameController::PaddleR4:
+            case cro::GameController::ButtonY:
+                if (m_currentMenu == MenuID::Lobby)
+                {
+                    m_textChat.toggleWindow(true, false);
+                }
+                break;
             }
-            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)

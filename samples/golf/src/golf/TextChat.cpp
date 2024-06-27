@@ -284,7 +284,8 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                 if (ImGui::Begin("Chat Window", nullptr, 
                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
                 {
-                    if (m_showShortcuts)
+                    if (m_showShortcuts
+                        && !Social::isSteamdeck())
                     {
                         //ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 0.f, -4.f });
                         ImGui::Text("Quick Emotes: ");
