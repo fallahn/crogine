@@ -105,8 +105,8 @@ static constexpr float CourseFadeDistance = 2.f;
 static constexpr float ZoomFadeDistance = 10.f;
 
 static constexpr float GreenCamHeight = 3.f;
-static constexpr float SkyCamHeight = 8.f;// 16.f; //8.f for lower club set
-static constexpr float MinDroneHeight = 12.f;// 20.f; pushes at least this far above terrain on hilly courses
+static constexpr float SkyCamHeight = 16.f; //8.f for lower club set
+static constexpr float MinDroneHeight = 20.f; //12.f pushes at least this far above terrain on hilly courses
 static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f);
 
 static constexpr float BallPointSize = 1.4f;
