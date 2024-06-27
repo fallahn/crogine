@@ -2247,6 +2247,24 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
         ents[0].getComponent<cro::Text>().setFillColour(dark); //no red text on first column!
         ents.back().getComponent<cro::Text>().setFillColour(dark); //no red text on final column!
+
+        //check to see if we are top of the scoreboard
+        if (m_achievementTracker.leadingCareerRound)
+        {
+            switch (m_sharedData.clubSet)
+            {
+            default: break;
+            case 0:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::StartingOut]);
+                break;
+            case 1:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::GettingTheHangOfIt]);
+                break;
+            case 2:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::ProShow]);
+                break;
+            }
+        }
     }
 
     bool personalBest = false;
@@ -3216,7 +3234,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 return a.totalDistance < b.totalDistance;
             }
         });
-
+    m_achievementTracker.leadingCareerRound = !scores[0].leaguePlayer;
 
     const auto formatDistance = [](float d)
         {

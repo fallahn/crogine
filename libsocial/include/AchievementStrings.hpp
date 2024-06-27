@@ -152,6 +152,9 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "short_distance_clara",
     "snug_bug",
     "happy_snapper",
+    "starting_out",
+    "hang_of_it",
+    "pro_show"
 };
 
 //appears on the notification
@@ -261,7 +264,10 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Pin King",
     "Short Distance Clara",
     "Snug As A Bug",
-    "Happy Snapper"
+    "Happy Snapper",
+    "Starting Out",
+    "Getting The Hang Of It",
+    "Pro Show"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -372,6 +378,9 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Finish 9 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Finish 18 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Take at least one screenshot on each course using freecam", false),
+    std::make_pair("Come first in any Career round using the Novice clubs", false),
+    std::make_pair("Come first in any Career round using the Expert clubs", false),
+    std::make_pair("Come first in any Career round using the Pro clubs", false),
 };
 
 //assuming trophies load correctly they are:
@@ -515,6 +524,10 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*103*/TrophyID::SilverFigure,
     /*104*/TrophyID::GoldFigure,
     /*105*/TrophyID::BronzeCup,
+
+    /*106*/TrophyID::BronzeFigure,
+    /*107*/TrophyID::SilverFigure,
+    /*108*/TrophyID::GoldFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

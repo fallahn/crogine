@@ -600,7 +600,7 @@ void League::rollPlayers(bool resetScores)
         maxIncrease = 3;
         break;
     case LeagueRoundID::RoundFive:
-        maxIncrease = 3;
+        maxIncrease = 4;
         break;
     case LeagueRoundID::RoundSix:
         maxIncrease = 4;

@@ -614,6 +614,8 @@ private:
         std::int32_t birdieChallenge = 0; //monthly challenge only incremented on front 9
         bool nearMissChallenge = false;
         bool bullseyeChallenge = false;
+
+        bool leadingCareerRound = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;
