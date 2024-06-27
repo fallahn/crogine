@@ -632,7 +632,7 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckIn
     else
 #endif
     {
-        if (showOSK)
+        if (showOSK && !Social::isSteamdeck()) //deck uses its own kb
         {
             auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::RequestOSK;
