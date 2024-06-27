@@ -389,9 +389,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 {
                 default: break;
                 case SDLK_ESCAPE:
+                case SDLK_F4:
                     if (m_textChat.isVisible())
                     {
-                        m_textChat.toggleWindow(false, true);
+                        m_textChat.toggleWindow(false, true, false);
                     }
                     break;
                 case SDLK_F8:
@@ -582,20 +583,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
             break;
-        case SDLK_F8:
-            if (evt.key.keysym.mod & KMOD_SHIFT)
-            {
-                m_textChat.toggleWindow(false, true);
-            }
-            break;
-        case SDLK_F9:
-            if (evt.key.keysym.mod & KMOD_SHIFT)
-            {
-                cro::Console::doCommand("build_cubemaps");
-            }
-            break;
         case SDLK_F2:
-            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::GotoHole), net::NetFlag::Reliable);
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::UI::PuttingLabel;
@@ -610,19 +598,25 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
             break;
         case SDLK_F3:
-            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::NextPlayer), net::NetFlag::Reliable);
             setUIHidden(m_courseEnt.getComponent<cro::Transform>().getOrigin().z > 0);
             break;
-#ifdef CRO_DEBUG_
         case SDLK_F4:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::GotoGreen), net::NetFlag::Reliable);
+            m_textChat.toggleWindow(false, true, false);
             break;
-//        case SDLK_F6: //this is used to log CSV
-//            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::EndGame), net::NetFlag::Reliable);
-//#ifdef USE_GNS
-//            //Social::resetAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
-//#endif
-//            break;
+        case SDLK_F8:
+            if (evt.key.keysym.mod & KMOD_SHIFT)
+            {
+                m_textChat.toggleWindow(false, true);
+            }
+            break;
+        case SDLK_F9:
+            if (evt.key.keysym.mod & KMOD_SHIFT)
+            {
+                cro::Console::doCommand("build_cubemaps");
+            }
+            break;
+
+#ifdef CRO_DEBUG_
         case SDLK_F7:
             //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
             
@@ -796,7 +790,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
             if (m_textChat.isVisible())
             {
-                m_textChat.toggleWindow(false, true);
+                m_textChat.toggleWindow(false, true, false);
                 break;
             }
             [[fallthrough]];
@@ -871,9 +865,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             toggleQuitReady();
             break;
         //case cro::GameController::ButtonTrackpad:
-        case cro::GameController::PaddleR4:
+        /*case cro::GameController::PaddleR4:
             m_textChat.toggleWindow(true, true);
-            break;
+            break;*/
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -1872,6 +1866,8 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+    m_textChat.update(dt);
+
     //hack to speed up transition when holding the action button
     static constexpr float MaxMultiplier = 2.f;
     static constexpr float MinMultiplier = 1.f;

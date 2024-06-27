@@ -758,7 +758,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 case SDLK_ESCAPE:
                     if (m_textChat.isVisible())
                     {
-                        m_textChat.toggleWindow(false, false);
+                        m_textChat.toggleWindow(false, false, false);
                     }
                     break;
                 /*case SDLK_F8:
@@ -769,7 +769,19 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     break;*/
                 }
             }
-
+            else if (evt.type == SDL_KEYDOWN)
+            {
+                switch (evt.key.keysym.sym)
+                {
+                default: break;
+                case SDLK_F4:
+                    if (m_textChat.isVisible())
+                    {
+                        m_textChat.toggleWindow(false, false, false);
+                    }
+                    break;
+                }
+            }
             return true;
         }
     }
@@ -929,6 +941,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_TAB:
             togglePreviousScoreCard();
             break;
+        case SDLK_F4:
+            if (m_currentMenu == MenuID::Lobby)
+            {
+                m_textChat.toggleWindow(false, false, false);
+            }
+            break;
         case SDLK_F8:
             if ((evt.key.keysym.mod & KMOD_SHIFT)
                 && m_currentMenu == MenuID::Lobby)
@@ -979,7 +997,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             togglePreviousScoreCard();
             break;
         case cro::GameController::ButtonTrackpad:
-        case cro::GameController::PaddleR4:
+        //case cro::GameController::PaddleR4:
         case cro::GameController::ButtonY:
             if (m_currentMenu == MenuID::Lobby)
             {
@@ -1312,6 +1330,8 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    m_textChat.update(dt);
+
     if (cro::Keyboard::isKeyPressed(SDLK_j))
     {
         m_voiceChat.captureVoice();

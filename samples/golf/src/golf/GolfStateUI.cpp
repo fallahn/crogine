@@ -5863,7 +5863,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 //consume this so we don't mess with the swing
                 return true;
             case cro::GameController::ButtonX:
-                m_textChat.toggleWindow(true, true);
+                m_textChat.toggleWindow(true, true, true);
                 //close emote wheel automatically
                 targetScale = 0.f;
                 return true;
