@@ -327,9 +327,15 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         ImGui::Separator();
                     }
                     
+                    std::int32_t flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
+                    if (Social::isSteamdeck())
+                    {
+                        flags |= ImGuiWindowFlags_NoScrollbar;
+                    }
+
                     const float reserveHeight = (ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing()) * 2.f;
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f,0.f,0.f,0.4f));
-                    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveHeight), false, flags);
                     ImGui::PopStyleColor();
 
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
@@ -404,6 +410,10 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                             ImGui::PopFont();
                             ImGui::EndPopup();
                         }
+                    }
+                    else
+                    {
+                        ImGui::Text("Chat History");
                     }
                 }
                 ImGui::End();
