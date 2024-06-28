@@ -259,6 +259,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
+
                 ImGui::End();
 
                 ImGui::GetFont()->Scale = 1.f;

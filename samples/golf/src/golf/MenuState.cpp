@@ -2890,7 +2890,7 @@ bool MenuState::applyTextEdit()
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-        SDL_StopTextInput();
+        //SDL_StopTextInput();
         m_textEdit = {};
         return true;
     }

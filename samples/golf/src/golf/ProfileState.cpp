@@ -3676,8 +3676,9 @@ bool ProfileState::applyTextEdit()
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-
-        SDL_StopTextInput();
+        //SDL isn't really clear why we may want to call this, but
+        //it appears it can break the text input of ImGui windows
+        //SDL_StopTextInput();
         m_textEdit = {};
         return true;
     }
