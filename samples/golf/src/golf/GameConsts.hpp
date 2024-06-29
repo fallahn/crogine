@@ -841,7 +841,12 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
     }
 }
 
-void createMusicPlayer(cro::Scene& scene, cro::AudioResource&, cro::Entity gameMusic);
+struct MusicPlayerData final
+{
+    std::vector<cro::Entity> playlist;
+    std::size_t currentIndex = 0;
+};
+[[nodiscard]] cro::Entity createMusicPlayer(cro::Scene& scene, cro::AudioResource&, cro::Entity gameMusic);
 
 //finds an intersecting point on the water plane.
 static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)

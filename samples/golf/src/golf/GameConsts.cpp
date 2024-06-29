@@ -46,7 +46,7 @@ bool hasPSLayout(std::int32_t controllerID)
     return cro::GameController::hasPSLayout(controllerID);
 }
 
-void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity gameMusic)
+[[nodiscard]] cro::Entity createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity gameMusic)
 {
     //parse any music files into a playlist
     M3UPlaylist m3uPlaylist(audio, Social::getBaseContentPath() + "music/");
@@ -96,12 +96,6 @@ void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity
     //if the playlist isnt empty, create the music playing entities
     if (auto trackCount = m3uPlaylist.getTrackCount(); trackCount != 0)
     {
-        struct MusicPlayerData final
-        {
-            std::vector<cro::Entity> playlist;
-            std::size_t currentIndex = 0;
-        };
-
         auto playerEnt = scene.createEntity();
         playerEnt.addComponent<cro::Transform>();
         playerEnt.addComponent<cro::Callback>().active = true;
@@ -169,9 +163,11 @@ void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity
         for (auto i = 0u; i < trackCount; ++i)
         {
             const auto id = m3uPlaylist.getCurrentTrack();
+            const std::string trackName = m3uPlaylist.getCurrentTrackName();
             m3uPlaylist.nextTrack();
 
             auto entity = scene.createEntity();
+            entity.setLabel(trackName);
             entity.addComponent<cro::Transform>();
             entity.addComponent<cro::AudioEmitter>().setSource(audio.get(id));
             entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
@@ -183,5 +179,9 @@ void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity
         {
             playlist[0].getComponent<cro::AudioEmitter>().play();
         }
+
+        return playerEnt;
     }
+
+    return {};
 }

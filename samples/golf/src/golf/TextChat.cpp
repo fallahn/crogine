@@ -253,7 +253,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_buttonStrings.angry.push_back(0);
 
 
-    registerWindow([&]() 
+    registerWindow([&]()
         {
             //ImGui::ShowDemoWindow();
             //if (m_visible)
@@ -267,14 +267,17 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                 const glm::vec2 WindowSize = glm::vec2(std::max(320.f, std::round((OutputSize.x / 3.f))), OutputSize.y);
 
                 ImGui::SetNextWindowSize({ WindowSize.x, WindowSize.y });
-                ImGui::SetNextWindowPos({ std::round(-WindowSize.x * cro::Util::Easing::easeInCubic(m_animationProgress)), 0.f});
+                ImGui::SetNextWindowPos({ std::round(-WindowSize.x * cro::Util::Easing::easeInCubic(m_animationProgress)), 0.f });
 
                 if (m_animationProgress == 1)
                 {
                     m_drawWindow = false;
                     m_visible = false;
                 }
-
+                /*else if (m_animationProgress == 0)
+                {
+                    m_scrollToEnd = true;
+                }*/
 
                 ImGui::GetFont()->Scale *= viewScale;
                 ImGui::PushFont(ImGui::GetFont());
@@ -494,7 +497,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     {
         m_displayBuffer.pop_front();
     }
-
+    m_scrollToEnd = true;
     
     //create an entity to temporarily show the message on screen
 
@@ -655,6 +658,7 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckIn
             {
                 m_drawWindow = true;
                 m_animDir = 1;
+                m_scrollToEnd = true;
             }
             else
             {
