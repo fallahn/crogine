@@ -1427,10 +1427,18 @@ void DrivingState::initAudio()
         registerCommand("list_tracks", [playlist](const std::string&) 
             {
                 const auto& trackEnts = playlist.getComponent<cro::Callback>().getUserData<MusicPlayerData>().playlist;
-                for (auto e : trackEnts)
+                
+                if (!trackEnts.empty())
                 {
-                    cro::Console::print(e.getLabel());
-                }            
+                    for (auto e : trackEnts)
+                    {
+                        cro::Console::print(e.getLabel());
+                    }
+                }
+                else
+                {
+                    cro::Console::print("No music loaded");
+                }
             });
     }
 }

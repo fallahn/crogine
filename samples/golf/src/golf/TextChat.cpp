@@ -33,6 +33,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
+#include "../Colordome-32.hpp"
 
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -264,20 +265,18 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 
                 const auto viewScale = getViewScale();
                 const glm::vec2 OutputSize = glm::vec2(cro::App::getWindow().getSize());
-                const glm::vec2 WindowSize = glm::vec2(std::max(320.f, std::round((OutputSize.x / 3.f))), OutputSize.y);
+                //const glm::vec2 WindowSize = glm::vec2(std::max(320.f, std::round((OutputSize.x / 3.f))), OutputSize.y);
+                const glm::vec2 WindowSize = glm::vec2(OutputSize.x, std::max(240.f, std::round(OutputSize.y / 3.f)));
 
                 ImGui::SetNextWindowSize({ WindowSize.x, WindowSize.y });
-                ImGui::SetNextWindowPos({ std::round(-WindowSize.x * cro::Util::Easing::easeInCubic(m_animationProgress)), 0.f });
+                //ImGui::SetNextWindowPos({ std::round(-WindowSize.x * cro::Util::Easing::easeInCubic(m_animationProgress)), 0.f });
+                ImGui::SetNextWindowPos({ 0.f, std::round((OutputSize.y - WindowSize.y) + (WindowSize.y * cro::Util::Easing::easeInCubic(m_animationProgress))) });
 
                 if (m_animationProgress == 1)
                 {
                     m_drawWindow = false;
                     m_visible = false;
                 }
-                /*else if (m_animationProgress == 0)
-                {
-                    m_scrollToEnd = true;
-                }*/
 
                 ImGui::GetFont()->Scale *= viewScale;
                 ImGui::PushFont(ImGui::GetFont());
@@ -336,11 +335,12 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         flags |= ImGuiWindowFlags_NoScrollbar;
                     }
 
-                    const float reserveHeight = (ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing()) * 2.f;
+                    const float reserveHeight = (ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing());// *2.f;
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f,0.f,0.f,0.4f));
                     ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveHeight), false, flags);
                     ImGui::PopStyleColor();
 
+                    
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
                     for (const auto& [str, colour] : m_displayBuffer)
                     {
@@ -388,7 +388,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         {
                             sendTextChat();
                         }
-
+                        ImGui::SameLine();
                         ImGui::Checkbox("Close On Send", &closeOnSend);
 
                         //emoji keypad popout
@@ -469,7 +469,6 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     //only one person can type on a connected computer anyway
     //so we'll always assume it's player 0
     auto outStr = m_sharedData.connectionData[msg.client].playerData[0].name;
-
     auto msgText = msg.getString();// cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
 
 #ifdef USE_GNS
@@ -477,21 +476,26 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 #endif
 
     cro::Colour chatColour = TextNormalColour;
+    cro::Colour listColour = TextNormalColour;
     bool playSound = true;
 
     //process any emotes such as /me and choose colour
     if (auto p = msgText.find("/me"); p == 0
         && msgText.size() > 4)
     {
-        chatColour = TextGoldColour;
+        chatColour = listColour = TextGoldColour;
         outStr += " " + msgText.substr(p + 4);
     }
     else
     {
         outStr += ": " + msgText;
         playSound = !speak(msgText);
+
+        static std::int32_t idx = 0;
+        idx = (idx + 1) % 2;
+        listColour = idx == 0 ? TextNormalColour : CD32::Colours[CD32::GreyLight];
     }
-    m_displayBuffer.emplace_back(outStr, ImVec4(chatColour));
+    m_displayBuffer.emplace_back(outStr, ImVec4(listColour));
 
     if (m_displayBuffer.size() > MaxLines)
     {
