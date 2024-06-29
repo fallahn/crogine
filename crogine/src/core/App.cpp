@@ -434,6 +434,24 @@ void App::run()
                     Console::print("Usage: r_drawDebugWindows <0|1>");
                 }
             }, nullptr);
+
+        Console::addCommand("list_audio_devices",
+            [](const std::string&)
+            {
+                auto deviceCount = SDL_GetNumAudioDevices(0);
+                if (deviceCount)
+                {
+                    for (auto i = 0; i < deviceCount; ++i)
+                    {
+                        auto str = SDL_GetAudioDeviceName(i, 0);
+                        Console::print(str);
+                    }
+                }
+                else
+                {
+                    Console::print("No Audio Devices Found");
+                }
+            }, nullptr);
     }
     else
     {
@@ -650,6 +668,20 @@ void App::handleEvents()
         switch (evt.type)
         {
         default: break;
+        case SDL_AUDIODEVICEADDED:
+            //index of the device
+        {
+            //auto str = SDL_GetAudioDeviceName(evt.adevice.which, evt.adevice.iscapture);
+            //LogI << str << " was connected " << std::endl;
+        }
+            break;
+        case SDL_AUDIODEVICEREMOVED:
+            //SDL ID of device
+        {
+            //TODO how do we get something useful like the index/name of this device?
+            LogI << "Device " << evt.adevice.which << " was disconnected" << std::endl;
+        }
+            break;
         case SDL_CONTROLLERBUTTONUP:
             if (Console::isVisible()
                 && (evt.cbutton.button == GameController::ButtonB || evt.cbutton.button == GameController::ButtonBack))

@@ -2249,7 +2249,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
         ents.back().getComponent<cro::Text>().setFillColour(dark); //no red text on final column!
 
         //check to see if we are top of the scoreboard
-        if (m_achievementTracker.leadingCareerRound)
+        if (m_achievementTracker.leadingCareerRound
+            && !m_resumedFromSave) //no cheese please
         {
             switch (m_sharedData.clubSet)
             {
