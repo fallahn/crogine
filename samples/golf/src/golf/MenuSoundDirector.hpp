@@ -54,7 +54,8 @@ private:
             Hole,
             Ground,
             Snapshot,
-            Lobby,
+            LobbyJoin,
+            LobbyExit,
 
             Count
         };

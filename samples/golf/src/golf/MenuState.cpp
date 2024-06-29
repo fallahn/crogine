@@ -2295,6 +2295,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             m_readyState[client] = false;
             updateLobbyAvatars();
 
+            postMessage<SystemEvent>(cl::MessageID::SystemMessage)->type = SystemEvent::LobbyExit;
             postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
         }
             break;
