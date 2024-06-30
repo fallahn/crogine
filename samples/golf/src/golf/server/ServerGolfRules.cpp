@@ -43,7 +43,7 @@ source distribution.
 
 namespace
 {
-
+    constexpr float NTPPenalty = 10.f; //approx radius of green m_holeData[m_currentHole].distanceToPin;
 }
 
 using namespace sv;
@@ -103,7 +103,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
             }
             else
             {
-                m_playerInfo[0].distanceScore[m_currentHole] = 10.f;//approx radius if green m_holeData[m_currentHole].distanceToPin;
+                m_playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;
             }
             break;
         case ScoreType::LongestDrive:
@@ -211,7 +211,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
 
             break;
         case ScoreType::NearestThePin:
-            m_playerInfo[0].distanceScore[m_currentHole] = m_holeData[m_currentHole].distanceToPin / 2.f;
+            m_playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;// m_holeData[m_currentHole].distanceToPin / 2.f;
             m_playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes + 1;
             break;
         }
