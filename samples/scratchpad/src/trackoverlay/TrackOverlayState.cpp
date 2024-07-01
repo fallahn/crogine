@@ -51,13 +51,14 @@ namespace
     constexpr glm::vec3 TextPosition(ThumbSize.x + 80.f, ThumbSize.y - 40.f, TextDepth);
     constexpr float TransistionSpeed = 1.f; //seconds
 
-    const cro::Colour BannerColour = cro::Colour::Black;
+    const cro::Colour BannerColour = cro::Colour(0.f, 0.f, 0.f, 0.3f);
 
     const std::string ThumbFrag = 
 R"(
 OUTPUT
 
 uniform sampler2DArray u_texture;
+uniform float u_index = 0.0;
 
 VARYING_IN vec2 v_texCoord;
 VARYING_IN vec4 v_colour;
@@ -65,7 +66,7 @@ VARYING_IN vec4 v_colour;
 
 void main()
 {
-    FRAG_OUT = texture(u_texture, vec3(v_texCoord, 0.0)) * v_colour;
+    FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_index)) * v_colour;
 })";
 }
 
@@ -171,6 +172,7 @@ void TrackOverlayState::loadAssets()
     m_thumbShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), ThumbFrag, "#define TEXTURED\n");
 
     std::uint32_t index = 0;
+    cro::Image thumbImage;
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile("assets/tracklist.cfg"))
@@ -203,7 +205,23 @@ void TrackOverlayState::loadAssets()
             {
                 m_textStrings.emplace_back(std::make_pair(title, artist));
 
-                //TODO load image and insert at index
+                //load image and insert at index
+                if (!image.empty())
+                {
+                    if (thumbImage.loadFromFile("assets/" + image))
+                    {
+                        if (thumbImage.getSize().x != TexSize.x
+                            || thumbImage.getSize().y != TexSize.y)
+                        {
+                            thumbImage.resize(TexSize);
+                        }
+                        
+                        if (!m_textures.insertLayer(thumbImage, index))
+                        {
+                            m_textures.insertLayer(buff, index);
+                        }
+                    }
+                }
 
                 index++;
 
@@ -300,13 +318,12 @@ void TrackOverlayState::createUI()
             {
                 if (e.getComponent<cro::Transform>().getPosition().x < -width)
                 {
-
                     e.getComponent<cro::Transform>().move({ width + ViewSize.x, 0.f });
 
                     const auto& [title, artist] = m_textStrings[m_currentIndex];
                     m_displayEnts.artistText.getComponent<cro::Text>().setString(artist);
                     m_displayEnts.titleText.getComponent<cro::Text>().setString(title);
-                    //TODO check size and scale if needed
+                    //TODO check size and scale to fit if needed
 
                     width = cro::Text::getLocalBounds(e).width;
                     state = 1;

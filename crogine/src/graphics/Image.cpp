@@ -27,8 +27,11 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+
 #include "../detail/stb_image.h"
 #include "../detail/stb_image_write.h"
+#include "../detail/stb_image_resize2.h"
 #include "../detail/SDLImageRead.hpp"
 #include <SDL_rwops.h>
 
@@ -303,4 +306,45 @@ const std::uint8_t* Image::getPixel(std::size_t x, std::size_t y) const
         return &m_data[index];
     }
     return nullptr;
+}
+
+bool Image::resize(glm::uvec2 newSize)
+{
+    if (newSize.x == 0 || newSize.y == 0)
+    {
+        LogE << "Cannot resize image, dimension " << newSize << " must be greater than 0" << std::endl;
+        return false;
+    }
+
+    if (m_data.empty())
+    {
+        LogE << "Cannot resize image, no image is loaded" << std::endl;
+        return false;
+    }
+
+    
+    std::size_t size = 1;
+    stbir_pixel_layout layout = STBIR_1CHANNEL;
+    switch (m_format)
+    {
+    default: break;
+    case ImageFormat::Type::RGB:
+        size = 3;
+        layout = STBIR_RGB;
+        break;
+    case ImageFormat::Type::RGBA:
+        size = 4;
+        layout = STBIR_RGBA;
+        break;
+    }
+
+    std::vector<std::uint8_t> output(newSize.x * newSize.y * size);
+
+    if (stbir_resize_uint8_linear(m_data.data(), m_size.x, m_size.y, size * m_size.x, output.data(), newSize.x, newSize.y, size * newSize.x, layout) != 0)
+    {
+        m_size = newSize;
+        m_data.swap(output);
+        return true;
+    }
+    return false;
 }

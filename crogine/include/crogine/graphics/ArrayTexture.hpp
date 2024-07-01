@@ -188,6 +188,40 @@ namespace cro
             //bind tex and upload
             return updateTexture(data.data(), layer);
         }
+
+        bool insertLayer(const cro::Image& image, std::uint32_t layer)
+        {
+            static_assert(std::is_same<T, std::uint8_t>::value, "Must be a uint8_t texture");
+
+            if (!m_handle)
+            {
+                LogE << __FILE__ << " texture not yet created" << std::endl;
+                return false;
+            }
+
+            //validate incoming data
+            if (image.getFormat() != ImageFormat::RGBA)
+            {
+                LogE << __FILE__ << " array texture data probably not RGBA" << std::endl;
+                return false;
+            }
+
+            if (image.getSize() != getSize())
+            {
+                LogE << __FILE__ << " array texture data not correct dimensions" << std::endl;
+                return false;
+            }
+
+            if (layer >= Layers)
+            {
+                LogE << __FILE__ << " array texture data layer out of range" << std::endl;
+                return false;
+            }
+
+            //bind tex and upload
+            return updateTexture(image.getPixelData(), layer);
+        }
+
     private:
 
         std::uint32_t m_handle = 0;
