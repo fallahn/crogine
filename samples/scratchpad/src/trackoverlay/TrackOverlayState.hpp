@@ -43,6 +43,13 @@ private:
         cro::Entity artistText;
     }m_displayEnts;
 
+
+    struct ShaderHandle final
+    {
+        std::uint32_t id = 0;
+        std::int32_t indexUniform = -1;
+    }m_shaderHandle;
+
     std::size_t m_currentIndex;
     std::vector<std::pair<cro::String, cro::String>> m_textStrings;
 

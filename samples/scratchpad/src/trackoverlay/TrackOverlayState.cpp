@@ -22,6 +22,7 @@
 #include <crogine/graphics/Font.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Easings.hpp>
 
 namespace
 {
@@ -49,7 +50,7 @@ namespace
     constexpr std::uint32_t SmallTextSize = 60;
 
     constexpr glm::vec3 TextPosition(ThumbSize.x + 80.f, ThumbSize.y - 40.f, TextDepth);
-    constexpr float TransistionSpeed = 1.f; //seconds
+    constexpr float TransitionSpeed = 1.f; //seconds
 
     const cro::Colour BannerColour = cro::Colour(0.f, 0.f, 0.f, 0.3f);
 
@@ -163,13 +164,33 @@ void TrackOverlayState::loadAssets()
 {
     m_resources.fonts.load(FontID::Default, "assets/fonts/VeraMono.ttf");
    
-    std::vector<std::uint8_t> buff(TexSize.x * TexSize.y * 4);
-    std::fill(buff.begin(), buff.end(), 255);
+    cro::Image fallback;
+    fallback.create(TexSize.x, TexSize.y, cro::Colour::Black);
     
-    m_textures.create(TexSize.x, TexSize.y);
-    m_textures.insertLayer(buff, 0);
+    const float halfSize = static_cast<float>(TexSize.x / 2);
+    const glm::vec2 centre(halfSize);
+    for (auto i = 0u; i < (TexSize.x * TexSize.y); ++i)
+    {
+        auto x = i % TexSize.x;
+        auto y = i / TexSize.y;
 
-    m_thumbShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), ThumbFrag, "#define TEXTURED\n");
+        glm::vec2 position(x, y);
+        const float dist = glm::length(position - centre);
+        const float alpha = (1.f - glm::smoothstep(halfSize - 3.5f, halfSize - 1.5f, dist)) * 255.f;
+        const auto colour = std::uint8_t((1.f - glm::smoothstep(halfSize - 73.f, halfSize - 71.f, dist)) * 255.f);
+
+        cro::Colour c(colour, colour, colour, std::uint8_t(alpha));
+        fallback.setPixel(x, y, c);
+    }
+
+    m_textures.create(TexSize.x, TexSize.y);
+    m_textures.insertLayer(fallback, 0);
+
+    if (m_thumbShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), ThumbFrag, "#define TEXTURED\n"))
+    {
+        m_shaderHandle.id = m_thumbShader.getGLHandle();
+        m_shaderHandle.indexUniform = m_thumbShader.getUniformID("u_index");
+    }
 
     std::uint32_t index = 0;
     cro::Image thumbImage;
@@ -218,8 +239,12 @@ void TrackOverlayState::loadAssets()
                         
                         if (!m_textures.insertLayer(thumbImage, index))
                         {
-                            m_textures.insertLayer(buff, index);
+                            m_textures.insertLayer(fallback, index);
                         }
+                    }
+                    else
+                    {
+                        m_textures.insertLayer(fallback, index);
                     }
                 }
 
@@ -267,7 +292,8 @@ void TrackOverlayState::createUI()
 
     //thumbnail
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 40.f, 0.f, ImageDepth });
+    entity.addComponent<cro::Transform>().setPosition({ 40.f + (ThumbSize.x / 2.f), 0.f, ImageDepth});
+    entity.getComponent<cro::Transform>().setOrigin({ ThumbSize.x / 2.f, 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(0.f, ThumbSize.y), glm::vec2(0.f, 1.f)),
@@ -311,12 +337,16 @@ void TrackOverlayState::createUI()
         [&](cro::Entity e, float dt)
         {
             auto& [width, state] = e.getComponent<cro::Callback>().getUserData<CallbackData>();
-            const float Speed = dt * (ViewSize.x * TransistionSpeed);
+            const float Speed = (dt * (ViewSize.x * TransitionSpeed) * 2.f);
 
             e.getComponent<cro::Transform>().move({ -Speed, 0.f });
+            const auto xPos = e.getComponent<cro::Transform>().getPosition().x;
             if (state == 0)
             {
-                if (e.getComponent<cro::Transform>().getPosition().x < -width)
+                const float imageScale = 1.f - ((xPos - TextPosition.x) / -width);
+                m_displayEnts.thumb.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutSine(imageScale), 1.f });
+
+                if (xPos < -width)
                 {
                     e.getComponent<cro::Transform>().move({ width + ViewSize.x, 0.f });
 
@@ -325,14 +355,23 @@ void TrackOverlayState::createUI()
                     m_displayEnts.titleText.getComponent<cro::Text>().setString(title);
                     //TODO check size and scale to fit if needed
 
+                    //update the image index
+                    glUseProgram(m_shaderHandle.id);
+                    glUniform1f(m_shaderHandle.indexUniform, static_cast<float>(m_currentIndex));
+
                     width = cro::Text::getLocalBounds(e).width;
                     state = 1;
                 }
             }
             else
             {
-                if (e.getComponent<cro::Transform>().getPosition().x < TextPosition.x)
+                const float imageScale = 1.f - ((xPos - TextPosition.x) / (ViewSize.x - TextPosition.x));
+                m_displayEnts.thumb.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInSine(imageScale), 1.f });
+
+                if (xPos < TextPosition.x)
                 {
+                    m_displayEnts.thumb.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
                     e.getComponent<cro::Transform>().setPosition(TextPosition);
                     state = 0;
                     e.getComponent<cro::Callback>().active = 0;
