@@ -334,6 +334,7 @@
     <ClCompile Include="src\ssao\SSAOState.cpp" />
     <ClCompile Include="src\swingput\Swingput.cpp" />
     <ClCompile Include="src\swingput\SwingState.cpp" />
+    <ClCompile Include="src\trackoverlay\TrackOverlayState.cpp" />
     <ClCompile Include="src\vats\VatFile.cpp" />
     <ClCompile Include="src\vats\VatsState.cpp" />
     <ClCompile Include="src\voxels\MarchingCubes.cpp" />
@@ -398,6 +399,7 @@
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\swingput\Swingput.hpp" />
     <ClInclude Include="src\swingput\SwingState.hpp" />
+    <ClInclude Include="src\trackoverlay\TrackOverlayState.hpp" />
     <ClInclude Include="src\vats\VatFile.hpp" />
     <ClInclude Include="src\vats\VatsState.hpp" />
     <ClInclude Include="src\voxels\Consts.hpp" />

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -300,6 +300,9 @@ namespace cro
             const Texture* texture = nullptr;
             TextureID textureID;
             glm::uvec2 size = glm::vec2(0);
+
+            std::uint32_t GLType = 0x0DE1;// GL_TEXTURE_2D;
+
         }m_textureInfo;
 
         Shader* m_shader;

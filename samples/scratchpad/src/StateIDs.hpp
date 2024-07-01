@@ -55,6 +55,7 @@ namespace States
             Voxels,
             VATs,
             EndlessDriving,
+            TrackOverlay,
 
             Count
         };

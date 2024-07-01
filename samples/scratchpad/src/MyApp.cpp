@@ -49,6 +49,7 @@ source distribution.
 #include "endless/EndlessDrivingState.hpp"
 #include "LoadingScreen.hpp"
 #include "arc/ArcState.hpp"
+#include "trackoverlay/TrackOverlayState.hpp"
 
 #include <crogine/core/Clock.hpp>
 
@@ -171,9 +172,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<BounceState>(States::ScratchPad::Bounce);
     m_stateStack.registerState<InteriorMappingState>(States::ScratchPad::InteriorMapping);
     m_stateStack.registerState<EndlessDrivingState>(States::ScratchPad::EndlessDriving);
+    m_stateStack.registerState<TrackOverlayState>(States::ScratchPad::TrackOverlay);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Arc);
+    m_stateStack.pushState(States::ScratchPad::TrackOverlay);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

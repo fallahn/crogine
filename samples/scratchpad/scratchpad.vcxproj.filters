@@ -139,6 +139,12 @@
     <Filter Include="Source Files\arc">
       <UniqueIdentifier>{afd80b6d-c065-44ab-b616-7e607b4d737b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\track overlay">
+      <UniqueIdentifier>{60047cf3-f895-449e-a3ce-5a613a7f7667}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\track overlay">
+      <UniqueIdentifier>{01acaa1a-2247-406b-bdd5-9a8986bec227}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -275,6 +281,9 @@
     </ClCompile>
     <ClCompile Include="src\arc\ArcState.cpp">
       <Filter>Source Files\arc</Filter>
+    </ClCompile>
+    <ClCompile Include="src\trackoverlay\TrackOverlayState.cpp">
+      <Filter>Source Files\track overlay</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -460,6 +469,9 @@
     </ClInclude>
     <ClInclude Include="src\arc\ExportHeader.hpp">
       <Filter>Header Files\arc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\trackoverlay\TrackOverlayState.hpp">
+      <Filter>Header Files\track overlay</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

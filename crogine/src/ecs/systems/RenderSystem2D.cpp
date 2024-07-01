@@ -255,7 +255,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 if (drawable.m_textureInfo.textureID.textureID)
                 {
                     glCheck(glActiveTexture(GL_TEXTURE0));
-                    glCheck(glBindTexture(GL_TEXTURE_2D, drawable.m_textureInfo.textureID.textureID));
+                    glCheck(glBindTexture(drawable.m_textureInfo.GLType, drawable.m_textureInfo.textureID.textureID));
                     glCheck(glUniform1i(drawable.m_textureUniform, 0));
                 }
 
