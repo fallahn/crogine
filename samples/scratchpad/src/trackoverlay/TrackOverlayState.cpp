@@ -37,6 +37,8 @@ namespace
         enum
         {
             Default,
+            Title,
+            Artist,
 
             Count
         };
@@ -54,20 +56,56 @@ namespace
 
     const cro::Colour BannerColour = cro::Colour(0.f, 0.f, 0.f, 0.3f);
 
+    const std::string ThumbVertex = 
+R"(
+uniform mat4 u_worldMatrix;
+uniform mat4 u_viewProjectionMatrix;
+
+ATTRIBUTE vec2 a_position;
+ATTRIBUTE MED vec2 a_texCoord0;
+ATTRIBUTE LOW vec4 a_colour;
+
+VARYING_OUT LOW vec4 v_colour;
+VARYING_OUT MED vec2 v_texCoord;
+VARYING_OUT vec3 v_worldPos;
+
+void main()
+{
+    vec4 worldPos = u_worldMatrix * vec4(a_position, 0.0, 1.0);
+    gl_Position = u_viewProjectionMatrix * worldPos;
+    
+    v_colour = a_colour;
+    v_texCoord = a_texCoord0;
+    v_worldPos = worldPos.xyz;
+})";
+
     const std::string ThumbFrag = 
 R"(
 OUTPUT
 
 uniform sampler2DArray u_texture;
 uniform float u_index = 0.0;
+uniform vec3 u_surfaceNormal = vec3(0.0, 0.0, 1.0);
 
 VARYING_IN vec2 v_texCoord;
 VARYING_IN vec4 v_colour;
+VARYING_IN vec3 v_worldPos;
 
+const vec3 LightDir = vec3(0.57735, 0.57735, 0.57735);
+const vec3 CamPos = vec3(90.0, 90.0, 400.0);
+const float SpecularStrength = 0.5;
 
 void main()
 {
-    FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_index)) * v_colour;
+    vec4 colour = texture(u_texture, vec3(v_texCoord, u_index)) * v_colour;
+
+    vec3 viewDir = normalize(CamPos - v_worldPos);
+    vec3 reflectDir = reflect(normalize(-LightDir), u_surfaceNormal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
+    float specular = SpecularStrength * spec;
+    colour.rgb += specular;
+
+    FRAG_OUT = colour;
 })";
 }
 
@@ -75,7 +113,8 @@ TrackOverlayState::TrackOverlayState(cro::StateStack& stack, cro::State::Context
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
-    m_currentIndex  (0)
+    m_currentIndex  (0),
+    m_showSettings  (false)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -107,6 +146,13 @@ bool TrackOverlayState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_SPACE:
             nextTrack();
+            break;
+        case SDLK_F2:
+            m_showSettings = !m_showSettings;
+            if (!m_showSettings)
+            {
+                writeSettings();
+            }
             break;
         }
     }
@@ -162,10 +208,13 @@ void TrackOverlayState::addSystems()
 
 void TrackOverlayState::loadAssets()
 {
+    readSettings();
+
     m_resources.fonts.load(FontID::Default, "assets/fonts/VeraMono.ttf");
+    m_resources.fonts.load(FontID::Artist, m_settings.artistFont);
+    m_resources.fonts.load(FontID::Title, m_settings.titleFont);
    
-    cro::Image fallback;
-    fallback.create(TexSize.x, TexSize.y, cro::Colour::Black);
+    m_fallbackImage.create(TexSize.x, TexSize.y, cro::Colour::Black);
     
     const float halfSize = static_cast<float>(TexSize.x / 2);
     const glm::vec2 centre(halfSize);
@@ -180,83 +229,20 @@ void TrackOverlayState::loadAssets()
         const auto colour = std::uint8_t((1.f - glm::smoothstep(halfSize - 73.f, halfSize - 71.f, dist)) * 255.f);
 
         cro::Colour c(colour, colour, colour, std::uint8_t(alpha));
-        fallback.setPixel(x, y, c);
+        m_fallbackImage.setPixel(x, y, c);
     }
 
     m_textures.create(TexSize.x, TexSize.y);
-    m_textures.insertLayer(fallback, 0);
+    m_textures.insertLayer(m_fallbackImage, 0);
 
-    if (m_thumbShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), ThumbFrag, "#define TEXTURED\n"))
+    if (m_thumbShader.loadFromString(ThumbVertex, ThumbFrag))
     {
         m_shaderHandle.id = m_thumbShader.getGLHandle();
         m_shaderHandle.indexUniform = m_thumbShader.getUniformID("u_index");
+        m_shaderHandle.normalUniform = m_thumbShader.getUniformID("u_surfaceNormal");
     }
 
-    std::uint32_t index = 0;
-    cro::Image thumbImage;
-
-    cro::ConfigFile cfg;
-    if (cfg.loadFromFile("assets/tracklist.cfg"))
-    {
-        const auto& obs = cfg.getObjects();
-        for (const auto& ob : obs)
-        {
-            cro::String title;
-            cro::String artist;
-            std::string image;
-
-            const auto& props = ob.getProperties();
-            for (const auto& prop : props)
-            {
-                if (prop.getName() == "title")
-                {
-                    title = prop.getValue<cro::String>();
-                }
-                else if (prop.getName() == "artist")
-                {
-                    artist = prop.getValue<cro::String>();
-                }
-                else if (prop.getName() == "thumb")
-                {
-                    image = prop.getValue<std::string>();
-                }
-            }
-
-            if (!title.empty() && !artist.empty())
-            {
-                m_textStrings.emplace_back(std::make_pair(title, artist));
-
-                //load image and insert at index
-                if (!image.empty())
-                {
-                    if (thumbImage.loadFromFile("assets/" + image))
-                    {
-                        if (thumbImage.getSize().x != TexSize.x
-                            || thumbImage.getSize().y != TexSize.y)
-                        {
-                            thumbImage.resize(TexSize);
-                        }
-                        
-                        if (!m_textures.insertLayer(thumbImage, index))
-                        {
-                            m_textures.insertLayer(fallback, index);
-                        }
-                    }
-                    else
-                    {
-                        m_textures.insertLayer(fallback, index);
-                    }
-                }
-
-                index++;
-
-                if (index == MaxTracks)
-                {
-                    break;
-                }
-            }
-        }
-    }
+    loadAlbumDirectory();
 }
 
 void TrackOverlayState::createScene()
@@ -316,11 +302,11 @@ void TrackOverlayState::createUI()
     }
 
     //title text
-    const auto& font = m_resources.fonts.get(FontID::Default);
+    const auto& titleFont = m_resources.fonts.get(FontID::Title);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(TextPosition);
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString(title);
+    entity.addComponent<cro::Text>(titleFont).setString(title);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
     entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
 
@@ -339,11 +325,15 @@ void TrackOverlayState::createUI()
             auto& [width, state] = e.getComponent<cro::Callback>().getUserData<CallbackData>();
             const float Speed = (dt * (ViewSize.x * TransitionSpeed) * 2.f);
 
+            float rotation = 0.f;
+            glUseProgram(m_shaderHandle.id);
+
             e.getComponent<cro::Transform>().move({ -Speed, 0.f });
             const auto xPos = e.getComponent<cro::Transform>().getPosition().x;
             if (state == 0)
             {
                 const float imageScale = 1.f - ((xPos - TextPosition.x) / -width);
+                rotation = -imageScale;
                 m_displayEnts.thumb.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutSine(imageScale), 1.f });
 
                 if (xPos < -width)
@@ -356,7 +346,6 @@ void TrackOverlayState::createUI()
                     //TODO check size and scale to fit if needed
 
                     //update the image index
-                    glUseProgram(m_shaderHandle.id);
                     glUniform1f(m_shaderHandle.indexUniform, static_cast<float>(m_currentIndex));
 
                     width = cro::Text::getLocalBounds(e).width;
@@ -366,6 +355,7 @@ void TrackOverlayState::createUI()
             else
             {
                 const float imageScale = 1.f - ((xPos - TextPosition.x) / (ViewSize.x - TextPosition.x));
+                rotation = imageScale;
                 m_displayEnts.thumb.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInSine(imageScale), 1.f });
 
                 if (xPos < TextPosition.x)
@@ -377,20 +367,84 @@ void TrackOverlayState::createUI()
                     e.getComponent<cro::Callback>().active = 0;
                 }
             }
+
+            glm::quat q = glm::rotate(cro::Transform::QUAT_IDENTITY, rotation * (cro::Util::Const::PI / 2.f), cro::Transform::Y_AXIS);
+            glm::vec3 normal = q * cro::Transform::Z_AXIS;
+            glUniform3f(m_shaderHandle.normalUniform, normal.x, normal.y, normal.z);
         };
 
-    auto artistText = entity;
-    m_displayEnts.artistText = entity;
+    auto titleText = entity;
+    m_displayEnts.titleText = entity;
 
-    //track text
+    //artist text
+    const auto& artistFont = m_resources.fonts.get(FontID::Artist);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -80.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString(artist);
+    entity.addComponent<cro::Text>(artistFont).setString(artist);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
     entity.getComponent<cro::Text>().setCharacterSize(SmallTextSize);
-    artistText.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_displayEnts.titleText = entity;
+    titleText.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_displayEnts.artistText = entity;
+
+
+    registerWindow([&]()
+        {
+            if (m_showSettings)
+            {
+                if (ImGui::Begin("Settings"), nullptr, ImGuiWindowFlags_NoTitleBar)
+                {
+                    ImGui::Text("Title Font: %s", cro::FileSystem::getFileName(m_settings.titleFont).c_str());
+                    ImGui::SameLine();
+                    if (ImGui::Button("Choose##0"))
+                    {
+                        auto path = cro::FileSystem::openFileDialogue("c:/windows/fonts/Arial.ttf");
+                        if (!path.empty())
+                        {
+                            m_settings.titleFont = path;
+                            m_resources.fonts.get(FontID::Title).loadFromFile(path);
+                            m_displayEnts.titleText.getComponent<cro::Text>().setFont(m_resources.fonts.get(FontID::Title));
+                        }
+                    }
+
+                    ImGui::Text("Artist Font: %s", cro::FileSystem::getFileName(m_settings.artistFont).c_str());
+                    ImGui::SameLine();
+                    if (ImGui::Button("Choose##1"))
+                    {
+                        auto path = cro::FileSystem::openFileDialogue("c:/windows/fonts/Arial.ttf");
+                        if (!path.empty())
+                        {
+                            m_settings.artistFont = path;
+                            m_resources.fonts.get(FontID::Artist).loadFromFile(path);
+                            m_displayEnts.artistText.getComponent<cro::Text>().setFont(m_resources.fonts.get(FontID::Artist));
+                        }
+                    }
+                    ImGui::Text("Current Dir: %s", m_settings.albumDirectory.c_str());
+                    ImGui::SameLine();
+                    if (ImGui::Button("Choose##2"))
+                    {
+                        auto path = cro::FileSystem::openFolderDialogue();
+                        if (!path.empty())
+                        {
+                            std::replace(path.begin(), path.end(), '\\', '/');
+                            if (path.back() == '/')
+                            {
+                                path.pop_back();
+                            }
+                            m_settings.albumDirectory = path;
+                            loadAlbumDirectory();
+                        }
+                    }
+
+                    if (ImGui::Button("Close"))
+                    {
+                        writeSettings();
+                        m_showSettings = false;
+                    }
+                }
+                ImGui::End();
+            }        
+        });
 
 
     auto resize = [](cro::Camera& cam)
@@ -407,12 +461,131 @@ void TrackOverlayState::createUI()
     resize(cam);
 }
 
+void TrackOverlayState::loadAlbumDirectory()
+{
+    m_currentIndex = 0;
+    m_textStrings.clear();
+
+    std::uint32_t index = 0;
+    cro::Image thumbImage;
+
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(m_settings.albumDirectory + "/tracklist.cfg"))
+    {
+        const auto& obs = cfg.getObjects();
+        for (const auto& ob : obs)
+        {
+            cro::String title;
+            cro::String artist;
+            std::string image;
+
+            const auto& props = ob.getProperties();
+            for (const auto& prop : props)
+            {
+                if (prop.getName() == "title")
+                {
+                    title = prop.getValue<cro::String>();
+                }
+                else if (prop.getName() == "artist")
+                {
+                    artist = prop.getValue<cro::String>();
+                }
+                else if (prop.getName() == "thumb")
+                {
+                    image = prop.getValue<std::string>();
+                }
+            }
+
+            if (!title.empty() && !artist.empty())
+            {
+                m_textStrings.emplace_back(std::make_pair(title, artist));
+
+                //load image and insert at index
+                if (!image.empty())
+                {
+                    if (thumbImage.loadFromFile("assets/" + image))
+                    {
+                        if (thumbImage.getSize().x != TexSize.x
+                            || thumbImage.getSize().y != TexSize.y)
+                        {
+                            thumbImage.resize(TexSize);
+                        }
+
+                        if (!m_textures.insertLayer(thumbImage, index))
+                        {
+                            m_textures.insertLayer(m_fallbackImage, index);
+                        }
+                    }
+                    else
+                    {
+                        m_textures.insertLayer(m_fallbackImage, index);
+                    }
+                }
+
+                index++;
+
+                if (index == MaxTracks)
+                {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+void TrackOverlayState::readSettings()
+{
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile("settings.cfg"))
+    {
+        for (const auto& prop : cfg.getProperties())
+        {
+            if (prop.getName() == "title_font")
+            {
+                m_settings.titleFont = prop.getValue<std::string>();
+            }
+            else if (prop.getName() == "artist_font")
+            {
+                m_settings.artistFont = prop.getValue<std::string>();
+            }
+            else if (prop.getName() == "directory")
+            {
+                m_settings.albumDirectory = prop.getValue<std::string>();
+            }
+        }
+    }
+
+    if (m_settings.titleFont.empty())
+    {
+        m_settings.titleFont = "assets/fonts/VeraMono.ttf";
+    }
+
+    if (m_settings.artistFont.empty())
+    {
+        m_settings.artistFont = "assets/fonts/VeraMono.ttf";
+    }
+
+    if (m_settings.albumDirectory.empty())
+    {
+        m_settings.albumDirectory = "assets";
+    }
+}
+
+void TrackOverlayState::writeSettings() const
+{
+    cro::ConfigFile cfg;
+    cfg.addProperty("title_font").setValue(m_settings.titleFont);
+    cfg.addProperty("artist_font").setValue(m_settings.artistFont);
+    cfg.addProperty("directory").setValue(m_settings.albumDirectory);
+    cfg.save("settings.cfg");
+}
+
 void TrackOverlayState::nextTrack()
 {
     if (!m_textStrings.empty() &&
-        !m_displayEnts.artistText.getComponent<cro::Callback>().active)
+        !m_displayEnts.titleText.getComponent<cro::Callback>().active)
     {
-        m_displayEnts.artistText.getComponent<cro::Callback>().active = true;
+        m_displayEnts.titleText.getComponent<cro::Callback>().active = true;
 
 
         m_currentIndex = (m_currentIndex + 1) % m_textStrings.size();

@@ -18,6 +18,7 @@ class TrackOverlayState final : public cro::State, public cro::GuiClient
 {
 public:
     TrackOverlayState(cro::StateStack&, cro::State::Context);
+    ~TrackOverlayState() { writeSettings(); }
 
     cro::StateID getStateID() const override { return States::ScratchPad::TrackOverlay; }
 
@@ -35,6 +36,7 @@ private:
     static constexpr std::size_t MaxTracks = 30;
     cro::ArrayTexture<std::uint8_t, MaxTracks> m_textures;
     cro::Shader m_thumbShader;
+    cro::Image m_fallbackImage;
 
     struct DisplayEnts final
     {
@@ -48,7 +50,9 @@ private:
     {
         std::uint32_t id = 0;
         std::int32_t indexUniform = -1;
+        std::int32_t normalUniform = -1;
     }m_shaderHandle;
+    bool m_showSettings;
 
     std::size_t m_currentIndex;
     std::vector<std::pair<cro::String, cro::String>> m_textStrings;
@@ -57,6 +61,17 @@ private:
     void loadAssets();
     void createScene();
     void createUI();
+
+    struct Settings final
+    {
+        std::string artistFont;
+        std::string titleFont;
+        std::string albumDirectory;
+    }m_settings;
+
+    void loadAlbumDirectory();
+    void readSettings();
+    void writeSettings() const;
 
     void nextTrack();
 };
