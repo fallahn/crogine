@@ -148,6 +148,7 @@ namespace cro
             bool initStream(OpenALStream&);
 
             void getDeviceList();
+            void reconnect(const char*);
         };
     }
 }

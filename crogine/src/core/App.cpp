@@ -688,7 +688,7 @@ void App::handleEvents()
             }
 
             //TODO how do we get something useful like the index/name of this device?
-            LogI << "Device " << evt.adevice.which << " was disconnected" << std::endl;
+            //LogI << "Device " << evt.adevice.which << " was disconnected" << std::endl;
         }
             break;
         case SDL_CONTROLLERBUTTONUP:

@@ -614,32 +614,7 @@ void OpenALImpl::setSpeedOfSound(float speed)
 
 void OpenALImpl::playbackDisconnectEvent()
 {
-    auto device = alcGetContextsDevice(m_context);
-    if (device == nullptr)
-    {
-        m_device = nullptr;
-        LogE << "Could not connect to new audio device: None were available" << std::endl;
-        return;
-    }
-
-    if (alcIsExtensionPresent(device, "ALC_SOFT_reopen_device"))
-    {
-        ALCboolean(ALC_APIENTRY * alcReopenDeviceSOFT)(ALCdevice* device, const ALCchar* name, const ALCint* attribs);
-        alcReopenDeviceSOFT = reinterpret_cast<ALCboolean(ALC_APIENTRY*)(ALCdevice * device, const ALCchar * name, const ALCint * attribs)>(alcGetProcAddress(device, "alcReopenDeviceSOFT"));
-
-        if (alcReopenDeviceSOFT(device, nullptr, nullptr))
-        {
-            m_device = device;
-            getDeviceList();
-            return;
-        }
-
-        LogE << "Failed reopening default audio device" << std::endl;
-    }
-    else
-    {
-        LogW << "Unable to re-open audio device, extension not present" << std::endl;
-    }
+    reconnect(nullptr);
 }
 
 void OpenALImpl::recordDisconnectEvent()
@@ -697,6 +672,7 @@ void OpenALImpl::resizeSourcePool()
         m_sourcePool.resize(m_sourcePool.size() + SourceResizeCount);
 
         alCheck(alGenSources(SourceResizeCount, &m_sourcePool[startIndex]));
+        LogI << "Resized Audio Source Pool to " << m_sourcePool.size() << std::endl;
     }
 }
 
@@ -779,9 +755,9 @@ void OpenALImpl::enumerateDevices()
                             ConfigFile cfg;
                             cfg.addProperty("preferred_device", m_preferredDevice);
                             cfg.save(prefPath);
+
+                            reconnect(m_preferredDevice.c_str());
                         }
-                        ImGui::SameLine();
-                        ImGui::Text("(Takes effect after restart)");
                     }
                     ImGui::End();
                 }
@@ -865,6 +841,47 @@ void OpenALImpl::getDeviceList()
             }
             m_devices.push_back("Default");
         }
+    }
+}
+
+void OpenALImpl::reconnect(const char* deviceStr)
+{
+    auto device = alcGetContextsDevice(m_context);
+    if (device == nullptr)
+    {
+        m_device = nullptr;
+        LogE << "Could not connect to new audio device: None were available" << std::endl;
+        return;
+    }
+
+    if (alcIsExtensionPresent(device, "ALC_SOFT_reopen_device"))
+    {
+        ALCboolean(ALC_APIENTRY * alcReopenDeviceSOFT)(ALCdevice* device, const ALCchar* name, const ALCint* attribs);
+        alcReopenDeviceSOFT = reinterpret_cast<ALCboolean(ALC_APIENTRY*)(ALCdevice* device, const ALCchar* name, const ALCint* attribs)>(alcGetProcAddress(device, "alcReopenDeviceSOFT"));
+
+        if (alcReopenDeviceSOFT(device, deviceStr, nullptr))
+        {
+            m_device = device;
+            getDeviceList();
+
+            if (deviceStr)
+            {
+                LogI << "Reconnected audio output to " << deviceStr << std::endl;
+            }
+            else
+            {
+                LogI << "Connected audio output to default device" << std::endl;
+            }
+
+
+            return;
+        }
+
+        LogE << "Failed reopening default audio device" << std::endl;
+    }
+    else
+    {
+        LogW << "Unable to re-open audio device, extension not present" << std::endl;
     }
 }
 
