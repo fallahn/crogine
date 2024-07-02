@@ -503,7 +503,7 @@ void TrackOverlayState::loadAlbumDirectory()
                 //load image and insert at index
                 if (!image.empty())
                 {
-                    if (thumbImage.loadFromFile("assets/" + image))
+                    if (thumbImage.loadFromFile(m_settings.albumDirectory + "/" + image))
                     {
                         if (thumbImage.getSize().x != TexSize.x
                             || thumbImage.getSize().y != TexSize.y)
