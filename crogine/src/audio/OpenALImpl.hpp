@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,6 +41,7 @@ source distribution.
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alext.h>
 #endif
 
 #include <atomic>
@@ -117,6 +118,9 @@ namespace cro
             void setDopplerFactor(float) override;
             void setSpeedOfSound(float) override;
 
+            void playbackDisconnectEvent() override;
+            void recordDisconnectEvent() override;
+
             void printDebug() override;
 
         private:
@@ -142,6 +146,8 @@ namespace cro
 
             OpenALStream& getNextFreeStream();
             bool initStream(OpenALStream&);
+
+            void getDeviceList();
         };
     }
 }

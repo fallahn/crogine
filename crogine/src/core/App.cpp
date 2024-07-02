@@ -678,6 +678,15 @@ void App::handleEvents()
         case SDL_AUDIODEVICEREMOVED:
             //SDL ID of device
         {
+            if (evt.adevice.iscapture)
+            {
+                AudioRenderer::onRecordDisconnect();
+            }
+            else
+            {
+                AudioRenderer::onPlaybackDisconnect();
+            }
+
             //TODO how do we get something useful like the index/name of this device?
             LogI << "Device " << evt.adevice.which << " was disconnected" << std::endl;
         }
@@ -916,7 +925,7 @@ void App::removeWindows(const GuiClient* c)
             }), std::end(m_instance->m_debugWindows));
 }
 
-App::WindowSettings App::loadSettings() 
+App::WindowSettings App::loadSettings() const
 {
     WindowSettings settings;
 
