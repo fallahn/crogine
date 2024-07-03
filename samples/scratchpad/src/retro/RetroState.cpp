@@ -65,7 +65,7 @@ OUTPUT
 
 void main()
 {
-    vec2 offset = ((v_colour.gb * 2.0) - 1.0) * 0.01;
+    vec2 offset = ((v_colour.gb * 2.0) - 1.0) * 0.02;
     float r = TEXTURE(u_texture, v_texCoord + offset).r;
     float g = TEXTURE(u_texture, v_texCoord).r;
     float b = TEXTURE(u_texture, v_texCoord - offset).r;
@@ -675,7 +675,7 @@ void RetroState::LensFlare::update(const cro::Camera& cam)
             glm::vec2 OutputSize(cro::App::getWindow().getSize() / 2u);
 
             //use length of screenPos to calc brightness / set vert colour
-            const float Brightness = ((1.f - std::min(1.f, glm::length2(glm::vec2(ndc)))) * 0.4f) + 0.1f;
+            const float Brightness = ((1.f - std::min(1.f, glm::length2(glm::vec2(ndc)))) * 0.2f) + 0.1f;
 
             cro::Colour c = cro::Colour(Brightness, 1.f, 1.f, 1.f);
             std::int32_t i = 0;
@@ -684,6 +684,10 @@ void RetroState::LensFlare::update(const cro::Camera& cam)
                 const auto basePos = (point * OutputSize) + OutputSize;
                 const float uWidth = (1.f / MaxPoints);
                 const float u = uWidth * i;
+
+                auto r = c.getRed();
+                r *= (((1.f - std::min(1.f, glm::length2(glm::vec2(ndc)))) * 0.8f) + 0.2f);
+                c.setRed(r);
 
                 //the shader uses the NDC position to calc abberation
                 c.setGreen(std::clamp((point.x + 1.f) / 2.f, 0.f, 1.f));
