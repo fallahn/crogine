@@ -48,8 +48,8 @@ namespace
     constexpr float TextDepth = 0.f;
     constexpr float ImageDepth = 0.5f;
 
-    constexpr std::uint32_t LargeTextSize = 80;
-    constexpr std::uint32_t SmallTextSize = 60;
+    constexpr std::int32_t MaxFontSize = 100;
+    constexpr std::int32_t MinFontSize = 10;
 
     constexpr glm::vec3 TextPosition(ThumbSize.x + 80.f, ThumbSize.y - 40.f, TextDepth);
     constexpr float TransitionSpeed = 1.f; //seconds
@@ -308,7 +308,7 @@ void TrackOverlayState::createUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(titleFont).setString(title);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
-    entity.getComponent<cro::Text>().setCharacterSize(LargeTextSize);
+    entity.getComponent<cro::Text>().setCharacterSize(m_settings.titleFontSize);
 
     struct CallbackData final
     {
@@ -383,7 +383,7 @@ void TrackOverlayState::createUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(artistFont).setString(artist);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
-    entity.getComponent<cro::Text>().setCharacterSize(SmallTextSize);
+    entity.getComponent<cro::Text>().setCharacterSize(m_settings.artistFontSize);
     titleText.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_displayEnts.artistText = entity;
 
@@ -407,6 +407,12 @@ void TrackOverlayState::createUI()
                         }
                     }
 
+                    if (ImGui::InputInt("Size##0", &m_settings.titleFontSize))
+                    {
+                        m_settings.titleFontSize = std::clamp(m_settings.titleFontSize, MinFontSize, MaxFontSize);
+                        m_displayEnts.titleText.getComponent<cro::Text>().setCharacterSize(m_settings.titleFontSize);
+                    }
+
                     ImGui::Text("Artist Font: %s", cro::FileSystem::getFileName(m_settings.artistFont).c_str());
                     ImGui::SameLine();
                     if (ImGui::Button("Choose##1"))
@@ -419,6 +425,13 @@ void TrackOverlayState::createUI()
                             m_displayEnts.artistText.getComponent<cro::Text>().setFont(m_resources.fonts.get(FontID::Artist));
                         }
                     }
+
+                    if (ImGui::InputInt("Size##1", &m_settings.artistFontSize))
+                    {
+                        m_settings.artistFontSize = std::clamp(m_settings.artistFontSize, MinFontSize, MaxFontSize);
+                        m_displayEnts.artistText.getComponent<cro::Text>().setCharacterSize(m_settings.artistFontSize);
+                    }
+
                     ImGui::Text("Current Dir: %s", m_settings.albumDirectory.c_str());
                     ImGui::SameLine();
                     if (ImGui::Button("Choose##2"))
@@ -544,9 +557,17 @@ void TrackOverlayState::readSettings()
             {
                 m_settings.titleFont = prop.getValue<std::string>();
             }
+            else if (prop.getName() == "title_font_size")
+            {
+                m_settings.titleFontSize = std::clamp(prop.getValue<std::int32_t>(), MinFontSize, MaxFontSize);
+            }
             else if (prop.getName() == "artist_font")
             {
                 m_settings.artistFont = prop.getValue<std::string>();
+            }
+            else if (prop.getName() == "artist_font_size")
+            {
+                m_settings.artistFontSize = std::clamp(prop.getValue<std::int32_t>(), MinFontSize, MaxFontSize);
             }
             else if (prop.getName() == "directory")
             {
@@ -575,7 +596,9 @@ void TrackOverlayState::writeSettings() const
 {
     cro::ConfigFile cfg;
     cfg.addProperty("title_font").setValue(m_settings.titleFont);
+    cfg.addProperty("title_font_size").setValue(m_settings.titleFontSize);
     cfg.addProperty("artist_font").setValue(m_settings.artistFont);
+    cfg.addProperty("artist_font_size").setValue(m_settings.artistFontSize);
     cfg.addProperty("directory").setValue(m_settings.albumDirectory);
     cfg.save("settings.cfg");
 }

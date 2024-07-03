@@ -65,7 +65,9 @@ private:
     struct Settings final
     {
         std::string artistFont;
+        std::int32_t artistFontSize = 60;
         std::string titleFont;
+        std::int32_t titleFontSize = 80;
         std::string albumDirectory;
     }m_settings;
 
