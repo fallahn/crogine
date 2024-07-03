@@ -175,7 +175,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<TrackOverlayState>(States::ScratchPad::TrackOverlay);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::TrackOverlay);
+    m_stateStack.pushState(States::ScratchPad::Retro);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
