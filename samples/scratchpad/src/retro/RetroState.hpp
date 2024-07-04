@@ -71,6 +71,7 @@ private:
     {
         cro::Entity lightSource;
         glm::vec4 ndc = glm::vec4(0.f);
+        glm::vec3 samplePos = glm::vec3(0.f);
 
         bool visible = true;
         bool occluded = false;

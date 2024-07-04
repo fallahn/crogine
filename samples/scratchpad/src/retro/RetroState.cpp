@@ -434,6 +434,8 @@ void RetroState::createUI()
                 ImGui::Text("Light Source World: %3.2f, %3.2f, %3.2f", pos.x, pos.y, pos.z);
                 ImGui::Text("Light Source NDC: %3.2f, %3.2f", m_lensFlare.ndc.x, m_lensFlare.ndc.y);
                 
+                ImGui::Text("Sample Screen Pos: %3.2f, %3.2f, %3.2f", m_lensFlare.samplePos.x, m_lensFlare.samplePos.y, m_lensFlare.samplePos.z);
+
                 auto v = m_lensFlare.visible ? "True" : "False";
                 ImGui::Text("Light Source Visible: %s", v);
 
@@ -444,6 +446,8 @@ void RetroState::createUI()
 
                 const float l = glm::length2(glm::vec2(m_lensFlare.ndc));
                 ImGui::Text("Lens Length: %3.2f", l);
+
+                ImGui::Text("Light: %3.2f, Sample: %3.2f", glm::length2(pos), glm::length2(m_lensFlare.samplePos));
             }
             ImGui::End();
 
@@ -631,12 +635,15 @@ void RetroState::updateView(cro::Camera& cam3D)
 
 void RetroState::LensFlare::update(const cro::Camera& cam)
 {
+    const auto lightPos = lightSource.getComponent<cro::Transform>().getPosition();
+    const auto camPos = glm::vec3(0.f); //TODO don't fudge this
+
     const auto ndcVisible = [](glm::vec2 p)
         {
             return p.x >= -1.f && p.x <= 1.f && p.y >= -1.f && p.y <= 1.f;
         };
 
-    ndc = cam.getActivePass().viewProjectionMatrix * glm::vec4(lightSource.getComponent<cro::Transform>().getPosition(), 1.f);
+    ndc = cam.getActivePass().viewProjectionMatrix * glm::vec4(lightPos, 1.f);
 
     visible = (ndc.w > 0); //hm this only accounts for far clip....
     occluded = false;
@@ -651,14 +658,19 @@ void RetroState::LensFlare::update(const cro::Camera& cam)
         //this to print debug output with imgui.
         ndc.x /= ndc.w;
         ndc.y /= ndc.w;
+        //ndc.z /= ndc.w;
 
         glm::vec2 screenPos(ndc);
 
-        if (!ndcVisible(screenPos))
-        {
-            //TODO check depth map for occlusion
-            occluded = true;
-        }
+        //convert to pixel pos
+        //we've already done half the work obtaining the NDC so we could micro-optimise the rest of the conversion
+        //here instead of calling this function - but meh we're just writing the same code twice
+        auto windowPos = cam.coordsToPixel(lightSource.getComponent<cro::Transform>().getPosition());
+        glm::vec3 testCoords = glm::vec3(windowPos, 0.f);
+        glReadPixels(static_cast<std::int32_t>(testCoords.x), static_cast<std::int32_t>(testCoords.y), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &testCoords.z);
+
+        samplePos = glm::unProject(testCoords, cam.getActivePass().viewMatrix, cam.getProjectionMatrix(), glm::uvec4({0u,0u,cro::App::getWindow().getSize().x,cro::App::getWindow().getSize() .y}));
+        occluded = (glm::length2(samplePos) < glm::length2(lightPos)) || !ndcVisible(screenPos);
 
         if (!occluded)
         {
