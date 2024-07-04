@@ -428,6 +428,29 @@ void RetroState::createUI()
 {
     registerWindow([&]() 
         {
+            if (ImGui::Begin("Calc"))
+            {
+                static glm::vec3 buff(0.f);
+                static float rotation = 0.f;
+                static glm::vec3 result(0.f);
+                const auto updateCalc = [&]()
+                    {
+                        result = glm::rotate(cro::Transform::QUAT_IDENTITY, rotation * cro::Util::Const::degToRad, cro::Transform::Y_AXIS) * buff;
+                    };
+
+                if (ImGui::InputFloat3("Pos", &buff[0]))
+                {
+                    updateCalc();
+                }
+
+                if (ImGui::InputFloat("Rotation", &rotation))
+                {
+                    updateCalc();
+                }
+                ImGui::Text("Final Pos: %3.3f, %3.3f, %3.3f", result.x, result.y, result.z);
+            }
+            ImGui::End();
+
             if (ImGui::Begin("Lens Flare"))
             {
                 auto pos = m_lensFlare.lightSource.getComponent<cro::Transform>().getPosition();
@@ -684,7 +707,7 @@ void RetroState::LensFlare::update(const cro::Camera& cam)
 
             //why don't we just do this in the above loop?
             constexpr glm::vec2 QuadSize(64.f, 64.f); //TODO scale to screen size
-            glm::vec2 OutputSize(cro::App::getWindow().getSize() / 2u);
+            const glm::vec2 OutputSize(cro::App::getWindow().getSize() / 2u);
 
             //use length of screenPos to calc brightness / set vert colour
             const float Brightness = ((1.f - std::min(1.f, glm::length2(glm::vec2(ndc)))) * 0.2f) + 0.1f;

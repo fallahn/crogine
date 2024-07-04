@@ -304,7 +304,8 @@ struct ShaderID final
         Flag,
         TV,
         PointLight,
-        Glass
+        Glass,
+        LensFlare
 
     };
 };
@@ -966,10 +967,18 @@ struct SkyboxMaterials final
     std::int32_t horizon = -1;
     std::int32_t horizonSun = -1;
     std::int32_t skinned = -1;
+    
+    //if loading the skybox finds a 
+    //sun position this is set to true
+    //it's then up to the current game
+    //mode to act on it.
+    bool requestLensFlare = false;
+    glm::vec3 sunPos = glm::vec3(0.f);
 };
 
-//return the entity with the cloud ring (so we can apply material)
-static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials materials)
+//returns the entity with the cloud ring (so we can apply material)
+//and sets requesting the lensflare effect if the sun position is found
+static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials& materials)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
@@ -1006,6 +1015,11 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                 else if (name == "stars")
                 {
                     stars = p.getValue<float>();
+                }
+                else if (name == "sun_pos")
+                {
+                    materials.requestLensFlare = true;
+                    materials.sunPos = p.getValue<glm::vec3>();
                 }
             }
         }

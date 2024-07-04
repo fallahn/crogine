@@ -41,6 +41,7 @@ source distribution.
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -71,6 +72,7 @@ namespace
 #include "shaders/PostProcess.inl"
 #include "shaders/Glass.inl"
 #include "shaders/Blur.inl"
+#include "shaders/LensFlare.inl"
 }
 
 void GolfState::loadAssets()
@@ -365,6 +367,19 @@ void GolfState::loadMap()
         material.setProperty("u_skyColourTop", m_skyScene.getSkyboxColours().top);
         material.setProperty("u_skyColourBottom", m_skyScene.getSkyboxColours().middle);
         cloudRing.getComponent<cro::Model>().setMaterial(0, material);
+    }
+
+    if (materials.requestLensFlare
+        && m_sharedData.weatherType == WeatherType::Clear)
+    {
+        m_sunPosition = materials.sunPos;
+
+        //this is just used to signal the UI creation that we
+        //have a shader and we want to use it
+        if (m_resources.shaders.loadFromString(ShaderID::LensFlare, cro::RenderSystem2D::getDefaultVertexShader(), LensFlareFrag, "#define TEXTURED\n"))
+        {
+            m_materialIDs[MaterialID::LensFlare] = ShaderID::LensFlare;
+        }
     }
 
     if (m_sharedData.nightTime)

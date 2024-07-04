@@ -163,6 +163,7 @@ namespace cro
         */
         bool saveToFile(const std::string& path) const;
 
+        std::uint32_t getFrameBufferID() const override { return m_fboID; }
 
     private:
         std::uint32_t m_samples;
@@ -184,7 +185,5 @@ namespace cro
 
         bool createDefault(RenderTarget::Context);
         bool createMultiSampled(RenderTarget::Context);
-
-        std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };
 }

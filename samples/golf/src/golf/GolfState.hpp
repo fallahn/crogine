@@ -275,6 +275,7 @@ private:
             Flag,
             PointLight,
             Glass,
+            LensFlare,
 
             Count
         };
@@ -327,6 +328,7 @@ private:
     void createClouds();
     void buildBow();
     void handleWeatherChange(std::uint8_t);
+    void updateLensFlare(cro::Entity, float); //bound as a callback to the lens flare entity
 
     //GolfState.cpp
     void createDrone();
@@ -366,6 +368,7 @@ private:
     //allows switching camera, TV style (GolfStateCameras.cpp)
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
+    glm::vec3 m_sunPosition = glm::vec3(0.f); //used by lens flare if active
     void createCameras();
     void setActiveCamera(std::int32_t);
     void updateCameraHeight(float);

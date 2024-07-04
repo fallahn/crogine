@@ -288,6 +288,20 @@ void GolfState::buildUI()
     auto courseEnt = entity;
     m_courseEnt = courseEnt;
 
+    //if we have a lens flare material then create the lensflare entity
+    if (m_materialIDs[MaterialID::LensFlare] != -1)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.01f });
+        entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+        entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
+        entity.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("assets/golf/images/lens_flare.png"));
+        entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::LensFlare));
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            std::bind(&GolfState::updateLensFlare, this, std::placeholders::_1, std::placeholders::_2);
+    }
+
     //displays the trophies on round end - has to be displayed over top of scoreboard
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
