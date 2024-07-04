@@ -328,7 +328,6 @@ private:
     void createClouds();
     void buildBow();
     void handleWeatherChange(std::uint8_t);
-    void updateLensFlare(cro::Entity, float); //bound as a callback to the lens flare entity
 
     //GolfState.cpp
     void createDrone();
@@ -368,7 +367,6 @@ private:
     //allows switching camera, TV style (GolfStateCameras.cpp)
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
-    glm::vec3 m_sunPosition = glm::vec3(0.f); //used by lens flare if active
     void createCameras();
     void setActiveCamera(std::int32_t);
     void updateCameraHeight(float);
@@ -384,6 +382,18 @@ private:
     };
     std::array<cro::Entity, SkyCam::Count> m_skyCameras = {};
     void updateSkybox(float);
+
+    struct LensFlare final
+    {
+        glm::vec3 sunPos = glm::vec3(0.f);
+
+        std::uint32_t shaderID = 0;
+        std::int32_t positionUniform = -1;
+
+    }m_lensFlare;
+    void updateLensFlare(cro::Entity, float); //bound as a callback to the lens flare entity
+
+
 
     static const cro::Time DefaultIdleTime;
     cro::Time m_idleTime;

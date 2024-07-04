@@ -1827,3 +1827,87 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
         targetInfo.waterPlane.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
     }
 }
+
+void GolfState::updateLensFlare(cro::Entity e, float)
+{
+    const auto ndcVisible = [](glm::vec2 p)
+        {
+            return p.x >= -1.f && p.x <= 1.f && p.y >= -1.f && p.y <= 1.f;
+        };
+
+    const auto sceneCamPos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    auto ndc = m_skyScene.getActiveCamera().getComponent<cro::Camera>().getActivePass().viewProjectionMatrix * glm::vec4(m_lensFlare.sunPos, 1.f);
+
+    bool visible = (ndc.w > 0);
+    bool occluded = false;
+
+    auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+    verts.clear();
+
+    static constexpr std::int32_t FlareCount = 3; //set the initial stride from sun to screen centre - total is more than this
+    static constexpr std::int32_t MaxPoints = 6; //max number of quads - may be few if point count is clipped by screen
+
+    if (visible)
+    {
+        glm::vec2 screenPos(ndc);
+        screenPos /= ndc.w;
+        occluded = !ndcVisible(screenPos);
+
+        if (!occluded)
+        {
+            const glm::vec2 OutputSize(/*m_gameSceneTexture.getSize()*/cro::App::getWindow().getSize() / 2u);
+            const glm::vec2 QuadSize(48.f * m_viewScale.x);
+
+            auto depthUV = screenPos + glm::vec2(1.f);
+            depthUV /= 2.f;
+
+            glUseProgram(m_lensFlare.shaderID);
+            glUniform2f(m_lensFlare.positionUniform, depthUV.x, depthUV.y);
+
+            //use length of screenPos to calc brightness / set vert colour
+            const float Brightness = (cro::Util::Easing::easeOutCubic(1.f - std::min(1.f, glm::length(screenPos))) * 0.2f) + 0.1f;
+            cro::Colour c = cro::Colour(Brightness * 0.2f, 1.f, 1.f, 1.f);
+            std::int32_t i = 0;
+
+            //create the quads
+            const glm::vec2 Stride = screenPos / FlareCount;
+            do
+            {
+                screenPos -= Stride;
+
+                auto point = screenPos;
+                const auto basePos = (point * OutputSize) + OutputSize;
+                const float uWidth = (1.f / MaxPoints);
+                const float u = uWidth * i;
+
+                auto r = c.getRed();
+                r *= (((1.f - std::min(1.f, glm::length2(glm::vec2(screenPos)))) * 0.8f) + 0.2f);
+                c.setRed(r);
+
+                //the shader uses the NDC position to calc abberation
+                //TODO this should probably be scaled with render buffer size?
+                c.setGreen(std::clamp((point.x + 1.f) / 2.f, 0.f, 1.f));
+                c.setBlue(std::clamp((point.y + 1.f) / 2.f, 0.f, 1.f));
+
+                verts.emplace_back(glm::vec2(basePos.x - QuadSize.x, basePos.y + QuadSize.y), glm::vec2(u, 1.f), c);
+                verts.emplace_back(basePos - QuadSize, glm::vec2(u, 0.f), c);
+                verts.emplace_back(basePos + QuadSize, glm::vec2(u + uWidth, 1.f), c);
+
+                verts.emplace_back(basePos + QuadSize, glm::vec2(u + uWidth, 1.f), c);
+                verts.emplace_back(basePos - QuadSize, glm::vec2(u, 0.f), c);
+                verts.emplace_back(glm::vec2(basePos.x + QuadSize.x, basePos.y - QuadSize.y), glm::vec2(u + uWidth, 0.f), c);
+                i++;
+
+            } while (ndcVisible(screenPos) && i < MaxPoints);
+
+            if (!verts.empty())
+            {
+                e.getComponent<cro::Drawable2D>().updateLocalBounds();
+            }
+
+            //make sure we're still visible in free cam mode/hidden UI
+            float depth = m_courseEnt.getComponent<cro::Transform>().getOrigin().z;
+            e.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, depth });
+        }
+    }
+}

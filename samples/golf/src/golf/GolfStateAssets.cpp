@@ -372,13 +372,17 @@ void GolfState::loadMap()
     if (materials.requestLensFlare
         && m_sharedData.weatherType == WeatherType::Clear)
     {
-        m_sunPosition = materials.sunPos;
+        m_lensFlare.sunPos = materials.sunPos;
 
         //this is just used to signal the UI creation that we
         //have a shader and we want to use it
         if (m_resources.shaders.loadFromString(ShaderID::LensFlare, cro::RenderSystem2D::getDefaultVertexShader(), LensFlareFrag, "#define TEXTURED\n"))
         {
             m_materialIDs[MaterialID::LensFlare] = ShaderID::LensFlare;
+
+            const auto& shader = m_resources.shaders.get(ShaderID::LensFlare);
+            m_lensFlare.shaderID = shader.getGLHandle();
+            m_lensFlare.positionUniform = shader.getUniformID("u_sourcePosition");
         }
     }
 

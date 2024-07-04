@@ -34,7 +34,7 @@ source distribution.
 static const inline std::string LensFlareFrag =
 R"(
 uniform sampler2D u_texture;
-uniform sampler2D u_depthMap;
+uniform sampler2D u_depthTexture;
 uniform vec2 u_sourcePosition = vec2(0.5);
 
 VARYING_IN vec2 v_texCoord;
@@ -42,19 +42,21 @@ VARYING_IN vec4 v_colour;
 
 OUTPUT
 
+const float Cutoff = 0.3;
+
 #include FOG_COLOUR
 
 void main()
 {
-    float depth = TEXTURE(u_depthMap, u_sourcePosition).r;
+    float depth = TEXTURE(u_depthTexture, u_sourcePosition).r;
     float dist = getDistance(depth);
 
-    vec2 offset = ((v_colour.gb * 2.0) - 1.0) * 0.02;
+    vec2 offset = ((v_colour.gb * 2.0) - 1.0) * 0.021;
     float r = TEXTURE(u_texture, v_texCoord + offset).r;
-    float g = TEXTURE(u_texture, v_texCoord).r;
-    float b = TEXTURE(u_texture, v_texCoord - offset).r;
+    float g = TEXTURE(u_texture, v_texCoord).r * 0.8;
+    float b = TEXTURE(u_texture, v_texCoord - offset).r * 0.4;
 
-    FRAG_OUT.rgb = vec3(step(0.5, dist));// vec3(r,g,b) * v_colour.r * (step(0.99, dist));
+    FRAG_OUT.rgb = vec3(r,g,b) * v_colour.r * step(Cutoff, dist);
     FRAG_OUT.a = 1.0;
 }
 )";

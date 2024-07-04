@@ -279,13 +279,6 @@ void GolfState::buildUI()
         m_postProcesses[PostID::CompositeDOF].uniforms.emplace_back(std::make_pair("u_dofTexture", cro::TextureID(m_focusTexture.getTexture())));
     }    
 
-    registerWindow([&]()
-        {
-            ImGui::Begin("sdsd");
-            const auto& t = m_gameSceneTexture.getDepthTexture();
-            ImGui::Image(t, { 200.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
-            ImGui::End();
-        });
 
     for (auto cam : m_cameras)
     {
@@ -299,11 +292,14 @@ void GolfState::buildUI()
     if (m_materialIDs[MaterialID::LensFlare] != -1
         && !m_sharedData.nightTime) //should never be true, but hey
     {
+        auto& t = m_resources.textures.get("assets/golf/images/lens_flare.png");
+        t.setRepeated(false);
+
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.01f });
         entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-        //entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
-        entity.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("assets/golf/images/lens_flare.png"));
+        entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
+        entity.getComponent<cro::Drawable2D>().setTexture(&t);
         entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::LensFlare));
         entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
         entity.addComponent<cro::Callback>().active = true;
