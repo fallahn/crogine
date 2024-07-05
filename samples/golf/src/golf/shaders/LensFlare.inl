@@ -53,11 +53,12 @@ void main()
 
     //vec2 offset = ((v_colour.gb * 2.0) - 1.0) * 0.021;
 
-    vec2 offset = ((v_texCoord - v_colour.gb) * 0.0999);
+    vec2 offsetS = ((v_texCoord - v_colour.gb) * 0.0999);
+    vec2 offsetP = (u_sourcePosition - vec2(0.5)) * 0.021;
 
-    float r = TEXTURE(u_texture, v_texCoord + offset).r;
+    float r = TEXTURE(u_texture, v_texCoord + offsetS + offsetP).r;
     float g = TEXTURE(u_texture, v_texCoord).r;
-    float b = TEXTURE(u_texture, v_texCoord - offset).r;
+    float b = TEXTURE(u_texture, v_texCoord - offsetS - offsetP).r;
 
     FRAG_OUT.rgb = vec3(r,g,b) * v_colour.r * step(Cutoff, dist);
     FRAG_OUT.a = 1.0;
