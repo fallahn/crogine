@@ -51,10 +51,13 @@ void main()
     float depth = TEXTURE(u_depthTexture, u_sourcePosition).r;
     float dist = getDistance(depth);
 
-    vec2 offset = ((v_colour.gb * 2.0) - 1.0) * 0.021;
+    //vec2 offset = ((v_colour.gb * 2.0) - 1.0) * 0.021;
+
+    vec2 offset = ((v_texCoord - v_colour.gb) * 0.0999);
+
     float r = TEXTURE(u_texture, v_texCoord + offset).r;
-    float g = TEXTURE(u_texture, v_texCoord).r * 0.8;
-    float b = TEXTURE(u_texture, v_texCoord - offset).r * 0.4;
+    float g = TEXTURE(u_texture, v_texCoord).r;
+    float b = TEXTURE(u_texture, v_texCoord - offset).r;
 
     FRAG_OUT.rgb = vec3(r,g,b) * v_colour.r * step(Cutoff, dist);
     FRAG_OUT.a = 1.0;

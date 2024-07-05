@@ -289,8 +289,7 @@ void GolfState::buildUI()
     m_courseEnt = courseEnt;
 
     //if we have a lens flare material then create the lensflare entity
-    if (m_materialIDs[MaterialID::LensFlare] != -1
-        && !m_sharedData.nightTime) //should never be true, but hey
+    if (m_materialIDs[MaterialID::LensFlare] != -1)
     {
         auto& t = m_resources.textures.get("assets/golf/images/lens_flare.png");
         t.setRepeated(false);
@@ -301,10 +300,19 @@ void GolfState::buildUI()
         entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
         entity.getComponent<cro::Drawable2D>().setTexture(&t);
         entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::LensFlare));
-        entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
             std::bind(&GolfState::updateLensFlare, this, std::placeholders::_1, std::placeholders::_2);
+
+        if (!m_sharedData.nightTime)
+        {
+            entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
+
+        }
+        else
+        {
+            entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getDepthTexture());
+        }
     }
 
     //displays the trophies on round end - has to be displayed over top of scoreboard

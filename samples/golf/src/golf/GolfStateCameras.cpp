@@ -1835,7 +1835,6 @@ void GolfState::updateLensFlare(cro::Entity e, float)
             return p.x >= -1.f && p.x <= 1.f && p.y >= -1.f && p.y <= 1.f;
         };
 
-    const auto sceneCamPos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
     auto ndc = m_skyScene.getActiveCamera().getComponent<cro::Camera>().getActivePass().viewProjectionMatrix * glm::vec4(m_lensFlare.sunPos, 1.f);
 
     bool visible = (ndc.w > 0);
@@ -1855,7 +1854,7 @@ void GolfState::updateLensFlare(cro::Entity e, float)
 
         if (!occluded)
         {
-            const glm::vec2 OutputSize(/*m_gameSceneTexture.getSize()*/cro::App::getWindow().getSize() / 2u);
+            const glm::vec2 OutputSize(cro::App::getWindow().getSize() / 2u);
             const glm::vec2 QuadSize(48.f * m_viewScale.x);
 
             auto depthUV = screenPos + glm::vec2(1.f);
@@ -1877,17 +1876,18 @@ void GolfState::updateLensFlare(cro::Entity e, float)
 
                 auto point = screenPos;
                 const auto basePos = (point * OutputSize) + OutputSize;
-                const float uWidth = (1.f / MaxPoints);
+                constexpr float uWidth = (1.f / MaxPoints);
                 const float u = uWidth * i;
 
                 auto r = c.getRed();
                 r *= (((1.f - std::min(1.f, glm::length2(glm::vec2(screenPos)))) * 0.8f) + 0.2f);
                 c.setRed(r);
 
-                //the shader uses the NDC position to calc abberation
-                //TODO this should probably be scaled with render buffer size?
-                c.setGreen(std::clamp((point.x + 1.f) / 2.f, 0.f, 1.f));
-                c.setBlue(std::clamp((point.y + 1.f) / 2.f, 0.f, 1.f));
+
+                //store the centre point of the quad texture so we can scale it in the shader
+                //for an abberation effect
+                c.setGreen(std::clamp(u + (uWidth / 2.f), 0.f, 1.f));
+                c.setBlue(0.5f);
 
                 verts.emplace_back(glm::vec2(basePos.x - QuadSize.x, basePos.y + QuadSize.y), glm::vec2(u, 1.f), c);
                 verts.emplace_back(basePos - QuadSize, glm::vec2(u, 0.f), c);
