@@ -113,6 +113,96 @@ namespace cro
             PaddleR5 = SDL_CONTROLLER_BUTTON_PADDLE3,
         };
 
+        enum
+        {
+            DSTriggerLeft  = 0x1,
+            DSTriggerRight = 0x2,
+            DSTriggerBoth  = DSTriggerLeft | DSTriggerRight
+        };
+
+        enum
+        {
+            DSModeOff            = 0x05,
+            DSModeFeedback       = 0x21,
+            DSModeWeapon         = 0x25,
+            DSModeVibrate        = 0x26,
+
+            DSModeFeedbackSimple = 0x01,
+            DSModeWeaponSimple   = 0x02,
+            DSModeVibrateSimple  = 0x06
+        };
+
+        /*!
+        \brief Used to supply effect parameters to DualSense trigger effects
+        */
+        struct CRO_EXPORT_API DSEffect final
+        {
+            //DSMode enum
+            std::uint8_t mode = DSModeOff;
+
+            //params vary based on the above mode
+            //so factory functions are provided for
+            //creating a variety of presets (below)
+            std::array<std::uint8_t, 10> params = {};
+
+            DSEffect() { std::fill(params.begin(), params.end(), 0); }
+            explicit DSEffect(std::uint8_t dsMode) : mode(dsMode) { std::fill(params.begin(), params.end(), 0); }
+
+            /*!
+            \brief Feedback effects resist movement atfer a given position
+            \param position Value between 0-9 at which to start resisting movement
+            \param strength The amount of resistance to apply. 0-8
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createFeedback(std::uint8_t position, std::uint8_t strength);
+
+            /*!
+            \brief Weapon effects resist movement between the given start and end position.
+            This is usually used to emulate the trigger of a gun for example.
+            \param startPosition The position at which the effect starts. Must be between 2-7
+            \param endPosition The position at which the effect ends. Must be between startPosition +1
+            and 8
+            \param strength The strength of the resistance to apply. 0-8
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createWeapon(std::uint8_t startPosition, std::uint8_t endPosition, std::uint8_t strength);
+
+            /*!
+            \brief Creates a vibration effect when the trigger is pressed beyond the given position
+            \param position The starting point for the effect. 0-9
+            \param strength The strength or amplitude of the vibration. 0-8
+            \param frequency The frequency of the vibration in hertz
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createVibration(std::uint8_t position, std::uint8_t strength, std::uint8_t frequency);
+
+            /*!
+            \brief Creates 10 regions of resistance when pressing the trigger.
+            \param values An array of 10 values between 0-8 representing the strength of each region
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createMultiFeedback(const std::array<std::uint8_t, 10u>& values);
+
+            /*!
+            \brief Creates a linear range of resistance from the given start position to the given
+            end position interpolated between the given start strength and the given end strength
+            \param startPosition The starting position of the effect 0-8
+            \param endPosition The end point of the effect (startPosition+1) - 9
+            \param startStrength The amount of resistance at the start point 1-8
+            \param endStrength The amount of resistance at the endPoint 1-8
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createSlopeFeedback(std::uint8_t startPosition, std::uint8_t endPosition, std::uint8_t startStrength, std::uint8_t endStrength);
+
+            /*!
+            \brief Creates a vibration effect of 10 varying strengths at the same frequency
+            \param strengths An array of 10 values representing the 10 ampltude/strengths. Values must be 0-8
+            \param frquency The frequency of the effect in hertz
+            \returns DSEffect object to use with appyDSTriggerEffect()
+            */
+            static DSEffect createMultiVibration(const std::array<std::uint8_t, 10u>& strengths, std::uint8_t frequency);
+        };
+
         static constexpr std::int16_t AxisMax = 32767;
         static constexpr std::int16_t AxisMin = -32768;
 
@@ -120,6 +210,12 @@ namespace cro
         static constexpr std::int16_t LeftThumbDeadZone = 7849;
         static constexpr std::int16_t RightThumbDeadZone = 8689;
         static constexpr std::int16_t TriggerDeadZone = 30;
+
+        /*!
+        \brief Maximum number of game controllers which may be connected
+        Note that this does not include joystick devices.
+        */
+        static constexpr std::int32_t MaxControllers = 12;
 
         /*!
         \brief Returns the event ID associated with the controller at the given index
@@ -265,11 +361,30 @@ namespace cro
         static void setLEDColour(std::int32_t controllerIndex, cro::Colour colour);
 
         /*!
-        \brief Maximum number of game controllers which may be connected
-        Note that this does not include joystick devices.
+        \brief Applies a trigger effect to the given controller if it is a DualSense
+        compatible controller else does nothing.
+        \param controllerIndex Which controller to apply the effect to
+        \param triggers DSTrigger flags for which triggers to affect
+        \param settings DSEffect struct containing the parameters for the desired effect.
+        Note that a default constructed DSEEffect will reset the trigger state to none
+        \returns true if the effect was applied else false if the given controller index
+        was not valid or the controller is not a DualSense controller
         */
-        static constexpr std::int32_t MaxControllers = 12;
-    private:
+        static bool applyDSTriggerEffect(std::int32_t controllerIndex, std::int32_t triggers, const DSEffect& settings);
 
+        /*!
+        \brief Returns the player index of the last controller to recieve an event
+        */
+        static std::int32_t getLastControllerID() { return m_lastControllerIndex; }
+
+        /*!
+        \brief Returns thet Steam input ID of this controller if we're on a Steam deck
+        else returns zero
+        */
+        static  std::uint64_t getSteamHandle(std::int32_t controllerID);
+
+    private:
+        friend class App;
+        static std::int32_t m_lastControllerIndex; //tracks which controller last had input
     };
 }

@@ -129,6 +129,11 @@ namespace cro
         */
         const std::uint8_t* getPixel(std::size_t x, std::size_t y) const;
 
+        /*!
+        \brief Attempts to resize the Image to the given dimensions
+        \returns true on success or false on failure or if no image is loaded
+        */
+        bool resize(glm::uvec2 newSize);
 
     private:
         glm::uvec2 m_size = glm::uvec2(0);

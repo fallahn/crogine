@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "Thumbsticks.hpp"
+
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/core/HiResTimer.hpp>
@@ -77,6 +79,12 @@ public:
     };
     std::int32_t getState() const { return m_state; }
 
+    //allows any controller input if there's a single human on a client
+    void setHumanCount(std::int32_t c) { m_humanCount = c; }
+
+    //whichever controller ID took the shot (ID, NOT index)
+    std::int32_t getLastActiveController() const;
+
 private:
     const SharedStateData& m_sharedData;
     std::int32_t m_enabled;
@@ -101,6 +109,10 @@ private:
     {
         "Inactive", "Swing", "Summarise"
     };
+
+    Thumbsticks m_thumbsticks;
+    std::int32_t m_humanCount;
+    std::int32_t m_activeControllerID; //controller used to initiate swing
 
     struct MouseSwing final
     {

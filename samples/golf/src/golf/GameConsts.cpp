@@ -28,27 +28,62 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GameConsts.hpp"
+#include "Social.hpp"
 #include "../M3UPlaylist.hpp"
 
-void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity gameMusic)
+#ifdef USE_GNS
+#include "Input.hpp"
+#endif
+
+bool hasPSLayout(std::int32_t controllerID)
+{
+#ifdef USE_GNS
+    if (Social::isSteamdeck())
+    {
+        return Input::isPSController(cro::GameController::getSteamHandle(controllerID));  
+    }
+#endif
+    return cro::GameController::hasPSLayout(controllerID);
+}
+
+[[nodiscard]] cro::Entity createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity gameMusic)
 {
     //parse any music files into a playlist
     M3UPlaylist m3uPlaylist(audio, Social::getBaseContentPath() + "music/");
 
     if (m3uPlaylist.getTrackCount() == 0)
     {
-        //look in the fallback dir
-        const auto MusicDir = "assets/golf/sound/music/";
-        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
-        {
-            const auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + MusicDir);
-            for (const auto& file : files)
+        const auto loadFiles = [&](const std::string& path, const std::string& root)
             {
-                //this checks the file has a valid extension
-                //and limits the number of files loaded
-                m3uPlaylist.addTrack(MusicDir + file);
+                const auto files = cro::FileSystem::listFiles(path);
+                for (const auto& file : files)
+                {
+                    //this checks the file has a valid extension
+                    //and limits the number of files loaded
+                    m3uPlaylist.addTrack(root + file);
+                }
+                m3uPlaylist.shuffle();
+            };
+
+
+#ifdef USE_GNS
+        //see if the soundtrack is installed and prefer that
+        auto soundtrackPath = Social::getSoundTrackPath();
+        if (!soundtrackPath.empty()
+            && cro::FileSystem::directoryExists(soundtrackPath + u8"/mp3/"))
+        {
+            loadFiles(soundtrackPath + u8"/mp3/", soundtrackPath + u8"/mp3/");
+        }
+
+        if (m3uPlaylist.getTrackCount() == 0)
+#endif
+        {
+            //look in the fallback dir
+            const auto MusicDir = "assets/golf/sound/music/";
+            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
+            {
+                loadFiles(cro::FileSystem::getResourcePath() + MusicDir, MusicDir);
             }
-            m3uPlaylist.shuffle();
         }
     }
 
@@ -61,12 +96,6 @@ void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity
     //if the playlist isnt empty, create the music playing entities
     if (auto trackCount = m3uPlaylist.getTrackCount(); trackCount != 0)
     {
-        struct MusicPlayerData final
-        {
-            std::vector<cro::Entity> playlist;
-            std::size_t currentIndex = 0;
-        };
-
         auto playerEnt = scene.createEntity();
         playerEnt.addComponent<cro::Transform>();
         playerEnt.addComponent<cro::Callback>().active = true;
@@ -134,9 +163,11 @@ void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity
         for (auto i = 0u; i < trackCount; ++i)
         {
             const auto id = m3uPlaylist.getCurrentTrack();
+            const std::string trackName = m3uPlaylist.getCurrentTrackName();
             m3uPlaylist.nextTrack();
 
             auto entity = scene.createEntity();
+            entity.setLabel(trackName);
             entity.addComponent<cro::Transform>();
             entity.addComponent<cro::AudioEmitter>().setSource(audio.get(id));
             entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
@@ -148,5 +179,9 @@ void createMusicPlayer(cro::Scene& scene, cro::AudioResource& audio, cro::Entity
         {
             playlist[0].getComponent<cro::AudioEmitter>().play();
         }
+
+        return playerEnt;
     }
+
+    return {};
 }

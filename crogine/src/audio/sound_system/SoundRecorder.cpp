@@ -44,20 +44,74 @@ source distribution.
 #include <AL/alc.h>
 #endif
 
-#include <opus.h>
+#include <cstring>
 
-#define RECORDING_DEVICE static_cast<ALCdevice*>(m_recordingDevice)
-#define OPUS_ENCODER static_cast<OpusEncoder*>(m_encoder)
+//#define RECORDING_DEVICE static_cast<ALCdevice*>(m_recordingDevice)
+#define RECORDING_DEVICE m_recordingDevice
+#define CAPTURE_CONTEXT(X) static_cast<cro::Detail::CaptureContext*>(X)
+
+/*
+Let's clarify a few things
+When we talk about FRAME_SIZE we mean the number od SAMPLES in a frame.
+FRAME_SIZE is directly proportional to SAMPLE_RATE where it is 1/25
+
+A SAMPLE is made up of as many channels available so SAMPLE_SIZE = CHANNEL_COUNT
+DATA_SIZE is the size in BYTES of a sample which is SAMPLE_SIZE * sizeof(T)
+where T is float, int16 or uint8.
+
+The sound recorder ALWAYS captures raw audio in STEREO (2 channels) at 48000Khz,
+floating point. The capture callback feeds this through an SDL AudioStream which 
+converts the sample rate and channel count to that which was requested when the
+device was opened. It remains as float, and is written to a circular buffer
+3 FRAMES in size. If the requested hardware do not support Stereo 48Khz float
+opening the device will deliberately FAIL.
+
+Data is stored in the circular buffer to give any optional effects on the
+effects stack to be applied, before the data is fed into a second SDL
+AudioStream which does the final conversion to the required output.
+
+*/
+
 
 using namespace cro;
 
 namespace
 {
-    constexpr ALCsizei RECORD_BUFFER_SIZE = 4096;
-    constexpr std::uint32_t PCMBufferSize = 10240; //testing shows we cap either 220 or 441 frames at a time (@60hz)
-    constexpr std::uint32_t PCMBufferWrapSize = PCMBufferSize - (PCMBufferSize / 10); //so we want to wrap our pointer with enough room to spare
-    constexpr std::uint32_t SAMPLE_RATE = 22050;
-    constexpr std::uint32_t SAMPLE_SIZE = sizeof(std::uint16_t);
+    constexpr std::int32_t CAPTURE_CHANNELS = 2;
+    constexpr std::int32_t CAPTURE_RATE = 48000;
+    constexpr std::int32_t CAPTURE_FRAMES = 5; //number of frames which fit in the circular buffer
+
+    void captureCallback(void* userdata, Uint8* stream, int len)
+    {
+        //this is automatically locked on its thread by SDL
+        //HOWEVER we must lock the audio device when accessing
+        //the capture context anywhere else.
+        auto* ctx = CAPTURE_CONTEXT(userdata);
+
+        SDL_AudioStreamPut(ctx->conversionStream, stream, len);
+
+        auto available = SDL_AudioStreamAvailable(ctx->conversionStream);
+        if (available > ctx->FrameSizeBytes)
+        {
+            SDL_AudioStreamGet(ctx->conversionStream, &ctx->circularBuffer[ctx->bufferInput], ctx->FrameSizeBytes);
+            ctx->bufferInput = (ctx->bufferInput + ctx->FrameStride) % ctx->BufferSize;
+            ctx->buffAvailable += ctx->FrameStride;
+
+            if (ctx->bufferInput == ctx->bufferOutput)
+            {
+                ctx->bufferOutput = ((ctx->bufferInput - ctx->FrameStride) + ctx->BufferSize) % ctx->BufferSize;
+                ctx->buffAvailable = ctx->FrameStride;
+            }
+        }
+    }
+
+    constexpr std::array OPUS_SAMPLE_RATES =
+    {
+        8000, 12000, 16000, 24000, 48000
+    };
+
+    constexpr std::uint32_t OPUS_MAX_PACKET_SIZE = 1276 * 3;
+    constexpr std::uint32_t OPUS_BITRATE = 56000;
 
     const std::string MissingDevice("No Device Active");
     const std::string DefaultDevice("Default");
@@ -70,35 +124,46 @@ namespace
 
 SoundRecorder::SoundRecorder()
     : m_deviceIndex     (-1),
-    m_recordingDevice   (nullptr),
+    m_recordingDevice   (0),
     m_active            (false),
-    m_encoder           (nullptr),
-    m_pcmBuffer         (PCMBufferSize),
-    m_pcmDoubleBuffer   (PCMBufferSize),
-    m_pcmBufferOffset   (0),
-    m_pcmBufferReady    (false)
+    m_channelCount      (0),
+    m_sampleRate        (0),
+    m_frameSize         (0),
+    m_captureStream     (nullptr),
+    m_captureContext    (0,0),
+    m_outputStream      (nullptr)
 {
     enumerateDevices();
 
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]() 
-        {
-            if (ImGui::Begin("Sound Recorder Debug"))
-            {
-                ImGui::Text("PCM Buffer Size %d", pcmBufferCaptureSize);
-            }
-            ImGui::End();
-        });*/
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Sound Recorder Debug"))
+    //        {
+    //            /*SDL_LockAudioDevice(m_recordingDevice);
+    //            ImGui::PlotLines("Input Buffer", m_captureContext.circularBuffer, m_captureContext.BufferSize);
+    //            SDL_UnlockAudioDevice(m_recordingDevice);*/
+
+    //            //ImGui::Text("PCM Buffer Size %d", pcmBufferCaptureSize);
+    //            //ImGui::PlotLines("Process Buffer", m_processBuffer.data(), m_processBuffer.size());
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
 SoundRecorder::~SoundRecorder()
 {
-    stop();
     closeDevice();
 }
 
 //public
+void SoundRecorder::refreshDeviceList()
+{
+    m_deviceList.clear();
+    enumerateDevices();
+}
+
 const std::vector<std::string>& SoundRecorder::listDevices() const
 {
     return m_deviceList;
@@ -114,11 +179,23 @@ const std::string& SoundRecorder::getActiveDevice() const
     return MissingDevice;
 }
 
-bool SoundRecorder::openDevice(const std::string& device)
+bool SoundRecorder::openDevice(const std::string& device, std::int32_t channelCount, std::int32_t sampleRate, bool createEncoder)
 {
+    CRO_ASSERT(channelCount == 1 || channelCount == 2, "Only mono and stereo are supported");
+    CRO_ASSERT(sampleRate >= 8000, "Sample rate must be at least 8KHz");
+    m_channelCount = channelCount;
+    m_sampleRate = sampleRate;
+    m_frameSize = sampleRate / 25;
+    
     if (!AudioRenderer::isValid())
     {
         LogE << "SoundRecorder::openDevice(): No valid audio renderer available." << std::endl;
+        return false;
+    }
+
+    if (m_deviceList.empty())
+    {
+        LogE << "SoundRecorder::openDevice(): No recording devices are available" << std::endl;
         return false;
     }
 
@@ -133,6 +210,20 @@ bool SoundRecorder::openDevice(const std::string& device)
         m_deviceIndex = -1;
     }
 
+
+    if (createEncoder &&
+        std::find(OPUS_SAMPLE_RATES.begin(), OPUS_SAMPLE_RATES.end(), sampleRate) != OPUS_SAMPLE_RATES.end())
+    {
+        //create the opus encoder and decoder
+        Opus::Context ctx;
+        ctx.channelCount = channelCount;
+        ctx.sampleRate = sampleRate;
+        ctx.bitrate = OPUS_BITRATE;
+        ctx.maxPacketSize = OPUS_MAX_PACKET_SIZE;
+
+        m_encoder = std::make_unique<Opus>(ctx);
+    }
+
     return openSelectedDevice();
 }
 
@@ -140,46 +231,32 @@ void SoundRecorder::closeDevice()
 {
     if (m_recordingDevice)
     {
-        alcCaptureCloseDevice(RECORDING_DEVICE);
+        SDL_CloseAudioDevice(m_recordingDevice);
     }
-    m_recordingDevice = nullptr;
-}
 
-bool SoundRecorder::start()
-{
-    if (m_active)
+    if (m_captureStream)
     {
-        return true;
+        SDL_AudioStreamClear(m_captureStream);
+        SDL_FreeAudioStream(m_captureStream);
     }
 
-    if (!AudioRenderer::isValid())
+    if (m_outputStream)
     {
-        LogE << "SoundRecorder::start(): No valid audio renderer available." << std::endl;
-        return false;
+        SDL_AudioStreamClear(m_outputStream);
+        SDL_FreeAudioStream(m_outputStream);
     }
 
-    //opens device if not yet open
-    if (!openSelectedDevice())
+    for (auto& effect : m_processEffects)
     {
-        return false;
+        effect->reset();
     }
 
-
-    alcCaptureStart(RECORDING_DEVICE);
-    m_active = true;
-    m_pcmBufferOffset = 0;
-
-    return true;
-}
-
-void SoundRecorder::stop()
-{
-    if (m_recordingDevice)
-    {
-        alcCaptureStop(RECORDING_DEVICE);
-    }
     m_active = false;
-    m_pcmBufferReady = false;
+
+    m_recordingDevice = 0;
+    m_captureStream = nullptr;
+    m_outputStream = nullptr;
+    m_encoder.reset();
 }
 
 bool SoundRecorder::isActive() const
@@ -187,102 +264,184 @@ bool SoundRecorder::isActive() const
     return m_active;
 }
 
-const std::uint8_t* SoundRecorder::getEncodedPackets(std::int32_t* count) const
+void SoundRecorder::getEncodedPacket(std::vector<std::uint8_t>& dst) const
 {
-    if (m_recordingDevice && m_active)
+    dst.clear();
+
+    if (m_encoder)
     {
-        ALCint sampleCount = 0;
-
-        alcGetIntegerv(RECORDING_DEVICE, ALC_CAPTURE_SAMPLES, 1, &sampleCount);
-        alcCaptureSamples(RECORDING_DEVICE, m_pcmBuffer.data() + m_pcmBufferOffset, sampleCount);
-
-        auto lastOffset = m_pcmBufferOffset;
-        m_pcmBufferOffset = (m_pcmBufferOffset + sampleCount) % PCMBufferWrapSize;
-
-        if (m_pcmBufferOffset < lastOffset)
+        if (hasProcessedBuffer())
         {
-            //we wrapped around so we must have a reasonable amount buffered
-            m_pcmBufferReady = true;
-
-            //return the largest initial buffer
-            m_pcmDoubleBuffer.swap(m_pcmBuffer);
-            *count = static_cast<std::int32_t>(PCMBufferWrapSize + m_pcmBufferOffset);
-            m_pcmBufferOffset = 0;
-            return reinterpret_cast<std::uint8_t*>(m_pcmDoubleBuffer.data());
+            m_encoder->encode(m_processBuffer.data(), dst);
         }
+    }
+}
 
-        if (m_pcmBufferReady)
+const std::int16_t* SoundRecorder::getPCMData(std::int32_t* count) const
+{
+    if (m_recordingDevice
+        && hasProcessedBuffer())
+    {
+        SDL_AudioStreamPut(m_outputStream, m_processBuffer.data(), m_processBuffer.size() * sizeof(float));
+        if (SDL_AudioStreamAvailable(m_outputStream) >= m_outputBuffer.size() * sizeof(std::int16_t))
         {
-            //otherwise return whatever we have available to prevent drop outs
-            m_pcmDoubleBuffer.swap(m_pcmBuffer);
-            *count = static_cast<std::int32_t>(m_pcmBufferOffset);
-            m_pcmBufferOffset = 0;
-            return reinterpret_cast<std::uint8_t*>(m_pcmDoubleBuffer.data());
+            SDL_AudioStreamGet(m_outputStream, m_outputBuffer.data(), m_outputBuffer.size() * sizeof(std::int16_t));
+            *count = m_frameSize;
+            return m_outputBuffer.data();
         }
-
-
-
-        //TODO once the pcm buffer reaches an encodable size
-        //encode the buffer and reset the buffer offset
     }
 
-
-
     *count = 0;
-
     return nullptr;
 }
 
+std::int32_t SoundRecorder::getChannelCount() const
+{
+    return m_channelCount;
+}
+
+std::int32_t SoundRecorder::getSampleRate() const
+{
+    return m_sampleRate;
+}
+
+
 //private
+bool SoundRecorder::hasProcessedBuffer() const
+{
+    if (m_active)
+    {
+        SDL_LockAudioDevice(m_recordingDevice);
+        if (m_captureContext.buffAvailable >= m_captureContext.FrameStride)
+        {
+            std::memcpy(m_processBuffer.data(), &m_circularBuffer[m_captureContext.bufferOutput], m_captureContext.FrameSizeBytes);
+            m_captureContext.bufferOutput = (m_captureContext.bufferOutput + m_captureContext.FrameStride) % m_captureContext.BufferSize;
+            m_captureContext.buffAvailable -= m_captureContext.FrameStride;
+
+            SDL_UnlockAudioDevice(m_recordingDevice);
+
+
+            //run the copied buffer through the effects chain
+            for (auto& effect : m_processEffects)
+            {
+                effect->process(m_processBuffer);
+            }
+
+            return true;
+        }
+        SDL_UnlockAudioDevice(m_recordingDevice);
+    }
+    return false;
+}
+
 void SoundRecorder::enumerateDevices()
 {
     if (AudioRenderer::isValid())
     {
-        const ALchar* deviceList = alcGetString(nullptr, ALC_CAPTURE_DEVICE_SPECIFIER);
-        auto* next = deviceList + 1;
-        std::size_t len = 0;
-
-        while (deviceList && *deviceList != '\0'
-            && next
-            && *next != '\0')
+        const auto deviceCount = SDL_GetNumAudioDevices(SDL_TRUE);
+        for (auto i = 0; i < deviceCount; ++i)
         {
-            m_deviceList.push_back(std::string(deviceList));
-            len = strlen(deviceList);
-            deviceList += (len + 1);
-            next += (len + 2);
+            const auto* name = SDL_GetAudioDeviceName(i, SDL_TRUE);
+            if (name)
+            {
+                m_deviceList.push_back(name);
+            }
         }
-        
-        /*const auto* defaultDevice = alcGetString(NULL, ALC_CAPTURE_DEFAULT_DEVICE_SPECIFIER);
-        if (defaultDevice)
-        {
-            m_deviceList.push_back(std::string(defaultDevice));
-        }*/
 
-        return;
+        //return;
     }
 
-    m_deviceList.push_back("No Audio Device Available");
-
-    
+    //m_deviceList.push_back("No Audio Device Available");
 }
 
 bool SoundRecorder::openSelectedDevice()
 {
     if (!m_recordingDevice)
     {
+        if (m_captureStream)
+        {
+            //this should never be true, but tidy up just in case
+            SDL_FreeAudioStream(m_captureStream);
+        }
+
+        m_captureStream = SDL_NewAudioStream(AUDIO_F32, CAPTURE_CHANNELS, CAPTURE_RATE, AUDIO_F32, m_channelCount, m_sampleRate);
+
+        if (!m_captureStream)
+        {
+            LogE << "Failed creating capture stream" << std::endl;
+            return false;
+        }
+
+
+
+        if (m_outputStream)
+        {
+            SDL_FreeAudioStream(m_outputStream);
+        }
+
+        m_outputStream = SDL_NewAudioStream(AUDIO_F32, m_channelCount, m_sampleRate, AUDIO_S16, m_channelCount, m_sampleRate);
+
+        if (!m_outputStream)
+        {
+            SDL_FreeAudioStream(m_captureStream);
+            LogE << "Failed creating output stream" << std::endl;
+            return false;
+        }
+
+
+
+        const auto frameBufferSize = m_frameSize * m_channelCount;
+        const auto bufferSize = frameBufferSize * CAPTURE_FRAMES;
+        m_circularBuffer.resize(bufferSize);
+
+        m_captureContext = Detail::CaptureContext(bufferSize, frameBufferSize);
+        m_captureContext.circularBuffer = m_circularBuffer.data();
+        m_captureContext.conversionStream = m_captureStream;
+
+        m_processBuffer.resize(frameBufferSize);
+        m_outputBuffer.resize(frameBufferSize);
+
+        SDL_AudioSpec recordingSpec = {};
+        SDL_AudioSpec receivedSpec = {};
+
+        SDL_zero(recordingSpec);
+        recordingSpec.freq = CAPTURE_RATE;
+        recordingSpec.format = AUDIO_F32;
+        recordingSpec.channels = CAPTURE_CHANNELS;
+        recordingSpec.samples = (CAPTURE_RATE / 25);// *CAPTURE_FRAMES;
+        recordingSpec.callback = captureCallback;
+        recordingSpec.userdata = &m_captureContext;
+
         if (m_deviceIndex > -1)
         {
-            m_recordingDevice = alcCaptureOpenDevice(m_deviceList[m_deviceIndex].c_str(), SAMPLE_RATE, AL_FORMAT_MONO16, RECORD_BUFFER_SIZE);
+            m_recordingDevice = SDL_OpenAudioDevice(m_deviceList[m_deviceIndex].c_str(), SDL_TRUE, &recordingSpec, &receivedSpec, SDL_FALSE);
         }
         else
         {
-            m_recordingDevice = alcCaptureOpenDevice(nullptr, SAMPLE_RATE, AL_FORMAT_MONO16, RECORD_BUFFER_SIZE);
+            m_recordingDevice = SDL_OpenAudioDevice(nullptr, SDL_TRUE, &recordingSpec, &receivedSpec, SDL_FALSE);
         }
 
         if (!m_recordingDevice)
         {
-            LogE << "Failed opening device for recording" << std::endl;
+            SDL_FreeAudioStream(m_captureStream);
+            m_captureStream = nullptr;
+
+            SDL_FreeAudioStream(m_outputStream);
+            m_outputStream = nullptr;
         }
+        else
+        {
+            for (auto& effect : m_processEffects)
+            {
+                effect->setAudioParameters(m_sampleRate, m_channelCount);
+                effect->reset(); //do this second as resetting parameters might require knowinf the above values
+            }
+
+            SDL_PauseAudioDevice(m_recordingDevice, SDL_FALSE);
+        }
+        m_active = (m_recordingDevice != 0);
+
     }
-    return m_recordingDevice != nullptr;
+
+    return m_recordingDevice != 0;
 }

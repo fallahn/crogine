@@ -61,8 +61,16 @@ source distribution.
 #include <cstdint>
 #include <sstream>
 #include <iomanip>
+#include <array>
+
+static inline constexpr float ToYards = 1.09361f;
 
 static inline constexpr std::int32_t CrowdDensityCount = 4;
+//decreased for each additional player to a minimum of 2
+//so max is actually 4 because we always have at least 2 players
+static inline constexpr std::uint8_t StartLives = 6;
+static inline constexpr std::uint8_t MaxNTPStrokes = 2; //nearest the pin
+static inline constexpr std::int32_t CareerLeagueThreshold = 6; //placing higher than this unlocks next league
 
 static constexpr float MaxBallRadius = 0.07f;
 static constexpr float GreenCamRadiusLarge = 45.f;
@@ -97,12 +105,14 @@ static constexpr float CourseFadeDistance = 2.f;
 static constexpr float ZoomFadeDistance = 10.f;
 
 static constexpr float GreenCamHeight = 3.f;
-static constexpr float SkyCamHeight = 16.f;
+static constexpr float SkyCamHeight = 16.f; //8.f for lower club set
+static constexpr float MinDroneHeight = 20.f; //12.f pushes at least this far above terrain on hilly courses
 static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f);
 
 static constexpr float BallPointSize = 1.4f;
 static constexpr float LongPuttDistance = 6.f;
 
+static constexpr float MinHook = 0.08f; //used to decide if we call a hook or slice in UI
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
 static constexpr float MPHPerMetre = 2.23694f;
@@ -281,6 +291,7 @@ struct ShaderID final
         Target,
         Bow,
         Noise,
+        BoxBlur,
         TreesetLeaf,
         TreesetBranch,
         TreesetShadow,
@@ -288,11 +299,13 @@ struct ShaderID final
         BallTrail,
         FXAA,
         Composite,
+        CompositeDOF,
         Blur,
         Flag,
         TV,
         PointLight,
-        Glass
+        Glass,
+        LensFlare
 
     };
 };
@@ -362,6 +375,16 @@ static inline float getWindMultiplier(float ballHeight, float distanceToPin)
 
 static inline std::int32_t activeControllerID(std::int32_t bestMatch)
 {
+    /*
+    We need to use whichever game controller is currently available when the
+    deck is docked or using an external controller which may be hot-seat
+    else the deck's internal controller overrides the input for the current player...
+    */
+    if (Social::isSteamdeck() && cro::GameController::getControllerCount() > 1)
+    {
+        return cro::GameController::getLastControllerID();
+    }
+
     if (cro::GameController::isConnected(bestMatch))
     {
         return bestMatch;
@@ -376,6 +399,8 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
     }
     return 0;
 }
+
+bool hasPSLayout(std::int32_t controllerID);
 
 template <typename T>
 constexpr T interpolate(T a, T b, float t)
@@ -748,10 +773,10 @@ static inline void createSwingputMeter(cro::Entity entity, InputParser& inputPar
             verts[15].position.y = height;
         };
 
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-        entity.addComponent<UIElement>().depth = 0.2f;
-        entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
-        entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
 }
 
 //applies material data loaded in a model definition such as texture info to custom materials
@@ -817,7 +842,12 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
     }
 }
 
-void createMusicPlayer(cro::Scene& scene, cro::AudioResource&, cro::Entity gameMusic);
+struct MusicPlayerData final
+{
+    std::vector<cro::Entity> playlist;
+    std::size_t currentIndex = 0;
+};
+[[nodiscard]] cro::Entity createMusicPlayer(cro::Scene& scene, cro::AudioResource&, cro::Entity gameMusic);
 
 //finds an intersecting point on the water plane.
 static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)
@@ -937,10 +967,18 @@ struct SkyboxMaterials final
     std::int32_t horizon = -1;
     std::int32_t horizonSun = -1;
     std::int32_t skinned = -1;
+    
+    //if loading the skybox finds a 
+    //sun position this is set to true
+    //it's then up to the current game
+    //mode to act on it.
+    bool requestLensFlare = false;
+    glm::vec3 sunPos = glm::vec3(0.f);
 };
 
-//return the entity with the cloud ring (so we can apply material)
-static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials materials)
+//returns the entity with the cloud ring (so we can apply material)
+//and sets requesting the lensflare effect if the sun position is found
+static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials& materials)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
@@ -977,6 +1015,11 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                 else if (name == "stars")
                 {
                     stars = p.getValue<float>();
+                }
+                else if (name == "sun_pos")
+                {
+                    materials.requestLensFlare = true;
+                    materials.sunPos = p.getValue<glm::vec3>();
                 }
             }
         }

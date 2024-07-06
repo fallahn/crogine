@@ -98,6 +98,7 @@ struct PlayerData final
     bool loadProfile(const std::string& path, const std::string& uid);
 
     bool isSteamID = false;
+    mutable bool isCustomName = false; //if not true and is a steam profile use the current steam name
 };
 
 struct ProfileTexture

@@ -31,8 +31,8 @@ source distribution.
 #include "Social.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
-#include "RandNames.hpp"
 #include "XPAwardStrings.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/App.hpp>
@@ -58,6 +58,7 @@ namespace
     };
 
     const std::string FileName("lea.gue");
+    const std::string DBName("db.dat");
 
     constexpr std::int32_t MaxCurve = 5;
 
@@ -99,12 +100,13 @@ namespace
 
     //used to version the league data file
     constexpr std::uint32_t VersionMask = 0x000000ff;
-    constexpr std::uint8_t VersionNumber = 1;
+    constexpr std::uint8_t VersionNumber = 2;
 }
 
-League::League(std::int32_t id)
+League::League(std::int32_t id, const SharedStateData& sd)
     : m_id                  (id),
     m_maxIterations         (id == LeagueRoundID::Club ? MaxIterations : MaxIterations / 4),
+    m_sharedData            (sd),
     m_playerScore           (0),
     m_currentIteration      (0),
     m_currentSeason         (1),
@@ -116,58 +118,19 @@ League::League(std::int32_t id)
 {
     CRO_ASSERT(id < LeagueRoundID::Count, "");
 
+    for (auto& scores : m_holeScores)
+    {
+        std::fill(scores.begin(), scores.end(), 0);
+    }
+
     read();
 }
 
 //public
 void League::reset()
 {
-    std::int32_t nameIndex = 0;
-    for (auto& player : m_players)
-    {
-        float dist = static_cast<float>(nameIndex) / PlayerCount;
-
-        player = {};
-        player.skill = std::round(dist * (SkillCentre - 1) + 1);
-        player.curve = std::round(dist * MaxCurve) + (player.skill % 2);
-        player.curve = player.curve + cro::Util::Random::value(-1, 1);
-        player.curve = std::clamp(player.curve, 0, MaxCurve);
-        player.outlier = cro::Util::Random::value(1, 10);
-        player.nameIndex = nameIndex++;
-
-        //this starts small and increase as
-        //player level is increased
-        player.quality = BaseQuality - (0.01f * (player.nameIndex / 2));
-    }
-
-    //for career leagues we want to increase the initial difficulty
-    //as it remains at that level between seasons
-    std::int32_t maxIncrease = 0;
-    switch (m_id)
-    {
-    default: break;
-    case LeagueRoundID::RoundTwo:
-        maxIncrease = 2;
-        break;
-    case LeagueRoundID::RoundThree:
-        maxIncrease = 4;
-        break;
-    case LeagueRoundID::RoundFour:
-        maxIncrease = 6;
-        break;
-    case LeagueRoundID::RoundFive:
-        maxIncrease = 8;
-        break;
-    case LeagueRoundID::RoundSix:
-        maxIncrease = 10;
-        break;
-    }
-
-    for (auto i = 0; i < maxIncrease; ++i)
-    {
-        increaseDifficulty();
-    }
-
+    rollPlayers(true);
+   
     createSortedTable();
 
     m_currentIteration = 0;
@@ -185,6 +148,11 @@ void League::reset()
     {
         std::error_code ec;
         std::filesystem::remove(path, ec);
+    }
+
+    for (auto& scores : m_holeScores)
+    {
+        std::fill(scores.begin(), scores.end(), 0);
     }
 
     write();
@@ -205,70 +173,18 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 
     CRO_ASSERT(holeCount == 6 || holeCount == 9 || holeCount == 12 || holeCount == 18, "");
 
-    //update all the player scores
+    //update all the player totals based on running scores
     std::int32_t p = 0;
     for (auto& player : m_players)
     {
-        std::int32_t playerTotal = 0;
-
         for (auto i = 0u; i < holeCount; ++i)
         {
-            //calc aim accuracy
-            float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
-
-            //calc power accuracy
-            float power = 1.f - PowerSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
-
-            float quality = aim * power;
-
-            //outlier for cock-up
-            if (cro::Util::Random::value(0, 49) < player.outlier)
-            {
-                float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
-                quality *= errorAmount;
-            }
-
-            //pass through active curve
-            quality = applyCurve(quality, MaxCurve - player.curve) * player.quality;
-
-            
-            //calc ideal
-            float ideal = 3.f; //triple bogey
-            switch (parVals[i])
-            {
-            default:
-            case 2:
-                ideal += 1.f; //1 under par etc
-                break;
-            case 3:
-            case 4:
-                ideal += 2.f;
-                break;
-            case 5:
-                ideal += 3.f;
-                break;
-            }
-
-            
-            //find range of triple bogey - ideal
-            float score = std::round(ideal * quality);
-            score -= 2.f; //average out to birdie
-
-            //then use the player skill chance to decide if we got an eagle
-            if (cro::Util::Random::value(1, 10) > player.skill)
-            {
-                score -= 1.f;
-            }
-
-            //add player score to player total
-            std::int32_t holeScore = -score;
-
-            //convert to stableford where par == 2
+            //convert to stableford where par == 2 points
+            auto holeScore = m_holeScores[player.nameIndex][i] - parVals[i];
             holeScore = std::max(0, 2 - holeScore);
-            playerTotal += holeScore;
+            player.currentScore += holeScore;
         }
 
-        player.currentScore += playerTotal;
         player.previousPosition = p++;
     }
 
@@ -435,6 +351,12 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     }
 
     createSortedTable();
+
+    //reset the hole scores for the next round
+    for (auto& scores : m_holeScores)
+    {
+        std::fill(scores.begin(), scores.end(), 0);
+    }
     write();
 }
 
@@ -447,6 +369,43 @@ std::int32_t League::reward(std::int32_t position) const
     case 2:
     case 3:
         return XPAmount[position - 1] + (m_id * XPMultiplier[position - 1]);
+    }
+}
+
+void League::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance)
+{
+    windChance = std::clamp(windChance, 1, 100);
+    for (auto& player : m_players)
+    {
+        calculateHoleScore(player, hole, par, overPar);
+
+        if (cro::Util::Random::value(0, 99) < windChance)
+        {
+            m_holeScores[player.nameIndex][hole]++;
+        }
+    }
+    updateDB();
+}
+
+void League::retrofitHoleScores(const std::vector<std::int32_t>& parVals)
+{
+    bool writeWhenDone = false;
+    for (auto i = 0u; i < parVals.size(); ++i)
+    {
+        if (m_holeScores[0][i] == 0)
+        {
+            for (auto& player : m_players)
+            {
+                calculateHoleScore(player, i, parVals[i], false);
+            }
+            //LogI << "Retrofit " << parVals.size() << " scores for hole " << i+1 << std::endl;
+            writeWhenDone = true;
+        }
+    }
+
+    if (writeWhenDone)
+    {
+        updateDB();
     }
 }
 
@@ -473,13 +432,13 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
                 m_previousResults = "Previous Season's Results";
                 for (auto i = 0u; i < buff.size(); ++i)
                 {
-                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(RandomNames.size()) - 1);
+                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(PlayerCount) - 1);
 
                     m_previousResults += " -~- ";
                     m_previousResults += std::to_string(i + 1);
                     if (buff[i].nameIndex > -1)
                     {
-                        m_previousResults += ". " + RandomNames[buff[i].nameIndex];
+                        m_previousResults += ". " + m_sharedData.leagueNames[buff[i].nameIndex];
                     }
                     else
                     {
@@ -496,6 +455,164 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
 }
 
 //private
+void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::int32_t par, bool overPar)
+{
+    auto skill = player.skill;
+    if (overPar
+        && m_sharedData.clubSet != 2)
+    {
+        //have a little leniency on the player
+        skill++;
+    }
+
+    //CPU players exhibit better skill when playing with longer club sets
+    auto skillOffset = cro::Util::Random::value(0, 2) == 0 ? 0 : 1;
+    if (m_sharedData.clubSet == 1)
+    {
+        auto s = std::max(1, skill - 1);
+        skillOffset = cro::Util::Random::value(-s, s);
+    }
+    else if (m_sharedData.clubSet == 0)
+    {
+        skillOffset = cro::Util::Random::value(-skill, skill);
+    }
+
+    //calc aim accuracy
+    float aim = 1.f - AimSkill[SkillCentre + skillOffset];
+
+    //calc power accuracy
+    float power = 1.f - PowerSkill[SkillCentre + skillOffset];
+
+    float quality = aim * power;
+
+    //outlier for cock-up
+    if (cro::Util::Random::value(0, 49) < player.outlier)
+    {
+        float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
+        quality *= errorAmount;
+    }
+
+    //pass through active curve
+    quality = applyCurve(quality, MaxCurve - player.curve) * player.quality;
+
+
+    //calc ideal
+    float ideal = 3.f; //triple bogey
+    switch (par)
+    {
+    default:
+    case 2:
+        ideal += 1.f; //1 under par etc
+        break;
+    case 3:
+    case 4:
+        ideal += 2.f;
+        break;
+    case 5:
+        ideal += 3.f;
+        break;
+    }
+
+
+    //find range of triple bogey - ideal
+    float score = std::round(ideal * quality);
+    score -= 2.f; //average out to birdie
+
+    //then use the player skill chance to decide if we got an eagle
+    if (cro::Util::Random::value(1, 10) > skill)
+    {
+        score -= 1.f;
+    }
+
+    //add player score to player total
+    std::int32_t holeScore = -score;
+    holeScore += par;
+
+    //too many HIOs
+    if (holeScore == 1)
+    {
+        //players with skill 0 (0 good, 2 bad) + good clubs have better chance of keeping the HIO
+        //players with skill 2 and short clubs have worse chance of keeping the HIO
+        const auto hioSkill = (player.skill + (2 - m_sharedData.clubSet)) * 2;
+        if (cro::Util::Random::value(0, (3 + hioSkill)) != 0)
+        {
+            holeScore += std::max(1, (par - 2));
+        }
+    }
+
+    //there's a flaw in my logic here which means the result occasionally
+    //comes back as zero - rather than fix my logic I'm going to paste over the cracks.
+    if (holeScore == 0)
+    {
+        holeScore = std::max(2, par + cro::Util::Random::value(-1, 1));
+    }
+
+
+    //write this to the hole scores which get saved in a file / used to display on scoreboard
+    CRO_ASSERT(player.nameIndex != -1, "this shouldn't be a human player");
+    m_holeScores[player.nameIndex][hole] = holeScore;// +par;
+}
+
+void League::rollPlayers(bool resetScores)
+{
+    std::int32_t nameIndex = 0;
+    for (auto& player : m_players)
+    {
+        float dist = static_cast<float>(std::min(nameIndex, static_cast<std::int32_t>(PlayerCount / 3))) / PlayerCount;
+
+        std::int32_t oldScore = 0;
+        std::int32_t oldPosition = 0;
+        if (!resetScores)
+        {
+            oldScore = player.currentScore;
+            oldPosition = player.previousPosition;
+        }
+
+        player = {};
+        player.skill = std::round(dist * (SkillCentre - 2)) + 2;
+        player.curve = std::round(dist * MaxCurve) + (player.skill % 2);
+        player.curve = player.curve + cro::Util::Random::value(-1, 1);
+        player.curve = std::clamp(player.curve, 0, MaxCurve);
+        player.outlier = cro::Util::Random::value(1, 10);
+        player.nameIndex = nameIndex++;
+
+        //this starts small and increase as
+        //player level is increased
+        player.quality = BaseQuality - (0.01f * (player.nameIndex / 2));
+
+        player.currentScore = oldScore;
+        player.previousPosition = oldPosition;
+    }
+
+    //for career leagues we want to increase the initial difficulty
+    //as it remains at that level between seasons
+    std::int32_t maxIncrease = 0;
+    switch (m_id)
+    {
+    default: break;
+    //case LeagueRoundID::RoundTwo:
+    //    maxIncrease = 2;
+        break;
+    case LeagueRoundID::RoundThree:
+        maxIncrease = 2;
+        break;
+    case LeagueRoundID::RoundFour:
+        maxIncrease = 3;
+        break;
+    case LeagueRoundID::RoundFive:
+        maxIncrease = 4;
+        break;
+    case LeagueRoundID::RoundSix:
+        maxIncrease = 4;
+        break;
+    }
+
+    for (auto i = 0; i < maxIncrease; ++i)
+    {
+        increaseDifficulty();
+    }
+}
+
 void League::increaseDifficulty()
 {
     //increase ALL player quality, but show a bigger improvement near the bottom
@@ -538,6 +655,10 @@ void League::decreaseDifficulty()
         for (auto j = 0; j < failureMagnitude; ++j)
         {
             m_players[i].quality = std::max(MinQuality, m_players[i].quality - ((0.02f * ((PlayerCount - 1)-i)) / 10.f));
+            if (cro::Util::Random::value(0, 1) == 0)
+            {
+                m_players[i].skill = std::min(SkillCentre, m_players[i].skill + 1);
+            }
         }
     }
     LogI << "League reduced." << std::endl;
@@ -646,6 +767,10 @@ void League::createSortedTable()
 
 void League::read()
 {
+    assertDB();
+
+    bool rerollPlayers = false;
+
     const auto path = getFilePath(FileName);
     if (cro::FileSystem::fileExists(path))
     {
@@ -746,7 +871,39 @@ void League::read()
                 //we added position tracking, so need to set our previous position
                 m_lastIterationPosition = m_currentPosition;
                 createSortedTable(); //this needs to be rebuilt now it knows what the last iteration ought to be
+                [[fallthrough]]; //if we're on V0 we definitely want to fall through to V1
+            case 1:
+                //updated league rule wants regenned players
+                rerollPlayers = true;
                 break;
+            }
+        }
+
+
+        //read hole scores from DB
+        const auto dbPath = Social::getBaseContentPath() + DBName;
+        constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
+        cro::RaiiRWops dbFile;
+        dbFile.file = SDL_RWFromFile(dbPath.c_str(), "rb");
+        if (dbFile.file)
+        {
+            const auto dbSize = dbFile.file->seek(dbFile.file, 0, RW_SEEK_END);
+            if (dbSize != DBSize)
+            {
+                //close the file and delete it
+                SDL_RWclose(dbFile.file);
+
+                LogE << "DB File size incorrect, DB will be reset" << std::endl;
+
+                std::error_code ec;
+                std::filesystem::remove(dbPath, ec);
+                assertDB();
+            }
+            else
+            {
+                auto startPoint = m_id * sizeof(m_holeScores);
+                dbFile.file->seek(dbFile.file, startPoint, RW_SEEK_SET);
+                SDL_RWread(dbFile.file, m_holeScores.data(), sizeof(m_holeScores), 1);
             }
         }
     }
@@ -754,6 +911,12 @@ void League::read()
     {
         //create a fresh league
         reset();
+    }
+
+    if (rerollPlayers)
+    {
+        rollPlayers(false);
+        write();
     }
 }
 
@@ -793,9 +956,85 @@ void League::write()
         file.file->write(file.file, &padding, sizeof(std::int32_t), 1);
 
         file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
+
+        //write hole scores to db
+        updateDB();
     }
     else
     {
         LogE << "Couldn't open " << path << " for writing" << std::endl;
+    }
+}
+
+void League::assertDB()
+{
+    const auto path = Social::getBaseContentPath() + DBName;
+    if (!cro::FileSystem::fileExists(path))
+    {
+        //hmm what do if we failed creating this? I guess the read/write ops
+        //will fail anyway when they can't open the file, so no harm, just
+        //no player scores either...
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        if (file.file)
+        {
+            //create an empty file big enough to store all the arrays
+            constexpr auto size = LeagueRoundID::Count * sizeof(m_holeScores);
+            std::vector<std::uint8_t> nullData(size);
+            std::fill(nullData.begin(), nullData.end(), 0);
+
+            SDL_RWwrite(file.file, nullData.data(), size, 1);
+
+            LogI << "Created new league DB" << std::endl;
+        }
+        else
+        {
+            LogE << "Unable to create player database for League" << std::endl;
+        }
+    }
+}
+
+void League::updateDB()
+{
+    const auto dbPath = Social::getBaseContentPath() + DBName;
+    constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
+
+    //hmm SDL doesn't let us write to arbitrary positions in the file
+    //so we have to open it, read the entire thing, update the local data
+    //then write the whole ting back again D:
+    std::vector<std::uint8_t> temp(DBSize);
+    std::fill(temp.begin(), temp.end(), 0);
+
+    cro::RaiiRWops dbFile;
+    dbFile.file = SDL_RWFromFile(dbPath.c_str(), "rb");
+    if (dbFile.file)
+    {
+        const auto dbSize = dbFile.file->seek(dbFile.file, 0, RW_SEEK_END);
+        if (dbSize != DBSize)
+        {
+            //close the file and delete it
+            SDL_RWclose(dbFile.file);
+
+            LogE << "DB File size incorrect, DB will be reset" << std::endl;
+
+            std::error_code ec;
+            std::filesystem::remove(dbPath, ec);
+            assertDB();
+        }
+        else
+        {
+            SDL_RWread(dbFile.file, temp.data(), DBSize, 1);
+            SDL_RWclose(dbFile.file);
+
+            dbFile.file = SDL_RWFromFile(dbPath.c_str(), "wb");
+            if (dbFile.file)
+            {
+                auto startPoint = m_id * sizeof(m_holeScores);
+                std::memcpy(&temp[startPoint], m_holeScores.data(), sizeof(m_holeScores));
+
+                SDL_RWwrite(dbFile.file, temp.data(), DBSize, 1);
+                //LogI << "Wrote updated DB" << std::endl;
+            }
+        }
     }
 }

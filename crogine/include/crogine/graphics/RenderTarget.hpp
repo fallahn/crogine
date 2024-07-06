@@ -129,6 +129,10 @@ namespace cro
         */
         const glm::mat4& getProjectionMatrix() const;
 
+        /*!
+        \brief Return the implementation's FBO ID, used by setActive()
+        */
+        virtual std::uint32_t getFrameBufferID() const = 0;
 
     protected:
         /*!
@@ -138,10 +142,6 @@ namespace cro
         */
         void setActive(bool);
 
-        /*!
-        \brief Return the implementation's FBO ID, used by setActive()
-        */
-        virtual std::uint32_t getFrameBufferID() const = 0;
 
     private:
         friend class Window;

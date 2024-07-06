@@ -67,16 +67,27 @@ private:
     cro::RenderTexture m_renderTexture;
     cro::SimpleQuad m_quad;
 
-    cro::Entity m_lightSource;
-    cro::Entity m_lightRoot;
     struct LensFlare final
     {
-        glm::vec3 srcPos = glm::vec3(0.f);
-        glm::vec3 testPos = glm::vec3(0.f);
-        glm::vec2 screenPos = glm::vec2(0.f);
-        bool visible = false;
+        cro::Entity lightSource;
+        glm::vec4 ndc = glm::vec4(0.f);
+        glm::vec3 samplePos = glm::vec3(0.f);
+
+        bool visible = true;
+        bool occluded = false;
+
+        std::int32_t flareCount = 2; //from source to centre so potentially double this or more
+        std::vector<glm::vec2> points;
+        static constexpr std::size_t MaxPoints = 6;
+
+        cro::Entity flareEntity;
+        std::vector<cro::Vertex2D> verts;
+
+        void update(const cro::Camera&);
     }m_lensFlare;
-   void updateLensFlare();
+    
+    cro::Shader m_flareShader;
+
 
     void addSystems();
     void loadAssets();

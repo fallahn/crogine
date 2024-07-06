@@ -2,13 +2,13 @@ model sphere
 {
     mesh = sphere
     radius = 0.021
-    cast_shadows = true
+    cast_shadows = false
 
-    material VertexLit
+    material Unlit
     {
         mask_colour = 1.000000,1.000000,0.000000,1
         name = "Untitled"
-        colour = 1.0,0.000000,1.000000,1
+        colour = 1.0,1.000000,0.900000,1
         smooth = true
         repeat = true
         blendmode = "none"

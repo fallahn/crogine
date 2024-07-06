@@ -33,6 +33,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
+#include "../Colordome-32.hpp"
 
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -48,6 +49,10 @@ source distribution.
 
 namespace
 {
+    //this is static so the preference is remember between
+    //instances
+    bool closeOnSend = false;
+
     static void showToolTip(const char* desc)
     {
         if (ImGui::BeginItemTooltip())
@@ -175,6 +180,9 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_visible               (false),
     m_scrollToEnd           (false),
     m_focusInput            (false),
+    m_drawWindow            (false),
+    m_animDir               (0),
+    m_animationProgress     (0.f),
     m_screenChatIndex       (0),
     m_screenChatActiveCount (0),
     m_showShortcuts         (false)
@@ -246,23 +254,45 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_buttonStrings.angry.push_back(0);
 
 
-    registerWindow([&]() 
+    registerWindow([&]()
         {
             //ImGui::ShowDemoWindow();
-            if (m_visible)
+            //if (m_visible)
+            if (m_drawWindow)
             {
                 //used to detect if we had any input
                 auto buffSize = m_inputBuffer.size();
 
-                ImGui::SetNextWindowSize({ 600.f, 340.f });
-                if (ImGui::Begin("Chat Window", &m_visible, ImGuiWindowFlags_NoCollapse))
+                const auto viewScale = getViewScale();
+                const glm::vec2 OutputSize = glm::vec2(cro::App::getWindow().getSize());
+                //const glm::vec2 WindowSize = glm::vec2(std::max(320.f, std::round((OutputSize.x / 3.f))), OutputSize.y);
+                const glm::vec2 WindowSize = glm::vec2(OutputSize.x, std::max(240.f, std::round(OutputSize.y / 3.f)));
+
+                ImGui::SetNextWindowSize({ WindowSize.x, WindowSize.y });
+                //ImGui::SetNextWindowPos({ std::round(-WindowSize.x * cro::Util::Easing::easeInCubic(m_animationProgress)), 0.f });
+                ImGui::SetNextWindowPos({ 0.f, std::round((OutputSize.y - WindowSize.y) + (WindowSize.y * cro::Util::Easing::easeInCubic(m_animationProgress))) });
+
+                if (m_animationProgress == 1)
                 {
-                    if (m_showShortcuts)
+                    m_drawWindow = false;
+                    m_visible = false;
+                }
+
+                ImGui::GetFont()->Scale *= viewScale;
+                ImGui::PushFont(ImGui::GetFont());
+
+                m_sharedData.chatFonts.buttonLarge->Scale = 0.5f * viewScale;
+
+                if (ImGui::Begin("Chat Window", nullptr, 
+                    ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+                {
+                    if (m_showShortcuts
+                        && !Social::isSteamdeck())
                     {
                         ImGui::Text("Quick Emotes: ");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-                        if (ImGui::Button(m_buttonStrings.applaud.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight)))
+                        if (ImGui::Button(m_buttonStrings.applaud.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Applaud);
                             m_visible = false;
@@ -271,7 +301,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         showToolTip("Applaud - Shortcut: Number 7");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-                        if (ImGui::Button(m_buttonStrings.happy.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight)))
+                        if (ImGui::Button(m_buttonStrings.happy.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Happy);
                             m_visible = false;
@@ -280,7 +310,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         showToolTip("Happy - Shortcut: Number 8");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-                        if (ImGui::Button(m_buttonStrings.laughing.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight)))
+                        if (ImGui::Button(m_buttonStrings.laughing.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Laughing);
                             m_visible = false;
@@ -289,7 +319,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         showToolTip("Laughing - Shortcut: Number 9");
                         ImGui::SameLine();
                         ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-                        if (ImGui::Button(m_buttonStrings.angry.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight)))
+                        if (ImGui::Button(m_buttonStrings.angry.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Angry);
                             m_visible = false;
@@ -298,12 +328,19 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         showToolTip("Grumpy - Shortcut: Number 0");
                         ImGui::Separator();
                     }
+                    
+                    std::int32_t flags = ImGuiWindowFlags_AlwaysUseWindowPadding;
+                    if (Social::isSteamdeck())
+                    {
+                        flags |= ImGuiWindowFlags_NoScrollbar;
+                    }
 
-                    const float reserveHeight = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
+                    const float reserveHeight = (ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing());// *2.f;
                     ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f,0.f,0.f,0.4f));
-                    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveHeight), false, ImGuiWindowFlags_AlwaysUseWindowPadding);
+                    ImGui::BeginChild("ScrollingRegion", ImVec2(0, -reserveHeight), false, flags);
                     ImGui::PopStyleColor();
 
+                    
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
                     for (const auto& [str, colour] : m_displayBuffer)
                     {
@@ -322,59 +359,72 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     ImGui::EndChild();
                     ImGui::Separator();
 
-                    if (ImGui::InputText("##ip", &m_inputBuffer, ImGuiInputTextFlags_EnterReturnsTrue))
+                    if (!Social::isSteamdeck())
                     {
-                        sendTextChat();
-                        m_focusInput = true;
-                    }
-                    
-                    ImGui::SetItemDefaultFocus();
-                    if (m_focusInput
-                        || ImGui::IsItemHovered()
-                        || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow/*AndChildWindows*/)
-                            && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
-                    {
-                        ImGui::SetKeyboardFocusHere(-1);
-                    }
-
-                    ImGui::SameLine();
-                    if (ImGui::Button(m_buttonStrings.popout.data()))
-                    {
-                        ImGui::OpenPopup("emote_popup");
-                    }
-
-                    m_focusInput = false;
-
-                    //emoji keypad popout
-                    ImGui::SameLine();
-                    if (ImGui::Button("Send"))
-                    {
-                        sendTextChat();
-                    }
-
-                    if (ImGui::BeginPopup("emote_popup"))
-                    {
-                        ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
-
-                        for (auto i = 0; i < 25; ++i)
+                        if (ImGui::InputText("##ip", &m_inputBuffer, ImGuiInputTextFlags_EnterReturnsTrue))
                         {
-                            if (ImGui::Button(Emotes[i].icon.data()))
-                            {
-                                for (auto cp : Emotes[i].icon)
-                                {
-                                    m_inputBuffer.push_back(cp);
-                                }
-                                m_inputBuffer.pop_back(); //removes the terminator.. ugh
-                            }
-
-                            if ((i % 5) != 4) ImGui::SameLine();
+                            sendTextChat();
+                            m_focusInput = true;
                         }
 
-                        ImGui::PopFont();
-                        ImGui::EndPopup();
+                        ImGui::SetItemDefaultFocus();
+                        if (m_focusInput
+                            || ImGui::IsItemHovered()
+                            || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootWindow/*AndChildWindows*/)
+                                && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
+                        {
+                            ImGui::SetKeyboardFocusHere(-1);
+                        }
+
+                        ImGui::SameLine();
+                        if (ImGui::Button(m_buttonStrings.popout.data()))
+                        {
+                            ImGui::OpenPopup("emote_popup");
+                        }
+                        m_focusInput = false;
+
+                        ImGui::SameLine();
+                        if (ImGui::Button("Send"))
+                        {
+                            sendTextChat();
+                        }
+                        ImGui::SameLine();
+                        ImGui::Checkbox("Close On Send", &closeOnSend);
+
+                        //emoji keypad popout
+                        if (ImGui::BeginPopup("emote_popup"))
+                        {
+                            ImGui::PushFont(m_sharedData.chatFonts.buttonLarge);
+
+                            for (auto i = 0; i < 25; ++i)
+                            {
+                                if (ImGui::Button(Emotes[i].icon.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
+                                {
+                                    for (auto cp : Emotes[i].icon)
+                                    {
+                                        m_inputBuffer.push_back(cp);
+                                    }
+                                    m_inputBuffer.pop_back(); //removes the terminator.. ugh
+                                }
+
+                                if ((i % 5) != 4) ImGui::SameLine();
+                            }
+
+                            ImGui::PopFont();
+                            ImGui::EndPopup();
+                        }
+                    }
+                    else
+                    {
+                        ImGui::Text("Chat History");
                     }
                 }
                 ImGui::End();
+
+                m_sharedData.chatFonts.buttonLarge->Scale = 0.5f;
+
+                ImGui::GetFont()->Scale = 1.f;
+                ImGui::PopFont();
 
                 //notification packets to tell clients if someone is typing
                 if (m_inputBuffer.size() != buffSize)
@@ -392,7 +442,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 TextChat::~TextChat()
 {
 #ifdef USE_GNS
-    Social::hideChatInput();
+    Social::hideTextInput();
 #endif
 }
 
@@ -419,7 +469,6 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     //only one person can type on a connected computer anyway
     //so we'll always assume it's player 0
     auto outStr = m_sharedData.connectionData[msg.client].playerData[0].name;
-
     auto msgText = msg.getString();// cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
 
 #ifdef USE_GNS
@@ -427,27 +476,32 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 #endif
 
     cro::Colour chatColour = TextNormalColour;
+    cro::Colour listColour = TextNormalColour;
     bool playSound = true;
 
     //process any emotes such as /me and choose colour
     if (auto p = msgText.find("/me"); p == 0
         && msgText.size() > 4)
     {
-        chatColour = TextGoldColour;
+        chatColour = listColour = TextGoldColour;
         outStr += " " + msgText.substr(p + 4);
     }
     else
     {
         outStr += ": " + msgText;
         playSound = !speak(msgText);
+
+        static std::int32_t idx = 0;
+        idx = (idx + 1) % 2;
+        listColour = idx == 0 ? TextNormalColour : CD32::Colours[CD32::GreyLight];
     }
-    m_displayBuffer.emplace_back(outStr, ImVec4(chatColour));
+    m_displayBuffer.emplace_back(outStr, ImVec4(listColour));
 
     if (m_displayBuffer.size() > MaxLines)
     {
         m_displayBuffer.pop_front();
     }
-
+    m_scrollToEnd = true;
     
     //create an entity to temporarily show the message on screen
 
@@ -565,12 +619,14 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     return playSound;
 }
 
-void TextChat::toggleWindow(bool showOSK, bool showQuickEmote)
+void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckInput)
 {
     m_showShortcuts = showQuickEmote;
 
 #ifdef USE_GNS
-    if (Social::isSteamdeck())
+    if (Social::isSteamdeck()
+        && enableDeckInput
+        /*&& !m_visible*/)
     {
         beginChat();
 
@@ -586,12 +642,12 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote)
             };
 
         //this only shows the overlay as Steam takes care of dismissing it
-        Social::showChatInput(cb);
+        Social::showTextInput(cb, "Chat");
     }
     else
 #endif
     {
-        if (showOSK)
+        if (showOSK && !Social::isSteamdeck()) //deck uses its own kb
         {
             auto* msg = cro::App::postMessage<SystemEvent>(cl::MessageID::SystemMessage);
             msg->type = SystemEvent::RequestOSK;
@@ -599,9 +655,34 @@ void TextChat::toggleWindow(bool showOSK, bool showQuickEmote)
         }
         else
         {
-            m_visible = (!m_visible && !Social::isSteamdeck());
+            m_visible = (!m_visible /*&& !Social::isSteamdeck()*/);
             m_focusInput = m_visible;
+
+            if (m_visible)
+            {
+                m_drawWindow = true;
+                m_animDir = 1;
+                m_scrollToEnd = true;
+            }
+            else
+            {
+                m_animDir = 0;
+            }
         }
+    }
+}
+
+void TextChat::update(float dt)
+{
+    //seems counter intuitive at first but 1 is full animated OUT of the screen
+    const float Speed = dt * 6.f;
+    if (m_animDir == 0)
+    {
+        m_animationProgress = std::min(1.f, m_animationProgress + Speed);
+    }
+    else
+    {
+        m_animationProgress = std::max(0.f, m_animationProgress - Speed);
     }
 }
 
@@ -687,7 +768,12 @@ void TextChat::sendTextChat()
         m_limitClock.restart();
         m_scrollToEnd = true;
 
-        m_visible = false;
+        //m_visible = false;
+        
+        if (closeOnSend /*|| Social::isSteamdeck()*/)
+        {
+            m_animDir = 0;
+        }
 
         endChat();
     }

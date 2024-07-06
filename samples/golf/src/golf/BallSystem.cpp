@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -64,8 +64,10 @@ namespace
     static constexpr float MinVelocitySqr = 0.001f;// 0.005f;//0.04f
     static constexpr float BallRollTimeout = -10.f;
     static constexpr float BallTimeoutVelocity = 0.04f;
+    static constexpr float MinSpinPower = 0.05f; //min velocity to stop doesn't kick in if there's more than this much top/back spin to apply
 
     static constexpr float MinRollVelocity = -0.25f;
+    static constexpr float MaxStoneSlope = 0.9f; //dot prod with vertical - ball is OOB if less than this
 
     static constexpr std::array<float, TerrainID::Count> Friction =
     {
@@ -477,7 +479,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         //finally check to see if we're slow enough to stop
         constexpr float TimeOut = (BallRollTimeout / 2.f);
         auto len2 = glm::length2(ball.velocity);
-        if (len2 < MinVelocitySqr
+        if ((len2 < MinVelocitySqr && std::abs(ball.spin.y) < MinSpinPower)
             || ((ball.delay < TimeOut) && (len2 < BallTimeoutVelocity))
             || (ball.delay < (TimeOut * 2.f)))
         {
@@ -492,7 +494,14 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 resetBall(Ball::State::Reset, terrainContact.terrain);
                 break;*/
             case TerrainID::Stone:
-                resetBall(Ball::State::Reset, TerrainID::Scrub);
+                if (glm::dot(terrainContact.normal, cro::Transform::Y_AXIS) > MaxStoneSlope)
+                {
+                    resetBall(Ball::State::Paused, terrainContact.terrain);
+                }
+                else
+                {
+                    resetBall(Ball::State::Reset, TerrainID::Scrub);
+                }
                 break;
             }
         }
@@ -700,7 +709,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //if we've slowed down or fallen more than the
             //ball's diameter (radius??) stop the ball
-            if (vel2 < MinVelocitySqr 
+            if ((vel2 < MinVelocitySqr && std::abs(ball.spin.y) < MinSpinPower)//this might be true when there's still spin to be applied
                 || (terrainContact.penetration > (Ball::Radius * 2.5f)) 
                 || ((ball.delay < BallRollTimeout) && (vel2 < BallTimeoutVelocity))
                 || (ball.delay < (BallRollTimeout * 2.f)))
@@ -712,11 +721,11 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 {
                     ball.state = Ball::State::Reset;
                 }
-                else if (ball.terrain == TerrainID::Stone)
+                /*else if (ball.terrain == TerrainID::Stone)
                 {
                     ball.state = Ball::State::Reset;
                     ball.terrain = TerrainID::Scrub;
-                }
+                }*/
                 else
                 {
                     ball.state = Ball::State::Paused;
@@ -743,15 +752,17 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 else if (len2 < GimmeRadii[m_gimmeRadius]
                     && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
                 {
-                    auto* msg2 = postEvent();
-                    msg2->type = GolfBallEvent::Gimme;
+                //    moved to post-pause delay (below)
+                //    auto* msg2 = postEvent();
+                //    msg2->type = GolfBallEvent::Gimme;
 
-                    position.x = m_holeData->pin.x;
-                    position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
-                    position.z = m_holeData->pin.z;
-                    tx.setPosition(position);
+                //    position.x = m_holeData->pin.x;
+                //    position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
+                //    position.z = m_holeData->pin.z;
+                //    tx.setPosition(position);
 
-                    ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
+                //    ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
+                    ball.checkGimme = true;
                 }
 
                 msg->position = position;
@@ -849,7 +860,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                     if (terrain != TerrainID::Water
                         && terrain != TerrainID::Scrub
-                        && terrain != TerrainID::Stone
+                        && terrain != TerrainID::Stone //we're restoring from OOB, so we still don't want to land on stone here
                         && slope > 0.996f)
                     {
                         //move the ball a bit closer so we're not balancing on the edge
@@ -901,15 +912,41 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         doBallCollision(entity);
 
         ball.delay -= dt;
+
+        if (ball.checkGimme && ball.delay < (BallTurnDelay / 2.f))
+        {
+            auto position = entity.getComponent<cro::Transform>().getPosition();
+
+            //check for gimme first
+            const auto pinDir = m_holeData->pin - position;
+            const auto len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
+
+            if (len2 < GimmeRadii[m_gimmeRadius]
+                && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
+            {
+                auto* msg2 = postEvent();
+                msg2->type = GolfBallEvent::Gimme;
+
+                position.x = m_holeData->pin.x;
+                position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
+                position.z = m_holeData->pin.z;
+                entity.getComponent<cro::Transform>().setPosition(position);
+
+                ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
+                ball.checkGimme = false;
+
+                ball.delay += (BallTurnDelay / 2.f);
+            }
+        }
+
         if (ball.delay < 0)
         {
+            auto position = entity.getComponent<cro::Transform>().getPosition();
+
             ball.spin = { 0.f, 0.f };
             ball.initialForwardVector = { 0.f, 0.f, 0.f };
             ball.initialSideVector = { 0.f, 0.f, 0.f };
 
-            auto position = entity.getComponent<cro::Transform>().getPosition();
-            //auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
-            //auto wantGimme = (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius]));
 
             //send message to report status
             auto* msg = postEvent();
@@ -1112,7 +1149,15 @@ void BallSystem::doCollision(cro::Entity entity)
                 resetBall(ball, Ball::State::Reset, terrainResult.terrain);
                 break;
             case TerrainID::Stone:
-                resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
+                //assume flat surfaces are OK to stop on
+                if (glm::dot(terrainResult.normal, cro::Transform::Y_AXIS) > MaxStoneSlope)
+                {
+                    resetBall(ball, Ball::State::Paused, terrainResult.terrain);
+                }
+                else
+                {
+                    resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
+                }
                 break;
             }
         }

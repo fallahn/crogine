@@ -49,6 +49,9 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
     {
         "assets/golf/sound/ball/holed.wav",
         "assets/golf/sound/ball/drop.wav",
+        "assets/golf/sound/menu/snapshot.wav",
+        "assets/golf/sound/menu/lobby.wav",
+        "assets/golf/sound/menu/lobby_exit.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -75,6 +78,15 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cro::Message::SystemMessage:
+        {
+            const auto& data = msg.getData<cro::Message::SystemEvent>();
+            if (data.type == cro::Message::SystemEvent::ScreenshotTaken)
+            {
+                playSound(AudioID::Snapshot, 1.f);
+            }
+        }
+        break;
         case cro::Message::SpriteAnimationMessage:
         {
             const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
@@ -124,6 +136,19 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
             }
         }
         break;
+        case cl::MessageID::SystemMessage:
+        {
+            const auto& data = msg.getData<SystemEvent>();
+            if (data.type == SystemEvent::LobbyEntered)
+            {
+                playSound(AudioID::LobbyJoin, 0.5f);
+            }
+            else if (data.type == SystemEvent::LobbyExit)
+            {
+                playSound(AudioID::LobbyExit, 0.5f);
+            }
+        }
+            break;
         }
     }
 }

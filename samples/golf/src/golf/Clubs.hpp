@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <string>
 #include <array>
@@ -50,10 +51,11 @@ struct ClubID final
     
     static constexpr std::array<std::int32_t, ClubID::Count> Flags =
     {
-        (1<<0), (1<<1), (1<<2),
-        (1<<3), (1<<4), (1<<5),
-        (1<<6), (1<<7), (1<<8),
-        (1<<9), (1<<10), (1<<11)
+        (1<<Driver),     (1<<ThreeWood), (1<<FiveWood),
+        (1<<FourIron),   (1<<FiveIron),  (1<<SixIron),
+        (1<<SevenIron),  (1<<EightIron), (1<<NineIron),
+        (1<<PitchWedge), (1<<GapWedge),  (1<<SandWedge),
+        (1<<Putter)
     };
 
     static constexpr std::array<std::int32_t, 5u> LockedSet =
@@ -75,11 +77,21 @@ struct ClubID final
     }
 
     static constexpr std::int32_t DefaultSet =
-        Flags[Driver] | Flags[ThreeWood] | Flags[FiveIron] |
+        Flags[Driver]    | Flags[ThreeWood]  | Flags[FiveIron] |
         Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
         Flags[SandWedge] | Flags[Putter];
 
-    static constexpr std::int32_t FullSet = 0x0FFF;
+    static constexpr std::int32_t FullSet = 0x1FFF;
+
+    static inline std::int32_t getRandomSet()
+    {
+        std::int32_t retVal = /*Flags[Driver] | */Flags[Putter];
+        retVal |= (1 << cro::Util::Random::value(ThreeWood, FiveWood));
+        retVal |= (1 << cro::Util::Random::value(FourIron, NineIron));
+        retVal |= (1 << cro::Util::Random::value(PitchWedge, SandWedge));
+
+        return retVal;
+    }
 };
 
 class Club final
@@ -129,7 +141,7 @@ private:
     float getScaledValue(float v, float dist) const;
 };
 
-static const std::array<Club, ClubID::Count> Clubs =
+static inline const std::array<Club, ClubID::Count> Clubs =
 {
     Club(ClubID::Driver,    "Driver ", 45.f, 0.3f,   0.5f),  //default set
     Club(ClubID::ThreeWood, "3 Wood ", 45.f, 0.35f,  0.55f), //default set
@@ -149,3 +161,21 @@ static const std::array<Club, ClubID::Count> Clubs =
     Club(ClubID::SandWedge,  "Sand Wedge ",  60.f, 0.05f, 0.95f), //default set
     Club(ClubID::Putter,     "Putter ",      0.f,  0.f,   0.f)    //default set
 };
+
+//remember if using these to also set the club stats in Clubs.cpp
+//static inline const std::array<Club, ClubID::Count> Clubs =
+//{
+//    Club(ClubID::Driver,    "Driver ", 28.992f, 0.300f, 0.500f),
+//    Club(ClubID::ThreeWood, "3 Wood ", 32.315f, 0.350f, 0.550f),
+//    Club(ClubID::FiveWood,  "5 Wood ", 34.721f, 0.450f, 0.550f),
+//    Club(ClubID::FourIron,  "4 Iron ", 37.586f, 0.450f, 0.780f),
+//    Club(ClubID::FiveIron,  "5 Iron ", 37.128f, 0.500f, 0.780f),
+//    Club(ClubID::SixIron,   "6 Iron ", 36.326f, 0.550f, 0.800f),
+//    Club(ClubID::SevenIron, "7 Iron ", 35.924f, 0.600f, 0.800f),
+//    Club(ClubID::EightIron, "8 Iron ", 35.924f, 0.750f, 0.850f),
+//    Club(ClubID::NineIron,  "9 Iron ", 35.523f, 0.800f, 0.850f),
+//    Club(ClubID::PitchWedge, "Pitch Wedge ", 56.895f, 0.050f, 0.900f),
+//    Club(ClubID::GapWedge,   "Gap Wedge ",   62.452f, 0.050f, 0.930f),
+//    Club(ClubID::SandWedge,  "Sand Wedge ",  60.000f, 0.050f, 0.950f),
+//    Club(ClubID::Putter,     "Putter ",      0.000f, 0.000f, 0.000f),
+//};

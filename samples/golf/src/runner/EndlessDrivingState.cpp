@@ -488,7 +488,7 @@ bool EndlessDrivingState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        m_sharedGameData.lastInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) 
+        m_sharedGameData.lastInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which))
             ? els::SharedStateData::PS : els::SharedStateData::Xbox;
 
         switch (evt.cbutton.button)

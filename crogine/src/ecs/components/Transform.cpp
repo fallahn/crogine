@@ -236,7 +236,7 @@ void Transform::setOrigin(glm::vec3 o)
 
 void Transform::setOrigin(glm::vec2 o)
 {
-    setOrigin(glm::vec3(o.x, o.y, 0.f));
+    setOrigin(glm::vec3(o.x, o.y, m_origin.z));
 }
 
 void Transform::setPosition(glm::vec3 position)
@@ -284,7 +284,7 @@ void Transform::setScale(glm::vec3 scale)
 
 void Transform::setScale(glm::vec2 scale)
 {
-    setScale(glm::vec3(scale.x, scale.y, 1.f));
+    setScale(glm::vec3(scale.x, scale.y, m_scale.z));
 }
 
 void Transform::move(glm::vec3 distance)

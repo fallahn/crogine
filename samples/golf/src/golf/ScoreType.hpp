@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -43,17 +43,25 @@ namespace ScoreType
         Match, Skins,
         MultiTarget,
         ShortRound,
+        
+        Elimination,
+        ClubShuffle,
+        NearestThePin,
 
         Count,
-        BattleRoyale,
+
         BBB,
-        NearestThePin,
         LongestDrive,
     };
 
-    static const inline std::array<std::int32_t, Count> PlayerCount =
+    static const inline std::array<std::int32_t, Count> MinPlayerCount =
     {
-        1,1,1, 1,1,1,1, //3
+        1,1,1,2,2,1,1,2,1,2,//2,2
+    };
+
+    static const inline std::array<std::int32_t, Count> MaxPlayerCount =
+    {
+        16,16,16,2,16,16,16,16,16,16,//16,16
     };
 }
 

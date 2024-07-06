@@ -91,6 +91,7 @@ private:
     SharedProfileData& m_profileData;
 
     PlayerData m_activeProfile;
+    cro::String m_previousName; //so we can restore if we cancel an edit
 
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;

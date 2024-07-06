@@ -945,11 +945,11 @@ void PlaylistState::buildUI()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_resources.textures);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(-1000.f, -100000.f, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(-1000.f, -100000.f, 1.6f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height, -0.5f });
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height, /*-0.5f*/0.f });
     entity.addComponent<cro::Callback>().setUserData<PopupData>();
     entity.getComponent<cro::Callback>().function =
         [&, popupBG](cro::Entity e, float dt) mutable
@@ -1021,7 +1021,7 @@ void PlaylistState::buildUI()
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
 
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -8.f, 14.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         m_viewScale = glm::vec2(getViewScale());

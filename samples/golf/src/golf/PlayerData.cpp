@@ -61,6 +61,10 @@ bool PlayerData::saveProfile() const
     {
         const auto s = name.toUtf8();
         cfg.addProperty("name", std::string(s.c_str(), s.c_str() + s.length()));
+
+#ifdef USE_GNS
+        isCustomName = (name != Social::getPlayerName());
+#endif
     }
     cfg.addProperty("ball_colour").setValue(ballColourIndex);
     cfg.addProperty("ball_id").setValue(ballID);
@@ -74,6 +78,7 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("flags4").setValue(avatarFlags[4]);
     cfg.addProperty("flags5").setValue(avatarFlags[5]);
     cfg.addProperty("cpu").setValue(isCPU);
+    cfg.addProperty("custom_name").setValue(isCustomName);
 
     //hmmmm is it possible we might accidentally
     //create the ID of an existing profile?
@@ -195,6 +200,10 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             else if (n == "cpu")
             {
                 isCPU = prop.getValue<bool>();
+            }
+            else if (n == "custom_name")
+            {
+                isCustomName = prop.getValue<bool>();
             }
         }
 

@@ -33,11 +33,11 @@ source distribution.
 #include "Clubs.hpp"
 #include "Terrain.hpp"
 #include "SharedStateData.hpp"
-#include "GameConsts.hpp"
 #include "CameraFollowSystem.hpp"
 #include "CommandIDs.hpp"
 #include "BallSystem.hpp"
 #include "PacketIDs.hpp"
+#include "GameConsts.hpp"
 
 #include <AchievementStrings.hpp>
 
@@ -66,6 +66,8 @@ namespace
     static constexpr float MinBarSpeed = 0.9f; //base speed of power bar up to level 10
 
     const cro::Time DoubleTapTime = cro::milliseconds(200);
+
+    std::int32_t lastActiveController = -1;
 }
 
 InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
@@ -73,6 +75,8 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_inputBinding      (sd.inputBinding),
     m_gameScene         (s),
     m_swingput          (sd),
+    m_humanCount        (1),
+    m_activeController  (-1),
     m_inputFlags        (0),
     m_prevFlags         (0),
     m_enableFlags       (std::numeric_limits<std::uint16_t>::max()),
@@ -86,6 +90,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     //m_mouseMove         (0),
     //m_prevMouseMove     (0),
     m_isCPU             (false),
+    m_distanceToHole    (1000.f),
     m_holeDirection     (0.f),
     m_rotation          (0.f),
     m_maxRotation       (MaxRotation),
@@ -137,6 +142,14 @@ void InputParser::handleEvent(const cro::Event& evt)
             }
         }
     };
+
+    const auto acceptInput = [&](std::int32_t joyID)
+        {
+            auto controllerID = activeControllerID(m_inputBinding.playerID);
+            return !m_isCPU &&
+                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
+                    || (m_humanCount == 1 && (m_activeController == -1 || m_activeController == joyID))); //allow input from any controller if only one local player
+        };
 
     if (m_active &&
         !m_swingput.handleEvent(evt, m_inputFlags, static_cast<std::int32_t>(m_state)))
@@ -198,7 +211,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                     //cro::App::getWindow().setMouseCaptured(!m_isCPU);
                 }
             }
-            else if (evt.key.keysym.sym == SDLK_1)
+            else if (evt.key.keysym.sym == FixedKey::DroneCam)
             {
                 toggleDroneCam();
             }
@@ -260,10 +273,7 @@ void InputParser::handleEvent(const cro::Event& evt)
         }
         else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
         {
-            auto controllerID = activeControllerID(m_inputBinding.playerID);
-            if (!m_isCPU &&
-                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
-                || m_sharedData.localConnectionData.playerCount == 1)) //allow input from any controller if only one local player
+            if (acceptInput(evt.cbutton.which))
             {
                 if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
@@ -299,35 +309,43 @@ void InputParser::handleEvent(const cro::Event& evt)
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadUp)
                 {
-                    m_inputFlags |= InputFlag::Up;
+                    if (isSpinputActive())
+                    {
+                        m_inputFlags |= InputFlag::Up;
+                    }
+                    else
+                    {
+                        toggleDroneCam();
+                    }
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadDown)
                 {
-                    m_inputFlags |= InputFlag::Down;
+                    if (isSpinputActive())
+                    {
+                        m_inputFlags |= InputFlag::Down;
+                    }
                 }
 
-                else if (evt.cbutton.button == cro::GameController::ButtonRightStick)
+                /*else if (evt.cbutton.button == cro::GameController::ButtonRightStick)
                 {
                     toggleDroneCam();
-                }
+                }*/
                 //people say this happens accidentally, so let's use a timer
-                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                /*else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
                 {
                     m_inputFlags |= InputFlag::MiniMap;
                     m_minimapToggleTimer.restart();
-                }
+                }*/
             }
         }
         else if (evt.type == SDL_CONTROLLERBUTTONUP)
         {
-            auto controllerID = activeControllerID(m_inputBinding.playerID);
-            if (!m_isCPU &&
-                (evt.cbutton.which == cro::GameController::deviceID(controllerID)
-                || m_sharedData.localConnectionData.playerCount == 1))
+            if (acceptInput(evt.cbutton.which))
             {
                 if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
                 {
                     m_inputFlags &= ~InputFlag::Action;
+                    lastActiveController = evt.cbutton.which;
                 }
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::NextClub])
                 {
@@ -369,31 +387,36 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == cro::GameController::DPadDown)
                 {
                     m_inputFlags &= ~InputFlag::Down;
+
+                    if (!isSpinputActive())
+                    {
+                        //toggles freecam
+                        auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                        msg->type = SceneEvent::RequestToggleFreecam;
+                        msg->data = evt.cbutton.which;
+                    }
                 }
 
-                else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
+                /*else if (evt.cbutton.button == cro::GameController::ButtonLeftStick)
                 {
                     m_inputFlags &= ~InputFlag::MiniMap;
-                }
+                }*/
             }
         }
 
-        //this would be nice - but I cba to block the input when, say,
-        //a menu is open so clicking the menu doesn't take a swing...
-        /*else if (evt.type == SDL_MOUSEBUTTONDOWN)
+        else if (evt.type == SDL_CONTROLLERAXISMOTION)
         {
-            if (evt.button.button == SDL_BUTTON_LEFT)
+            if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
             {
-                m_inputFlags |= InputFlag::Action;
+                m_activeController = evt.caxis.which;
+            }
+            
+            if (acceptInput(evt.caxis.which))
+            {
+                m_thumbsticks.setValue(evt.caxis.axis, evt.caxis.value);
             }
         }
-        else if (evt.type == SDL_MOUSEBUTTONUP)
-        {
-            if (evt.button.button == SDL_BUTTON_LEFT)
-            {
-                m_inputFlags &= ~InputFlag::Action;
-            }
-        }*/
+
 
         else if (evt.type == SDL_MOUSEWHEEL)
         {
@@ -440,6 +463,21 @@ void InputParser::setClub(float dist)
             && m_currentClub != m_firstClub);//prevent inf loop
     }
 
+    //fudge to prevent picking driver in clubset shuffle mode
+    if (m_sharedData.scoreType == ScoreType::ClubShuffle)
+    {
+        if ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0)
+        {
+            auto old = m_currentClub;
+
+            do
+            {
+                m_currentClub = (m_currentClub + 1) % ClubID::Count;
+            } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0
+                && m_currentClub != old);
+        }
+    }
+
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
@@ -467,16 +505,16 @@ float InputParser::getCamRotation() const
         && m_state == State::Aim
         && (m_inputFlags & ~(InputFlag::Up | InputFlag::Down)) == 0) //ignore these as right stick might set them
     {
-        if (cro::Keyboard::isKeyPressed(SDLK_4))
+        if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateLeft))
         {
             return 1.f;
         }
-        if (cro::Keyboard::isKeyPressed(SDLK_5))
+        if (cro::Keyboard::isKeyPressed(FixedKey::CameraRotateRight))
         {
             return -1.f;
         }
 
-        auto x = -cro::GameController::getAxisPosition(activeControllerID(m_inputBinding.playerID), cro::GameController::AxisRightX);
+        auto x = -getAxisPosition(cro::GameController::AxisRightX);
         const auto dz = LeftThumbDeadZone / 4;
         if (x < -dz || x > dz)
         {
@@ -525,6 +563,12 @@ std::int32_t InputParser::getClub() const
     return m_currentClub;
 }
 
+void InputParser::setHumanCount(std::int32_t count)
+{
+    m_humanCount = count;
+    m_swingput.setHumanCount(count);
+}
+
 void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::uint8_t lie)
 {
     CRO_ASSERT(terrain < TerrainID::Count, "");
@@ -540,6 +584,8 @@ void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::
         resetPower();
         m_inputFlags = 0;
         m_spin = glm::vec2(0.f);
+        m_thumbsticks.reset();
+        m_activeController = -1;
 
         m_swingput.setEnabled((m_enableFlags == std::numeric_limits<std::uint16_t>::max()) && !isCPU ? m_inputBinding.playerID : -1);
 
@@ -831,6 +877,11 @@ void InputParser::doFastStroke(float accuracy, float power)
     msg->type = GolfEvent::HitBall;
 }
 
+std::int32_t InputParser::getLastActiveController() const
+{
+    return lastActiveController;
+}
+
 //private
 void InputParser::updateDistanceEstimation()
 {
@@ -940,9 +991,13 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
+                const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ? 
+                    ClubID::Count : ClubID::Putter;
+
                 do
                 {
-                    auto clubCount = ClubID::Putter - m_firstClub;
+                    auto clubCount = MinClub - m_firstClub;
+                    m_clubOffset = m_currentClub - m_firstClub;
                     m_clubOffset = (m_clubOffset + 1) % clubCount;
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
@@ -958,9 +1013,13 @@ void InputParser::updateStroke(float dt)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
+                const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ?
+                    ClubID::Count : ClubID::Putter;
+
+
                 do
                 {
-                    auto clubCount = ClubID::Putter - m_firstClub;
+                    auto clubCount = MinClub - m_firstClub;
                     m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
@@ -968,7 +1027,6 @@ void InputParser::updateStroke(float dt)
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU? 0 : 1;
-
                 updateDistanceEstimation();
                 beginIcon();
             }
@@ -1033,10 +1091,10 @@ void InputParser::updateStroke(float dt)
                             m_state = State::Flight;
                             m_hook = m_swingput.getHook();
 
+                            lastActiveController = m_swingput.getLastActiveController();
+
                             auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                             msg->type = GolfEvent::HitBall;
-
-                            //TODO read hook value from swingput
                         }
                         else
                         {
@@ -1168,8 +1226,8 @@ void InputParser::updateDroneCam(float dt)
         auto invRotation = glm::inverse(tx.getRotation());
         auto up = invRotation * cro::Transform::Y_AXIS;
 
-        e.getComponent<cro::Transform>().rotate(up, rotation.y * zoomSpeed * dt);
-        e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rotation.x * zoomSpeed * dt);
+        tx.rotate(up, rotation.y * zoomSpeed * dt);
+        tx.rotate(cro::Transform::X_AXIS, rotation.x * zoomSpeed * dt);
     };
     m_gameScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
@@ -1230,12 +1288,10 @@ void InputParser::checkControllerInput()
         return;
     }
 
-    auto controllerID = activeControllerID(m_inputBinding.playerID);
 
     //left stick
     auto startInput = m_inputFlags;
-    float xPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
-    //xPos += cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightX);
+    float xPos = getAxisPosition(cro::GameController::AxisLeftX);
 
     if (xPos < -LeftThumbDeadZone)
     {
@@ -1255,7 +1311,7 @@ void InputParser::checkControllerInput()
         m_inputFlags &= ~InputFlag::Right;
     }
 
-    float yPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
+    float yPos = getAxisPosition(cro::GameController::AxisLeftY);
     
     float len2 = (xPos * xPos) + (yPos * yPos);
     static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);
@@ -1266,7 +1322,8 @@ void InputParser::checkControllerInput()
 
 
     //this isn't really analogue, it just moves the camera so do it separately
-    yPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightY);
+    yPos = getAxisPosition(cro::GameController::AxisRightY);
+
     if (yPos > (LeftThumbDeadZone))
     {
         m_inputFlags |= InputFlag::Down;
@@ -1364,17 +1421,19 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
         }
     }
 
-    auto controllerID = activeControllerID(m_inputBinding.playerID);
-    auto controllerX = cro::GameController::getAxisPosition(controllerID, xAxis);
-    auto controllerY = cro::GameController::getAxisPosition(controllerID, yAxis);
+    auto controllerX = getAxisPosition(xAxis);
+    auto controllerY = getAxisPosition(yAxis);
     if (std::abs(controllerX) > LeftThumbDeadZone)
     {
-        //hmmm we want to read axis inversion from the settings...
         rotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
+        rotation.y *= m_sharedData.invertX ? -1.f : 1.f;
+        rotation.y *= m_sharedData.mouseSpeed;
     }
     if (std::abs(controllerY) > LeftThumbDeadZone)
     {
         rotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
+        rotation.x *= m_sharedData.invertY ? -1.f : 1.f;
+        rotation.x *= m_sharedData.mouseSpeed;
     }
 
     if (auto len2 = glm::length2(rotation); len2 != 0)
@@ -1383,6 +1442,14 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
     }
 
     return rotation;
+}
+
+std::int16_t InputParser::getAxisPosition(std::int32_t axis) const
+{
+    //auto controllerID = activeControllerID(m_inputBinding.playerID);
+    //return cro::GameController::getAxisPosition(controllerID, axis);
+
+    return m_thumbsticks.getValue(axis);
 }
 
 void InputParser::beginIcon()

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,76 +29,147 @@ source distribution.
 
 #pragma once
 
+#include "Thumbsticks.hpp"
+
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/String.hpp>
+#include <crogine/detail/glm/gtc/quaternion.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-
-/*
-First/third person camera controller.
-Attach this directly to an entity which has a Camera component for first
-person view, or attach a Camera to a child entity of the camera controller
-and place it appropriately to create a third person view.
-*/
+#include <crogine/gui/GuiClient.hpp>
 
 struct FpsCamera final
 {
+    static constexpr float MaxZoom = 0.25f; //multiplier of shared data FOV
+    static constexpr float MinZoom = 1.f;
+
+    float fov = MinZoom;
+    float zoomProgress = 0.f; //0 - 1
+
     float cameraPitch = 0.f; //used to clamp camera
     float cameraYaw = 0.f; //used to calc forward vector
 
-    float moveSpeed = 3.f; //units per second
-    float lookSensitivity = 0.5f; //0 - 1
-    float yInvert = 1.f; //-1 to invert axis
+    float moveSpeed = 5.f; //units per second
 
-    std::int32_t controllerIndex = 0; //which controller to accept input from. Keyboard input is always sent to controller 0
 
-    bool flyMode = true;
 
-    //if setting a transform manually on an entity which uses this component
-    //call this once with the entity to reset the orientation to the new transform.
-    void resetOrientation(cro::Entity entity)
+    struct State final
     {
-        auto rotation = glm::eulerAngles(entity.getComponent<cro::Transform>().getRotation());
-        //cam.cameraPitch = rotation.x;
-        cameraYaw = rotation.y;
+        enum
+        {
+            Enter, Active, Exit
+        };
+    };
+    std::int32_t state = State::Enter;
+
+    //used for transition to/from camera
+    struct Transition final
+    {
+        glm::vec3 startPosition = glm::vec3(0.f);
+        glm::quat startRotation = cro::Transform::QUAT_IDENTITY;
+        float startFov = 1.f;
+
+        glm::vec3 endPosition = glm::vec3(0.f);
+        glm::quat endRotation = cro::Transform::QUAT_IDENTITY;
+        float endFov = 1.f;
+
+        float progress = 0.f;
+
+    std::function<void()> completionCallback;
+    }transition;
+
+    void resetTransition(glm::vec3 pos, glm::quat rot)
+    {
+        transition.endPosition = pos;
+        transition.endRotation = rot;
+        transition.endFov = 1.f;
+        fov = 1.f;
+        zoomProgress = 0.f;
+    }
+
+    void startTransition(glm::vec3 pos, glm::quat rot, float f)
+    {
+        transition.startPosition = pos;
+        transition.startRotation = rot;
+        transition.startFov = f;
+        transition.progress = 0.f;
+        state = State::Enter;
+    }
+
+    void endTransition(glm::vec3 pos, glm::quat rot)
+    {
+        transition.endPosition = pos;
+        transition.endRotation = rot;
+        transition.endFov = fov;
+        transition.progress = 1.f;
+        state = State::Exit;
     }
 };
 
 class CollisionMesh;
-class FpsCameraSystem final : public cro::System
+struct SharedStateData;
+class FpsCameraSystem final : public cro::System, public cro::GuiClient
 {
 public:
-    FpsCameraSystem(cro::MessageBus&, const CollisionMesh&);
+    FpsCameraSystem(cro::MessageBus&, const CollisionMesh&, const SharedStateData&);
 
     void handleEvent(const cro::Event&);
 
     void process(float) override;
 
-    //TODO allow adding keybinds to controller index mapping
+    void setHumanCount(std::int32_t c) { m_humanCount = c; }
+    void setControllerID(std::int32_t p);
+    void setLocation(const cro::String& l) { m_screenshotLocation = l; }
 
 private:
 
     const CollisionMesh& m_collisionMesh;
+    const SharedStateData& m_sharedData;
+
+    std::int32_t m_humanCount;
+    std::int32_t m_controllerID;
 
     struct Input final
     {
         enum Flags
         {
-            Forward = 0x1,
-            Backward = 0x2,
-            Left = 0x4,
-            Right = 0x8,
-            LeftMouse = 0x10,
+            Forward    = 0x1,
+            Backward   = 0x2,
+            Left       = 0x4,
+            Right      = 0x8,
+            LeftMouse  = 0x10,
             RightMouse = 0x20,
-            Crouch = 0x40,
-            Jump = 0x80
+            Down       = 0x40,
+            Up         = 0x80,
+            ZoomIn     = 0x100,
+            ZoomOut    = 0x200,
+            Sprint     = 0x400,
+            Walk       = 0x800,
         };
 
-        std::uint32_t timeStamp = 0;
+        std::int32_t wheel = 0;
         std::uint16_t buttonFlags = 0;
+        std::uint16_t prevStick = 0; //previous flags used by left thumb stick
         std::int8_t xMove = 0;
         std::int8_t yMove = 0;
-    };
-    std::array<Input, cro::GameController::MaxControllers> m_inputs;
+    }m_input;
+    
+    Thumbsticks m_thumbsticks;
+    std::int16_t m_triggerAmount;
 
-    void onEntityAdded(cro::Entity) override;
+    float m_sprintMultiplier;
+    float m_analogueMultiplier;
+    float m_inputAcceleration;
+
+    float m_forwardAmount;
+    float m_sideAmount;
+    float m_upAmount;
+
+    cro::String m_screenshotLocation;
+
+    void checkControllerInput(float);
+
+    void enterAnim(cro::Entity, float);
+    void exitAnim(cro::Entity, float);
 };

@@ -516,9 +516,9 @@ void MessageOverlayState::buildScene()
                         //m_sharedData.gameMode = GameMode::Tutorial;
 
                         Social::resetProfile();
-                        Career::instance().reset();
+                        Career::instance(m_sharedData).reset();
 
-                        League l(LeagueRoundID::Club);
+                        League l(LeagueRoundID::Club, m_sharedData);
                         l.reset();
                         
                         cro::App::quit();
@@ -538,7 +538,7 @@ void MessageOverlayState::buildScene()
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, -4.f));
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\n career progress including\nall of your unlocked items.");
+        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\n career progress, preserving\nany unlocked items.");
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
@@ -569,13 +569,15 @@ void MessageOverlayState::buildScene()
                         //menu state to remove any existing connection/server instance
                         //if for some reason we're resetting mid-game
                         m_sharedData.gameMode = GameMode::Tutorial;
+                        m_sharedData.leagueTable = 0; //must reset this else league browser tries to open non-existent table
+                        m_sharedData.leagueRoundID = 0;
 
-                        Career::instance().reset();
+                        Career::instance(m_sharedData).reset();
 
-                        Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
+                        /*Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
                         Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
                         Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);
-                        Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);
+                        Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);*/
 
                         requestStackClear();
                         requestStackPush(StateID::SplashScreen);

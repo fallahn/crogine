@@ -68,6 +68,8 @@ static void winFPE(int)
 #include <SDL_joystick.h>
 #include <SDL_filesystem.h>
 
+#include <future>
+
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
 #include "../detail/fa-regular-400.hpp"
@@ -86,7 +88,7 @@ static void winFPE(int)
 #include <sstream>
 
 #ifdef CRO_DEBUG_
-#define DEBUG_NO_CONTROLLER
+//#define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
 using namespace cro;
@@ -432,6 +434,24 @@ void App::run()
                     Console::print("Usage: r_drawDebugWindows <0|1>");
                 }
             }, nullptr);
+
+        Console::addCommand("list_audio_devices",
+            [](const std::string&)
+            {
+                auto deviceCount = SDL_GetNumAudioDevices(0);
+                if (deviceCount)
+                {
+                    for (auto i = 0; i < deviceCount; ++i)
+                    {
+                        auto str = SDL_GetAudioDeviceName(i, 0);
+                        Console::print(str);
+                    }
+                }
+                else
+                {
+                    Console::print("No Audio Devices Found");
+                }
+            }, nullptr);
     }
     else
     {
@@ -450,6 +470,9 @@ void App::run()
         Logger::log("App initialise() returned false.", Logger::Type::Error, Logger::Output::All);
     }
 
+    static constexpr std::int32_t MaxFrames = 4; //for every fixed update render no more than these frames
+    std::int32_t framesRendered = 0;
+
     while (m_running)
     {
         timeSinceLastUpdate += frameClock.restart();
@@ -464,15 +487,20 @@ void App::run()
             handleMessages();
 
             simulate(frameTime);
+
+            framesRendered = 0;
         }
 
-        doImGui();
+        if (framesRendered++ < MaxFrames)
+        {
+            doImGui();
 
-        ImGui::Render();
-        m_window.clear();
-        render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        m_window.display();
+            ImGui::Render();
+            m_window.clear();
+            render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            m_window.display();
+        }
     }
 
     saveSettings();
@@ -538,46 +566,63 @@ bool App::isValid()
 
 void App::saveScreenshot()
 {
+    //wait for any previous operation
+    static std::future<void> writeResult;
+    if (writeResult.valid())
+    {
+        writeResult.wait();
+    }
+
+    //TODO this assumes we're calling this with the main buffer
+    //active - if a texture buffer is currently active we should be
+    //checking the size of that at the very least...
     auto size = m_window.getSize();
-    std::vector<GLubyte> buffer(size.x * size.y * 4);
+    static std::vector<GLubyte> buffer;
+    buffer.resize(size.x * size.y * 3);
+
     glCheck(glPixelStorei(GL_PACK_ALIGNMENT, 1));
-    glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
+    glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGB, GL_UNSIGNED_BYTE, buffer.data()));
 
-    //flip row order
-    stbi_flip_vertically_on_write(1);
+    postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::ScreenshotTaken;
 
-    auto d = SysTime::now();
-    std::stringstream ss;
-    ss << std::setw(2) << std::setfill('0') << d.year() << "/"
-        << std::setw(2) << std::setfill('0') << d.months() << "/"
-        << d.days();
-    
-        
-    std::string filename = "screenshot_" + ss.str() + "_" + SysTime::timeString() + ".png";
-    std::replace(filename.begin(), filename.end(), '/', '_');
-    std::replace(filename.begin(), filename.end(), ':', '_');
 
-    auto outPath = getPreferencePath()+ "screenshots/";
-    std::replace(outPath.begin(), outPath.end(), '\\', '/');
+    writeResult = std::async(std::launch::async, [size]() {
+        //flip row order
+        stbi_flip_vertically_on_write(1);
 
-    if (!FileSystem::directoryExists(outPath))
-    {
-        FileSystem::createDirectory(outPath);
-    }
+        auto d = SysTime::now();
+        std::stringstream ss;
+        ss << std::setw(2) << std::setfill('0') << d.year() << "/"
+            << std::setw(2) << std::setfill('0') << d.months() << "/"
+            << d.days();
 
-    filename = outPath + filename;
 
-    RaiiRWops out;
-    out.file = SDL_RWFromFile(filename.c_str(), "w");
-    if (out.file)
-    {
-        stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
-        LogI << "Saved " << filename << std::endl;
-    }
-    else
-    {
-        LogE << SDL_GetError() << std::endl;
-    }
+        std::string filename = "screenshot_" + ss.str() + "_" + SysTime::timeString() + ".png";
+        std::replace(filename.begin(), filename.end(), '/', '_');
+        std::replace(filename.begin(), filename.end(), ':', '_');
+
+        auto outPath = getPreferencePath() + "screenshots/";
+        std::replace(outPath.begin(), outPath.end(), '\\', '/');
+
+        if (!FileSystem::directoryExists(outPath))
+        {
+            FileSystem::createDirectory(outPath);
+        }
+
+        filename = outPath + filename;
+
+        RaiiRWops out;
+        out.file = SDL_RWFromFile(filename.c_str(), "w");
+        if (out.file)
+        {
+            stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 3, buffer.data(), size.x * 3);
+            LogI << "Saved " << filename << std::endl;
+        }
+        else
+        {
+            LogE << SDL_GetError() << std::endl;
+        }
+        });
 }
 
 //protected
@@ -623,6 +668,29 @@ void App::handleEvents()
         switch (evt.type)
         {
         default: break;
+        case SDL_AUDIODEVICEADDED:
+            //index of the device
+        {
+            //auto str = SDL_GetAudioDeviceName(evt.adevice.which, evt.adevice.iscapture);
+            //LogI << str << " was connected " << std::endl;
+        }
+            break;
+        case SDL_AUDIODEVICEREMOVED:
+            //SDL ID of device
+        {
+            if (evt.adevice.iscapture)
+            {
+                AudioRenderer::onRecordDisconnect();
+            }
+            else
+            {
+                AudioRenderer::onPlaybackDisconnect();
+            }
+
+            //TODO how do we get something useful like the index/name of this device?
+            //LogI << "Device " << evt.adevice.which << " was disconnected" << std::endl;
+        }
+            break;
         case SDL_CONTROLLERBUTTONUP:
             if (Console::isVisible()
                 && (evt.cbutton.button == GameController::ButtonB || evt.cbutton.button == GameController::ButtonBack))
@@ -632,6 +700,15 @@ void App::handleEvents()
                 {
                     saveSettings();
                 }
+            }
+            [[fallthrough]];
+        case SDL_CONTROLLERBUTTONDOWN:
+            GameController::m_lastControllerIndex = GameController::controllerID(evt.cbutton.which);
+            break;
+        case SDL_CONTROLLERAXISMOTION:
+            if (std::abs(evt.caxis.value) > GameController::RightThumbDeadZone)
+            {
+                GameController::m_lastControllerIndex = GameController::controllerID(evt.caxis.which);
             }
             break;
         case SDL_KEYUP:
@@ -848,7 +925,7 @@ void App::removeWindows(const GuiClient* c)
             }), std::end(m_instance->m_debugWindows));
 }
 
-App::WindowSettings App::loadSettings() 
+App::WindowSettings App::loadSettings() const
 {
     WindowSettings settings;
 

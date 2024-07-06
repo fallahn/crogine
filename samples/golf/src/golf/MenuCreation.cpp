@@ -747,7 +747,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
     auto validData = Social::isValid();
     if (validData
-        &&!m_sharedCourseData.courseData.empty()
+        && !m_sharedCourseData.courseData.empty()
         && !m_sharedData.ballInfo.empty()
         && ! m_sharedData.avatarInfo.empty())
     {
@@ -1787,7 +1787,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         {
             if (cro::GameController::isConnected(0))
             {
-                if (cro::GameController::hasPSLayout(0))
+                if (hasPSLayout(0))
                 {
                     e.getComponent<cro::SpriteAnimation>().play(1);
                 }
@@ -1876,6 +1876,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
+    if (m_sharedData.scoreType != ScoreType::Stroke)
+    {
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
@@ -2219,7 +2223,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 85.f, 62.f, 0.4f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("Completed 100x this month!");
+    entity.addComponent<cro::Text>(smallFont).setString("Please Wait...");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
@@ -3052,7 +3056,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     if (m_sharedData.hosting)
                     {
                         //prevents starting the game if a game mode requires a certain number of players
-                        if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
+                        if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
+                            || m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])
                         {
                             m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
                             m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
@@ -3180,6 +3185,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     {
         std::uint8_t clientID = 0;
         std::uint8_t playerID = 0;
+        std::uint8_t lives = 0;
         std::int8_t score = 0;
     };
 
@@ -3204,7 +3210,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     switch (m_sharedData.scoreType)
                     {
                     default:
-                    case ScoreType::BattleRoyale:
+                    case ScoreType::Elimination:
+                        info.lives = m_sharedData.connectionData[i].playerData[j].skinScore;
+                        [[fallthrough]];
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
                     case ScoreType::MultiTarget:
@@ -3245,8 +3253,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 switch (m_sharedData.scoreType)
                 {
                 default:
+                case ScoreType::Elimination:
+                    if (a.score == b.score)
+                    {
+                        return a.lives > b.lives;
+                    }
+                    [[fallthrough]];
                 case ScoreType::Stroke:
-                case ScoreType::BattleRoyale:
                 case ScoreType::ShortRound:
                 case ScoreType::MultiTarget:
                     return a.score < b.score;
@@ -3265,7 +3278,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
             case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
@@ -3398,6 +3411,12 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         m_matchMaking.setGameConnectionCount(connectionCount);
     }
 
+    if (cd.connectionID != m_sharedData.clientConnection.connectionID)
+    {
+        //this is someone else so play notification
+        postMessage<SystemEvent>(cl::MessageID::SystemMessage)->type = SystemEvent::LobbyEntered;
+    }
+
     //new players won't have other levels
     std::uint16_t xp = (Social::getLevel() << 8) | m_sharedData.clientConnection.connectionID;
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerXP, xp, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -3516,6 +3535,8 @@ void MenuState::quitLobby()
     m_sharedData.clientConnection.connectionID = ConstVal::NullValue;
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
+
+    m_voiceChat.disconnect();
 
     m_matchMaking.leaveLobby();
     m_sharedData.lobbyID = 0;
@@ -4287,9 +4308,10 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
         {
             if (updateScoreboard)
             {
+                const float scale = m_sharedData.scoreType == ScoreType::Stroke ? 1.f : 0.f;
                 auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
-                m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setPosition(glm::vec2(200.f, 0.f));
             }
         }
@@ -4332,6 +4354,8 @@ void MenuState::updateUnlockedItems()
         {
             clubFlags = ClubID::DefaultSet;
         }
+        //this is a fudge for people ho miss putters from their set...
+        clubFlags |= ClubID::Flags[ClubID::Putter];
         auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / 5));
         for (auto i = 0u; i < clubCount; ++i)
         {
@@ -4478,19 +4502,18 @@ void MenuState::updateUnlockedItems()
         Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);
     }
 
-    //career items are driven directly by the league file status
-    //rather than these flags - they're just use to stop the
-    //unlock animation playing every single time.
+    //career items will check the league status for unlocks
+    //if these flags are unavailable when setting item lock status
 
     //career balls
     const std::array<League, 6u> Leagues =
     {
-        League(LeagueRoundID::RoundOne),
-        League(LeagueRoundID::RoundTwo),
-        League(LeagueRoundID::RoundThree),
-        League(LeagueRoundID::RoundFour),
-        League(LeagueRoundID::RoundFive),
-        League(LeagueRoundID::RoundSix),
+        League(LeagueRoundID::RoundOne, m_sharedData),
+        League(LeagueRoundID::RoundTwo, m_sharedData),
+        League(LeagueRoundID::RoundThree, m_sharedData),
+        League(LeagueRoundID::RoundFour, m_sharedData),
+        League(LeagueRoundID::RoundFive, m_sharedData),
+        League(LeagueRoundID::RoundSix, m_sharedData),
     };
     ballFlags = Social::getUnlockStatus(Social::UnlockType::CareerBalls);
     if (ballFlags != -1)
@@ -4569,6 +4592,7 @@ void MenuState::updateUnlockedItems()
                     case 1:
                     case 2:
                     case 3:
+                    {
                         leagueFlags |= flag;
                         auto& item = m_sharedData.unlockedItems.emplace_back();
                         item.id = ul::UnlockID::CareerGold + (position - 1);
@@ -4578,6 +4602,20 @@ void MenuState::updateUnlockedItems()
                         {
                             //this was the last league so show the credits
                             m_sharedData.showCredits = true;
+                        }
+                    }
+                        [[fallthrough]];
+                    case 4:
+                    case 5:
+                        if (i < (Leagues.size() - 1))
+                        {
+                            //show the padlock for unlocking the next league
+                            if (Leagues[i].getCurrentSeason() == 2) //only do this the first time
+                            {
+                                auto& u = m_sharedData.unlockedItems.emplace_back();
+                                u.id = ul::UnlockID::CareerLeague;
+                                //u.xp = 100; //this doesn't actually award XP, it just sets the text
+                            }
                         }
                         break;
                     }
@@ -4747,7 +4785,7 @@ void MenuState::createPreviousScoreCard()
         }
     }
 
-    if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+    if (m_sharedData.scoreType == ScoreType::Elimination)
     {
         //use the number of holes actually played
         holeCount = m_sharedData.holesPlayed + 1;
@@ -4755,6 +4793,7 @@ void MenuState::createPreviousScoreCard()
         backCount = std::max(0, holeCount - frontCount);
     }
 
+    //hmmm we're basically repeating the same thing here as in the Scoreboard update in GolfStateUI
     struct Entry final
     {
         std::uint32_t client = 0; //use this to index directly into name data, save making a copy
@@ -4764,6 +4803,12 @@ void MenuState::createPreviousScoreCard()
         std::int32_t totalFront = 0;
         std::int32_t totalBack = 0;
         std::int32_t roundScore = 0; //rule type, ie par diff or match points
+        std::uint8_t lives = 0;
+
+        std::array<float, 18> distanceScores = {};
+        float totalDistance = 0.f;
+        float frontDistance = 0.f;
+        float backDistance = 0.f;
     };
 
     std::vector<Entry> scoreEntries;
@@ -4780,7 +4825,9 @@ void MenuState::createPreviousScoreCard()
                 switch (m_sharedData.scoreType)
                 {
                 default:
-                case ScoreType::BattleRoyale:
+                case ScoreType::Elimination:
+                    entry.lives = m_sharedData.connectionData[i].playerData[j].skinScore;
+                    [[fallthrough]];
                 case ScoreType::MultiTarget:
                 case ScoreType::Stroke:
                 case ScoreType::ShortRound:
@@ -4796,54 +4843,80 @@ void MenuState::createPreviousScoreCard()
                 case ScoreType::Stableford:
                     //do nothing, we re-calc below
                     break;
+                case ScoreType::NearestThePin:
+                    
+                    break;
                 }
 
                 //These should be fine from the last round as they aren't
                 //cleared and resized until the beginning of the next one
                 //also means there are only as many scores as there are holes.
                 auto k = 0;
-                for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
+                if (m_sharedData.scoreType == ScoreType::NearestThePin)
                 {
-                    if (m_sharedData.scoreType == ScoreType::Stableford
-                        || m_sharedData.scoreType == ScoreType::StablefordPro)
+                    for (auto score : m_sharedData.connectionData[i].playerData[j].distanceScores)
                     {
-                        auto diff = static_cast<std::int32_t>(score) - courseData.parVals[k];
-                        auto stableScore = 2 - diff;
-
-                        if (m_sharedData.scoreType == ScoreType::Stableford)
-                        {
-                            stableScore = std::max(0, stableScore);
-                        }
-                        else if (stableScore < 2)
-                        {
-                            stableScore -= 2;
-                        }
-
-                        entry.holeScores[k] = stableScore;
-                        entry.total += stableScore;
+                        //need to track this so we know if player forfeited
+                        entry.holeScores[k] = m_sharedData.connectionData[i].playerData[j].holeScores[k];
+                        
+                        entry.distanceScores[k] = score;
+                        entry.totalDistance += score;
                         if (k < 9)
                         {
-                            entry.totalFront += stableScore;
+                            entry.frontDistance += score;
                         }
                         else
                         {
-                            entry.totalBack += stableScore;
+                            entry.backDistance += score;
                         }
+                        k++;
                     }
-                    else
+                }
+                else
+                {
+                    for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
                     {
-                        entry.holeScores[k] = score;
-                        entry.total += score;
-                        if (k < 9)
+                        if (m_sharedData.scoreType == ScoreType::Stableford
+                            || m_sharedData.scoreType == ScoreType::StablefordPro)
                         {
-                            entry.totalFront += score;
+                            auto diff = static_cast<std::int32_t>(score) - courseData.parVals[k];
+                            auto stableScore = 2 - diff;
+
+                            if (m_sharedData.scoreType == ScoreType::Stableford)
+                            {
+                                stableScore = std::max(0, stableScore);
+                            }
+                            else if (stableScore < 2)
+                            {
+                                stableScore -= 2;
+                            }
+
+                            entry.holeScores[k] = stableScore;
+                            entry.total += stableScore;
+                            if (k < 9)
+                            {
+                                entry.totalFront += stableScore;
+                            }
+                            else
+                            {
+                                entry.totalBack += stableScore;
+                            }
                         }
                         else
                         {
-                            entry.totalBack += score;
+                            entry.holeScores[k] = score;
+                            entry.total += score;
+                            if (k < 9)
+                            {
+                                entry.totalFront += score;
+                            }
+                            else
+                            {
+                                entry.totalBack += score;
+                            }
                         }
+                        k++;
                     }
-                    k++;
                 }
             }
         }
@@ -4854,7 +4927,12 @@ void MenuState::createPreviousScoreCard()
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
+                if (a.total == b.total)
+                {
+                    return a.lives > b.lives;
+                }
+                [[fallthrough]];
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
@@ -4865,6 +4943,8 @@ void MenuState::createPreviousScoreCard()
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
                 return a.total > b.total;
+            case ScoreType::NearestThePin:
+                return a.totalDistance < b.totalDistance;
             }
         });
 
@@ -4891,7 +4971,7 @@ void MenuState::createPreviousScoreCard()
     //TODO we could do all the updates in one iter over the Entries
     //but this is all in the loading screen so... meh
 
-    bool page2 = m_sharedData.scoreType == ScoreType::BattleRoyale ?
+    bool page2 = m_sharedData.scoreType == ScoreType::Elimination ?
         backCount != 0
         : m_sharedData.holeCount == 0;
 
@@ -4903,6 +4983,7 @@ void MenuState::createPreviousScoreCard()
         break;
     case ScoreType::Stableford:
     case ScoreType::StablefordPro:
+    case ScoreType::NearestThePin:
         str += " ";
         break;
     }
@@ -4928,6 +5009,7 @@ void MenuState::createPreviousScoreCard()
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
+        case ScoreType::NearestThePin:
             str += " ";
             break;
         }
@@ -4961,7 +5043,7 @@ void MenuState::createPreviousScoreCard()
     case 1:
         holeCount = frontCount;
         
-        if (m_sharedData.scoreType == ScoreType::BattleRoyale
+        if (m_sharedData.scoreType == ScoreType::Elimination
             && m_sharedData.reverseCourse)
         {
             parOffset = 9;
@@ -4970,7 +5052,7 @@ void MenuState::createPreviousScoreCard()
         break;
     case 2:
         //back 9
-        if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+        if (m_sharedData.scoreType == ScoreType::Elimination)
         {
             parOffset = m_sharedData.reverseCourse ? 0 : 9;
         }
@@ -5016,6 +5098,7 @@ void MenuState::createPreviousScoreCard()
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
+        case ScoreType::NearestThePin:
             str += " ";
             break;
         }
@@ -5056,6 +5139,23 @@ void MenuState::createPreviousScoreCard()
                     redStr += "\n" + std::to_string(score);
                 }
                 break;
+            case ScoreType::NearestThePin:
+                if (score > MaxNTPStrokes)
+                {
+                    str += "\n";
+                    redStr += "\nF";
+                }
+                else if(score != 0)
+                {
+                    str += "\n-";
+                    redStr += "\n";
+                }
+                else
+                {
+                    str += "\n";
+                    redStr += "\n";
+                }
+                break;
             }
         }
 
@@ -5085,6 +5185,7 @@ void MenuState::createPreviousScoreCard()
                     break;
                 case ScoreType::Stableford:
                 case ScoreType::StablefordPro:
+                case ScoreType::NearestThePin:
                     str += " ";
                     break;
                 }
@@ -5119,6 +5220,23 @@ void MenuState::createPreviousScoreCard()
                         {
                             str += "\n";
                             redStr += "\n" + std::to_string(score);
+                        }
+                        break;
+                    case ScoreType::NearestThePin:
+                        if (score > MaxNTPStrokes)
+                        {
+                            str += "\n";
+                            redStr += "\nF";
+                        }
+                        else if (score != 0)
+                        {
+                            str += "\n-";
+                            redStr += "\n";
+                        }
+                        else
+                        {
+                            str += "\n";
+                            redStr += "\n";
                         }
                         break;
                     }
@@ -5176,16 +5294,26 @@ void MenuState::createPreviousScoreCard()
             str += " ";
         }
         break;
+    case ScoreType::NearestThePin:
+        str += " ";
+        break;
     }
 
     for (const auto& entry : scoreEntries)
     {
-        str += "\n" + std::to_string(entry.totalFront);
+        if (m_sharedData.scoreType == ScoreType::NearestThePin)
+        {
+            str += "\n ";
+        }
+        else
+        {
+            str += "\n" + std::to_string(entry.totalFront);
+        }
 
         switch (m_sharedData.scoreType)
         {
         default:
-        case ScoreType::BattleRoyale:
+        case ScoreType::Elimination:
         case ScoreType::MultiTarget:
         case ScoreType::Stroke:
         case ScoreType::ShortRound:
@@ -5208,6 +5336,22 @@ void MenuState::createPreviousScoreCard()
             break;
         case ScoreType::Skins:
             str += " - " + std::to_string(entry.roundScore) + " SKINS";
+            break;
+        case ScoreType::NearestThePin:
+        {
+            std::stringstream ss;
+            ss.precision(2);
+            if (m_sharedData.imperialMeasurements)
+            {
+                ss << std::fixed << entry.totalDistance * ToYards;
+                str += ss.str() + " YARDS";
+            }
+            else
+            {
+                ss << std::fixed << entry.totalDistance;
+                str += ss.str() + " METRES";
+            }
+        }
             break;
         }
     }
@@ -5235,12 +5379,19 @@ void MenuState::createPreviousScoreCard()
 
         for (const auto& entry : scoreEntries)
         {
-            str += "\n" + std::to_string(entry.totalBack);
+            if (m_sharedData.scoreType == ScoreType::NearestThePin)
+            {
+                str += "\n ";
+            }
+            else
+            {
+                str += "\n" + std::to_string(entry.totalBack);
+            }
 
             switch (m_sharedData.scoreType)
             {
             default:
-            case ScoreType::BattleRoyale:
+            case ScoreType::Elimination:
             case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
@@ -5268,6 +5419,22 @@ void MenuState::createPreviousScoreCard()
             case ScoreType::Skins:
                 str += " - " + std::to_string(entry.roundScore) + " SKINS";
                 break;
+            case ScoreType::NearestThePin:
+            {
+                std::stringstream ss;
+                ss.precision(2);
+                if (m_sharedData.imperialMeasurements)
+                {
+                    ss << std::fixed << entry.totalDistance * ToYards;
+                    str += ss.str() + " YARDS";
+                }
+                else
+                {
+                    ss << std::fixed << entry.totalDistance;
+                    str += ss.str() + " METRES";
+                }
+            }
+            break;
             }
         }
     }

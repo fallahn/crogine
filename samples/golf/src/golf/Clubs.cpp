@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -69,6 +69,23 @@ namespace
         ClubStat({10.3f, 10.f}, {10.3f, 10.f}, {10.3f, 10.f}),
         ClubStat({9.11f, 10.f}, {9.11f, 10.f}, {9.11f, 10.f}) //except this which is dynamic
     };
+
+    //constexpr std::array<ClubStat, ClubID::Count> ClubStats =
+    //{
+    //    ClubStat({ 47.199f, 220.000f }, { 49.378f, 240.000f }, { 51.398f, 260.000f }),
+    //    ClubStat({ 41.344f, 180.000f }, { 43.534f, 200.000f }, { 45.694f, 220.000f }),
+    //    ClubStat({ 37.172f, 150.000f }, { 38.402f, 160.000f }, { 40.533f, 180.000f }),
+    //    ClubStat({ 35.149f, 140.000f }, { 36.490f, 150.000f }, { 37.690f, 160.000f }),
+    //    ClubStat({ 33.869f, 130.000f }, { 35.440f, 140.000f }, { 36.490f, 150.000f }),
+    //    ClubStat({ 32.850f, 120.000f }, { 34.160f, 130.000f }, { 35.440f, 140.000f }),
+    //    ClubStat({ 31.330f, 110.000f }, { 32.850f, 120.000f }, { 34.160f, 130.000f }),
+    //    ClubStat({ 29.910f, 100.000f }, { 31.330f, 110.000f }, { 32.850f, 120.000f }),
+    //    ClubStat({ 28.400f, 90.000f }, { 29.910f, 100.000f }, { 31.621f, 110.000f }),
+    //    ClubStat({ 25.491f, 70.000f }, { 26.562f, 75.000f }, { 27.460f, 80.000f }),
+    //    ClubStat({ 17.691f, 30.000f }, { 18.239f, 32.000f }, { 19.140f, 35.000f }),
+    //    ClubStat({ 10.300f, 10.000f }, { 10.300f, 10.000f }, { 10.300f, 10.000f }),
+    //    ClubStat({ 9.110f, 10.000f }, { 9.110f, 10.000f }, { 9.110f, 10.000f }),
+    //};
 
     static constexpr float ToYards = 1.094f;
     static constexpr float ToFeet = 3.281f;

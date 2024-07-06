@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,6 +41,7 @@ source distribution.
 #else
 #include <AL/al.h>
 #include <AL/alc.h>
+#include <AL/alext.h>
 #endif
 
 #include <atomic>
@@ -95,7 +96,7 @@ namespace cro
             void deleteBuffer(std::int32_t) override;
 
             std::int32_t requestNewStream(const std::string&) override;
-            std::int32_t requestNewBufferableStream(BufferedStreamLoader** dst);
+            std::int32_t requestNewBufferableStream(BufferedStreamLoader** dst, std::uint32_t channels, std::uint32_t sampleRate);
             void deleteStream(std::int32_t) override;
 
             std::int32_t requestAudioSource(std::int32_t, bool) override;
@@ -116,6 +117,9 @@ namespace cro
             void setSourceVelocity(std::int32_t, glm::vec3) override;
             void setDopplerFactor(float) override;
             void setSpeedOfSound(float) override;
+
+            void playbackDisconnectEvent() override;
+            void recordDisconnectEvent() override;
 
             void printDebug() override;
 
@@ -142,6 +146,9 @@ namespace cro
 
             OpenALStream& getNextFreeStream();
             bool initStream(OpenALStream&);
+
+            void getDeviceList();
+            void reconnect(const char*);
         };
     }
 }

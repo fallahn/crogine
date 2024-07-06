@@ -158,10 +158,14 @@ public:
             Chat,
             Poke,
             SkinsWin,
+            Snapshot,
 
             CrowdClearThroat,
             CrowdCough,
             CrowdSigh,
+
+            NTP01,
+            NTP02,
 
             Count
         };

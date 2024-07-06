@@ -1,3 +1,32 @@
+/*-----------------------------------------------------------------------
+
+Matt Marchant 2021 - 2024
+http://trederia.blogspot.com
+
+Super Video Golf - zlib licence.
+
+This software is provided 'as-is', without any express or
+implied warranty.In no event will the authors be held
+liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented;
+you must not claim that you wrote the original software.
+If you use this software in a product, an acknowledgment
+in the product documentation would be appreciated but
+is not required.
+
+2. Altered source versions must be plainly marked as such,
+and must not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any
+source distribution.
+
+-----------------------------------------------------------------------*/
+
 #include "../PacketIDs.hpp"
 #include "../BallSystem.hpp"
 #include "../Clubs.hpp"
@@ -14,7 +43,7 @@
 
 namespace
 {
-
+    constexpr float NTPPenalty = 10.f; //approx radius of green m_holeData[m_currentHole].distanceToPin;
 }
 
 using namespace sv;
@@ -27,6 +56,31 @@ void GolfState::handleRules(const GolfBallEvent& data)
         switch (m_sharedData.scoreType)
         {
         default: break;
+        case ScoreType::Elimination:
+            if (data.terrain != TerrainID::Hole)
+            {
+                if (m_playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par -1) //never going to finish under par
+                {
+                    m_playerInfo[0].skins--;
+                    std::uint16_t packet = ((m_playerInfo[0].client << 8) | m_playerInfo[0].player);
+                    auto packetID = PacketID::LifeLost;
+
+                    //if no lives left, eliminate
+                    if (m_playerInfo[0].skins == 0)
+                    {
+                        m_playerInfo[0].eliminated = true;
+                        packetID = PacketID::Elimination;
+                    }
+                    m_sharedData.host.broadcastPacket(packetID, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    
+                    //forfeit the rest of the hole
+                    m_playerInfo[0].holeScore[m_currentHole]++;
+                    m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+                    m_playerInfo[0].distanceToHole = 0;
+                    m_playerInfo[0].matchWins = 1; //flags this is a life lost
+                }
+            }
+            break;
         case ScoreType::Match:
         case ScoreType::Skins:
             if (m_playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
@@ -37,10 +91,11 @@ void GolfState::handleRules(const GolfBallEvent& data)
             break;
         case ScoreType::NearestThePin:
             //we may be in the hole so make sure we dont sqrt(0)
-            if (data.terrain < TerrainID::Water
-                || data.terrain == TerrainID::Hole)
+            if ((data.terrain < TerrainID::Water
+                && data.terrain != TerrainID::Hole)
+                || data.terrain == TerrainID::Stone)
             {
-                auto l2 = glm::length(data.position - m_holeData[m_currentHole].pin);
+                auto l2 = glm::length2(data.position - m_holeData[m_currentHole].pin);
                 if (l2 != 0)
                 {
                     m_playerInfo[0].distanceScore[m_currentHole] = std::sqrt(l2);
@@ -48,7 +103,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
             }
             else
             {
-                m_playerInfo[0].distanceScore[m_currentHole] = 666.f;
+                m_playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;
             }
             break;
         case ScoreType::LongestDrive:
@@ -129,38 +184,35 @@ void GolfState::handleRules(const GolfBallEvent& data)
                 m_playerInfo[0].holeScore[m_currentHole] = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? 6 : 12;
             }
             break;
-        case ScoreType::BattleRoyale:
-            //check if all other players already holed and eliminate remaining
-            if (m_eliminationStarted)
+        case ScoreType::Elimination:
+            //check player score and update lives if necessary
+            if (m_playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par)
             {
-                auto sortData = m_playerInfo; //don't sort on the live data
-                std::sort(sortData.begin(), sortData.end(), [](const PlayerStatus& a, const PlayerStatus& b)
-                    {
-                        if (!a.eliminated && !b.eliminated)
-                        {
-                            return a.distanceToHole > b.distanceToHole;
-                        }
+                m_playerInfo[0].skins--;
+                std::uint16_t packet = ((m_playerInfo[0].client << 8) | m_playerInfo[0].player);
+                auto packetID = PacketID::LifeLost;
 
-                        return !a.eliminated;
-                    });
-
-                if (sortData[1].distanceToHole == 0)
+                //if no lives left, eliminate
+                if (m_playerInfo[0].skins == 0)
                 {
-                    auto eliminee = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), 
-                        [&](const PlayerStatus ps)
-                        {
-                            return ps.client == sortData[0].client && ps.player == sortData[0].player;                    
-                        });
-                    eliminee->eliminated = true;
-                    eliminee->holeScore[m_currentHole] = m_holeData[m_currentHole].puttFromTee ? 6 : 12;
-                    eliminee->distanceToHole = 0.f;
-
-                    std::uint16_t packet = ((sortData[0].client << 8) | sortData[0].player);
-                    m_sharedData.host.broadcastPacket(PacketID::Elimination, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                    //LogI << (int)sortData[0].player << " was eliminated" << std::endl;
+                    m_playerInfo[0].eliminated = true;
+                    packetID = PacketID::Elimination;
                 }
+                m_sharedData.host.broadcastPacket(packetID, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                m_playerInfo[0].matchWins = 1; //marks player as having just lost a life
             }
+            else if (m_playerInfo[0].holeScore[m_currentHole] < m_holeData[m_currentHole].par - 1)
+            {
+                m_playerInfo[0].skins++;
+                std::uint16_t packet = ((m_playerInfo[0].client << 8) | m_playerInfo[0].player);
+                m_sharedData.host.broadcastPacket(PacketID::LifeGained, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+
+            break;
+        case ScoreType::NearestThePin:
+            m_playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;// m_holeData[m_currentHole].distanceToPin / 2.f;
+            m_playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes + 1;
             break;
         }
     }
@@ -201,7 +253,7 @@ bool GolfState::summariseRules()
 {
     bool gameFinished = false;
 
-    if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+    if (m_sharedData.scoreType == ScoreType::Elimination)
     {
         if (m_playerInfo.size() == 1
             || m_playerInfo[1].eliminated)
@@ -248,35 +300,42 @@ bool GolfState::summariseRules()
             }
         }
 
-
-        //only score if no player tied
-        if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
-            sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
-            || (m_skinsFinals && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
+        //hmm this used to apply to ALL score types before 
+        //elimination mode shanghaid some of the playerInfo fields
+        //so... are these the only two score types relevant here to
+        //do we need to allow all but exclude elimination (and maybe NTP)?
+        if (m_sharedData.scoreType == ScoreType::Skins
+            || m_sharedData.scoreType == ScoreType::Match)
         {
-            auto player = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), [&sortData](const PlayerStatus& p)
-                {
-                    return p.client == sortData[0].client && p.player == sortData[0].player;
-                });
-
-            player->matchWins++;
-            player->skins += m_skinsPot;
-            m_skinsPot = 1;
-
-            sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
-
-            //send notification packet to clients that player won the hole
-            std::uint16_t data = (player->client << 8) | player->player;
-            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
-        else //increase the skins pot, but only if not repeating the final hole
-        {
-            if (!m_skinsFinals)
+            //only score if no player tied
+            if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
+                sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
+                || (m_skinsFinals && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
             {
-                m_skinsPot++;
+                auto player = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), [&sortData](const PlayerStatus& p)
+                    {
+                        return p.client == sortData[0].client && p.player == sortData[0].player;
+                    });
 
-                std::uint16_t data = 0xff00 | m_skinsPot;
+                player->matchWins++;
+                player->skins += m_skinsPot;
+                m_skinsPot = 1;
+
+                sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
+
+                //send notification packet to clients that player won the hole
+                std::uint16_t data = (player->client << 8) | player->player;
                 m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            else //increase the skins pot, but only if not repeating the final hole
+            {
+                if (!m_skinsFinals)
+                {
+                    m_skinsPot++;
+
+                    std::uint16_t data = 0xff00 | m_skinsPot;
+                    m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
             }
         }
 

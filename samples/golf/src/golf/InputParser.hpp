@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,7 @@ source distribution.
 
 #include "InputBinding.hpp"
 #include "Swingput.hpp"
+#include "Thumbsticks.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -50,6 +51,7 @@ public:
 
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
+    void setDistanceToHole(float d) { m_distanceToHole = d; }
     void setClub(float); //picks closest club to given distance
     float getYaw() const; //yaw in world space (includes facing direction)
     float getRotation() const; //relative rotation
@@ -63,6 +65,7 @@ public:
     float getHook() const; //-1 to -1 * some angle, club defined
 
     std::int32_t getClub() const;
+    void setHumanCount(std::int32_t); //if there's only one human count we can use input from any controller
 
     // *sigh* be careful with this, the int param can be implicitly converted to bool...
     void setActive(bool active, std::int32_t terrain, bool isCPU = false, std::uint8_t lie = 1);
@@ -103,13 +106,15 @@ public:
 
     void doFastStroke(float hook, float power); //performed by 'fast' CPU
 
-
+    std::int32_t getLastActiveController() const;
 private:
     const SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;
     cro::Scene* m_gameScene;
 
     Swingput m_swingput;
+    std::int32_t m_humanCount;
+    std::int32_t m_activeController; //used when multple controllers are connected in single player
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
@@ -128,6 +133,7 @@ private:
     bool m_isCPU;
     cro::Clock m_doubleTapClock; //prevent accidentally double tapping action
 
+    float m_distanceToHole;
     float m_holeDirection; //radians
     float m_rotation; //+- max rads
     float m_maxRotation;
@@ -160,6 +166,7 @@ private:
     float m_estimatedDistance;
     void updateDistanceEstimation();
 
+
     void updateStroke(float);
     void updateDroneCam(float);
     void updateSpin(float);
@@ -168,6 +175,12 @@ private:
     void checkControllerInput();
     void checkMouseInput();
     glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const; //used for drone cam and spin amount
+
+
+    Thumbsticks m_thumbsticks;
+    std::int16_t getAxisPosition(std::int32_t axis) const;
+
+
 
     cro::Clock m_minimapToggleTimer;
 

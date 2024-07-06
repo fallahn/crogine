@@ -36,6 +36,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 #include "Utility.hpp"
+#include "CallbackData.hpp"
 #include "MenuCallbacks.hpp"
 #include "MenuConsts.hpp"
 #include "TextAnimCallback.hpp"
@@ -251,6 +252,20 @@ void CareerState::handleMessage(const cro::Message& msg)
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         }
     }
+    else if (msg.id == Social::MessageID::SocialMessage)
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::PlayerNameChanged)
+        {
+            m_playerName.getComponent<cro::Text>().setString(Social::getPlayerName());
+            for (auto& table : Career::instance(m_sharedData).getLeagueTables())
+            {
+                //this is misleading - it says it's cont however it updates the
+                //internal string data with the player's name...
+                table.getPreviousResults(Social::getPlayerName());
+            }
+        }
+    }
 
     m_scene.forwardMessage(msg);
 }
@@ -337,7 +352,7 @@ void CareerState::buildScene()
                     if (currIdx != 0 &&
                         currIdx == m_maxLeagueIndex - 1)
                     {
-                        if (Career::instance().getLeagueTables()[currIdx].getCurrentIteration() == 0)
+                        if (Career::instance(m_sharedData).getLeagueTables()[currIdx].getCurrentIteration() == 0)
                         {
                             m_sharedData.leagueRoundID = std::min(std::int32_t(LeagueRoundID::RoundSix), m_sharedData.leagueRoundID + 1);
                         }
@@ -360,7 +375,7 @@ void CareerState::buildScene()
                     {
                         auto idx = m_sharedData.leagueRoundID - LeagueRoundID::RoundOne;
                         if (idx == 0 && m_progressPositions[idx] == 0 //no completed holes
-                            && Career::instance().getLeagueTables()[idx].getCurrentIteration() == 0)
+                            && Career::instance(m_sharedData).getLeagueTables()[idx].getCurrentIteration() == 0)
                         {
                             //if we're on the first league/season show the info
                             enterInfoCallback();
@@ -516,8 +531,8 @@ void CareerState::buildScene()
 
 
     //league items
-    const auto& leagueData = Career::instance().getLeagueData();
-    const auto& leagueTables = Career::instance().getLeagueTables();
+    const auto& leagueData = Career::instance(m_sharedData).getLeagueData();
+    const auto& leagueTables = Career::instance(m_sharedData).getLeagueTables();
     glm::vec3 position = LeagueListPosition;
 
     //active league highlight
@@ -541,7 +556,7 @@ void CareerState::buildScene()
         //this just builds up the string if needed, and finds the previous result (if any)
         leagueTables[i].getPreviousResults(playerName);
 
-        const bool unlocked = (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < 4)));
+        const bool unlocked = (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < CareerLeagueThreshold)));
 
         //league titles, listed on left
         entity = m_scene.createEntity();
@@ -644,9 +659,51 @@ void CareerState::buildScene()
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_playerName = entity;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //ticker for freeplay reminder
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    position.x += 100.f;
+    position.y += LeagueLineSpacing + 1.f;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Freeplay mode!");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<ScrollData>();
+    entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.height += 2.f;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& [bounds, xPos] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
+            xPos -= (dt * 30.f);
+
+            static constexpr float BGWidth = 198.f;
+
+            if (xPos < (-bounds.width))
+            {
+                xPos = BGWidth + 20.f;
+            }
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            pos.x = std::round(xPos);
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            auto cropping = bounds;
+            cropping.left = -pos.x;
+            cropping.left += 20.f;
+            cropping.width = BGWidth;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //gimme
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 72.f, 96.f, 0.1f });
@@ -1666,7 +1723,7 @@ Unlike Free Play mode you can leave a Career round at any time, and resume it ag
 you're ready. Career mode will even remember which hole you're on!
 
 Standard league rules apply (see the league table for more information). Finish the current
-league in the top 3 to unlock the next stage. You can return to an unlocked league at any
+league in the top 5 to unlock the next stage. You can return to an unlocked league at any
 time if you want to try and improve your existing score.
 
 Finish a league in the top 3 to unlock a new ball, in the top 2 to unlock a new piece of
@@ -1840,8 +1897,8 @@ void CareerState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&
 
 void CareerState::selectLeague(std::size_t idx)
 {
-    const auto& leagueData = Career::instance().getLeagueData()[idx];
-    const auto& league = Career::instance().getLeagueTables()[idx];
+    const auto& leagueData = Career::instance(m_sharedData).getLeagueData()[idx];
+    const auto& league = Career::instance(m_sharedData).getLeagueTables()[idx];
 
     const auto playlistIdx = league.getCurrentIteration() % Career::MaxLeagues;
     const auto& courseData = m_sharedData.courseData->courseData[leagueData.playlist[playlistIdx].courseID];
@@ -1873,21 +1930,29 @@ void CareerState::selectLeague(std::size_t idx)
     {
         str += " (Hole " + std::to_string(m_progressPositions[idx]) + ")";
     }
-    str += "\nCurrent Position: " + std::to_string(league.getCurrentPosition());
-    switch (league.getCurrentPosition())
+
+    if (league.getCurrentScore() == 0)
     {
-    default:
-        str += "th";
-        break;
-    case 1:
-        str += "st";
-        break;
-    case 2:
-        str += "nd";
-        break;
-    case 3:
-        str += "rd";
-        break;
+        str += "\n";
+    }
+    else
+    {
+        str += "\nCurrent Position: " + std::to_string(league.getCurrentPosition());
+        switch (league.getCurrentPosition())
+        {
+        default:
+            str += "th";
+            break;
+        case 1:
+            str += "st";
+            break;
+        case 2:
+            str += "nd";
+            break;
+        case 3:
+            str += "rd";
+            break;
+        }
     }
 
     if (league.getCurrentSeason() > 1)

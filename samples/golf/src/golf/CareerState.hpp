@@ -84,6 +84,7 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
+    cro::Entity m_playerName;
     cro::RenderTexture m_clubTexture;
 
     struct LeagueDetails final

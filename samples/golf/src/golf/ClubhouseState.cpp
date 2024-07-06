@@ -387,7 +387,8 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
                     if (m_arcadeIndexKey == ArcadeKey.size())
                     {
                         //MAGIC
-                        if (m_arcadeEnt.isValid())
+                        if (m_arcadeEnt.isValid()
+                            && !m_arcadeEnt.getComponent<cro::UIInput>().enabled)
                         {
                             m_arcadeEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                             m_arcadeEnt.getComponent<cro::UIInput>().enabled = true;
@@ -1983,7 +1984,7 @@ void ClubhouseState::finaliseGameCreate()
 void ClubhouseState::finaliseGameJoin(std::uint64_t hostID)
 {
 #ifdef USE_GNS
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(hostID)));
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(hostID)), ConstVal::GamePort);
     m_sharedData.clientConnection.hostID = hostID;
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);

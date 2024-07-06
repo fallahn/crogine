@@ -218,7 +218,32 @@ void ProgressIcon::showLeague(std::int32_t index, std::int32_t progress, std::in
     }
 }
 
-//public
+void ProgressIcon::showMessage(const std::string& title, const std::string& msg)
+{
+    if (!m_active)
+    {
+        //update progress bar verts
+        const float pc = 1.f;
+        const auto idx = m_vertexData.size() - 1;
+        const auto pos = (BarSize.x * pc) + BarPos.x;
+        m_vertexData[idx].position.x = pos;
+        m_vertexData[idx - 1].position.x = pos;
+        m_vertexData[idx - 3].position.x = pos;
+        m_background.setVertexData(m_vertexData);
+
+
+        m_titleText.setString(title);
+        m_text.setString(cro::Util::String::wordWrap(msg, 40, 128));
+
+        m_active = true;
+        m_state = ScrollIn;
+        m_pauseTime = PauseTime;
+
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - IconSize.x, windowSize.y });
+    }
+}
+
 void ProgressIcon::update(float dt)
 {
     static const float Speed = 240.f;

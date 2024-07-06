@@ -208,7 +208,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<LeaderboardState>(StateID::Leaderboard, m_sharedData);
     m_stateStack.registerState<StatsState>(StateID::Stats, m_sharedData);
-    m_stateStack.registerState<LeagueState>(StateID::League, m_sharedData);
+    m_stateStack.registerState<LeagueState>(StateID::League, m_sharedData, m_profileData);
     m_stateStack.registerState<MapOverviewState>(StateID::MapOverview, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<EndlessAttractState>(StateID::EndlessAttract, m_sharedData, elsShared);
@@ -315,6 +315,8 @@ void GolfGame::handleMessage(const cro::Message& msg)
             {
                 recreatePostProcess();
             }
+            //ImGui::GetStyle().ScaleAllSizes(getViewScale());
+            //ImGui::GetIO().FontGlobalScale = getViewScale();
         }
     }
     else if (msg.id == MessageID::SystemMessage)
@@ -418,6 +420,14 @@ void GolfGame::handleMessage(const cro::Message& msg)
         {
             m_progressIcon->showLeague(data.challengeID, data.level, data.reason);
             //achievement is awarded by League class on completion
+        }
+    }
+    else if (msg.id == cro::Message::SystemMessage)
+    {
+        const auto& data = msg.getData<cro::Message::SystemEvent>();
+        if (data.type == cro::Message::SystemEvent::ScreenshotTaken)
+        {
+            m_progressIcon->showMessage(" ", "Screenshot Saved.");
         }
     }
 
@@ -692,14 +702,14 @@ bool GolfGame::initialise()
         });
 
     registerCommand("reset_leagues", 
-        [](const std::string&)
+        [&](const std::string&)
         {
             if (cro::FileSystem::showMessageBox("Information", "This will reset the leagues and close the game", cro::FileSystem::ButtonType::OK, cro::FileSystem::IconType::Warning))
             {
-                League l(LeagueRoundID::Club);
+                League l(LeagueRoundID::Club, m_sharedData);
                 l.reset();
 
-                Career::instance().reset();
+                Career::instance(m_sharedData).reset();
 
                 Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
                 Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
@@ -745,6 +755,67 @@ bool GolfGame::initialise()
             }
         });
 
+    registerCommand("connect_voice", 
+        [&](const std::string&)
+        {
+            if (m_sharedData.clientConnection.connected)
+            {
+                if (m_sharedData.hosting)
+                {
+#ifdef USE_GNS
+                    if (m_sharedData.serverInstance.addLocalVoiceConnection(m_sharedData.voiceConnection.netClient))
+                    {
+                        m_sharedData.voiceConnection.connected = true;
+                        cro::Console::print("Connected to local voice server");
+                    }
+                    else
+                    {
+                        m_sharedData.voiceConnection.connected = false;
+                        cro::Console::print("Could not connect to local voice server");
+                    }
+#else
+                    m_sharedData.voiceConnection.connected = m_sharedData.voiceConnection.netClient.connect("255.255.255.255", ConstVal::VoicePort);
+                    if (!m_sharedData.voiceConnection.connected)
+                    {
+                        m_sharedData.voiceConnection.connected = m_sharedData.voiceConnection.netClient.connect("127.0.0.1", ConstVal::VoicePort);
+                    }
+#endif
+                }
+                else
+                {
+#ifdef USE_GNS
+                    if (m_sharedData.voiceConnection.netClient.connect(CSteamID(uint64(m_sharedData.clientConnection.hostID)), ConstVal::VoicePort))
+                    {
+                        m_sharedData.voiceConnection.connected = true;
+                        m_sharedData.voiceConnection.hostID = m_sharedData.clientConnection.hostID;
+                        cro::Console::print("Connected to remote voice server");
+                    }
+                    else
+                    {
+                        m_sharedData.voiceConnection.connected = false;
+                        cro::Console::print("Could not connect to remote voice server");
+                    }
+#else
+                    m_sharedData.voiceConnection.connected = m_sharedData.voiceConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::VoicePort);
+#endif
+                }
+            }
+            else
+            {
+                cro::Console::print("Not connected to a server");
+            }
+        });
+
+    registerCommand("disconnect_voice", [&](const std::string&) 
+        {
+            if (m_sharedData.voiceConnection.connected)
+            {
+                m_sharedData.voiceConnection.netClient.disconnect();
+                m_sharedData.voiceConnection.connected = false;
+                m_sharedData.voiceConnection.connectionID = ConstVal::NullValue;
+                cro::Console::print("Disconnected from voice server");
+            }        
+        });
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
@@ -977,7 +1048,7 @@ void GolfGame::initFonts()
 
     //emoji fonts
     ctx.allowBold = false;
-    ctx.allowFillColour = true;
+    ctx.allowFillColour = false;
     ctx.allowOutline = false;
 
     static constexpr std::array Ranges =
@@ -989,11 +1060,11 @@ void GolfGame::initFonts()
 
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    //const std::string winPath = "assets/golf/fonts/OpenMoji.ttf";
     //const std::string winPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
     
     if (cro::FileSystem::fileExists(winPath))
     {
-        ctx.allowFillColour = false;
         for (const auto& r : Ranges)
         {
             ctx.codepointRange = r;
@@ -1007,14 +1078,17 @@ void GolfGame::initFonts()
     else
 #endif
     {
+        const std::string path = "assets/golf/fonts/OpenMoji.ttf";
+        //const std::string monoPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
+
         for (const auto& r : Ranges)
         {
             ctx.codepointRange = r;
-            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
-            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
-            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(path, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
 
-            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::OSK).appendFromFile(path, ctx);
         }
     }
 }
@@ -1366,6 +1440,16 @@ void GolfGame::loadPreferences()
                 }
             }
         }
+
+        path = Social::getBaseContentPath() + "league_names.txt";
+        if (!cro::FileSystem::fileExists(path))
+        {
+            m_sharedData.leagueNames.write();
+        }
+        else
+        {
+            m_sharedData.leagueNames.read();
+        }
     }
 
 
@@ -1617,8 +1701,17 @@ void GolfGame::loadAvatars()
                 pd = PlayerData();
                 pd.profileID = uid;
             }
-            //always use the current Steam user name
-            pd.name = Social::getPlayerName();
+
+            if (!pd.name.empty()
+                && pd.isCustomName)
+            {
+                Social::setPlayerName(pd.name);
+            }
+            else
+            {
+                //always use the current Steam user name
+                pd.name = Social::getPlayerName();
+            }
             pd.saveProfile();
 
             m_profileData.playerProfiles.push_back(pd);
@@ -1637,6 +1730,7 @@ void GolfGame::loadAvatars()
     }
 
     m_profileData.playerProfiles[0].isSteamID = true;
+
 #endif
 
     auto profileDirs = cro::FileSystem::listDirectories(path);

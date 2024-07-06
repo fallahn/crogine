@@ -30,18 +30,45 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/audio/sound_system/OpusEncoder.hpp>
+#include <crogine/audio/sound_system/effects_chain/BaseEffect.hpp>
 #include <crogine/gui/GuiClient.hpp>
+
+#include <SDL_audio.h>
 
 #include <vector>
 #include <string>
+#include <memory>
+
+
+
+//this is used to retreive data from the callback
+namespace cro::Detail
+{
+    struct CaptureContext final
+    {
+        SDL_AudioStream* conversionStream = nullptr;
+        float* circularBuffer = nullptr;
+        std::int32_t bufferInput = 0; //this is where the next block of data is inserted
+        std::int32_t bufferOutput = 0; //this is the next available index to be read - reset when the buffer wraps
+        std::int32_t buffAvailable = 0;
+        std::int32_t BufferSize = 0; //number of SAMPLES * channelCount - ie size of the array
+        std::int32_t FrameStride = 0; //number of entries in the circular buffer to step with 1 frame
+        std::int32_t FrameSizeBytes = 0; //when the conversion stream has this much available it's inserted into the circular buffer.
+
+        explicit CaptureContext(std::int32_t bs, std::int32_t fs)
+            : bufferInput(fs), BufferSize(bs), FrameStride(fs), FrameSizeBytes(fs * sizeof(float)) {}
+    };
+}
+
 
 namespace cro
 {
     /*!
     \brief The sound recorder captures audio from the specified audio device
-    and encodes it to a stream of Opus packets.
+    and optionally creates an opus encoder for streaming audio
     */
-    class CRO_EXPORT_API SoundRecorder
+    class CRO_EXPORT_API SoundRecorder final
 #ifdef CRO_DEBUG_
         : public cro::GuiClient
 #endif
@@ -57,6 +84,11 @@ namespace cro
         SoundRecorder& operator = (SoundRecorder&&) = delete;
 
         /*!
+        \brief Refreshes the list of devices
+        */
+        void refreshDeviceList();
+        
+        /*!
         \brief Lists available recording devices
         */
         const std::vector<std::string>& listDevices() const;
@@ -67,28 +99,22 @@ namespace cro
         const std::string& getActiveDevice() const;
 
         /*!
-        \brief Attempts to open the device with the given name for recording.
+        \brief Attempts to open the device with the given name and starts recording.
+        \param device Name of the recording device to attempt to open
+        \param channels Number of channels to attempt to capture. Must be 1 (mono) or 2 (stereo)
+        \param sampleRate The sample rate at which to capture. To enable opus encoding this must be
+        8000, 12000, 16000, 24000 or 48000. Other sample rates can be used, but opus encoding will
+        be unavailable, even if createEncoder was true
+        \param createEncoder If true this will attempt to create an opus packet encoder to use with
+        getEncodedPacket(). However this will be ignored is sampleRate is not a compatible value.
         Use listDevices() to obtain a list of valid name strings
         */
-        bool openDevice(const std::string& device /*TODO set sample rate  and channel count*/);
+        bool openDevice(const std::string& device, std::int32_t channels, std::int32_t sampleRate, bool createEncoder = false);
 
         /*!
-        \brief Closes the current recording device or does nthing if no device is open
+        \brief Closes the current recording device or does nothing if no device is open
         */
         void closeDevice();
-
-        /*!
-        \brief Starts recording with the currently open device, or attempts to
-        open the last used device (or default device if no device was specified)
-        and starts recording.
-        \returns true if recording started or false if no device was available.
-        */
-        bool start();
-
-        /*!
-        \brief Stops recording if recording is active, else does nothing
-        */
-        void stop();
 
         /*!
         \brief Returns true if a device is open and capturing else
@@ -97,28 +123,84 @@ namespace cro
         bool isActive() const;
 
         /*!
-        \brief Returns the buffer of currently encoded opus packets
-        \param count Pointer to an int32_t which will be filled with the 
-        *number of packets* (not bytes) contained in the buffer.
-        TODO state packet size etc
+        \brief Resizes and fills the given buffer with an opus encoded packet.
+
+        This is only available if the recording device was opened with a compatible
+        sample rate and creteEncoder set to true. Otherwise this function does nothing.
         */
-        const std::uint8_t* getEncodedPackets(std::int32_t* count) const;
+        void getEncodedPacket(std::vector<std::uint8_t>& dst) const;
+
+        /*!
+        \brief Returns a pointer to the raw captured PCM data (if any)
+        \param count Pointer to an int32_t which is filled with the
+        number of *samples* in the buffer. (Note the total size is
+        samples * channel count)
+        */
+        const std::int16_t* getPCMData(std::int32_t* count) const;
+
+
+        /*!
+        \brief Returns the number of audio channels with which the audio
+        will be captured
+        */
+        std::int32_t getChannelCount() const;
+
+        /*!
+        \brief Returns the sample rate at which the audio will be captured
+        */
+        std::int32_t getSampleRate() const;
+
+
+        /*!
+        \brief Add an effect to the effect chain which processes the recorded audio
+        \param T must be a type which derives from BaseEffect
+        \param Args Optional arugments which are passed to the effect constructor
+        \returns A pointer to the newly created effect. Use this to set any parameters
+        on the effect. As effects are owned by the SoundRecorder these pointers are invalid
+        once the SoundRecorder goes out of scope.
+
+        Effects are applied to the recorded signal in the order in which they are added
+        with this function. As such you'll probably want to make sure to add effects like
+        the volume control last, so that it is applied after any other effects such as
+        the noise gate.
+        */
+        template <typename T, typename... Args>
+        T* insertEffect(Args... a)
+        {
+            static_assert(std::is_base_of<BaseEffect, T>::value, "Must be an effect type");
+
+            auto effect = std::make_unique<T>(a...);
+            effect->setAudioParameters(m_sampleRate, m_channelCount);
+
+            auto* retVal = effect.get();
+            m_processEffects.emplace_back(std::move(effect));
+            return retVal;
+        }
 
     private:
 
         std::vector<std::string> m_deviceList;
         std::int32_t m_deviceIndex;
 
-        void* m_recordingDevice;
+        std::int32_t m_recordingDevice;
         bool m_active;
 
-        void* m_encoder;
+        std::int32_t m_channelCount;
+        std::int32_t m_sampleRate;
+        std::int32_t m_frameSize;
 
-        //buffer for PCM captured from device
-        mutable std::vector<std::int16_t> m_pcmBuffer;
-        mutable std::vector<std::int16_t> m_pcmDoubleBuffer;
-        mutable std::uint32_t m_pcmBufferOffset;
-        mutable bool m_pcmBufferReady;
+        std::unique_ptr<Opus> m_encoder;
+        std::vector<std::unique_ptr<BaseEffect>> m_processEffects;
+
+        std::vector<float> m_circularBuffer;
+        SDL_AudioStream* m_captureStream;
+        mutable Detail::CaptureContext m_captureContext;
+
+        mutable std::vector<float> m_processBuffer; //1 frame's worth of audio post-effects processing
+        bool hasProcessedBuffer() const; //false if there's not enough to process else true if there's a frame in the process buffer
+
+        SDL_AudioStream* m_outputStream;
+        mutable std::vector<std::int16_t> m_outputBuffer;
 
         void enumerateDevices();
         bool openSelectedDevice();

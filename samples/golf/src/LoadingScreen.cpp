@@ -209,6 +209,16 @@ void LoadingScreen::update()
                 evt = {}; //not strictly necessary but squashes warning about re-using a moved object
             }
         }
+
+        if (m_sharedData.voiceConnection.connected)
+        {
+            //this NEEDS to be done to stop the voice channels backlogging the
+            //connection - however it means voice will cut out until the loading
+            //screen has exited - we ideally want to be able to pass it to a decoder
+            //immediately (although there'll be no active audio source anyway...)
+            net::NetEvent evt;
+            while (m_sharedData.voiceConnection.netClient.pollEvent(evt)) {}
+        }
     }
 }
 

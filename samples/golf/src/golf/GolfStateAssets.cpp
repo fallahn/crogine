@@ -34,12 +34,14 @@ source distribution.
 #include "SpectatorAnimCallback.hpp"
 #include "PropFollowSystem.hpp"
 #include "PoissonDisk.hpp"
+#include "Career.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -69,6 +71,8 @@ namespace
 #include "shaders/WaterShader.inl"
 #include "shaders/PostProcess.inl"
 #include "shaders/Glass.inl"
+#include "shaders/Blur.inl"
+#include "shaders/LensFlare.inl"
 }
 
 void GolfState::loadAssets()
@@ -363,6 +367,23 @@ void GolfState::loadMap()
         material.setProperty("u_skyColourTop", m_skyScene.getSkyboxColours().top);
         material.setProperty("u_skyColourBottom", m_skyScene.getSkyboxColours().middle);
         cloudRing.getComponent<cro::Model>().setMaterial(0, material);
+    }
+
+    if (materials.requestLensFlare
+        && m_sharedData.weatherType == WeatherType::Clear)
+    {
+        m_lensFlare.sunPos = materials.sunPos;
+
+        //this is just used to signal the UI creation that we
+        //have a shader and we want to use it
+        if (m_resources.shaders.loadFromString(ShaderID::LensFlare, cro::RenderSystem2D::getDefaultVertexShader(), LensFlareFrag, "#define TEXTURED\n"))
+        {
+            m_materialIDs[MaterialID::LensFlare] = ShaderID::LensFlare;
+
+            const auto& shader = m_resources.shaders.get(ShaderID::LensFlare);
+            m_lensFlare.shaderID = shader.getGLHandle();
+            m_lensFlare.positionUniform = shader.getUniformID("u_sourcePosition");
+        }
     }
 
     if (m_sharedData.nightTime)
@@ -1291,7 +1312,6 @@ void GolfState::loadMap()
         m_depthMap.update(40);
     }
 
-
     m_terrainBuilder.create(m_resources, m_gameScene, theme);
 
     //terrain builder will have loaded some shaders from which we need to capture some uniforms
@@ -1354,6 +1374,9 @@ void GolfState::loadMap()
                 m_currentHole = std::min(holeStrings.size() - 1, std::size_t(h));
                 m_terrainBuilder.applyHoleIndex(m_currentHole);
                 
+                m_depthMap.setModel(m_holeData[m_currentHole]);
+                m_depthMap.update(40);
+
                 auto& player = m_sharedData.connectionData[0].playerData[0];
                 player.holeScores.swap(scores);
                 
@@ -1380,6 +1403,15 @@ void GolfState::loadMap()
                 }
 
                 m_resumedFromSave = true;
+
+                //this might be an upgrade from the old league system
+                //so we need to fill in the in-progress scores
+                std::vector<std::int32_t> parVals;
+                for (auto i = 0u; i < m_currentHole; ++i)
+                {
+                    parVals.push_back(m_holeData[i].par);
+                    Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne].retrofitHoleScores(parVals);
+                }
             }
         }
     }
@@ -1687,8 +1719,10 @@ void GolfState::loadMaterials()
     m_postProcesses[PostID::Noise].shader = shader;
 
 
-    //light blur
-    if (m_sharedData.nightTime)
+
+
+    //light blur (also dof blur)
+    //if (m_sharedData.nightTime)
     {
         m_resources.shaders.loadFromString(ShaderID::Blur, BlurVert, BlurFrag);
         shader = &m_resources.shaders.get(ShaderID::Blur);
@@ -1712,6 +1746,10 @@ void GolfState::loadMaterials()
     m_postProcesses[PostID::Composite].shader = shader;
     //depth uniform is set after creating the UI once we know the render texture is created
 
+    defines += "#define DOF\n";
+    m_resources.shaders.loadFromString(ShaderID::CompositeDOF, CompositeVert, CompositeFrag, "#define ZFAR 320.0\n" + defines);
+    shader = &m_resources.shaders.get(ShaderID::CompositeDOF);
+    m_postProcesses[PostID::CompositeDOF].shader = shader;
 
 
     //wireframe
@@ -1808,6 +1846,7 @@ void GolfState::loadSprites()
     m_sprites[SpriteID::Thinking] = spriteSheet.getSprite("thinking");
     m_sprites[SpriteID::Sleeping] = spriteSheet.getSprite("sleeping");
     m_sprites[SpriteID::Typing] = spriteSheet.getSprite("typing");
+    m_sprites[SpriteID::Freecam] = spriteSheet.getSprite("camera_icon");
     m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
     m_sprites[SpriteID::Bunker] = spriteSheet.getSprite("bunker");
     m_sprites[SpriteID::Foul] = spriteSheet.getSprite("foul");
@@ -1948,7 +1987,7 @@ void GolfState::loadModels()
                                 //but we have a, uh.. 'handy' handle (to the hands)
                                 if (m_activeAvatar->hands)
                                 {
-                                    //we have to free this up alse the model might
+                                    //we have to free this up else the model might
                                     //become attached to two avatars...
                                     m_activeAvatar->hands->setModel({});
                                 }
@@ -2448,7 +2487,26 @@ void GolfState::initAudio(bool loadTrees)
         m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>();
         LogE << "Invalid AudioScape file was found" << std::endl;
     }
-    createMusicPlayer(m_gameScene, m_resources.audio, m_gameScene.getActiveCamera());
+    auto playlist = createMusicPlayer(m_gameScene, m_resources.audio, m_gameScene.getActiveCamera());
+    if (playlist.isValid())
+    {
+        registerCommand("list_tracks", [playlist](const std::string&)
+            {
+                const auto& trackEnts = playlist.getComponent<cro::Callback>().getUserData<MusicPlayerData>().playlist;
+                
+                if (!trackEnts.empty())
+                {
+                    for (auto e : trackEnts)
+                    {
+                        cro::Console::print(e.getLabel());
+                    }
+                }
+                else
+                {
+                    cro::Console::print("No music loaded");
+                }
+            });
+    }
 
 
     if (loadTrees)

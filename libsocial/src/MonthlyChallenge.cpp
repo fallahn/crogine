@@ -251,3 +251,14 @@ cro::String MonthlyChallenge::getProgressString() const
 
     return ret;
 }
+
+const std::string& MonthlyChallenge::getChallengeDescription() const
+{
+    if (m_month != -1)
+    {
+        return ChallengeDescriptions[m_month];
+    }
+
+    static std::string Fallback("Something went wrong...");
+    return Fallback;
+}

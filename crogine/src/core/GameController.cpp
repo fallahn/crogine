@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 
 using namespace cro;
+
+std::int32_t GameController::m_lastControllerIndex = 0;
 
 std::int32_t GameController::deviceID(std::int32_t controllerID)
 {
@@ -287,4 +289,249 @@ void GameController::setLEDColour(std::int32_t controllerIndex, cro::Colour colo
     {
         SDL_GameControllerSetLED(controller, colour.getRedByte(), colour.getGreenByte(), colour.getBlueByte());
     }
+}
+
+bool GameController::applyDSTriggerEffect(std::int32_t controllerIndex, std::int32_t triggers, const DSEffect& settings)
+{
+    struct DataPacket final
+    {
+        std::array<std::uint8_t, 2> header = { 0x0c, 0x40 };
+        std::array<std::uint8_t, 68> data = {};
+
+        DataPacket() { std::fill(data.begin(), data.end(), 0); }
+    };
+
+    if (auto* controller = SDL_GameControllerFromInstanceID(controllerIndex); controller)
+    {
+        if (SDL_GameControllerGetType(controller) == SDL_CONTROLLER_TYPE_PS5)
+        {
+            DataPacket dataPacket;
+
+            if (triggers & DSTriggerRight)
+            {
+                std::memcpy(&dataPacket.data[8], &settings, sizeof(DSEffect));
+                //dataPacket.data[17] = settings.actuationFrequency;
+            }
+            if (triggers & DSTriggerLeft)
+            {
+                std::memcpy(&dataPacket.data[19], &settings, sizeof(DSEffect));
+                //dataPacket.data[27] = settings.actuationFrequency;
+            }
+            return SDL_GameControllerSendEffect(controller, &dataPacket, sizeof(DataPacket)) == 0;
+        }
+        return false;
+    }
+    return false;
+}
+
+std::uint64_t GameController::getSteamHandle(std::int32_t controllerID)
+{
+#if SDL_MINOR_VERSION < 30
+            return 0;
+#else
+    if (controllerID < 0 || controllerID >= MaxControllers)
+    {
+        return 0;
+    }
+    
+    if (auto* c = App::m_instance->m_controllers[controllerID].controller; c != nullptr)
+    {
+            return SDL_GameControllerGetSteamHandle(c);
+    }
+    return 0;
+#endif
+}
+
+//factory functions for DSEffect - based on https://gist.github.com/Nielk1/6d54cc2c00d2201ccb8c2720ad7538db (MIT)
+GameController::DSEffect GameController::DSEffect::createFeedback(std::uint8_t position, std::uint8_t strength)
+{
+    position = std::min(std::uint8_t(9), position);
+    strength = std::min(std::uint8_t(8), strength);
+
+    DSEffect retVal;
+    if (strength == 0)
+    {
+        //defaults to switching the effect off
+        return retVal;
+    }
+
+    retVal.mode = DSModeFeedback;
+
+    std::uint8_t forceValue = std::uint8_t((strength - 1) & 0x07);
+    std::uint32_t forceZones = 0u;
+    std::uint16_t activeZones = 0u;
+
+    for (auto i = position; i < 10u; i++)
+    {
+        forceZones |= std::uint32_t(forceValue << (3 * i));
+        activeZones |= std::uint16_t(1 << i);
+    }
+
+    retVal.params[0] = std::uint8_t((activeZones >> 0) & 0xff);
+    retVal.params[1] = std::uint8_t((activeZones >> 8) & 0xff);
+    retVal.params[2] = std::uint8_t((forceZones >> 0) & 0xff);
+    retVal.params[3] = std::uint8_t((forceZones >> 8) & 0xff);
+    retVal.params[4] = std::uint8_t((forceZones >> 16) & 0xff);
+    retVal.params[5] = std::uint8_t((forceZones >> 24) & 0xff);
+
+    return retVal;
+}
+
+GameController::DSEffect GameController::DSEffect::createWeapon(std::uint8_t startPosition, std::uint8_t endPosition, std::uint8_t strength)
+{
+    startPosition = std::clamp(startPosition, std::uint8_t(2), std::uint8_t(7));
+    endPosition = std::clamp(endPosition, std::uint8_t(startPosition + 1), std::uint8_t(8));
+    strength = std::min(strength, std::uint8_t(8));
+
+    DSEffect retVal;
+    if (strength == 0)
+    {
+        return retVal;
+    }
+
+    retVal.mode = DSModeWeapon;
+    
+    std::uint16_t startAndStopZones = std::uint16_t((1 << startPosition) | (1 << endPosition));
+
+    retVal.params[0] = std::uint8_t((startAndStopZones >> 0) & 0xff);
+    retVal.params[1] = std::uint8_t((startAndStopZones >> 8) & 0xff);
+    retVal.params[2] = std::uint8_t (strength - 1);
+
+    return retVal;
+}
+
+GameController::DSEffect GameController::DSEffect::createVibration(std::uint8_t position, std::uint8_t strength, std::uint8_t frequency)
+{
+    position = std::clamp(position,std::uint8_t(0), std::uint8_t(9));
+    strength = std::clamp(strength, std::uint8_t(0), std::uint8_t(8));
+
+    DSEffect retVal;
+    if (strength == 0
+        || frequency == 0)
+    {
+        return retVal;
+    }
+
+    retVal.mode = DSModeVibrate;
+
+    std::uint8_t strengthValue = std::uint8_t((strength - 1) & 0x07);
+    std::uint32_t amplitudeZones = 0u;
+    std::uint16_t activeZones = 0u;
+
+    for (auto i = position; i < 10u; i++)
+    {
+        amplitudeZones |= std::uint32_t(strengthValue << (3 * i));
+        activeZones |= std::uint32_t (1 << i);
+    }
+
+    
+
+    retVal.params[0] = std::uint8_t((activeZones >> 0) & 0xff);
+    retVal.params[1] = std::uint8_t((activeZones >> 8) & 0xff);
+    retVal.params[2] = std::uint8_t((amplitudeZones >> 0) & 0xff);
+    retVal.params[3] = std::uint8_t((amplitudeZones >> 8) & 0xff);
+    retVal.params[4] = std::uint8_t((amplitudeZones >> 16) & 0xff);
+    retVal.params[5] = std::uint8_t((amplitudeZones >> 24) & 0xff);
+    //retVal.params[6] = 0;
+    //retVal.params[7] = 0;
+    retVal.params[8] = frequency;
+
+
+    return retVal;
+}
+
+GameController::DSEffect GameController::DSEffect::createMultiFeedback(const std::array<std::uint8_t, 10u>& values)
+{
+    DSEffect retVal;
+    if (std::all_of(values.begin(), values.end(), [](std::uint8_t i) {return i == 0; }))
+    {
+        return retVal;
+    }
+
+    retVal.mode = DSModeFeedback;
+
+    std::uint32_t forceZones = 0u;
+    std::uint32_t activeZones = 0u;
+
+    for (auto i = 0u; i < values.size(); i++)
+    {
+        if (values[i] != 0)
+        {
+            std::uint8_t forceValue = std::uint8_t((values[i] - 1) & 0x07);
+            forceZones |= std::uint32_t(forceValue << (3 * i));
+            activeZones |= std::uint32_t(1 << i);
+        }
+    }
+
+    retVal.params[0] = std::uint8_t((activeZones >> 0) & 0xff);
+    retVal.params[1] = std::uint8_t((activeZones >> 8) & 0xff);
+    retVal.params[2] = std::uint8_t((forceZones >> 0) & 0xff);
+    retVal.params[3] = std::uint8_t((forceZones >> 8) & 0xff);
+    retVal.params[4] = std::uint8_t((forceZones >> 16) & 0xff);
+    retVal.params[5] = std::uint8_t((forceZones >> 24) & 0xff);
+
+    return retVal;
+}
+
+GameController::DSEffect GameController::DSEffect::createSlopeFeedback(std::uint8_t startPosition, std::uint8_t endPosition, std::uint8_t startStrength, std::uint8_t endStrength)
+{
+    startPosition = std::clamp(startPosition, std::uint8_t(0), std::uint8_t(8));
+    endPosition = std::clamp(endPosition, std::uint8_t(startPosition+1), std::uint8_t(9));
+    startStrength = std::clamp(startStrength, std::uint8_t(1), std::uint8_t(8));
+    endStrength = std::clamp(endStrength, std::uint8_t(1), std::uint8_t(8));
+
+    std::array<std::uint8_t, 10u> values = {};
+    float slope = 1.f * static_cast<float>(endStrength - startStrength) / (endPosition - startPosition);
+    for (auto i = startPosition; i < values.size(); i++)
+    {
+        if (i <= endPosition)
+        {
+            values[i] = static_cast<std::uint8_t>(std::round(static_cast<float>(startStrength) + (slope * (i - startPosition))));
+        }
+        else
+        {
+            values[i] = endStrength;
+        }
+    }
+
+
+    return createMultiFeedback(values);
+}
+
+GameController::DSEffect GameController::DSEffect::createMultiVibration(const std::array<std::uint8_t, 10u>& values, std::uint8_t frequency)
+{
+    DSEffect retVal;
+    if (frequency == 0
+        || std::all_of(values.begin(), values.end(), [](std::uint8_t i) {return i == 0; }))
+    {
+        return retVal;
+    }
+
+    retVal.mode = DSModeVibrate;
+
+    std::uint32_t strengthZones = 0;
+    std::uint16_t activeZones = 0;
+
+    for (auto i = 0u; i < values.size(); i++)
+    {
+        if (values[i] != 0)
+        {
+            std::uint8_t strengthValue = std::uint8_t((values[i] - 1) & 0x07);
+            strengthZones |= std::uint32_t(strengthValue << (3 * i));
+            activeZones |= std::uint16_t(1 << i);
+        }
+    }
+
+
+    retVal.params[0] = std::uint8_t((activeZones >> 0) & 0xff);
+    retVal.params[1] = std::uint8_t((activeZones >> 8) & 0xff);
+    retVal.params[2] = std::uint8_t((strengthZones >> 0) & 0xff);
+    retVal.params[3] = std::uint8_t((strengthZones >> 8) & 0xff);
+    retVal.params[4] = std::uint8_t((strengthZones >> 16) & 0xff);
+    retVal.params[5] = std::uint8_t((strengthZones >> 24) & 0xff);
+    //retVal.params[6] = 0;
+    //retVal.params[7] = 0;
+    retVal.params[8] = frequency;
+
+    return retVal;
 }

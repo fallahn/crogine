@@ -50,7 +50,13 @@ namespace cro
     class CRO_EXPORT_API DynamicAudioStream final : public AudioSource
     {
     public:
-        DynamicAudioStream();
+        /*!
+        \brief Constructor
+        \param channels Number of audio channels the stream should expect
+        \param samplerate The sample rate of the incoming data
+        Note that DynamicAudioStreams always expect 16 bit data
+        */
+        DynamicAudioStream(std::uint32_t channels, std::uint32_t samplerate);
         ~DynamicAudioStream();
         DynamicAudioStream(const DynamicAudioStream&) = delete;
         DynamicAudioStream(DynamicAudioStream&&) noexcept;
@@ -59,8 +65,10 @@ namespace cro
 
         /*!
         \brief Allows submitting audio data to the internal buffer
+        Audio data must ALWAYS be 16 bit. The channel count and sample rate
+        should match the values with which this audio stream was constructed
         */
-        void updateBuffer(const std::vector<std::uint8_t>&);
+        void updateBuffer(const std::int16_t*, std::int32_t sampleCount);
 
         /*!
         \brief Returns the underlying data type

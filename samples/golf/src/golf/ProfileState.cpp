@@ -155,7 +155,7 @@ namespace
 
 ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedProfileData& sp)
     : cro::State        (ss, ctx),
-    m_uiScene           (ctx.appInstance.getMessageBus(), 384u),
+    m_uiScene           (ctx.appInstance.getMessageBus(), 1024),
     m_modelScene        (ctx.appInstance.getMessageBus(), 1024), //just because someone might be daft enough to install ALL the workshop items
     m_sharedData        (sd),
     m_profileData       (sp),
@@ -222,7 +222,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     {
         if (controllerID > -1)
         {
-            if (cro::GameController::hasPSLayout(controllerID))
+            if (hasPSLayout(controllerID))
             {
                 m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(PSString);
             }
@@ -719,7 +719,8 @@ void ProfileState::buildScene()
 
                 //assume we launched from a cached state and update
                 //local profile data if necessary
-                if (m_activeProfile.profileID != m_profileData.playerProfiles[m_profileData.activeProfileIndex].profileID)
+                //if (m_activeProfile.profileID != m_profileData.playerProfiles[m_profileData.activeProfileIndex].profileID) //this returns wrong result if the profile has the same id but needs refreshing, eg player name was changed
+                if (m_activeProfile.name != m_profileData.playerProfiles[m_profileData.activeProfileIndex].name)
                 {
                     m_activeProfile = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
 
@@ -728,10 +729,13 @@ void ProfileState::buildScene()
                     setHairIndex(indexFromHairID(m_activeProfile.hairID));
                     setBallIndex(indexFromBallID(m_activeProfile.ballID) % m_ballModels.size());
                     refreshMugshot();
-                    refreshNameString();
                     refreshSwatch();
                 }
                 m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.ballColour);
+
+                refreshNameString();
+                m_previousName = m_activeProfile.name;
+
                 refreshBio();
             }
             break;
@@ -1265,7 +1269,7 @@ void ProfileState::buildScene()
     nameButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
-                if (!m_activeProfile.isSteamID &&
+                if (/*!m_activeProfile.isSteamID &&*/
                     activated(evt))
                 {
                     auto& callback = m_menuEntities[EntityID::NameText].getComponent<cro::Callback>();
@@ -1277,9 +1281,36 @@ void ProfileState::buildScene()
 
                         if (evt.type == SDL_CONTROLLERBUTTONUP)
                         {
-                            auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
-                            msg->type = SystemEvent::RequestOSK;
-                            msg->data = 0;
+#ifdef USE_GNS
+                            if (Social::isSteamdeck())
+                            {
+                                const auto cb =
+                                    [&](bool submitted, const char* buffer)
+                                    {
+                                        if (submitted)
+                                        {
+                                            *m_textEdit.string = cro::String::fromUtf8(buffer, buffer + std::strlen(buffer));
+                                            *m_textEdit.string = m_textEdit.string->substr(0, ConstVal::MaxStringChars);
+                                            applyTextEdit();
+                                            refreshNameString();
+                                        }
+                                        else
+                                        {
+                                            cancelTextEdit();
+                                        }
+                                    };
+
+                                //this only shows the overlay as Steam takes care of dismissing it
+                                const auto utf = m_activeProfile.name.toUtf8();
+                                Social::showTextInput(cb, "Enter Name", ConstVal::MaxStringChars * 2, reinterpret_cast<const char*>(utf.data()));
+                            }
+                            else
+#endif
+                            {
+                                auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                                msg->type = SystemEvent::RequestOSK;
+                                msg->data = 0;
+                            }
                         }
                     }
                     else
@@ -1475,6 +1506,12 @@ void ProfileState::buildScene()
                         m_mugshotUpdated = false;
                     }
 
+                    if (m_activeProfile.isSteamID
+                        && m_activeProfile.name != Social::getPlayerName())
+                    {
+                        Social::setPlayerName(m_activeProfile.name);
+                    }
+
                     quitState();
                 }
             });
@@ -1494,6 +1531,7 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
+                    m_activeProfile.name = m_previousName;
                     quitState();
                 }
             });
@@ -3622,7 +3660,6 @@ bool ProfileState::applyTextEdit()
         m_textEdit.entity.getComponent<cro::Text>().setString(*m_textEdit.string);
         m_textEdit.entity.getComponent<cro::Callback>().active = false;
 
-
         //send this as a command to delay it by a frame - doesn't matter who receives it :)
         cro::Command cmd;
         cmd.targetFlags = CommandID::Menu::RootNode;
@@ -3639,8 +3676,9 @@ bool ProfileState::applyTextEdit()
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-
-        SDL_StopTextInput();
+        //SDL isn't really clear why we may want to call this, but
+        //it appears it can break the text input of ImGui windows
+        //SDL_StopTextInput();
         m_textEdit = {};
         return true;
     }

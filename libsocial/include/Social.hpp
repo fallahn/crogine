@@ -49,11 +49,11 @@ source distribution.
 //(ball started sending wind effect 1120 -> 1124)
 //(added night mode/weather 1141 -> 1150)
 //(player avatar data format changed 1153->1160)
-static constexpr std::uint16_t CURRENT_VER = 1164;
+static constexpr std::uint16_t CURRENT_VER = 1170;
 #ifdef __APPLE__
-static const std::string StringVer("1.16.4 (macOS beta)");
+static const std::string StringVer("1.17.0 (macOS beta)");
 #else
-static const std::string StringVer("1.16.4");
+static const std::string StringVer("1.17.0");
 #endif
 
 struct HallEntry final
@@ -115,7 +115,8 @@ public:
             PlayerAchievement, //as in we should cheer, not an actual achievement
             MonthlyProgress,
             LeagueProgress,
-            LobbyUpdated
+            LobbyUpdated,
+            PlayerNameChanged
         }type = LevelUp;
         std::int32_t level = 0; //if monthly progress then current value
         std::int32_t reason = -1; //if monthly progress then target value
@@ -183,7 +184,7 @@ public:
     static void courseComplete(const std::string&, std::uint8_t);
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
-    static void takeScreenShot() { cro::App::getInstance().saveScreenshot(); }
+    static void takeScreenshot(const cro::String&, std::size_t);
     static constexpr std::uint32_t IconSize = 64;
     static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";

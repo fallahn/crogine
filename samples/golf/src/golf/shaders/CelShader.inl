@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -126,6 +126,7 @@ inline const std::string CelVertexShader = R"(
         mat4 worldMatrix = u_worldMatrix;
         mat4 worldViewMatrix = u_worldViewMatrix;
         mat3 normalMatrix = u_normalMatrix;
+        //mat3 normalMatrix = transpose(inverse(mat3(u_worldMatrix)));
     #endif
 
     #if defined (VATS)
@@ -242,7 +243,7 @@ inline const std::string CelVertexShader = R"(
 
 inline const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
-    uniform vec4 u_lightColour;
+    uniform vec4 u_lightColour = vec4(1.0);
 
 #include SCALE_BUFFER
 
@@ -482,6 +483,7 @@ inline const std::string CelFragmentShader = R"(
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt * effectAmount);
 
+
 #if !defined(HOLE_HEIGHT)
 
         //TODO most of these comp shade materials don't need this
@@ -657,6 +659,12 @@ inline const std::string CelFragmentShader = R"(
 
 #if defined(TERRAIN_CLIP)
     FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118) * u_lightColour.rgb, FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
+
+//if(v_worldPosition.y < WaterLevel - 0.001)
+//{
+//discard;
+//}
+
 #endif
 
 #if defined (MASK_MAP)
@@ -695,5 +703,5 @@ inline const std::string CelFragmentShader = R"(
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, targetColour + FRAG_OUT.rgb, targetAmount);
 #endif
-
+//FRAG_OUT += vec4(1.0, 0.0, 0.0, 1.0);
     })";

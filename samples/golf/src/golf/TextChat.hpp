@@ -54,11 +54,13 @@ public:
 
     bool handlePacket(const net::NetEvent::Packet&); //returns true if a notification sound should play
 
-    void toggleWindow(bool showOSK, bool showQuickEmote);
+    void toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckInput = true);
 
     bool isVisible() const { return m_visible; }
 
     void setRootNode(cro::Entity e) { m_rootNode = e; }
+
+    void update(float);
 
     enum
     {
@@ -75,6 +77,9 @@ private:
     bool m_visible;
     bool m_scrollToEnd;
     bool m_focusInput;
+    bool m_drawWindow;
+    std::int32_t m_animDir; //1 in 0 out
+    float m_animationProgress;
 
     struct BufferLine final
     {

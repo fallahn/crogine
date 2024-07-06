@@ -31,6 +31,7 @@ source distribution.
 
 #include "../Networking.hpp"
 #include "ServerState.hpp"
+#include "ServerVoice.hpp"
 
 #include <atomic>
 #include <memory>
@@ -63,6 +64,7 @@ public:
     void stop();
 
     bool addLocalConnection(net::NetClient& client);
+    bool addLocalVoiceConnection(net::NetClient& client);
     void setHostID(std::uint64_t id);
     void setLeagueID(std::int32_t id);
 
@@ -85,6 +87,7 @@ private:
     std::int32_t m_playerCount;
 
     sv::SharedData m_sharedData;
+    VoiceHost m_voiceHost;
 
     struct PendingConnection final
     {

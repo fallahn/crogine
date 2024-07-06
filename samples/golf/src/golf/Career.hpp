@@ -52,6 +52,7 @@ struct CareerLeague final
     cro::String title;
 };
 
+struct SharedStateData;
 class Career final
 {
 public:
@@ -63,9 +64,9 @@ public:
 
     static constexpr std::uint32_t MaxLeagues = 6;
 
-    static Career& instance()
+    static Career& instance(const SharedStateData& sd)
     {
-        static Career i;
+        static Career i(sd);
         return i;
     }
 
@@ -75,7 +76,7 @@ public:
 
     void reset();
 private:
-    Career();
+    explicit Career(const SharedStateData& sd);
     std::array<CareerLeague, MaxLeagues> m_leagues = {};
     std::vector<League> m_leagueTables;
 };

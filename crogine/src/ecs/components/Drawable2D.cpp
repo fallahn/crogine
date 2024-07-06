@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -95,6 +95,7 @@ void Drawable2D::setTexture(TextureID textureID, glm::uvec2 size)
     {
         m_textureInfo.texture = nullptr;
         m_textureInfo.textureID = textureID;
+        m_textureInfo.GLType = textureID.isArray() ? GL_TEXTURE_2D_ARRAY : GL_TEXTURE_2D;
 
         m_applyDefaultShader = !m_customShader;
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -163,6 +163,8 @@ namespace cro
         */
         bool saveToFile(const std::string& path) const;
 
+        std::uint32_t getFrameBufferID() const override { return m_fboID; }
+
     private:
         std::uint32_t m_samples;
         std::uint32_t m_fboID;
@@ -183,7 +185,5 @@ namespace cro
 
         bool createDefault(RenderTarget::Context);
         bool createMultiSampled(RenderTarget::Context);
-
-        std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };
 }

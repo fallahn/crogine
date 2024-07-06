@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -109,7 +109,9 @@ uniform sampler2D u_depthTexture;
 uniform sampler2D u_lightTexture;
 uniform sampler2D u_blurTexture;
 uniform sampler2D u_maskTexture;
-
+#if defined(DOF)
+uniform sampler2D u_dofTexture;
+#endif
 uniform vec4 u_lightColour;
 
 //uniform float u_brightness = 1.1;
@@ -143,6 +145,13 @@ void main()
     float d = getDistance(depthSample);
     float fogMix = fogAmount(d);
 
+#if defined(DOF)
+    vec4 dofcolour = TEXTURE(u_dofTexture, v_texCoord) * v_colour;
+    dofcolour.rgb = dim(dofcolour.rgb);
+    colour = mix(colour, dofcolour, d);
+#endif
+
+
 #if defined (LIGHT_COLOUR)
     float maskAmount = TEXTURE(u_maskTexture, v_texCoord).a;
     float fogAddition = (0.95 * maskAmount) + 0.05;
@@ -163,5 +172,5 @@ void main()
 #endif
 
     FRAG_OUT = vec4(colour.rgb, 1.0);
-    //FRAG_OUT = mix(colour, vec4(d,d,d,1.0), u_density / 10.0);
+    //FRAG_OUT = mix(vec4(colour.rgb, 1.0), vec4(d,d,d,1.0), 0.99);
 })";

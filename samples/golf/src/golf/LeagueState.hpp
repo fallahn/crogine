@@ -30,6 +30,8 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "League.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -40,10 +42,11 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 struct SharedStateData;
+struct SharedProfileData;
 class LeagueState final : public cro::State, public cro::ConsoleClient, public cro::GuiClient
 {
 public:
-    LeagueState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    LeagueState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedProfileData&);
 
     bool handleEvent(const cro::Event&) override;
 
@@ -59,13 +62,14 @@ private:
 
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
+    SharedProfileData& m_profileData;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
     {
         enum
         {
-            Accept, Back,
+            Accept, Back, No,
 
             Count
         };
@@ -112,6 +116,17 @@ private:
     void buildScene();
     bool createLeagueTab(cro::Entity, const cro::SpriteSheet&, std::int32_t);
     void createInfoTab(cro::Entity);
+
+    float m_scrollMultiplier;
+    std::array<cro::Entity, LeagueID::Count> m_nameLists = {};
+    std::array<cro::Entity, LeagueID::Count> m_nameScrollers = {};
+    void refreshNameList(std::int32_t leagueID, const League&);
+    void refreshAllNameLists();
+
+    bool m_editName;
+    cro::String* m_activeName;
+    std::array<char, ConstVal::MaxStringChars * 2>  m_nameBuffer = {}; //hmmm this has to allow for multi-byte chars
+
 
 #ifdef USE_GNS
 

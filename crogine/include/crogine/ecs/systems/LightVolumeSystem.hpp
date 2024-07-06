@@ -53,7 +53,7 @@ namespace cro
     Light volumes can be rendered via entities with a Mesh component and LightVolume
     component. The mesh component is used to define the volume in 3D space and should
     be a sphere with greater or equal radius as the LightVolume. The LightVolume
-    component is then used to define the radius if the falloff and the light colour.
+    component is then used to define the radius of the falloff and the light colour.
 
     The LightVolumeSystem works in screen space and require the input of two scene
     buffers containing the position and normal data of the scene, usually output

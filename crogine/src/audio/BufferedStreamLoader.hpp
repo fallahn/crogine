@@ -37,13 +37,14 @@ namespace cro::Detail
 {
     /*!
     \brief emulates an audio file but expects buffered
-    data to be streamed from elsewhere
+    data to be streamed from elsewhere. Streams may have 1 or 2
+    channels and are always 16 bit.
     */
     class BufferedStreamLoader final : public AudioFile
     {
     public:
 
-        BufferedStreamLoader();
+        explicit BufferedStreamLoader(std::uint32_t channelCount, std::uint32_t sampleRate);
 
         ~BufferedStreamLoader();
         BufferedStreamLoader(const BufferedStreamLoader&) = delete;
@@ -55,7 +56,7 @@ namespace cro::Detail
 
         const PCMData& getData(std::size_t = 0, bool looped = false) const override;
 
-        void updateBuffer(const std::vector<std::uint8_t>&);
+        void updateBuffer(const int16_t*, std::int32_t);
 
         bool seek(cro::Time) override { return false; }
 

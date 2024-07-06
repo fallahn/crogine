@@ -34,6 +34,7 @@ source distribution.
 #include "AchievementStrings.hpp"
 #include "WeatherAnimationSystem.hpp"
 #include "ChunkVisSystem.hpp"
+#include "Career.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -235,26 +236,31 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("asefsd"))
-    //        {
-    //            /*if (m_drone.isValid())
-    //            {
-    //                auto pos = m_drone.getComponent<cro::Transform>().getPosition();
-    //                float height = pos.y - m_collisionMesh.getTerrain(pos).height;
-    //                ImGui::Text("height %3.3f", height);
-    //            }*/
-    //            /*ImGui::Text("Shader ID %d", m_targetShader.shaderID);
-    //            ImGui::Text("Shader Uniform %d", m_targetShader.vpUniform);
-    //            ImGui::Text("Position %3.2f, %3.2f, %3.2f", m_targetShader.position.x, m_targetShader.position.y, m_targetShader.position.z);
-    //            ImGui::Text("Size %3.3f", m_targetShader.size);*/
-    //            
-    //            const auto* system = m_gameScene.getSystem<ChunkVisSystem>();
-    //            ImGui::Text("Visible Chunks %d", system->getIndexList().size());
-    //        }
-    //        ImGui::End();        
-    //    });
+    /*registerWindow([&]() 
+        {
+            if (ImGui::Begin("asefsd"))
+            {
+                auto holeDir = m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin;
+                holeDir.y = 0.f;
+
+                auto windDir = m_windUpdate.windVector;
+                windDir.y = 0.f;
+
+                const float headWind = (glm::dot(glm::normalize(holeDir), glm::normalize(windDir)) + 1.f) * 0.5f;
+
+                static constexpr float BaseReduction = 0.9f;
+                float resultF = headWind * BaseReduction * m_windUpdate.windVector.y;
+                resultF /= (1.f + static_cast<float>(m_sharedData.clubSet));
+
+                const std::int32_t resultI = static_cast<std::int32_t>(std::round(resultF * 100.f));
+
+                ImGui::Text("Headwind %3.1f", headWind);
+                ImGui::Text("Strength %3.1f", m_windUpdate.windVector.y);
+
+                ImGui::Text("Likelyhood %d%", resultI);
+            }
+            ImGui::End();
+        });*/
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

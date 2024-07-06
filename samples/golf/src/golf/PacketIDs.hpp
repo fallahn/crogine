@@ -80,7 +80,9 @@ struct Activity final
         PlayerChatStart,
         PlayerChatEnd,
         PlayerIdleStart,
-        PlayerIdleEnd
+        PlayerIdleEnd,
+        FreecamStart,
+        FreecamEnd
     };
     std::uint8_t type = 0;
     std::uint8_t client = 0;
@@ -103,6 +105,28 @@ struct TextMessage final
     }
 };
 
+namespace VoicePacket
+{
+    enum
+    {
+        //identifies from which connection the voice packet arrived
+        //note that this isn't the same as ClientID rather just the
+        //order in which voice connections were made - not all client
+        //will want to connect, after all.
+        Client00,
+        Client01,
+        Client02,
+        Client03,
+        Client04,
+        Client05,
+        Client06,
+        Client07,
+
+        ClientConnect, //< uint8 index of voice channel which was assigned
+        ClientDisconnect, //< uint8 index of voice channel which disconnected
+    };
+}
+
 namespace PacketID
 {
     enum
@@ -121,7 +145,7 @@ namespace PacketID
         SetHole, //< uint16(uint8 hole | uint8 par)
         SetPar, //< uint8 par
         ScoreUpdate, //< ScoreUpdate struct
-        HoleWon, //< uint16 client OR'd player winning a match or skins point
+        HoleWon, //< uint16 client OR'd player winning a match or skins point, or NTP
         FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
         MaxStrokes, //< uint8 MaxStrokeID player reached stroke limit (so client can print message)
@@ -134,6 +158,8 @@ namespace PacketID
         BallLanded, //< BallUpdate struct
         Gimme, //< uint16 client << 8 | player turn was ended on a gimme
         Elimination, //< uint16 client << 8 | player was eliminated
+        LifeLost, //< uint16 client << 8 | player
+        LifeGained, //< uint16 client << 8 | player
         TableInfo, //< TableInfo struct
         TargetID, //< uint16 billiards player OR'd ball ID to update the UI
         ServerAchievement, //< uint8 client, uint8 player, uint8 achievement id - up to client to decide if to award
@@ -184,7 +210,8 @@ namespace PacketID
         BallPrediction, //< InputUpdate if from client, vec3 if from server
         PlayerXP, //<uint16 level << 8 | client - used to share client xp/level info
         ChatMessage, //TextMessage struct
-        DronePosition //< compressed vec3 from host rebroadcast to clients
+        DronePosition, //< compressed vec3 from host rebroadcast to clients
+        ClubChanged //< updates putt cam on remote clients: uint8 club | uint8 client
     };
 }
 

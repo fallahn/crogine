@@ -59,7 +59,7 @@ namespace cro
     Video player class, which renders MPEG1 video to a texture using
     pl_mpeg: https://github.com/phoboslab/pl_mpeg
 
-    Note that the audio is streamed separately to the ECS and so is
+    Note that the audio is streamed separately from the ECS and so is
     not assignable to any mixer channels. The only volume channel which
     affects audio playback is the Master control for all audio.
 

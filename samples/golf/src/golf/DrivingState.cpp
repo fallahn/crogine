@@ -130,6 +130,32 @@ namespace
 #define DEBUG_DRAW false
 #endif
 
+    const std::string DebugFrag = R"(
+
+#if defined (VERTEX_COLOURED)
+VARYING_IN vec4 v_colour;
+#else
+uniform sampler2D u_diffuseMap;
+VARYING_IN vec2 v_texCoord;
+#endif
+
+VARYING_IN vec3 v_normal;
+
+OUTPUT
+
+void main()
+{
+    vec3 normal = normalize(v_normal);
+    float amount = clamp(dot(normal, vec3(0.0, 1.0, 0.0)), 0.0, 1.0);
+#if defined (VERTEX_COLOURED)
+    FRAG_OUT = v_colour;
+#else
+    FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord);
+#endif
+    FRAG_OUT.rgb *= amount;
+}
+)";
+
     cro::Box BillBox;
     bool prevBillBox = false;
     std::vector<float> noiseTable;
@@ -268,6 +294,11 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     Achievements::setActive(true);
     Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });
     Social::getMonthlyChallenge().refresh();
+
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
+    }
 
 #ifdef CRO_DEBUG_
     m_sharedData.inputBinding.clubset = ClubID::FullSet;
@@ -434,7 +465,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F5:
 
             break;
-        case SDLK_F6:
+        case FixedKey::ZoomMinimap:
         case SDLK_KP_MULTIPLY:
             toggleMiniZoom();
             break;
@@ -523,6 +554,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
+        case cro::GameController::ButtonRightStick:
+            toggleMiniZoom();
+            break;
         case cro::GameController::ButtonStart:
         case cro::GameController::ButtonGuide:
             pauseGame();
@@ -576,7 +610,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         pauseGame();
     }
 #ifdef CRO_DEBUG_
-    m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
+    //m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
 #endif
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -1013,7 +1047,7 @@ void DrivingState::loadAssets()
     {
         m_resources.shaders.addInclude(name, str);
     }
-
+    
     //models
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n" + wobble);
@@ -1049,6 +1083,7 @@ void DrivingState::loadAssets()
     m_defaultMaskMap.loadFromImage(defaultMask);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    //m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
@@ -1386,7 +1421,26 @@ void DrivingState::initAudio()
         }
     };
 
-    createMusicPlayer(m_gameScene, m_resources.audio, m_gameScene.getActiveCamera());
+    auto playlist = createMusicPlayer(m_gameScene, m_resources.audio, m_gameScene.getActiveCamera());
+    if (playlist.isValid())
+    {
+        registerCommand("list_tracks", [playlist](const std::string&) 
+            {
+                const auto& trackEnts = playlist.getComponent<cro::Callback>().getUserData<MusicPlayerData>().playlist;
+                
+                if (!trackEnts.empty())
+                {
+                    for (auto e : trackEnts)
+                    {
+                        cro::Console::print(e.getLabel());
+                    }
+                }
+                else
+                {
+                    cro::Console::print("No music loaded");
+                }
+            });
+    }
 }
 
 void DrivingState::createScene()
@@ -1731,7 +1785,10 @@ void DrivingState::createScene()
             && data.currentTime > data.TotalTime / 2.f)
         {
             //play the music
-            e.getComponent<cro::AudioEmitter>().play();
+            if (cro::AudioMixer::getVolume(MixerChannel::UserMusic) == 0)
+            {
+                e.getComponent<cro::AudioEmitter>().play();
+            }
         }
 
         float progress = cro::Util::Easing::easeInOutQuad(data.currentTime / data.TotalTime);
@@ -2179,7 +2236,7 @@ void DrivingState::createClouds()
     }
 }
 
-void DrivingState::createPlayer(cro::Entity courseEnt)
+void DrivingState::createPlayer()
 {
     //load from avatar info
     const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
@@ -2197,8 +2254,12 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         return 0;
     };
 
+#ifdef USE_GNS
+    const auto& playerData = m_profileData.playerProfiles[0]; //prefer steam profile
+#else
     auto playerIndex = cro::Util::Random::value(0u, m_profileData.playerProfiles.size() - 1);
     const auto& playerData = m_profileData.playerProfiles[playerIndex];
+#endif
     auto idx = indexFromSkinID(playerData.skinID);
 
     ProfileTexture av(m_sharedData.avatarInfo[idx].texturePath);
@@ -2207,6 +2268,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         av.setColour(pc::ColourKey::Index(j), playerData.avatarFlags[j]);
     }
     av.apply(&m_sharedData.avatarTextures[0][0]);
+
+
 
     //3D Player Model
     cro::ModelDefinition md(m_resources);
@@ -2226,7 +2289,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         scale = std::min(1.f, scale + (dt * 2.f));
 
         auto dir = e.getComponent<cro::Transform>().getScale().x; //might be flipped
-        e.getComponent<cro::Transform>().setScale(glm::vec2(dir, cro::Util::Easing::easeOutBounce(scale)));
+        e.getComponent<cro::Transform>().setScale(glm::vec3(dir, cro::Util::Easing::easeOutBounce(scale), scale));
 
         if (scale == 1)
         {
@@ -2249,8 +2312,9 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     //avatar requirement is single material
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
     applyMaterialData(md, material);
-    material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][0]); //there's only ever goingto be one player so just use the first tex
+    material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][0]); //there's only ever going to be one player so just use the first tex
     entity.getComponent<cro::Model>().setMaterial(0, material);
+
 
     std::fill(m_avatar.animationIDs.begin(), m_avatar.animationIDs.end(), AnimationID::Invalid);
     if (entity.hasComponent<cro::Skeleton>())
@@ -3061,17 +3125,17 @@ void DrivingState::hitBall()
 
     //from here the hook value is just used for UI feedback
     //so we want to flip it as appropriate with the current avatar
-    auto hook = result.hook;
+    auto hook = m_inputParser.getHook();// result.hook; //though this is technically more accurate it should match the value used in GolfState
     hook *= playerXScale;
 
     //check if we hooked/sliced
-    if (hook < -0.15f) //this magic number doesn't match that of the golf state...
+    if (hook < -MinHook/*-0.15f*/) //this magic number doesn't match that of the golf state...
     {
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg2->type = GolfEvent::HookedBall;
         floatingMessage("Hook");
     }
-    else if (hook > 0.15f)
+    else if (hook > MinHook/*0.15f*/)
     {
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg2->type = GolfEvent::SlicedBall;

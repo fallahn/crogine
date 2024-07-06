@@ -48,6 +48,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/LeaderboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp
   ${PROJECT_DIR}/golf/League.cpp
+  ${PROJECT_DIR}/golf/LeagueNames.cpp
   ${PROJECT_DIR}/golf/LeagueState.cpp
   ${PROJECT_DIR}/golf/LightAnimationSystem.cpp
   ${PROJECT_DIR}/golf/MenuAvatars.cpp
@@ -97,6 +98,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/UnlockState.cpp
   ${PROJECT_DIR}/golf/VatAnimationSystem.cpp
   ${PROJECT_DIR}/golf/VatFile.cpp
+  ${PROJECT_DIR}/golf/VoiceChat.cpp
   ${PROJECT_DIR}/golf/Weather.cpp
   ${PROJECT_DIR}/golf/WeatherAnimationSystem.cpp
   ${PROJECT_DIR}/golf/WeatherDirector.cpp
@@ -109,4 +111,5 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/server/ServerGolfRules.cpp
   ${PROJECT_DIR}/golf/server/ServerGolfState.cpp
   ${PROJECT_DIR}/golf/server/ServerLobbyState.cpp
+  ${PROJECT_DIR}/golf/server/ServerVoice.cpp
   ${PROJECT_DIR}/golf/server/SnookerDirector.cpp)

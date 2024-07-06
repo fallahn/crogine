@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -65,7 +65,7 @@ namespace sv
 
         //game rule stuff. TODO encapsulate somewhere
         bool m_gameStarted;
-        bool m_eliminationStarted; //< allows playing X holes before elimination starts
+        //bool m_eliminationStarted; //< allows playing X holes before elimination starts
         bool m_allMapsLoaded;
         bool m_skinsFinals;
         std::uint8_t m_currentHole;

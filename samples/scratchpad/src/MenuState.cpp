@@ -244,16 +244,16 @@ void MenuState::createScene()
                 }
             });
 
-    //voxels button
+    //arc button
     textPos.y -= MenuSpacing;
-    entity = createButton("Voxels", textPos);
+    entity = createButton("Arc", textPos);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
                     requestStackClear();
-                    requestStackPush(States::ScratchPad::Voxels);
+                    requestStackPush(States::ScratchPad::Arc);
                 }
             });
 

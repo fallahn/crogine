@@ -264,7 +264,7 @@ namespace cro
             bool useMultisampling = false;
             glm::vec2 windowedSize = glm::vec2(0.f);
         };
-        WindowSettings loadSettings();
+        WindowSettings loadSettings() const;
 
 
         //loading external plugins

@@ -135,7 +135,7 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
                     const auto id = m_audioResource.load(fp, true);
                     if (id != -1)
                     {
-                        m_resourceIDs.push_back(id);
+                        m_resourceIDs.emplace_back(id, cro::FileSystem::getFileName(fp));
                     }
                 }
             }
@@ -171,7 +171,7 @@ void M3UPlaylist::addTrack(const std::string& path)
         const auto id = m_audioResource.load(path, true);
         if (id != -1)
         {
-            m_resourceIDs.push_back(id);
+            m_resourceIDs.emplace_back(id, cro::FileSystem::getFileName(path));
         }
     }
 }
@@ -203,5 +203,16 @@ std::int32_t M3UPlaylist::getCurrentTrack() const
     {
         return -1;
     }
-    return m_resourceIDs[m_currentIndex];
+    return m_resourceIDs[m_currentIndex].first;
+}
+
+const std::string& M3UPlaylist::getCurrentTrackName() const
+{
+    if (!m_resourceIDs.empty())
+    {
+        return m_resourceIDs[m_currentIndex].second;
+    }
+
+    static std::string ret;
+    return ret;
 }

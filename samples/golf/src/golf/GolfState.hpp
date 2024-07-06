@@ -133,6 +133,15 @@ private:
 
     TextChat m_textChat;
 
+    //fudge to track real time state of buttons
+    struct ButtonState final
+    {
+        bool buttonA = false;
+        bool buttonB = false;
+        bool buttonX = false;
+        bool buttonY = false;
+    }m_buttonStates;
+
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
     std::int32_t m_humanCount;
@@ -155,6 +164,10 @@ private:
     cro::MultiRenderTexture m_gameSceneMRTexture;
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
+
+    //renders 'out of focus'
+    cro::RenderTexture m_focusTexture;
+    cro::SimpleQuad m_focusQuad;
 
     struct LightMapID final
     {
@@ -210,6 +223,7 @@ private:
         enum
         {
             Noise, Composite,
+            CompositeDOF,
             Count
         };
     };
@@ -220,6 +234,7 @@ private:
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
     float m_distanceToHole;
+    float m_NTPDistance; //in NTP mode how far away from the pin the shot landed
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
     bool m_resumedFromSave;
@@ -260,6 +275,7 @@ private:
             Flag,
             PointLight,
             Glass,
+            LensFlare,
 
             Count
         };
@@ -324,15 +340,11 @@ private:
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint16_t, bool forceTransition = false); //(number << 8) | par
-    void setCameraPosition(glm::vec3, float, float);
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
     void predictBall(float);
     void hitBall();
     void updateActor(const ActorInfo&);
-
-    void createTransition(const ActivePlayer&);
-    void startFlyBy();
     std::int32_t getClub() const;
 
 
@@ -371,9 +383,33 @@ private:
     std::array<cro::Entity, SkyCam::Count> m_skyCameras = {};
     void updateSkybox(float);
 
+    struct LensFlare final
+    {
+        glm::vec3 sunPos = glm::vec3(0.f);
+
+        std::uint32_t shaderID = 0;
+        std::int32_t positionUniform = -1;
+
+    }m_lensFlare;
+    void updateLensFlare(cro::Entity, float); //bound as a callback to the lens flare entity
+
+
+
     static const cro::Time DefaultIdleTime;
     cro::Time m_idleTime;
     void resetIdle();
+
+    struct PuttViewState final
+    {
+        bool isPuttView = false;
+        bool isBusy = false;
+        bool isEnabled = false;
+    }m_puttViewState;
+    void togglePuttingView(bool); //only used when switching to putter manually
+    void createTransition(const ActivePlayer&);
+    void startFlyBy();
+    void setCameraPosition(glm::vec3, float, float);
+
 
     //follows the ball mid-flight
     cro::Entity m_flightCam;
@@ -381,8 +417,10 @@ private:
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
     bool m_photoMode;
+    bool m_useDOF;
     bool m_restoreInput;
     void toggleFreeCam();
+    void enableDOF(bool);
     void applyShadowQuality();
 
     //scoring related stuff in GolfStateScoring.cpp
@@ -408,6 +446,7 @@ private:
             Thinking,
             Sleeping,
             Typing,
+            Freecam,
             MessageBoard,
             Bunker,
             Foul,
@@ -451,12 +490,15 @@ private:
     std::size_t m_scoreColumnCount;
     LeaderboardTexture m_leaderboardTexture;
 
+    //TODO refactor this into an array?
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
     cro::Entity m_minimapEnt;
     cro::Entity m_miniGreenEnt;
     cro::Entity m_miniGreenIndicatorEnt;
     cro::Entity m_scoreboardEnt;
+    cro::Entity m_droneTextEnt;
+    cro::Entity m_freecamMenuEnt;
     std::uint8_t m_readyQuitFlags;
 
     void buildUI();
@@ -472,7 +514,9 @@ private:
     {
         Bunker, Scrub, Water,
         PlayerName, HoleScore,
-        Gimme, Eliminated
+        Gimme, 
+        Eliminated, EliminatedStroke,
+        NTPForfeit, NTPDistance
     };
     void showMessageBoard(MessageBoardID, bool special = false);
     void floatingMessage(const std::string&);
@@ -571,6 +615,8 @@ private:
         bool twoShotsSpare = true; //greens in regulation
         bool alwaysOnTheCourse = true; //consistency
 
+        bool under15metres = true; //NTP total for full courses (puttFromTee sets this false)
+
         bool underTwoPutts = true;
         std::int32_t puttCount = 0; //no more than two putts on every hole
 
@@ -581,6 +627,8 @@ private:
         std::int32_t birdieChallenge = 0; //monthly challenge only incremented on front 9
         bool nearMissChallenge = false;
         bool bullseyeChallenge = false;
+
+        bool leadingCareerRound = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;
@@ -591,10 +639,12 @@ private:
         std::uint8_t client = 0;
         std::uint8_t player = 0;
         std::int32_t score = 0;
+        float distance = 0.f;
     };
     std::vector<StatBoardEntry> m_statBoardScores;
 
     void updateLeague();
+    void updateLeagueHole();
     void setUIHidden(bool hidden);
 
     struct GamepadNotify final

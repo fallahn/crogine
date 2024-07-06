@@ -68,7 +68,12 @@ namespace ConstVal
     //this is sent as a byte in packet headers - so don't increase MaxStringChars above 32!!
     static constexpr std::size_t MaxStringDataSize = MaxStringChars * sizeof(std::uint32_t);
 
+#ifdef USE_GNS
+    static constexpr std::uint16_t GamePort = 160;
+#else
     static constexpr std::uint16_t GamePort = 16002;
+#endif
+    static constexpr std::uint16_t VoicePort = GamePort + 5;
     static constexpr std::uint8_t MaxClients = 8;
     static constexpr std::uint8_t MaxPlayers = 8;
     static constexpr std::uint8_t NullValue = 255;

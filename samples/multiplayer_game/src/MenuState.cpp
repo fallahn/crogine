@@ -57,16 +57,26 @@ source distribution.
 #include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/util/Wavetable.hpp>
+#include <crogine/audio/sound_system/effects_chain/VolumeEffect.hpp>
+#include <crogine/audio/sound_system/effects_chain/NoiseGateEffect.hpp>
 
 #include <cstring>
 
 namespace
 {
+    //used in the gui. Don't do this. Bad.
+    std::int32_t sampleCount = 0;
+    bool encodeAudio = false;
+    cro::VolumeEffect* volumeEffect = nullptr;
+    cro::NoiseGateEffect* noiseGateEffect = nullptr;
 
+    constexpr std::int32_t ChannelCount = 1;
+    constexpr std::int32_t SampleRate = 24000;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
+    m_audioStream   (ChannelCount, SampleRate),
     m_sharedData    (sd),
     m_scene         (context.appInstance.getMessageBus()),
     m_hosting       (false)
@@ -142,9 +152,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
-        case SDLK_p:
-            m_soundRecorder.stop();
-            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -154,9 +161,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_BACKSPACE:
             handleTextEdit(evt);
-            break;
-        case SDLK_p:
-            m_soundRecorder.start();
             break;
         }
     }
@@ -188,16 +192,35 @@ bool MenuState::simulate(float dt)
         }
     }
 
-    std::int32_t packetCount = 0;
-    const auto* d = m_soundRecorder.getEncodedPackets(&packetCount);
 
-    static std::vector<std::uint8_t> tempBuffer;
-    if (packetCount != 0)
+    if (cro::Keyboard::isKeyPressed(SDLK_p))
     {
-        tempBuffer.resize(packetCount * 2);
-        std::memcpy(tempBuffer.data(), d, tempBuffer.size());
-        m_audioStream.updateBuffer(tempBuffer);
+        if (encodeAudio)
+        {
+            std::vector<std::uint8_t> packet;
+            m_soundRecorder.getEncodedPacket(packet);
+            sampleCount = packet.size();
+
+            if (!packet.empty())
+            {
+                auto pcm = m_encoder->decode(packet);
+                if (!pcm.empty())
+                {
+                    m_audioStream.updateBuffer(pcm.data(), m_encoder->getFrameSize());
+                }
+            }
+        }
+        else
+        {
+            const auto* d = m_soundRecorder.getPCMData(&sampleCount);
+
+            if (sampleCount)
+            {
+                m_audioStream.updateBuffer(d, sampleCount);
+            }
+        }
     }
+
 
     m_scene.simulate(dt);
     return true;
@@ -264,7 +287,8 @@ void MenuState::createScene()
     entity.addComponent<cro::AudioEmitter>().setSource(m_audioStream);
     entity.getComponent<cro::AudioEmitter>().play();
     entity.getComponent<cro::AudioEmitter>().setLooped(true); //hmmm what do we need to do to not make this necessary?
-
+    noiseGateEffect = m_soundRecorder.insertEffect<cro::NoiseGateEffect>();
+    volumeEffect = m_soundRecorder.insertEffect<cro::VolumeEffect>();
 
 
     //set a custom camera so the scene doesn't overwrite the viewport
@@ -388,65 +412,106 @@ void MenuState::registerUI()
         });
 #endif //CRO_DEBUG_
 
-        registerWindow([&]() 
+    registerWindow([&]() 
+        {
+            //ImGui::ShowDemoWindow();
+            if (ImGui::Begin("Sound Recorder"))
             {
-                if (ImGui::Begin("Sound Recorder"))
+                const auto& devices = m_soundRecorder.listDevices();
+
+                std::vector<const char*> items; //lol.
+                for (const auto& d : devices)
                 {
-                    const auto& devices = m_soundRecorder.listDevices();
+                    items.push_back(d.c_str());
+                }
 
-                    std::vector<const char*> items; //lol.
-                    for (const auto& d : devices)
+                static std::int32_t idx = 0;
+                if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
+                {
+                    for (auto n = 0u; n < items.size(); ++n)
                     {
-                        items.push_back(d.c_str());
-                    }
-
-                    static std::int32_t idx = 0;
-                    if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
-                    {
-                        for (auto n = 0u; n < items.size(); ++n)
+                        const bool selected = (idx == n);
+                        if (ImGui::Selectable(items[n], selected))
                         {
-                            const bool selected = (idx == n);
-                            if (ImGui::Selectable(items[n], selected))
-                            {
-                                idx = n;
-                            }
-
-                            if (selected)
-                            {
-                                ImGui::SetItemDefaultFocus();
-                            }
+                            idx = n;
                         }
-                        ImGui::EndListBox();
+
+                        if (selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
                     }
+                    ImGui::EndListBox();
+                }
 
+                if (ImGui::Button("Refresh"))
+                {
+                    m_soundRecorder.refreshDeviceList();
+                }
 
+                static bool deviceOpen = false;
+                    
+                if (!deviceOpen)
+                {
                     if (ImGui::Button("Open Device"))
                     {
-                        m_soundRecorder.openDevice(devices[idx]);
-                    }
+                        deviceOpen = m_soundRecorder.openDevice(devices[idx], ChannelCount, SampleRate, true);
 
-                    ImGui::SameLine();
+                        //TODO we should have some mechanism to make sure the decoder
+                        //uses the same context used to create the encoder.
+                        cro::Opus::Context ctx;
+                        ctx.channelCount = ChannelCount;
+                        m_encoder = std::make_unique<cro::Opus>(ctx);
+                    }
+                }
+                else
+                {
                     if (ImGui::Button("Close Device"))
                     {
                         m_soundRecorder.closeDevice();
-                    }
-
-
-
-                    if (ImGui::Button("Start Recording"))
-                    {
-                        m_soundRecorder.start();
+                        deviceOpen = false;
                     }
 
                     ImGui::SameLine();
-                    if (ImGui::Button("Stop Recording"))
+
+                    if (!encodeAudio)
                     {
-                        m_soundRecorder.stop();
+                        if (ImGui::Button("Use Opus"))
+                        {
+                            encodeAudio = true;
+                        }
                     }
+                    else
+                    {
+                        if (ImGui::Button("Use PCM"))
+                        {
+                            encodeAudio = false;
+                        }
+                    }
+
+                    ImGui::SameLine();
+
+                    float vol = volumeEffect->getGain();
+                    if (ImGui::SliderFloat("Volume", &vol, 0.f, 1.5f))
+                    {
+                        volumeEffect->setGain(vol);
+                    }
+
+                    float thresh = noiseGateEffect->getThreshold();
+                    if (ImGui::SliderFloat("Gate Threshold", &thresh, 0.f, 1.f))
+                    {
+                        noiseGateEffect->setThreshold(thresh);
+                    }
+
+
+                    ImGui::ProgressBar(volumeEffect->getVULeft());
+                    //ImGui::SameLine();
+                    ImGui::Text("Peak: %3.3f", volumeEffect->getVUDecibelsLeft());
                 }
-                ImGui::End();
+            }
+            ImGui::End();
             
-            });
+        });
 }
 
 void MenuState::handleNetEvent(const cro::NetEvent& evt)

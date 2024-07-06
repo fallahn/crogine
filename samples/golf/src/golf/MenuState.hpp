@@ -39,6 +39,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "MenuCallbacks.hpp"
 #include "TextChat.hpp"
+#include "VoiceChat.hpp"
 
 #include <MatchMaking.hpp>
 
@@ -116,6 +117,7 @@ private:
     }m_cosmeticIDs;
 
     TextChat m_textChat;
+    VoiceChat m_voiceChat;
     MatchMaking m_matchMaking;
     cro::ResourceCollection m_resources;
 
@@ -248,6 +250,8 @@ private:
     void loadAssets();
     void createScene();
     void createClouds();
+    void setVoiceCallbacks();
+    std::array<cro::Entity, ConstVal::MaxClients> m_voiceEntities;
 
     SharedCourseData m_sharedCourseData;
     

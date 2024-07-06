@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -103,4 +103,30 @@ FloatRect Sprite::getTextureRectNormalised() const
 Colour Sprite::getColour() const
 {
     return  m_colour;
+}
+
+void Sprite::getVertexData(std::vector<Vertex2D>& verts) const
+{
+    auto subRect = m_textureRect;
+    verts.resize(4);
+
+    verts[0].position = { 0.f, subRect.height };
+    verts[1].position = { 0.f, 0.f };
+    verts[2].position = { subRect.width, subRect.height };
+    verts[3].position = { subRect.width, 0.f };
+
+    //update vert coords
+    if (m_texture)
+    {
+        glm::vec2 texSize = m_texture->getSize();
+        verts[0].UV = { subRect.left / texSize.x, (subRect.bottom + subRect.height) / texSize.y };
+        verts[1].UV = { subRect.left / texSize.x, subRect.bottom / texSize.y };
+        verts[2].UV = { (subRect.left + subRect.width) / texSize.x, (subRect.bottom + subRect.height) / texSize.y };
+        verts[3].UV = { (subRect.left + subRect.width) / texSize.x, subRect.bottom / texSize.y };
+    }
+    //update colour
+    verts[0].colour = m_colour;
+    verts[1].colour = m_colour;
+    verts[2].colour = m_colour;
+    verts[3].colour = m_colour;
 }

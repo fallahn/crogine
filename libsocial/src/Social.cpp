@@ -81,6 +81,8 @@ namespace
         StoredValue("cpo")
     };
 
+    StoredValue snapperFlags("snp");
+
     std::vector<Social::Award> awards;
     const std::array<std::string, 12u> MonthStrings =
     {
@@ -116,6 +118,8 @@ namespace
         //ew.
         return static_cast<std::int32_t>(std::pow((static_cast<float>(level) / XPx), XPy));
     }
+
+    cro::String socialName;
 }
 
 cro::Image Social::userIcon;
@@ -125,7 +129,7 @@ cro::String Social::getPlayerName()
 #ifdef USE_GJS
     return GJ::getActiveName();
 #else
-    return {};
+    return socialName;
 #endif
 }
 
@@ -133,7 +137,10 @@ void Social::setPlayerName(const cro::String& name)
 {
 #ifdef USE_GJS
     GJ::setActiveName(name);
+#else
+    socialName = name;
 #endif
+    cro::App::postMessage<SocialEvent>(Social::MessageID::SocialMessage)->type = SocialEvent::PlayerNameChanged;
 }
 
 bool Social::isValid()
@@ -684,7 +691,21 @@ std::int32_t Social::getMonth()
     return cro::SysTime::now().months() - 1; //we're using this as an index
 }
 
+void Social::takeScreenshot(const cro::String&, std::size_t courseIndex)
+{
+    cro::App::getInstance().saveScreenshot();
 
+    snapperFlags.read();
+    auto v = snapperFlags.value;
+    v |= (1 << courseIndex);
+    snapperFlags.value = v;
+    snapperFlags.write();
+
+    if (v == 0x0fff)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::HappySnapper]);
+    }
+}
 
 void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t)
 {

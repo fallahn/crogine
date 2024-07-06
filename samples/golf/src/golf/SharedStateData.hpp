@@ -33,6 +33,7 @@ source distribution.
 #include "Networking.hpp"
 #include "CommonConsts.hpp"
 #include "PlayerData.hpp"
+#include "LeagueNames.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/core/String.hpp>
@@ -115,7 +116,9 @@ struct SharedStateData final
 
         std::uint64_t hostID = 0;
         std::vector<net::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
-    }clientConnection;
+    };
+    ClientConnection clientConnection;
+    ClientConnection voiceConnection;
 
     //data of all players rx'd from server
     std::array<ConnectionData, ConstVal::MaxClients> connectionData = {};
@@ -273,4 +276,6 @@ struct SharedStateData final
     
     std::vector<glm::uvec2> resolutions;
     std::vector<std::string> resolutionStrings;
+
+    LeagueNames leagueNames;
 };

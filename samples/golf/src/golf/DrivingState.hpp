@@ -38,6 +38,7 @@ source distribution.
 #include "BallTrail.hpp"
 
 #include <crogine/core/Clock.hpp>
+#include <crogine/core/Console.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -66,7 +67,7 @@ using WindCallbackData = std::pair<float, float>;
 
 struct SharedStateData;
 struct SharedProfileData;
-class DrivingState final : public cro::State, public cro::GuiClient
+class DrivingState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
     DrivingState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&);
@@ -192,7 +193,7 @@ private:
     void createScene();
     void createFoliage(cro::Entity);
     void createClouds();
-    void createPlayer(cro::Entity);
+    void createPlayer();
     void createBall();
     void createFlag();
     void startTransition();

@@ -158,10 +158,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_connectedClientCount  (0),
     m_connectedPlayerCount  (0),
     m_textChat              (m_uiScene, sd),
+    m_voiceChat             (m_sharedData),
     m_matchMaking           (context.appInstance.getMessageBus(), checkCommandLine),
     m_uiScene               (context.appInstance.getMessageBus(), 1024),
     m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene           (context.appInstance.getMessageBus(), 1024/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene           (context.appInstance.getMessageBus(), 1536/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
@@ -172,6 +173,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f),
     m_scrollSpeed           (1.f)
 {
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
+    }
+
     checkCommandLine = false;
     sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;
@@ -194,6 +200,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         addSystems();
         loadAssets();
         createScene();
+        setVoiceCallbacks();
 
 #ifdef USE_GNS
         Social::findLeaderboards(Social::BoardType::Courses);
@@ -281,6 +288,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //also set if the player quit the game from the pause menu)
         if (sd.gameMode != GameMode::FreePlay)
         {
+            m_voiceChat.disconnect();
+
             sd.serverInstance.stop();
             sd.hosting = false;
 
@@ -477,12 +486,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 #endif
 
 #if defined USE_WORKSHOP && !defined __APPLE__
-    registerCommand("workshop",
-        [&](const std::string&)
-        {
-            requestStackClear();
-            requestStackPush(StateID::Workshop);
-        });
+    if (!Social::isSteamdeck())
+    {
+        registerCommand("workshop",
+            [&](const std::string&)
+            {
+                requestStackClear();
+                requestStackPush(StateID::Workshop);
+            });
+    }
 #endif
 
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
@@ -507,62 +519,19 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     registerCommand("dump_monthly", [](const std::string&) {Social::dumpMonthlyToText(); });
 #endif
 
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("buns"))
-            {
-                /*ImGui::ColorButton("cb", C);
-                if (ImGui::SliderFloat("Strength", &strength, 0.f, 1.f))
-                {
-                    C.x = 1.f - std::pow(1.f - strength, 3.f);
-                    C.y = std::pow(1.f - strength, 5.f);
-                    C.z = 1.f - std::pow(1.f - (0.1f + (strength * 0.9f)), 40.f);
-                }
-
-                ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());*/
-
-                //auto size = glm::vec2(m_ballThumbTexture.getSize());
-                //ImGui::Image(m_ballThumbTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
-
-                auto size = glm::vec2(LabelTextureSize) * 2.f;
-                /*auto size = glm::vec2(256.f);
-                auto* tex = Achievements::getIcon(AchievementStrings[1]).texture;
-                if (tex)*/
-                for(const auto& t : m_sharedData.nameTextures)
-                {
-                    ImGui::Image(t.getTexture()/**tex*/, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::SameLine();
-                }
-            }
-            ImGui::End();
-        }, true);
-
+#endif
     //registerWindow([&]() 
     //    {
-    //        if (ImGui::Begin("Debug"))
+    //        if (ImGui::Begin("buns"))
     //        {
-    //            //ImGui::Text("Course Index %u", m_sharedData.courseIndex);
-    //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-    //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //            //auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
-    //            //float maxDist = cam.getMaxShadowDistance();
-    //            //if (ImGui::SliderFloat("Dist", &maxDist, 1.f, cam.getFarPlane()))
-    //            //{
-    //            //    cam.setMaxShadowDistance(maxDist);
-    //            //}
-
-    //            //float exp = cam.getShadowExpansion();
-    //            //if (ImGui::SliderFloat("Exp", &exp, 0.f, 100.f))
-    //            //{
-    //            //    cam.setShadowExpansion(exp);
-    //            //}
-
-    //            //ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //            cro::AudioMixer::printDebug();
+    //            for (auto i = 0u; i < cro::GameController::getControllerCount(); ++i)
+    //            {
+    //                ImGui::Text("%s", cro::GameController::getName(i).c_str());
+    //            }
     //        }
     //        ImGui::End();
-    //    }/*, true*/);
-#endif
+    //    });
+
 }
 
 MenuState::~MenuState()
@@ -653,7 +622,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     {
                         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-                        if (cro::GameController::hasPSLayout(0))
+                        if (hasPSLayout(0))
                         {
                             e.getComponent<cro::SpriteAnimation>().play(1);
                         }
@@ -679,7 +648,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     }
                     else
                     {
-                        e.getComponent<cro::Text>().setString("Shift+F8 to Chat");
+                        e.getComponent<cro::Text>().setString("Press F4 to Chat");
                     }
                 };
             }
@@ -779,7 +748,8 @@ bool MenuState::handleEvent(const cro::Event& evt)
         && evt.type != SDL_CONTROLLERBUTTONDOWN
         && evt.type != SDL_CONTROLLERBUTTONUP)
     {
-        if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+        if (/*cro::Console::isVisible() &&*/
+            (cro::ui::wantsMouse() || cro::ui::wantsKeyboard()))
         {
             if (evt.type == SDL_KEYUP)
             {
@@ -789,7 +759,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 case SDLK_ESCAPE:
                     if (m_textChat.isVisible())
                     {
-                        m_textChat.toggleWindow(false, false);
+                        m_textChat.toggleWindow(false, false, false);
                     }
                     break;
                 /*case SDLK_F8:
@@ -800,7 +770,19 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     break;*/
                 }
             }
-
+            else if (evt.type == SDL_KEYDOWN)
+            {
+                switch (evt.key.keysym.sym)
+                {
+                default: break;
+                case SDLK_F4:
+                    if (m_textChat.isVisible())
+                    {
+                        m_textChat.toggleWindow(false, false, false);
+                    }
+                    break;
+                }
+            }
             return true;
         }
     }
@@ -840,6 +822,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
             Achievements::resetAchievement(AchievementStrings[AchievementID::JoinTheClub]);
             break;
 #endif
+        case SDLK_SPACE:
+            cro::App::getInstance().resetFrameTime();
+            break;
         case SDLK_F2:
             requestStackPush(StateID::Profile);
             break;
@@ -934,6 +919,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             showPlayerManagement();
             break;
+        case SDLK_k:
+            m_voiceChat.connect();
+            break;
+        case SDLK_l:
+            m_voiceChat.disconnect();
+            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -950,6 +941,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_TAB:
             togglePreviousScoreCard();
+            break;
+        case SDLK_F4:
+            if (m_currentMenu == MenuID::Lobby)
+            {
+                m_textChat.toggleWindow(false, false, false);
+            }
             break;
         case SDLK_F8:
             if ((evt.key.keysym.mod & KMOD_SHIFT)
@@ -975,39 +972,50 @@ bool MenuState::handleEvent(const cro::Event& evt)
     {
         setChatHint(true, evt.cbutton.which);
         cro::App::getWindow().setMouseCaptured(true);
-        switch (evt.cbutton.button)
+
+        if (!m_textChat.isVisible())
         {
-        default: 
-            //cro::Console::show();
-            
-            break;
-        case cro::GameController::ButtonBack:
-            showOptions();
-            break;
-        case cro::GameController::ButtonStart:
-            showPlayerManagement();
-            break;
-            //leave the current menu when B is pressed.
-        case cro::GameController::ButtonB:
-            quitMenu();
-            break;
-        case cro::GameController::ButtonRightShoulder:
-            doNext();
-            break;
-        case cro::GameController::ButtonLeftShoulder:
-            doPrev();
-            break;
-        case cro::GameController::ButtonGuide:
-            togglePreviousScoreCard();
-            break;
-        case cro::GameController::ButtonTrackpad:
-        case cro::GameController::PaddleR4:
-        case cro::GameController::ButtonY:
-            if (m_currentMenu == MenuID::Lobby)
+            switch (evt.cbutton.button)
             {
-                m_textChat.toggleWindow(true, false);
+            default:
+                //cro::Console::show();
+
+                break;
+            case cro::GameController::ButtonBack:
+                showOptions();
+                break;
+            case cro::GameController::ButtonStart:
+                showPlayerManagement();
+                break;
+                //leave the current menu when B is pressed.
+            case cro::GameController::ButtonB:
+                quitMenu();
+                break;
+            case cro::GameController::ButtonRightShoulder:
+                doNext();
+                break;
+            case cro::GameController::ButtonLeftShoulder:
+                doPrev();
+                break;
+            case cro::GameController::ButtonGuide:
+                togglePreviousScoreCard();
+                break;
             }
-            break;
+        }
+
+        //we have to do this separately because it should be allowed when chat window is open
+        if (m_currentMenu == MenuID::Lobby)
+        {
+            switch (evt.cbutton.button)
+            {
+            default:  break;
+            case cro::GameController::ButtonY:
+                m_textChat.toggleWindow(true, false);
+                break;
+            case cro::GameController::ButtonTrackpad:
+                m_textChat.toggleWindow(false, false, false);
+                break;
+            }
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -1334,6 +1342,13 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    m_textChat.update(dt);
+
+    if (cro::Keyboard::isKeyPressed(SDLK_j))
+    {
+        m_voiceChat.captureVoice();
+    }
+
     if (m_sharedData.clientConnection.connected)
     {
         for (const auto& evt : m_sharedData.clientConnection.eventBuffer)
@@ -1348,6 +1363,8 @@ bool MenuState::simulate(float dt)
             //handle events
             handleNetEvent(evt);
         }
+
+        m_voiceChat.process();
     }
 
     //update the scroll speed of lobby text
@@ -1481,14 +1498,14 @@ void MenuState::loadAssets()
     }
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n");
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
-    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" /*+ wobble*/);
     //m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 600.0\n");
     
 
@@ -2055,6 +2072,43 @@ void MenuState::createClouds()
     }
 }
 
+void MenuState::setVoiceCallbacks()
+{
+    const auto voiceCreate =
+        [&](VoiceChat& vc, std::size_t idx)
+        {
+            if (!m_voiceEntities[idx].isValid())
+            {
+                m_voiceEntities[idx] = m_backgroundScene.createEntity();
+                m_voiceEntities[idx].addComponent<cro::Transform>();
+                m_voiceEntities[idx].addComponent<cro::AudioEmitter>().setSource(*vc.getStream(idx));
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().play();
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setLooped(true);
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setRolloff(0.f);
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+
+                LogI << "Created voice entity" << std::endl;
+            }
+        };
+    m_voiceChat.setCreationCallback(voiceCreate);
+
+    const auto voiceDelete =
+        [&](std::size_t idx)
+        {
+            if (m_voiceEntities[idx].isValid())
+            {
+                m_voiceEntities[idx].getComponent<cro::AudioEmitter>().stop();
+                m_backgroundScene.destroyEntity(m_voiceEntities[idx]);
+                m_backgroundScene.simulate(0.f);
+
+                m_voiceEntities[idx] = {};
+
+                LogI << "Remove voice entity" << std::endl;
+            }
+        };
+    m_voiceChat.setDeletionCallback(voiceDelete);
+}
+
 void MenuState::handleNetEvent(const net::NetEvent& evt)
 {
     if (evt.type == net::NetEvent::PacketReceived)
@@ -2226,6 +2280,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
             m_sharedData.clientConnection.netClient.disconnect();
             m_sharedData.clientConnection.connected = false;
+
+            m_voiceChat.disconnect();
         }
             break;
         case PacketID::LobbyUpdate:
@@ -2239,6 +2295,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             m_readyState[client] = false;
             updateLobbyAvatars();
 
+            postMessage<SystemEvent>(cl::MessageID::SystemMessage)->type = SystemEvent::LobbyExit;
             postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
         }
             break;
@@ -2425,7 +2482,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         }
             break;
         case PacketID::ScoreType:
-            m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
+            m_sharedData.scoreType = evt.packet.as<std::uint8_t>() % ScoreType::Count;
             {
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Menu::ScoreType;
@@ -2443,9 +2500,18 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-                if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
+                if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
+                    || m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])
                 {
                     m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType])
+                    {
+                        m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MinPlayerWarning);
+                    }
+                    else
+                    {
+                        m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MaxPlayerWarning);
+                    }
                 }
                 else
                 {
@@ -2459,6 +2525,13 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 auto strGameType = std::to_string(ConstVal::MaxClients) + " - " + ScoreTypes[m_sharedData.scoreType];
 
                 Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
+
+                //hide the ticker if not stroke play
+                if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
+                {
+                    const float scale = m_sharedData.scoreType == ScoreType::Stroke ? 1.f : 0.f;
+                    m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                }
             }
             break;
         case PacketID::NightTime:
@@ -2606,6 +2679,8 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 #endif
     if (!m_sharedData.clientConnection.connected)
     {
+        m_voiceChat.disconnect();
+
         m_sharedData.serverInstance.stop();
         m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
             + std::to_string(ConstVal::GamePort)
@@ -2684,7 +2759,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 void MenuState::finaliseGameJoin(std::uint64_t hostID)
 {
 #ifdef USE_GNS
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(hostID)));
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(hostID)), ConstVal::GamePort);
     m_sharedData.clientConnection.hostID = hostID;
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
@@ -2816,7 +2891,7 @@ bool MenuState::applyTextEdit()
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-        SDL_StopTextInput();
+        //SDL_StopTextInput();
         m_textEdit = {};
         return true;
     }

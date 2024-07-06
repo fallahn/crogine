@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -77,8 +77,12 @@ struct CogitationCallback final
     }
 };
 
-
-
+//scrolling text in league and career state
+struct ScrollData final
+{
+    cro::FloatRect bounds = {};
+    float xPos = 0.f;
+};
 
 //used to move the flag as the player approaches
 struct FlagCallbackData final
@@ -169,3 +173,4 @@ struct AnimDirection final
 };
 using WindHideData = AvatarAnimCallbackData;
 using BullsEyeData = AvatarAnimCallbackData;
+using FreecamHideData = AvatarAnimCallbackData;

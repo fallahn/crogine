@@ -645,6 +645,7 @@
     <ClCompile Include="src\golf\LeaderboardState.cpp" />
     <ClCompile Include="src\golf\LeaderboardTexture.cpp" />
     <ClCompile Include="src\golf\League.cpp" />
+    <ClCompile Include="src\golf\LeagueNames.cpp" />
     <ClCompile Include="src\golf\LeagueState.cpp" />
     <ClCompile Include="src\golf\LightAnimationSystem.cpp" />
     <ClCompile Include="src\golf\MapOverviewState.cpp" />
@@ -680,6 +681,7 @@
     <ClCompile Include="src\golf\server\ServerGolfRules.cpp" />
     <ClCompile Include="src\golf\server\ServerGolfState.cpp" />
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
+    <ClCompile Include="src\golf\server\ServerVoice.cpp" />
     <ClCompile Include="src\golf\server\SnookerDirector.cpp" />
     <ClCompile Include="src\golf\SharedStateData.cpp" />
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
@@ -700,6 +702,7 @@
     <ClCompile Include="src\golf\UnlockState.cpp" />
     <ClCompile Include="src\golf\VatAnimationSystem.cpp" />
     <ClCompile Include="src\golf\VatFile.cpp" />
+    <ClCompile Include="src\golf\VoiceChat.cpp" />
     <ClCompile Include="src\golf\Weather.cpp" />
     <ClCompile Include="src\golf\WeatherAnimationSystem.cpp" />
     <ClCompile Include="src\golf\WeatherDirector.cpp" />
@@ -745,6 +748,7 @@
     <ClInclude Include="src\golf\ClientPacketData.hpp" />
     <ClInclude Include="src\golf\CloudSystem.hpp" />
     <ClInclude Include="src\golf\ClubhouseState.hpp" />
+    <ClInclude Include="src\golf\ClubModifiers.hpp" />
     <ClInclude Include="src\golf\Clubs.hpp" />
     <ClInclude Include="src\golf\CollisionMesh.hpp" />
     <ClInclude Include="src\golf\CommandIDs.hpp" />
@@ -773,6 +777,7 @@
     <ClInclude Include="src\golf\LeaderboardState.hpp" />
     <ClInclude Include="src\golf\LeaderboardTexture.hpp" />
     <ClInclude Include="src\golf\League.hpp" />
+    <ClInclude Include="src\golf\LeagueNames.hpp" />
     <ClInclude Include="src\golf\LeagueState.hpp" />
     <ClInclude Include="src\golf\LightAnimationSystem.hpp" />
     <ClInclude Include="src\golf\MapOverviewState.hpp" />
@@ -821,6 +826,7 @@
     <ClInclude Include="src\golf\server\ServerMessages.hpp" />
     <ClInclude Include="src\golf\server\ServerPacketData.hpp" />
     <ClInclude Include="src\golf\server\ServerState.hpp" />
+    <ClInclude Include="src\golf\server\ServerVoice.hpp" />
     <ClInclude Include="src\golf\server\SnookerDirector.hpp" />
     <ClInclude Include="src\golf\SharedCourseData.hpp" />
     <ClInclude Include="src\golf\SharedProfileData.hpp" />
@@ -839,6 +845,7 @@
     <ClInclude Include="src\golf\TerrainDepthmap.hpp" />
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />
     <ClInclude Include="src\golf\TextChat.hpp" />
+    <ClInclude Include="src\golf\Thumbsticks.hpp" />
     <ClInclude Include="src\golf\Treeset.hpp" />
     <ClInclude Include="src\golf\TrophyDisplaySystem.hpp" />
     <ClInclude Include="src\golf\TrophyState.hpp" />
@@ -849,6 +856,7 @@
     <ClInclude Include="src\golf\Utility.hpp" />
     <ClInclude Include="src\golf\VatFile.hpp" />
     <ClInclude Include="src\golf\VatAnimationSystem.hpp" />
+    <ClInclude Include="src\golf\VoiceChat.hpp" />
     <ClInclude Include="src\golf\WeatherAnimationSystem.hpp" />
     <ClInclude Include="src\golf\WeatherDirector.hpp" />
     <ClInclude Include="src\golf\XPAwardStrings.hpp" />
@@ -884,11 +892,13 @@
     <None Include="src\golf\ProfileEnum.inl" />
     <None Include="src\golf\shaders\BeaconShader.inl" />
     <None Include="src\golf\shaders\BillboardShader.inl" />
+    <None Include="src\golf\shaders\Blur.inl" />
     <None Include="src\golf\shaders\CelShader.inl" />
     <None Include="src\golf\shaders\CloudShader.inl" />
     <None Include="src\golf\shaders\CompositeShader.inl" />
     <None Include="src\golf\shaders\Glass.inl" />
     <None Include="src\golf\shaders\GlowShader.inl" />
+    <None Include="src\golf\shaders\LensFlare.inl" />
     <None Include="src\golf\shaders\MinimapShader.inl" />
     <None Include="src\golf\shaders\PaletteSwap.inl" />
     <None Include="src\golf\shaders\PointLightShader.inl" />

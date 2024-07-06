@@ -85,7 +85,8 @@ struct CommandID final
             WindEffect           = 0x1000000,
             PuttPower            = 0x2000000,
             TerrainType          = 0x4000000,
-            AFKWarn              = 0x8000000
+            AFKWarn              = 0x8000000,
+            PuttingLabel         = 0x10000000, //29
         };
     };
 
@@ -98,6 +99,8 @@ struct CommandID final
             LobbyList    = 0x4,
             ServerInfo   = 0x8,
             PlayerConfig = 0x10,
+            InfoString   = PlayerConfig,
+
             PlayerName   = 0x20,
             PlayerAvatar = 0x40,
             UIElement    = 0x80,

@@ -309,7 +309,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     return -1;
 }
 
-std::int32_t OpenALImpl::requestNewBufferableStream(BufferedStreamLoader** dstPtr)
+std::int32_t OpenALImpl::requestNewBufferableStream(BufferedStreamLoader** dstPtr, std::uint32_t channelCount, std::uint32_t sampleRate)
 {
     if (m_nextFreeStream >= m_streams.size())
     {
@@ -318,7 +318,7 @@ std::int32_t OpenALImpl::requestNewBufferableStream(BufferedStreamLoader** dstPt
     }
 
     auto& stream = getNextFreeStream();
-    stream.audioFile = std::make_unique<BufferedStreamLoader>();
+    stream.audioFile = std::make_unique<BufferedStreamLoader>(channelCount, sampleRate);
     *dstPtr = dynamic_cast<BufferedStreamLoader*>(stream.audioFile.get());
 
     if (initStream(stream))
@@ -612,6 +612,16 @@ void OpenALImpl::setSpeedOfSound(float speed)
     alCheck(alSpeedOfSound(speed));
 }
 
+void OpenALImpl::playbackDisconnectEvent()
+{
+    reconnect(nullptr);
+}
+
+void OpenALImpl::recordDisconnectEvent()
+{
+
+}
+
 void OpenALImpl::printDebug()
 {
     ImGui::Text("Source Cache Size %lu", m_sourcePool.size());
@@ -662,133 +672,107 @@ void OpenALImpl::resizeSourcePool()
         m_sourcePool.resize(m_sourcePool.size() + SourceResizeCount);
 
         alCheck(alGenSources(SourceResizeCount, &m_sourcePool[startIndex]));
+        LogI << "Resized Audio Source Pool to " << m_sourcePool.size() << std::endl;
     }
 }
 
 void OpenALImpl::enumerateDevices()
 {
-    //check first - this probably doesn't work on mac for example
-    auto enumAvailable = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
-    if (enumAvailable)
+    getDeviceList();
+
+    if (!m_devices.empty())
     {
-        static const auto getDeviceList = [&]()
-        {
-            m_devices.clear();
-            const auto* deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
-            if (deviceList)
-            {
-                auto* next = deviceList + 1;
-                std::size_t len = 0;
+        char* pp = SDL_GetPrefPath("Trederia", "common");
+        auto prefPath = std::string(pp);
+        SDL_free(pp);
+        std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
+        prefPath += u8"audio_device.cfg";
 
-                while (deviceList && *deviceList != '\0'
-                    && next
-                    && *next != '\0')
+        static bool showWindow = false;
+
+        registerCommand("al_config",
+            [&](const std::string)
+            {
+                showWindow = !showWindow;
+
+                if (showWindow)
                 {
-                    m_devices.push_back(std::string(deviceList));
-                    len = strlen(deviceList);
-                    deviceList += (len + 1);
-                    next += (len + 2);
+                    getDeviceList();
                 }
-                m_devices.push_back("Default");
-            }        
-        };
-        
-        getDeviceList();
+            });
 
-        if (!m_devices.empty())
-        {
-            char* pp = SDL_GetPrefPath("Trederia", "common");
-            auto prefPath = std::string(pp);
-            SDL_free(pp);
-            std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
-            prefPath += u8"audio_device.cfg";
-
-            static bool showWindow = false;
-
-            registerCommand("al_config",
-                [](const std::string)
-                {
-                    showWindow = !showWindow;
-
-                    if (showWindow)
-                    {
-                        getDeviceList();
-                    }
-                });
-
-            registerWindow(
-                [&, prefPath]()
-                {
-                    if (showWindow)
-                    {
-                        if (ImGui::Begin("Default Audio Device", &showWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
-                        {
-                            std::vector<const char*> items; //lol.
-                            for (const auto& d : m_devices)
-                            {
-                                items.push_back(d.c_str());
-                            }
-
-                            static std::int32_t idx = 0;
-                            if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
-                            {
-                                for (auto n = 0u; n < items.size(); ++n)
-                                {
-                                    const bool selected = (idx == n);
-                                    if (ImGui::Selectable(items[n], selected))
-                                    {
-                                        idx = n;
-                                    }
-
-                                    if (selected)
-                                    {
-                                        ImGui::SetItemDefaultFocus();
-                                    }
-                                }
-                                ImGui::EndListBox();
-                            }
-
-                            if (ImGui::Button("Refresh"))
-                            {
-                                getDeviceList();
-                            }
-                            ImGui::Separator();
-                            ImGui::NewLine();
-                            if (!m_preferredDevice.empty())
-                            {
-                                ImGui::Text("Current Device: %s", m_preferredDevice.c_str());
-                            }
-                            else
-                            {
-                                ImGui::Text("Current Device: Default");
-                            }
-
-                            if (ImGui::Button("Make Selected Preferred"))
-                            {
-                                m_preferredDevice = m_devices[idx];
-
-                                ConfigFile cfg;
-                                cfg.addProperty("preferred_device", m_preferredDevice);
-                                cfg.save(prefPath);
-                            }
-                            ImGui::SameLine();
-                            ImGui::Text("(Takes effect after restart)");
-                        }
-                        ImGui::End();
-                    }
-                });
-
-            //look for device config and load if found
-            ConfigFile cfg;
-            if (cfg.loadFromFile(prefPath, false))
+        registerWindow(
+            [&, prefPath]()
             {
-                const auto& props = cfg.getProperties();
-                for (const auto& prop : props)
+                if (showWindow)
                 {
-                    if (prop.getName() == "preferred_device")
+                    if (ImGui::Begin("Default Audio Device", &showWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
                     {
-                        m_preferredDevice = prop.getValue<std::string>();
+                        std::vector<const char*> items; //lol.
+                        for (const auto& d : m_devices)
+                        {
+                            items.push_back(d.c_str());
+                        }
+
+                        static std::int32_t idx = 0;
+                        if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
+                        {
+                            for (auto n = 0u; n < items.size(); ++n)
+                            {
+                                const bool selected = (idx == n);
+                                if (ImGui::Selectable(items[n], selected))
+                                {
+                                    idx = n;
+                                }
+
+                                if (selected)
+                                {
+                                    ImGui::SetItemDefaultFocus();
+                                }
+                            }
+                            ImGui::EndListBox();
+                        }
+
+                        if (ImGui::Button("Refresh"))
+                        {
+                            getDeviceList();
+                        }
+                        ImGui::Separator();
+                        ImGui::NewLine();
+                        if (!m_preferredDevice.empty())
+                        {
+                            ImGui::Text("Current Device: %s", m_preferredDevice.c_str());
+                        }
+                        else
+                        {
+                            ImGui::Text("Current Device: Default");
+                        }
+
+                        if (ImGui::Button("Make Selected Preferred"))
+                        {
+                            m_preferredDevice = m_devices[idx];
+
+                            ConfigFile cfg;
+                            cfg.addProperty("preferred_device", m_preferredDevice);
+                            cfg.save(prefPath);
+
+                            reconnect(m_preferredDevice.c_str());
+                        }
                     }
+                    ImGui::End();
+                }
+            });
+
+        //look for device config and load if found
+        ConfigFile cfg;
+        if (cfg.loadFromFile(prefPath, false))
+        {
+            const auto& props = cfg.getProperties();
+            for (const auto& prop : props)
+            {
+                if (prop.getName() == "preferred_device")
+                {
+                    m_preferredDevice = prop.getValue<std::string>();
                 }
             }
         }
@@ -830,6 +814,75 @@ bool OpenALImpl::initStream(OpenALStream& stream)
         return true;
     }
     return false;
+}
+
+void OpenALImpl::getDeviceList()
+{
+    m_devices.clear();
+
+    //check first - this probably doesn't work on mac for example
+    auto enumAvailable = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
+    if (enumAvailable)
+    {
+        const auto* deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+        if (deviceList)
+        {
+            auto* next = deviceList + 1;
+            std::size_t len = 0;
+
+            while (deviceList && *deviceList != '\0'
+                && next
+                && *next != '\0')
+            {
+                m_devices.push_back(std::string(deviceList));
+                len = strlen(deviceList);
+                deviceList += (len + 1);
+                next += (len + 2);
+            }
+            m_devices.push_back("Default");
+        }
+    }
+}
+
+void OpenALImpl::reconnect(const char* deviceStr)
+{
+    auto device = alcGetContextsDevice(m_context);
+    if (device == nullptr)
+    {
+        m_device = nullptr;
+        LogE << "Could not connect to new audio device: None were available" << std::endl;
+        return;
+    }
+
+    if (alcIsExtensionPresent(device, "ALC_SOFT_reopen_device"))
+    {
+        ALCboolean(ALC_APIENTRY * alcReopenDeviceSOFT)(ALCdevice* device, const ALCchar* name, const ALCint* attribs);
+        alcReopenDeviceSOFT = reinterpret_cast<ALCboolean(ALC_APIENTRY*)(ALCdevice* device, const ALCchar* name, const ALCint* attribs)>(alcGetProcAddress(device, "alcReopenDeviceSOFT"));
+
+        if (alcReopenDeviceSOFT(device, deviceStr, nullptr))
+        {
+            m_device = device;
+            getDeviceList();
+
+            if (deviceStr)
+            {
+                LogI << "Reconnected audio output to " << deviceStr << std::endl;
+            }
+            else
+            {
+                LogI << "Connected audio output to default device" << std::endl;
+            }
+
+
+            return;
+        }
+
+        LogE << "Failed reopening default audio device" << std::endl;
+    }
+    else
+    {
+        LogW << "Unable to re-open audio device, extension not present" << std::endl;
+    }
 }
 
 //stream thread function

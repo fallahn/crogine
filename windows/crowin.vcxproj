@@ -43,7 +43,11 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\DynamicAudioStream.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\effects_chain\BaseEffect.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\effects_chain\NoiseGateEffect.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\effects_chain\VolumeEffect.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\MusicPlayer.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\OpusEncoder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundRecorder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundSource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundStream.hpp" />
@@ -260,7 +264,11 @@
     <ClCompile Include="..\crogine\src\audio\DynamicAudioStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\Mp3Loader.cpp" />
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\effects_chain\BaseEffect.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\effects_chain\NoiseGateEffect.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\effects_chain\VolumeEffect.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\MusicPlayer.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\OpusEncoder.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundRecorder.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundSource.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundStream.cpp" />

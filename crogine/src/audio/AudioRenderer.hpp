@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -97,6 +97,11 @@ namespace cro
         virtual void setSourceVelocity(std::int32_t, glm::vec3) = 0;
         virtual void setDopplerFactor(float) = 0;
         virtual void setSpeedOfSound(float) = 0;
+
+        //optional callbacks raised when audio devices
+        //are disconnected. Allows for connecting to new device
+        virtual void playbackDisconnectEvent(){};
+        virtual void recordDisconnectEvent(){};
 
         //optionally override this to implement ImGui debug printing
         //*without* window begin/end
@@ -315,6 +320,11 @@ namespace cro
         \param speed Speed at which sound is to be simulated in world units
         */
         static void setSpeedOfSound(float speed);
+
+
+        static void onPlaybackDisconnect();
+        static void onRecordDisconnect();
+
 
         /*!
         \brief Prints any debug info available to the current ImGui window

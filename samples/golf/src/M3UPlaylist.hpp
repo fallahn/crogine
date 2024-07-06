@@ -35,6 +35,7 @@ source distribution.
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <string>
 
 namespace cro
 {
@@ -66,13 +67,15 @@ public:
 
     //returns the resource ID of the current track or -1 if playlist is empty
     std::int32_t getCurrentTrack() const;
+    const std::string& getCurrentTrackName() const;
 
     std::size_t getCurrentIndex() const { return m_currentIndex; }
     std::size_t getTrackCount() const { return m_resourceIDs.size(); }
 
 private:
     cro::AudioResource& m_audioResource;
-    std::vector<std::int32_t> m_resourceIDs;
+    std::vector<std::pair<std::int32_t, std::string>> m_resourceIDs;
+
     std::size_t m_currentIndex;
     std::string m_defaultFile;
 };

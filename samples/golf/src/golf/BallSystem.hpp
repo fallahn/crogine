@@ -74,13 +74,14 @@ struct Ball final
 
     std::uint8_t terrain = TerrainID::Fairway;
     std::uint8_t lie = 0; //0 buried, 1 sitting up
+    bool checkGimme = false; //used in pause delay to not insta-gimme
 
     glm::vec3 velocity = glm::vec3(0.f);
     float delay = 0.f;
     float rotation = 0.f; //animation effect
     float windEffect = 0.f; //how much the ball is being affected by wind (normalised) used for UI display
 
-    glm::vec2 spin = glm::vec2(0.f);
+    glm::vec2 spin = glm::vec2(0.f); //-1 to 1
     glm::vec3 initialForwardVector = glm::vec3(0.f); //normalised forward vector of velocity when impulse applied
     glm::vec3 initialSideVector = glm::vec3(0.f); //normalised right vector of velocity when impulse applied
 

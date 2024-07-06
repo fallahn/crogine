@@ -2284,9 +2284,18 @@ void MenuState::updateLobbyAvatars()
 
         m_connectedClientCount = clientCount;
         m_connectedPlayerCount = playerCount;
-        if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
+        if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType]
+            || m_connectedPlayerCount > ScoreType::MaxPlayerCount[m_sharedData.scoreType])
         {
             m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            if (m_connectedPlayerCount < ScoreType::MinPlayerCount[m_sharedData.scoreType])
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MinPlayerWarning);
+            }
+            else
+            {
+                m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Text>().setString(MaxPlayerWarning);
+            }
         }
         else
         {
@@ -2345,4 +2354,10 @@ void MenuState::updateLobbyAvatars()
             };
     }
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
+    {
+        const auto scale = m_sharedData.scoreType == ScoreType::Stroke ? 1.f : 0.f;
+        m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    }
 }

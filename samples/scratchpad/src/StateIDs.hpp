@@ -37,6 +37,7 @@ namespace States
         {
             MainMenu,
             AnimBlend,
+            Arc,
             BatCat,
             Billiards,
             Bounce,
@@ -54,6 +55,7 @@ namespace States
             Voxels,
             VATs,
             EndlessDriving,
+            TrackOverlay,
 
             Count
         };

@@ -329,12 +329,12 @@ void MenuState::createBallScene()
 
     const std::array<League, 6u> Leagues =
     {
-        League(LeagueRoundID::RoundOne),
-        League(LeagueRoundID::RoundTwo),
-        League(LeagueRoundID::RoundThree),
-        League(LeagueRoundID::RoundFour),
-        League(LeagueRoundID::RoundFive),
-        League(LeagueRoundID::RoundSix)
+        League(LeagueRoundID::RoundOne, m_sharedData),
+        League(LeagueRoundID::RoundTwo, m_sharedData),
+        League(LeagueRoundID::RoundThree, m_sharedData),
+        League(LeagueRoundID::RoundFour, m_sharedData),
+        League(LeagueRoundID::RoundFive, m_sharedData),
+        League(LeagueRoundID::RoundSix, m_sharedData)
     };
     const std::array<std::string, 6u> LeaguePaths =
     {
@@ -345,6 +345,10 @@ void MenuState::createBallScene()
         "assets/golf/career/tier0/05.ball",
         "assets/golf/career/tier0/06.ball"
     };
+
+    //check the stat flags first
+    const auto ballFlags = Social::getUnlockStatus(Social::UnlockType::CareerBalls);
+
     //unlockable balls for league placements
     for (auto i = 0u; i < LeaguePaths.size(); ++i)
     {
@@ -354,7 +358,8 @@ void MenuState::createBallScene()
             auto info = readBallCfg(cfg);
             info.type = SharedStateData::BallInfo::Unlock;
 
-            if (Leagues[i].getCurrentBest() < 4)
+            if ((ballFlags == -1 && Leagues[i].getCurrentBest() < 4)
+                || ((ballFlags & (1 << i)) != 0))
             {
                 insertInfo(info, m_sharedData.ballInfo, true);
             }
@@ -589,12 +594,12 @@ void MenuState::parseAvatarDirectory()
 {
     const std::array<League, 6u> Leagues =
     {
-        League(LeagueRoundID::RoundOne),
-        League(LeagueRoundID::RoundTwo),
-        League(LeagueRoundID::RoundThree),
-        League(LeagueRoundID::RoundFour),
-        League(LeagueRoundID::RoundFive),
-        League(LeagueRoundID::RoundSix)
+        League(LeagueRoundID::RoundOne, m_sharedData),
+        League(LeagueRoundID::RoundTwo, m_sharedData),
+        League(LeagueRoundID::RoundThree, m_sharedData),
+        League(LeagueRoundID::RoundFour, m_sharedData),
+        League(LeagueRoundID::RoundFive, m_sharedData),
+        League(LeagueRoundID::RoundSix, m_sharedData)
     };
 
     m_sharedData.avatarInfo.clear();
@@ -614,11 +619,13 @@ void MenuState::parseAvatarDirectory()
         "ca05.avt",
         "ca06.avt",
     };
+    const auto avatarFlags = Social::getUnlockStatus(Social::UnlockType::CareerAvatar);
 
     auto start = m_sharedData.avatarInfo.size();
     for (auto i = 0u; i < CareerAvatars.size(); ++i)
     {
-        processAvatarList(Leagues[i].getCurrentBest() > 1, {CareerAvatars[i]}, CareerPath);
+        const bool unlocked = ((avatarFlags == -1 && Leagues[i].getCurrentBest() == 1) || ((avatarFlags & (1 << i)) != 0));
+        processAvatarList(/*Leagues[i].getCurrentBest() > 1*/!unlocked, {CareerAvatars[i]}, CareerPath);
     }
 
     //if we unlocked any models update the info
@@ -720,6 +727,8 @@ void MenuState::parseAvatarDirectory()
         "assets/golf/career/tier1/05.hct",
         "assets/golf/career/tier1/06.hct"
     };
+    const auto hairFlags = Social::getUnlockStatus(Social::UnlockType::CareerHair);
+
     std::vector<SharedStateData::HairInfo> delayedEntries;
 
     for (auto i = 0u; i < LeaguePaths.size(); ++i)
@@ -730,7 +739,8 @@ void MenuState::parseAvatarDirectory()
             auto info = readHairCfg(cfg);
             info.type = SharedStateData::HairInfo::Unlock;
 
-            if (Leagues[i].getCurrentBest() < 3)
+            if ((hairFlags == -1 && Leagues[i].getCurrentBest() < 3)
+                || ((hairFlags & (1 << i)) != 0))
             {
                 insertInfo(info, m_sharedData.hairInfo, true);
             }
@@ -815,6 +825,19 @@ void MenuState::parseAvatarDirectory()
                 }
 
                 m_profileData.hairDefs.push_back(md);
+            }
+        }
+
+        //make sure the avatar info is the same size as hair info as indexFromHairID()
+        //has to return a valid index based on m_sharedData.hairInfo into avatar.hairModels
+        for (auto& avatar : m_playerAvatars)
+        {
+            if (avatar.hairModels.size() < m_sharedData.hairInfo.size())
+            {
+                for (auto i = avatar.hairModels.size(); i < m_sharedData.hairInfo.size(); ++i)
+                {
+                    avatar.hairModels.emplace_back();
+                }
             }
         }
     }
