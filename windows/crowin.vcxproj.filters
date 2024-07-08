@@ -759,6 +759,9 @@
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\effects_chain\NoiseGateEffect.hpp">
       <Filter>Header Files\audio\sound system\effects chain</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\Playlist.hpp">
+      <Filter>Header Files\audio\sound system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1279,6 +1282,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\sound_system\effects_chain\NoiseGateEffect.cpp">
       <Filter>Source Files\audio\sound system\effects chain</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\sound_system\Playlist.cpp">
+      <Filter>Source Files\audio\sound system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
