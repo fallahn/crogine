@@ -1830,6 +1830,13 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
 void GolfState::updateLensFlare(cro::Entity e, float)
 {
+    if (!m_sharedData.useLensFlare)
+    {
+        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        return;
+    }
+    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
     const auto ndcVisible = [](glm::vec2 p)
         {
             return p.x >= -1.f && p.x <= 1.f && p.y >= -1.f && p.y <= 1.f;
