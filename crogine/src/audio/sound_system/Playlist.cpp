@@ -31,6 +31,8 @@ source distribution.
 #include "../WavLoader.hpp"
 #include "../Mp3Loader.hpp"
 
+#include <SDL.h>
+
 #include <crogine/audio/sound_system/Playlist.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
@@ -45,6 +47,7 @@ namespace
 {
     constexpr std::size_t MaxFiles = 50;
     constexpr std::int32_t ChannelCount = 2;
+    constexpr std::int32_t SampleRate = 48000;
 }
 
 Playlist::Playlist()
@@ -103,7 +106,7 @@ const std::int16_t* Playlist::getData(std::int32_t& samples)
 
     //arbitrary amount - we make sure below to not load the next buffer
     //until we know it's safe to do so, so let's send ~double samples per sec (at 60Hz)
-    static constexpr std::int32_t SampleCount = (44100 / 30) * ChannelCount;
+    static constexpr std::int32_t SampleCount = (SampleRate / 30) * ChannelCount;
     auto available = std::min((static_cast<std::int32_t>(m_buffers[m_outBuffer].size()) - m_outputOffset), SampleCount);
 
     samples = available / ChannelCount; //ONE SAMPLE includes 2 CHANNELS
@@ -171,13 +174,14 @@ void Playlist::threadFunc()
             
                 if (audioFile)
                 {
-                    if (!audioFile->open(m_filePaths[m_fileIndex])
-                        || audioFile->getFormat() != Detail::PCMData::Format::STEREO16
-                        || audioFile->getSampleRate() != 44100) //hmm what about 48KHz?
+                    if (!audioFile->open(m_filePaths[m_fileIndex]))
                     {
                         m_loadNextFile = false;
                         m_fileIndex = (m_fileIndex + 1) % m_filePaths.size();
-                        LogW << m_filePaths[m_fileIndex] << ": could not open file, or file not 16 bit stereo" << std::endl;
+                        LogW << m_filePaths[m_fileIndex] << ": could not open file" << std::endl;
+
+                        //TODO erase the path from the file list and adjust indices accordingly otherwise
+                        //we get stuck in an endless loop of unloadability
 
                         audioFile.reset();
                     }
@@ -189,7 +193,7 @@ void Playlist::threadFunc()
                 m_buffers[m_inBuffer].clear();
 
                 //set a max file length of ~15 minutes
-                static constexpr std::size_t MaxFileSize = 15 * 60 * 44100 * ChannelCount * sizeof(std::int16_t);
+                static constexpr std::size_t MaxFileSize = 15 * 60 * SampleRate * ChannelCount * sizeof(std::int16_t);
 
                 std::vector<std::uint8_t> temp;
                 const auto& data = audioFile->getData();
@@ -203,8 +207,76 @@ void Playlist::threadFunc()
                     audioFile->getData(); //this actually updates the supposedly const data reference... not the greatest design
                 }
 
+                
                 if (!temp.empty())
                 {
+                    //resmaple music not in the correct format
+                    if (audioFile->getFormat() != Detail::PCMData::Format::STEREO16
+                        || audioFile->getSampleRate() != SampleRate)
+                    {
+                        SDL_AudioFormat inFormat = AUDIO_S16;
+                        std::uint8_t inChannels = 1;
+
+                        switch (audioFile->getFormat())
+                        {
+                        default: 
+                        case Detail::PCMData::Format::NONE:
+                            //just instert silence
+                            temp.clear();
+                            break;
+                        case Detail::PCMData::Format::STEREO8:
+                            inChannels = 2;
+                            [[fallthrough]];
+                        case Detail::PCMData::Format::MONO8:
+                            inFormat = AUDIO_U8;
+                            break;
+                        case Detail::PCMData::Format::STEREO16:
+                            //we still have to handle this case if the sample rate doesn't match
+                            inChannels = 2;
+                            [[fallthrough]];
+                        case Detail::PCMData::Format::MONO16:
+                            //do nothing these are the default input settings
+                            break;
+                        }
+
+
+                        if (temp.empty())
+                        {
+                            //we got an invalid format
+                            temp.resize(100);
+                            std::fill(temp.begin(), temp.end(), 0);
+                        }
+                        else
+                        {
+                            //resample
+                            auto* stream = SDL_NewAudioStream(inFormat, inChannels, audioFile->getSampleRate(), AUDIO_S16, ChannelCount, SampleRate);
+                            SDL_AudioStreamPut(stream, temp.data(), temp.size());
+                            SDL_AudioStreamFlush(stream);
+
+                            std::int32_t count = 0;
+                            std::vector<std::uint8_t> resampled;
+                            std::vector<std::uint8_t> buff(102400);
+
+                            do
+                            {
+                                count = SDL_AudioStreamGet(stream, buff.data(), buff.size());
+
+                                if (count > 0)
+                                {
+                                    auto old = resampled.size();
+                                    resampled.resize(old + count);
+                                    std::memcpy(&resampled[old], buff.data(), count);
+                                }
+
+                            } while (count > 0); //might be negative on error
+
+                            temp.swap(resampled);
+                            SDL_FreeAudioStream(stream);
+                        }
+                    }
+
+
+
                     {
                         std::scoped_lock lock(m_mutex);
                         m_fileIndex = (m_fileIndex + 1) % m_filePaths.size();

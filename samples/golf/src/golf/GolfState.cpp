@@ -161,7 +161,7 @@ namespace
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State            (stack, context),
-    m_musicStream           (2,44100),
+    m_musicStream           (2,48000),
     m_sharedData            (sd),
     m_gameScene             (context.appInstance.getMessageBus(), 1024/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_skyScene              (context.appInstance.getMessageBus(), 512),

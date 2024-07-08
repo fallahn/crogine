@@ -44,12 +44,13 @@ namespace cro
     /*
     \brief Loads and buffers audio files asynchronously so
     that they may be streamed continuously to a buffer such
-    as DynamicAudioStream. Currently only supports 44.1KHz, 16 bit Stereo
+    as DynamicAudioStream. Output is 48KHz 16 bit Stereo
+    files are resampled on load if necessary
     */
     class CRO_EXPORT_API Playlist final
     {
     public:
-        Playlist(); //TODO specify a format the audio must match - currently fixed to 16bit stereo
+        Playlist();
         ~Playlist();
 
         Playlist(const Playlist&) = delete;
