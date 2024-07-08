@@ -1338,6 +1338,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.crowdDensity = std::clamp(prop.getValue<std::int32_t>(), 0, CrowdDensityCount - 1);
                 }
+                else if (name == "use_flare")
+                {
+                    m_sharedData.useLensFlare = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -1436,6 +1440,10 @@ void GolfGame::loadPreferences()
                     else if (name == "use_swingput")
                     {
                         m_sharedData.useSwingput = prop.getValue<bool>();
+                    }
+                    else if (name == "use_flare")
+                    {
+                        m_sharedData.useLensFlare = prop.getValue<bool>();
                     }
                 }
             }
@@ -1551,6 +1559,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("clubset").setValue(m_sharedData.preferredClubSet);
     cfg.addProperty("press_hold").setValue(m_sharedData.pressHold);
     cfg.addProperty("use_tts").setValue(m_sharedData.useTTS);
+    cfg.addProperty("use_flare").setValue(m_sharedData.useLensFlare);
     cfg.save(path);
 
 

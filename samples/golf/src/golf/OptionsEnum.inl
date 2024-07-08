@@ -73,6 +73,7 @@ enum OptionsIndex
     AVShadowR,
     AVCrowdL,
     AVCrowdR,
+    AVLensFlare,
 
 
     Controls = 300,

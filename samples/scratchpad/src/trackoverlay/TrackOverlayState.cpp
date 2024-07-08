@@ -54,7 +54,7 @@ namespace
     constexpr glm::vec3 TextPosition(ThumbSize.x + 80.f, ThumbSize.y - 40.f, TextDepth);
     constexpr float TransitionSpeed = 1.f; //seconds
 
-    const cro::Colour BannerColour = cro::Colour(0.f, 0.f, 0.f, 0.3f);
+    const cro::Colour BannerColour = cro::Colour::Transparent;// cro::Colour(0.f, 0.f, 0.f, 0.3f);
 
     const std::string ThumbVertex = 
 R"(

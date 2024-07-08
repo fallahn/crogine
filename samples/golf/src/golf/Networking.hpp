@@ -31,6 +31,7 @@ source distribution.
 
 #ifdef USE_GNS
 #include <gns/NetClient.hpp>
+#include <gns/NetHost.hpp>
 namespace net = gns;
 #else
 #include <crogine/network/NetClient.hpp>
