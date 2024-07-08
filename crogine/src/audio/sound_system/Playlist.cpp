@@ -124,6 +124,18 @@ const std::int16_t* Playlist::getData(std::int32_t& samples)
     return retVal;
 }
 
+std::vector<std::string> Playlist::getTrackList() const
+{
+    std::vector<std::string> retVal;
+    {
+        std::scoped_lock lock(m_mutex);
+        for (const auto& t : m_filePaths)
+        {
+            retVal.push_back(cro::FileSystem::getFileName(t));
+        }
+    }
+    return retVal;
+}
 
 //private
 void Playlist::threadFunc()

@@ -44,7 +44,7 @@ namespace cro
     /*
     \brief Loads and buffers audio files asynchronously so
     that they may be streamed continuously to a buffer such
-    as DynamicAudioStream.
+    as DynamicAudioStream. Currently only supports 44.1KHz, 16 bit Stereo
     */
     class CRO_EXPORT_API Playlist final
     {
@@ -70,9 +70,15 @@ namespace cro
         /*!
         \brief returns a pointer 16 bit Stereo PCM samples
         \param count A reference to a std::int32_t which is filled
-        with the number of *samples* pointed to by the return value - may be 0!!
+        with the number of *samples* pointed to by the return value
         */
         const std::int16_t* getData(std::int32_t& count);
+
+        /*!
+        \brief Returns a COPY of the tracklist (as it otherwise gets manipulated
+        by multiple threads...)
+        */
+        std::vector<std::string> getTrackList() const;
 
     private:
 
@@ -96,7 +102,7 @@ namespace cro
         std::atomic_bool m_threadRunning;
         std::atomic_bool m_loadNextFile;
         std::thread m_thread;
-        std::mutex m_mutex;
+        mutable std::mutex m_mutex;
 
         void threadFunc();
     };

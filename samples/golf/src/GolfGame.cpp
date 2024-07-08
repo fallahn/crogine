@@ -75,6 +75,7 @@ source distribution.
 #include "golf/XPAwardStrings.hpp"
 
 #include "ImTheme.hpp"
+#include "M3UPlaylist.hpp"
 
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
@@ -1511,6 +1512,7 @@ void GolfGame::loadPreferences()
     {
         cro::FileSystem::createDirectory(Social::getBaseContentPath() + u8"music");
     }
+    loadMusic();
 }
 
 void GolfGame::savePreferences()
@@ -1829,6 +1831,58 @@ void GolfGame::loadAvatars()
         m_profileData.playerProfiles.emplace_back().name = "I blame the dev";
     }
     m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
+}
+
+void GolfGame::loadMusic()
+{
+    //parse any music files into a playlist
+    M3UPlaylist m3uPlaylist(Social::getBaseContentPath() + u8"music/");
+
+    if (m3uPlaylist.getTrackCount() == 0)
+    {
+        const auto loadFiles = [&](const std::string& path, const std::string& root)
+            {
+                const auto files = cro::FileSystem::listFiles(path);
+                for (const auto& file : files)
+                {
+                    //this checks the file has a valid extension
+                    //and limits the number of files loaded
+                    m3uPlaylist.addTrack(root + file);
+                }
+                m3uPlaylist.shuffle();
+            };
+
+
+#ifdef USE_GNS
+        //see if the soundtrack is installed and prefer that
+        auto soundtrackPath = Social::getSoundTrackPath();
+        if (!soundtrackPath.empty()
+            && cro::FileSystem::directoryExists(soundtrackPath + u8"/mp3/"))
+        {
+            loadFiles(soundtrackPath + u8"/mp3/", soundtrackPath + u8"/mp3/");
+        }
+
+        if (m3uPlaylist.getTrackCount() == 0)
+#endif
+        {
+            //look in the fallback dir
+            const auto MusicDir = u8"assets/golf/sound/music/";
+            if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + MusicDir))
+            {
+                loadFiles(cro::FileSystem::getResourcePath() + MusicDir, MusicDir);
+            }
+        }
+    }
+
+    if (cro::Console::getConvarValue<bool>("shuffle_music"))
+    {
+        m3uPlaylist.shuffle();
+    }
+
+    for (const auto& fp : m3uPlaylist.getFilePaths())
+    {
+        m_sharedData.playlist.addPath(fp);
+    }
 }
 
 void GolfGame::recreatePostProcess()

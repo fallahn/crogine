@@ -4,9 +4,6 @@
 
 #include "../StateIDs.hpp"
 
-#include <crogine/audio/sound_system/Playlist.hpp>
-#include <crogine/audio/DynamicAudioStream.hpp>
-
 #include <crogine/core/State.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -31,11 +28,6 @@ public:
     void render() override;
 
 private:
-
-    cro::Playlist m_playlist;
-    cro::DynamicAudioStream m_audioStream;
-    cro::Entity m_audioEnt;
-
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;

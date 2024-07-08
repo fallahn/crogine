@@ -36,6 +36,7 @@ source distribution.
 #include "LeagueNames.hpp"
 #include "server/Server.hpp"
 
+#include <crogine/audio/sound_system/Playlist.hpp>
 #include <crogine/core/String.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -86,6 +87,8 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
+    cro::Playlist playlist;
+
     bool showCredits = false;
     std::int32_t leagueTable = 0; //which league table to display when opening league browser
     SharedCourseData* courseData = nullptr; //only valid when MenuState is active

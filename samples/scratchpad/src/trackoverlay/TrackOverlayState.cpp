@@ -113,7 +113,6 @@ void main()
 
 TrackOverlayState::TrackOverlayState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
-    m_audioStream   (2,44100),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
     m_currentIndex  (0),
@@ -127,16 +126,6 @@ TrackOverlayState::TrackOverlayState(cro::StateStack& stack, cro::State::Context
     });
 
     cro::App::getInstance().setClearColour(cro::Colour(0.f, 1.f, 0.f, 0.f));
-
-    m_playlist.addPath("assets/avatar_voices.mp3");
-    m_playlist.addPath("assets/bass_loop.mp3");
-    m_playlist.addPath("assets/loop.wav");
-    m_playlist.addPath("assets/avatar_voices.ogg");
-    m_playlist.addPath("assets/menu.ogg");
-
-    m_audioEnt = m_uiScene.createEntity();
-    m_audioEnt.addComponent<cro::Transform>();
-    m_audioEnt.addComponent<cro::AudioEmitter>(m_audioStream).play();
 }
 
 //public
@@ -193,14 +182,6 @@ void TrackOverlayState::handleMessage(const cro::Message& msg)
 
 bool TrackOverlayState::simulate(float dt)
 {
-    if (m_audioEnt.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
-    {
-        std::int32_t size = 0;
-        const auto* data = m_playlist.getData(size);
-
-        m_audioStream.updateBuffer(data, size);
-    }
-
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;

@@ -108,6 +108,7 @@ private:
     void loadPreferences();
     void savePreferences();
     void loadAvatars();
+    void loadMusic();
     void recreatePostProcess();
     void applyPostProcess();
     bool setShader(const char*);

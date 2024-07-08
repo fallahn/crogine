@@ -249,6 +249,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_sharedData        (sd),
     m_profileData       (sp),
     m_inputParser       (sd, nullptr),
+    m_musicStream       (2,44100),
     m_gameScene         (context.appInstance.getMessageBus(), 512),
     m_skyScene          (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
@@ -1294,29 +1295,29 @@ void DrivingState::initAudio()
 
                 entity.addComponent<cro::Callback>().function =
                     [](cro::Entity e, float dt)
-                {
-                    static constexpr float Speed = 6.3f;
-                    const float MaxLen = glm::length2((Start - End) / 2.f);
-
-                    auto& tx = e.getComponent<cro::Transform>();
-                    auto dir = glm::normalize(tx.getRightVector()); //scaling means this isn't normalised :/
-                    tx.move(dir * Speed * dt);
-
-                    float currLen = glm::length2((Start + ((Start + End) / 2.f)) - tx.getPosition());
-                    float scale = std::max(1.f - (currLen / MaxLen), 0.001f); //can't scale to 0 because it breaks normalizing the right vector above
-                    tx.setScale({ scale, scale, scale });
-
-                    if (tx.getPosition().x > End.x)
                     {
-                        tx.setPosition(Start);
-                        e.getComponent<cro::Callback>().active = false;
-                    }
-                };
+                        static constexpr float Speed = 6.3f;
+                        const float MaxLen = glm::length2((Start - End) / 2.f);
+
+                        auto& tx = e.getComponent<cro::Transform>();
+                        auto dir = glm::normalize(tx.getRightVector()); //scaling means this isn't normalised :/
+                        tx.move(dir * Speed * dt);
+
+                        float currLen = glm::length2((Start + ((Start + End) / 2.f)) - tx.getPosition());
+                        float scale = std::max(1.f - (currLen / MaxLen), 0.001f); //can't scale to 0 because it breaks normalizing the right vector above
+                        tx.setScale({ scale, scale, scale });
+
+                        if (tx.getPosition().x > End.x)
+                        {
+                            tx.setPosition(Start);
+                            e.getComponent<cro::Callback>().active = false;
+                        }
+                    };
 
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                 applyMaterialData(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
-                
+
                 //engine
                 entity.addComponent<cro::AudioEmitter>(); //always needs one in case audio doesn't exist
                 if (as.hasEmitter("plane"))
@@ -1340,50 +1341,50 @@ void DrivingState::initAudio()
             entity.getComponent<cro::Callback>().setUserData<AudioData>();
             entity.getComponent<cro::Callback>().function =
                 [plane01, plane02, church, planeEnt](cro::Entity e, float dt) mutable
-            {
-                auto& [currTime, timeOut, activeEnt] = e.getComponent<cro::Callback>().getUserData<AudioData>();
-
-                if (!activeEnt.isValid()
-                    || activeEnt.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
                 {
-                    currTime += dt;
+                    auto& [currTime, timeOut, activeEnt] = e.getComponent<cro::Callback>().getUserData<AudioData>();
 
-                    if (currTime > timeOut)
+                    if (!activeEnt.isValid()
+                        || activeEnt.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
                     {
-                        currTime = 0.f;
-                        timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
+                        currTime += dt;
 
-                        auto id = cro::Util::Random::value(0, 3);
-                        if (id == 0)
+                        if (currTime > timeOut)
                         {
-                            //fly the plane
-                            if (planeEnt.isValid())
+                            currTime = 0.f;
+                            timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
+
+                            auto id = cro::Util::Random::value(0, 3);
+                            if (id == 0)
                             {
-                                planeEnt.getComponent<cro::Callback>().active = true;
-                                planeEnt.getComponent<cro::AudioEmitter>().play();
-                                activeEnt = planeEnt;
+                                //fly the plane
+                                if (planeEnt.isValid())
+                                {
+                                    planeEnt.getComponent<cro::Callback>().active = true;
+                                    planeEnt.getComponent<cro::AudioEmitter>().play();
+                                    activeEnt = planeEnt;
+                                }
                             }
-                        }
-                        else if (id == 1)
-                        {
-                            if (church.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                            else if (id == 1)
                             {
-                                church.getComponent<cro::AudioEmitter>().play();
-                                activeEnt = church;
+                                if (church.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                                {
+                                    church.getComponent<cro::AudioEmitter>().play();
+                                    activeEnt = church;
+                                }
                             }
-                        }
-                        else
-                        {
-                            auto ent = (id == 2) ? plane01 : plane02;
-                            if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                            else
                             {
-                                ent.getComponent<cro::AudioEmitter>().play();
-                                activeEnt = ent;
+                                auto ent = (id == 2) ? plane01 : plane02;
+                                if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                                {
+                                    ent.getComponent<cro::AudioEmitter>().play();
+                                    activeEnt = ent;
+                                }
                             }
                         }
                     }
-                }
-            };
+                };
 
         }
 
@@ -1401,45 +1402,100 @@ void DrivingState::initAudio()
         LogE << "Invalid AudioScape file was found" << std::endl;
     }
 
+
     //fades in the audio
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
-    {
-        auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
-        progress = std::min(1.f, progress + dt);
-
-        cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
-        cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::UserMusic);
-
-        if (progress == 1)
         {
-            e.getComponent<cro::Callback>().active = false;
-            m_gameScene.destroyEntity(e);
-        }
-    };
+            auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+            progress = std::min(1.f, progress + dt);
 
-    auto playlist = createMusicPlayer(m_gameScene, m_resources.audio, m_gameScene.getActiveCamera());
-    if (playlist.isValid())
-    {
-        registerCommand("list_tracks", [playlist](const std::string&) 
+            cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
+            cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::UserMusic);
+
+            if (progress == 1)
             {
-                const auto& trackEnts = playlist.getComponent<cro::Callback>().getUserData<MusicPlayerData>().playlist;
-                
-                if (!trackEnts.empty())
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
+
+    //TODO this is duplicated in the main game too so we could share this in a freefunc
+    registerCommand("list_tracks", [&](const std::string&)
+        {
+            const auto& trackList = m_sharedData.playlist.getTrackList();
+
+            if (!trackList.empty())
+            {
+                for (const auto& str : trackList)
                 {
-                    for (auto e : trackEnts)
+                    cro::Console::print(str);
+                }
+            }
+            else
+            {
+                cro::Console::print("No music loaded");
+            }
+        });
+
+    if (!m_sharedData.playlist.getTrackList().empty())
+    {
+        auto gameMusic = m_gameScene.getActiveCamera();
+
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::AudioEmitter>(m_musicStream).setMixerChannel(MixerChannel::UserMusic);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, gameMusic](cro::Entity e, float dt)
+            {
+                //set the mixer channel to inverse valaue of main music channel
+                //while the incidental music is playing
+                if (gameMusic.isValid())
+                {
+                    //fade out if the menu music is playing, ie in a transition
+                    const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
+                    float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
+                    if (target < vol)
                     {
-                        cro::Console::print(e.getLabel());
+                        vol = std::max(0.f, vol - (dt * 2.f));
+                    }
+                    else
+                    {
+                        vol = std::min(1.f, vol + dt);
+                    }
+                    cro::AudioMixer::setPrefadeVolume(vol, MixerChannel::UserMusic);
+                }
+
+
+                //check the current music state and pause when volume is low else play the
+                //next track when we stop playing.
+                const float currVol = cro::AudioMixer::getVolume(MixerChannel::UserMusic);
+                auto state = e.getComponent<cro::AudioEmitter>().getState();
+
+                if (state == cro::AudioEmitter::State::Playing)
+                {
+                    if (currVol < MinMusicVolume)
+                    {
+                        e.getComponent<cro::AudioEmitter>().pause();
                     }
                 }
-                else
+                else if ((state == cro::AudioEmitter::State::Paused
+                    && currVol > MinMusicVolume) || state == cro::AudioEmitter::State::Stopped)
                 {
-                    cro::Console::print("No music loaded");
+                    e.getComponent<cro::AudioEmitter>().play();
                 }
-            });
+
+
+                if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
+                {
+                    std::int32_t samples = 0;
+                    const auto* data = m_sharedData.playlist.getData(samples);
+                    m_musicStream.updateBuffer(data, samples);
+                }
+            };
     }
 }
 
