@@ -195,7 +195,8 @@ const std::string& M3UPlaylist::getCurrentTrack() const
 {
     if (m_filePaths.empty())
     {
-        return {};
+        static const std::string ret;
+        return ret;
     }
     return m_filePaths[m_currentIndex];
 }

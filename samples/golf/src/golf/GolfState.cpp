@@ -465,13 +465,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    const auto showMapOverview = [&]()
+    /*const auto showMapOverview = [&]()
     {
         if (m_sharedData.minimapData.active)
         {
             requestStackPush(StateID::MapOverview);
         }
-    };
+    };*/
 
     const auto toggleMiniZoom = [&]()
         {

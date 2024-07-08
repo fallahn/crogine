@@ -1447,6 +1447,7 @@ void DrivingState::initAudio()
 
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::AudioEmitter>(m_musicStream).setMixerChannel(MixerChannel::UserMusic);
+        entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
             [&, gameMusic](cro::Entity e, float dt)
