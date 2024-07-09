@@ -140,6 +140,15 @@ std::vector<std::string> Playlist::getTrackList() const
     return retVal;
 }
 
+void Playlist::precache()
+{
+    if (!m_filePaths.empty()
+        && m_inBuffer == m_outBuffer)
+    {
+        m_loadNextFile = true;
+    }
+}
+
 //private
 void Playlist::threadFunc()
 {

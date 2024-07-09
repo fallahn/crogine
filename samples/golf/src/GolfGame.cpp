@@ -1883,6 +1883,7 @@ void GolfGame::loadMusic()
     {
         m_sharedData.playlist.addPath(fp);
     }
+    m_sharedData.playlist.precache();
 }
 
 void GolfGame::recreatePostProcess()

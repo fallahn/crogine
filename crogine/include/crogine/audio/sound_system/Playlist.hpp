@@ -81,6 +81,12 @@ namespace cro
         */
         std::vector<std::string> getTrackList() const;
 
+        /*!
+        \brief Pre-loads the first buffer (if possible) - use this to
+        prime the audio input without having to wait until the first call to getData()
+        */
+        void precache();
+
     private:
 
         static constexpr std::size_t MaxBuffers = 3u;
