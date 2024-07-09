@@ -423,12 +423,11 @@ void InputParser::handleEvent(const cro::Event& evt)
             m_mouseWheel += evt.wheel.y;
         }
         else if (evt.type == SDL_MOUSEBUTTONDOWN
-            && !m_swingput.isActive())
+            && !Social::isSteamdeck())
         {
             m_inputFlags |= InputFlag::Action;
         }
-        else if (evt.type == SDL_MOUSEBUTTONUP
-            && !m_swingput.isActive())
+        else if (evt.type == SDL_MOUSEBUTTONUP)
         {
             m_inputFlags &= ~InputFlag::Action;
         }
