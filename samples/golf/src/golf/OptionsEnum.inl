@@ -94,6 +94,7 @@ enum OptionsIndex
     CtrlLB,
     CtrlInvX,
     CtrlInvY,
+    CtrlMouseAction,
     CtrlVib,
     CtrlAltPower,
     CtrlSwg,

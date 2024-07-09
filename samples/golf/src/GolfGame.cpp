@@ -1446,6 +1446,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.useLensFlare = prop.getValue<bool>();
                     }
+                    else if (name == "use_mouse_action")
+                    {
+                        m_sharedData.useMouseAction = prop.getValue<bool>();
+                    }
                 }
             }
         }
@@ -1562,6 +1566,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("press_hold").setValue(m_sharedData.pressHold);
     cfg.addProperty("use_tts").setValue(m_sharedData.useTTS);
     cfg.addProperty("use_flare").setValue(m_sharedData.useLensFlare);
+    cfg.addProperty("use_mouse_action").setValue(m_sharedData.useMouseAction);
     cfg.save(path);
 
 

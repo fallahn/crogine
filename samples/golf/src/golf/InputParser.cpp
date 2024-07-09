@@ -423,7 +423,7 @@ void InputParser::handleEvent(const cro::Event& evt)
             m_mouseWheel += evt.wheel.y;
         }
         else if (evt.type == SDL_MOUSEBUTTONDOWN
-            && !Social::isSteamdeck())
+            && m_sharedData.useMouseAction)
         {
             m_inputFlags |= InputFlag::Action;
         }
