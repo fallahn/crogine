@@ -28,7 +28,6 @@ public:
     void render() override;
 
 private:
-
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;

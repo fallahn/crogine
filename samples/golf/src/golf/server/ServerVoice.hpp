@@ -30,7 +30,7 @@ source distribution.
 #pragma once
 
 #include "../CommonConsts.hpp"
-#include "Networking.hpp"
+#include "../Networking.hpp"
 
 #include <array>
 

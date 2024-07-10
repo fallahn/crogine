@@ -50,9 +50,8 @@ namespace
     constexpr std::size_t MaxTotalFiles = 64;
 }
 
-M3UPlaylist::M3UPlaylist(cro::AudioResource& ar, const std::string& searchDir, std::uint32_t maxFiles)
-    : m_audioResource   (ar),
-    m_currentIndex      (0)
+M3UPlaylist::M3UPlaylist(const std::string& searchDir, std::uint32_t maxFiles)
+    : m_currentIndex    (0)
 {
     if (cro::FileSystem::directoryExists(searchDir))
     {
@@ -115,7 +114,7 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
         const auto parseString = [&](const std::string str)
         {
             if (str.find(FilePrefix) == 0
-                && m_resourceIDs.size() < MaxTotalFiles)
+                && m_filePaths.size() < MaxTotalFiles)
             {
                 auto fp = str.substr(FilePrefix.size());
                 std::replace(fp.begin(), fp.end(), '\\', '/');
@@ -132,11 +131,7 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
 
                 if (cro::FileSystem::fileExists(fp))
                 {
-                    const auto id = m_audioResource.load(fp, true);
-                    if (id != -1)
-                    {
-                        m_resourceIDs.emplace_back(id, cro::FileSystem::getFileName(fp));
-                    }
+                    m_filePaths.push_back(fp);
                 }
             }
         };
@@ -149,7 +144,7 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
         }
         parseString(fileString.substr(prev));
 
-        return !m_resourceIDs.empty();
+        return !m_filePaths.empty();
     }
 
     LogE << path << " file is empty" << std::endl;
@@ -165,54 +160,43 @@ void M3UPlaylist::addTrack(const std::string& path)
         std::string(".wav"),
     };
 
-    if (m_resourceIDs.size() < MaxTotalFiles &&
+    if (m_filePaths.size() < MaxTotalFiles &&
         std::find(ValidExt.begin(), ValidExt.end(), cro::FileSystem::getFileExtension(path)) != ValidExt.end())
     {
-        const auto id = m_audioResource.load(path, true);
-        if (id != -1)
+        if (cro::FileSystem::fileExists(path))
         {
-            m_resourceIDs.emplace_back(id, cro::FileSystem::getFileName(path));
+            m_filePaths.push_back(path);
         }
     }
 }
 
 void M3UPlaylist::shuffle()
 {
-    std::shuffle(m_resourceIDs.begin(), m_resourceIDs.end(), cro::Util::Random::rndEngine);
+    std::shuffle(m_filePaths.begin(), m_filePaths.end(), cro::Util::Random::rndEngine);
 }
 
 void M3UPlaylist::nextTrack()
 {
-    if (!m_resourceIDs.empty())
+    if (!m_filePaths.empty())
     {
-        m_currentIndex = (m_currentIndex + 1) % m_resourceIDs.size();
+        m_currentIndex = (m_currentIndex + 1) % m_filePaths.size();
     }
 }
 
 void M3UPlaylist::prevTrack()
 {
-    if (!m_resourceIDs.empty())
+    if (!m_filePaths.empty())
     {
-        m_currentIndex = (m_currentIndex + (m_resourceIDs.size() - 1)) % m_resourceIDs.size();
+        m_currentIndex = (m_currentIndex + (m_filePaths.size() - 1)) % m_filePaths.size();
     }
 }
 
-std::int32_t M3UPlaylist::getCurrentTrack() const
+const std::string& M3UPlaylist::getCurrentTrack() const
 {
-    if (m_resourceIDs.empty())
+    if (m_filePaths.empty())
     {
-        return -1;
+        static const std::string ret;
+        return ret;
     }
-    return m_resourceIDs[m_currentIndex].first;
-}
-
-const std::string& M3UPlaylist::getCurrentTrackName() const
-{
-    if (!m_resourceIDs.empty())
-    {
-        return m_resourceIDs[m_currentIndex].second;
-    }
-
-    static std::string ret;
-    return ret;
+    return m_filePaths[m_currentIndex];
 }

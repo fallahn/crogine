@@ -3168,8 +3168,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
             entry.player = 0;// ConstVal::NullValue;
             entry.leaguePlayer = true;
 
-            bool overPar = false;
-
             for (auto j = 0u; j < /*leagueScores[i].size()*/m_holeData.size(); ++j)
             {
                 auto s = leagueScores[i][j];
@@ -3185,7 +3183,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
 
                         entry.parDiff += diff;
-                        overPar = (diff > 0);
                     }
                 }
 

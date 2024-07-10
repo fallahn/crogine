@@ -166,7 +166,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
             m_mouseSwing.startStroke();
             return true;
         }
-        return false;
+        return isActive();
     case SDL_MOUSEBUTTONUP:
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
@@ -174,7 +174,7 @@ bool Swingput::handleEvent(const cro::Event& evt, std::uint16_t& inputFlags, std
             m_mouseSwing.endStroke();
             return true;
         }
-        return false;
+        return isActive();
     case SDL_MOUSEMOTION:
         if (m_state == State::Swing)
         {

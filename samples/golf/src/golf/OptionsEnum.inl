@@ -73,6 +73,7 @@ enum OptionsIndex
     AVShadowR,
     AVCrowdL,
     AVCrowdR,
+    AVLensFlare,
 
 
     Controls = 300,
@@ -93,6 +94,7 @@ enum OptionsIndex
     CtrlLB,
     CtrlInvX,
     CtrlInvY,
+    CtrlMouseAction,
     CtrlVib,
     CtrlAltPower,
     CtrlSwg,

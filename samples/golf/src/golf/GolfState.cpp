@@ -161,6 +161,7 @@ namespace
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State            (stack, context),
+    m_musicStream           (2,48000),
     m_sharedData            (sd),
     m_gameScene             (context.appInstance.getMessageBus(), 1024/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_skyScene              (context.appInstance.getMessageBus(), 512),
@@ -464,13 +465,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    const auto showMapOverview = [&]()
+    /*const auto showMapOverview = [&]()
     {
         if (m_sharedData.minimapData.active)
         {
             requestStackPush(StateID::MapOverview);
         }
-    };
+    };*/
 
     const auto toggleMiniZoom = [&]()
         {
@@ -988,6 +989,38 @@ bool GolfState::handleEvent(const cro::Event& evt)
             if (std::abs(evt.caxis.value) > 10000)
             {
                 scrollScores(cro::Util::Maths::sgn(evt.caxis.value) * 19);
+            }
+            break;
+        }
+    }
+
+    else if (evt.type == SDL_WINDOWEVENT)
+    {
+        switch (evt.window.event)
+        {
+        default: break;
+        case SDL_WINDOWEVENT_FOCUS_GAINED:
+            //this needs to be delayed a frame so mouse clincking on the
+            //open window doesn't get sent to the input parser
+            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+            {
+                auto entity = m_uiScene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float)
+                    {
+                        m_inputParser.setSuspended(false);
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                    };
+            }
+            break;
+        case SDL_WINDOWEVENT_FOCUS_LOST:
+            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+            {
+                m_inputParser.setSuspended(true);
             }
             break;
         }

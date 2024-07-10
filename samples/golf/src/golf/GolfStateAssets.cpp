@@ -2487,26 +2487,84 @@ void GolfState::initAudio(bool loadTrees)
         m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>();
         LogE << "Invalid AudioScape file was found" << std::endl;
     }
-    auto playlist = createMusicPlayer(m_gameScene, m_resources.audio, m_gameScene.getActiveCamera());
-    if (playlist.isValid())
-    {
-        registerCommand("list_tracks", [playlist](const std::string&)
+
+    //TODO this is all the same as the driving range, so we can wrap this up in a free func
+
+    registerCommand("list_tracks", [&](const std::string&)
+        {
+            const auto& trackList = m_sharedData.playlist.getTrackList();
+
+            if (!trackList.empty())
             {
-                const auto& trackEnts = playlist.getComponent<cro::Callback>().getUserData<MusicPlayerData>().playlist;
-                
-                if (!trackEnts.empty())
+                for (const auto& str : trackList)
                 {
-                    for (auto e : trackEnts)
+                    cro::Console::print(str);
+                }
+            }
+            else
+            {
+                cro::Console::print("No music loaded");
+            }
+        });
+
+    if (!m_sharedData.playlist.getTrackList().empty())
+    {
+        auto gameMusic = m_gameScene.getActiveCamera();
+
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::AudioEmitter>(m_musicStream).setMixerChannel(MixerChannel::UserMusic);
+        entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, gameMusic](cro::Entity e, float dt)
+            {
+                //set the mixer channel to inverse valaue of main music channel
+                //while the incidental music is playing
+                if (gameMusic.isValid())
+                {
+                    //fade out if the menu music is playing, ie in a transition
+                    const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
+                    float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
+                    if (target < vol)
                     {
-                        cro::Console::print(e.getLabel());
+                        vol = std::max(0.f, vol - (dt * 2.f));
+                    }
+                    else
+                    {
+                        vol = std::min(1.f, vol + dt);
+                    }
+                    cro::AudioMixer::setPrefadeVolume(vol, MixerChannel::UserMusic);
+                }
+
+
+                //check the current music state and pause when volume is low else play the
+                //next track when we stop playing.
+                const float currVol = cro::AudioMixer::getVolume(MixerChannel::UserMusic);
+                auto state = e.getComponent<cro::AudioEmitter>().getState();
+
+                if (state == cro::AudioEmitter::State::Playing)
+                {
+                    if (currVol < MinMusicVolume)
+                    {
+                        e.getComponent<cro::AudioEmitter>().pause();
                     }
                 }
-                else
+                else if ((state == cro::AudioEmitter::State::Paused
+                    && currVol > MinMusicVolume) || state == cro::AudioEmitter::State::Stopped)
                 {
-                    cro::Console::print("No music loaded");
+                    e.getComponent<cro::AudioEmitter>().play();
                 }
-            });
+
+
+                if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
+                {
+                    std::int32_t samples = 0;
+                    const auto* data = m_sharedData.playlist.getData(samples);
+                    m_musicStream.updateBuffer(data, samples);
+                }
+            };
     }
+
 
 
     if (loadTrees)
@@ -2572,7 +2630,7 @@ void GolfState::initAudio(bool loadTrees)
         [&](cro::Entity e, float dt)
         {
             auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
-            progress = std::min(1.f, progress + dt);
+            progress = std::min(1.f, progress + (dt / 5.f));
 
             cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
             cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Environment);

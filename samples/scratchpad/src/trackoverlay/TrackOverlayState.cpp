@@ -5,6 +5,7 @@
 #include <crogine/gui/Gui.hpp>
 #include <crogine/core/ConfigFile.hpp>
 
+#include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -12,6 +13,7 @@
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 
+#include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
@@ -54,7 +56,7 @@ namespace
     constexpr glm::vec3 TextPosition(ThumbSize.x + 80.f, ThumbSize.y - 40.f, TextDepth);
     constexpr float TransitionSpeed = 1.f; //seconds
 
-    const cro::Colour BannerColour = cro::Colour(0.f, 0.f, 0.f, 0.3f);
+    const cro::Colour BannerColour = cro::Colour::Transparent;// cro::Colour(0.f, 0.f, 0.f, 0.3f);
 
     const std::string ThumbVertex = 
 R"(
@@ -199,6 +201,7 @@ void TrackOverlayState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_uiScene.addSystem<cro::AudioSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,8 +31,10 @@ source distribution.
 
 #ifdef USE_GNS
 #include <gns/NetClient.hpp>
+#include <gns/NetHost.hpp>
 namespace net = gns;
 #else
 #include <crogine/network/NetClient.hpp>
+#include <crogine/network/NetHost.hpp>
 namespace net = cro;
 #endif

@@ -46,6 +46,8 @@ source distribution.
 #include "League.hpp"
 #include "server/ServerPacketData.hpp"
 
+#include <crogine/audio/DynamicAudioStream.hpp>
+
 #include <crogine/core/State.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -122,6 +124,7 @@ public:
 
 private:
     cro::ResourceCollection m_resources;
+    cro::DynamicAudioStream m_musicStream;
 
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;

@@ -37,6 +37,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "BallTrail.hpp"
 
+#include <crogine/audio/DynamicAudioStream.hpp>
+
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Console.hpp>
 #include <crogine/core/State.hpp>
@@ -97,6 +99,8 @@ private:
     SharedStateData& m_sharedData;
     const SharedProfileData& m_profileData;
     InputParser m_inputParser;
+
+    cro::DynamicAudioStream m_musicStream;
 
     cro::Scene m_gameScene;
     cro::Scene m_skyScene;

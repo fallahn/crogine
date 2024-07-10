@@ -47,7 +47,7 @@ class M3UPlaylist final
 public:
     //takes a single directory through which to search for
     //playlists. Doesn't support recursive searching (no subdirs)
-    explicit M3UPlaylist(cro::AudioResource&, const std::string& searchFolder, std::uint32_t maxFiles = 25);
+    explicit M3UPlaylist(const std::string& searchFolder, std::uint32_t maxFiles = 25);
 
     //load another file and appeand it to the list
     bool loadPlaylist(const std::string& path);
@@ -65,17 +65,16 @@ public:
     void prevTrack();
 
 
-    //returns the resource ID of the current track or -1 if playlist is empty
-    std::int32_t getCurrentTrack() const;
-    const std::string& getCurrentTrackName() const;
+    const std::string& getCurrentTrack() const;
 
     std::size_t getCurrentIndex() const { return m_currentIndex; }
-    std::size_t getTrackCount() const { return m_resourceIDs.size(); }
+    std::size_t getTrackCount() const { return m_filePaths.size(); }
+
+
+    const std::vector<std::string>& getFilePaths() const { return m_filePaths; }
 
 private:
-    cro::AudioResource& m_audioResource;
-    std::vector<std::pair<std::int32_t, std::string>> m_resourceIDs;
-
     std::size_t m_currentIndex;
-    std::string m_defaultFile;
+
+    std::vector<std::string> m_filePaths;
 };

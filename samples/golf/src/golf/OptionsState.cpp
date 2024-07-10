@@ -2571,7 +2571,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity = createHighlight(glm::vec2(286.f, 10.f));
     entity.setLabel("Very high density crowds may cause a drop in performance.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVCrowdL);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdR, WindowApply);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdR, AVLensFlare);
 #ifdef _WIN32
     if (!Social::isSteamdeck())
     {
@@ -2596,6 +2596,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdL, AVShadowR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = crowdChanged;
 
+    //text to speech
 #ifdef _WIN32
     if (!Social::isSteamdeck())
     {
@@ -2629,8 +2630,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         entity = createHighlight(glm::vec2(69.f, -1.f));
         entity.setLabel("Enables text-to-speech for in game text chat.\nUse the Speech option in Windows Control Panel to set advanced options.");
         entity.getComponent<cro::UIInput>().setSelectionIndex(AVTextToSpeech);
-        entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdL, WindowAdvanced);
-        entity.getComponent<cro::UIInput>().setPrevIndex(AVCrowdR, AVBeacon);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVLensFlare, WindowAdvanced);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVLensFlare, AVBeacon);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
@@ -2644,6 +2645,62 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 #endif
+
+    //lens flare
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 217.f, -5.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("use_flare");
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto optEnt = entity;
+
+    //checkbox centre
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(71.f, 1.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.useLensFlare ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //highlight
+    entity = createHighlight(glm::vec2(69.f, -1.f));
+    //entity.setLabel("Enables text-to-speech for in game text chat.\nUse the Speech option in Windows Control Panel to set advanced options.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AVLensFlare);
+#ifdef _WIN32
+    if (!Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVTextToSpeech, WindowApply);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVTextToSpeech, AVCrowdL);
+    }
+    else
+#endif
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVBeacon, WindowApply);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVBeacon, AVCrowdL);
+    }
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.useLensFlare = !m_sharedData.useLensFlare;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+            });
+    optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, const cro::SpriteSheet& spriteSheet)
@@ -2981,6 +3038,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     auto mouseText = createText(glm::vec2(20.f, 96.f), st.str());
     createText(glm::vec2(26.f, 63.f), "Invert X");
     createText(glm::vec2(26.f, 47.f), "Invert Y");
+    createText(glm::vec2(26.f, 31.f), "Mouse Action");
     createText(glm::vec2(112.f, 63.f), "Use Vibration");
     createText(glm::vec2(112.f, 47.f), "Hold For Power");
     createText(glm::vec2(112.f, 31.f), "Enable Swingput");
@@ -3308,7 +3366,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity.setLabel("With either trigger held, pull back on a thumbstick to charge the power.\nPush forward on the stick to make your shot. Timing is important!");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlSwg);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlRight, WindowAdvanced);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlReset, CtrlAltPower);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlMouseAction, CtrlAltPower);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity, cro::ButtonEvent evt) mutable
         {
@@ -3344,7 +3402,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity = createSquareHighlight(glm::vec2(11.f, 38.f));
     entity.setLabel("Invert the controller Y axis when in camera mode");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlInvY);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlAltPower, CtrlReset);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlAltPower, CtrlMouseAction);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlB, CtrlInvX);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -3378,9 +3436,48 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //enable mouse click for action button
+    entity = createSquareHighlight(glm::vec2(11.f, 22.f));
+    entity.setLabel("Allow using Left Mouse Button as Action Button");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlMouseAction);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlSwg, CtrlReset);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlSwg, CtrlInvY);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                m_sharedData.useMouseAction = !m_sharedData.useMouseAction;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(13.f, 24.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.useMouseAction ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
     //reset to defaults
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(32.f, 11.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(32.f, -1.f, HighlightOffset));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("small_highlight");
@@ -3388,7 +3485,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Controls);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlReset);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlSwg, WindowCredits);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlA, CtrlInvY);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlA, CtrlMouseAction);
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
@@ -3945,7 +4042,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 #endif
         upLeftA = AVBeacon;
         upLeftB = AVBeaconL;
-        upRightA = AVCrowdL;
+        upRightA = AVLensFlare;
         upRightB = AVCrowdR;
         break;
     case MenuID::Controls:
