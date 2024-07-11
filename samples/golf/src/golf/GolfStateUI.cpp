@@ -55,6 +55,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Timeline.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -1872,6 +1873,8 @@ void GolfState::buildUI()
 
 void GolfState::showCountdown(std::uint8_t seconds)
 {
+    Timeline::setTimelineDesc("Final Scores");
+
     m_roundEnded = true;
     Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
 

@@ -51,6 +51,7 @@ source distribution.
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
 #include <Input.hpp>
+#include <Timeline.hpp>
 
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -3578,6 +3579,9 @@ void MenuState::quitLobby()
 
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
     Social::setGroup(0);
+
+    Timeline::setGameMode(Timeline::GameMode::Menu);
+    Timeline::setTimelineDesc("Main Menu");
 }
 
 void MenuState::addCourseSelectButtons()

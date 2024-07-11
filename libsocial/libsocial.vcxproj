@@ -271,6 +271,7 @@
     <ClInclude Include="include\MonthlyChallenge.hpp" />
     <ClInclude Include="include\Social.hpp" />
     <ClInclude Include="include\StoredValue.hpp" />
+    <ClInclude Include="include\Timeline.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Achievements.cpp" />

@@ -37,6 +37,8 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
 
+#include <Timeline.hpp>
+
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/graphics/Image.hpp>
@@ -257,6 +259,8 @@ void PauseState::buildScene()
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 m_scene.getSystem<cro::UISystem>()->selectAt(0);
+
+                Timeline::setGameMode(Timeline::GameMode::Menu);
             }
             break;
         case RootCallbackData::FadeOut:
@@ -278,6 +282,10 @@ void PauseState::buildScene()
 
                     m_requestRestart = false;
                 }
+
+                //TODO is this always true that we return from this menu to
+                //the game and not another menu?
+                Timeline::setGameMode(Timeline::GameMode::Playing);
             }
             break;
         }

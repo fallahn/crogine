@@ -42,6 +42,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Timeline.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -143,6 +144,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Achievements::refreshGlobalStats();
     Social::getMonthlyChallenge().refresh();
 
+    Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     ctx.mainWindow.loadResources([this]() {
         addSystems();
         loadResources();
@@ -166,6 +168,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         cacheState(StateID::Stats);
         cacheState(StateID::League);
         });
+    Timeline::setGameMode(Timeline::GameMode::Menu);
+    Timeline::setTimelineDesc("In the Clubhouse");
 
     ctx.mainWindow.setMouseCaptured(false);
 

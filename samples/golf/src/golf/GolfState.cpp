@@ -64,6 +64,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Timeline.hpp>
 #include <Input.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
@@ -334,6 +335,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     }
     m_cpuGolfer.setCPUCount(cpuCount, sd);
     
+    Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
@@ -345,6 +347,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::MapOverview);
         cacheState(StateID::Keyboard);
         });
+    Timeline::setGameMode(Timeline::GameMode::Playing);
 
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
@@ -1525,6 +1528,8 @@ void GolfState::handleMessage(const cro::Message& msg)
         break;
         case GolfEvent::BallLanded:
         {
+            Timeline::setTimelineDesc("");
+
             bool oob = false;
             switch (data.terrain)
             {
@@ -5257,39 +5262,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     cmd.action =
         [&](cro::Entity e, float)
     {
-        auto holeNumber = m_currentHole + 1;
-        if (m_sharedData.reverseCourse)
-        {
-            holeNumber = static_cast<std::uint32_t>(m_holeData.size() + 1) - holeNumber;
-
-            if (m_sharedData.scoreType == ScoreType::ShortRound)
-            {
-                switch (m_sharedData.holeCount)
-                {
-                default:
-                case 0:
-                    holeNumber += 6;
-                    break;
-                case 1:
-                case 2:
-                    holeNumber += 3;
-                    break;
-                }
-            }
-        }
-
-        if (m_sharedData.holeCount == 2)
-        {
-            if (m_sharedData.scoreType == ScoreType::ShortRound
-                && m_courseIndex != -1)
-            {
-                holeNumber += 9;
-            }
-            else
-            {
-                holeNumber += static_cast<std::uint32_t>(m_holeData.size());
-            }
-        }
+        auto holeNumber = holeNumberFromIndex();
 
         auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
         data.string = "Hole: " + std::to_string(holeNumber);
@@ -5445,6 +5418,45 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions[m_sharedData.crowdDensity]);
 }
 
+std::uint32_t GolfState::holeNumberFromIndex() const
+{
+    auto holeNumber = m_currentHole + 1;
+    if (m_sharedData.reverseCourse)
+    {
+        holeNumber = static_cast<std::uint32_t>(m_holeData.size() + 1) - holeNumber;
+
+        if (m_sharedData.scoreType == ScoreType::ShortRound)
+        {
+            switch (m_sharedData.holeCount)
+            {
+            default:
+            case 0:
+                holeNumber += 6;
+                break;
+            case 1:
+            case 2:
+                holeNumber += 3;
+                break;
+            }
+        }
+    }
+
+    if (m_sharedData.holeCount == 2)
+    {
+        if (m_sharedData.scoreType == ScoreType::ShortRound
+            && m_courseIndex != -1)
+        {
+            holeNumber += 9;
+        }
+        else
+        {
+            holeNumber += static_cast<std::uint32_t>(m_holeData.size());
+        }
+    }
+
+    return holeNumber;
+}
+
 void GolfState::requestNextPlayer(const ActivePlayer& player)
 {
     if (m_sharedData.gameMode != GameMode::Tutorial)
@@ -5470,10 +5482,40 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
-    /*if (m_sharedData.scoreType == ScoreType::ClubShuffle)
+#ifdef USE_GNS
+    cro::String timelineDesc = m_sharedData.connectionData[player.client].playerData[player.player].name;
+    if (!m_courseTitle.empty())
     {
-        m_sharedData.inputBinding.clubset = ClubID::getRandomSet();
-    }*/
+        timelineDesc += " " + m_courseTitle;
+    }
+    timelineDesc += " - Hole " + std::to_string(holeNumberFromIndex()); //ugh we need to do all the shenanigans for converting to hole number when playing in reverse etc
+
+    if (m_sharedData.connectionData[player.client].playerData[player.player].holeScores[m_currentHole] == 0)
+    {
+        timelineDesc += ", at the tee";
+    }
+    else
+    {
+        switch (player.terrain)
+        {
+        default: break;
+        case TerrainID::Rough:
+            timelineDesc += ", in the rough";
+            break;
+        case TerrainID::Fairway:
+            timelineDesc += ", on the fairway";
+            break;
+        case TerrainID::Green:
+            timelineDesc += ", on the green";
+            break;
+        case TerrainID::Bunker:
+            timelineDesc += ", in the bunker";
+            break;
+        }
+    }
+    timelineDesc += " (" + ScoreTypes[m_sharedData.scoreType] + ")";
+    Timeline::setTimelineDesc(timelineDesc);
+#endif
 
     m_buttonStates = {};
 

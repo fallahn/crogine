@@ -57,6 +57,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Timeline.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -272,6 +273,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     std::fill(m_topScores.begin(), m_topScores.end(), 0.f);
     loadScores();   
     
+    Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     m_sharedData.hosting = false; //TODO shouldn't have to do this...
     context.mainWindow.loadResources([this]() {
 #ifdef USE_GNS
@@ -291,6 +293,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         cacheState(StateID::Pause);
         cacheState(StateID::GC);
     });
+    Timeline::setGameMode(Timeline::GameMode::Playing);
+    Timeline::setTimelineDesc("On The Driving Range");
 
     Achievements::setActive(true);
     Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });

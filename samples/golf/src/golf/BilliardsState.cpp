@@ -81,6 +81,7 @@ source distribution.
 #include <crogine/util/Random.hpp>
 
 #include <Achievements.hpp>
+#include <Timeline.hpp>
 
 using namespace cl;
 
@@ -148,13 +149,14 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_gameMode          (TableData::Void),
     m_readyQuitFlags    (0)
 {
+    Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     ctx.mainWindow.loadResources([&]()
         {
             loadAssets();
             addSystems();
             buildScene();
         });
-
+    Timeline::setGameMode(Timeline::GameMode::Playing);
     ctx.mainWindow.setMouseCaptured(true);
 
     //this is already set to Clubhouse so the pause
@@ -1229,6 +1231,9 @@ void BilliardsState::buildScene()
             m_gameScene.destroyEntity(e);
         }
     };
+
+
+    Timeline::setTimelineDesc("Playing " + TableStrings[tableData.rules]);
 }
 
 void BilliardsState::handleNetEvent(const net::NetEvent& evt)

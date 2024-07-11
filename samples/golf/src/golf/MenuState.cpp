@@ -50,6 +50,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Timeline.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -173,6 +174,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f),
     m_scrollSpeed           (1.f)
 {
+    Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
+    Timeline::setTimelineDesc("Main Menu");
+
     for (auto i = 0; i < 4; ++i)
     {
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
@@ -409,6 +413,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         m_sharedData.inviteID = 0;
         m_sharedData.lobbyID = 0;
         });
+    
+    Timeline::setGameMode(Timeline::GameMode::Menu);
+        
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
 #ifndef __APPLE__
@@ -2178,6 +2185,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 m_matchMaking.leaveLobby(); //doesn't really leave the game, it quits the lobby
                 requestStackClear();
                 requestStackPush(StateID::Golf);
+
+                Timeline::setTimelineDesc("");
             }
             break;
         case PacketID::ConnectionAccepted:
@@ -2753,6 +2762,12 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+        {
+            Timeline::setGameMode(Timeline::GameMode::Lobby);
+            Timeline::setTimelineDesc("Hosting Game");
+        }
     }
 }
 
@@ -2799,6 +2814,9 @@ void MenuState::finaliseGameJoin(std::uint64_t hostID)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     refreshLobbyButtons(); //makes sure buttons point to correct target when navigating
+
+    Timeline::setGameMode(Timeline::GameMode::Lobby);
+    Timeline::setTimelineDesc("Joined Game");
 }
 
 void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

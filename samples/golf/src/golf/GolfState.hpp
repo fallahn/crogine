@@ -343,6 +343,7 @@ private:
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint16_t, bool forceTransition = false); //(number << 8) | par
+    std::uint32_t holeNumberFromIndex() const;
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
     void predictBall(float);
