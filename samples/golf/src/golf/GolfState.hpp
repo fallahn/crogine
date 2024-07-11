@@ -238,6 +238,7 @@ private:
     std::uint32_t m_currentHole;
     float m_distanceToHole;
     float m_NTPDistance; //in NTP mode how far away from the pin the shot landed
+    float m_strokeTimer; //reset at the beginning of the stroke to time the potential timeline clip
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
     bool m_resumedFromSave;

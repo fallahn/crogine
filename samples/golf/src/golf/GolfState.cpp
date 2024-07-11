@@ -182,6 +182,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_currentHole           (0),
     m_distanceToHole        (1.f), //don't init to 0 in case we get div0
     m_NTPDistance           (1.f), //don't init to 0 in case we get div0
+    m_strokeTimer           (0.f),
     m_resumedFromSave       (false),
     m_terrainBuilder        (sd, m_holeData),
     m_audioPath             ("assets/golf/sound/ambience.xas"),
@@ -1274,6 +1275,9 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             //restore the ball origin if buried
             m_activeAvatar->ballModel.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f));
+
+            //reset the stroke timer for timeline - set this to a couple of seconds to allow for wind-up
+            m_strokeTimer = 3.f;
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {
@@ -1710,6 +1714,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             };
             m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            Timeline::addEvent(Timeline::Event::Drone, m_strokeTimer);
         }
         break;
         case GolfEvent::HoleInOne:
@@ -1897,6 +1903,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+    m_strokeTimer += dt;
     m_textChat.update(dt);
 
     //hack to speed up transition when holding the action button
@@ -4070,6 +4077,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 Achievements::incrementStat(StatStrings[StatID::FlagHits]);
                 Achievements::setActive(active);
             }
+
+            Timeline::addEvent(Timeline::Event::BeefStick, m_strokeTimer);
         }
         break;
         case PacketID::BullHit:
@@ -4673,6 +4682,8 @@ void GolfState::handleBullHit(const BullHit& bh)
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit = true;
+
+    Timeline::addEvent(Timeline::Event::TargetHit, m_strokeTimer);
 }
 
 void GolfState::handleMaxStrokes(std::uint8_t reason)
@@ -5416,6 +5427,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     m_sharedData.minimapData.courseName += "\nHole: " + std::to_string(m_sharedData.minimapData.holeNumber + offset); //this isn't updated until the map texture is 
     m_sharedData.minimapData.courseName += "\nPar: " + std::to_string(m_holeData[m_currentHole].par);
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions[m_sharedData.crowdDensity]);
+
+    Timeline::addEvent(Timeline::Event::NewHole, holeNumberFromIndex());
 }
 
 std::uint32_t GolfState::holeNumberFromIndex() const

@@ -47,9 +47,9 @@ public:
     {
         enum
         {
-            HIO, Albatross, Eagle, Birdie, Par, Bogey,
+            HIO, Albatross, Eagle, Birdie, HoleOut, TargetHit, BeefStick,
 
-            Bunker, Water, Drone
+            Bunker, Water, Drone, NewHole, EndOfRound, Elimination
         };
     };
 

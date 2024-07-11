@@ -1874,6 +1874,7 @@ void GolfState::buildUI()
 void GolfState::showCountdown(std::uint8_t seconds)
 {
     Timeline::setTimelineDesc("Final Scores");
+    Timeline::addEvent(Timeline::Event::EndOfRound);
 
     m_roundEnded = true;
     Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
@@ -4344,6 +4345,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             case ScoreID::Albatross:
                 Social::awardXP(XPValues[XPID::Albatross] / divisor, XPStringID::Albatross + offset);
                 addIcon(SpriteID::AlbatrossLeft, SpriteID::AlbatrossRight);
+                Timeline::addEvent(Timeline::Event::Albatross, m_strokeTimer);
                 break;
             case ScoreID::Eagle:
                 Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle + offset);
@@ -4351,6 +4353,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
                 textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
                 textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
+                Timeline::addEvent(Timeline::Event::Eagle, m_strokeTimer);
                 break;
             case ScoreID::Birdie:
                 Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie + offset);
@@ -4358,11 +4361,13 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
                 textEnt.getComponent<cro::Text>().setFillColour({0xadd9b7ff});
                 textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
+                Timeline::addEvent(Timeline::Event::Birdie, m_strokeTimer);
                 break;
             case ScoreID::Par:
                 Social::awardXP(XPValues[XPID::Par] / divisor, XPStringID::Par + offset);
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
                 textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
+                Timeline::addEvent(Timeline::Event::HoleOut, m_strokeTimer);
                 break;
             case ScoreID::Bogie:
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
@@ -4370,12 +4375,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             case ScoreID::DoubleBogie:
             case ScoreID::TripleBogie:
                 textEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+                Timeline::addEvent(Timeline::Event::HoleOut, m_strokeTimer);
                 break;
             case ScoreID::HIO:
                 addIcon(SpriteID::Hio, SpriteID::Hio);
                 textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
                 textEnt.getComponent<cro::Text>().setVerticalSpacing(3.f);
                 textEnt.getComponent<cro::Transform>().move({ 0.f, 4.f, 0.f });
+                Timeline::addEvent(Timeline::Event::HIO, m_strokeTimer);
                 break;
             default:
                 break;
@@ -4416,6 +4423,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         {
             textEnt.getComponent<cro::Text>().setString("Bad Luck!");
             textEnt2.getComponent<cro::Text>().setString(std::to_string(overPar) + " Over Par");
+            Timeline::addEvent(Timeline::Event::HoleOut, m_strokeTimer);
         }
     }
     break;
@@ -4423,6 +4431,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         textEnt.getComponent<cro::Text>().setString("Bunker!");
         imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Bunker];
         bounds = m_sprites[SpriteID::Bunker].getTextureBounds();
+
+        Timeline::addEvent(Timeline::Event::Bunker, m_strokeTimer);
         break;
     case MessageBoardID::PlayerName:
         textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name.substr(0, 19));
@@ -4486,7 +4496,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             imgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
         }
         bounds = m_sprites[SpriteID::BounceAnim].getTextureBounds();
-
+        Timeline::addEvent(Timeline::Event::Elimination);
         break;
     case MessageBoardID::Scrub:
     case MessageBoardID::Water:
@@ -4495,6 +4505,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         textEnt2.getComponent<cro::Text>().setString("1 Stroke Penalty");
         imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Foul];
         bounds = m_sprites[SpriteID::Foul].getTextureBounds();
+
+        Timeline::addEvent(Timeline::Event::Water, m_strokeTimer);
         break;
     }
     imgEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
