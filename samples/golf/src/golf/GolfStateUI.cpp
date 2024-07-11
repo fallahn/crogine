@@ -981,15 +981,12 @@ void GolfState::buildUI()
     rootNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::Root;
     rootNode.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 0.f);
     rootNode.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
     {
         auto& [dir, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
 
-#ifdef USE_GNS
-        const float ScaleMultiplier = Social::isSteamdeck() ? 2.f : 1.f;
-#else
-        const float ScaleMultiplier = 1.f;
-#endif
+        const float ScaleMultiplier = m_sharedData.useLargePowerBar ? 2.f : 1.f;
+
         if (dir == 0)
         {
             //grow
@@ -1033,9 +1030,13 @@ void GolfState::buildUI()
     auto barEnt = entity;
 
     //displays the range of the selected putter
+    const glm::vec2 posSmall = glm::vec2(bounds.width + 2.f, 12.f);
+    const glm::vec2 posLarge = glm::vec2({ -2.f, -6.f }) + posSmall;
+
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width + 2.f, 12.f, 0.f });
-    if (Social::isSteamdeck())
+    entity.addComponent<cro::Transform>().setPosition(posSmall);
+    entity.addComponent<cro::Callback>().setUserData<std::pair<glm::vec2, glm::vec2>>(posSmall, posLarge);
+    if (m_sharedData.useLargePowerBar)
     {
         entity.getComponent<cro::Transform>().setScale({ 0.5f, 0.5f });
         entity.getComponent<cro::Transform>().move({ -2.f, -6.f });
@@ -1849,13 +1850,12 @@ void GolfState::buildUI()
 
         //relocate the power bar
         auto uiPos = glm::vec2(uiSize.x / 2.f, UIBarHeight / 2.f);
-#ifdef USE_GNS
-        if (Social::isSteamdeck())
+        if (m_sharedData.useLargePowerBar)
         {
             uiPos.y *= 2.f;
             spinEnt.getComponent<cro::Transform>().move({ 0.f, 32.f, 0.f });
         }
-#endif
+
         rootNode.getComponent<cro::Transform>().setPosition(uiPos);
 
         //this calls the update for the scoreboard render texture

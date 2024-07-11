@@ -275,6 +275,7 @@ struct SharedStateData final
     bool useTTS = false;
     bool useLensFlare = true;
     bool useMouseAction = true;
+    bool useLargePowerBar = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

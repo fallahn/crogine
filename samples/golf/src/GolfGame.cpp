@@ -1351,6 +1351,8 @@ void GolfGame::loadPreferences()
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
     if (!safeMode)
     {
+        m_sharedData.useLargePowerBar = Social::isSteamdeck();
+
         path = Social::getBaseContentPath() + "user_prefs.cfg";
         if (cro::FileSystem::fileExists(path))
         {
@@ -1449,6 +1451,10 @@ void GolfGame::loadPreferences()
                     else if (name == "use_mouse_action")
                     {
                         m_sharedData.useMouseAction = prop.getValue<bool>();
+                    }
+                    else if (name == "large_power")
+                    {
+                        m_sharedData.useLargePowerBar = prop.getValue<bool>();
                     }
                 }
             }
@@ -1567,6 +1573,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_tts").setValue(m_sharedData.useTTS);
     cfg.addProperty("use_flare").setValue(m_sharedData.useLensFlare);
     cfg.addProperty("use_mouse_action").setValue(m_sharedData.useMouseAction);
+    cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
     cfg.save(path);
 
 

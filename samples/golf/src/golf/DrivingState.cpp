@@ -840,6 +840,24 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                //and the power bar
+                cmd.targetFlags = CommandID::UI::Root;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        auto [state, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+                        if (state == 1)
+                        {
+                            //we've visible
+                            const float scale = m_sharedData.useLargePowerBar ? 2.f : 1.f;
+                            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                        }
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //updates the position of the entities based on bar size
+                auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
+                cam.resizeCallback(cam);
+
                 m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
             }
             else if (data.id == StateID::GC)

@@ -550,15 +550,11 @@ void DrivingState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Root;
     entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 0.f);
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
     {
         auto& [dir, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
 
-#ifdef USE_GNS
-        const float ScaleMultiplier = Social::isSteamdeck() ? 2.f : 1.f;
-#else
-        const float ScaleMultiplier = 1.f;
-#endif
+        const float ScaleMultiplier = m_sharedData.useLargePowerBar ? 2.f : 1.f;
 
         if (dir == 0)
         {
@@ -910,13 +906,12 @@ void DrivingState::createUI()
 
         //relocate the power bar
         auto uiPos = glm::vec2(uiSize.x / 2.f, UIBarHeight / 2.f);
-#ifdef USE_GNS
-        if (Social::isSteamdeck())
+        if (m_sharedData.useLargePowerBar)
         {
             uiPos.y *= 2.f;
             spinEnt.getComponent<cro::Transform>().move({ 0.f, 32.f, 0.f });
         }
-#endif
+
         rootNode.getComponent<cro::Transform>().setPosition(uiPos);
     };
 
