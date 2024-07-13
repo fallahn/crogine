@@ -502,6 +502,7 @@ private:
     cro::Entity m_miniGreenEnt;
     cro::Entity m_miniGreenIndicatorEnt;
     cro::Entity m_scoreboardEnt;
+    cro::Entity m_nemesisEnt;
     cro::Entity m_droneTextEnt;
     cro::Entity m_freecamMenuEnt;
     std::uint8_t m_readyQuitFlags;

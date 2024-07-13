@@ -2959,6 +2959,28 @@ void GolfState::createScoreboard()
             createAvatar(createIcon(0,0,true), 0, 0);            
             iconPos.y -= IconSpacing;
         }
+
+        //add a nemesis icon to show if a CPU player is hot on our tail
+        if (Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne].getNemesis() != -1)
+        {
+            static constexpr glm::vec3 NemesisPos({ 10.f, 240.f, 2.2f });
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(NemesisPos);
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("nemesis");
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float)
+                {
+                    const auto& p = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+                    auto pos = NemesisPos;
+                    pos.y -= p * IconSpacing;
+                    e.getComponent<cro::Transform>().setPosition(pos);
+                };
+            bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            m_nemesisEnt = entity;
+        }
     }
 
     updateScoreboard();
@@ -2986,6 +3008,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         std::uint8_t lives = 0;
 
         bool leaguePlayer = false;
+        std::int32_t nameIndex = -1;
     };
 
     std::vector<ScoreEntry> scores;
@@ -3171,6 +3194,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             entry.client = 0;// ConstVal::NullValue; //can't set this to NullValue as something indexes from it some (I can't find it) but the OOR causes a crash elsewhere
             entry.player = 0;// ConstVal::NullValue;
             entry.leaguePlayer = true;
+            entry.nameIndex = static_cast<std::int32_t>(i);
 
             for (auto j = 0u; j < /*leagueScores[i].size()*/m_holeData.size(); ++j)
             {
@@ -3264,6 +3288,18 @@ void GolfState::updateScoreboard(bool updateParDiff)
             }
         });
     m_achievementTracker.leadingCareerRound = !scores[0].leaguePlayer;
+
+    if (m_nemesisEnt.isValid())
+    {
+        for (auto i = 0u; i < scores.size(); ++i)
+        {
+            if (scores[i].nameIndex == Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne].getNemesis())
+            {
+                m_nemesisEnt.getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(i);
+                break;
+            }
+        }
+    }
 
     const auto formatDistance = [](float d)
         {
