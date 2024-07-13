@@ -68,12 +68,14 @@ if(USE_STEAM)
 
   add_compile_definitions(USE_GNS USE_WORKSHOP)
 
-  include(FetchContent)
-  FetchContent_Declare(libgns
-    GIT_REPOSITORY https://github.com/fallahn/libgns) # Could specify a tag/commit hash here?
-  FetchContent_MakeAvailable(libgns)
+  #include(FetchContent)
+  #FetchContent_Declare(libgns
+  #  GIT_REPOSITORY https://github.com/fallahn/libgns) # Could specify a tag/commit hash here?
+  #FetchContent_MakeAvailable(libgns)
 
-  SET(GNS_DIR ${libgns_SOURCE_DIR})
+  #SET(GNS_DIR ${libgns_SOURCE_DIR})
+
+  SET(GNS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../libgns)
   SET(SOCIAL_DIR ${GNS_DIR}/golf_ach/src)
   SET(SOCIAL_INCLUDE_DIR ${GNS_DIR}/golf_ach/include)
   SET(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${GNS_DIR}/cmake/modules/")
