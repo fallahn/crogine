@@ -670,7 +670,7 @@ void CareerState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Freeplay mode!");
+    entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.addComponent<cro::Callback>().active = true;

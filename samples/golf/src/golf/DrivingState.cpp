@@ -455,7 +455,6 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_p:
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
         case SDLK_PAUSE:
@@ -3471,6 +3470,9 @@ void DrivingState::forceRestart()
         e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //reset any active animation from the avatar else it'll resume and hit the ball...
+    m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Idle]);
 
 }
 
