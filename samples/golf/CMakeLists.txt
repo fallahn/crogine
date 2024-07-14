@@ -34,11 +34,9 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
 endif()
 
-#if(USE_NEWSFEED)
-#  add_compile_definitions(USE_RSS)
-#endif()
-
-
+if(NOT GNS_TAG)
+  SET(GNS_TAG "HEAD")
+endif()
 
 # We're using c++17
 SET(CMAKE_CXX_STANDARD 17)
@@ -70,7 +68,8 @@ if(USE_STEAM)
 
   include(FetchContent)
   FetchContent_Declare(libgns
-    GIT_REPOSITORY https://github.com/fallahn/libgns) # Could specify a tag/commit hash here?
+    GIT_REPOSITORY https://github.com/fallahn/libgns
+    GIT_TAG ${GNS_TAG}) # Could specify a tag/commit hash here?
   FetchContent_MakeAvailable(libgns)
 
   SET(GNS_DIR ${libgns_SOURCE_DIR})
