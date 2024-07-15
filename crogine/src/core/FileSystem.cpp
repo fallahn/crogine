@@ -169,12 +169,22 @@ std::string FileSystem::getFilePath(const std::string& path)
 
 bool FileSystem::fileExists(const std::string& path)
 {
-    std::error_code ec;
-    if (!std::filesystem::exists(std::filesystem::u8path(path), ec))
+    try
     {
+        const auto u8p = std::filesystem::u8path(path);
+
+        std::error_code ec;
+        if (!std::filesystem::exists(u8p, ec))
+        {
+            return false;
+        }
+        return true;
+    }
+    catch (...)
+    {
+        LogE << path << ": unable to create u8 path" << std::endl;
         return false;
     }
-    return true;
 }
 
 bool FileSystem::createDirectory(const std::string& path)
