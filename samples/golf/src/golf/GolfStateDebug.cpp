@@ -242,20 +242,14 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("asefsd"))
-            {
-                std::int32_t i = Club::getModifierIndex();
-                if (ImGui::InputInt("Club Mod", &i))
-                {
-                    i %= 3;
-                    Club::setModifierIndex(i);
-                }
-                ImGui::Text("%s", ModifierNames[i]);
-            }
-            ImGui::End();
-        });
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("asefsd"))
+    //        {
+
+    //        }
+    //        ImGui::End();
+    //    });
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

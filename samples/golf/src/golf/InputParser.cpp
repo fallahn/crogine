@@ -490,6 +490,7 @@ void InputParser::setClub(float dist)
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
+    Club::setModifierIndex(0);
     updateDistanceEstimation();
 }
 
@@ -676,6 +677,7 @@ void InputParser::setMaxClub(float dist, bool atTee)
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
+    Club::setModifierIndex(0);
     updateDistanceEstimation();
 }
 
@@ -696,6 +698,7 @@ void InputParser::setMaxClub(std::int32_t clubID)
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
+    Club::setModifierIndex(0);
     updateDistanceEstimation();
 }
 
@@ -1011,6 +1014,9 @@ void InputParser::updateStroke(float dt)
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
 
+                //TODO do we want to check the existing setting and only reset if the new club doesn't support?
+                Club::setModifierIndex(0);
+
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
@@ -1025,13 +1031,14 @@ void InputParser::updateStroke(float dt)
                 const auto MinClub = m_terrain == TerrainID::Fairway && m_distanceToHole < 11.f ?
                     ClubID::Count : ClubID::Putter;
 
-
                 do
                 {
                     auto clubCount = MinClub - m_firstClub;
                     m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
+
+                Club::setModifierIndex(0);
 
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
@@ -1243,6 +1250,34 @@ void InputParser::updateDroneCam(float dt)
 
 void InputParser::updateSpin(float dt)
 {
+    if ((m_inputFlags & InputFlag::PrevClub)
+        && ((m_prevFlags & InputFlag::PrevClub) == 0))
+    {
+        //we pressed punch shot
+        if (ClubShot[m_currentClub] & ShotType::Punch)
+        {
+            Club::setModifierIndex(Club::getModifierIndex() == 1 ? 0 : 1);
+
+            auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::ClubChanged;
+            msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
+        }
+    }
+    if ((m_inputFlags & InputFlag::NextClub)
+        && ((m_prevFlags & InputFlag::NextClub) == 0))
+    {
+        //we pressed flop shot
+        if (ClubShot[m_currentClub] & ShotType::Flop)
+        {
+            Club::setModifierIndex(Club::getModifierIndex() == 2 ? 0 : 2);
+
+            auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::ClubChanged;
+            msg->score = m_isCPU ? 0 : 1;
+        }
+    }
+
+
     auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY) * 2.f;
     m_spin.x = std::clamp(m_spin.x + (rotation.y * dt), -1.f, 1.f);
     m_spin.y = std::clamp(m_spin.y + (rotation.x * dt), -1.f, 1.f);

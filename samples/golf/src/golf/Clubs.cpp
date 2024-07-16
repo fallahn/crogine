@@ -121,17 +121,27 @@ std::string Club::getName(bool imperial, float distanceToPin) const
 {
     auto t = getTarget(distanceToPin);
     
+    const auto getSuffix = []()
+        {
+            switch (modifierIndex)
+            {
+            default: return "";
+            case 1: return " (P)";
+            case 2: return " (F)";
+            }
+        };
+
     if (imperial)
     {
         if (getPower(distanceToPin, imperial) > 10.f)
         {
             auto dist = static_cast<std::int32_t>(t * ToYards);
-            return m_name + std::to_string(dist) + "yds";
+            return m_name + std::to_string(dist) + "yds" + getSuffix();
         }
         else
         {
             auto dist = static_cast<std::int32_t>(std::round(t * ToFeet));
-            return m_name + std::to_string(dist) + "ft";
+            return m_name + std::to_string(dist) + "ft" + getSuffix();
         }
     }
     else
@@ -140,10 +150,10 @@ std::string Club::getName(bool imperial, float distanceToPin) const
         {
             t *= 100.f;
             auto dist = static_cast<std::int32_t>(t);
-            return m_name + std::to_string(dist) + "cm";
+            return m_name + std::to_string(dist) + "cm" + getSuffix();
         }
         auto dist = static_cast<std::int32_t>(t);
-        return m_name + std::to_string(dist) + "m";
+        return m_name + std::to_string(dist) + "m" + getSuffix();
     }
 }
 
