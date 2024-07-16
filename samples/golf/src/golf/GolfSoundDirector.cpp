@@ -140,10 +140,14 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/kudos/swing01.wav",
         "assets/golf/sound/kudos/swing02.wav",
         "assets/golf/sound/kudos/swing03.wav",
-        "assets/golf/sound/kudos/power_drive.wav",
+
+        "assets/golf/sound/kudos/power_drive01.wav",
         "assets/golf/sound/kudos/power_drive02.wav",
-        "assets/golf/sound/kudos/power_drive03.wav",
-        "assets/golf/sound/kudos/power_drive04.wav",
+        "assets/golf/sound/kudos/power_punch01.wav",
+        "assets/golf/sound/kudos/power_punch02.wav",
+        "assets/golf/sound/kudos/flop01.wav",
+        "assets/golf/sound/kudos/flop02.wav",
+
         "assets/golf/sound/kudos/flag_pole.wav",
 
         "assets/golf/sound/kudos/hook.wav",
@@ -156,6 +160,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/kudos/putt02.wav",
         "assets/golf/sound/kudos/putt01.wav",
         "assets/golf/sound/holes/gimme.wav",
+        "assets/golf/sound/kudos/mulligan.wav",
 
         "assets/golf/sound/ambience/firework.wav",
         "assets/golf/sound/ambience/burst.wav",
@@ -370,7 +375,18 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             break;
             case GolfEvent::NiceShot:
-                playSoundDelayed(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position, 0.8f, 1.f, MixerChannel::Voice);
+                switch (Club::getModifierIndex())
+                {
+                default:
+                    playSoundDelayed(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position, 0.8f, 1.f, MixerChannel::Voice);
+                    break;
+                case 1:
+                    playSoundDelayed(AudioID::PowerPunch01 + cro::Util::Random::value(0, 1), data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                    break;
+                case 2:
+                    playSoundDelayed(AudioID::Flop01 + cro::Util::Random::value(0, 1), data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                    break;
+                }
                 break;
             case GolfEvent::PowerShot:
                 if (m_soundTimers[AudioID::PowerBall].elapsed() > PowerSoundTime)
@@ -380,7 +396,18 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     //this might also play if a player quits but meh
                     if (cro::Util::Random::value(0, 2) == 0)
                     {
-                        playSoundDelayed(AudioID::PowerShot01 + cro::Util::Random::value(0, 3), data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                        switch (Club::getModifierIndex())
+                        {
+                        default:
+                            playSoundDelayed(AudioID::PowerDrive01 + cro::Util::Random::value(0, 1), data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                            break;
+                        case 1:
+                            playSoundDelayed(AudioID::PowerPunch01 + cro::Util::Random::value(0, 1), data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                            break;
+                        case 2:
+                            playSoundDelayed(AudioID::Flop01 + cro::Util::Random::value(0, 1), data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                            break;
+                        }
                     }
                 }
                 break;
