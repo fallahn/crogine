@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "Clubs.hpp"
+#include "ClubModifiers.hpp"
 #include <Social.hpp>
 
 #include <crogine/detail/Assert.hpp>
@@ -94,6 +95,15 @@ namespace
 
     constexpr std::size_t DebugLevel = 35;
     std::int32_t playerLevel = 0;
+
+    struct ModifierID final
+    {
+        enum
+        {
+            Default, Punch, Flop
+        };
+    };
+    std::int32_t modifierIndex = ModifierID::Default;
 }
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
@@ -188,7 +198,12 @@ float Club::getPower(float distanceToPin, bool imperial) const
     }
 
     //check player level and return further distance
-    return ClubStats[m_id].stats[getClubLevel()].power;
+    return ClubStats[m_id].stats[getClubLevel()].power * LevelModifiers[playerLevel][modifierIndex][m_id].powerMultiplier;
+}
+
+float Club::getAngle() const
+{
+    return m_angle + LevelModifiers[playerLevel][modifierIndex][m_id].angle;
 }
 
 float Club::getTarget(float distanceToPin) const
@@ -198,22 +213,22 @@ float Club::getTarget(float distanceToPin) const
         return getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
     }
 
-    return getBaseTarget();
+    return getBaseTarget(); //this includes target multiplier
 }
 
 float Club::getBaseTarget() const
 {
-    return ClubStats[m_id].stats[getClubLevel()].target;
+    return ClubStats[m_id].stats[getClubLevel()].target * LevelModifiers[playerLevel][modifierIndex][m_id].targetMultiplier;
 }
 
 float Club::getTargetAtLevel(std::int32_t level) const
 {
-    return ClubStats[m_id].stats[level].target;
+    return ClubStats[m_id].stats[level].target * LevelModifiers[playerLevel][modifierIndex][m_id].targetMultiplier;
 }
 
 float Club::getDefaultTarget() const
 {
-    return ClubStats[m_id].stats[0].target;
+    return ClubStats[m_id].stats[0].target * LevelModifiers[playerLevel][modifierIndex][m_id].targetMultiplier;
 }
 
 std::int32_t Club::getClubLevel()
@@ -227,6 +242,17 @@ void Club::setClubLevel(std::int32_t level)
 {
     playerLevel = level;
     CRO_ASSERT(playerLevel > -1 && playerLevel < 3, "");
+}
+
+std::int32_t Club::getModifierIndex()
+{
+    return modifierIndex;
+}
+
+void Club::setModifierIndex(std::int32_t idx)
+{
+    modifierIndex = idx;
+    CRO_ASSERT(idx > -1 && id < 3, "");
 }
 
 //private

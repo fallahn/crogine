@@ -41,9 +41,20 @@ struct ShotModifier final
 
 struct ModifierGroup final
 {
-    const std::array<ShotModifier, ClubID::Count> DefaultModifier = {}; //leaves the default shot
+    static constexpr std::array<ShotModifier, ClubID::Count> DefaultModifier = {}; //leaves the default shot
     std::array<ShotModifier, ClubID::Count> punchModifier = {};
     std::array<ShotModifier, ClubID::Count> flopModifier = {};
+
+    const std::array<ShotModifier, ClubID::Count>& operator [](std::size_t i) const
+    {
+        switch (i)
+        {
+        default:assert(false); break;
+        case 0: return DefaultModifier;
+        case 1: return punchModifier;
+        case 2: return flopModifier;
+        }
+    }
 
     ModifierGroup() = default;
     constexpr ModifierGroup(const std::array<ShotModifier, ClubID::Count>& p, const std::array<ShotModifier, ClubID::Count>& f)

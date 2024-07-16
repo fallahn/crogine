@@ -35,6 +35,7 @@ source distribution.
 #include "WeatherAnimationSystem.hpp"
 #include "ChunkVisSystem.hpp"
 #include "Career.hpp"
+#include "Clubs.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -48,6 +49,11 @@ namespace
     const std::array<std::string, CameraID::Count> CameraStrings =
     {
         "Player", "Bystander", "Sky", "Green", "Transition", "Idle", "Drone"
+    };
+
+    const std::array<std::string, 3u> ModifierNames =
+    {
+        "Default", "Punch", "Flop"
     };
 }
 
@@ -236,31 +242,20 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    /*registerWindow([&]() 
+    registerWindow([&]() 
         {
             if (ImGui::Begin("asefsd"))
             {
-                auto holeDir = m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin;
-                holeDir.y = 0.f;
-
-                auto windDir = m_windUpdate.windVector;
-                windDir.y = 0.f;
-
-                const float headWind = (glm::dot(glm::normalize(holeDir), glm::normalize(windDir)) + 1.f) * 0.5f;
-
-                static constexpr float BaseReduction = 0.9f;
-                float resultF = headWind * BaseReduction * m_windUpdate.windVector.y;
-                resultF /= (1.f + static_cast<float>(m_sharedData.clubSet));
-
-                const std::int32_t resultI = static_cast<std::int32_t>(std::round(resultF * 100.f));
-
-                ImGui::Text("Headwind %3.1f", headWind);
-                ImGui::Text("Strength %3.1f", m_windUpdate.windVector.y);
-
-                ImGui::Text("Likelyhood %d%", resultI);
+                std::int32_t i = Club::getModifierIndex();
+                if (ImGui::InputInt("Club Mod", &i))
+                {
+                    i %= 3;
+                    Club::setModifierIndex(i);
+                }
+                ImGui::Text("%s", ModifierNames[i]);
             }
             ImGui::End();
-        });*/
+        });
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

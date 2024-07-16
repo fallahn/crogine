@@ -108,7 +108,7 @@ public:
 
     float getPower(float distanceToPin, bool imperial) const;
 
-    float getAngle() const { return m_angle; }
+    float getAngle() const;
 
     //note distanceToPin only affects the putter so this can be 0
     //for any of the other clubs
@@ -125,6 +125,9 @@ public:
     static std::int32_t getClubLevel(); //0-2 for range
     static void setClubLevel(std::int32_t);
 
+    static std::int32_t getModifierIndex(); //default, punch, flop
+    static void setModifierIndex(std::int32_t);
+
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI
@@ -139,6 +142,33 @@ private:
     static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
 
     float getScaledValue(float v, float dist) const;
+};
+
+struct ShotType final
+{
+    enum
+    {
+        Regular = (1<<0),
+        Punch   = (1<<1),
+        Flop    = (1<<2),
+    };
+};
+
+static constexpr std::array<std::int32_t, ClubID::Count> ClubShot =
+{
+    ShotType::Regular | ShotType::Punch, //driver
+    ShotType::Regular, //wood
+    ShotType::Regular,
+    ShotType::Regular | ShotType::Punch, //iron
+    ShotType::Regular | ShotType::Punch,
+    ShotType::Regular | ShotType::Punch,
+    ShotType::Regular | ShotType::Punch,
+    ShotType::Regular | ShotType::Punch,
+    ShotType::Regular | ShotType::Punch | ShotType::Flop,
+    ShotType::Regular | ShotType::Flop, //wedge
+    ShotType::Regular | ShotType::Flop,
+    ShotType::Regular | ShotType::Flop,
+    ShotType::Regular, //putter
 };
 
 //static inline const std::array<Club, ClubID::Count> Clubs =
