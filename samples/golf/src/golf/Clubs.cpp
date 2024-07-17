@@ -100,10 +100,18 @@ namespace
     {
         enum
         {
-            Default, Punch, Flop
+            Default, Punch, Flop,
+
+            Count
         };
     };
     std::int32_t modifierIndex = ModifierID::Default;
+
+    //reduces topspin based on punch/flop
+    constexpr std::array<float, ModifierID::Count> SpinModifiers =
+    {
+        1.f, 1.f, 0.2f
+    };
 }
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
@@ -234,6 +242,16 @@ float Club::getBaseTarget() const
 float Club::getTargetAtLevel(std::int32_t level) const
 {
     return ClubStats[m_id].stats[level].target * LevelModifiers[playerLevel][modifierIndex][m_id].targetMultiplier;
+}
+
+float Club::getSideSpinMultiplier() const
+{
+    return m_sidespin;
+}
+
+float Club::getTopSpinMultiplier() const
+{
+    return m_topspin * SpinModifiers[modifierIndex];
 }
 
 float Club::getDefaultTarget() const

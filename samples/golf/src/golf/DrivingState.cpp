@@ -296,7 +296,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     Timeline::setGameMode(Timeline::GameMode::Playing);
     Timeline::setTimelineDesc("On The Driving Range");
 
-    Achievements::setActive(true);
+    Achievements::setActive(false); //TODO remove this when leaving beta!
+    //Achievements::setActive(true);
     Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });
     Social::getMonthlyChallenge().refresh();
 

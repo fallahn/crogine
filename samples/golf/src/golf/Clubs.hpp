@@ -118,8 +118,8 @@ public:
     float getDefaultTarget() const; //target with no level-shift applied
     float getTargetAtLevel(std::int32_t level) const;
 
-    float getSideSpinMultiplier() const { return m_sidespin; }
-    float getTopSpinMultiplier() const { return m_topspin; }
+    float getSideSpinMultiplier() const;
+    float getTopSpinMultiplier() const;
     float getSpinInfluence() const { return (m_topspin + m_sidespin) / 2.f; } //an average just used for printing stats
 
     static std::int32_t getClubLevel(); //0-2 for range
