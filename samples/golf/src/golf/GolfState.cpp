@@ -540,6 +540,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
+        m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         //hideMouse(); //TODO this should only react to current keybindings
         switch (evt.key.keysym.sym)
         {
@@ -766,6 +767,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
+
         if (evt.key.keysym.sym != SDLK_F12) //default screenshot key
         {
             resetIdle();
@@ -834,6 +837,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
+        const auto activeID = activeControllerID(m_currentPlayer.player);
+        if (evt.cbutton.which == cro::GameController::deviceID(activeID)
+            || m_humanCount == 1)
+        {
+            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
+                SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+        }
+
         resetIdle();
         m_skipState.displayControllerMessage = true;
         setFreecamLayout();
@@ -870,6 +881,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        const auto activeID = activeControllerID(m_currentPlayer.player);
+        if (evt.cbutton.which == cro::GameController::deviceID(activeID)
+            || m_humanCount == 1)
+        {
+            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
+                SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+        }
+
         hideMouse();
         switch (evt.cbutton.button)
         {
@@ -885,7 +904,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
         case cro::GameController::ButtonA:
-            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+            if (evt.cbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
                 closeMessage();
@@ -896,7 +915,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_buttonStates.buttonB = false;
             if (m_photoMode)
             {
-                if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+                if (evt.cbutton.which == cro::GameController::deviceID(activeID)
                     || m_humanCount == 1)
                 {
                     toggleFreeCam();
@@ -904,21 +923,21 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
             break;
         case cro::GameController::ButtonRightStick:
-            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+            if (evt.cbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
                 toggleMiniZoom();
             }
             break;
         case cro::GameController::ButtonX:
-            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+            if (evt.cbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
                 toggleDOF();
             }
             break;
         case cro::GameController::ButtonY:
-            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player))
+            if (evt.cbutton.which == cro::GameController::deviceID(activeID)
                 || m_humanCount == 1)
             {
                 toggleFreecamMenu();
@@ -977,6 +996,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
+        const auto activeID = activeControllerID(m_currentPlayer.player);
+        if (evt.caxis.which == cro::GameController::deviceID(activeID)
+            || m_humanCount == 1)
+        {
+            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
+                SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+        }
+
+
         m_skipState.displayControllerMessage = true;
 
         if (std::abs(evt.caxis.value) > 10000)

@@ -862,6 +862,151 @@ void GolfState::buildUI()
     spinEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //punch indicator
+    const auto originOffset = spinEnt.getComponent<cro::Transform>().getOrigin();
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -36.f, 0.f, 0.f });
+    entity.getComponent<cro::Transform>().move(originOffset);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("PUNCH");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale =
+                (ClubShot[getClub()] & ShotType::Punch) ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    spinEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto textEnt = entity;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 8.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = buttonSprites.getSprite("button_lb");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float) 
+        {
+            switch (m_sharedData.activeInput)
+            {
+            default:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                break;
+            case SharedStateData::ActiveInput::XBox:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                entity.getComponent<cro::SpriteAnimation>().play(0);
+                break;
+            case SharedStateData::ActiveInput::PS:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                entity.getComponent<cro::SpriteAnimation>().play(1);
+                break;
+            }
+        };
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+        };
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //flop indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 36.f, 0.f, 0.f });
+    entity.getComponent<cro::Transform>().move(originOffset);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("FLOP");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const float scale =
+                (ClubShot[getClub()] & ShotType::Flop) ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    spinEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    textEnt = entity;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 8.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = buttonSprites.getSprite("button_rb");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            switch (m_sharedData.activeInput)
+            {
+            default:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                break;
+            case SharedStateData::ActiveInput::XBox:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                entity.getComponent<cro::SpriteAnimation>().play(0);
+                break;
+            case SharedStateData::ActiveInput::PS:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                entity.getComponent<cro::SpriteAnimation>().play(1);
+                break;
+            }
+        };
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+        };
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //wind strength - this is positioned by the camera's resize callback, below
     entity = m_uiScene.createEntity();

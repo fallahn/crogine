@@ -98,6 +98,15 @@ struct SharedStateData final
     bool useOSKBuffer = false; //if true output of OSK is buffered here instead of sending codepoints
     cro::String OSKBuffer;
 
+    struct ActiveInput final
+    {
+        enum
+        {
+            Keyboard, XBox, PS
+        };
+    };
+    std::int32_t activeInput = ActiveInput::Keyboard; //NOTE only updated by driving range and main game
+
     struct MinimapData final
     {
         cro::MultiRenderTexture* mrt = nullptr;

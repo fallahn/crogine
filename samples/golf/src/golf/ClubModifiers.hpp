@@ -54,6 +54,7 @@ struct ModifierGroup final
         case 1: return punchModifier;
         case 2: return flopModifier;
         }
+        return DefaultModifier;
     }
 
     ModifierGroup() = default;

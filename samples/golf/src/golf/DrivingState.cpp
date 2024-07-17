@@ -454,6 +454,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
+        m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         resetIdle();
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.key.keysym.sym)
@@ -530,6 +531,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         m_skipState.displayControllerMessage = false;
         switch (evt.key.keysym.sym)
         {
@@ -544,6 +546,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
+        m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
+            SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+
         resetIdle();
         if (evt.caxis.value > LeftThumbDeadZone)
         {
@@ -552,6 +557,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
+            SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+
         resetIdle();
         m_skipState.displayControllerMessage = true;
 
