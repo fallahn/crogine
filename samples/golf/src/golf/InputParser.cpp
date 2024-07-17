@@ -956,7 +956,14 @@ void InputParser::updateDistanceEstimation()
         totalSteps += 1.f;
     } while (endPos.y > 0.f);
 
-    m_estimatedDistance = glm::length(endPos) * 1.08f; //correction of the average difference of club rating (we're only using this for the range indicator)
+
+    //correction of the average difference of club rating (we're only using this for the range indicator)
+    static constexpr std::array<float, 3u> VisualAdjust =
+    {
+        1.08f, 1.025f, 1.045f
+    };
+
+    m_estimatedDistance = glm::length(endPos) * VisualAdjust[Club::getClubLevel()];
 }
 
 void InputParser::updateStroke(float dt)

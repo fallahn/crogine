@@ -47,6 +47,9 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+//#define NO_WIND
+
+
 using namespace cl;
 
 namespace
@@ -174,7 +177,13 @@ void BallSystem::process(float dt)
     m_currentWindInterpTime = std::min(m_windInterpTime, m_currentWindInterpTime + dt);
     float interp = std::min(1.f, std::max(0.f, m_currentWindInterpTime / m_windInterpTime));
     m_windDirection = interpolate(m_windDirSrc, m_windDirTarget, interp);
+
+#ifdef NO_WIND
+    m_windStrength = 0.f;
+#else
     m_windStrength = interpolate(m_windStrengthSrc, m_windStrengthTarget, interp);
+#endif
+
 
     CRO_ASSERT(!std::isnan(m_windDirection.x), "");
     CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
