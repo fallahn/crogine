@@ -528,7 +528,7 @@ void DrivingState::createUI()
             }
             else
             {
-                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
         };
     textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -600,7 +600,7 @@ void DrivingState::createUI()
             }
             else
             {
-                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
         };
     textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
