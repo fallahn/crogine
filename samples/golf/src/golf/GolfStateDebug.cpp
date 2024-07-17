@@ -445,6 +445,26 @@ void GolfState::registerDebugCommands()
             }
         });
 
+    registerCommand("sv_cheats", [&](const std::string&)
+        {
+            static std::int32_t count = 0;
+            switch (count)
+            {
+            case 0:
+                cro::Console::print("Nice try, but you probably don't want to do that again...");
+                count++;
+                break;
+            case 1:
+                cro::Console::print("Back for more eh? Seriously though, this won't do what you think it does.");
+                count++;
+                break;
+            case 2:
+                cro::FileSystem::showMessageBox("Oh Dear", "Well, this was fun.");
+                cro::App::quit();
+                break;
+            }
+        });
+
     //nasssssty staticses
     static bool showKickWindow = false;
     if (m_sharedData.hosting)

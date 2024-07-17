@@ -490,7 +490,15 @@ void InputParser::setClub(float dist)
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
-    Club::setModifierIndex(0);
+    if (m_terrain == TerrainID::Stone
+        && (ClubShot[m_currentClub] & ShotType::Punch))
+    {
+        Club::setModifierIndex(1);
+    }
+    else
+    {
+        Club::setModifierIndex(0);
+    }
     updateDistanceEstimation();
 }
 
@@ -677,7 +685,15 @@ void InputParser::setMaxClub(float dist, bool atTee)
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
-    Club::setModifierIndex(0);
+    if (m_terrain == TerrainID::Stone
+        && (ClubShot[m_currentClub] & ShotType::Punch))
+    {
+        Club::setModifierIndex(1);
+    }
+    else
+    {
+        Club::setModifierIndex(0);
+    }
     updateDistanceEstimation();
 }
 
@@ -698,7 +714,15 @@ void InputParser::setMaxClub(std::int32_t clubID)
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 
-    Club::setModifierIndex(0);
+    if (m_terrain == TerrainID::Stone
+        && (ClubShot[m_currentClub] & ShotType::Punch))
+    {
+        Club::setModifierIndex(1);
+    }
+    else
+    {
+        Club::setModifierIndex(0);
+    }
     updateDistanceEstimation();
 }
 
@@ -1014,8 +1038,17 @@ void InputParser::updateStroke(float dt)
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
 
-                //TODO do we want to check the existing setting and only reset if the new club doesn't support?
-                Club::setModifierIndex(0);
+                //always punch from stone if club supports it
+                if (m_terrain == TerrainID::Stone
+                    && (ClubShot[m_currentClub] & ShotType::Punch))
+                {
+                    Club::setModifierIndex(1);
+                }
+                //reset modifier if new club doesn't support it
+                else if((ClubShot[m_currentClub] & (1 << Club::getModifierIndex())) == 0)
+                {
+                    Club::setModifierIndex(0);
+                }
 
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
@@ -1038,7 +1071,16 @@ void InputParser::updateStroke(float dt)
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
 
-                Club::setModifierIndex(0);
+                //always punch from stone (if club supports it)
+                if (m_terrain == TerrainID::Stone
+                    && (ClubShot[m_currentClub] & ShotType::Punch))
+                {
+                    Club::setModifierIndex(1);
+                }
+                else if((ClubShot[m_currentClub] & (1 << Club::getModifierIndex())) == 0)
+                {
+                    Club::setModifierIndex(0);
+                }
 
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
@@ -1254,7 +1296,8 @@ void InputParser::updateSpin(float dt)
         && ((m_prevFlags & InputFlag::PrevClub) == 0))
     {
         //we pressed punch shot
-        if (ClubShot[m_currentClub] & ShotType::Punch)
+        if ((ClubShot[m_currentClub] & ShotType::Punch)
+            && m_terrain != TerrainID::Stone)
         {
             Club::setModifierIndex(Club::getModifierIndex() == 1 ? 0 : 1);
 
@@ -1267,7 +1310,8 @@ void InputParser::updateSpin(float dt)
         && ((m_prevFlags & InputFlag::NextClub) == 0))
     {
         //we pressed flop shot
-        if (ClubShot[m_currentClub] & ShotType::Flop)
+        if ((ClubShot[m_currentClub] & ShotType::Flop)
+            && m_terrain != TerrainID::Stone)
         {
             Club::setModifierIndex(Club::getModifierIndex() == 2 ? 0 : 2);
 

@@ -90,8 +90,8 @@ static constexpr std::array<ShotModifier, ClubID::Count> fA =
     ShotModifier(0.328f, 0.857f, 0.725f),
     ShotModifier(0.343f, 0.850f, 0.701f),
     ShotModifier(0.373f, 0.837f, 0.674f),
-    ShotModifier(0.359f, 0.966f, 0.429f),
-    ShotModifier(0.305f, 1.095f, 0.504f),
+    ShotModifier(0.298f, 0.871f, 0.429f),
+    ShotModifier(0.252f, 0.966f, 0.504f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
 };
@@ -124,8 +124,8 @@ static constexpr std::array<ShotModifier, ClubID::Count> fB =
     ShotModifier(0.229f, 0.850f, 0.752f),
     ShotModifier(0.274f, 0.850f, 0.728f),
     ShotModifier(0.328f, 0.844f, 0.708f),
-    ShotModifier(0.305f, 0.905f, 0.470f),
-    ShotModifier(0.320f, 1.143f, 0.504f),
+    ShotModifier(0.274f, 0.864f, 0.470f),
+    ShotModifier(0.236f, 0.933f, 0.504f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
 };
@@ -159,7 +159,7 @@ static constexpr std::array<ShotModifier, ClubID::Count> fC =
     ShotModifier(0.251f, 0.857f, 0.755f),
     ShotModifier(0.290f, 0.843f, 0.728f),
     ShotModifier(0.275f, 0.898f, 0.504f),
-    ShotModifier(0.320f, 1.129f, 0.490f),
+    ShotModifier(0.244f, 0.939f, 0.490f),
     ShotModifier(0.313f, 1.000f, 0.511f),
     ShotModifier(0.000f, 1.000f, 1.000f),
 };
