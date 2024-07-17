@@ -1000,19 +1000,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        const auto activeID = activeControllerID(m_currentPlayer.player);
-        if (evt.caxis.which == cro::GameController::deviceID(activeID)
-            || m_humanCount == 1)
-        {
-            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
-                SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
-        }
-
-
         m_skipState.displayControllerMessage = true;
 
         if (std::abs(evt.caxis.value) > 10000)
         {
+            const auto activeID = activeControllerID(m_currentPlayer.player);
+            if (evt.caxis.which == cro::GameController::deviceID(activeID)
+                || m_humanCount == 1)
+            {
+                m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
+                    SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+            }
+
             setFreecamLayout();
             hideMouse();
             resetIdle();

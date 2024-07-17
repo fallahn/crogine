@@ -899,11 +899,11 @@ void GolfState::buildUI()
                 break;
             case SharedStateData::ActiveInput::XBox:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                entity.getComponent<cro::SpriteAnimation>().play(0);
+                e.getComponent<cro::SpriteAnimation>().play(0);
                 break;
             case SharedStateData::ActiveInput::PS:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                entity.getComponent<cro::SpriteAnimation>().play(1);
+                e.getComponent<cro::SpriteAnimation>().play(1);
                 break;
             }
         };
@@ -971,11 +971,11 @@ void GolfState::buildUI()
                 break;
             case SharedStateData::ActiveInput::XBox:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                entity.getComponent<cro::SpriteAnimation>().play(0);
+                e.getComponent<cro::SpriteAnimation>().play(0);
                 break;
             case SharedStateData::ActiveInput::PS:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                entity.getComponent<cro::SpriteAnimation>().play(1);
+                e.getComponent<cro::SpriteAnimation>().play(1);
                 break;
             }
         };

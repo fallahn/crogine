@@ -547,12 +547,12 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
-            SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
-
-        resetIdle();
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (std::abs(evt.caxis.value) > LeftThumbDeadZone)
         {
+            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
+                SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+
+            resetIdle();
             cro::App::getWindow().setMouseCaptured(true);
         }
     }

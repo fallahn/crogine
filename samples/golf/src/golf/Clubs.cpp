@@ -280,7 +280,7 @@ std::int32_t Club::getModifierIndex()
 void Club::setModifierIndex(std::int32_t idx)
 {
     modifierIndex = idx;
-    CRO_ASSERT(idx > -1 && id < 3, "");
+    CRO_ASSERT(idx > -1 && idx < 3, "");
 }
 
 //private
