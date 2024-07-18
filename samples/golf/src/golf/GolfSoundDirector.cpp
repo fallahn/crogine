@@ -62,6 +62,8 @@ namespace
     const cro::Time ChatSoundTime = cro::seconds(0.05f);
     const cro::Time PowerSoundTime = cro::seconds(0.5f);
     const cro::Time ApplauseSoundTime = cro::seconds(3.5f);
+
+    bool hadBeefstick = false;
 }
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateData& sd)
@@ -73,6 +75,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
     m_crowdPositions    (nullptr),
     m_crowdTime         (MinCrowdTime)
 {
+    hadBeefstick = false;
+
     //this must match with AudioID enum
     static const std::array<std::string, AudioID::Count> FilePaths =
     {
@@ -499,7 +503,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
                         break;
                     case TerrainID::Fairway:
-                        playSound(cro::Util::Random::value(AudioID::TerrainFairway01, AudioID::TerrainFairway02), glm::vec3(0.f));
+                    {
+                        const auto id = hadBeefstick ? AudioID::BigStick : cro::Util::Random::value(AudioID::TerrainFairway01, AudioID::TerrainFairway02);
+                        playSound(id, glm::vec3(0.f));
+                    }
                         break;
                     case TerrainID::Scrub:
                         playSound(cro::Util::Random::value(AudioID::TerrainScrub02, AudioID::TerrainScrub04), glm::vec3(0.f));
@@ -512,7 +519,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     case TerrainID::Green:
                         if (data.club != ClubID::Putter) //previous shot wasn't from green
                         {
-                            playSound(cro::Util::Random::value(AudioID::TerrainGreen01, AudioID::TerrainGreen03), glm::vec3(0.f));
+                            const auto id = hadBeefstick ? AudioID::BigStick : cro::Util::Random::value(AudioID::TerrainGreen01, AudioID::TerrainGreen03);
+                            playSound(id, glm::vec3(0.f));
 
                             if (data.pinDistance < MinHoleDistance //near the hole
                                 || data.travelDistance > 10000.f) //landed a long shot
@@ -576,6 +584,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         }
                     }
                 }
+                hadBeefstick = false;
                 break;
             }
         }
@@ -603,11 +612,12 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                         m_soundTimers[AudioID::Pole].restart();
 
-                        if (m_sharedData.gimmeRadius == 0 &&
+                        /*if (m_sharedData.gimmeRadius == 0 &&
                             cro::Util::Random::value(0, 1) == 0)
                         {
                             playSoundDelayed(AudioID::BigStick, data.position, 2.2f, 1.f, MixerChannel::Voice);
-                        }
+                        }*/
+                        hadBeefstick = true;
                     }
                     break;
                 default:
