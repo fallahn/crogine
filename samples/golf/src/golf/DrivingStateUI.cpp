@@ -1702,6 +1702,8 @@ will be given a score based on your overall accuracy. Good Luck!
                             labelEnt.getComponent<cro::Text>().setString("Clubset: Pro");
                             break;
                         }
+
+                        m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                     }
                     Club::setClubLevel(m_sharedData.clubSet);
                     centreText(labelEnt);
