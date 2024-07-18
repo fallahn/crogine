@@ -2458,7 +2458,9 @@ void GolfState::showCountdown(std::uint8_t seconds)
     cro::String bestString("PERSONAL BEST!");
 
 #ifndef CRO_DEBUG_
-    //enter score into leaderboard
+    //enter score into leaderboard - note this also
+    //sets the 'tutorial' string so debug builds will
+    //show the wrong message when completing the tutorial
     updateLeaderboardScore(personalBest, bestString);
 #endif
 

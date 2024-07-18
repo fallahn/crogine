@@ -2018,7 +2018,12 @@ void StatsState::refreshAwardsTab(std::int32_t page)
     }
 
     m_awardPageIndex = page;
-    m_awardPageCount = (awards.size() / ItemsPerPage) + 1;
+    m_awardPageCount = (awards.size() / ItemsPerPage);
+
+    if (awards.size() % ItemsPerPage)
+    {
+        m_awardPageCount++;
+    }
 
     if (m_awardPageCount > 1)
     {
