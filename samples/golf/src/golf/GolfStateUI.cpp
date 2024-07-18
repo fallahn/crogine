@@ -892,6 +892,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float) 
         {
+            const cro::Colour c = Club::getModifierIndex() == 1 ? cro::Colour::Red : cro::Colour::White;
             switch (m_sharedData.activeInput)
             {
             default:
@@ -900,10 +901,12 @@ void GolfState::buildUI()
             case SharedStateData::ActiveInput::XBox:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 e.getComponent<cro::SpriteAnimation>().play(0);
+                e.getComponent<cro::Sprite>().setColour(c);
                 break;
             case SharedStateData::ActiveInput::PS:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 e.getComponent<cro::SpriteAnimation>().play(1);
+                e.getComponent<cro::Sprite>().setColour(c);
                 break;
             }
         };
@@ -925,8 +928,10 @@ void GolfState::buildUI()
         {
             if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
+                const cro::Colour c = Club::getModifierIndex() == 1 ? TextHighlightColour : TextNormalColour;
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+                e.getComponent<cro::Text>().setFillColour(c);
             }
             else
             {
@@ -964,6 +969,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
+            const cro::Colour c = Club::getModifierIndex() == 2 ? cro::Colour::Red : cro::Colour::White;
             switch (m_sharedData.activeInput)
             {
             default:
@@ -972,10 +978,12 @@ void GolfState::buildUI()
             case SharedStateData::ActiveInput::XBox:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 e.getComponent<cro::SpriteAnimation>().play(0);
+                e.getComponent<cro::Sprite>().setColour(c);
                 break;
             case SharedStateData::ActiveInput::PS:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 e.getComponent<cro::SpriteAnimation>().play(1);
+                e.getComponent<cro::Sprite>().setColour(c);
                 break;
             }
         };
@@ -997,8 +1005,10 @@ void GolfState::buildUI()
         {
             if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
             {
+                const cro::Colour c = Club::getModifierIndex() == 2 ? TextHighlightColour : TextNormalColour;
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]));
+                e.getComponent<cro::Text>().setFillColour(c);
             }
             else
             {
