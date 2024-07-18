@@ -47,7 +47,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
-#define NO_WIND
+//#define NO_WIND
 
 
 using namespace cl;
@@ -57,7 +57,7 @@ namespace
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
-    static constexpr float AttractRadius = HoleRadius * 1.2f;
+    static constexpr float AttractRadius = HoleRadius * 1.24f; //1.2f;
     static constexpr float MinAttractRadius = AttractRadius * AttractRadius;
     static constexpr float Margin = 1.02f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
@@ -72,7 +72,7 @@ namespace
     static constexpr float MinRollVelocity = -0.25f;
     static constexpr float MaxStoneSlope = 0.9f; //dot prod with vertical - ball is OOB if less than this
 
-    static constexpr float MaxRestitutionIncrease = 0.07f; //depending on the angle of the bounce up to this much is added to restitution multiplier
+    static constexpr float MaxRestitutionIncrease = 0.06f; //depending on the angle of the bounce up to this much is added to restitution multiplier
 
     float getRestitution(glm::vec3 vel, glm::vec3 norm)
     {

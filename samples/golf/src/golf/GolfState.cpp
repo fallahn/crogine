@@ -4345,6 +4345,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         break;
         case PacketID::BallLanded:
         {
+            //this *potentially* could mess with the player
+            //camera - however if this is true then it should
+            //never be any camera view except the correct one
+            if (m_puttViewState.isPuttView)
+            {
+                m_puttViewState.isEnabled = true; //this *should* be disabled but we need to enable it here to override state
+                togglePuttingView(false);
+            }
+
+
             auto update = evt.packet.as<BallUpdate>();
             switch (update.terrain)
             {
