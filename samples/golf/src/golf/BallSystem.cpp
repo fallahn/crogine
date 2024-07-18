@@ -47,7 +47,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
-//#define NO_WIND
+#define NO_WIND
 
 
 using namespace cl;
@@ -71,6 +71,24 @@ namespace
 
     static constexpr float MinRollVelocity = -0.25f;
     static constexpr float MaxStoneSlope = 0.9f; //dot prod with vertical - ball is OOB if less than this
+
+    static constexpr float MaxRestitutionIncrease = 0.07f; //depending on the angle of the bounce up to this much is added to restitution multiplier
+
+    float getRestitution(glm::vec3 vel, glm::vec3 norm)
+    {
+        //TODO this needs to be a lookup table for the punch values for each club
+        //however I don't think we *actually know* the club server side. Perhaps
+        //we could use the length of velocity, but there's probably too much overlap
+        //between the different clubs.
+        const float StartAngle = 0.35f;
+        const float l = glm::length(vel);
+
+        const float d = glm::dot(-(vel / l), norm);
+        //LogI << "Vel: " << l << ", dot: " << d << std::endl;
+        const float amt = 0.1f + (0.9f * glm::smoothstep(0.001f, StartAngle, d));
+        //LogI << amt << std::endl;
+        return (1.f - amt) * MaxRestitutionIncrease;
+    }
 
     static constexpr std::array<float, TerrainID::Count> Friction =
     {
@@ -1112,7 +1130,7 @@ void BallSystem::doCollision(cro::Entity entity)
         case TerrainID::Rough:
             doBullsEyeCollision(tx.getPosition());
 
-            ball.velocity *= Restitution[terrainResult.terrain];
+            ball.velocity *= Restitution[terrainResult.terrain] + getRestitution(ball.velocity, terrainResult.normal);
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             //ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
             ball.spin *= SpinReduction[terrainResult.terrain];
@@ -1129,7 +1147,7 @@ void BallSystem::doCollision(cro::Entity entity)
             }
             else //bounce
             {
-                ball.velocity *= Restitution[terrainResult.terrain];
+                ball.velocity *= Restitution[terrainResult.terrain] + getRestitution(ball.velocity, terrainResult.normal);
                 ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
                 //ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
                 ball.spin *= SpinReduction[terrainResult.terrain];
