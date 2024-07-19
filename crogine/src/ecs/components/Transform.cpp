@@ -383,6 +383,13 @@ glm::mat4 Transform::getLocalTransform() const
 {
     if (m_dirtyFlags & Tx)
     {
+#ifdef USE_PARALLEL_PROCESSING
+        //hmmm we need to use this *everywhere* these are touched
+        //really - but for now this just fixes the parallel execution
+        //of built in Systems (eg ModelRenderer) - ie we assume this
+        //is only ever *read* from multiple threads, not mutated
+        std::scoped_lock l(m_mutex);
+#endif
         m_transform = glm::translate(glm::mat4(1.f), m_position);
         m_transform *= glm::toMat4(m_rotation);
         m_transform = glm::scale(m_transform, m_scale);

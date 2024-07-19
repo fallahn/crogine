@@ -104,4 +104,20 @@ source distribution.
 
 #endif //CRO_STATIC
 
+//used specifically for the Systems
+//which implements parallel execution
+//this *doesn't* mean anything is thread-safe
+//outside of its defined scope, if anything 
+//it's probably worse :)
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
+#define EARLY_OUT return
+#else
+#define EARLY_OUT continue
+#endif
+
+
 #include <crogine/android/Android.hpp>

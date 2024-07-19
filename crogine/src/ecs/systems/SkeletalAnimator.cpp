@@ -42,7 +42,14 @@ source distribution.
 
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
+#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
 #include <execution>
+#endif
 
 using namespace cro;
 
@@ -83,16 +90,21 @@ void SkeletalAnimator::process(float dt)
     const auto camDir = cro::Util::Matrix::getForwardVector(getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldTransform());
 
 
-    auto& entities = getEntities();
-    //for (auto& entity : entities)
+    const auto& entities = getEntities();
+    
     //const auto policy = entities.size() > 5 ? std::execution::par : std::execution::seq;
-    std::for_each(/*std::execution::par, */entities.begin(), entities.end(), 
-        [&](cro::Entity& entity)
+
+#ifdef USE_PARALLEL_PROCESSING
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](cro::Entity entity)
+#else
+    for (auto entity : entities)
+#endif
         {
             auto& skel = entity.getComponent<Skeleton>();
 
             //check the model is roughly in front of the camera and within interp distance
-            auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
+            const auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
             bool useInterpolation = (glm::dot(direction, camDir) > 0 //could squeeze a bit more out of this if we take FOV into account...
                 && glm::length2(direction) < skel.m_interpolationDistance
                 && skel.m_useInterpolation);
@@ -148,7 +160,10 @@ void SkeletalAnimator::process(float dt)
                     ap.getModel().getComponent<cro::Transform>().m_attachmentTransform = ctx.worldTransform * skel.getAttachmentTransform(i);
                 }
             }
-        });
+        }
+#ifdef USE_PARALLEL_PROCESSING       
+        );
+#endif
 }
 
 void SkeletalAnimator::debugUI() const
@@ -427,3 +442,9 @@ void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::
         dest.m_keyFrameBounds.push_back(source.boundingBox);
     }
 }
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

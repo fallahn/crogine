@@ -48,7 +48,7 @@ source distribution.
 #include "../../detail/GLCheck.hpp"
 
 
-#define PARALLEL_DISABLE
+//#define PARALLEL_DISABLE
 #ifdef PARALLEL_DISABLE
 #undef USE_PARALLEL_PROCESSING
 #endif

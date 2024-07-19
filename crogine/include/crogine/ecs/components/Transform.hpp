@@ -40,6 +40,10 @@ source distribution.
 #include <vector>
 #include <functional>
 
+#ifdef USE_PARALLEL_PROCESSING
+#include <mutex>
+#endif
+
 namespace cro
 {
     class Entity;
@@ -309,6 +313,10 @@ namespace cro
         Transform* m_parent;
         std::vector<Transform*> m_children = {};
         void doCallbacks() const; //actually mutable - called from getTransform()
+
+#ifdef USE_PARALLEL_PROCESSING
+        mutable std::mutex m_mutex;
+#endif
 
         std::size_t m_depth;
         void increaseDepth();

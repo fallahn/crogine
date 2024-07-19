@@ -34,7 +34,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
 
-#define PARALLEL_DISABLE
+//#define PARALLEL_DISABLE
 #ifdef PARALLEL_DISABLE
 #undef USE_PARALLEL_PROCESSING
 #endif

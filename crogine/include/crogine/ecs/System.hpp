@@ -39,16 +39,6 @@ source distribution.
 #include <vector>
 #include <typeindex>
 
-#ifndef PARALLEL_GLOBAL_DISABLE
-#define USE_PARALLEL_PROCESSING
-#endif
-
-#ifdef USE_PARALLEL_PROCESSING
-#define EARLY_OUT return
-#else
-#define EARLY_OUT continue
-#endif
-
 namespace cro
 {
     class Time;

@@ -43,7 +43,7 @@ source distribution.
 
 #include <string>
 
-#define PARALLEL_DISABLE
+//#define PARALLEL_DISABLE
 #ifdef PARALLEL_DISABLE
 #undef USE_PARALLEL_PROCESSING
 #endif
@@ -160,7 +160,11 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 
     if (m_needsSort)
     {
+#ifdef USE_PARALLEL_PROCESSING
+        std::sort(std::execution::par, drawlist.begin(), drawlist.end(),
+#else
         std::sort(drawlist.begin(), drawlist.end(),
+#endif
             [](Entity a, Entity b)
             {
                 return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;

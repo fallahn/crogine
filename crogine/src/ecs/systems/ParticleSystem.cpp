@@ -46,7 +46,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
-#define PARALLEL_DISABLE
+//#define PARALLEL_DISABLE
 #ifdef PARALLEL_DISABLE
 #undef USE_PARALLEL_PROCESSING
 #endif

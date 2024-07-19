@@ -62,7 +62,9 @@ bool MessageBus::empty()
 {
     if (m_currentCount == 0)
     {
+#ifdef USE_PARALLEL_PROCESSING
         std::scoped_lock l(m_mutex);
+#endif
         m_currentBuffer.swap(m_pendingBuffer);
         m_inPointer = m_pendingBuffer.data();
         m_outPointer = m_currentBuffer.data();

@@ -32,7 +32,10 @@ source distribution.
 #include <crogine/core/Message.hpp>
 
 #include <vector>
+
+#ifdef USE_PARALLEL_PROCESSING
 #include <mutex>
+#endif
 
 namespace cro
 {   
@@ -101,7 +104,9 @@ namespace cro
             //a stall - if we're smart each thread/group of threads
             //would have their own mutexes and the message bus
             //would do a collection from all of them each frame
+#ifdef USE_PARALLEL_PROCESSING
             std::scoped_lock l(m_mutex);
+#endif
 
             Message* msg = new (m_inPointer)Message();
             m_inPointer += msgSize;
@@ -141,7 +146,8 @@ namespace cro
         std::size_t m_pendingCount;
 
         bool m_enabled;
-
+#ifdef USE_PARALLEL_PROCESSING
         std::mutex m_mutex;
+#endif
     };
 }
