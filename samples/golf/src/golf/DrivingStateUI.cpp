@@ -490,7 +490,7 @@ void DrivingState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            const cro::Colour c = Club::getModifierIndex() == 1 ? cro::Colour::Red : cro::Colour::White;
+            const cro::Colour c = Club::getModifierIndex() == 1 ? TextHighlightColour : cro::Colour::White;
             switch (m_sharedData.activeInput)
             {
             default:
@@ -568,7 +568,7 @@ void DrivingState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            const cro::Colour c = Club::getModifierIndex() == 2 ? cro::Colour::Red : cro::Colour::White;
+            const cro::Colour c = Club::getModifierIndex() == 2 ? TextHighlightColour : cro::Colour::White;
 
             switch (m_sharedData.activeInput)
             {
