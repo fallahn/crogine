@@ -63,7 +63,9 @@ if (msvc)
 endif()
 
 if (APPLE)
-  add_definitions(-DGL_SILENCE_DEPRECATION)
+#silence opengl/openal deprecation warnings
+#plus apple clang doesn't support parallel exection policies
+  add_definitions(-DGL_SILENCE_DEPRECATION -DPARALLEL_GLOBAL_DISABLE)
 endif()
 
 if (NOT BUILD_SHARED_LIBS)
