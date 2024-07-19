@@ -43,6 +43,11 @@ source distribution.
 
 #include <string>
 
+#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
 #ifdef USE_PARALLEL_PROCESSING
 #include <mutex>
 #include <execution>
@@ -104,17 +109,19 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     const auto& entities = getEntities();
     std::mutex mutex;
 
+#ifdef USE_PARALLEL_PROCESSING
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](Entity entity)
+#else
     for (auto entity : entities)
-    //std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
-    //    [&](Entity entity)
+#endif
         {
             auto& drawable = entity.getComponent<Drawable2D>();
             drawable.m_wasCulledLastFrame = true;
 
             if ((renderFlags & drawable.m_renderFlags) == 0)
             {
-                continue;
-                //return;
+                EARLY_OUT;
             }
 
             if (drawable.m_autoCrop)
@@ -129,8 +136,9 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
                     if (bounds.intersects(viewRect))
                     {
                         drawable.m_wasCulledLastFrame = false;
-
-                        //std::scoped_lock l(mutex);
+#ifdef USE_PARALLEL_PROCESSING
+                        std::scoped_lock l(mutex);
+#endif
                         drawlist.push_back(entity);
                     }
                 }
@@ -138,12 +146,15 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
             else
             {
                 drawable.m_wasCulledLastFrame = false;
-
-                //std::scoped_lock l(mutex);
+#ifdef USE_PARALLEL_PROCESSING
+                std::scoped_lock l(mutex);
+#endif
                 drawlist.push_back(entity);
             }
         }
-    //);
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 
     DPRINT("Visible 2D ents", std::to_string(drawlist.size()));
 
@@ -471,3 +482,10 @@ void RenderSystem2D::resetDrawable(Entity entity)
 
 #endif //PLATFORM
 }
+
+#ifdef PARALLEL_DISABLE
+#undef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

@@ -34,6 +34,11 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
 
+#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
 #ifdef USE_PARALLEL_PROCESSING
 #include <mutex>
 #include <execution>
@@ -147,3 +152,9 @@ void SpriteAnimator::process(float dt)
         msg->userType = eventID;
     }
 }
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

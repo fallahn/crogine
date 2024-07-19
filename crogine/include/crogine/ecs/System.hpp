@@ -39,8 +39,8 @@ source distribution.
 #include <vector>
 #include <typeindex>
 
-#ifndef USE_PARALLEL_PROCESSING
-//#define USE_PARALLEL_PROCESSING
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
 #endif
 
 #ifdef USE_PARALLEL_PROCESSING

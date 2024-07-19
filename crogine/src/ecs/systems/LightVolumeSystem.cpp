@@ -27,6 +27,9 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+
+
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/Message.hpp>
 
@@ -43,6 +46,12 @@ source distribution.
 
 #include <crogine/graphics/Spatial.hpp>
 #include "../../detail/GLCheck.hpp"
+
+
+#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
 
 #ifdef USE_PARALLEL_PROCESSING
 #include <execution>
@@ -369,3 +378,10 @@ void LightVolumeSystem::setSourceBuffer(TextureID id, std::int32_t index)
     CRO_ASSERT(index != -1 && index < BufferID::Count, "");
     m_bufferIDs[index] = id;
 }
+
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

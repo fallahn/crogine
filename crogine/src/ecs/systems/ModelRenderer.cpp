@@ -49,6 +49,11 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+//#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
 #ifdef USE_PARALLEL_PROCESSING
 #include <execution>
 #include <mutex>
@@ -75,7 +80,7 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 //public
 void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
-    auto& camComponent = cameraEnt.getComponent<Camera>();
+    const auto& camComponent = cameraEnt.getComponent<Camera>();
     if (m_drawLists.size() <= camComponent.getDrawListIndex())
     {
         m_drawLists.resize(camComponent.getDrawListIndex() + 1);
@@ -102,7 +107,11 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
     for (auto i = 0; i < passCount; ++i)
     {
+#ifdef USE_PARALLEL_PROCESSING
+        std::sort(std::execution::par, std::begin(drawList[i]), std::end(drawList[i]),
+#else
         std::sort(std::begin(drawList[i]), std::end(drawList[i]),
+#endif
             [](MaterialPair& a, MaterialPair& b)
             {
                 return a.second.flags < b.second.flags;
@@ -768,3 +777,9 @@ void ModelRenderer::applyBlendMode(const Material::Data& material)
         break;
     }
 }
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif
