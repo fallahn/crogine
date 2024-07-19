@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -45,6 +45,9 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+
+#include <execution>
+#include <mutex>
 
 #ifdef CRO_DEBUG_
 #include <crogine/gui/Gui.hpp>
@@ -318,7 +321,7 @@ ParticleSystem::~ParticleSystem()
 void ParticleSystem::updateDrawList(Entity cameraEnt)
 {   
     const auto& cam = cameraEnt.getComponent<Camera>();
-    auto passCount = cam.reflectionBuffer.available() ? 2 : 1;
+    const auto passCount = cam.reflectionBuffer.available() ? 2 : 1;
     const auto camPos = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
     const auto forwardVec = cro::Util::Matrix::getForwardVector(cameraEnt.getComponent<cro::Transform>().getWorldTransform());
 
@@ -334,34 +337,39 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
     }
 
     const auto& entities = getEntities();
-    for (auto entity : entities)
-    {
-        auto& emitter = entity.getComponent<ParticleEmitter>();
-        const auto emitterDirection = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
+    std::mutex mutex;
 
-        for (auto i = 0; i < passCount; ++i)
+    //for (auto entity : entities)
+    for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](Entity entity)
         {
-            if ((emitter.m_renderFlags & cam.getPass(i).renderFlags) == 0)
-            {
-                continue;
-            }
+            auto& emitter = entity.getComponent<ParticleEmitter>();
+            const auto emitterDirection = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
 
-            if (glm::dot(forwardVec, emitterDirection) > 0)
+            for (auto i = 0; i < passCount; ++i)
             {
-                if (!emitter.m_pendingUpdate)
+                if ((emitter.m_renderFlags & cam.getPass(i).renderFlags) == 0)
                 {
-                    emitter.m_pendingUpdate = true;
-                    m_potentiallyVisible.push_back(entity);
+                    continue;
                 }
 
-                const auto& frustum = cam.getPass(i).getFrustum();
-                if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
+                if (glm::dot(forwardVec, emitterDirection) > 0)
                 {
-                    drawlist[i].push_back(entity);
+                    /*if (!emitter.m_pendingUpdate)
+                    {
+                        emitter.m_pendingUpdate = true;
+                        m_potentiallyVisible.push_back(entity);
+                    }*/
+
+                    const auto& frustum = cam.getPass(i).getFrustum();
+                    if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
+                    {
+                        std::scoped_lock l(mutex);
+                        drawlist[i].push_back(entity);
+                    }
                 }
             }
-        }
-    }
+        });
 
     DPRINT("Visible particle Systems", std::to_string(drawlist[0].size()));
 }
@@ -396,7 +404,7 @@ void ParticleSystem::process(float dt)
             while (emitter.m_emissionTime > rate)
             {
                 //make sure not to update this again unless it gets marked as visible next frame
-                emitter.m_pendingUpdate = false;
+                //emitter.m_pendingUpdate = false;
 
                 //apply fallback texture if one doesn't exist
                 //this would be speedier to do once when adding the emitter to the system
@@ -579,7 +587,7 @@ void ParticleSystem::process(float dt)
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    m_potentiallyVisible.clear();
+    //m_potentiallyVisible.clear();
 }
 
 void ParticleSystem::render(Entity camera, const RenderTarget& rt)

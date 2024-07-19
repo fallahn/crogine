@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -48,6 +48,9 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+
+#include <execution>
+#include <mutex>
 
 using namespace cro;
 
@@ -319,7 +322,7 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
     //entities for the second pass...
     const auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
 
     //cull entities by viewable into draw lists by pass
@@ -328,12 +331,17 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
         list.clear();
     }
 
-    for (auto& entity : entities)
+    std::mutex mutex;
+
+    //for (auto& entity : entities)
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](Entity entity)
     {
         auto& model = entity.getComponent<Model>();
         if (model.isHidden())
         {
-            continue;
+            //continue;
+            return;
         }
 
         if (model.m_meshBox != model.m_meshData.boundingBox)
@@ -422,16 +430,18 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 
                 if (!opaque.second.matIDs.empty())
                 {
+                    std::scoped_lock l(mutex);
                     drawList[p].push_back(opaque);
                 }
 
                 if (!transparent.second.matIDs.empty())
                 {
+                    std::scoped_lock l(mutex);
                     drawList[p].push_back(transparent);
                 }
             }
         }
-    }
+    });
 }
 
 void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)

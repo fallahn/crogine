@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/core/Message.hpp>
 
 #include <vector>
+#include <mutex>
 
 namespace cro
 {   
@@ -91,6 +92,17 @@ namespace cro
             CRO_ASSERT(m_pendingBuffer.size() - (m_inPointer - m_pendingBuffer.data()) > (dataSize + msgSize), "buffer overflow " + std::to_string(m_pendingCount)); //make sure we have enough room in the buffer
             //CRO_WARNING(m_pendingBuffer.size() - (m_inPointer - m_pendingBuffer.data()) < 128, "Messagebus buffer is heavily contended!");
 
+
+            //this is probably not ideal - the returned
+            //message is probably modified outside of the lock
+            //however what we're *really* protecting here
+            //is creation of new messages on the bus
+            //ALSO a lot of threads waiting on this will probably cause
+            //a stall - if we're smart each thread/group of threads
+            //would have their own mutexes and the message bus
+            //would do a collection from all of them each frame
+            std::scoped_lock l(m_mutex);
+
             Message* msg = new (m_inPointer)Message();
             m_inPointer += msgSize;
             msg->id = id;
@@ -129,5 +141,7 @@ namespace cro
         std::size_t m_pendingCount;
 
         bool m_enabled;
+
+        std::mutex m_mutex;
     };
 }

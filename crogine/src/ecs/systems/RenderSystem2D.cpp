@@ -42,6 +42,8 @@ source distribution.
 #include "../../graphics/shaders/Sprite.hpp"
 
 #include <string>
+#include <mutex>
+#include <execution>
 
 namespace
 {
@@ -83,7 +85,7 @@ RenderSystem2D::~RenderSystem2D()
 //public
 void RenderSystem2D::updateDrawList(Entity camEnt)
 {
-    auto& camera = camEnt.getComponent<Camera>();
+    const auto& camera = camEnt.getComponent<Camera>();
     CRO_ASSERT(camera.isOrthographic(), "Camera is not orthographic");
 
     if (m_drawLists.size() <= camera.getDrawListIndex())
@@ -93,42 +95,51 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     auto& drawlist = m_drawLists[camera.getDrawListIndex()];
     drawlist.clear();
 
-    auto viewRect = camEnt.getComponent<cro::Transform>().getWorldTransform() * camera.getViewSize();
+    const auto viewRect = camEnt.getComponent<cro::Transform>().getWorldTransform() * camera.getViewSize();
+    const auto renderFlags = camera.getPass(Camera::Pass::Final).renderFlags;
 
+    const auto& entities = getEntities();
+    std::mutex mutex;
 
-    auto& entities = getEntities();
     for (auto entity : entities)
-    {
-        auto& drawable = entity.getComponent<Drawable2D>();
-        drawable.m_wasCulledLastFrame = true;
-
-        if ((camera.getPass(Camera::Pass::Final).renderFlags & drawable.m_renderFlags) == 0)
+    //std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+    //    [&](Entity entity)
         {
-            continue;
-        }
+            auto& drawable = entity.getComponent<Drawable2D>();
+            drawable.m_wasCulledLastFrame = true;
 
-        if (drawable.m_autoCrop)
-        {
-            auto scale = entity.getComponent<cro::Transform>().getWorldScale();
-            if (scale.x * scale.y != 0)
+            if ((renderFlags & drawable.m_renderFlags) == 0)
             {
-                const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
+                continue;
+                //return;
+            }
 
-                //check local bounds for visibility and draw if visible
-                auto bounds = drawable.m_localBounds.transform(worldMat);
-                if (bounds.intersects(viewRect))
+            if (drawable.m_autoCrop)
+            {
+                const auto scale = entity.getComponent<cro::Transform>().getWorldScale();
+                if (scale.x * scale.y != 0)
                 {
-                    drawlist.push_back(entity);
-                    drawable.m_wasCulledLastFrame = false;
+                    const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
+
+                    //check local bounds for visibility and draw if visible
+                    auto bounds = drawable.m_localBounds.transform(worldMat);
+                    if (bounds.intersects(viewRect))
+                    {
+                        drawable.m_wasCulledLastFrame = false;
+
+                        //std::scoped_lock l(mutex);
+                        drawlist.push_back(entity);
+                    }
                 }
             }
-        }
-        else
-        {
-            drawlist.push_back(entity);
-            drawable.m_wasCulledLastFrame = false;
-        }
-    }
+            else
+            {
+                drawable.m_wasCulledLastFrame = false;
+
+                //std::scoped_lock l(mutex);
+                drawlist.push_back(entity);
+            }
+        }//);
 
     DPRINT("Visible 2D ents", std::to_string(drawlist.size()));
 

@@ -44,6 +44,9 @@ source distribution.
 #include <crogine/graphics/Spatial.hpp>
 #include "../../detail/GLCheck.hpp"
 
+#include <execution>
+#include <mutex>
+
 #ifdef CRO_DEBUG_
 #include <crogine/gui/Gui.hpp>
 #endif
@@ -182,17 +185,20 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
 //public
 void LightVolumeSystem::process(float)
 {
-    for (auto entity : getEntities())
-    {
-        const auto& model = entity.getComponent<Model>();
-        auto sphere = model.getBoundingSphere();
-        const auto& tx = entity.getComponent<Transform>();
+    //for (auto entity : getEntities())
+    const auto& entities = getEntities();
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [](Entity entity)
+        {
+            const auto& model = entity.getComponent<Model>();
+            auto sphere = model.getBoundingSphere();
+            const auto& tx = entity.getComponent<Transform>();
 
-        auto scale = tx.getWorldScale();
-        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+            const auto scale = tx.getWorldScale();
+            sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-        entity.getComponent<LightVolume>().lightScale = sphere.radius / entity.getComponent<LightVolume>().radius;
-    }
+            entity.getComponent<LightVolume>().lightScale = sphere.radius / entity.getComponent<LightVolume>().radius;
+        });
 }
 
 void LightVolumeSystem::updateDrawList(Entity cameraEnt)
@@ -216,53 +222,61 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
     //TODO - and this goes for all culling functions
     //the world space transform of the sphere could be cached for a frame
     //instead of being recalculated for every active camera
-    for (auto entity : entities)
-    {
-        const auto& model = entity.getComponent<Model>();
-        auto sphere = model.getBoundingSphere();
-        const auto& tx = entity.getComponent<Transform>();
-
-        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
-        auto scale = tx.getWorldScale();
-
-        if (scale.x * scale.y * scale.z == 0)
+    //for (auto entity : entities)
+    std::mutex mutex;
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](Entity entity)
         {
-            continue;
-        }
+            const auto& model = entity.getComponent<Model>();
+            auto sphere = model.getBoundingSphere();
+            const auto& tx = entity.getComponent<Transform>();
 
-        //average for non-uniform scale
-        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+            sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
+            auto scale = tx.getWorldScale();
 
-        const auto direction = (sphere.centre - cameraPos);
-        const float distance = glm::dot(camComponent.getPass(Camera::Pass::Final).forwardVector, direction);
+            if (scale.x * scale.y * scale.z == 0)
+            {
+                //continue;
+                return;
+            }
 
-        if (distance < -sphere.radius)
-        {
-            //model is behind the camera
-            continue;
-        }
+            //average for non-uniform scale
+            sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-        auto& light = entity.getComponent<LightVolume>();
-        const auto l2 = glm::length2(direction);
-        if (l2 >light.maxVisibilityDistance)
-        {
-            //model is out of bounds
-            continue;
-        }
+            const auto direction = (sphere.centre - cameraPos);
+            const float distance = glm::dot(camComponent.getPass(Camera::Pass::Final).forwardVector, direction);
 
-        bool visible = true;
-        std::size_t j = 0;
-        while (visible && j < frustum.size())
-        {
-            visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
-        }
+            if (distance < -sphere.radius)
+            {
+                //model is behind the camera
+                //continue;
+                return;
+            }
 
-        if (visible)
-        {
-            light.cullAttenuation = 1.f - smoothstep(light.maxVisibilityDistance - (light.maxVisibilityDistance * 0.33f), light.maxVisibilityDistance, l2);
-            drawList.push_back(entity);
-        }
-    }
+            auto& light = entity.getComponent<LightVolume>();
+            const auto l2 = glm::length2(direction);
+            if (l2 > light.maxVisibilityDistance)
+            {
+                //model is out of bounds
+                //continue;
+                return;
+            }
+
+            bool visible = true;
+            std::size_t j = 0;
+            while (visible && j < frustum.size())
+            {
+                visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+            }
+
+            if (visible)
+            {
+                light.cullAttenuation = 1.f - smoothstep(light.maxVisibilityDistance - (light.maxVisibilityDistance * 0.33f), light.maxVisibilityDistance, l2);
+                
+                std::scoped_lock l(mutex);
+                drawList.push_back(entity);
+            }
+        });
 }
 
 void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
