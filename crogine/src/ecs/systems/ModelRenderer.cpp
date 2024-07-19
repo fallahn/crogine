@@ -49,8 +49,10 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+#ifdef USE_PARALLEL_PROCESSING
 #include <execution>
 #include <mutex>
+#endif
 
 using namespace cro;
 
@@ -330,18 +332,19 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
     {
         list.clear();
     }
-
+#ifdef USE_PARALLEL_PROCESSING
     std::mutex mutex;
 
-    //for (auto& entity : entities)
     std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
         [&](Entity entity)
+#else
+    for (auto entity : entities)
+#endif
     {
         auto& model = entity.getComponent<Model>();
         if (model.isHidden())
         {
-            //continue;
-            return;
+            EARLY_OUT;
         }
 
         if (model.m_meshBox != model.m_meshData.boundingBox)
@@ -430,18 +433,25 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 
                 if (!opaque.second.matIDs.empty())
                 {
+#ifdef USE_PARALLEL_PROCESSING
                     std::scoped_lock l(mutex);
+#endif
                     drawList[p].push_back(opaque);
                 }
 
                 if (!transparent.second.matIDs.empty())
                 {
+#ifdef USE_PARALLEL_PROCESSING
                     std::scoped_lock l(mutex);
+#endif
                     drawList[p].push_back(transparent);
                 }
             }
         }
-    });
+    }
+#ifdef USE_PARALLEL_PROCESSING    
+    );
+#endif
 }
 
 void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)

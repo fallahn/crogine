@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -38,6 +38,16 @@ source distribution.
 
 #include <vector>
 #include <typeindex>
+
+#ifndef USE_PARALLEL_PROCESSING
+//#define USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
+#define EARLY_OUT return
+#else
+#define EARLY_OUT continue
+#endif
 
 namespace cro
 {

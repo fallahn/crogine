@@ -44,8 +44,10 @@ source distribution.
 #include <crogine/graphics/Spatial.hpp>
 #include "../../detail/GLCheck.hpp"
 
+#ifdef USE_PARALLEL_PROCESSING
 #include <execution>
 #include <mutex>
+#endif
 
 #ifdef CRO_DEBUG_
 #include <crogine/gui/Gui.hpp>
@@ -185,20 +187,26 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
 //public
 void LightVolumeSystem::process(float)
 {
-    //for (auto entity : getEntities())
     const auto& entities = getEntities();
+#ifdef USE_PARALLEL_PROCESSING
     std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
         [](Entity entity)
-        {
-            const auto& model = entity.getComponent<Model>();
-            auto sphere = model.getBoundingSphere();
-            const auto& tx = entity.getComponent<Transform>();
+#else
+    for (auto entity : getEntities())
+#endif
+    {
+        const auto& model = entity.getComponent<Model>();
+        auto sphere = model.getBoundingSphere();
+        const auto& tx = entity.getComponent<Transform>();
 
-            const auto scale = tx.getWorldScale();
-            sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+        const auto scale = tx.getWorldScale();
+        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
-            entity.getComponent<LightVolume>().lightScale = sphere.radius / entity.getComponent<LightVolume>().radius;
-        });
+        entity.getComponent<LightVolume>().lightScale = sphere.radius / entity.getComponent<LightVolume>().radius;
+    }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 }
 
 void LightVolumeSystem::updateDrawList(Entity cameraEnt)
@@ -222,10 +230,14 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
     //TODO - and this goes for all culling functions
     //the world space transform of the sphere could be cached for a frame
     //instead of being recalculated for every active camera
-    //for (auto entity : entities)
+#ifdef USE_PARALLEL_PROCESSING
     std::mutex mutex;
     std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
         [&](Entity entity)
+#else
+    for (auto entity : entities)
+#endif
+
         {
             const auto& model = entity.getComponent<Model>();
             auto sphere = model.getBoundingSphere();
@@ -236,8 +248,7 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
 
             if (scale.x * scale.y * scale.z == 0)
             {
-                //continue;
-                return;
+                EARLY_OUT;
             }
 
             //average for non-uniform scale
@@ -249,8 +260,7 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
             if (distance < -sphere.radius)
             {
                 //model is behind the camera
-                //continue;
-                return;
+                EARLY_OUT;
             }
 
             auto& light = entity.getComponent<LightVolume>();
@@ -258,8 +268,7 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
             if (l2 > light.maxVisibilityDistance)
             {
                 //model is out of bounds
-                //continue;
-                return;
+                EARLY_OUT;
             }
 
             bool visible = true;
@@ -272,11 +281,15 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
             if (visible)
             {
                 light.cullAttenuation = 1.f - smoothstep(light.maxVisibilityDistance - (light.maxVisibilityDistance * 0.33f), light.maxVisibilityDistance, l2);
-                
+#ifdef USE_PARALLEL_PROCESSING
                 std::scoped_lock l(mutex);
+#endif
                 drawList.push_back(entity);
             }
-        });
+        }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 }
 
 void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)

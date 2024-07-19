@@ -42,8 +42,11 @@ source distribution.
 #include "../../graphics/shaders/Sprite.hpp"
 
 #include <string>
+
+#ifdef USE_PARALLEL_PROCESSING
 #include <mutex>
 #include <execution>
+#endif
 
 namespace
 {
@@ -139,7 +142,8 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
                 //std::scoped_lock l(mutex);
                 drawlist.push_back(entity);
             }
-        }//);
+        }
+    //);
 
     DPRINT("Visible 2D ents", std::to_string(drawlist.size()));
 

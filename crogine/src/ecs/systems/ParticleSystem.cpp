@@ -46,8 +46,10 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+#ifdef USE_PARALLEL_PROCESSING
 #include <execution>
 #include <mutex>
+#endif
 
 #ifdef CRO_DEBUG_
 #include <crogine/gui/Gui.hpp>
@@ -337,11 +339,15 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
     }
 
     const auto& entities = getEntities();
+
+#ifdef USE_PARALLEL_PROCESSING
     std::mutex mutex;
 
-    //for (auto entity : entities)
     for_each(std::execution::par, entities.cbegin(), entities.cend(), 
         [&](Entity entity)
+#else
+    for (auto entity : entities)
+#endif
         {
             auto& emitter = entity.getComponent<ParticleEmitter>();
             const auto emitterDirection = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
@@ -364,12 +370,17 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
                     const auto& frustum = cam.getPass(i).getFrustum();
                     if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
                     {
+#ifdef USE_PARALLEL_PROCESSING
                         std::scoped_lock l(mutex);
+#endif
                         drawlist[i].push_back(entity);
                     }
                 }
             }
-        });
+        }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 
     DPRINT("Visible particle Systems", std::to_string(drawlist[0].size()));
 }

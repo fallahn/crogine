@@ -34,8 +34,10 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
 
+#ifdef USE_PARALLEL_PROCESSING
 #include <mutex>
 #include <execution>
+#endif
 
 using namespace cro;
 
@@ -59,78 +61,84 @@ void SpriteAnimator::process(float dt)
     m_animationEvents.clear();
 
     const auto& entities = getEntities();
+
+#ifdef USE_PARALLEL_PROCESSING
     std::mutex mutex;
 
-    //for (auto& entity : entities) 
-    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(),
         [&, dt](Entity entity)
+#else
+    for (auto entity : entities)
+#endif
+    {
+        auto& animation = entity.getComponent<SpriteAnimation>();
+
+        if (animation.playing)
         {
-            auto& animation = entity.getComponent<SpriteAnimation>();
+            auto& sprite = entity.getComponent<Sprite>();
 
-            if (animation.playing)
+            //TODO we need to somehow make sure this never gets
+            //set out of range - however the anim component doesn't
+            //know how many animations there are - given that they
+            //are stored in the sprite and could theoretically change at any time...
+            //CRO_ASSERT(animation.id < sprite.m_animations.size(), "");
+            if (animation.id >= static_cast<std::int32_t>(sprite.m_animations.size()))
             {
-                auto& sprite = entity.getComponent<Sprite>();
+                animation.stop();
+                EARLY_OUT;
+            }
 
-                //TODO we need to somehow make sure this never gets
-                //set out of range - however the anim component doesn't
-                //know how many animations there are - given that they
-                //are stored in the sprite and could theoretically change at any time...
-                //CRO_ASSERT(animation.id < sprite.m_animations.size(), "");
-                if (animation.id >= static_cast<std::int32_t>(sprite.m_animations.size()))
+            //TODO this should be an assertion as we should never have
+            //tried playing the animation in the first place...
+            if (sprite.m_animations[animation.id].frames.empty())
+            {
+                animation.stop();
+                EARLY_OUT;
+            }
+            //really these two cases should be fixed by moving the frame
+            //data into the animation component, however this will break sprite sheets.
+
+            const auto frameTime = (1.f / (sprite.m_animations[animation.id].framerate * animation.playbackRate));
+            animation.currentFrameTime = std::min(animation.currentFrameTime - dt, frameTime);
+            if (animation.currentFrameTime < 0)
+            {
+                CRO_ASSERT(sprite.m_animations[animation.id].framerate > 0, "");
+                CRO_ASSERT(animation.playbackRate > 0, "");
+                animation.currentFrameTime += frameTime;
+
+                auto lastFrame = animation.frameID;
+                animation.frameID = (animation.frameID + 1) % sprite.m_animations[animation.id].frames.size();
+
+                if (animation.frameID < lastFrame)
                 {
-                    animation.stop();
-                    //continue;
-                    return;
+                    if (!sprite.m_animations[animation.id].looped)
+                    {
+                        animation.stop();
+                        EARLY_OUT;
+                    }
+                    else
+                    {
+                        animation.frameID = std::max(animation.frameID, sprite.m_animations[animation.id].loopStart);
+                    }
                 }
 
-                //TODO this should be an assertion as we should never have
-                //tried playing the animation in the first place...
-                if (sprite.m_animations[animation.id].frames.empty())
+                const auto& frame = sprite.m_animations[animation.id].frames[animation.frameID];
+                sprite.setTextureRect(frame.frame);
+
+                if (frame.event != -1
+                    && m_animationEvents.size() < MaxEvents)
                 {
-                    animation.stop();
-                    //continue;
-                    return;
-                }
-                //really these two cases should be fixed by moving the frame
-                //data into the animation component, however this will break sprite sheets.
-
-                const auto frameTime = (1.f / (sprite.m_animations[animation.id].framerate * animation.playbackRate));
-                animation.currentFrameTime = std::min(animation.currentFrameTime - dt, frameTime);
-                if (animation.currentFrameTime < 0)
-                {
-                    CRO_ASSERT(sprite.m_animations[animation.id].framerate > 0, "");
-                    CRO_ASSERT(animation.playbackRate > 0, "");
-                    animation.currentFrameTime += frameTime;
-
-                    auto lastFrame = animation.frameID;
-                    animation.frameID = (animation.frameID + 1) % sprite.m_animations[animation.id].frames.size();
-
-                    if (animation.frameID < lastFrame)
-                    {
-                        if (!sprite.m_animations[animation.id].looped)
-                        {
-                            animation.stop();
-                            //continue;
-                            return;
-                        }
-                        else
-                        {
-                            animation.frameID = std::max(animation.frameID, sprite.m_animations[animation.id].loopStart);
-                        }
-                    }
-
-                    const auto& frame = sprite.m_animations[animation.id].frames[animation.frameID];
-                    sprite.setTextureRect(frame.frame);
-
-                    if (frame.event != -1
-                        && m_animationEvents.size() < MaxEvents)
-                    {
-                        std::scoped_lock l(mutex);
-                        m_animationEvents.emplace_back(entity, frame.event);
-                    }
+#ifdef USE_PARALLEL_PROCESSING
+                    std::scoped_lock l(mutex);
+#endif
+                    m_animationEvents.emplace_back(entity, frame.event);
                 }
             }
-        });
+        }
+    }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 
     for (const auto& [entity, eventID] : m_animationEvents)
     {
