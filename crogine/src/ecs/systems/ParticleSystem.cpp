@@ -397,8 +397,13 @@ void ParticleSystem::process(float dt)
         handle.boundThisFrame = false;
     }*/
 
-    auto& entities = getEntities();
-    for (auto& e : entities/*m_potentiallyVisible*/)
+    const auto& entities = getEntities();
+    const auto fallbackTextureID = m_fallbackTexture.getGLHandle();
+#ifdef USE_PARALLEL_PROCESSING
+    std::for_each(std::execution::par, entities.begin(), entities.end(), [dt, fallbackTextureID](Entity e)
+#else
+    for (auto e : entities/*m_potentiallyVisible*/)
+#endif
     {
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
@@ -427,7 +432,7 @@ void ParticleSystem::process(float dt)
                 //but the texture may change at runtime.
                 if (emitter.settings.textureID == 0)
                 {
-                    emitter.settings.textureID = m_fallbackTexture.getGLHandle();
+                    emitter.settings.textureID = fallbackTextureID;
                 }
 
                 emitter.m_emissionTime -= rate;
@@ -521,8 +526,8 @@ void ParticleSystem::process(float dt)
             {
                 p.velocity += f * dt;
             }
-            p.position += p.velocity * dt;            
-           
+            p.position += p.velocity * dt;
+
             p.lifetime -= dt;
             p.colour.setAlpha(std::min(1.f, std::max(p.lifetime / p.maxLifeTime, 0.f)));
 
@@ -566,12 +571,24 @@ void ParticleSystem::process(float dt)
                     && (emitter.m_particles[i].loopCount == 0)))
             {
                 emitter.m_nextFreeParticle--;
-                std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);                
+                std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);
             }
         }
         //DPRINT("Next free Particle", std::to_string(emitter.m_nextFreeParticle));
 
         //TODO sort verts by depth? should be drawing back to front for transparency really.
+
+        emitter.m_previousPosition = e.getComponent<cro::Transform>().getWorldPosition();
+
+#ifdef USE_PARALLEL_PROCESSING
+    });
+
+
+    //this still has to be done in the main thread cos OpenGL
+    for(auto e : entities)
+    {
+        auto& emitter = e.getComponent<ParticleEmitter>();
+#endif
 
         //update VBO
         std::size_t idx = 0;
@@ -597,8 +614,6 @@ void ParticleSystem::process(float dt)
         }
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, idx * sizeof(float), m_dataBuffer.data()));
-
-        emitter.m_previousPosition = e.getComponent<cro::Transform>().getWorldPosition();
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
