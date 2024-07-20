@@ -72,7 +72,7 @@ namespace
     static constexpr float MinRollVelocity = -0.25f;
     static constexpr float MaxStoneSlope = 0.9f; //dot prod with vertical - ball is OOB if less than this
 
-    static constexpr float MaxRestitutionIncrease = 0.06f; //depending on the angle of the bounce up to this much is added to restitution multiplier
+    static constexpr float MaxRestitutionIncrease = 0.05f; //depending on the angle of the bounce up to this much is added to restitution multiplier
 
     float getRestitution(glm::vec3 vel, glm::vec3 norm)
     {
