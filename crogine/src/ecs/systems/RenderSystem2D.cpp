@@ -107,9 +107,9 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     const auto renderFlags = camera.getPass(Camera::Pass::Final).renderFlags;
 
     const auto& entities = getEntities();
-    std::mutex mutex;
 
 #ifdef USE_PARALLEL_PROCESSING
+    std::mutex mutex;
     std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
         [&](Entity entity)
 #else

@@ -109,6 +109,7 @@ source distribution.
 //this *doesn't* mean anything is thread-safe
 //outside of its defined scope, if anything 
 //it's probably worse :)
+//#define PARALLEL_GLOBAL_DISABLE
 #ifndef PARALLEL_GLOBAL_DISABLE
 #define USE_PARALLEL_PROCESSING
 #endif
