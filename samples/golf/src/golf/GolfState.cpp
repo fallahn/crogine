@@ -1035,7 +1035,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDL_WINDOWEVENT_FOCUS_GAINED:
-            //this needs to be delayed a frame so mouse clincking on the
+            //this needs to be delayed a frame so mouse clicking on the
             //open window doesn't get sent to the input parser
             if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
                 && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
