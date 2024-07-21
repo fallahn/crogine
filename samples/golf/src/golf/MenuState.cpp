@@ -201,10 +201,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //launches a loading screen (registered in MyApp.cpp)
     CRO_ASSERT(!isCached(), "Don't use loading screen on cached states!");
     context.mainWindow.loadResources([&]() {
-        addSystems();
-        loadAssets();
-        createScene();
-        setVoiceCallbacks();
 
 #ifdef USE_GNS
         Social::findLeaderboards(Social::BoardType::Courses);
@@ -217,7 +213,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             Achievements::update();
         }
 #endif
-        updateUnlockedItems();
+
+        updateUnlockedItems(); //do this before attempting to load the assets...
+        addSystems();
+        loadAssets();
+        createScene();
+        setVoiceCallbacks();
+
         cacheState(StateID::Unlock);
         cacheState(StateID::Options);
         cacheState(StateID::Profile);

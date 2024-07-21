@@ -616,7 +616,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PARALLEL_GLOBAL_DISABLE;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>

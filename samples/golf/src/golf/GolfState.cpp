@@ -4352,6 +4352,18 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 m_puttViewState.isEnabled = true; //this *should* be disabled but we need to enable it here to override state
                 togglePuttingView(false);
+
+                if (m_activeAvatar)
+                {
+                    auto anim = m_activeAvatar->animationIDs[AnimationID::Celebrate];
+                    auto& skel = m_activeAvatar->model.getComponent<cro::Skeleton>();
+
+                    if (skel.getState() == cro::Skeleton::Stopped
+                        || (skel.getActiveAnimations().first != anim && skel.getActiveAnimations().second != anim))
+                    {
+                        skel.play(anim, 1.f, 0.4f);
+                    }
+                }
             }
 
 
