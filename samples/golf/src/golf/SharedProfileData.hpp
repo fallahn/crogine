@@ -37,7 +37,7 @@ source distribution.
 
 struct SharedProfileData final
 {
-    //be careful here! these stores a reference to the resources from the menu state
+    //be careful here! these store a reference to the resources from the menu state
     //however it is used to load models in the profile state - so the profile state
     //must ALWAYS be loaded on top of the menu!!!
     std::vector<cro::ModelDefinition> ballDefs;
@@ -49,13 +49,14 @@ struct SharedProfileData final
     struct
     {
         cro::Material::Data hair;
+        cro::Material::Data hairReflection;
         cro::Material::Data ball;
         cro::Material::Data ballReflection;
         cro::Material::Data avatar;
 
         void reset()
         {
-            hair = ball = ballReflection = avatar = {};
+            hair = hairReflection = ball = ballReflection = avatar = {};
         }
     }profileMaterials;
 

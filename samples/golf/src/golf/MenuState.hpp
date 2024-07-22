@@ -150,6 +150,7 @@ private:
             CelTextured,
             CelTexturedSkinned,
             Hair,
+            HairReflect,
             Billboard,
             BillboardShadow,
             Ground,

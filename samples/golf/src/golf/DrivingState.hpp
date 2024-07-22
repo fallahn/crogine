@@ -137,6 +137,7 @@ private:
             CelTexturedSkinned,
             Course,
             Hair,
+            HairReflect,
             Wireframe,
             WireframeCulled,
             Beacon,

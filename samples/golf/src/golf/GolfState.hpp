@@ -268,6 +268,7 @@ private:
             Leaderboard,
             Player,
             Hair,
+            HairReflect,
             Course,
             Ball,
             BallNight,

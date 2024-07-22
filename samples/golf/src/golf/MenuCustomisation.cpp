@@ -818,7 +818,10 @@ void MenuState::parseAvatarDirectory()
                     modelInfo.model.addComponent<cro::Transform>();
                     md.createModel(modelInfo.model);
 
-                    modelInfo.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
+                    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                    applyMaterialData(md, material); //applies double sidedness
+
+                    modelInfo.model.getComponent<cro::Model>().setMaterial(0, material);
                     modelInfo.model.getComponent<cro::Model>().setHidden(true);
 
                     modelInfo.uid = info.uid;

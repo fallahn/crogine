@@ -155,8 +155,8 @@ static constexpr std::int16_t LeftThumbDeadZone = cro::GameController::LeftThumb
 static constexpr std::int16_t RightThumbDeadZone = cro::GameController::RightThumbDeadZone;
 static constexpr std::int16_t TriggerDeadZone = cro::GameController::TriggerDeadZone;
 
-static constexpr glm::vec3 BallHairScale(0.23f);
-static constexpr glm::vec3 BallHairOffset(0.f, -0.29f, -0.008f);
+static constexpr glm::vec3 PreviewHairScale(0.23f);
+static constexpr glm::vec3 PreviewHairOffset(0.f, -0.29f, -0.008f);
 
 static constexpr float MinMusicVolume = 0.001f;
 
@@ -273,6 +273,7 @@ struct ShaderID final
         Leaderboard,
         Player,
         Hair,
+        HairReflect,
         Course,
         CourseGreen,
         CourseGrid,

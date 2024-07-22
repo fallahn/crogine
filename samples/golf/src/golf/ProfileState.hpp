@@ -140,7 +140,7 @@ private:
     std::array<cro::Entity, CameraID::Count> m_cameras;
 
     std::vector<BallPreview> m_ballModels;
-    std::vector<cro::Entity> m_ballHairModels;
+    std::vector<cro::Entity> m_previewHairModels;
     std::size_t m_ballIndex;
     std::size_t m_ballHairIndex;
 
