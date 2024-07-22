@@ -186,6 +186,7 @@ namespace PacketID
         BallPlaced, //< BilliardBallInput with position in offset member
         SkipTurn, //< uint8 clientID - requests server fast forward current turn
         ClubLevel, //< uint8 client ID | uint8 client club level (max clubs - used to limit to lowest player)
+        Mulligan, //< uint8 client ID - career mode requests a mulligan
 
         //both directions
         ClientVersion, //uint16 FROM server on join contains the game mode, TO server CURRENT_VER of client. Clients are kicked if this does not match the server

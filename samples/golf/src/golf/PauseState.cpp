@@ -35,6 +35,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
+#include "League.hpp"
+#include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <Timeline.hpp>
@@ -247,7 +249,9 @@ void PauseState::buildScene()
             }
 
             {
-                auto players = (m_sharedData.baseState == StateID::Golf && m_sharedData.hosting);
+                auto players = (m_sharedData.baseState == StateID::Golf
+                    && (m_sharedData.leagueRoundID == LeagueRoundID::Club && m_sharedData.hosting)
+                    || m_sharedData.hasMulligan);
                 m_playerButton.getComponent<cro::UIInput>().enabled = players;
                 m_playerButton.getComponent<cro::Transform>().setScale(glm::vec2(players ? 1.f : 0.f));
             }
@@ -448,14 +452,24 @@ void PauseState::buildScene()
     m_minimapButton = entity;
 
     //player management
-    entity = createItem(glm::vec2(0.f, -5.f), "Player Management", menuEntity);
+    const std::string title = m_sharedData.leagueRoundID == LeagueRoundID::Club ? "Player Management" : "Mulligan";
+    entity = createItem(glm::vec2(0.f, -5.f), title, menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
-                    requestStackPush(StateID::PlayerManagement);
+                    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+                    {
+                        requestStackPush(StateID::PlayerManagement);
+                    }
+                    else
+                    {
+                        //we're in career so request a mulligan
+                        postMessage<GolfEvent>(MessageID::GolfMessage)->type = GolfEvent::Mulligan;
+                        quitState();
+                    }
                 }
             });
     entity.getComponent<cro::UIInput>().enabled = false;

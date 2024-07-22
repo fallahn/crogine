@@ -294,6 +294,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             switch (data.type)
             {
             default: break;
+            case GolfEvent::Mulligan:
+                playSoundDelayed(AudioID::Mulligan, data.position, 1.6f, 1.f, MixerChannel::Voice);
+                break;
             case GolfEvent::TargetHit:
                 playSound(AudioID::Target, data.position, 0.2f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 break;

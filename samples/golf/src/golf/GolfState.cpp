@@ -151,7 +151,7 @@ namespace
     constexpr float MaxPuttRotation = 0.4f;// 0.24f;
 
     bool recordCam = false;
-
+    std::int32_t mulliganCount = 0;
 
     bool isFastCPU(const SharedStateData& sd, const ActivePlayer& activePlayer)
     {
@@ -1437,6 +1437,15 @@ void GolfState::handleMessage(const cro::Message& msg)
         switch (data.type)
         {
         default: break;
+        case GolfEvent::Mulligan:
+        {
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::Mulligan,
+                m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            mulliganCount = 0;
+            m_sharedData.hasMulligan = false;
+        }
+        break;
         case GolfEvent::NiceTiming:
             Social::awardXP(10, XPStringID::NiceTiming);
             break;
@@ -5518,6 +5527,11 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions[m_sharedData.crowdDensity]);
 
     Timeline::addEvent(Timeline::Event::NewHole, holeNumberFromIndex());
+
+    if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+    {
+        mulliganCount = 1;
+    }
 }
 
 std::uint32_t GolfState::holeNumberFromIndex() const
@@ -6151,6 +6165,19 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto fcRot = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldRotation();
     m_freeCam.getComponent<FpsCamera>().resetTransition(fcPos, fcRot);
     m_freeCam.getComponent<cro::Camera>().resizeCallback(m_freeCam.getComponent<cro::Camera>());
+
+
+    //if we're not on the tee and there's a mulligan available
+    //set it to be allowed from the menu
+    if (glm::length2(m_holeData[m_currentHole].tee - player.position) > 0.1f)
+    {
+        //crude way of telling if we're not at the tee
+        m_sharedData.hasMulligan = m_sharedData.leagueRoundID != LeagueRoundID::Club && mulliganCount != 0;
+    }
+    else
+    {
+        m_sharedData.hasMulligan = false;
+    }
 }
 
 void GolfState::predictBall(float powerPct)
