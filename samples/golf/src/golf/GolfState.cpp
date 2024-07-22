@@ -1444,6 +1444,16 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             mulliganCount = 0;
             m_sharedData.hasMulligan = false;
+
+            //hide the stroke indicator
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
+            cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Model>().setHidden(true);
+                    e.getComponent<cro::Callback>().active = false;
+                };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         break;
         case GolfEvent::NiceTiming:

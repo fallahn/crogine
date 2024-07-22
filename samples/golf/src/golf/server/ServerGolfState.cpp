@@ -1194,6 +1194,7 @@ void GolfState::applyMulligan()
     {
         m_playerInfo[0].holeScore[m_currentHole] = m_playerInfo[0].previousBallScore;
         m_playerInfo[0].position = m_playerInfo[0].prevBallPos;
+        m_playerInfo[0].terrain = m_scene.getSystem<BallSystem>()->getTerrain(m_playerInfo[0].position).terrain;
 
         //set the ball to its previous position
         auto ball = m_playerInfo[0].ballEntity;
@@ -1216,9 +1217,6 @@ void GolfState::applyMulligan()
         info.lie = ballC.lie;
         m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable);
 
-
-        //TODO do we want to set the last distance to zero? as this
-        //next move will send a score update...
         ballC.lastStrokeDistance = 0.f;
 
         setNextPlayer();
