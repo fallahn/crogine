@@ -56,6 +56,8 @@ static inline bool operator != (const ActivePlayer& a, const ActivePlayer& b)
 struct PlayerStatus final : public ActivePlayer
 {
     cro::Entity ballEntity;
+    glm::vec3 prevBallPos = glm::vec3(0.f); //used for returning the ball after a mulligan
+    std::uint8_t previousBallScore = 0; //also used for mulligan
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
     std::vector<float> distanceScore;

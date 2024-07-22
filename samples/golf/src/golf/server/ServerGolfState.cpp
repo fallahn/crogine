@@ -361,6 +361,9 @@ void GolfState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::Mulligan:
+            applyMulligan();
+            break;
         case PacketID::ClubChanged:
             m_sharedData.host.broadcastPacket(PacketID::ClubChanged, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
@@ -697,7 +700,9 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
 
             if (!predict)
             {
+                m_playerInfo[0].previousBallScore = m_playerInfo[0].holeScore[m_currentHole];
                 m_playerInfo[0].holeScore[m_currentHole]++;
+                m_playerInfo[0].prevBallPos = ball.startPoint;
 
                 auto animID = isPutt ? AnimationID::Putt : AnimationID::Swing;
                 m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -1177,6 +1182,46 @@ void GolfState::skipCurrentTurn(std::uint8_t clientID)
             m_scene.getSystem<BallSystem>()->fastForward(m_playerInfo[0].ballEntity);
             break;
         }
+    }
+}
+
+void GolfState::applyMulligan()
+{
+    //TODO probably want so checks to make sure
+    //this is legit in career mode...
+    if (m_playerInfo.size() == 1
+        && m_playerInfo[0].ballEntity.getComponent<Ball>().state == Ball::State::Idle)
+    {
+        m_playerInfo[0].holeScore[m_currentHole] = m_playerInfo[0].previousBallScore;
+        m_playerInfo[0].position = m_playerInfo[0].prevBallPos;
+
+        //set the ball to its previous position
+        auto ball = m_playerInfo[0].ballEntity;
+        ball.getComponent<cro::Transform>().setPosition(m_playerInfo[0].prevBallPos);
+
+
+        auto timestamp = m_serverTime.elapsed().asMilliseconds();
+        auto& ballC = ball.getComponent<Ball>();
+        ballC.lie = 1;
+
+        ActorInfo info;
+        info.serverID = static_cast<std::uint32_t>(ball.getIndex());
+        info.position = ball.getComponent<cro::Transform>().getPosition();
+        info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
+        info.windEffect = ballC.windEffect;
+        info.timestamp = timestamp;
+        info.clientID = m_playerInfo[0].client;
+        info.playerID = m_playerInfo[0].player;
+        info.state = static_cast<std::uint8_t>(ballC.state);
+        info.lie = ballC.lie;
+        m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable);
+
+
+        //TODO do we want to set the last distance to zero? as this
+        //next move will send a score update...
+        ballC.lastStrokeDistance = 0.f;
+
+        setNextPlayer();
     }
 }
 
