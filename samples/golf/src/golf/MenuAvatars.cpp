@@ -412,6 +412,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             if (hair.model.isValid())
             {
                 hair.model.getComponent<cro::Model>().setHidden(false);
+                hair.model.getComponent<cro::Model>().setFacing(profile.flipped ? cro::Model::Facing::Back : cro::Model::Facing::Front);
                 m_playerAvatars[idx].hairAttachment->setModel(hair.model);
 
                 //apply hair colour to material
