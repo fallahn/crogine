@@ -456,6 +456,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
                 {
                     m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+                    m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
                 }
 
                 //don't forward this to the menu system
@@ -1244,6 +1245,7 @@ void ProfileState::buildScene()
                     if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
                     {
                         m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
                     }
 
                     //update swatch
@@ -2215,6 +2217,15 @@ void ProfileState::buildPreviewScene()
 
         entity.getComponent<cro::Model>().setHidden(true);
         entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        if (hair.getMaterialCount() == 2)
+        {
+            auto material2 = m_profileData.profileMaterials.hairReflection;
+            applyMaterialData(hair, material2, 1);
+            entity.getComponent<cro::Model>().setMaterial(1, material2);
+        }
+
+
         m_avatarHairModels.push_back(entity);
         
         //these arent ball hair, they're preview for thumbs
@@ -2225,6 +2236,15 @@ void ProfileState::buildPreviewScene()
         hair.createModel(entity);
         entity.getComponent<cro::Model>().setMaterial(0, material);
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", CD32::Colours[CD32::Orange]);
+
+        if (hair.getMaterialCount() == 2)
+        {
+            auto material2 = m_profileData.profileMaterials.hairReflection;
+            applyMaterialData(hair, material2, 1);
+            entity.getComponent<cro::Model>().setMaterial(1, material2);
+            entity.getComponent<cro::Model>().setMaterialProperty(2, "u_hairColour", CD32::Colours[CD32::Orange]);
+        }
+
         entity.getComponent<cro::Model>().setHidden(true);
         m_previewHairModels.push_back(entity);
     }
@@ -2313,6 +2333,7 @@ void ProfileState::createPalettes(cro::Entity parent)
                     if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
                     {
                         m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
                     }
                 };
 
@@ -2336,6 +2357,7 @@ void ProfileState::createPalettes(cro::Entity parent)
                     if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
                     {
                         m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[e.getComponent<cro::Callback>().getUserData<std::uint8_t>()]);
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[e.getComponent<cro::Callback>().getUserData<std::uint8_t>()]);
                     }
                 }
 
@@ -3346,6 +3368,7 @@ void ProfileState::setHairIndex(std::size_t idx)
     {
         m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIndex]);
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
     }
     m_avatarModels[m_avatarIndex].hairIndex = hairIndex;
 

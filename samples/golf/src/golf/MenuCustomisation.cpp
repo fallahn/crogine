@@ -824,6 +824,15 @@ void MenuState::parseAvatarDirectory()
                     modelInfo.model.getComponent<cro::Model>().setMaterial(0, material);
                     modelInfo.model.getComponent<cro::Model>().setHidden(true);
 
+                    if (md.getMaterialCount() == 2)
+                    {
+                        //add the shiny material on the second channel
+                        material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        applyMaterialData(md, material, 1);
+
+                        modelInfo.model.getComponent<cro::Model>().setMaterial(1, material);
+                    }
+
                     modelInfo.uid = info.uid;
                 }
 

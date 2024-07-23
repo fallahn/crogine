@@ -2433,7 +2433,6 @@ void DrivingState::createPlayer()
     material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][0]); //there's only ever going to be one player so just use the first tex
     entity.getComponent<cro::Model>().setMaterial(0, material);
 
-
     std::fill(m_avatar.animationIDs.begin(), m_avatar.animationIDs.end(), AnimationID::Invalid);
     if (entity.hasComponent<cro::Skeleton>())
     {
@@ -2499,9 +2498,24 @@ void DrivingState::createPlayer()
                 md.createModel(hairEnt);
 
                 //set material and colour
+                const auto hairColour = pc::Palette[playerData.avatarFlags[pc::ColourKey::Hair]];
                 auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
-                mat.setProperty("u_hairColour", pc::Palette[playerData.avatarFlags[pc::ColourKey::Hair]]);
+                applyMaterialData(md, mat, 0); //applies double sisded property
+                mat.setProperty("u_hairColour", hairColour);
                 hairEnt.getComponent<cro::Model>().setMaterial(0, mat);
+
+                //this needs to be captured by player callback, below
+                auto matCount = 1;
+                if (md.getMaterialCount() == 2)
+                {
+                    mat = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                    applyMaterialData(md, mat, 1);
+                    mat.setProperty("u_hairColour", hairColour);
+                    hairEnt.getComponent<cro::Model>().setMaterial(1, mat);
+
+                    matCount = 2;
+                }
+
 
                 skel.getAttachments()[id].setModel(hairEnt);
 
@@ -2513,12 +2527,17 @@ void DrivingState::createPlayer()
                 //fade callback
                 hairEnt.addComponent<cro::Callback>().active = true;
                 hairEnt.getComponent<cro::Callback>().function =
-                    [&](cro::Entity e, float)
+                    [&, matCount](cro::Entity e, float)
                 {
                     float alpha = std::abs(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
                     alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
 
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
+
+                    if (matCount == 2)
+                    {
+                        e.getComponent<cro::Model>().setMaterialProperty(1, "u_fadeAmount", alpha);
+                    }
                 };
             }
         }

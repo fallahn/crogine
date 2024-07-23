@@ -2088,9 +2088,20 @@ void GolfState::loadModels()
                             //set material and colour
                             material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
                             applyMaterialData(md, material); //applies double sidedness
-                            material.setProperty("u_hairColour", pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]]);
+
+                            const auto hairColour = pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]];
+                            material.setProperty("u_hairColour", hairColour);
                             hairEnt.getComponent<cro::Model>().setMaterial(0, material);
                             hairEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
+
+                            if (md.getMaterialCount() == 2)
+                            {
+                                material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                                applyMaterialData(md, material, 1);
+                                material.setProperty("u_hairColour", hairColour);
+                                hairEnt.getComponent<cro::Model>().setMaterial(1, material);
+                            }
+
 
                             skel.getAttachments()[id].setModel(hairEnt);
 
