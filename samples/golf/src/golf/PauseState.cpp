@@ -250,8 +250,8 @@ void PauseState::buildScene()
 
             {
                 auto players = (m_sharedData.baseState == StateID::Golf
-                    && (m_sharedData.leagueRoundID == LeagueRoundID::Club && m_sharedData.hosting)
-                    || m_sharedData.hasMulligan);
+                    && ((m_sharedData.leagueRoundID == LeagueRoundID::Club && m_sharedData.hosting)
+                    || m_sharedData.hasMulligan));
                 m_playerButton.getComponent<cro::UIInput>().enabled = players;
                 m_playerButton.getComponent<cro::Transform>().setScale(glm::vec2(players ? 1.f : 0.f));
             }
@@ -262,7 +262,7 @@ void PauseState::buildScene()
                 e.getComponent<cro::Callback>().active = false;
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
-                m_scene.getSystem<cro::UISystem>()->selectAt(0);
+                m_scene.getSystem<cro::UISystem>()->selectByIndex(0);
 
                 Timeline::setGameMode(Timeline::GameMode::Menu);
             }
@@ -452,7 +452,7 @@ void PauseState::buildScene()
     m_minimapButton = entity;
 
     //player management
-    const std::string title = m_sharedData.leagueRoundID == LeagueRoundID::Club ? "Player Management" : "Mulligan";
+    const std::string title = m_sharedData.leagueRoundID == LeagueRoundID::Club ? "Player Management" : "Take A Mulligan";
     entity = createItem(glm::vec2(0.f, -5.f), title, menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =

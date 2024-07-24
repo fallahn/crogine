@@ -6219,6 +6219,8 @@ void GolfState::predictBall(float powerPct)
 
 void GolfState::hitBall()
 {
+    m_sharedData.hasMulligan = false;
+
     auto club = getClub();
     auto facing = cro::Util::Maths::sgn(m_activeAvatar->model.getComponent<cro::Transform>().getScale().x);
     auto lie = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<ClientCollider>().lie;

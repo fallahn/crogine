@@ -1368,6 +1368,133 @@ void GolfState::buildUI()
     windEnt2.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //displays if a mulligan is available in Career
+    if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+    {
+        auto mRoot = m_uiScene.createEntity();
+        mRoot.addComponent<cro::Transform>();
+        mRoot.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        mRoot.addComponent<UIElement>();// .relativePosition = { 0.01f, 0.01f };
+        mRoot.getComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x + 4.f, (WindIndicatorPosition.y / 2.f) - 6.f };
+        mRoot.getComponent<UIElement>().depth = 1.f;
+        infoEnt.getComponent<cro::Transform>().addChild(mRoot.getComponent<cro::Transform>());
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.getComponent<cro::Text>().setString("M");
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        mRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        auto mEnt = entity;
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f });
+        entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.getComponent<cro::Text>().setString("Mulligan Available");
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        mRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        auto tEnt = entity;
+
+        struct MulliganData final
+        {
+            enum
+            {
+                Hide, Shrink, Grow,
+                Hold
+            };
+            std::int32_t state = 0;
+            float progress = 0.f;
+            float currTime = 5.f;
+
+        };
+        static constexpr float SpinTime = 6.f; //Time between spins
+
+        mRoot.addComponent<cro::Callback>().active = true;
+        mRoot.getComponent<cro::Callback>().setUserData<MulliganData>();
+        mRoot.getComponent<cro::Callback>().function =
+            [&, mEnt, tEnt](cro::Entity e, float dt) mutable
+            {
+                auto& [state, progress, currTime] = e.getComponent<cro::Callback>().getUserData<MulliganData>();
+                const float Speed = dt * 4.f;
+
+                switch (state)
+                {
+                default: break;
+                case MulliganData::Hide:
+                    if (m_sharedData.hasMulligan)
+                    {
+                        state = MulliganData::Grow;
+                        progress = 0.f;
+                    }
+                    else
+                    {
+                        progress = std::max(0.f, progress - Speed);
+                        const float scale = cro::Util::Easing::easeOutSine(progress);
+                        e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+                    }
+                    break;
+                case MulliganData::Grow:
+                {
+                    progress = std::min(1.f, progress + Speed);
+                    const float scale = cro::Util::Easing::easeInSine(progress);
+                    e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+
+                    if (progress == 1)
+                    {
+                        state = MulliganData::Hold;
+                    }
+                }
+                    break;
+                case MulliganData::Hold:
+                    if (m_sharedData.hasMulligan)
+                    {
+                        //count time to spin
+                        currTime -= dt;
+                        if (currTime < 0.f)
+                        {
+                            currTime = (mEnt.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Back) ? SpinTime : SpinTime / 3.f;
+                            state = MulliganData::Shrink;
+                        }
+                    }
+                    else
+                    {
+                        state = MulliganData::Hide;
+                    }
+                    break;
+                case MulliganData::Shrink:
+                {
+                    progress = std::max(0.f, progress - Speed);
+                    const float scale = cro::Util::Easing::easeOutSine(progress);
+                    e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+
+                    if (progress == 0)
+                    {
+                        state = MulliganData::Grow;
+                        if (mEnt.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Front)
+                        {
+                            mEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                            tEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                        }
+                        else
+                        {
+                            mEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            tEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                        }
+                    }
+                }
+                    break;
+                }
+            };
+    }
+
 
 
     //minimap view
