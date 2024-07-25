@@ -4330,7 +4330,7 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
 void MenuState::updateUnlockedItems()
 {
     //current day streak
-    auto streak =3// Social::updateStreak();
+    auto streak = Social::updateStreak();
     CRO_ASSERT(streak < 8, "");
     switch (streak)
     {

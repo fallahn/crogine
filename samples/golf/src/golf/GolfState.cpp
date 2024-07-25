@@ -5640,6 +5640,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 #endif
 
     m_buttonStates = {};
+    m_gameScene.getSystem<PropFollowSystem>()->setPlayerPosition(player.position);
 
     cro::App::getWindow().setMouseCaptured(true);
     m_achievementTracker.hadBackspin = false;

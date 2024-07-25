@@ -162,6 +162,7 @@ public:
             Poke,
             SkinsWin,
             Snapshot,
+            Toot,
 
             CrowdClearThroat,
             CrowdCough,

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "PropFollowSystem.hpp"
 #include "CollisionMesh.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -44,7 +45,8 @@ namespace
 
 PropFollowSystem::PropFollowSystem(cro::MessageBus& mb, const CollisionMesh& cm)
     : cro::System   (mb, typeid(PropFollowSystem)),
-    m_collisionMesh (cm)
+    m_collisionMesh (cm),
+    m_playerPosition(glm::vec3(0.f))
 {
     requireComponent<PropFollower>();
     requireComponent<cro::Transform>();
@@ -71,13 +73,40 @@ void PropFollowSystem::process(float dt)
             }
             else
             {
+                //check proximity to player position so we don't bump into them :)
+                static constexpr float MaxProximity = 5.f;
+                static constexpr float MaxProximitySqr = MaxProximity * MaxProximity;
+                auto proximitySpeed = glm::length2(entity.getComponent<cro::Transform>().getWorldPosition() - m_playerPosition);
+                if (proximitySpeed < MaxProximitySqr)
+                {
+                    proximitySpeed = glm::smoothstep(0.5f, 0.99f, std::sqrt(proximitySpeed) / MaxProximity);
+
+                    if (proximitySpeed == 0)
+                    {
+                        follower.waitTimeout -= dt;
+                        if (follower.waitTimeout < 0)
+                        {
+                            follower.waitTimeout = PropFollower::WaitTime + cro::Util::Random::value(5, 10);
+
+                            auto* msg = postMessage<CollisionEvent>(cl::MessageID::CollisionMessage);
+                            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                            msg->terrain = CollisionEvent::Special::Timeout;
+                            msg->type = CollisionEvent::Begin;
+                        }
+                    }
+                }
+                else
+                {
+                    proximitySpeed = 1.f;
+                }
+
                 for (auto& point : follower.axis)
                 {
                     auto targetPos = follower.path.getPoint(point.target);
                     auto dir = targetPos - point.position;
                     auto len2 = glm::length2(glm::vec2(dir.x, dir.z));
 
-                    point.position += glm::normalize(dir) * follower.speed * dt;
+                    point.position += glm::normalize(dir) * follower.speed * proximitySpeed * dt;
                     //point.position = cro::Util::Maths::smoothDamp(point.position, targetPos, point.velocity, 0.0125f, dt, follower.speed);
 
                     if (len2 < MinTargetRadSqr)

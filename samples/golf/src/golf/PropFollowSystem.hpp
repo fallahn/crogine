@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -47,7 +47,7 @@ struct PropFollower final
     void initAxis(cro::Entity);
 
     float rotation = 0.f;
-    float  targetRotation = 0.f;
+    float targetRotation = 0.f;
     float speed = 6.f;
     bool loop = true;
 
@@ -57,6 +57,9 @@ struct PropFollower final
     }state = Idle;
     float idleTime = 0.f;
     float stateTimer = 0.f;
+
+    static constexpr float WaitTime = 12.f;
+    float waitTimeout = WaitTime;
 };
 
 class CollisionMesh;
@@ -67,9 +70,11 @@ public:
     PropFollowSystem(cro::MessageBus&, const CollisionMesh&);
 
     void process(float) override;
+    void setPlayerPosition(glm::vec3 pos) { m_playerPosition = pos; }
 
 private:
     const CollisionMesh& m_collisionMesh;
+    glm::vec3 m_playerPosition;
 
     void onEntityAdded(cro::Entity) override;
 };

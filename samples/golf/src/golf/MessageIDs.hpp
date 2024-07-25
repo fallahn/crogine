@@ -135,7 +135,8 @@ struct CollisionEvent final
 
     enum Special
     {
-        Billboard = -3,
+        Timeout = -4,
+        Billboard,
         Firework,
         FlagPole
     };
