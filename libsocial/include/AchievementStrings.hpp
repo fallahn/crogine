@@ -154,7 +154,11 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "happy_snapper",
     "starting_out",
     "hang_of_it",
-    "pro_show"
+    "pro_show",
+    "punch_it",
+    "top_flop",
+    "fringe_benefit",
+    "mulligan"
 };
 
 //appears on the notification
@@ -267,7 +271,11 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Happy Snapper",
     "Starting Out",
     "Getting The Hang Of It",
-    "Pro Show"
+    "Pro Show",
+    "Punch It Chewie!",
+    "Top Of The Flops",
+    "Fringe Benefit",
+    "Try, Try Again"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -381,6 +389,10 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Come first in any Career round using the Novice clubs", false),
     std::make_pair("Come first in any Career round using the Expert clubs", false),
     std::make_pair("Come first in any Career round using the Pro clubs", false),
+    std::make_pair("Hole out with a Punch shot", false),
+    std::make_pair("Hole out with a Flop shot", false),
+    std::make_pair("Sink a hole from the fringe using a putter", false),
+    std::make_pair("Use at least one Mulligan in Career Mode", false),
 };
 
 //assuming trophies load correctly they are:
@@ -528,6 +540,11 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*106*/TrophyID::BronzeFigure,
     /*107*/TrophyID::SilverFigure,
     /*108*/TrophyID::GoldFigure,
+
+    /*109*/TrophyID::Platinum,
+    /*110*/TrophyID::GoldFigure,
+    /*111*/TrophyID::SilverCup,
+    /*112*/TrophyID::BronzeCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

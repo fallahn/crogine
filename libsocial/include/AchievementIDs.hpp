@@ -166,6 +166,11 @@ namespace AchievementID
         GettingTheHangOfIt,
         ProShow,
 
+        PunchIt,
+        TopOfTheFlops,
+        FringeBenefit,
+        TryTryAgain,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
