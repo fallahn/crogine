@@ -107,7 +107,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
     for (auto i = 0; i < passCount; ++i)
     {
-#ifdef USE_PARALLEL_PROCESSING
+#if defined USE_PARALLEL_PROCESSING && !defined __linux__
         std::sort(std::execution::par, std::begin(drawList[i]), std::end(drawList[i]),
 #else
         std::sort(std::begin(drawList[i]), std::end(drawList[i]),
