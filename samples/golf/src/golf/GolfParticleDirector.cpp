@@ -198,6 +198,10 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             case CollisionEvent::Billboard:
                 getEnt(ParticleID::Explode, data.position);
                 break;
+            case CollisionEvent::Timeout:
+            case CollisionEvent::Firework:
+            case CollisionEvent::FlagPole:
+                break;
             }
         }
     }

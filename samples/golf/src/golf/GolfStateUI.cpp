@@ -1444,7 +1444,7 @@ void GolfState::buildUI()
                 case MulliganData::Grow:
                 {
                     progress = std::min(1.f, progress + Speed);
-                    const float scale = cro::Util::Easing::easeInSine(progress);
+                    const float scale = cro::Util::Easing::easeOutSine(progress);
                     e.getComponent<cro::Transform>().setScale({ scale, 1.f });
 
                     if (progress == 1)

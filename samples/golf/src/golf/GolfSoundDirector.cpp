@@ -183,7 +183,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/menu/poke.wav",
         "assets/golf/sound/menu/skins.wav",
         "assets/golf/sound/menu/snapshot.wav",
-        "assets/golf/sound/menu/toot.wav",
+        "assets/golf/sound/menu/toot2.wav",
 
         "assets/golf/sound/ambience/crowd_clear_throat.wav",
         "assets/golf/sound/ambience/crowd_cough.wav",
@@ -601,7 +601,16 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 switch (data.terrain)
                 {
                 case CollisionEvent::Special::Timeout:
-                    playSound(AudioID::Toot, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Vehicles);
+                {
+                    auto e = playSound(AudioID::Toot, data.position);
+                    e .getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Vehicles);
+                    e.getComponent<cro::AudioEmitter>().setVolume(0.6f);
+
+                    if (cro::Util::Random::value(0, 2) == 0)
+                    {
+                        playSoundDelayed(AudioID::Toot, data.position, 0.2f, 0.6f, MixerChannel::Vehicles);
+                    }
+                }
                     break;
                 case CollisionEvent::Billboard:
                     playSound(AudioID::BadSport, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);

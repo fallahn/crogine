@@ -81,7 +81,7 @@ void PropFollowSystem::process(float dt)
                 {
                     proximitySpeed = glm::smoothstep(0.5f, 0.99f, std::sqrt(proximitySpeed) / MaxProximity);
 
-                    if (proximitySpeed == 0)
+                    if (proximitySpeed < 0.01f)
                     {
                         follower.waitTimeout -= dt;
                         if (follower.waitTimeout < 0)

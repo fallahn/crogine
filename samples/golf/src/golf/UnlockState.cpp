@@ -640,14 +640,14 @@ void UnlockState::buildUI()
         {
             const auto str = "\nTotal Streak: " + std::to_string(Social::getCurrentStreak()) + " Days";
             auto e = m_scene.createEntity();
-            e.addComponent<cro::Transform>().setPosition({ 0.f, -24.f, 0.f });
+            e.addComponent<cro::Transform>().setPosition({ 0.f, -16.f, 0.f });
             e.addComponent<cro::Drawable2D>();
             e.addComponent<cro::Text>(smallFont);
             e.getComponent<cro::Text>().setString(str);
-            e.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::BlueLight]);
+            e.getComponent<cro::Text>().setFillColour(/*CD32::Colours[CD32::BlueDark]*/LeaderboardTextDark);
             e.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
             e.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-            e.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+            //e.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
             e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
             entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         }
