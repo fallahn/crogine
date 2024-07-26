@@ -50,6 +50,7 @@ PlayerInfo& PlayerInfo::operator=(const PlayerData& pd)
     ballColourIndex = pd.ballColourIndex;
     ballID = pd.ballID;
     hairID = pd.hairID;
+    hatID = pd.hatID;
     skinID = pd.skinID;
     flipped = pd.flipped;
     isCPU = pd.isCPU;

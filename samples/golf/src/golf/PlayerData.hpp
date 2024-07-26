@@ -73,6 +73,7 @@ struct PlayerData final
     std::uint8_t ballColourIndex = 255; //ignore the palette if not in range and set to white
     std::uint32_t ballID = 0;
     std::uint32_t hairID = 0;
+    std::uint32_t hatID = 0;
     std::uint32_t skinID = 0; //uid as loaded from the avatar data file
     bool flipped = false; //whether or not avatar flipped/southpaw
     bool isCPU = false; //these bools are flagged as bits in a single byte when serialised

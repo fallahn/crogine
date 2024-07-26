@@ -46,6 +46,7 @@ PlayerData& PlayerData::operator=(const sv::PlayerInfo& pi)
     ballColourIndex = pi.ballColourIndex;
     ballID = pi.ballID;
     hairID = pi.hairID;
+    hatID = pi.hatID;
     skinID = pi.skinID;
     flipped = pi.flipped;
     isCPU = pi.isCPU;
@@ -69,6 +70,7 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("ball_colour").setValue(ballColourIndex);
     cfg.addProperty("ball_id").setValue(ballID);
     cfg.addProperty("hair_id").setValue(hairID);
+    cfg.addProperty("hat_id").setValue(hatID);
     cfg.addProperty("skin_id").setValue(skinID);
     cfg.addProperty("flipped").setValue(flipped);
     cfg.addProperty("flags0").setValue(avatarFlags[0]);
@@ -155,6 +157,11 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             {
                 auto id = prop.getValue<std::uint32_t>();
                 hairID = id;
+            }
+            else if (n == "hat_id")
+            {
+                auto id = prop.getValue<std::uint32_t>();
+                hatID = id;
             }
             else if (n == "skin_id")
             {
