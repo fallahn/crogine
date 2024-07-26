@@ -185,7 +185,7 @@ if(NOT TARGET crogine)
     target_link_libraries(${PROJECT_NAME} ${LIBUNWIND_LIBRARIES})
 
     if(USE_TBB)
-      target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
+      target_link_libraries(${PROJECT_NAME} TBB::tbb)
     endif()
   endif()
 
