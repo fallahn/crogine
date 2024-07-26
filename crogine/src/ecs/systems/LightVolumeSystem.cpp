@@ -201,7 +201,7 @@ void LightVolumeSystem::process(float)
     std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
         [](Entity entity)
 #else
-    for (auto entity : getEntities())
+    for (auto entity : entities)
 #endif
     {
         const auto& model = entity.getComponent<Model>();
