@@ -1159,6 +1159,7 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
     static constexpr float ToFeet = 3.281f;
     static constexpr float ToInches = 12.f;
 
+
     const std::string Prefix = isTarget ? "Target: " : "Pin: ";
 
     if (imperial)

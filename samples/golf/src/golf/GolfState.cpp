@@ -192,6 +192,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_useDOF                (false),
     m_restoreInput          (false),
     m_activeAvatar          (nullptr),
+    m_terrainLevel          (0.f),
     m_camRotation           (0.f),
     m_roundEnded            (false),
     m_newHole               (true),
@@ -6164,7 +6165,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     retargetMinimap(false); //must do this after current player position is set...
 
-
+    calcTerrainLevel();
 
     //reset the freecam based on new player position
     auto fcPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();

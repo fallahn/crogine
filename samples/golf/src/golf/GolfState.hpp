@@ -488,6 +488,7 @@ private:
     };
     std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
+    glm::vec3 m_terrainLevel;
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;
     bool m_newHole; //prevents closing scoreboard until everyone is ready
@@ -516,6 +517,7 @@ private:
     void showScoreboard(bool visible);
     void updateWindDisplay(glm::vec3);
     float estimatePuttPower();
+    void calcTerrainLevel();
 
     enum class MessageBoardID
     {

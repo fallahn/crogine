@@ -4385,6 +4385,22 @@ float GolfState::estimatePuttPower()
     return std::clamp(guestimation + (0.25f * slope), 0.f, 1.f);
 }
 
+void GolfState::calcTerrainLevel()
+{
+    const auto terrain = m_collisionMesh.getTerrain(m_currentPlayer.position);
+    if (terrain.terrain != TerrainID::Green
+        && m_currentPlayer.position != m_holeData[m_currentHole].tee)
+    {
+        const auto fwd = glm::normalize(m_holeData[m_currentHole].pin - m_currentPlayer.position);
+        const auto up = terrain.normal;
+        m_terrainLevel = glm::inverse(m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldRotation()) * glm::cross(fwd, up);
+    }
+    else
+    {
+        m_terrainLevel = { 1.f, 0.f, 0.f };
+    }
+}
+
 void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();

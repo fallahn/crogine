@@ -242,14 +242,16 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("asefsd"))
-    //        {
-
-    //        }
-    //        ImGui::End();
-    //    });
+    /*registerWindow([&]() 
+        {
+            if (ImGui::Begin("asefsd"))
+            {
+                auto up = m_collisionMesh.getTerrain(m_currentPlayer.position).normal;
+                ImGui::Text("Level: %3.4f, %3.4f", m_terrainLevel.x, m_terrainLevel.y);
+                ImGui::Text("Up: %3.4f, %3.4f", up.x, up.y);
+            }
+            ImGui::End();
+        });*/
 
     registerCommand("refresh_turn", [&](const std::string&)
         {
