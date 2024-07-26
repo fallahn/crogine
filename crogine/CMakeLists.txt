@@ -71,7 +71,7 @@ endif()
 #versions of gcc older than 9 don't support parallel execution policies
 if(CMAKE_COMPILER_IS_GNUCC AND
   CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8)
-  SET(USE_LTBB true)
+  SET(USE_TBB true)
 else()
   add_definitions(-DPARALLEL_GLOBAL_DISABLE)
 endif()
@@ -108,6 +108,9 @@ if(MSVC)
   find_package(DbgHelp REQUIRED)
 elseif(LINUX)
   find_package(Libunwind REQUIRED)
+  if(USE_TBB)
+    find_package(TBB REQUIRED)
+  endif()
 endif()
 
 include_directories(
@@ -160,9 +163,7 @@ if(NOT TARGET crogine)
     add_library(${PROJECT_NAME} SHARED ${PROJECT_SRC})
   endif()
 
-  if(USE_LTBB)
-    target_link_options(${PROJECT_NAME} PUBLIC -ltbb)
-  endif()
+
 
   target_compile_definitions(${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG_>)
 
@@ -182,6 +183,10 @@ if(NOT TARGET crogine)
     target_link_libraries(${PROJECT_NAME} winmm ws2_32 IPHLPAPI ${DBGHELP_LIBRARIES} shlwapi)
   elseif(LINUX)
     target_link_libraries(${PROJECT_NAME} ${LIBUNWIND_LIBRARIES})
+
+    if(USE_TBB)
+      target_link_libraries(${PROJECT_NAME} PUBLIC TBB::tbb)
+    endif()
   endif()
 
   target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
