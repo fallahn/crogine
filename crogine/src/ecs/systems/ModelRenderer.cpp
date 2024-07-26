@@ -107,9 +107,9 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
     for (auto i = 0; i < passCount; ++i)
     {
-//apprently this won't work on gcc 9/10 (and should be disabled on lower versions anyway)
+//apprently this won't work on gcc 9/10/11 (and should be disabled on lower versions anyway)
 #ifndef _MSC_VER
-#if __GNUC__ <= 10
+#if __GNUC__ <= 12
 #ifdef USE_PARALLEL_PROCESSING
 #undef USE_PARALLEL_PROCESSING
 #define GNUC_UNSUPPORTED
