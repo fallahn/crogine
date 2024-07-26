@@ -346,15 +346,15 @@ struct Avatar final
 };
 
 //TODO these aren't used now
-static inline const std::array BallTints =
-{
-    cro::Colour(1.f,0.937f,0.752f), //default
-    cro::Colour(1.f,0.364f,0.015f), //pumpkin
-    cro::Colour(0.1176f, 0.2f, 0.45f), //planet
-    cro::Colour(0.937f, 0.76f, 0.235f), //snail
-    cro::Colour(0.015f,0.031f,1.f), //bowling
-    cro::Colour(0.964f,1.f,0.878f) //snowman
-};
+//static inline const std::array BallTints =
+//{
+//    cro::Colour(1.f,0.937f,0.752f), //default
+//    cro::Colour(1.f,0.364f,0.015f), //pumpkin
+//    cro::Colour(0.1176f, 0.2f, 0.45f), //planet
+//    cro::Colour(0.937f, 0.76f, 0.235f), //snail
+//    cro::Colour(0.015f,0.031f,1.f), //bowling
+//    cro::Colour(0.964f,1.f,0.878f) //snowman
+//};
 
 static inline std::int32_t courseOfTheMonth()
 {

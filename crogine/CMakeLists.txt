@@ -27,6 +27,7 @@ SET(USE_OPENAL TRUE CACHE BOOL "Choose whether to use OpenAL for audio or SDL_Mi
 SET(TARGET_ANDROID FALSE CACHE BOOL "Build the library for Android devices")
 
 SET(USE_GL_41 FALSE CACHE BOOL "Use OpenGL 4.1 instead of 4.6 on desktop builds.")
+SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires compiler support")
 
 if(${TARGET_ANDROID})
   SET(${CMAKE_TOOLCHAIN_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/android-arm.cmake")
@@ -60,6 +61,9 @@ endif()
 
 if (MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  if (NOT USE_PARALLEL_EXECUTION)
+    add_definitions(-DPARALLEL_GLOBAL_DISABLE)
+  endif()
 endif()
 
 if (APPLE)
@@ -70,7 +74,8 @@ endif()
 
 #versions of gcc older than 9 don't support parallel execution policies
 if(CMAKE_COMPILER_IS_GNUCC AND
-  CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8)
+  CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8 AND
+  USE_PARALLEL_EXECUTION)
   SET(USE_TBB true)
 else()
   add_definitions(-DPARALLEL_GLOBAL_DISABLE)
