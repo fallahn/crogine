@@ -79,6 +79,7 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("flags3").setValue(avatarFlags[3]);
     cfg.addProperty("flags4").setValue(avatarFlags[4]);
     cfg.addProperty("flags5").setValue(avatarFlags[5]);
+    cfg.addProperty("flags6").setValue(avatarFlags[6]);
     cfg.addProperty("cpu").setValue(isCPU);
     cfg.addProperty("custom_name").setValue(isCustomName);
 
@@ -202,6 +203,11 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             {
                 auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[5];
                 avatarFlags[5] = static_cast<std::uint8_t>(flag);
+            }
+            else if (n == "flags6")
+            {
+                auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[6];
+                avatarFlags[6] = static_cast<std::uint8_t>(flag);
             }
 
             else if (n == "cpu")

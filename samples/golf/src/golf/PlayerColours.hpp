@@ -104,6 +104,7 @@ namespace pc
             TopLight, TopDark,
             BottomLight, BottomDark,
 
+            Hat,
             Count
         };
     };
@@ -112,6 +113,7 @@ namespace pc
     {
         Palette.size(),
         16,
+        Palette.size(),
         Palette.size(),
         Palette.size(),
         Palette.size(),
@@ -128,5 +130,7 @@ namespace pc
 
         (0x0a), //bottom light
         (0x00), //bottom dark
+        
+        (0x82), //hat
     };
 }

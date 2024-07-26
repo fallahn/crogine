@@ -68,7 +68,8 @@ struct PlayerData final
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[2] - 1)),
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[3] - 1)),
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[4] - 1)),
-        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[5] - 1))    
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[5] - 1)),   
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[6] - 1)),   
     }; //indices into colours
     std::uint8_t ballColourIndex = 255; //ignore the palette if not in range and set to white
     std::uint32_t ballID = 0;
