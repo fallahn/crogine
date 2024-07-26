@@ -55,6 +55,8 @@ PlayerInfo& PlayerInfo::operator=(const PlayerData& pd)
     flipped = pd.flipped;
     isCPU = pd.isCPU;
 
+    headwearOffsets = pd.headwearOffsets;
+
     return *this;
 }
 

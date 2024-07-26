@@ -79,6 +79,17 @@ struct PlayerData final
     bool flipped = false; //whether or not avatar flipped/southpaw
     bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
 
+    struct HeadwearOffset final
+    {
+        enum
+        {
+            HairTx, HairRot,
+            HatTx, HatRot,
+            Count
+        };
+    };
+    std::array<glm::vec3, HeadwearOffset::Count> headwearOffsets = {};
+
     //these aren't included in serialise/deserialise
     std::vector<std::uint8_t> holeScores;
     std::vector<bool> holeComplete; //TODO surely we don't need to record this for *every* hole?
@@ -101,6 +112,8 @@ struct PlayerData final
 
     bool isSteamID = false;
     mutable bool isCustomName = false; //if not true and is a steam profile use the current steam name
+
+    PlayerData() { std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f)); }
 };
 
 struct ProfileTexture

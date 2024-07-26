@@ -58,7 +58,10 @@ namespace sv
         bool flipped = false; //we don't really care about this on the server, but we do need to forward it to clients.
         bool isCPU = false; //only allow CPU players to request predictions
 
+        std::array<glm::vec3, 4u> headwearOffsets = {};
+
         PlayerInfo& operator = (const PlayerData&);
+        PlayerInfo() { std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f)); }
     };
 
     struct ClientConnection final

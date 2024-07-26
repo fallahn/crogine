@@ -51,6 +51,8 @@ PlayerData& PlayerData::operator=(const sv::PlayerInfo& pi)
     flipped = pi.flipped;
     isCPU = pi.isCPU;
 
+    headwearOffsets = pi.headwearOffsets;
+
     return *this;
 }
 
@@ -82,6 +84,11 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("flags6").setValue(avatarFlags[6]);
     cfg.addProperty("cpu").setValue(isCPU);
     cfg.addProperty("custom_name").setValue(isCustomName);
+
+    cfg.addProperty("offset_0").setValue(headwearOffsets[0]);
+    cfg.addProperty("rotation_0").setValue(headwearOffsets[1]);
+    cfg.addProperty("offset_1").setValue(headwearOffsets[2]);
+    cfg.addProperty("rotation_1").setValue(headwearOffsets[3]);
 
     //hmmmm is it possible we might accidentally
     //create the ID of an existing profile?
@@ -116,6 +123,8 @@ bool PlayerData::saveProfile() const
 
 bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 {
+    std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f));
+
     //profiles may not yet have the colour index property, so set to a default
     if (ballColourIndex < pc::Palette.size())
     {
@@ -217,6 +226,23 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             else if (n == "custom_name")
             {
                 isCustomName = prop.getValue<bool>();
+            }
+
+            else if (name == "offset_0")
+            {
+                headwearOffsets[0] = prop.getValue<glm::vec3>();
+            }
+            else if (name == "rotation_0")
+            {
+                headwearOffsets[1] = prop.getValue<glm::vec3>();
+            }
+            else if (name == "offset_1")
+            {
+                headwearOffsets[2] = prop.getValue<glm::vec3>();
+            }
+            else if (name == "rotation_2")
+            {
+                headwearOffsets[3] = prop.getValue<glm::vec3>();
             }
         }
 

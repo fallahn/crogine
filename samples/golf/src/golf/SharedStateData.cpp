@@ -59,6 +59,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         sizes[i] = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, playerData[i].name.size() * sizeof(std::uint32_t)));
 
         sizes[i] += sizeof(playerData[i].avatarFlags);
+        sizes[i] += sizeof(playerData[i].headwearOffsets);
         sizes[i] += sizeof(playerData[i].ballColourIndex);
         sizes[i] += sizeof(playerData[i].ballID);
         sizes[i] += sizeof(playerData[i].hairID);
@@ -79,6 +80,9 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
     {
         std::memcpy(&buffer[offset], playerData[i].avatarFlags.data(), sizeof(playerData[i].avatarFlags));
         offset += sizeof(playerData[i].avatarFlags);
+
+        std::memcpy(&buffer[offset], playerData[i].headwearOffsets.data(), sizeof(playerData[i].headwearOffsets));
+        offset += sizeof(playerData[i].headwearOffsets);
 
         std::memcpy(&buffer[offset], &playerData[i].ballColourIndex, sizeof(playerData[i].ballColourIndex));
         offset += sizeof(playerData[i].ballColourIndex);
@@ -106,8 +110,6 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
             buffer[offset] |= BoolFlags::CPUPlayer;
         }
         offset++;
-
-
 
         //do string last as it's not fixed size
         auto stringSize = playerData[i].name.size() * sizeof(std::uint32_t);
@@ -180,6 +182,10 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         std::memcpy(&playerData[i].avatarFlags, ptr + offset, sizeof(playerData[i].avatarFlags));
         offset += sizeof(playerData[i].avatarFlags);
         stringSize -= sizeof(playerData[i].avatarFlags);
+
+        std::memcpy(&playerData[i].headwearOffsets, ptr + offset, sizeof(playerData[i].headwearOffsets));
+        offset += sizeof(playerData[i].headwearOffsets);
+        stringSize -= sizeof(playerData[i].headwearOffsets);
 
         std::memcpy(&playerData[i].ballColourIndex, ptr + offset, sizeof(playerData[i].ballColourIndex));
         offset += sizeof(playerData[i].ballColourIndex);
