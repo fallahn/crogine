@@ -107,7 +107,17 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
     for (auto i = 0; i < passCount; ++i)
     {
-#if defined USE_PARALLEL_PROCESSING && !defined __linux__
+//apprently this won't work on gcc 9/10 (and should be disabled on lower versions anyway)
+#ifndef _MSC_VER
+#if __GNUC__ <= 10
+#ifdef USE_PARALLEL_PROCESSING
+#undef USE_PARALLEL_PROCESSING
+#define GNUC_UNSUPPORTED
+#endif //USE_PARALLEL_PROCESSING
+#endif //__GNUC__
+#endif //_MSC_VER
+
+#if defined USE_PARALLEL_PROCESSING
         std::sort(std::execution::par, std::begin(drawList[i]), std::end(drawList[i]),
 #else
         std::sort(std::begin(drawList[i]), std::end(drawList[i]),
@@ -116,6 +126,11 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
             {
                 return a.second.flags < b.second.flags;
             });
+#ifdef GNUC_UNSUPPORTED
+#define USE_PARALLEL_PROCESSING
+#undef GNUC_UNSUPPORTED
+#endif
+
     }
 }
 
