@@ -20,7 +20,9 @@ endif()
 option(USE_STEAM "Enable the steamworks SDK" OFF)
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
-SET (PROJECT_STATIC_RUNTIME FALSE)
+SET(PROJECT_STATIC_RUNTIME FALSE)
+
+SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires compiler support")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   if(PROJECT_STATIC_RUNTIME)
@@ -32,6 +34,10 @@ endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-potentially-evaluated-expression")
+endif()
+
+if (NOT USE_PARALLEL_EXECUTION)
+  add_definitions(-DPARALLEL_GLOBAL_DISABLE)
 endif()
 
 if(NOT GNS_TAG)
@@ -150,7 +156,7 @@ if(APPLE)
 
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE TRUE)
 
-  # Add the assets if the folder ezists
+  # Add the assets if the folder exists
   set(ASSETS_PATH ${CMAKE_CURRENT_SOURCE_DIR}/assets)
   if (EXISTS ${ASSETS_PATH})
     target_sources(${PROJECT_NAME} PRIVATE ${ASSETS_PATH})

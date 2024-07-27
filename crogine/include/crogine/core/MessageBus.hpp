@@ -89,9 +89,11 @@ namespace cro
         {
             if (!m_enabled) return static_cast<T*>((void*)m_pendingBuffer.data());
 
+            static_assert(sizeof(T) < 128, "MEssage size limit is 128 bytes");
+
             const auto dataSize = sizeof(T);
             static const auto msgSize = sizeof(Message);
-            CRO_ASSERT(dataSize < 128, "message size exceeds 128 bytes"); //limit custom data to 128 bytes
+            //CRO_ASSERT(dataSize < 128, "message size exceeds 128 bytes"); //limit custom data to 128 bytes
             CRO_ASSERT(m_pendingBuffer.size() - (m_inPointer - m_pendingBuffer.data()) > (dataSize + msgSize), "buffer overflow " + std::to_string(m_pendingCount)); //make sure we have enough room in the buffer
             //CRO_WARNING(m_pendingBuffer.size() - (m_inPointer - m_pendingBuffer.data()) < 128, "Messagebus buffer is heavily contended!");
 
