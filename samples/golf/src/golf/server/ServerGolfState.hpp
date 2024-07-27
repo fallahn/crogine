@@ -69,7 +69,7 @@ namespace sv
         bool m_allMapsLoaded;
         bool m_skinsFinals;
         std::uint8_t m_currentHole;
-        std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
+        //std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
         std::uint8_t m_skinsPot;
         std::uint8_t m_currentBest; //current best score for hole, non-stroke games end if no-one can beat it
         std::uint8_t m_randomTargetCount;
@@ -77,11 +77,19 @@ namespace sv
         cro::Clock m_turnTimer;
         std::array<std::uint8_t, 2u> m_honour = { 0, 0 };
 
+        struct PlayerGroup final
+        {
+            std::vector<PlayerStatus> playerInfo;
+            std::vector<std::uint8_t> clientIDs; //list of clients which should be notified of this info
+        };
+        std::vector<PlayerGroup> m_playerInfo;
+
+
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const net::NetEvent::Packet&, bool predict);
         void checkReadyQuit(std::uint8_t);
 
-        void setNextPlayer(bool newHole = false);
+        void setNextPlayer(std::int32_t groupID, bool newHole = false);
         void setNextHole();
         void skipCurrentTurn(std::uint8_t);
         void applyMulligan();
@@ -94,5 +102,9 @@ namespace sv
         bool summariseRules();
 
         void doServerCommand(const net::NetEvent&);
+
+        //placeholder group ID TODO remove this and implement finding
+        //the correct ID for events which occur etc
+        static constexpr std::int32_t GroupID = 0;
     };
 }
