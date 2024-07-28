@@ -110,7 +110,7 @@ namespace
     //reduces topspin based on punch/flop
     constexpr std::array<float, ModifierID::Count> SpinModifiers =
     {
-        1.f, 1.f, 0.2f
+        1.f, 0.01f, 0.2f
     };
 }
 

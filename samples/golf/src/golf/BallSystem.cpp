@@ -68,7 +68,7 @@ namespace
     static constexpr float BallRollTimeout = -10.f;
     static constexpr float BallTimeoutVelocity = 0.04f;
     static constexpr float MinSpinPower = 0.05f; //min velocity to stop doesn't kick in if there's more than this much top/back spin to apply
-    static constexpr float MinRollSlope = 0.85f; //ball won't stop rolling if the ground is steeper that this
+    static constexpr float MinRollSlope = 0.95f; //ball won't stop rolling if the ground is steeper that this
 
     static constexpr float MinRollVelocity = -0.25f;
     static constexpr float MaxStoneSlope = 0.9f; //dot prod with vertical - ball is OOB if less than this

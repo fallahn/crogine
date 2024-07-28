@@ -156,7 +156,7 @@ struct ShotType final
 
 static constexpr std::array<std::int32_t, ClubID::Count> ClubShot =
 {
-    ShotType::Regular | ShotType::Punch, //driver
+    ShotType::Regular, //driver
     ShotType::Regular, //wood
     ShotType::Regular,
     ShotType::Regular | ShotType::Punch, //iron
