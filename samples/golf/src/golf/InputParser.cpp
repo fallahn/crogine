@@ -864,7 +864,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     //modulate pitch with topspin
     spin.y *= Clubs[club].getTopSpinMultiplier();
-    pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
+    pitch -= (0.5f * cro::Util::Const::degToRad) * spin.y;
 
     spin.x *= Clubs[club].getSideSpinMultiplier() / 2.f;
     spin.x += sideSpin;

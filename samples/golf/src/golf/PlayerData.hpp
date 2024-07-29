@@ -83,8 +83,8 @@ struct PlayerData final
     {
         enum
         {
-            HairTx, HairRot,
-            HatTx, HatRot,
+            HairTx, HairRot, HairScale,
+            HatTx, HatRot, HatScale,
             Count
         };
     };
@@ -113,7 +113,12 @@ struct PlayerData final
     bool isSteamID = false;
     mutable bool isCustomName = false; //if not true and is a steam profile use the current steam name
 
-    PlayerData() { std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f)); }
+    PlayerData()
+    {
+        std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f));
+        headwearOffsets[HeadwearOffset::HairScale] = glm::vec3(1.f);
+        headwearOffsets[HeadwearOffset::HatScale] = glm::vec3(1.f);
+    }
 };
 
 struct ProfileTexture

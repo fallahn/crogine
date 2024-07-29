@@ -87,8 +87,10 @@ bool PlayerData::saveProfile() const
 
     cfg.addProperty("offset_0").setValue(headwearOffsets[0]);
     cfg.addProperty("rotation_0").setValue(headwearOffsets[1]);
-    cfg.addProperty("offset_1").setValue(headwearOffsets[2]);
-    cfg.addProperty("rotation_1").setValue(headwearOffsets[3]);
+    cfg.addProperty("scale_0").setValue(headwearOffsets[2]);
+    cfg.addProperty("offset_1").setValue(headwearOffsets[3]);
+    cfg.addProperty("rotation_1").setValue(headwearOffsets[4]);
+    cfg.addProperty("scale_1").setValue(headwearOffsets[5]);
 
     //hmmmm is it possible we might accidentally
     //create the ID of an existing profile?
@@ -236,13 +238,21 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             {
                 headwearOffsets[1] = prop.getValue<glm::vec3>();
             }
-            else if (name == "offset_1")
+            else if (name == "scale_0")
             {
                 headwearOffsets[2] = prop.getValue<glm::vec3>();
             }
-            else if (name == "rotation_2")
+            else if (name == "offset_1")
             {
                 headwearOffsets[3] = prop.getValue<glm::vec3>();
+            }
+            else if (name == "rotation_2")
+            {
+                headwearOffsets[4] = prop.getValue<glm::vec3>();
+            }
+            else if (name == "scale_2")
+            {
+                headwearOffsets[5] = prop.getValue<glm::vec3>();
             }
         }
 
