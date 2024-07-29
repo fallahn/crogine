@@ -959,11 +959,37 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         }
     }
 
+    
+    bool ntpStrokesComplete = false;
+    bool allPlayersEliminated = true;
+    
+    float totalDistance = 0.f;
+    std::size_t playerCount = 0;
+    for (const auto& group : m_playerInfo)
+    {
+        totalDistance += group.playerInfo[0].distanceToHole;
+        ntpStrokesComplete = 
+            (m_sharedData.scoreType == ScoreType::NearestThePin && playerInfo[0].holeScore[m_currentHole] >= MaxNTPStrokes) 
+            ? true : ntpStrokesComplete;
+
+        allPlayersEliminated =
+            (m_sharedData.scoreType == ScoreType::Elimination && !playerInfo[1].eliminated) 
+            ? false : allPlayersEliminated;
+
+        playerCount += group.playerInfo.size();
+    }
+    bool allHoled = (totalDistance == 0);
+    bool allPlayersQuit = (m_sharedData.scoreType == ScoreType::Elimination && playerCount == 1);
+
     //TODO move this to some game rule check function
-    if (playerInfo[0].distanceToHole == 0 //all players must be in the hole
-        || (m_sharedData.scoreType == ScoreType::NearestThePin && playerInfo[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
-        || (m_sharedData.scoreType == ScoreType::Elimination && playerInfo.size() == 1) //players have quit the game so attempt next hole
-        || (m_sharedData.scoreType == ScoreType::Elimination && playerInfo[1].eliminated)) //(which triggers the rules to end the game)
+    //if (playerInfo[0].distanceToHole == 0 //all players must be in the hole
+    //    || (m_sharedData.scoreType == ScoreType::NearestThePin && playerInfo[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
+    //    || (m_sharedData.scoreType == ScoreType::Elimination && playerInfo.size() == 1) //players have quit the game so attempt next hole
+    //    || (m_sharedData.scoreType == ScoreType::Elimination && playerInfo[1].eliminated)) //(which triggers the rules to end the game)
+    if (allHoled
+        || ntpStrokesComplete
+        || allPlayersQuit
+        || allPlayersEliminated)    
     {
         //if we're nearest the pin sort by closest player so current winner goes first
         //and we can award something for winning the hole
