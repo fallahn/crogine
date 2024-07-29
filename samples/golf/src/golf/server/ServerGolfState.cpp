@@ -70,6 +70,10 @@ namespace
 
     bool hadTennisBounce = false;
 
+    //placeholder group ID TODO remove this and implement finding
+    //the correct ID for events which occur etc
+    static constexpr std::int32_t GroupID = 0;
+
     //glm::vec3 randomOffset3()
     //{
     //    auto x = cro::Util::Random::value(0, 1) * 2;
@@ -245,7 +249,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
             m_playerInfo[GroupID].playerInfo[0].terrain = data.terrain;
 
-            handleRules(data);
+            handleRules(GroupID, data);
             
             setNextPlayer(GroupID);
         }
@@ -257,7 +261,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_playerInfo[GroupID].playerInfo[0].distanceToHole = 0.f;
             m_playerInfo[GroupID].playerInfo[0].terrain = data.terrain;
 
-            handleRules(data);           
+            handleRules(GroupID, data);           
 
             if (m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] < m_currentBest)
             {
@@ -316,7 +320,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             std::uint16_t inf = (m_playerInfo[GroupID].playerInfo[0].client << 8) | m_playerInfo[GroupID].playerInfo[0].player;
             m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
 
-            handleRules(data);
+            handleRules(GroupID, data);
         }
     }
     else if (msg.id == sv::MessageID::TriggerMessage)

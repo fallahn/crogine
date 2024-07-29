@@ -98,13 +98,9 @@ namespace sv
         void initScene();
         void buildWorld();
 
-        void handleRules(const struct GolfBallEvent&);
+        void handleRules(std::int32_t groupID, const struct GolfBallEvent&);
         bool summariseRules();
 
         void doServerCommand(const net::NetEvent&);
-
-        //placeholder group ID TODO remove this and implement finding
-        //the correct ID for events which occur etc
-        static constexpr std::int32_t GroupID = 0;
     };
 }

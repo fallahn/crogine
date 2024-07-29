@@ -48,7 +48,7 @@ namespace
 
 using namespace sv;
 
-void GolfState::handleRules(const GolfBallEvent& data)
+void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
 {
     if (data.type == GolfBallEvent::TurnEnded)
     {
@@ -59,34 +59,34 @@ void GolfState::handleRules(const GolfBallEvent& data)
         case ScoreType::Elimination:
             if (data.terrain != TerrainID::Hole)
             {
-                if (m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par -1) //never going to finish under par
+                if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par -1) //never going to finish under par
                 {
-                    m_playerInfo[GroupID].playerInfo[0].skins--;
-                    std::uint16_t packet = ((m_playerInfo[GroupID].playerInfo[0].client << 8) | m_playerInfo[GroupID].playerInfo[0].player);
+                    m_playerInfo[groupID].playerInfo[0].skins--;
+                    std::uint16_t packet = ((m_playerInfo[groupID].playerInfo[0].client << 8) | m_playerInfo[groupID].playerInfo[0].player);
                     auto packetID = PacketID::LifeLost;
 
                     //if no lives left, eliminate
-                    if (m_playerInfo[GroupID].playerInfo[0].skins == 0)
+                    if (m_playerInfo[groupID].playerInfo[0].skins == 0)
                     {
-                        m_playerInfo[GroupID].playerInfo[0].eliminated = true;
+                        m_playerInfo[groupID].playerInfo[0].eliminated = true;
                         packetID = PacketID::Elimination;
                     }
                     m_sharedData.host.broadcastPacket(packetID, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     
                     //forfeit the rest of the hole
-                    m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole]++;
-                    m_playerInfo[GroupID].playerInfo[0].position = m_holeData[m_currentHole].pin;
-                    m_playerInfo[GroupID].playerInfo[0].distanceToHole = 0;
-                    m_playerInfo[GroupID].playerInfo[0].matchWins = 1; //flags this is a life lost
+                    m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole]++;
+                    m_playerInfo[groupID].playerInfo[0].position = m_holeData[m_currentHole].pin;
+                    m_playerInfo[groupID].playerInfo[0].distanceToHole = 0;
+                    m_playerInfo[groupID].playerInfo[0].matchWins = 1; //flags this is a life lost
                 }
             }
             break;
         case ScoreType::Match:
         case ScoreType::Skins:
-            if (m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
+            if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
             {
-                m_playerInfo[GroupID].playerInfo[0].distanceToHole = 0;
-                m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole]++;
+                m_playerInfo[groupID].playerInfo[0].distanceToHole = 0;
+                m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole]++;
             }
             break;
         case ScoreType::NearestThePin:
@@ -98,12 +98,12 @@ void GolfState::handleRules(const GolfBallEvent& data)
                 auto l2 = glm::length2(data.position - m_holeData[m_currentHole].pin);
                 if (l2 != 0)
                 {
-                    m_playerInfo[GroupID].playerInfo[0].distanceScore[m_currentHole] = std::sqrt(l2);
+                    m_playerInfo[groupID].playerInfo[0].distanceScore[m_currentHole] = std::sqrt(l2);
                 }
             }
             else
             {
-                m_playerInfo[GroupID].playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;
+                m_playerInfo[groupID].playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;
             }
             break;
         case ScoreType::LongestDrive:
@@ -114,11 +114,11 @@ void GolfState::handleRules(const GolfBallEvent& data)
                 d = std::round(d * 10.f);
                 d /= 10.f;
 
-                m_playerInfo[GroupID].playerInfo[0].distanceScore[m_currentHole] = d;
+                m_playerInfo[groupID].playerInfo[0].distanceScore[m_currentHole] = d;
             }
             else
             {
-                m_playerInfo[GroupID].playerInfo[0].distanceScore[m_currentHole] = 0.f;
+                m_playerInfo[groupID].playerInfo[0].distanceScore[m_currentHole] = 0.f;
             }
             break;
         }
@@ -138,8 +138,8 @@ void GolfState::handleRules(const GolfBallEvent& data)
             {
                 for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
-                    m_playerInfo[GroupID].playerInfo[i].distanceToHole = 0.f;
-                    m_playerInfo[GroupID].playerInfo[i].holeScore[m_currentHole] = m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] + 1;
+                    m_playerInfo[groupID].playerInfo[i].distanceToHole = 0.f;
+                    m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] = m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] + 1;
                 }
             }
             else
@@ -147,30 +147,30 @@ void GolfState::handleRules(const GolfBallEvent& data)
                 //eliminate anyone who can't beat this score
                 for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
-                    if ((m_playerInfo[GroupID].playerInfo[i].holeScore[m_currentHole]) >=
-                        m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole])
+                    if ((m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole]) >=
+                        m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole])
                     {
-                        if (m_playerInfo[GroupID].playerInfo[i].distanceToHole > 0) //not already holed
+                        if (m_playerInfo[groupID].playerInfo[i].distanceToHole > 0) //not already holed
                         {
-                            m_playerInfo[GroupID].playerInfo[i].distanceToHole = 0.f;
-                            m_playerInfo[GroupID].playerInfo[i].holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
+                            m_playerInfo[groupID].playerInfo[i].distanceToHole = 0.f;
+                            m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
                         }
                     }
                 }
 
                 //if this is the second hole and it has the same as the current best
                 //force a draw by eliminating anyone who can't beat it
-                if (m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] == m_currentBest)
+                if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] == m_currentBest)
                 {
                     for (auto i = 1u; i < m_playerInfo.size(); ++i)
                     {
-                        if ((m_playerInfo[GroupID].playerInfo[i].holeScore[m_currentHole] + 1) >=
+                        if ((m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] + 1) >=
                             m_currentBest)
                         {
-                            if (m_playerInfo[GroupID].playerInfo[i].distanceToHole > 0)
+                            if (m_playerInfo[groupID].playerInfo[i].distanceToHole > 0)
                             {
-                                m_playerInfo[GroupID].playerInfo[i].distanceToHole = 0.f;
-                                m_playerInfo[GroupID].playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(m_playerInfo[GroupID].playerInfo[i].holeScore[m_currentHole] + 1));
+                                m_playerInfo[groupID].playerInfo[i].distanceToHole = 0.f;
+                                m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] + 1));
                             }
                         }
                     }
@@ -178,41 +178,41 @@ void GolfState::handleRules(const GolfBallEvent& data)
             }
             break;
         case ScoreType::MultiTarget:
-            if (!m_playerInfo[GroupID].playerInfo[0].targetHit)
+            if (!m_playerInfo[groupID].playerInfo[0].targetHit)
             {
                 //forfeit the hole
-                m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? 6 : 12;
+                m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? 6 : 12;
             }
             break;
         case ScoreType::Elimination:
             //check player score and update lives if necessary
-            if (m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par)
+            if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] >= m_holeData[m_currentHole].par)
             {
-                m_playerInfo[GroupID].playerInfo[0].skins--;
-                std::uint16_t packet = ((m_playerInfo[GroupID].playerInfo[0].client << 8) | m_playerInfo[GroupID].playerInfo[0].player);
+                m_playerInfo[groupID].playerInfo[0].skins--;
+                std::uint16_t packet = ((m_playerInfo[groupID].playerInfo[0].client << 8) | m_playerInfo[groupID].playerInfo[0].player);
                 auto packetID = PacketID::LifeLost;
 
                 //if no lives left, eliminate
-                if (m_playerInfo[GroupID].playerInfo[0].skins == 0)
+                if (m_playerInfo[groupID].playerInfo[0].skins == 0)
                 {
-                    m_playerInfo[GroupID].playerInfo[0].eliminated = true;
+                    m_playerInfo[groupID].playerInfo[0].eliminated = true;
                     packetID = PacketID::Elimination;
                 }
                 m_sharedData.host.broadcastPacket(packetID, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-                m_playerInfo[GroupID].playerInfo[0].matchWins = 1; //marks player as having just lost a life
+                m_playerInfo[groupID].playerInfo[0].matchWins = 1; //marks player as having just lost a life
             }
-            else if (m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] < m_holeData[m_currentHole].par - 1)
+            else if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] < m_holeData[m_currentHole].par - 1)
             {
-                m_playerInfo[GroupID].playerInfo[0].skins++;
-                std::uint16_t packet = ((m_playerInfo[GroupID].playerInfo[0].client << 8) | m_playerInfo[GroupID].playerInfo[0].player);
+                m_playerInfo[groupID].playerInfo[0].skins++;
+                std::uint16_t packet = ((m_playerInfo[groupID].playerInfo[0].client << 8) | m_playerInfo[groupID].playerInfo[0].player);
                 m_sharedData.host.broadcastPacket(PacketID::LifeGained, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
 
             break;
         case ScoreType::NearestThePin:
-            m_playerInfo[GroupID].playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;// m_holeData[m_currentHole].distanceToPin / 2.f;
-            m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes + 1;
+            m_playerInfo[groupID].playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;// m_holeData[m_currentHole].distanceToPin / 2.f;
+            m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes + 1;
             break;
         }
     }
@@ -228,8 +228,8 @@ void GolfState::handleRules(const GolfBallEvent& data)
             {
                 for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
-                    m_playerInfo[GroupID].playerInfo[i].distanceToHole = 0.f;
-                    m_playerInfo[GroupID].playerInfo[i].holeScore[m_currentHole] = m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] + 1;
+                    m_playerInfo[groupID].playerInfo[i].distanceToHole = 0.f;
+                    m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] = m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] + 1;
                 }
             }
             else
@@ -237,10 +237,10 @@ void GolfState::handleRules(const GolfBallEvent& data)
                 //check if our score is even with anyone holed already and forfeit
                 for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
-                    if (m_playerInfo[GroupID].playerInfo[i].distanceToHole == 0
-                        && m_playerInfo[GroupID].playerInfo[i].holeScore[m_currentHole] < m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole])
+                    if (m_playerInfo[groupID].playerInfo[i].distanceToHole == 0
+                        && m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] < m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole])
                     {
-                        m_playerInfo[GroupID].playerInfo[0].distanceToHole = 0;
+                        m_playerInfo[groupID].playerInfo[0].distanceToHole = 0;
                     }
                 }
             }
@@ -251,113 +251,141 @@ void GolfState::handleRules(const GolfBallEvent& data)
 
 bool GolfState::summariseRules()
 {
-    bool gameFinished = false;
-
     if (m_sharedData.scoreType == ScoreType::Elimination)
     {
-        if (m_playerInfo.size() == 1
-            || m_playerInfo[GroupID].playerInfo[1].eliminated)
+        bool allPlayersEliminated = true;
+        for (const auto& group : m_playerInfo)
         {
-            //everyone quit or all but player 1 are eliminated
-            return true;
+            allPlayersEliminated = !group.playerInfo[1].eliminated ? false : allPlayersEliminated;
         }
-        return false;
+        return allPlayersEliminated;
+
+        //if (m_playerInfo.size() == 1
+        //    || m_playerInfo[GroupID].playerInfo[1].eliminated)
+        //{
+        //    //everyone quit or all but player 1 are eliminated
+        //    return true;
+        //}
+        //return false;
     }
 
-    if (m_playerInfo.size() > 1)
+    bool gameFinished = false;
+
+    //concat all the player info and do a single sort/compare on the total results
+    std::vector<PlayerStatus> sortData;
+    sortData.reserve(2 * ConstVal::MaxPlayers);
+
+    for (auto& group : m_playerInfo)
     {
-        auto sortData = m_playerInfo[GroupID].playerInfo;
-        std::sort(sortData.begin(), sortData.end(),
-            [&](const PlayerStatus& a, const PlayerStatus& b)
-            {
-                return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
-            });
-
-
-        //check if we tied the last hole in skins
-        if (m_sharedData.scoreType == ScoreType::Skins
-            && !m_skinsFinals
-            && ((m_currentHole + 1) == m_holeData.size()))
+        if (group.playerInfo.size() > 1)
         {
-            if (sortData[0].holeScore[m_currentHole] == sortData[1].holeScore[m_currentHole])
-            {
-                //this is used to make sure we send the correct score update to the client when this function returns
-                //and employ sudden death on the final hole
-                m_skinsFinals = true;
-                m_scene.getSystem<BallSystem>()->setGimmeRadius(0);
+            //this is an intentional copy
+            sortData.insert(sortData.end(), group.playerInfo.begin(), group.playerInfo.end());
+        }
+    }
 
-                for (auto& p : m_playerInfo[GroupID].playerInfo)
+    std::sort(sortData.begin(), sortData.end(),
+        [&](const PlayerStatus& a, const PlayerStatus& b)
+        {
+            return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
+        });
+
+
+
+    //check if we tied the last hole in skins
+    if (m_sharedData.scoreType == ScoreType::Skins
+        && !m_skinsFinals
+        && ((m_currentHole + 1) == m_holeData.size()))
+    {
+        if (sortData[0].holeScore[m_currentHole] == sortData[1].holeScore[m_currentHole])
+        {
+            //this is used to make sure we send the correct score update to the client when this function returns
+            //and employ sudden death on the final hole
+            m_skinsFinals = true;
+            m_scene.getSystem<BallSystem>()->setGimmeRadius(0);
+
+            for (auto& group : m_playerInfo)
+            {
+                for (auto& p : group.playerInfo)
                 {
                     p.holeScore[m_currentHole] = 0;
                 }
+            }
 
-                if (m_currentHole)
-                {
-                    //we might be on a custom course with one
-                    //hole in which case don't negate.
-                    m_currentHole--;
-                }
+            if (m_currentHole)
+            {
+                //we might be on a custom course with one
+                //hole in which case don't negate.
+                m_currentHole--;
             }
         }
+    }
 
-        //hmm this used to apply to ALL score types before 
-        //elimination mode shanghaid some of the playerInfo fields
-        //so... are these the only two score types relevant here to
-        //do we need to allow all but exclude elimination (and maybe NTP)?
-        if (m_sharedData.scoreType == ScoreType::Skins
-            || m_sharedData.scoreType == ScoreType::Match)
+    //hmm this used to apply to ALL score types before 
+    //elimination mode shanghaid some of the playerInfo fields
+    //so... are these the only two score types relevant here to
+    //do we need to allow all but exclude elimination (and maybe NTP)?
+    if (m_sharedData.scoreType == ScoreType::Skins
+        || m_sharedData.scoreType == ScoreType::Match)
+    {
+        //only score if no player tied
+        if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
+            sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
+            || (m_skinsFinals && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
         {
-            //only score if no player tied
-            if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
-                sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
-                || (m_skinsFinals && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
+            for (auto& group : m_playerInfo)
             {
-                auto player = std::find_if(m_playerInfo[GroupID].playerInfo.begin(), m_playerInfo[GroupID].playerInfo.end(), 
+                auto player = std::find_if(group.playerInfo.begin(), group.playerInfo.end(),
                     [&sortData](const PlayerStatus& p)
                     {
                         return p.client == sortData[0].client && p.player == sortData[0].player;
                     });
 
-                player->matchWins++;
-                player->skins += m_skinsPot;
-                m_skinsPot = 1;
-
-                sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
-
-                //send notification packet to clients that player won the hole
-                std::uint16_t data = (player->client << 8) | player->player;
-                m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            }
-            else //increase the skins pot, but only if not repeating the final hole
-            {
-                if (!m_skinsFinals)
+                if (player != group.playerInfo.end())
                 {
-                    m_skinsPot++;
+                    player->matchWins++;
+                    player->skins += m_skinsPot;
+                    m_skinsPot = 1;
 
-                    std::uint16_t data = 0xff00 | m_skinsPot;
+                    sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
+
+                    //send notification packet to clients that player won the hole
+                    std::uint16_t data = (player->client << 8) | player->player;
                     m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    break;
                 }
             }
         }
-
-        //check the match score and end the game if this is the mode we're in
-        if (m_sharedData.scoreType == ScoreType::Match)
+        else //increase the skins pot, but only if not repeating the final hole
         {
-            std::sort(sortData.begin(), sortData.end(),
-                [&](const PlayerStatus& a, const PlayerStatus& b)
-                {
-                    return a.matchWins > b.matchWins;
-                });
-
-
-            auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
-            //if second place can't beat first even if they win all the remaining holes it's game over
-            if (sortData[1].matchWins + remainingHoles < sortData[0].matchWins)
+            if (!m_skinsFinals)
             {
-                gameFinished = true;
+                m_skinsPot++;
+
+                std::uint16_t data = 0xff00 | m_skinsPot;
+                m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
         }
     }
 
+    //check the match score and end the game if this is the mode we're in
+    if (m_sharedData.scoreType == ScoreType::Match)
+    {
+        std::sort(sortData.begin(), sortData.end(),
+            [&](const PlayerStatus& a, const PlayerStatus& b)
+            {
+                return a.matchWins > b.matchWins;
+            });
+
+
+        auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
+        //if second place can't beat first even if they win all the remaining holes it's game over
+        if (sortData[1].matchWins + remainingHoles < sortData[0].matchWins)
+        {
+            gameFinished = true;
+        }
+    }     
+    
     return gameFinished;
 }
