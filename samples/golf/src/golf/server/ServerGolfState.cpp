@@ -965,7 +965,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 
     
     bool ntpStrokesComplete = false;
-    bool allPlayersEliminated = true;
+    bool allPlayersEliminated = (m_sharedData.scoreType == ScoreType::Elimination);
     
     float totalDistance = 0.f;
     std::size_t playerCount = 0;
@@ -976,9 +976,10 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             (m_sharedData.scoreType == ScoreType::NearestThePin && playerInfo[0].holeScore[m_currentHole] >= MaxNTPStrokes) 
             ? true : ntpStrokesComplete;
 
-        allPlayersEliminated =
-            (m_sharedData.scoreType == ScoreType::Elimination && !playerInfo[1].eliminated) 
-            ? false : allPlayersEliminated;
+        //if (m_sharedData.scoreType == ScoreType::Elimination)
+        {
+            allPlayersEliminated = !playerInfo[1].eliminated ? false : allPlayersEliminated;
+        }
 
         playerCount += group.playerInfo.size();
     }
