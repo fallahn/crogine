@@ -136,15 +136,18 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             //disconnect notification packet is sent in Server
             std::int32_t setNewPlayer = -1;
-            for (auto i = 0; i < m_playerInfo.size(); ++i)
+            auto& playerInfo = m_playerInfo[m_groupAssignments[data.clientID]].playerInfo;
+            //for (auto i = 0; i < m_playerInfo.size(); ++i)
             {
-                if (m_playerInfo[i].playerInfo[0].client == data.clientID)
+                //if this client was the current player check if there's
+                //enother player to take over
+                bool wantNewPlayer = false;
+                if (playerInfo[0].client == data.clientID)
                 {
-                    setNewPlayer = i;
+                    wantNewPlayer = true;
                 }
 
                 //remove the player data
-                auto& playerInfo = m_playerInfo[i].playerInfo;
                 playerInfo.erase(std::remove_if(playerInfo.begin(), playerInfo.end(),
                     [&, data](const PlayerStatus& p)
                     {
@@ -160,6 +163,17 @@ void GolfState::handleMessage(const cro::Message& msg)
                         return false;
                     }),
                     playerInfo.end());
+
+                //if this group is now empty, remove it
+                if (playerInfo.empty())
+                {
+                    //hmmm but this will mess up the group indexing in m_groupAssignments
+                    //m_playerInfo.erase();
+                }
+                else if (wantNewPlayer)
+                {
+                    setNewPlayer = m_groupAssignments[playerInfo[0].client];
+                }
             }
 
 
@@ -1507,15 +1521,76 @@ void GolfState::initScene()
 
     m_mapDataValid = m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[0]);
     
+    //calculate number of client groups based on connected client
+    //count and the number of requested clients per group
+    std::fill(m_groupAssignments.begin(), m_groupAssignments.end(), 0);
+
+    std::int32_t clientCount = 0;
+    for (const auto& client : m_sharedData.clients)
+    {
+        if (client.connected)
+        {
+            clientCount++;
+        }
+    }
+    std::int32_t groupCount = 1;
+    switch (m_sharedData.groupCount)
+    {
+    default: break;
+    case ClientGrouping::Even:
+        groupCount = 2;
+        break;
+    case ClientGrouping::One:
+        groupCount = clientCount;
+        break;
+    case ClientGrouping::Two:
+        groupCount = (clientCount / 2) + (clientCount % 2);
+        break;
+    case ClientGrouping::Three:
+        groupCount = (clientCount / 3) + ((clientCount % 3) != 0 ? 1 : 0);
+        break;
+    case ClientGrouping::Four:
+        groupCount = (clientCount / 4) + ((clientCount % 4) != 0 ? 1 : 0);
+        break;
+    }
+    m_playerInfo.resize(groupCount);
+
     auto startLives = StartLives;
-    m_playerInfo.resize(1);
+    clientCount = 0;
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
     {
         if (m_sharedData.clients[i].connected)
         {
+            auto groupID = 0;
+            switch (m_sharedData.groupCount)
+            {
+            default: break;
+            case ClientGrouping::Even:
+                groupID = clientCount % 2;
+                break;
+            case ClientGrouping::One:
+                //remember these clients might not be consecutive!
+                //eg it's possible only clients 1 & 6 are connected...
+                groupID = clientCount;
+                break;
+            case ClientGrouping::Two:
+                groupID = clientCount / 2;
+                break;
+            case ClientGrouping::Three:
+                groupID = clientCount / 3;
+                break;
+            case ClientGrouping::Four:
+                groupID = clientCount / 4;
+                break;
+            }
+            clientCount++;
+
+            m_groupAssignments[i] = groupID;
+            m_playerInfo[groupID].clientIDs.push_back(i); //tracks all client IDs in this group
+
             for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
             {
-                auto& player = m_playerInfo[GroupID].playerInfo.emplace_back();
+                auto& player = m_playerInfo[groupID].playerInfo.emplace_back();
                 player.client = i;
                 player.player = j;
                 player.position = m_holeData[0].tee;
@@ -1526,8 +1601,15 @@ void GolfState::initScene()
         }
     }
 
-    //fudgenstein - TODO this should check the sum total of players, not this size value
-    if (m_playerInfo[GroupID].playerInfo.size() == 4)
+    //fudgenstein - 4 is the max start lives but we
+    //want it with 4 players or fewer, not 5
+    std::int32_t playerCount = 0;
+    for (const auto& group : m_playerInfo)
+    {
+        playerCount += group.playerInfo.size();
+    }
+
+    if (playerCount == 4)
     {
         startLives++;
     }

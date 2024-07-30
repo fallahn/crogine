@@ -127,6 +127,19 @@ namespace VoicePacket
     };
 }
 
+struct ClientGrouping final
+{
+    enum
+    {
+        None, //no grouping every client is in group 0
+        Even, //attempt to split evenly between 2 groups
+        One,  //every client has its own group
+        Two,  //two clients per group
+        Three,//three clients per group
+        Four  //four clients per group
+    };
+};
+
 namespace PacketID
 {
     enum
