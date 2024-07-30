@@ -256,29 +256,6 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
 
 bool GolfState::summariseRules()
 {
-    if (m_sharedData.scoreType == ScoreType::Elimination)
-    {
-        //TODO this is WRONG we need to concat everything and check the
-        //scores as each player could be in a separate group
-
-        /*bool allPlayersEliminated = true;
-        for (const auto& group : m_playerInfo)
-        {
-            allPlayersEliminated = !group.playerInfo[1].eliminated ? false : allPlayersEliminated;
-        }
-        return allPlayersEliminated;*/
-
-        //if (m_playerInfo.size() == 1
-        //    || m_playerInfo[GroupID].playerInfo[1].eliminated)
-        //{
-        //    //everyone quit or all but player 1 are eliminated
-        //    return true;
-        //}
-        //return false;
-    }
-
-    bool gameFinished = false;
-
     //concat all the player info and do a single sort/compare on the total results
     std::vector<PlayerStatus> sortData;
     sortData.reserve(2 * ConstVal::MaxPlayers);
@@ -290,7 +267,28 @@ bool GolfState::summariseRules()
             //this is an intentional copy
             sortData.insert(sortData.end(), group.playerInfo.begin(), group.playerInfo.end());
         }
+    }    
+    
+    
+    //check sort data to see if we have 1 remaining player
+    if (m_sharedData.scoreType == ScoreType::Elimination)
+    {
+        std::sort(sortData.begin(), sortData.end(),
+            [&](const PlayerStatus& a, const PlayerStatus& b)
+            {
+                return !a.eliminated;
+            });
+
+        if (sortData.size() == 1
+            || sortData[1].eliminated)
+        {
+            //everyone quit or all but player 1 are eliminated
+            return true;
+        }
+        return false;
     }
+
+    bool gameFinished = false;
 
     std::sort(sortData.begin(), sortData.end(),
         [&](const PlayerStatus& a, const PlayerStatus& b)
