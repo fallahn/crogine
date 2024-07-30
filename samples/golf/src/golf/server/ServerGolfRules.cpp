@@ -50,6 +50,11 @@ using namespace sv;
 
 void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
 {
+    if (m_playerInfo[groupID].playerInfo.empty())
+    {
+        return;
+    }
+
     if (data.type == GolfBallEvent::TurnEnded)
     {
         //if match/skins play check if our score is even with anyone holed already and forfeit
@@ -253,12 +258,15 @@ bool GolfState::summariseRules()
 {
     if (m_sharedData.scoreType == ScoreType::Elimination)
     {
-        bool allPlayersEliminated = true;
+        //TODO this is WRONG we need to concat everything and check the
+        //scores as each player could be in a separate group
+
+        /*bool allPlayersEliminated = true;
         for (const auto& group : m_playerInfo)
         {
             allPlayersEliminated = !group.playerInfo[1].eliminated ? false : allPlayersEliminated;
         }
-        return allPlayersEliminated;
+        return allPlayersEliminated;*/
 
         //if (m_playerInfo.size() == 1
         //    || m_playerInfo[GroupID].playerInfo[1].eliminated)
