@@ -144,6 +144,7 @@ struct CollisionEvent final
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t terrain = 0;
     std::int32_t clubID = -1;
+    std::uint8_t client = 0;
 };
 
 struct SystemEvent final

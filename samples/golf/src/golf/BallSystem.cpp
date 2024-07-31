@@ -323,6 +323,7 @@ void BallSystem::fastForward(cro::Entity entity)
     //still have to raise the final event...
     auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
     *msg = predictionEvent;
+    msg->client = entity.getComponent<Ball>().client;
 }
 
 #ifdef CRO_DEBUG_
@@ -469,7 +470,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             newPos.y = terrainContact.intersection.y;
             tx.setPosition(newPos);
         }
-        doBullsEyeCollision(tx.getPosition());
+        doBullsEyeCollision(tx.getPosition(), ball.client);
 
 
         const auto resetBall = [&](Ball::State state, std::uint8_t terrain)
@@ -483,6 +484,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             msg->type = GolfBallEvent::Landed;
             msg->terrain = ball.terrain;
             msg->position = newPos;
+            msg->client = ball.client;
         };
 
         //check if we rolled onto the green
@@ -724,6 +726,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 auto* msg = postEvent();
                 msg->type = GolfBallEvent::Landed;
                 msg->terrain = ball.terrain;
+                msg->client = ball.client;
                 return;
             }
 
@@ -735,7 +738,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             //check for target
             if (vel2 != 0)
             {
-                doBullsEyeCollision(tx.getPosition());
+                doBullsEyeCollision(tx.getPosition(), ball.client);
             }
 
             //if we've slowed down or fallen more than the
@@ -774,6 +777,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 auto* msg = postEvent();
                 msg->type = GolfBallEvent::Landed;
                 msg->terrain = ((terrainContact.penetration > Ball::Radius) || (len2 < MinBallDistance)) ? TerrainID::Hole : ball.terrain;
+                msg->client = ball.client;
 
                 if (msg->terrain == TerrainID::Hole)
                 {
@@ -931,6 +935,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             msg->type = GolfBallEvent::Foul;
             msg->terrain = terrain;
             msg->position = tx.getPosition();
+            msg->client = ball.client;
 
             //set ball to reset / correct terrain
             ball.delay = 0.5f;
@@ -960,6 +965,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             {
                 auto* msg2 = postEvent();
                 msg2->type = GolfBallEvent::Gimme;
+                msg2->client = ball.client;
 
                 position.x = m_holeData->pin.x;
                 position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
@@ -985,6 +991,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             //send message to report status
             auto* msg = postEvent();
             msg->terrain = ball.terrain;
+            msg->client = ball.client;
 
             if (ball.terrain == TerrainID::Hole)
             {
@@ -1065,6 +1072,7 @@ void BallSystem::doCollision(cro::Entity entity)
             msg->terrain = CollisionEvent::FlagPole;
             msg->position = pos;
             msg->type = CollisionEvent::Begin;
+            msg->client = ball.client;
         }
     }
 
@@ -1081,6 +1089,7 @@ void BallSystem::doCollision(cro::Entity entity)
         msg->type = GolfBallEvent::Landed;
         msg->terrain = ball.terrain;
         msg->position = tx.getPosition();
+        msg->client = ball.client;
     };
     const auto startRoll = [](Ball::State state, Ball& ball)
     {
@@ -1121,6 +1130,7 @@ void BallSystem::doCollision(cro::Entity entity)
             {
                 auto* msg2 = postMessage<TriggerEvent>(sv::MessageID::TriggerMessage);
                 msg2->triggerID = terrainResult.trigger;
+                msg2->client = ball.client;
             }
 
             break;
@@ -1135,7 +1145,7 @@ void BallSystem::doCollision(cro::Entity entity)
             //else bounce
             [[fallthrough]];
         case TerrainID::Rough:
-            doBullsEyeCollision(tx.getPosition());
+            doBullsEyeCollision(tx.getPosition(), ball.client);
 
             ball.velocity *= Restitution[terrainResult.terrain] + getRestitution(ball.velocity, terrainResult.normal);
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
@@ -1214,6 +1224,7 @@ void BallSystem::doCollision(cro::Entity entity)
             {
                 auto* msg2 = postMessage<TriggerEvent>(sv::MessageID::TriggerMessage);
                 msg2->triggerID = terrainResult.trigger;
+                msg2->client = ball.client;
             }
         }
     }
@@ -1287,7 +1298,7 @@ void BallSystem::doBallCollision(cro::Entity entity)
     }
 }
 
-void BallSystem::doBullsEyeCollision(glm::vec3 ballPos)
+void BallSystem::doBullsEyeCollision(glm::vec3 ballPos, std::uint8_t client)
 {
     if (m_bullsEye.spawn && m_processFlags != ProcessFlags::Predicting)
     {
@@ -1310,6 +1321,7 @@ void BallSystem::doBullsEyeCollision(glm::vec3 ballPos)
                 msg->accuracy = std::clamp(1.f - (std::sqrt(len2) / BullRad), 0.f, 1.f);
             }
             msg->position = ballPos;
+            msg->client = client;
         }
     }
 }

@@ -68,6 +68,7 @@ struct GolfBallEvent final
     std::int32_t terrain = -1;
     float distance = 0.f;
     glm::vec3 position = glm::vec3(0.f);
+    std::uint8_t client = 0;
 };
 
 struct BilliardsEvent final
@@ -106,10 +107,12 @@ struct BilliardsEvent final
 struct TriggerEvent final
 {
     std::uint8_t triggerID = 25;
+    std::uint8_t client = 0;
 };
 
 struct BullsEyeEvent final
 {
     glm::vec3 position = glm::vec3(0.f);
     float accuracy = 0.f;
+    std::uint8_t client = 0;
 };
