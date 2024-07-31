@@ -100,14 +100,6 @@ private:
     std::int32_t m_confirmType;
     cro::Clock m_cooldownTimer;
 
-    struct GroupSelection final
-    {
-        cro::Entity root;
-        cro::Entity prev;
-        cro::Entity next;
-        cro::Entity label;
-    }m_groupSelection;
-
     void buildScene();
     void refreshPlayerList();
     void refreshPreview();

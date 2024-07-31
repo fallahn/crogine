@@ -103,7 +103,7 @@ namespace
     std::array<std::string, ClientGrouping::Count> GroupStrings =
     {
         std::string("None"),
-        "Even",
+        "Balanced",
         "One", "Two", "Three", "Four"
     };
 }
@@ -505,14 +505,13 @@ void PlayerManagementState::buildScene()
                             PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                 });
-        m_groupSelection.label = entity;
     }
 
     //return to game
     entity = createItem(glm::vec2(0.f, -6.f), "Return", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(QuitIndex);
-    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, m_groupSelection.label.isValid() ? GroupIndex : PokeIndex);
+    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, m_sharedData.baseState == StateID::Menu ? GroupIndex : PokeIndex);
     entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, KickIndex);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
