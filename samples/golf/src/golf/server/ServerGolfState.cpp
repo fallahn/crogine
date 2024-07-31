@@ -500,35 +500,39 @@ std::int32_t GolfState::process(float dt)
 {
     if (m_gameStarted)
     {
-        static bool warned = false;
-
         //check the turn timer and skip player if they AFK'd
-        if (m_turnTimer.elapsed() > (TurnTime - WarnTime))
+        for (auto& group : m_playerInfo)
         {
-            if (!warned
-                 && m_sharedData.clients[m_playerInfo[GroupID].playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+            if (group.turnTimer.elapsed() > (TurnTime - WarnTime))
             {
-                warned = true;
-                m_sharedData.host.broadcastPacket(PacketID::WarnTime, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            }
-
-            if (m_turnTimer.elapsed() > TurnTime)
-            {
-                if (m_sharedData.clients[m_playerInfo[GroupID].playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+                if (!group.warned
+                    && m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
                 {
-                    m_playerInfo[GroupID].playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
-                    m_playerInfo[GroupID].playerInfo[0].position = m_holeData[m_currentHole].pin;
-                    m_playerInfo[GroupID].playerInfo[0].distanceToHole = 0.f;
-                    m_playerInfo[GroupID].playerInfo[0].terrain = TerrainID::Green;
-                    setNextPlayer(GroupID); //resets the timer
+                    group.warned = true;
+                    m_sharedData.host.broadcastPacket(PacketID::WarnTime, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
 
-                    m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::IdleTimeout), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                if (group.turnTimer.elapsed() > TurnTime)
+                {
+                    if (m_sharedData.clients[group.playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+                    {
+                        group.playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
+                        group.playerInfo[0].position = m_holeData[m_currentHole].pin;
+                        group.playerInfo[0].distanceToHole = 0.f;
+                        group.playerInfo[0].terrain = TerrainID::Green;
+                        setNextPlayer(m_groupAssignments[group.playerInfo[0].client]); //resets the timer
+
+                        for (auto c : group.clientIDs)
+                        {
+                            m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::IdleTimeout), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        }
+                    }
                 }
             }
-        }
-        else
-        {
-            warned = false;
+            else
+            {
+                group.warned = false;
+            }
         }
 
         //we have to keep checking this as a client might
@@ -684,7 +688,10 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
 
             //make sure to keep resetting this to prevent unfairly
             //truncating the next player's turn
-            m_turnTimer.restart();
+            for (auto& group : m_playerInfo)
+            {
+                group.turnTimer.restart();
+            }
         };
 
         m_scoreboardReadyFlags = 0;
@@ -744,7 +751,7 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
                 auto animID = isPutt ? AnimationID::Putt : AnimationID::Swing;
                 m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-                m_turnTimer.restart(); //don't time out mid-shot...
+                m_playerInfo[GroupID].turnTimer.restart(); //don't time out mid-shot...
 
                 m_playerInfo[GroupID].playerInfo[0].ballEntity.getComponent<Ball>() = ball;
             }
@@ -1065,7 +1072,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Idle), net::NetFlag::Reliable, ConstVal::NetChannelReliable);*/
     }
 
-    m_turnTimer.restart();
+    m_playerInfo[groupID].turnTimer.restart();
 }
 
 void GolfState::setNextHole()
@@ -1202,7 +1209,10 @@ void GolfState::setNextHole()
 
             //make sure to keep resetting this to prevent unfairly
             //truncating the next player's turn
-            m_turnTimer.restart();
+            for (auto& group : m_playerInfo)
+            {
+                group.turnTimer.restart();
+            }
         };
 
         m_scoreboardReadyFlags = 0;

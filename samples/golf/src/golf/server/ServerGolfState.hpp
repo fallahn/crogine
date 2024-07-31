@@ -74,11 +74,12 @@ namespace sv
         std::uint8_t m_currentBest; //current best score for hole, non-stroke games end if no-one can beat it
         std::uint8_t m_randomTargetCount;
 
-        cro::Clock m_turnTimer;
         std::array<std::uint8_t, 2u> m_honour = { 0, 0 };
 
         struct PlayerGroup final
         {
+            cro::Clock turnTimer;
+            bool warned = false;
             std::vector<PlayerStatus> playerInfo;
             std::vector<std::uint8_t> clientIDs; //list of clients which should be notified of this info
         };

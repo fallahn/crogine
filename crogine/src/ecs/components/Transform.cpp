@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -385,7 +385,8 @@ glm::vec3 Transform::getPosition() const
 
 glm::vec3 Transform::getWorldPosition() const
 {
-    return glm::vec3(getWorldTransform()[3]) - ((m_origin * m_scale) * m_rotation);
+    const auto t = glm::vec3(getWorldTransform()[3]);
+    return t - ((m_origin * m_scale) * m_rotation);
 }
 
 glm::quat Transform::getRotation() const
@@ -423,11 +424,12 @@ glm::vec3 Transform::getWorldScale() const
 
 glm::mat4 Transform::getLocalTransform() const
 {
+   
     if (m_dirtyFlags & Tx)
     {
 #ifdef USE_PARALLEL_PROCESSING
         std::scoped_lock l(m_mutex);
-#endif
+#endif 
         m_transform = glm::translate(glm::mat4(1.f), m_position);
         m_transform *= glm::toMat4(m_rotation);
         m_transform = glm::scale(m_transform, m_scale);
