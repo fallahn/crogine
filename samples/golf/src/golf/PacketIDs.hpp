@@ -136,7 +136,9 @@ struct ClientGrouping final
         One,  //every client has its own group
         Two,  //two clients per group
         Three,//three clients per group
-        Four  //four clients per group
+        Four,  //four clients per group
+
+        Count
     };
 };
 
@@ -200,6 +202,7 @@ namespace PacketID
         SkipTurn, //< uint8 clientID - requests server fast forward current turn
         ClubLevel, //< uint8 client ID | uint8 client club level (max clubs - used to limit to lowest player)
         Mulligan, //< uint8 client ID - career mode requests a mulligan
+        GroupMode, //< int32 how multiplayer games should be grouped on a server
 
         //both directions
         ClientVersion, //uint16 FROM server on join contains the game mode, TO server CURRENT_VER of client. Clients are kicked if this does not match the server

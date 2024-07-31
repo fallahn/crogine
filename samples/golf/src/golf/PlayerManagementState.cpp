@@ -36,6 +36,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
+#include "PacketIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <Social.hpp>
@@ -89,11 +90,22 @@ namespace
     constexpr std::size_t ForfeitIndex = 101;
     constexpr std::size_t KickIndex    = 102;
     constexpr std::size_t QuitIndex    = 103;
+    constexpr std::size_t GroupIndex   = 104;
+
+    constexpr std::size_t PrevGroupID  = 105;
+    constexpr std::size_t NextGroupID  = 106;
 
     constexpr glm::vec2 MenuNodePosition(112.f, -76.f);
     constexpr glm::vec2 MenuHiddenPosition(-10000.f);
 
     const cro::Time CooldownTime = cro::seconds(10.f);
+
+    std::array<std::string, ClientGrouping::Count> GroupStrings =
+    {
+        std::string("None"),
+        "Even",
+        "One", "Two", "Three", "Four"
+    };
 }
 
 PlayerManagementState::PlayerManagementState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -462,7 +474,8 @@ void PlayerManagementState::buildScene()
         e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         e.getComponent<cro::Text>().setString(label);
         e.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        centreText(e);
+        e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        //centreText(e);
         e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
@@ -473,11 +486,33 @@ void PlayerManagementState::buildScene()
         return e;
     };
 
+    //grouping
+    if (m_sharedData.baseState == StateID::Menu)
+    {
+        entity = createItem({ 0.f, -31.f }, "Grouping: " + GroupStrings[m_sharedData.groupMode], menuEntity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(GroupIndex);
+        entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, PokeIndex);
+        entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, QuitIndex);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        m_sharedData.groupMode = (m_sharedData.groupMode + 1) % ClientGrouping::Count;
+                        e.getComponent<cro::Text>().setString("Grouping: " + GroupStrings[m_sharedData.groupMode]);
+                        m_sharedData.clientConnection.netClient.sendPacket(
+                            PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
+                });
+        m_groupSelection.label = entity;
+    }
+
     //return to game
     entity = createItem(glm::vec2(0.f, -6.f), "Return", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(QuitIndex);
-    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, PokeIndex);
+    entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, m_groupSelection.label.isValid() ? GroupIndex : PokeIndex);
     entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, KickIndex);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -567,7 +602,7 @@ void PlayerManagementState::buildScene()
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
         entity.getComponent<cro::UIInput>().setSelectionIndex(PokeIndex);
         entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, KickIndex);
-        entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, QuitIndex);
+        entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, GroupIndex);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&, setConfirmMessage](cro::Entity e, cro::ButtonEvent evt) mutable
                 {

@@ -1579,7 +1579,7 @@ void GolfState::initScene()
         }
     }
     std::int32_t groupCount = 1;
-    switch (m_sharedData.groupCount)
+    switch (m_sharedData.groupMode)
     {
     default: break;
     case ClientGrouping::Even:
@@ -1607,7 +1607,7 @@ void GolfState::initScene()
         if (m_sharedData.clients[i].connected)
         {
             auto groupID = 0;
-            switch (m_sharedData.groupCount)
+            switch (m_sharedData.groupMode)
             {
             default: break;
             case ClientGrouping::Even:

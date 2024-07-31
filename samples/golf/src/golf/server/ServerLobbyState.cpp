@@ -183,6 +183,12 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
+        case PacketID::GroupMode:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.groupMode = evt.packet.as<std::int32_t>();
+            }
+            break;
         case PacketID::ClubLevel:
             {
                 auto data = evt.packet.as<std::uint16_t>();
