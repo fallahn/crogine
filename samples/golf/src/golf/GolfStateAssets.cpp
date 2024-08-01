@@ -2075,56 +2075,83 @@ void GolfState::loadModels()
                     id = skel.getAttachmentIndex("head");
                     if (id > -1)
                     {
+                        const auto& pd = m_sharedData.connectionData[i].playerData[j];
+
+                        const auto createHeadEnt = [&](std::int32_t colourKey, std::int32_t transformIndexOffset)
+                            {
+                                auto ent = m_gameScene.createEntity();
+                                ent.addComponent<cro::Transform>();
+                                md.createModel(ent);
+
+                                //set material and colour
+                                material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                                applyMaterialData(md, material); //applies double sidedness
+
+                                const auto hairColour = pc::Palette[pd.avatarFlags[colourKey]];
+                                material.setProperty("u_hairColour", hairColour);
+                                ent.getComponent<cro::Model>().setMaterial(0, material);
+                                ent.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
+
+                                if (md.getMaterialCount() == 2)
+                                {
+                                    material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                                    applyMaterialData(md, material, 1);
+                                    material.setProperty("u_hairColour", hairColour);
+                                    ent.getComponent<cro::Model>().setMaterial(1, material);
+                                }
+
+                                //apply any profile specific transforms
+                                const auto rot = pd.headwearOffsets[PlayerData::HeadwearOffset::HairRot + transformIndexOffset] * cro::Util::Const::degToRad;
+                                ent.getComponent<cro::Transform>().setPosition(pd.headwearOffsets[PlayerData::HeadwearOffset::HairTx + transformIndexOffset]);
+                                ent.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+                                ent.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+                                ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+                                ent.getComponent<cro::Transform>().setScale(pd.headwearOffsets[PlayerData::HeadwearOffset::HairScale + transformIndexOffset]);
+
+                                if (m_avatars[i][j].flipped)
+                                {
+                                    ent.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                                }
+
+                                ent.addComponent<cro::Callback>().active = true;
+                                ent.getComponent<cro::Callback>().function =
+                                    [entity](cro::Entity e, float)
+                                    {
+                                        e.getComponent<cro::Model>().setHidden(entity.getComponent<cro::Model>().isHidden());
+                                    };
+
+                                return ent;
+                            };
+
+
+                        //do this first so we duplicate a blank attachment if needs be
+                        auto hatID = indexFromHairID(m_sharedData.connectionData[i].playerData[j].hatID);
+                        if (hatID != 0
+                            && md.loadFromFile(m_sharedData.hairInfo[hatID].modelPath))
+                        {
+                            auto hatEnt = createHeadEnt(pc::ColourKey::Hat, PlayerData::HeadwearOffset::HatTx);
+
+                            auto hatAttachment = entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                            auto hatAtID = entity.getComponent<cro::Skeleton>().addAttachment(hatAttachment);
+                            skel.getAttachments()[hatAtID].setModel(hatEnt);
+
+                            //play time tracking
+                            if (m_sharedData.hairInfo[hatID].workshopID
+                                && i == m_sharedData.localConnectionData.connectionID)
+                            {
+                                m_modelStats.push_back(m_sharedData.hairInfo[hatID].workshopID);
+                            }
+                        }
+
+
                         //look to see if we have a hair model to attach
-                        auto hairID = indexFromHairID(m_sharedData.connectionData[i].playerData[j].hairID);
+                        auto hairID = indexFromHairID(pd.hairID);
 
                         if (hairID != 0
                             && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
                         {
-                            auto hairEnt = m_gameScene.createEntity();
-                            hairEnt.addComponent<cro::Transform>();
-                            md.createModel(hairEnt);
-
-                            //set material and colour
-                            material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
-                            applyMaterialData(md, material); //applies double sidedness
-
-                            const auto hairColour = pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]];
-                            material.setProperty("u_hairColour", hairColour);
-                            hairEnt.getComponent<cro::Model>().setMaterial(0, material);
-                            hairEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
-
-                            if (md.getMaterialCount() == 2)
-                            {
-                                material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
-                                applyMaterialData(md, material, 1);
-                                material.setProperty("u_hairColour", hairColour);
-                                hairEnt.getComponent<cro::Model>().setMaterial(1, material);
-                            }
-
-                            const auto& pd = m_sharedData.connectionData[i].playerData[j];
-
-                            //apply any profile specific transforms
-                            const auto rot = pd.headwearOffsets[PlayerData::HeadwearOffset::HairRot] * cro::Util::Const::degToRad;
-                            hairEnt.getComponent<cro::Transform>().setPosition(pd.headwearOffsets[PlayerData::HeadwearOffset::HairTx]);
-                            hairEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
-                            hairEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
-                            hairEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
-                            hairEnt.getComponent<cro::Transform>().setScale(pd.headwearOffsets[PlayerData::HeadwearOffset::HairScale]);
-
+                            auto hairEnt = createHeadEnt(pc::ColourKey::Hair, 0);
                             skel.getAttachments()[id].setModel(hairEnt);
-
-                            if (m_avatars[i][j].flipped)
-                            {
-                                hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
-                            }
-
-                            hairEnt.addComponent<cro::Callback>().active = true;
-                            hairEnt.getComponent<cro::Callback>().function =
-                                [entity](cro::Entity e, float)
-                                {
-                                    e.getComponent<cro::Model>().setHidden(entity.getComponent<cro::Model>().isHidden());
-                                };
 
                             if (m_sharedData.hairInfo[hairID].workshopID
                                 && i == m_sharedData.localConnectionData.connectionID)

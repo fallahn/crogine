@@ -55,6 +55,7 @@ public:
     };
     std::vector<HairInfo> hairModels;
     cro::Attachment* hairAttachment = nullptr;
+    cro::Attachment* hatAttachment = nullptr;
 
     std::vector<cro::Entity> previewSounds;
 

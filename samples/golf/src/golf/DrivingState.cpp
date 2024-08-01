@@ -2481,64 +2481,96 @@ void DrivingState::createPlayer()
         id = skel.getAttachmentIndex("head");
         if (id > -1)
         {
-            //see if we have a hair model
-            std::int32_t hairID = 0;
-            if (auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
-                [&](const SharedStateData::HairInfo& h) {return h.uid == playerData.hairID; });
-                hair != m_sharedData.hairInfo.end())
+            const auto findID = [&](std::uint32_t hID)
+                {
+                    if (auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
+                        [&](const SharedStateData::HairInfo& h) {return h.uid == hID; });
+                        hair != m_sharedData.hairInfo.end())
+                    {
+                        return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
+                    }
+                    return 0;
+                };
+
+            const auto createHeadEnt = [&](std::int32_t colourKey, std::int32_t transformIndexOffset)
+                {
+                    auto ent = m_gameScene.createEntity();
+                    ent.addComponent<cro::Transform>();
+                    md.createModel(ent);
+
+                    //set material and colour
+                    const auto hairColour = pc::Palette[playerData.avatarFlags[colourKey]];
+                    auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                    applyMaterialData(md, mat, 0); //applies double sisded property
+                    mat.setProperty("u_hairColour", hairColour);
+                    ent.getComponent<cro::Model>().setMaterial(0, mat);
+
+                    //this needs to be captured by player callback, below
+                    auto matCount = 1;
+                    if (md.getMaterialCount() == 2)
+                    {
+                        mat = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        applyMaterialData(md, mat, 1);
+                        mat.setProperty("u_hairColour", hairColour);
+                        ent.getComponent<cro::Model>().setMaterial(1, mat);
+
+                        matCount = 2;
+                    }
+
+                    const auto rot = playerData.headwearOffsets[PlayerData::HeadwearOffset::HairRot + transformIndexOffset] * cro::Util::Const::degToRad;
+                    ent.getComponent<cro::Transform>().setPosition(playerData.headwearOffsets[PlayerData::HeadwearOffset::HairTx + transformIndexOffset]);
+                    ent.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+                    ent.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+                    ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+                    ent.getComponent<cro::Transform>().setScale(playerData.headwearOffsets[PlayerData::HeadwearOffset::HairScale + transformIndexOffset]);
+
+                    if (playerData.flipped)
+                    {
+                        ent.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                    }
+
+                    //fade callback
+                    ent.addComponent<cro::Callback>().active = true;
+                    ent.getComponent<cro::Callback>().function =
+                        [&, matCount](cro::Entity e, float)
+                        {
+                            float alpha = std::abs(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
+                            alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
+
+                            e.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
+
+                            if (matCount == 2)
+                            {
+                                e.getComponent<cro::Model>().setMaterialProperty(1, "u_fadeAmount", alpha);
+                            }
+                        };
+
+                    return ent;
+                };
+
+
+            //we want to duplicate the attachment *first*
+            //else we briefly have the hair entity set on 2 attachments...
+            const auto hatID = findID(playerData.hatID);
+            if (hatID != 0
+                && md.loadFromFile(m_sharedData.hairInfo[hatID].modelPath))
             {
-                hairID = static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
+                //duplicate the hair attachment
+                auto at = skel.getAttachments()[id];
+                auto hatAtID = skel.addAttachment(at);
+
+                auto hatEnt = createHeadEnt(pc::ColourKey::Hat, PlayerData::HeadwearOffset::HatTx);
+                skel.getAttachments()[hatAtID].setModel(hatEnt);
             }
 
+
+            //see if we have a hair model
+            const std::int32_t hairID = findID(playerData.hairID);            
             if (hairID != 0
                 && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
             {
-                auto hairEnt = m_gameScene.createEntity();
-                hairEnt.addComponent<cro::Transform>();
-                md.createModel(hairEnt);
-
-                //set material and colour
-                const auto hairColour = pc::Palette[playerData.avatarFlags[pc::ColourKey::Hair]];
-                auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
-                applyMaterialData(md, mat, 0); //applies double sisded property
-                mat.setProperty("u_hairColour", hairColour);
-                hairEnt.getComponent<cro::Model>().setMaterial(0, mat);
-
-                //this needs to be captured by player callback, below
-                auto matCount = 1;
-                if (md.getMaterialCount() == 2)
-                {
-                    mat = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
-                    applyMaterialData(md, mat, 1);
-                    mat.setProperty("u_hairColour", hairColour);
-                    hairEnt.getComponent<cro::Model>().setMaterial(1, mat);
-
-                    matCount = 2;
-                }
-
-
+                auto hairEnt = createHeadEnt(pc::ColourKey::Hair, 0);
                 skel.getAttachments()[id].setModel(hairEnt);
-
-                if (playerData.flipped)
-                {
-                    hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
-                }
-
-                //fade callback
-                hairEnt.addComponent<cro::Callback>().active = true;
-                hairEnt.getComponent<cro::Callback>().function =
-                    [&, matCount](cro::Entity e, float)
-                {
-                    float alpha = std::abs(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
-                    alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
-
-                    e.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
-
-                    if (matCount == 2)
-                    {
-                        e.getComponent<cro::Model>().setMaterialProperty(1, "u_fadeAmount", alpha);
-                    }
-                };
             }
         }
 

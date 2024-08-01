@@ -1071,6 +1071,12 @@ void MenuState::createAvatarScene()
                 if (id > -1)
                 {
                     //hair is optional so OK if this doesn't exist
+
+                    //manually duplicate this to create a hat attachment
+                    auto hatAttachment = entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                    auto hatID = entity.getComponent<cro::Skeleton>().addAttachment(hatAttachment);
+                    m_playerAvatars[i].hatAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[hatID];
+                    //do this last because adding an attachment will invalidate the pointer...
                     m_playerAvatars[i].hairAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[id];
                 }
 
