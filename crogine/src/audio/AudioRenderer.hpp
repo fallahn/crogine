@@ -103,6 +103,9 @@ namespace cro
         virtual void playbackDisconnectEvent(){};
         virtual void recordDisconnectEvent(){};
 
+        //called when the current device is resumed from sleep mode
+        virtual void resume() {};
+
         //optionally override this to implement ImGui debug printing
         //*without* window begin/end
         virtual void printDebug() {}
@@ -324,7 +327,7 @@ namespace cro
 
         static void onPlaybackDisconnect();
         static void onRecordDisconnect();
-
+        static void resume();
 
         /*!
         \brief Prints any debug info available to the current ImGui window

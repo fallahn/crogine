@@ -848,11 +848,19 @@ void App::handleMessages()
     {
         const auto& msg = m_messageBus.poll();
 
-        /*switch (msg.id)
+        switch (msg.id)
         {
-
+        case Message::SystemMessage:
+        {
+            const auto& data = msg.getData<Message::SystemEvent>();
+            if (data.type == Message::SystemEvent::ResumedFromSuspend)
+            {
+                AudioRenderer::resume();
+            }
+        }
+            break;
         default: break;
-        }*/
+        }
 
         handleMessage(msg);
     }

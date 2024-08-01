@@ -121,11 +121,14 @@ namespace cro
             void playbackDisconnectEvent() override;
             void recordDisconnectEvent() override;
 
+            void resume() override;
+
             void printDebug() override;
 
         private:
             ALCdevice* m_device;
             ALCcontext* m_context;
+            std::string m_deviceName;
 
             static constexpr std::size_t MaxStreams = 128;
             std::array<OpenALStream, MaxStreams> m_streams = {};

@@ -113,6 +113,14 @@ bool OpenALImpl::init()
         }
     }
     
+    
+    //store which device we connected to in case we need to resume at some point
+    auto enumAvailable = alcIsExtensionPresent(m_device, "ALC_ENUMERATION_EXT");
+    if (enumAvailable)
+    {
+        m_deviceName = alcGetString(m_device, ALC_ALL_DEVICES_SPECIFIER);
+    }
+
     /*alcCheck*/(m_context = alcCreateContext(m_device, nullptr));
     if (!m_context)
     {
@@ -622,6 +630,24 @@ void OpenALImpl::recordDisconnectEvent()
 
 }
 
+void OpenALImpl::resume()
+{
+    //when the device wakes from sleep this
+    //impl may be resumed before devices which
+    //were previously being used are. In this
+    //case we re-enumerate available devices and
+    //reconnect to the previous device is it exists
+    //in the list
+    if (!m_deviceName.empty())
+    {
+        getDeviceList();
+        if (std::find(m_devices.begin(), m_devices.end(), m_deviceName) != m_devices.end())
+        {
+            reconnect(m_deviceName.c_str());
+        }
+    }
+}
+
 void OpenALImpl::printDebug()
 {
     ImGui::Text("Source Cache Size %lu", m_sourcePool.size());
@@ -873,6 +899,8 @@ void OpenALImpl::reconnect(const char* deviceStr)
                 LogI << "Connected audio output to default device" << std::endl;
             }
 
+            //update the device name as it may have changed
+            m_deviceName = alcGetString(m_device, ALC_ALL_DEVICES_SPECIFIER);
 
             return;
         }

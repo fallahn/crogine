@@ -237,6 +237,14 @@ void AudioRenderer::onRecordDisconnect()
     }
 }
 
+void AudioRenderer::resume() 
+{
+    if (m_impl)
+    {
+        m_impl->resume();
+    }
+}
+
 void AudioRenderer::printDebug()
 {
     CRO_ASSERT(m_impl, "");
