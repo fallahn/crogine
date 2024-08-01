@@ -53,6 +53,11 @@ PlayerData& PlayerData::operator=(const sv::PlayerInfo& pi)
 
     headwearOffsets = pi.headwearOffsets;
 
+    if (hatID == hairID)
+    {
+        hatID = 0;
+    }
+
     return *this;
 }
 
@@ -256,8 +261,11 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             else if (n == "scale_1")
             {
                 headwearOffsets[5] = prop.getValue<glm::vec3>();
-                headwearOffsets[5].y = 3.f;
             }
+        }
+        if (hatID == hairID)
+        {
+            hatID == 0;
         }
 
         profileID = uid;
