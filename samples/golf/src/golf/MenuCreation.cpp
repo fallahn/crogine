@@ -3386,6 +3386,12 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
                 Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
             }
 
+            if (indexFromHairID(cd.playerData[i].hatID) == 0)
+            {
+                //no local hat model
+                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Social::UserContent::Hair);
+            }
+
             if (indexFromAvatarID(cd.playerData[i].skinID) == 0)
             {
                 //no local avatar model

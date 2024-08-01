@@ -865,19 +865,25 @@ void MenuState::parseAvatarDirectory()
     for (auto& profile : m_profileData.playerProfiles)
     {
         //make sure the profile avatar is actually available
-        auto skinIndex = indexFromAvatarID(profile.skinID);
+        const auto skinIndex = indexFromAvatarID(profile.skinID);
         if (profile.skinID == 0
             || m_sharedData.avatarInfo[skinIndex].locked)
         {
-            //use first valid skin
+            //use first valid skin - locked skins are never loaded first
             profile.skinID = m_sharedData.avatarInfo[0].uid;
         }
 
         //and the hair
-        auto hairIndex = indexFromHairID(profile.hairID);
+        const auto hairIndex = indexFromHairID(profile.hairID);
         if (m_sharedData.hairInfo[hairIndex].locked)
         {
             profile.hairID = m_sharedData.hairInfo[0].uid;
+        }
+
+        const auto hatIndex = indexFromHairID(profile.hairID);
+        if (m_sharedData.hairInfo[hatIndex].locked)
+        {
+            profile.hatID = 0;
         }
 
         //compare against list of unlocked balls and make sure we're in it

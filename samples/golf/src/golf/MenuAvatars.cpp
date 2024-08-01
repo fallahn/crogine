@@ -399,35 +399,43 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             mugshot.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         }
 
+        const auto setAttachment = 
+            [&](cro::Attachment* attachment, std::uint32_t itemID, pc::ColourKey::Index colourKey, std::int32_t transformIndexOffset)
+            {
+                if (attachment != nullptr)
+                {
+                    if (attachment->getModel().isValid())
+                    {
+                        attachment->getModel().getComponent<cro::Model>().setHidden(true);
+                    }
+
+                    auto hID = indexFromHairID(itemID);
+                    auto& hair = m_playerAvatars[idx].hairModels[hID];
+                    if (hair.model.isValid())
+                    {
+                        hair.model.getComponent<cro::Model>().setHidden(false);
+                        hair.model.getComponent<cro::Model>().setFacing(profile.flipped ? cro::Model::Facing::Back : cro::Model::Facing::Front);
+                        attachment->setModel(hair.model);
+
+                        //apply hair colour to material
+                        auto hairColour = m_playerAvatars[idx].getColour(colourKey);
+                        hair.model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", hairColour);
+
+                        //apply any profile specific transforms
+                        const auto rot = profile.headwearOffsets[PlayerData::HeadwearOffset::HairRot + transformIndexOffset] * cro::Util::Const::degToRad;
+                        hair.model.getComponent<cro::Transform>().setPosition(profile.headwearOffsets[PlayerData::HeadwearOffset::HairTx + transformIndexOffset]);
+                        hair.model.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+                        hair.model.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+                        hair.model.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+                        hair.model.getComponent<cro::Transform>().setScale(profile.headwearOffsets[PlayerData::HeadwearOffset::HairScale + transformIndexOffset]);
+                    }
+                }
+            };
         //update hair model
-        if (m_playerAvatars[idx].hairAttachment != nullptr)
-        {
-            if (m_playerAvatars[idx].hairAttachment->getModel().isValid())
-            {
-                m_playerAvatars[idx].hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
-            }
+        setAttachment(m_playerAvatars[idx].hairAttachment, profile.hairID, pc::ColourKey::Hair, 0);
 
-            auto hID = indexFromHairID(profile.hairID);
-            auto& hair = m_playerAvatars[idx].hairModels[hID];
-            if (hair.model.isValid())
-            {
-                hair.model.getComponent<cro::Model>().setHidden(false);
-                hair.model.getComponent<cro::Model>().setFacing(profile.flipped ? cro::Model::Facing::Back : cro::Model::Facing::Front);
-                m_playerAvatars[idx].hairAttachment->setModel(hair.model);
-
-                //apply hair colour to material
-                auto hairColour = m_playerAvatars[idx].getColour(pc::ColourKey::Hair);
-                hair.model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", hairColour);
-
-                //apply any profile specific transforms
-                const auto rot = profile.headwearOffsets[PlayerData::HeadwearOffset::HairRot] * cro::Util::Const::degToRad;
-                hair.model.getComponent<cro::Transform>().setPosition(profile.headwearOffsets[PlayerData::HeadwearOffset::HairTx]);
-                hair.model.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
-                hair.model.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
-                hair.model.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
-                hair.model.getComponent<cro::Transform>().setScale(profile.headwearOffsets[PlayerData::HeadwearOffset::HairScale]);
-            }
-        }
+        //and the hat model
+        setAttachment(m_playerAvatars[idx].hatAttachment, profile.hatID, pc::ColourKey::Hat, PlayerData::HeadwearOffset::HatTx);
     };
 
 
