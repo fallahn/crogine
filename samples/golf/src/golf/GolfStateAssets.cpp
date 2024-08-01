@@ -2030,13 +2030,6 @@ void GolfState::loadModels()
                 {
                     auto& skel = entity.getComponent<cro::Skeleton>();
 
-                    //find attachment points for club model
-                    auto id = skel.getAttachmentIndex("hands");
-                    if (id > -1)
-                    {
-                        m_avatars[i][j].hands = &skel.getAttachments()[id];
-                    }
-
                     const auto& anims = skel.getAnimations();
                     for (auto k = 0u; k < std::min(anims.size(), static_cast<std::size_t>(AnimationID::Count)); ++k)
                     {
@@ -2072,7 +2065,7 @@ void GolfState::loadModels()
                     }
 
                     //and attachment for hair/hats
-                    id = skel.getAttachmentIndex("head");
+                    auto id = skel.getAttachmentIndex("head");
                     if (id > -1)
                     {
                         const auto& pd = m_sharedData.connectionData[i].playerData[j];
@@ -2159,6 +2152,13 @@ void GolfState::loadModels()
                                 m_modelStats.push_back(m_sharedData.hairInfo[hairID].workshopID);
                             }
                         }
+                    }
+
+                    //find attachment points for club model
+                    id = skel.getAttachmentIndex("hands");
+                    if (id > -1)
+                    {
+                        m_avatars[i][j].hands = &skel.getAttachments()[id];
                     }
                 }
 

@@ -2464,21 +2464,7 @@ void DrivingState::createPlayer()
             }
         }
 
-        //find attachment points for club model
-        auto id = skel.getAttachmentIndex("hands");
-        if (id > -1)
-        {
-            m_avatar.hands = &skel.getAttachments()[id];
-            m_avatar.hands->setModel(m_clubModels[ClubModel::Wood]);
-        }
-        else
-        {
-            //although this should have been validated when loading
-            //avatar data in to the menu
-            LogW << "No attachment point named \'hands\' was found" << std::endl;
-        }
-
-        id = skel.getAttachmentIndex("head");
+        auto id = skel.getAttachmentIndex("head");
         if (id > -1)
         {
             const auto findID = [&](std::uint32_t hID)
@@ -2574,6 +2560,19 @@ void DrivingState::createPlayer()
             }
         }
 
+        //find attachment points for club model - do this second else above might duplicate attachment and invalidate the pointer
+        id = skel.getAttachmentIndex("hands");
+        if (id > -1)
+        {
+            m_avatar.hands = &skel.getAttachments()[id];
+            m_avatar.hands->setModel(m_clubModels[ClubModel::Wood]);
+        }
+        else
+        {
+            //although this should have been validated when loading
+            //avatar data in to the menu
+            LogW << "No attachment point named \'hands\' was found" << std::endl;
+        }
         //skel.setInterpolationEnabled(false);
     }
 

@@ -233,29 +233,30 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
                 isCustomName = prop.getValue<bool>();
             }
 
-            else if (name == "offset_0")
+            else if (n == "offset_0")
             {
                 headwearOffsets[0] = prop.getValue<glm::vec3>();
             }
-            else if (name == "rotation_0")
+            else if (n == "rotation_0")
             {
                 headwearOffsets[1] = prop.getValue<glm::vec3>();
             }
-            else if (name == "scale_0")
+            else if (n == "scale_0")
             {
                 headwearOffsets[2] = prop.getValue<glm::vec3>();
             }
-            else if (name == "offset_1")
+            else if (n == "offset_1")
             {
                 headwearOffsets[3] = prop.getValue<glm::vec3>();
             }
-            else if (name == "rotation_2")
+            else if (n == "rotation_1")
             {
                 headwearOffsets[4] = prop.getValue<glm::vec3>();
             }
-            else if (name == "scale_2")
+            else if (n == "scale_1")
             {
                 headwearOffsets[5] = prop.getValue<glm::vec3>();
+                headwearOffsets[5].y = 3.f;
             }
         }
 
