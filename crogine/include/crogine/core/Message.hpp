@@ -150,7 +150,8 @@ namespace cro
             enum
             {
                 FullScreenToggled,
-                ScreenshotTaken //note that files are written asynchronously and may not be available when this message is received
+                ScreenshotTaken, //note that files are written asynchronously and may not be available when this message is received
+                ResumedFromSuspend
             }type = FullScreenToggled;
         };
 

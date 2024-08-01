@@ -503,6 +503,8 @@ void PlayerManagementState::buildScene()
                         e.getComponent<cro::Text>().setString("Grouping: " + GroupStrings[m_sharedData.groupMode]);
                         m_sharedData.clientConnection.netClient.sendPacket(
                             PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
     }
