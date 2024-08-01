@@ -929,7 +929,7 @@ void InputParser::updateDistanceEstimation()
     auto power = Clubs[m_currentClub].getPower(0.f, m_sharedData.imperialMeasurements);
     auto spin = getSpin();
     spin.y *= Clubs[m_currentClub].getTopSpinMultiplier();
-    pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
+    //pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
 
     spin.x *= Clubs[m_currentClub].getSideSpinMultiplier() / 2.f;
 

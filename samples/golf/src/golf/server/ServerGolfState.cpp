@@ -1013,7 +1013,10 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     std::size_t playerCount = 0;
     for (const auto& group : m_playerInfo)
     {
-        totalDistance += group.playerInfo[0].distanceToHole;
+        if (!group.playerInfo.empty())
+        {
+            totalDistance += group.playerInfo[0].distanceToHole;
+        }
         ntpStrokesComplete = 
             (m_sharedData.scoreType == ScoreType::NearestThePin && playerInfo[0].holeScore[m_currentHole] >= MaxNTPStrokes) 
             ? true : ntpStrokesComplete;
