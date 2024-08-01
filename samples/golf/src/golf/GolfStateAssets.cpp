@@ -2102,6 +2102,15 @@ void GolfState::loadModels()
                                 hairEnt.getComponent<cro::Model>().setMaterial(1, material);
                             }
 
+                            const auto& pd = m_sharedData.connectionData[i].playerData[j];
+
+                            //apply any profile specific transforms
+                            const auto rot = pd.headwearOffsets[PlayerData::HeadwearOffset::HairRot] * cro::Util::Const::degToRad;
+                            hairEnt.getComponent<cro::Transform>().setPosition(pd.headwearOffsets[PlayerData::HeadwearOffset::HairTx]);
+                            hairEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+                            hairEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+                            hairEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+                            hairEnt.getComponent<cro::Transform>().setScale(pd.headwearOffsets[PlayerData::HeadwearOffset::HairScale]);
 
                             skel.getAttachments()[id].setModel(hairEnt);
 

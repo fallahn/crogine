@@ -418,6 +418,14 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 //apply hair colour to material
                 auto hairColour = m_playerAvatars[idx].getColour(pc::ColourKey::Hair);
                 hair.model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", hairColour);
+
+                //apply any profile specific transforms
+                const auto rot = profile.headwearOffsets[PlayerData::HeadwearOffset::HairRot] * cro::Util::Const::degToRad;
+                hair.model.getComponent<cro::Transform>().setPosition(profile.headwearOffsets[PlayerData::HeadwearOffset::HairTx]);
+                hair.model.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+                hair.model.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+                hair.model.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+                hair.model.getComponent<cro::Transform>().setScale(profile.headwearOffsets[PlayerData::HeadwearOffset::HairScale]);
             }
         }
     };

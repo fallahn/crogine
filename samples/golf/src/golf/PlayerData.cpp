@@ -127,6 +127,9 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 {
     std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f));
 
+    headwearOffsets[2] = glm::vec3(1.f);
+    headwearOffsets[5] = glm::vec3(1.f);
+
     //profiles may not yet have the colour index property, so set to a default
     if (ballColourIndex < pc::Palette.size())
     {
