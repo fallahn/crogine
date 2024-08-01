@@ -4184,6 +4184,22 @@ void MenuState::addCourseSelectButtons()
     }
 }
 
+void MenuState::prevRules()
+{
+    m_sharedData.scoreType = (m_sharedData.scoreType + (ScoreType::Count - 1)) % ScoreType::Count;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+}
+
+void MenuState::nextRules()
+{
+    m_sharedData.scoreType = (m_sharedData.scoreType + 1) % ScoreType::Count;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+}
+
 void MenuState::prevHoleCount()
 {
     m_sharedData.holeCount = (m_sharedData.holeCount + 2) % 3;

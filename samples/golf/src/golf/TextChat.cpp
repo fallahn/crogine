@@ -84,7 +84,7 @@ namespace
         "/me asks for a selfie"
     };
 
-    const std::array<std::string, 17u> HappyStrings =
+    const std::array<std::string, 18u> HappyStrings =
     {
         "/me is ecstatic",
         "/me grins from ear to ear",
@@ -102,7 +102,8 @@ namespace
         "/me is on top of the world",
         "/me pirouettes jubilantly",
         "/me feels like a dog with two tails",
-        "/me lets out a squeak"
+        "/me lets out a squeak",
+        "/me oscillates with glee"
     };
 
     const std::array<std::string, 14u> LaughStrings =

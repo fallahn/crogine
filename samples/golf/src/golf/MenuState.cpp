@@ -561,10 +561,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
     const auto doNext = [&]()
         {
             if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby
-                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+                && m_currentMenu == MenuID::Lobby)
             {
-                nextCourse();
+                if (m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+                {
+                    nextCourse();
+                }
+                else if (m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().getScale().x == 0)
+                {
+                    nextRules();
+                }
             }
             else if (m_currentMenu == MenuID::Avatar)
             {
@@ -577,10 +583,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
     const auto doPrev = [&]()
         {
             if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby
-                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+                && m_currentMenu == MenuID::Lobby)
             {
-                prevCourse();
+                if (m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+                {
+                    prevCourse();
+                }
+                else if (m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().getScale().x == 0)
+                {
+                    prevRules();
+                }
             }
             else if (m_currentMenu == MenuID::Avatar)
             {

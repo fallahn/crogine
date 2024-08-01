@@ -1350,10 +1350,7 @@ void MenuState::createMenuCallbacks()
         {
             if (activated(evt))
             {
-                m_sharedData.scoreType = (m_sharedData.scoreType + (ScoreType::Count - 1)) % ScoreType::Count;
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                prevRules();
             }
         });
     m_courseSelectCallbacks.nextRules = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1361,10 +1358,7 @@ void MenuState::createMenuCallbacks()
         {
             if (activated(evt))
             {
-                m_sharedData.scoreType = (m_sharedData.scoreType + 1) % ScoreType::Count;
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                nextRules();
             }
         });
 
