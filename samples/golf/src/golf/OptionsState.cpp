@@ -133,6 +133,8 @@ namespace
     //the slider callbacks :3
     std::uint8_t mixerChannelIndex = MixerChannel::Music;
 
+    std::size_t audioDeviceIndex = 0;
+
     static constexpr float SliderWidth = 142.f;
     static constexpr glm::vec3 ToolTipOffset(10.f, 10.f, 0.f);
 
@@ -259,6 +261,13 @@ namespace
         cro::Entity target;
     };
 
+    constexpr cro::FloatRect LabelCrop(0.f, -8.f, 128.f, 9.f);
+    struct TextScrollData final
+    {
+        std::int32_t direction = 0;
+        float currTime = 0.f;
+        float maxWidth = 100.f;
+    };
 
     struct TabID final
     {
@@ -1396,8 +1405,45 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
 
-    auto audioDeviceLabel = createLabel(glm::vec2(308.f, 156.f), cro::AudioDevice::getActiveDevice());
-    audioDeviceLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_deviceLabel = createLabel(glm::vec2(244.f, 156.f), " ");
+    m_deviceLabel.getComponent<cro::Drawable2D>().setCroppingArea(LabelCrop);
+    m_deviceLabel.addComponent<cro::Callback>().active = true;
+    m_deviceLabel.getComponent<cro::Callback>().setUserData<TextScrollData>();
+    m_deviceLabel.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            static constexpr float ScrollPadding = -14.f;
+            static constexpr float ScrollSpeed = 0.05f;
+
+            auto& [dir, currTime, maxScroll] = e.getComponent<cro::Callback>().getUserData<TextScrollData>();
+            currTime += dt;
+            if (currTime > ScrollSpeed)
+            {
+                currTime -= ScrollSpeed;
+                auto o = e.getComponent<cro::Transform>().getOrigin();
+                if (dir == 0)
+                {
+                    o.x += 1.f;
+                    if (o.x >= (maxScroll - (LabelCrop.width + ScrollPadding)))
+                    {
+                        dir = 1;
+                    }
+                }
+                else
+                {
+                    o.x -= 1.f;
+                    if (o.x <= ScrollPadding)
+                    {
+                        dir = 0;
+                    }
+                }
+                auto bounds = LabelCrop;
+                bounds.left = o.x;
+                e.getComponent<cro::Transform>().setOrigin(o);
+                e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+            }
+        };
+    refreshDeviceLabel();
 
     //antialiasing label
     auto aliasLabel = createLabel(glm::vec2(12.f, 131.f), "Antialiasing");
@@ -1771,7 +1817,20 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVDeviceDown);
     entity.getComponent<cro::UIInput>().setNextIndex(AVDeviceUp, AVTrail);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeUp, TabAchievements);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt) 
+        {
+            if (activated(evt))
+            {
+                const auto size = cro::AudioDevice::getDeviceList().size();
+                if (size != 0)
+                {
+                    audioDeviceIndex = (audioDeviceIndex + (size - 1)) % size;
+                    applyAudioDevice();
+                }
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
 
 
     //audio device up
@@ -1779,7 +1838,20 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVDeviceUp);
     entity.getComponent<cro::UIInput>().setNextIndex(AVMixerLeft, AVTrailR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVDeviceDown, TabStats);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                const auto size = cro::AudioDevice::getDeviceList().size();
+                if (size != 0)
+                {
+                    audioDeviceIndex = (audioDeviceIndex + 1) % size;
+                    applyAudioDevice();
+                }
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
 
 
     //aa down
@@ -4370,6 +4442,60 @@ void OptionsState::updateActiveCallbacks()
             entity.getComponent<cro::Callback>().active = entity.getComponent<cro::UIInput>().getGroup() == group;
         }
     }
+}
+
+void OptionsState::applyAudioDevice()
+{
+    const auto& devices = cro::AudioDevice::getDeviceList();
+    if (devices.empty())
+    {
+        return;
+    }
+
+    audioDeviceIndex %= devices.size();
+
+    cro::AudioDevice::setActiveDevice(devices[audioDeviceIndex]);
+    if (cro::AudioDevice::getActiveDevice() != devices[audioDeviceIndex])
+    {
+        //we couldn't apply the device so correct the label / index
+        if (auto result = std::find(devices.begin(), devices.end(), cro::AudioDevice::getActiveDevice()); result != devices.end())
+        {
+            audioDeviceIndex = std::distance(devices.begin(), result);
+        }
+    }
+    refreshDeviceLabel();
+}
+
+void OptionsState::refreshDeviceLabel()
+{
+    static const std::string RemoveMe("OpenAL Soft on ");
+
+    std::string str = cro::AudioDevice::getActiveDevice();
+    if (str.find(RemoveMe) != std::string::npos)
+    {
+        str = str.substr(RemoveMe.size());
+    }
+
+    m_deviceLabel.getComponent<cro::Text>().setString(str);
+    auto bounds = cro::Text::getLocalBounds(m_deviceLabel);
+
+    if (bounds.width > LabelCrop.width)
+    {
+        m_deviceLabel.getComponent<cro::Callback>().active = true;
+        m_deviceLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Left);
+        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 244.f, 156.f });
+        m_deviceLabel.getComponent<cro::Drawable2D>().setCroppingArea(LabelCrop);
+    }
+    else
+    {
+        m_deviceLabel.getComponent<cro::Callback>().active = false;
+        m_deviceLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 308.f, 156.f });
+        bounds.left = -(bounds.width / 2.f);
+        m_deviceLabel.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+    }
+    m_deviceLabel.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
+    m_deviceLabel.getComponent<cro::Callback>().getUserData<TextScrollData>().maxWidth = bounds.width;
 }
 
 void OptionsState::quitState()
