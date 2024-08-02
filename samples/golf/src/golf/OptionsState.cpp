@@ -1588,7 +1588,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //volume slider
-    auto volSlider = createSlider(glm::vec2(143.f, 153.f), 66.f);
+    auto volSlider = createSlider(glm::vec2(143.f, 153.f), 65.f);
 
     auto tipEnt = m_scene.createEntity();
     tipEnt.addComponent<cro::Transform>();
@@ -1692,9 +1692,9 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     fovSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
 
     //grid transparency
-    auto transPos = glm::vec2(280.f, 64.f);
+    auto transPos = glm::vec2(281.f, 64.f);
     auto transSlider = createSlider(transPos);
-    auto ud = SliderData(transPos, 91.f);
+    auto ud = SliderData(transPos, 90.f);
     ud.onActivate =
         [&](float distance)
         {
