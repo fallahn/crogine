@@ -152,6 +152,7 @@ namespace cro
             std::vector<std::string> m_devices;
             std::string m_preferredDevice;
             void enumerateDevices();
+            std::string getPreferencePath() const;
 
             OpenALStream& getNextFreeStream();
             bool initStream(OpenALStream&);

@@ -144,6 +144,7 @@ private:
 
     cro::Entity m_deviceLabel;
     void applyAudioDevice();
+    void assertDeviceIndex();
     void refreshDeviceLabel();
 
     void quitState();

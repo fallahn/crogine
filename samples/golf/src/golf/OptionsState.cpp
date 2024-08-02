@@ -606,6 +606,11 @@ void OptionsState::handleMessage(const cro::Message& msg)
                 centreText(resolutionLabel);
             }
         }
+        else if (data.type == cro::Message::SystemEvent::AudioDeviceChanged)
+        {
+            assertDeviceIndex();
+            refreshDeviceLabel();
+        }
     }
     m_scene.forwardMessage(msg);
 }
@@ -819,6 +824,9 @@ void OptionsState::buildScene()
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Video);
+
+                assertDeviceIndex();
+                refreshDeviceLabel();
             }
             break;
         case RootCallbackData::FadeOut:
@@ -4455,6 +4463,13 @@ void OptionsState::applyAudioDevice()
     audioDeviceIndex %= devices.size();
 
     cro::AudioDevice::setActiveDevice(devices[audioDeviceIndex]);
+    assertDeviceIndex();
+    refreshDeviceLabel();
+}
+
+void OptionsState::assertDeviceIndex()
+{
+    const auto& devices = cro::AudioDevice::getDeviceList();
     if (cro::AudioDevice::getActiveDevice() != devices[audioDeviceIndex])
     {
         //we couldn't apply the device so correct the label / index
@@ -4462,15 +4477,27 @@ void OptionsState::applyAudioDevice()
         {
             audioDeviceIndex = std::distance(devices.begin(), result);
         }
+        else
+        {
+            audioDeviceIndex = 0;
+        }
     }
-    refreshDeviceLabel();
 }
 
 void OptionsState::refreshDeviceLabel()
 {
+    std::string str;
+    if (cro::AudioDevice::getDeviceList().empty())
+    {
+        str = "No Device Available";
+    }
+    else
+    {
+        str = cro::AudioDevice::getActiveDevice();
+    }
+
     static const std::string RemoveMe("OpenAL Soft on ");
 
-    std::string str = cro::AudioDevice::getActiveDevice();
     if (str.find(RemoveMe) != std::string::npos)
     {
         str = str.substr(RemoveMe.size());

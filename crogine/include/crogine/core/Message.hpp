@@ -151,7 +151,8 @@ namespace cro
             {
                 FullScreenToggled,
                 ScreenshotTaken, //note that files are written asynchronously and may not be available when this message is received
-                ResumedFromSuspend
+                ResumedFromSuspend,
+                AudioDeviceChanged
             }type = FullScreenToggled;
         };
 

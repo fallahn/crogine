@@ -630,6 +630,12 @@ void OpenALImpl::setActiveDevice(const std::string& str)
     {
         reconnect(str.c_str());
     }
+
+    m_preferredDevice = m_deviceName;
+    
+    ConfigFile cfg;
+    cfg.addProperty("preferred_device", m_preferredDevice);
+    cfg.save(getPreferencePath());
 }
 
 void OpenALImpl::playbackDisconnectEvent()
@@ -734,11 +740,7 @@ void OpenALImpl::enumerateDevices()
 
     if (!m_devices.empty())
     {
-        char* pp = SDL_GetPrefPath("Trederia", "common");
-        auto prefPath = std::string(pp);
-        SDL_free(pp);
-        std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
-        prefPath += u8"audio_device.cfg";
+        const auto prefPath = getPreferencePath();
 
         static bool showWindow = false;
 
@@ -829,6 +831,17 @@ void OpenALImpl::enumerateDevices()
             }
         }
     }
+}
+
+std::string OpenALImpl::getPreferencePath() const
+{
+    char* pp = SDL_GetPrefPath("Trederia", "common");
+    auto prefPath = std::string(pp);
+    SDL_free(pp);
+    std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
+    prefPath += u8"audio_device.cfg";
+
+    return prefPath;
 }
 
 OpenALStream& OpenALImpl::getNextFreeStream()

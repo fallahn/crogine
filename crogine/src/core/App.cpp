@@ -681,6 +681,7 @@ void App::handleEvents()
             {
                 AudioRenderer::onPlaybackConnect();
             }
+            postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::AudioDeviceChanged;
         }
             break;
         case SDL_AUDIODEVICEREMOVED:
@@ -694,6 +695,7 @@ void App::handleEvents()
             {
                 AudioRenderer::onPlaybackDisconnect();
             }
+            postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::AudioDeviceChanged;
 
             //TODO how do we get something useful like the index/name of this device?
             //LogI << "Device " << evt.adevice.which << " was disconnected" << std::endl;
