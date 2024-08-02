@@ -98,6 +98,11 @@ namespace cro
         virtual void setDopplerFactor(float) = 0;
         virtual void setSpeedOfSound(float) = 0;
 
+        //enables switching active device programatically
+        virtual const std::string& getActiveDevice() const { static std::string s; return s; }
+        virtual const std::vector<std::string>& getDeviceList() const { static std::vector<std::string> s; return s; }
+        virtual void setActiveDevice(const std::string&) {}
+
         //optional callbacks raised when audio devices
         //are disconnected. Allows for connecting to new device
         virtual void playbackDisconnectEvent(){};
@@ -324,7 +329,29 @@ namespace cro
         */
         static void setSpeedOfSound(float speed);
 
+        /*!
+        \brief Return the string name of the currently active device if the
+        current backend supports it.
+        */
+        static const std::string& getActiveDevice();
 
+        /*!
+        \brief Returns the list of available devices since the last enumeration.
+        This device list is enumerated on device change and/or device disconnetion
+        */
+        static const std::vector<std::string>& getDeviceList();
+
+        /*!
+        \brief Attempts to set the active audio device, or does nothing if the
+        given string is not a valid device name. Use getDeviceList() to find
+        the names of the currently connected devices.
+        */
+        static void setActiveDevice(const std::string& deviceName);
+
+        /*!
+        \brief Callbacks used internally to signify hardware changes in audio
+        device availablity.
+        */
         static void onPlaybackDisconnect();
         static void onRecordDisconnect();
         static void resume();

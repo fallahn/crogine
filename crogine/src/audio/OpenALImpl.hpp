@@ -118,6 +118,10 @@ namespace cro
             void setDopplerFactor(float) override;
             void setSpeedOfSound(float) override;
 
+            const std::string& getActiveDevice() const override { return m_deviceName; }
+            const std::vector<std::string>& getDeviceList() const override { return m_devices; }
+            void setActiveDevice(const std::string&) override;
+
             void playbackDisconnectEvent() override;
             void recordDisconnectEvent() override;
 
@@ -150,7 +154,7 @@ namespace cro
             OpenALStream& getNextFreeStream();
             bool initStream(OpenALStream&);
 
-            void getDeviceList();
+            void refreshDeviceList();
             void reconnect(const char*);
         };
     }

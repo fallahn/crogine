@@ -1384,7 +1384,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //audio label
-    auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 101.f, 156.f), MixerLabels[mixerChannelIndex]);
+    auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 133.f, 156.f), MixerLabels[mixerChannelIndex]);
     centreText(audioLabel);
     audioLabel.addComponent<cro::Callback>().active = true;
     audioLabel.getComponent<cro::Callback>().function =
@@ -1501,7 +1501,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //    };
 
 
-    auto createSlider = [&](glm::vec2 position)
+    auto createSlider = [&](glm::vec2 position, float width = 142.f)
         {
             auto entity = m_scene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(position);
@@ -1511,7 +1511,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), /*std::floor*/(bounds.height / 2.f), -TextOffset });
 
 
-            auto userData = SliderData(position);
+            auto userData = SliderData(position, width);
             userData.onActivate = [](float distance)
                 {
                     float vol = distance;
@@ -1528,7 +1528,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //volume slider
-    auto volSlider = createSlider(glm::vec2(192.f, 153.f));
+    auto volSlider = createSlider(glm::vec2(143.f, 153.f), 66.f);
+
     auto tipEnt = m_scene.createEntity();
     tipEnt.addComponent<cro::Transform>();
     tipEnt.addComponent<cro::Callback>().active = true;
@@ -1566,7 +1567,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //fov slider
-    auto fovPos = glm::vec2(99.f, 112.f);
+    constexpr auto fovPos = glm::vec2(99.f, 112.f);
     auto fovSlider = createSlider(fovPos);
     auto userData = SliderData(fovPos, 76.f);
     userData.onActivate =
@@ -1710,10 +1711,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //channel select down
-    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 156.f, 147.f));
+    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 188.f, 147.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVMixerLeft);
     entity.getComponent<cro::UIInput>().setNextIndex(AVMixerRight, AVAAL);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeUp, TabController);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeUp, WindowCredits);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -1727,9 +1728,9 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
 
     //channel select up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 55.f, 147.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 87.f, 147.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVMixerRight);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVVolumeDown, AVAAR);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVVolumeDown, AVAAL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVMixerLeft, TabController);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -1745,17 +1746,17 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //audio down
-    entity = createHighlight(glm::vec2(174.f, 147.f));
+    entity = createHighlight(glm::vec2(125.f, 147.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVolumeDown);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVVolumeUp, AVAAR);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVVolumeUp, AVAAL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVMixerRight, TabController);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(m_audioEnts[AudioID::Accept]));
 
     //audio up
-    entity = createHighlight(glm::vec2(341.f, 147.f));
+    entity = createHighlight(glm::vec2(215.f, 147.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVolumeUp);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVMixerLeft, AVTrailL);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeDown, TabStats);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVMixerLeft, AVAAR);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeDown, TabAchievements);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(m_audioEnts[AudioID::Back]));
 
     //aa down

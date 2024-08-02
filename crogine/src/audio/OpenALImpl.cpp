@@ -620,6 +620,11 @@ void OpenALImpl::setSpeedOfSound(float speed)
     alCheck(alSpeedOfSound(speed));
 }
 
+void OpenALImpl::setActiveDevice(const std::string& str)
+{
+    reconnect(str.c_str());
+}
+
 void OpenALImpl::playbackDisconnectEvent()
 {
     reconnect(nullptr);
@@ -640,7 +645,7 @@ void OpenALImpl::resume()
     //in the list
     if (!m_deviceName.empty())
     {
-        getDeviceList();
+        refreshDeviceList();
         if (std::find(m_devices.begin(), m_devices.end(), m_deviceName) != m_devices.end())
         {
             reconnect(m_deviceName.c_str());
@@ -704,7 +709,7 @@ void OpenALImpl::resizeSourcePool()
 
 void OpenALImpl::enumerateDevices()
 {
-    getDeviceList();
+    refreshDeviceList();
 
     if (!m_devices.empty())
     {
@@ -723,7 +728,7 @@ void OpenALImpl::enumerateDevices()
 
                 if (showWindow)
                 {
-                    getDeviceList();
+                    refreshDeviceList();
                 }
             });
 
@@ -761,7 +766,7 @@ void OpenALImpl::enumerateDevices()
 
                         if (ImGui::Button("Refresh"))
                         {
-                            getDeviceList();
+                            refreshDeviceList();
                         }
                         ImGui::Separator();
                         ImGui::NewLine();
@@ -842,7 +847,7 @@ bool OpenALImpl::initStream(OpenALStream& stream)
     return false;
 }
 
-void OpenALImpl::getDeviceList()
+void OpenALImpl::refreshDeviceList()
 {
     m_devices.clear();
 
@@ -888,7 +893,7 @@ void OpenALImpl::reconnect(const char* deviceStr)
         if (alcReopenDeviceSOFT(device, deviceStr, nullptr))
         {
             m_device = device;
-            getDeviceList();
+            refreshDeviceList();
 
             if (deviceStr)
             {
