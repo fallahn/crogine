@@ -105,8 +105,11 @@ namespace cro
 
         //optional callbacks raised when audio devices
         //are disconnected. Allows for connecting to new device
-        virtual void playbackDisconnectEvent(){};
-        virtual void recordDisconnectEvent(){};
+        virtual void playbackDisconnectEvent(){}
+        virtual void recordDisconnectEvent(){}
+
+        virtual void playbackConnectEvent(){}
+        virtual void recordConnectEvent(){}
 
         //called when the current device is resumed from sleep mode
         virtual void resume() {};
@@ -354,6 +357,8 @@ namespace cro
         */
         static void onPlaybackDisconnect();
         static void onRecordDisconnect();
+        static void onPlaybackConnect();
+        static void onRecordConnect();
         static void resume();
 
         /*!

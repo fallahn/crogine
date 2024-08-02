@@ -673,6 +673,14 @@ void App::handleEvents()
         {
             //auto str = SDL_GetAudioDeviceName(evt.adevice.which, evt.adevice.iscapture);
             //LogI << str << " was connected " << std::endl;
+            if (evt.adevice.iscapture)
+            {
+                AudioRenderer::onRecordConnect();
+            }
+            else
+            {
+                AudioRenderer::onPlaybackConnect();
+            }
         }
             break;
         case SDL_AUDIODEVICEREMOVED:

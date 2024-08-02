@@ -622,7 +622,14 @@ void OpenALImpl::setSpeedOfSound(float speed)
 
 void OpenALImpl::setActiveDevice(const std::string& str)
 {
-    reconnect(str.c_str());
+    if (str == "Default")
+    {
+        reconnect(nullptr);
+    }
+    else
+    {
+        reconnect(str.c_str());
+    }
 }
 
 void OpenALImpl::playbackDisconnectEvent()
@@ -632,7 +639,17 @@ void OpenALImpl::playbackDisconnectEvent()
 
 void OpenALImpl::recordDisconnectEvent()
 {
+    refreshDeviceList();
+}
 
+void OpenALImpl::playbackConnectEvent()
+{
+    refreshDeviceList();
+}
+
+void OpenALImpl::recordConnectEvent()
+{
+    refreshDeviceList();
 }
 
 void OpenALImpl::resume()
@@ -650,6 +667,10 @@ void OpenALImpl::resume()
         {
             reconnect(m_deviceName.c_str());
         }
+        /*else
+        {
+            reconnect(nullptr);
+        }*/
     }
 }
 

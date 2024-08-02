@@ -267,6 +267,22 @@ void AudioRenderer::onRecordDisconnect()
     }
 }
 
+void AudioRenderer::onPlaybackConnect()
+{
+    if (m_impl)
+    {
+        m_impl->playbackConnectEvent();
+    }
+}
+
+void AudioRenderer::onRecordConnect()
+{
+    if (m_impl)
+    {
+        m_impl->recordConnectEvent();
+    }
+}
+
 void AudioRenderer::resume() 
 {
     if (m_impl)

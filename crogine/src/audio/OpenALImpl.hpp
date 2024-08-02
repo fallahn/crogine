@@ -124,6 +124,8 @@ namespace cro
 
             void playbackDisconnectEvent() override;
             void recordDisconnectEvent() override;
+            void playbackConnectEvent() override;
+            void recordConnectEvent() override;
 
             void resume() override;
 
