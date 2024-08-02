@@ -43,6 +43,8 @@ enum OptionsIndex
     AVMixerRight,
     AVVolumeDown,
     AVVolumeUp,
+    AVDeviceDown,
+    AVDeviceUp,
     AVAAL,
     AVAAR,
     AVFOVL,

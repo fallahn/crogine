@@ -228,7 +228,7 @@ const std::string& AudioRenderer::getActiveDevice()
         return m_impl->getActiveDevice();
     }
 
-    static std::string s;
+    static std::string s("None Available");
     return s;
 }
 
@@ -239,7 +239,7 @@ const std::vector<std::string>& AudioRenderer::getDeviceList()
         return m_impl->getDeviceList();
     }
 
-    static std::vector<std::string> s;
+    static std::vector<std::string> s = { "None Available" };
     return s;
 }
 

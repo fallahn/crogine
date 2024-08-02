@@ -41,6 +41,8 @@ source distribution.
 #include <AchievementStrings.hpp>
 #include <Input.hpp>
 
+#include <crogine/audio/AudioDevice.hpp>
+
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Mouse.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -1393,6 +1395,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             updateToolTip(e, ToolTipID::CustomMusic);
         };
 
+
+    auto audioDeviceLabel = createLabel(glm::vec2(308.f, 156.f), cro::AudioDevice::getActiveDevice());
+    audioDeviceLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+
     //antialiasing label
     auto aliasLabel = createLabel(glm::vec2(12.f, 131.f), "Antialiasing");
     aliasLabel.addComponent<cro::Callback>().active = true;
@@ -1714,7 +1720,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 188.f, 147.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVMixerLeft);
     entity.getComponent<cro::UIInput>().setNextIndex(AVMixerRight, AVAAL);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeUp, WindowCredits);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVDeviceUp, WindowCredits);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -1755,9 +1761,26 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //audio up
     entity = createHighlight(glm::vec2(215.f, 147.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVolumeUp);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVMixerLeft, AVAAR);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVDeviceDown, AVAAR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeDown, TabAchievements);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(m_audioEnts[AudioID::Back]));
+
+
+    //audio device down
+    entity = createHighlight(glm::vec2(231.f, 147.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AVDeviceDown);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVDeviceUp, AVTrail);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeUp, TabAchievements);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
+
+
+    //audio device up
+    entity = createHighlight(glm::vec2(373.f, 147.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AVDeviceUp);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVMixerLeft, AVTrailR);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVDeviceDown, TabStats);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
+
 
     //aa down
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 115.f, 122.f));
@@ -1787,7 +1810,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 122.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVAAR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTrail, AVFOVR);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVAAL, AVMixerRight);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVAAL, AVVolumeUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback(
             [&, aaLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -2193,7 +2216,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.setLabel("Draws a trail behind the ball when it is in flight.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTrail);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTrailL, AVPuttAss);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVAAR, AVVolumeDown);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVAAR, AVDeviceDown);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -2258,7 +2281,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity = createHighlight(glm::vec2(378.f, 122.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTrailR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVAAL, AVPostR);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVTrailL, AVVolumeUp);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVTrailL, AVDeviceUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = cbID;
 
 
@@ -4072,7 +4095,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     default:
         break;
     case MenuID::Video:
-        downLeftA = TabController;
+        downLeftA = AVMixerLeft;
         downLeftB = TabController;
         downRightA = TabAchievements;
         downRightB = TabStats;

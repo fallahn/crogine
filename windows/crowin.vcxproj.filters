@@ -651,9 +651,6 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp">
       <Filter>Header Files\audio\ecs</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp">
-      <Filter>Header Files\audio\ecs</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp">
       <Filter>Header Files\audio\ecs</Filter>
     </ClInclude>
@@ -761,6 +758,12 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\Playlist.hpp">
       <Filter>Header Files\audio\sound system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioDevice.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp">
+      <Filter>Header Files\audio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1181,9 +1184,6 @@
     <ClCompile Include="..\crogine\src\audio\AudioMixer.cpp">
       <Filter>Source Files\audio\ecs</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp">
-      <Filter>Source Files\audio\ecs</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\audio\AudioResource.cpp">
       <Filter>Source Files\audio\ecs</Filter>
     </ClCompile>
@@ -1285,6 +1285,12 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\sound_system\Playlist.cpp">
       <Filter>Source Files\audio\sound system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioDevice.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp">
+      <Filter>Source Files\audio</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
