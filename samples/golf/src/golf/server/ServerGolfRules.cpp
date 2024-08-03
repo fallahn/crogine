@@ -274,7 +274,7 @@ bool GolfState::summariseRules()
     if (m_sharedData.scoreType == ScoreType::Elimination)
     {
         std::sort(sortData.begin(), sortData.end(),
-            [&](const PlayerStatus& a, const PlayerStatus& b)
+            [](const PlayerStatus& a, const PlayerStatus& b)
             {
                 return !a.eliminated;
             });

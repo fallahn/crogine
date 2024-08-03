@@ -289,6 +289,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             {
             default: break;
             case StateID::Options:
+            case StateID::PlayerManagement:
                 saveSettings();
                 savePreferences();
                 break;
