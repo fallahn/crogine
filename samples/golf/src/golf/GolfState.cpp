@@ -3971,6 +3971,25 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::HoleComplete:
+        {
+            //hmm maybe we should be sending the hole number too
+            //in case of severe lag and the hole changes in the interim...
+            const auto data = evt.packet.as<std::uint16_t>();
+            const auto client = (data >> 8);
+            const auto player = (data & 0xff);
+            m_sharedData.connectionData[client].playerData[player].holeComplete[m_currentHole] = true;
+        }
+            break;
+        case PacketID::TargetHit:
+        {
+            //we do this so often we should have a single point for it...
+            const auto data = evt.packet.as<std::uint16_t>();
+            const auto client = (data >> 8);
+            const auto player = (data & 0xff);
+            m_sharedData.connectionData[client].playerData[player].targetHit = true;
+        }
+            break;
         case PacketID::ClubChanged:
         {
             std::uint16_t data = evt.packet.as<std::uint16_t>();
@@ -4423,14 +4442,6 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     }
 
                     bool special = false;
-                    //std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
-                    //if (score == 1)
-                    //{
-                    //    //moved to showMessageBoard where we assert we actually scored a HIO
-                    //    /*auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
-                    //    msg->type = GolfEvent::HoleInOne;
-                    //    msg->position = m_holeData[m_currentHole].pin;*/
-                    //}
 
                     //check if this is our own score
                     if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)

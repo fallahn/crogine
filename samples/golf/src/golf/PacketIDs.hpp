@@ -164,6 +164,7 @@ namespace PacketID
         FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
         MaxStrokes, //< uint8 MaxStrokeID player reached stroke limit (so client can print message)
+        HoleComplete, //< uint16 client OR'd player - let clients know a player was forfeited for the current hole
         MaxClubs, //< tells the client to use this club set
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
@@ -184,6 +185,7 @@ namespace PacketID
         BullsEye, //< bullseye struct
         BullHit, //< BullHit struct
         FlagHit, //< BullHit struct
+        TargetHit, //< uint16 client|player - hack to broadcast to clients to update their scoreboards
         WarnTime, //< uint8 warning time for AFK in seconds
         WeatherChange, //< 0 off 1 on uint8
         Poke, //< uint8 0 - only sent to specific client

@@ -252,7 +252,14 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? MaxStrokes / 2 : MaxStrokes;
                     break;
                 }
-                m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, reason, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                
+                for (auto c : m_playerInfo[groupID].clientIDs)
+                {
+                    m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::MaxStrokes, reason, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+                //broadcast a hole complete for this client (to update client scores)
+                std::uint16_t pkt = (m_playerInfo[groupID].playerInfo[0].client << 8) | m_playerInfo[groupID].playerInfo[0].player;
+                m_sharedData.host.broadcastPacket(PacketID::HoleComplete, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             else
             {
@@ -310,7 +317,12 @@ void GolfState::handleMessage(const cro::Message& msg)
             BallUpdate bu;
             bu.terrain = data.terrain;
             bu.position = data.position;
-            m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, net::NetFlag::Reliable);
+            //m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, net::NetFlag::Reliable);
+
+            for (auto c : m_playerInfo[groupID].clientIDs)
+            {
+                m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::BallLanded, bu, net::NetFlag::Reliable);
+            }
 
             auto dist = glm::length2(m_playerInfo[groupID].playerInfo[0].position - data.position);
             if (dist > 2250000.f)
@@ -330,8 +342,12 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole]++;
 
             std::uint16_t inf = (m_playerInfo[groupID].playerInfo[0].client << 8) | m_playerInfo[groupID].playerInfo[0].player;
-            m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
+            //m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
 
+            for (auto c : m_playerInfo[groupID].clientIDs)
+            {
+                m_sharedData.host.sendPacket<std::uint16_t>(m_sharedData.clients[c].peer, PacketID::Gimme, inf, net::NetFlag::Reliable);
+            }
             handleRules(groupID, data);
         }
     }
@@ -364,7 +380,14 @@ void GolfState::handleMessage(const cro::Message& msg)
         bh.position = data.position;
         bh.player = group.playerInfo[0].player;
         bh.client = group.playerInfo[0].client;
-        m_sharedData.host.broadcastPacket(PacketID::BullHit, bh, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        
+        for (auto c : group.clientIDs)
+        {
+            m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::BullHit, bh, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+        //let all clients know to update the score boards
+        std::uint16_t pkt = (bh.client << 8) | bh.player;
+        m_sharedData.host.broadcastPacket(PacketID::TargetHit, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         group.playerInfo[0].targetHit = true;
     }
@@ -396,7 +419,16 @@ void GolfState::netEvent(const net::NetEvent& evt)
             applyMulligan();
             break;
         case PacketID::ClubChanged:
-            m_sharedData.host.broadcastPacket(PacketID::ClubChanged, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            //m_sharedData.host.broadcastPacket(PacketID::ClubChanged, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        {
+            auto data = evt.packet.as<std::uint16_t>();
+            auto client = data & 0xff;
+            const auto group = m_playerInfo[m_groupAssignments[client]];
+            for (auto c : group.clientIDs)
+            {
+                m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::ClubChanged, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+        }
             break;
         case PacketID::DronePosition:
             m_sharedData.host.broadcastPacket(PacketID::DronePosition, evt.packet.as<std::array<std::int16_t, 3u>>(), net::NetFlag::Unreliable);
@@ -409,7 +441,15 @@ void GolfState::netEvent(const net::NetEvent& evt)
             skipCurrentTurn(evt.packet.as<std::uint8_t>());
             break;
         case PacketID::Activity:
-            m_sharedData.host.broadcastPacket(PacketID::Activity, evt.packet.as<Activity>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            //m_sharedData.host.broadcastPacket(PacketID::Activity, evt.packet.as<Activity>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        {
+            const auto pkt = evt.packet.as<Activity>();
+            const auto& group = m_playerInfo[m_groupAssignments[pkt.client]];
+            for (auto c : group.clientIDs)
+            {
+                m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::Activity, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+        }
             break;
         case PacketID::Emote:
             m_sharedData.host.broadcastPacket(PacketID::Emote, evt.packet.as<std::uint32_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -535,6 +575,9 @@ std::int32_t GolfState::process(float dt)
                             {
                                 m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::IdleTimeout), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                             }
+                            //broadcast hole complete message so all clients update scores correctly
+                            std::uint16_t pkt = (group.playerInfo[0].client << 8) | group.playerInfo[0].player;
+                            m_sharedData.host.broadcastPacket(PacketID::HoleComplete, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                         }
                     }
                 }
@@ -630,7 +673,6 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
                 info.clientID = player.client;
                 info.playerID = player.player;
                 info.timestamp = timestamp;
-                //m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, net::NetFlag::Reliable);
                 
                 //all clients should spawn a ball
                 m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, info, net::NetFlag::Reliable);
@@ -1785,7 +1827,13 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
                     m_playerInfo[groupID].playerInfo[0].terrain = TerrainID::Green;
                     setNextPlayer(groupID);
 
-                    m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::HostPunishment), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    for (auto c : m_playerInfo[groupID].clientIDs)
+                    {
+                        m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::MaxStrokes, std::uint8_t(MaxStrokeID::HostPunishment), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
+                    //broadcast hole complete message so clients can update scoreboards
+                    std::uint16_t pkt = (m_playerInfo[groupID].playerInfo[0].client << 8 ) | m_playerInfo[groupID].playerInfo[0].player;
+                    m_sharedData.host.broadcastPacket(PacketID::HoleComplete, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
             break;
