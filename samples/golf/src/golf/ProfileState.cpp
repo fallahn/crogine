@@ -135,7 +135,7 @@ namespace
     constexpr std::size_t PaletteColumnCount = 8;
     constexpr std::array SwatchPositions =
     {
-        glm::vec2(37.f, 171.f),
+        //glm::vec2(37.f, 171.f),
         glm::vec2(37.f, 139.f),
         glm::vec2(21.f, 107.f),
         glm::vec2(53.f, 107.f),
@@ -910,7 +910,7 @@ void ProfileState::buildScene()
 
     //colour swatch - this has its own update function
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_menuEntities[EntityID::Swatch] = entity;
@@ -928,33 +928,33 @@ void ProfileState::buildScene()
     };
 
     //colour buttons
-    auto hairColour = createButton("colour_highlight", glm::vec2(33.f, 167.f), ButtonHairColour);
-    hairColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-                    applyTextEdit();
-
-                    //show palette menu
-                    m_flyouts[PaletteID::Hair].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-
-                    //set column/row count for menu
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Hair);
-                    m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[0], pc::ColourKey::Hair));
-
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                    m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
-                }
-            });
-    hairColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevHair, ButtonSkinTone);
-#ifdef USE_GNS
-    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonWorkshop);
-#else
-    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonRandomise);
-#endif
+//    auto hairColour = createButton("colour_highlight", glm::vec2(33.f, 167.f), ButtonHairColour);
+//    hairColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+//        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+//            {
+//                if (activated(evt))
+//                {
+//                    applyTextEdit();
+//
+//                    //show palette menu
+//                    m_flyouts[PaletteID::Hair].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+//
+//                    //set column/row count for menu
+//                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Hair);
+//                    m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
+//                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[0], pc::ColourKey::Hair));
+//
+//                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+//
+//                    m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
+//                }
+//            });
+//    hairColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevHair, ButtonSkinTone);
+//#ifdef USE_GNS
+//    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonWorkshop);
+//#else
+//    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonRandomise);
+//#endif
 
     auto skinColour = createButton("colour_highlight", glm::vec2(33.f, 135.f), ButtonSkinTone);
     skinColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -975,8 +975,8 @@ void ProfileState::buildScene()
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
-    skinColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevHair, ButtonTopLight);
-    skinColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonHairColour);
+    skinColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBody, ButtonTopLight);
+    skinColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonHairBrowse);
 
 
     auto topLightColour = createButton("colour_highlight", glm::vec2(17.f, 103.f), ButtonTopLight);
@@ -1073,7 +1073,7 @@ void ProfileState::buildScene()
     //hat select button
     entity = m_uiScene.createEntity();
     entity.setLabel("Open Headwear Browser");
-    entity.addComponent<cro::Transform>().setPosition({163.f, 214.f, 0.5f});
+    entity.addComponent<cro::Transform>().setPosition({47.f, 180.f, 0.5f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("hat_select");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1081,8 +1081,8 @@ void ProfileState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonHairBrowse);
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonNextHair, ButtonNextBody);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevHair, ButtonPrevBody);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonSkinTone);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonRandomise);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 
         uiSystem.addCallback([rect](cro::Entity e) {e.getComponent<cro::Sprite>().setTextureRect(rect); });
     rect.bottom += rect.height;
@@ -1090,7 +1090,7 @@ void ProfileState::buildScene()
         uiSystem.addCallback([&,rect](cro::Entity e)
             {
                 e.getComponent<cro::Sprite>().setTextureRect(rect);
-                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                 m_menuEntities[EntityID::TipText].getComponent<cro::Text>().setString(e.getLabel());
             });
@@ -1116,40 +1116,40 @@ void ProfileState::buildScene()
         };
 
     //avatar arrow buttons
-    auto hairLeft = createButton("arrow_left", glm::vec2(87.f, 156.f), ButtonPrevHair);
-    hairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-                    auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
-                    setHairIndex(hairIndex);
+    //auto hairLeft = createButton("arrow_left", glm::vec2(87.f, 156.f), ButtonPrevHair);
+    //hairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+    //    uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+    //        {
+    //            if (activated(evt))
+    //            {
+    //                auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
+    //                setHairIndex(hairIndex);
 
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-                }
-            });
-    hairLeft.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonPrevBody);
-    hairLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonHairColour, ButtonPrevBody);
-    hairLeft.setLabel("Previous Headwear");
-    expandHitbox(hairLeft);
+    //                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+    //            }
+    //        });
+    //hairLeft.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonPrevBody);
+    //hairLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonHairColour, ButtonPrevBody);
+    //hairLeft.setLabel("Previous Headwear");
+    //expandHitbox(hairLeft);
 
-    auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f), ButtonNextHair);
-    hairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-                    auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + 1) % m_avatarHairModels.size();
-                    setHairIndex(hairIndex);
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-                }
-            });
-    hairRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextBody);
-    hairRight.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonNextBody);
-    hairRight.setLabel("Next Headwear");
-    expandHitbox(hairRight);
+    //auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f), ButtonNextHair);
+    //hairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+    //    uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+    //        {
+    //            if (activated(evt))
+    //            {
+    //                auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + 1) % m_avatarHairModels.size();
+    //                setHairIndex(hairIndex);
+    //                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+    //            }
+    //        });
+    //hairRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextBody);
+    //hairRight.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonNextBody);
+    //hairRight.setLabel("Next Headwear");
+    //expandHitbox(hairRight);
 
-    auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 110.f), ButtonPrevBody);
+    auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 133.f), ButtonPrevBody);
     avatarLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1159,12 +1159,12 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    avatarLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonPrevHair);
-    avatarLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonTopDark, ButtonPrevHair);
+    avatarLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonHairBrowse);
+    avatarLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonTopDark, ButtonTopDark);
     avatarLeft.setLabel("Previous Avatar");
     expandHitbox(avatarLeft);
 
-    auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 110.f), ButtonNextBody);
+    auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 133.f), ButtonNextBody);
     avatarRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1174,8 +1174,8 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    avatarRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextHair);
-    avatarRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevBody, ButtonNextHair);
+    avatarRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonPrevBall);
+    avatarRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevBody, ButtonPrevBall);
     avatarRight.setLabel("Next Avatar");
     expandHitbox(avatarRight);
 
@@ -1255,7 +1255,7 @@ void ProfileState::buildScene()
 #ifdef USE_GNS
     randomButton.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonWorkshop);
 #else
-    randomButton.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonHairColour);
+    randomButton.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonHairBrowse);
 #endif
     if (!Social::isSteamdeck())
     {
@@ -1343,7 +1343,7 @@ void ProfileState::buildScene()
                 }
             });
     ballLeft.getComponent<cro::UIInput>().setNextIndex(ButtonBallSelect, ButtonBallColour);
-    ballLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonName);
+    ballLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBody, ButtonName);
     ballLeft.setLabel("Previous Ball");
     expandHitbox(ballLeft);
 
@@ -1803,7 +1803,7 @@ void ProfileState::buildScene()
                     m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
                 }
             });
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairColour, ButtonDescDown);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonDescDown);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonName);
     expandHitbox(entity);
 

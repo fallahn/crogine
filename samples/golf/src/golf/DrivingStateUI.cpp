@@ -748,7 +748,7 @@ void DrivingState::createUI()
     auto rootNode = entity;
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
