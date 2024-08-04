@@ -495,15 +495,15 @@ void GolfState::loadMap()
             {
                 //TODO not sure how we ensure these are sane values?
                 holeData.pin = holeProp.getValue<glm::vec3>();
-                holeData.pin.x = glm::clamp(holeData.pin.x, 0.f, 320.f);
-                holeData.pin.z = glm::clamp(holeData.pin.z, -200.f, 0.f);
+                holeData.pin.x = glm::clamp(holeData.pin.x, 0.f, MapSizeFloat.x);
+                holeData.pin.z = glm::clamp(holeData.pin.z, -MapSizeFloat.y, 0.f);
                 propCount++;
             }
             else if (name == "tee")
             {
                 holeData.tee = holeProp.getValue<glm::vec3>();
-                holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, 320.f);
-                holeData.tee.z = glm::clamp(holeData.tee.z, -200.f, 0.f);
+                holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, MapSizeFloat.x);
+                holeData.tee.z = glm::clamp(holeData.tee.z, -MapSizeFloat.y, 0.f);
                 propCount++;
             }
             else if (name == "target")
@@ -1435,6 +1435,9 @@ void GolfState::loadMaterials()
     {
         m_resources.shaders.addInclude(name, str);
     }
+
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
     //cel shaded material
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n" + wobble);

@@ -79,7 +79,7 @@ void GolfState::initBallDebug()
     auto material = m_resources.materials.get(materialID);
     material.enableDepthTest = false;
     meshData = &m_resources.meshes.getMesh(meshID);
-    meshData->boundingBox = { glm::vec3(0.f), glm::vec3(320.f, 100.f, -200.f) };
+    meshData->boundingBox = { glm::vec3(0.f), glm::vec3(MApSizeFloat.x, 100.f, -MapSizeFloat.y) };
     meshData->boundingSphere = meshData->boundingBox;
 
     auto entity = m_gameScene.createEntity();
@@ -152,7 +152,7 @@ void GolfState::addCameraDebugging()
             auto material = m_resources.materials.get(materialID);
             material.enableDepthTest = false;
             auto meshData = m_resources.meshes.getMesh(meshID);
-            meshData.boundingBox = { glm::vec3(0.f), glm::vec3(320.f, 100.f, -200.f) };
+            meshData.boundingBox = { glm::vec3(0.f), glm::vec3(MapSizeFloat.x, 100.f, -MapSizeFloat.y) };
             meshData.boundingSphere = meshData.boundingBox;
 
             auto entity = m_gameScene.createEntity();

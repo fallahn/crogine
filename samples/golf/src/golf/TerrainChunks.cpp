@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "TerrainChunks.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -40,8 +41,8 @@ source distribution.
 
 namespace
 {
-    const cro::FloatRect MapSize(0.f, 0.f, 320.f, 200.f);
-    const glm::vec2 ChunkSize(MapSize.width / TerrainChunker::ChunkCountX, MapSize.height / TerrainChunker::ChunkCountY);
+    const cro::FloatRect MapRect(0.f, 0.f, MapSizeFloat.x, MapSizeFloat.y);
+    const glm::vec2 ChunkSize(MapRect.width / TerrainChunker::ChunkCountX, MapRect.height / TerrainChunker::ChunkCountY);
 
 
     bool intersects(glm::vec2 camPos, cro::FloatRect cell, float radius)
@@ -61,7 +62,7 @@ TerrainChunker::TerrainChunker(const cro::Scene& scene)
     : m_scene   (scene),
     m_chunks    (ChunkCountX * ChunkCountY)
 {
-    m_debugTexture.create(320, 200, false);
+    m_debugTexture.create(MapSize.x, MapSize.y, false);
     m_debugQuadTexture.create(1, 1);
     std::array<std::uint8_t, 4u> c = { 255,255,255,255 };
     m_debugQuadTexture.update(c.data());
@@ -96,10 +97,10 @@ void TerrainChunker::update()
     //
     //------1
     auto camBox = m_scene.getActiveCamera().getComponent<cro::Camera>().getActivePass().getAABB();
-    camBox[0].x = std::clamp(camBox[0].x, 0.f, MapSize.width);
-    camBox[1].x = std::clamp(camBox[1].x, 0.f, MapSize.width);
-    camBox[0].z = std::clamp(camBox[0].z, -MapSize.height, 0.f);
-    camBox[1].z = std::clamp(camBox[1].z, -MapSize.height, 0.f);
+    camBox[0].x = std::clamp(camBox[0].x, 0.f, MapRect.width);
+    camBox[1].x = std::clamp(camBox[1].x, 0.f, MapRect.width);
+    camBox[0].z = std::clamp(camBox[0].z, -MapRect.height, 0.f);
+    camBox[1].z = std::clamp(camBox[1].z, -MapRect.height, 0.f);
     cro::FloatRect camAABB(camBox[0].x, -camBox[1].z, camBox[1].x - camBox[0].x, -(camBox[0].z - camBox[1].z));
 
     auto camWorldPos = m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();

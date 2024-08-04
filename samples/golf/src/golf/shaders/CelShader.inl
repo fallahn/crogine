@@ -30,7 +30,7 @@ source distribution.
 #pragma once
 
 #include <string>
-
+//static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320");
 inline const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -110,7 +110,7 @@ inline const std::string CelVertexShader = R"(
 
 #if defined (NORMAL_MAP)
     VARYING_OUT vec2 v_normalTexCoord;
-    const vec2 MapSize = vec2(320.0, 200.0);
+#include MAP_SIZE
 #endif
 
 

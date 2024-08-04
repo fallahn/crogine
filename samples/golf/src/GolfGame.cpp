@@ -850,6 +850,8 @@ bool GolfGame::initialise()
     {
         m_sharedData.sharedResources->shaders.addInclude(name, str);
     }
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_sharedData.sharedResources->shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");

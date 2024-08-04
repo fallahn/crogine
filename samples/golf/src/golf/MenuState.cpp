@@ -1517,6 +1517,8 @@ void MenuState::loadAssets()
     {
         m_resources.shaders.addInclude(name, str);
     }
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs

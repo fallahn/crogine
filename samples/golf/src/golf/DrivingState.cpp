@@ -1103,6 +1103,8 @@ void DrivingState::loadAssets()
     {
         m_resources.shaders.addInclude(name, str);
     }
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
     
     //models
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);

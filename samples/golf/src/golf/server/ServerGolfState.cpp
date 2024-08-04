@@ -1485,22 +1485,22 @@ bool GolfState::validateMap()
                 //TODO not sure how we ensure these are sane values?
                 //could at leat clamp them to map bounds.
                 holeData.pin = holeProp.getValue<glm::vec3>();
-                holeData.pin.x = glm::clamp(holeData.pin.x, 0.f, 320.f);
-                holeData.pin.z = glm::clamp(holeData.pin.z, -200.f, 0.f);
+                holeData.pin.x = glm::clamp(holeData.pin.x, 0.f, MapSizeFloat.x);
+                holeData.pin.z = glm::clamp(holeData.pin.z, -MapSizeFloat.y, 0.f);
                 propCount++;
             }
             else if (name == "tee")
             {
                 holeData.tee = holeProp.getValue<glm::vec3>();
-                holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, 320.f);
-                holeData.tee.z = glm::clamp(holeData.tee.z, -200.f, 0.f);
+                holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, MapSizeFloat.x);
+                holeData.tee.z = glm::clamp(holeData.tee.z, -MapSizeFloat.y, 0.f);
                 propCount++;
             }
             else if (name == "target")
             {
                 holeData.target = holeProp.getValue<glm::vec3>();
-                holeData.target.x = glm::clamp(holeData.target.x, 0.f, 320.f);
-                holeData.target.z = glm::clamp(holeData.target.z, -200.f, 0.f);
+                holeData.target.x = glm::clamp(holeData.target.x, 0.f, MapSizeFloat.x);
+                holeData.target.z = glm::clamp(holeData.target.z, -MapSizeFloat.y, 0.f);
                 propCount++;
             }
             else if (name == "par")

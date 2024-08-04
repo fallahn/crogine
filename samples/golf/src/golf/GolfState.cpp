@@ -366,7 +366,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0,1,2));
     }
 
-    m_allowAchievements = false;
+    //m_allowAchievements = false;
 }
 
 GolfState::~GolfState()

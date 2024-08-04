@@ -30,7 +30,7 @@ source distribution.
 #pragma once
 
 #include <string>
-
+//static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320 in 3 places");
 inline const std::string WaterVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
@@ -53,7 +53,7 @@ inline const std::string WaterVertex = R"(
     VARYING_OUT vec2 v_vertDistance;
     VARYING_OUT float v_scale;
 
-    const vec2 MapSize = vec2(320.0, 200.0);
+    #include MAP_SIZE
 
     void main()
     {
@@ -107,8 +107,9 @@ uniform sampler2DArray u_depthMap;
     VARYING_IN float v_scale;
 
     //pixels per metre
+#include MAP_SIZE
     const vec2 PixelCount = vec2(1280.0, 800.0);
-    const vec2 TileCount = vec2(320.0, 200.0); //tiles of rain animation
+    const vec2 TileCount = MapSize; //tiles of rain animation
 
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
@@ -139,8 +140,8 @@ uniform sampler2DArray u_depthMap;
         float u = (v_worldPosition.x - (x * MetresPerTexture)) / MetresPerTexture;
         float v = -((y * MetresPerTexture) + v_worldPosition.z) / MetresPerTexture;
 
-        float stepX = step(0.0, v_worldPosition.x) * (1.0 - step(320.0, v_worldPosition.x));
-        float stepY = step(0.0, -v_worldPosition.z) * (1.0 - step(200.0, -v_worldPosition.z));
+        float stepX = step(0.0, v_worldPosition.x) * (1.0 - step(MapSize.x, v_worldPosition.x));
+        float stepY = step(0.0, -v_worldPosition.z) * (1.0 - step(MapSize.y, -v_worldPosition.z));
 
         return (1.0 - texture(u_depthMap, vec3(u, v, index)).r) * stepX * stepY;
     }

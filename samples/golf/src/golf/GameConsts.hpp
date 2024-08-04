@@ -87,6 +87,7 @@ static constexpr float MinFlightCamDistance = 0.132f;
 static constexpr float FlightCamRotation = -0.158f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
+static constexpr glm::vec2 MapSizeFloat(MapSize);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
 static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f); //used to validate the sub-target property of a hole
 
@@ -941,14 +942,14 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     cro::Image img;
     if (!img.loadFromFile(filePath))
     {
-        img.create(320, 300, DefaultColour);
+        img.create(MapSize.x, MapSize.y, DefaultColour);
     }
 
     auto size = img.getSize();
     if (size != MapSize)
     {
-        LogW << path << ": not loaded, image not 320x200" << std::endl;
-        img.create(320, 300, DefaultColour);
+        LogW << path << ": not loaded, image not " << MapSize << std::endl;
+        img.create(MapSize.x, MapSize.y, DefaultColour);
     }
 
     loadNormalMap(dst, img);
