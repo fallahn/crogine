@@ -265,7 +265,7 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
         }
         if (hatID == hairID)
         {
-            hatID == 0;
+            hatID = 0;
         }
 
         profileID = uid;

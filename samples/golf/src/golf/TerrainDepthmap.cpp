@@ -59,7 +59,7 @@ namespace
     constexpr float CameraHeight = 10.f;
     constexpr float MaxDepth = TerrainLevel - WaterLevel;
 
-    static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320");
+    //static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320");
     const std::string TerrainVertex = 
         R"(
         ATTRIBUTE vec4 a_position;
@@ -69,7 +69,8 @@ namespace
 
         uniform sampler2D u_heightMap;
         const float MaxHeight = MAX_HEIGHT;
-        const vec2 MapSize = vec2(320.0, 200.0);
+        
+#include MAP_SIZE
 
 
         void main()
