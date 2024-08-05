@@ -123,7 +123,7 @@ private:
 
             BallBrowser,
             HairBrowser,
-            HairEditor, HairHelp,
+            HairEditor, HairHelp, HairPreview,
 
             Count
         };
@@ -190,11 +190,24 @@ private:
         glm::vec3 closeButtonPosition = glm::vec3({ 468.f, 331.f, 0.1f });
         cro::SpriteSheet spriteSheet;
         std::function<cro::Entity(std::int32_t)> createArrow;
+        std::function<void()> onClose;
     };
+
+    struct HeadwearID final
+    {
+        enum
+        {
+            Hair, Hat,
+            Count
+        };
+    };
+    std::int32_t m_headwearID;
+    std::array<cro::FloatRect, HeadwearID::Count> m_headwearPreviewRects = {};
 
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
     void createHairEditor(cro::Entity, const CallbackContext&);
+    cro::FloatRect getHeadwearTextureRect(std::size_t);
     cro::Entity createBrowserBackground(std::int32_t, const CallbackContext&);
 
     void quitState();
