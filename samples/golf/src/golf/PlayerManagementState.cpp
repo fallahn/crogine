@@ -489,7 +489,7 @@ void PlayerManagementState::buildScene()
     //grouping
     if (m_sharedData.baseState == StateID::Menu)
     {
-        entity = createItem({ 0.f, -31.f }, "Grouping: " + GroupStrings[m_sharedData.groupMode], menuEntity);
+        entity = createItem({ 0.f, -32.f }, "Grouping: " + GroupStrings[m_sharedData.groupMode], menuEntity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
         entity.getComponent<cro::UIInput>().setSelectionIndex(GroupIndex);
         entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, PokeIndex);

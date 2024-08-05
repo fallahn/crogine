@@ -647,7 +647,7 @@ void LeagueState::buildScene()
         {
             //close button (we have one for each menu group)
             auto entity = m_scene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ 468.f, 331.f, 0.1f });
+            entity.addComponent<cro::Transform>().setPosition({ 468.f, 329.f, 0.1f });
             entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("close_highlight");

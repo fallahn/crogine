@@ -638,7 +638,10 @@ void UnlockState::buildUI()
         if (unlockID >= ul::UnlockID::Streak01
             && unlockID <= ul::UnlockID::Streak07)
         {
-            const auto str = "\nTotal Streak: " + std::to_string(Social::getCurrentStreak()) + " Days";
+            const auto streak = Social::getCurrentStreak();
+            const std::string dayStr = streak == 1 ? " Day" : " Days";
+
+            const auto str = "\nTotal Streak: " + std::to_string(streak) + dayStr;
             auto e = m_scene.createEntity();
             e.addComponent<cro::Transform>().setPosition({ 0.f, -16.f, 0.f });
             e.addComponent<cro::Drawable2D>();
