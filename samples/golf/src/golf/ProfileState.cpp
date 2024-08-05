@@ -3122,6 +3122,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 if (activated(evt))
                 {
                     m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+                    LogI << "MAKE SURE WE DON'T ALLOW THE SAME HAIR AND HAT ID!!" << std::endl;
                 }
             });
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -3151,7 +3152,8 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -3174,6 +3176,132 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //hair/hat button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 407.f, 112.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("select_button");
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    static constexpr std::array ButtonPositions =
+    {
+        glm::vec2(69.f, 7.f),
+        glm::vec2(21.f, 7.f),
+    };
+
+    auto buttonEnt = m_uiScene.createEntity();
+    buttonEnt.addComponent<cro::Transform>().setPosition({ 69.f, 7.f, 0.1f });
+    buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    buttonEnt.addComponent<cro::Drawable2D>();
+    buttonEnt.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("select_highlight");
+    buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+    buttonEnt.addComponent<cro::UIInput>().area = bounds;
+    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, entity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    auto b = entity.getComponent<cro::Sprite>().getTextureRect();
+                    if (m_headwearID == HeadwearID::Hair)
+                    {
+                        m_headwearID = HeadwearID::Hat;
+                        b.bottom += (b.height + 2.f);
+                    }
+                    else
+                    {
+                        m_headwearID = HeadwearID::Hair;
+                        b.bottom -= (b.height + 2.f);
+                    }
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    e.getComponent<cro::Transform>().setPosition(ButtonPositions[m_headwearID]);
+                    entity.getComponent<cro::Sprite>().setTextureRect(b);
+
+
+                    //TODO refresh colour preview and hair thumbnail with selected settings
+                    //TODO set pointers to transform values for inputs below
+                }
+            });
+    buttonEnt.addComponent<cro::Callback>().function = MenuTextCallback();
+    buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+
+    //transform numbers
+    const auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    constexpr float YStart = 85.f;
+    constexpr float RowSpacing = 14.f;
+    constexpr float ColSpacing = 74.f;
+
+    auto selectedID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e) 
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    auto unselectedID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+    //TODO create a button specific context then use a single activated
+    //callback on all below buttons which acts on context.
+    bounds = ctx.spriteSheet.getSprite("arrow_highlight").getTextureBounds();
+
+    glm::vec3 pos(310.f, YStart, 0.1f);
+    std::array temp = { "X", "Y", "Z" };
+    for (auto i = 0; i < 3; ++i) //cols pos, rot, scale
+    {
+        for (auto j = 0; j < 3; ++j) //rows x, y, z
+        {
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(infoFont).setString(temp[j]);
+            entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            auto numEnt = entity;
+
+            //add up/down buttons
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec2(-25.f, -9.f));
+            entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("arrow_highlight");
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            entity.addComponent<cro::UIInput>().area = bounds;
+            entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+            numEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec2(15.f, -9.f));
+            entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("arrow_highlight");
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            entity.addComponent<cro::UIInput>().area = bounds;
+            entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+            numEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            pos.y -= RowSpacing;
+        }
+        pos.x += ColSpacing;
+        pos.y = YStart;
+    }
 }
 
 cro::FloatRect ProfileState::getHeadwearTextureRect(std::size_t idx)
