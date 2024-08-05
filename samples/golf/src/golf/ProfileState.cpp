@@ -138,7 +138,7 @@ namespace
     constexpr std::size_t PaletteColumnCount = 8;
     constexpr std::array SwatchPositions =
     {
-        //glm::vec2(37.f, 171.f),
+        glm::vec2(382.f, 138.f),
         glm::vec2(37.f, 139.f),
         glm::vec2(21.f, 107.f),
         glm::vec2(53.f, 107.f),
@@ -939,49 +939,10 @@ void ProfileState::buildScene()
     m_menuEntities[EntityID::Swatch] = entity;
     refreshSwatch();
 
-    auto fetchUIIndexFromColour =
-        [&](std::uint8_t colourIndex, std::int32_t paletteIndex) 
-    {
-        const auto rowCount = m_uiScene.getSystem<cro::UISystem>()->getGroupSize() / PaletteColumnCount;
-        const auto x = colourIndex % PaletteColumnCount;
-        auto y = colourIndex / PaletteColumnCount;
-
-        y = (rowCount - 1) - y;
-        return (y * PaletteColumnCount + x) % pc::PairCounts[paletteIndex];
-    };
-
     //colour buttons
-//    auto hairColour = createButton("colour_highlight", glm::vec2(33.f, 167.f), ButtonHairColour);
-//    hairColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-//        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
-//            {
-//                if (activated(evt))
-//                {
-//                    applyTextEdit();
-//
-//                    //show palette menu
-//                    m_flyouts[PaletteID::Hair].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-//
-//                    //set column/row count for menu
-//                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Hair);
-//                    m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-//                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[0], pc::ColourKey::Hair));
-//
-//                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-//
-//                    m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
-//                }
-//            });
-//    hairColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevHair, ButtonSkinTone);
-//#ifdef USE_GNS
-//    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonWorkshop);
-//#else
-//    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonRandomise);
-//#endif
-
     auto skinColour = createButton("colour_highlight", glm::vec2(33.f, 135.f), ButtonSkinTone);
     skinColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1004,7 +965,7 @@ void ProfileState::buildScene()
 
     auto topLightColour = createButton("colour_highlight", glm::vec2(17.f, 103.f), ButtonTopLight);
     topLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1027,7 +988,7 @@ void ProfileState::buildScene()
 
     auto topDarkColour = createButton("colour_highlight", glm::vec2(49.f, 103.f), ButtonTopDark);
     topDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1050,7 +1011,7 @@ void ProfileState::buildScene()
 
     auto bottomLightColour = createButton("colour_highlight", glm::vec2(17.f, 69.f), ButtonBottomLight);
     bottomLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1072,7 +1033,7 @@ void ProfileState::buildScene()
 
     auto bottomDarkColour = createButton("colour_highlight", glm::vec2(49.f, 69.f), ButtonBottomDark);
     bottomDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1122,6 +1083,7 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
+                    applyTextEdit();
                     m_menuEntities[EntityID::HairEditor].getComponent<cro::Callback>().active = true;
                     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().stop();
                     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().gotoFrame(0);
@@ -1139,40 +1101,6 @@ void ProfileState::buildScene()
             bounds.height += 32.f;
             e.getComponent<cro::UIInput>().area = bounds;
         };
-
-    //avatar arrow buttons
-    //auto hairLeft = createButton("arrow_left", glm::vec2(87.f, 156.f), ButtonPrevHair);
-    //hairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-    //    uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-    //        {
-    //            if (activated(evt))
-    //            {
-    //                auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
-    //                setHairIndex(hairIndex);
-
-    //                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-    //            }
-    //        });
-    //hairLeft.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonPrevBody);
-    //hairLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonHairColour, ButtonPrevBody);
-    //hairLeft.setLabel("Previous Headwear");
-    //expandHitbox(hairLeft);
-
-    //auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f), ButtonNextHair);
-    //hairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-    //    uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-    //        {
-    //            if (activated(evt))
-    //            {
-    //                auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + 1) % m_avatarHairModels.size();
-    //                setHairIndex(hairIndex);
-    //                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-    //            }
-    //        });
-    //hairRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextBody);
-    //hairRight.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonNextBody);
-    //hairRight.setLabel("Next Headwear");
-    //expandHitbox(hairRight);
 
     auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 133.f), ButtonPrevBody);
     avatarLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1415,7 +1343,7 @@ void ProfileState::buildScene()
     ballColour.getComponent<cro::UIInput>().setNextIndex(ButtonBallColourReset, ButtonUpdateIcon);
     ballColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBody, ButtonBallSelect);
     ballColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -2374,6 +2302,12 @@ void ProfileState::buildPreviewScene()
 
 void ProfileState::createPalettes(cro::Entity parent)
 {
+    static const std::array<std::int32_t, PaletteID::BallThumb> PreviousMenus =
+    {
+        MenuID::HairEditor, MenuID::Main, MenuID::Main,
+        MenuID::Main, MenuID::Main, MenuID::Main
+    };
+
     for (auto i = 0u; i < PaletteID::BallThumb; ++i)
     {
         auto entity = createPaletteBackground(parent, m_flyouts[i], i);
@@ -2385,7 +2319,7 @@ void ProfileState::createPalettes(cro::Entity parent)
                 auto quitMenu = [&]()
                 {
                     m_flyouts[i].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(PreviousMenus[i]);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
                     m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
 
@@ -3194,6 +3128,52 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //colour preview
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 379.f, 110.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("item_colour");
+    entity.getComponent<cro::Sprite>().setColour(pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //colour button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 375.f, 106.f, 0.15f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("palette_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    //show palette menu
+                    m_flyouts[PaletteID::Hair].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                    //set column/row count for menu
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Hair);
+                    m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
+
+                    //TODO check hair or hat index
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[0], pc::ColourKey::Hair));
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
+                }
+            });
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 cro::FloatRect ProfileState::getHeadwearTextureRect(std::size_t idx)
@@ -3206,6 +3186,16 @@ cro::FloatRect ProfileState::getHeadwearTextureRect(std::size_t idx)
     textureBounds.bottom = y * textureBounds.height;
 
     return textureBounds;
+}
+
+std::size_t ProfileState::fetchUIIndexFromColour(std::uint8_t colourIndex, std::int32_t paletteIndex)
+{
+    const auto rowCount = m_uiScene.getSystem<cro::UISystem>()->getGroupSize() / PaletteColumnCount;
+    const auto x = colourIndex % PaletteColumnCount;
+    auto y = colourIndex / PaletteColumnCount;
+
+    y = (rowCount - 1) - y;
+    return (y * PaletteColumnCount + x) % pc::PairCounts[paletteIndex];
 }
 
 cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const CallbackContext& ctx)
@@ -3312,7 +3302,7 @@ cro::Entity ProfileState::createPaletteBackground(cro::Entity parent, FlyoutMenu
 
     //background
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(SwatchPositions[i], 0.5f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(SwatchPositions[i], 2.5f));
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
 
@@ -3682,9 +3672,9 @@ void ProfileState::refreshSwatch()
     static constexpr glm::vec2 SwatchSize = glm::vec2(20.f);
 
     std::vector<cro::Vertex2D> verts;
-    for (auto i = 0u; i < SwatchPositions.size(); ++i)
+    for (auto i = 1u; i < SwatchPositions.size(); ++i)//skip hair
     {
-        cro::Colour c = pc::Palette[m_activeProfile.avatarFlags[i]];
+        cro::Colour c = pc::Palette[m_activeProfile.avatarFlags[i]]; 
         auto pos = SwatchPositions[i];
 
         verts.emplace_back(glm::vec2(pos.x, pos.y + SwatchSize.y), c);
