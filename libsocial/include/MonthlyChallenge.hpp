@@ -82,7 +82,7 @@ static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
     "Play 9 holes on each course with at least 3 human or CPU players",
     "Get the equivalent of 10 Boomerang achievements",
     "Get 99% or better on each target on the Driving Range",
-    "Take 50 gimmies resulting from a Near Miss",
+    "Take 50 gimmes resulting from a Near Miss",
     "Make 250 shots with Great Accuracy",
     "Score 4 Birdies in one round on the front 9 of each course",
     "Score 1 Eagle on the back 9 of each course",

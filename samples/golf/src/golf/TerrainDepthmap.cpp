@@ -161,6 +161,10 @@ cro::TextureID TerrainDepthmap::getTextureAt(std::uint32_t idx) const
 //private
 void TerrainDepthmap::buildScene()
 {
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
+
+
     //create material
     auto shaderID = m_shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     auto materialID = m_materials.add(m_shaders.get(shaderID));
