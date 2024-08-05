@@ -4493,7 +4493,14 @@ void OptionsState::refreshDeviceLabel()
     }
     else
     {
-        str = cro::AudioDevice::getActiveDevice();
+        if (Social::isSteamdeck())
+        {
+            str = "Default";
+        }
+        else
+        {
+            str = cro::AudioDevice::getActiveDevice();
+        }
     }
 
     static const std::string RemoveMe("OpenAL Soft on ");

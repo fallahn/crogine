@@ -904,9 +904,9 @@ void OpenALImpl::refreshDeviceList()
                 deviceList += (len + 1);
                 next += (len + 2);
             }
-            m_devices.push_back("Default");
         }
     }
+    m_devices.push_back("Default");
 }
 
 void OpenALImpl::reconnect(const char* deviceStr)
