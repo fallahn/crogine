@@ -95,6 +95,7 @@ private:
 
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;
+    cro::RenderTexture m_hairEditorTexture;
     cro::ResourceCollection m_resources;
 
     cro::AudioScape m_menuSounds;
@@ -122,6 +123,7 @@ private:
 
             BallBrowser,
             HairBrowser,
+            HairEditor, HairHelp,
 
             Count
         };
@@ -133,6 +135,7 @@ private:
         enum
         {
             Avatar, Ball, Mugshot,
+            HairEdit,
 
             Count
         };
@@ -184,12 +187,14 @@ private:
         std::int32_t arrowUnselected = 0;
         std::int32_t closeSelected = 0;
         std::int32_t closeUnselected = 0;
+        glm::vec3 closeButtonPosition = glm::vec3({ 468.f, 331.f, 0.1f });
         cro::SpriteSheet spriteSheet;
         std::function<cro::Entity(std::int32_t)> createArrow;
     };
 
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
+    void createHairEditor(cro::Entity, const CallbackContext&);
     cro::Entity createBrowserBackground(std::int32_t, const CallbackContext&);
 
     void quitState();
