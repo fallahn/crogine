@@ -174,6 +174,7 @@ private:
     FlyoutMenu m_ballColourFlyout;
 
     std::size_t m_lastSelected;
+    float m_avatarRotation;
 
     void addSystems();
     void loadResources();
@@ -206,6 +207,15 @@ private:
     };
     std::int32_t m_headwearID;
     std::array<cro::FloatRect, HeadwearID::Count> m_headwearPreviewRects = {};
+
+    struct Gizmo final
+    {
+        cro::Entity entity;
+        std::vector<cro::Vertex2D> x;
+        std::vector<cro::Vertex2D> y;
+        std::vector<cro::Vertex2D> z;
+    }m_gizmo;
+    void updateGizmo();
 
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);

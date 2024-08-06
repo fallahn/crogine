@@ -168,6 +168,7 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_avatarIndex       (0),
     m_lockedAvatarCount (0),
     m_lastSelected      (0),
+    m_avatarRotation    (0.f),
     m_headwearID        (HeadwearID::Hair),
     m_mugshotUpdated    (false)
 {
@@ -187,26 +188,9 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     //    {
     //        if (ImGui::Begin("Flaps"))
     //        {
-    //            if (m_ballThumbs.available())
-    //            {
-    //                glm::vec2 size(m_ballThumbs.getSize());
-    //                ImGui::Image(m_ballThumbs.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-    //            }
-    //            
-    //            /*if (m_mugshotTexture.available())
-    //            {
-    //                ImGui::Image(m_mugshotTexture.getTexture(), { 192.f, 96.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //            }*/
-
-    //            /*auto pos = m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().getPosition();
-    //            if (ImGui::SliderFloat("Height", &pos.y, 0.f, 2.f))
-    //            {
-    //                m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
-    //            }
-    //            if (ImGui::SliderFloat("Depth", &pos.z, -2.f, 4.f))
-    //            {
-    //                m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
-    //            }*/
+    //            auto r = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().getRotation();
+    //            ImGui::Text("X: %3.2f Y: %3.2f W: %3.2f", r.x, r.y, r.w);
+    //            ImGui::Text("AV Rot: %3.2f", m_avatarRotation);
     //        }
     //        ImGui::End();
     //    });
@@ -606,20 +590,25 @@ bool ProfileState::simulate(float dt)
     //rotate/zoom avatar
     if (!m_textEdit.entity.isValid())
     {
-        float rotation = 0.f;
-
+        bool refresh = false;
         if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
             || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
         {
-            rotation -= dt;
+            m_avatarRotation -= dt;
+            refresh = true;
         }
         if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonRightShoulder)
             || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
         {
-            rotation += dt;
+            refresh = true;
+            m_avatarRotation += dt;
         }
-        m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);
 
+        if (refresh)
+        {
+            m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_avatarRotation);
+            updateGizmo();
+        }
 
         float zoom = 0.f;
         if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > TriggerDeadZone
@@ -2819,6 +2808,90 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::in
     }
 }
 
+void ProfileState::updateGizmo()
+{
+    const float scaleX = std::cos(m_avatarRotation);
+    const float scaleZ = std::sin(m_avatarRotation);
+
+    //by default these are in triangle strips
+    //0   2
+    //| / |
+    //1   3
+
+    std::vector<cro::Vertex2D> verts;
+    verts.push_back(m_gizmo.y[0]);
+    verts.push_back(m_gizmo.y[1]);
+    verts.push_back(m_gizmo.y[2]);
+    verts.push_back(m_gizmo.y[2]);
+    verts.push_back(m_gizmo.y[1]);
+    verts.push_back(m_gizmo.y[3]);
+
+    float c = std::clamp(0.4f + (0.6f * std::abs(scaleX)), 0.f, 1.f);
+    cro::Colour col(c, c, c, 1.f);
+    for (auto& v : m_gizmo.x)
+    {
+        v.colour = col;
+    }
+
+    if (scaleX > 0)
+    {
+        verts.push_back(m_gizmo.x[0]);
+        verts.push_back(m_gizmo.x[1]);
+        verts.push_back(m_gizmo.x[2]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[2]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[1]);
+        verts.push_back(m_gizmo.x[3]);
+        verts.back().position.x *= scaleX;
+    }
+    else //fudge cos winding direction
+    {
+        verts.push_back(m_gizmo.x[2]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[3]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[0]);
+        verts.push_back(m_gizmo.x[0]);
+        verts.push_back(m_gizmo.x[3]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[1]);
+    }
+
+    c = std::clamp(0.4f + (0.6f * std::abs(scaleZ)), 0.f, 1.f);
+    col = cro::Colour(c, c, c, 1.f);
+    for (auto& v : m_gizmo.z)
+    {
+        v.colour = col;
+    }
+
+    if (scaleZ > 0)
+    {
+        verts.push_back(m_gizmo.z[0]);
+        verts.push_back(m_gizmo.z[1]);
+        verts.push_back(m_gizmo.z[2]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[2]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[1]);
+        verts.push_back(m_gizmo.z[3]);
+        verts.back().position.x *= scaleZ;
+    }
+    else
+    {
+        verts.push_back(m_gizmo.z[2]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[3]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[0]);
+        verts.push_back(m_gizmo.z[0]);
+        verts.push_back(m_gizmo.z[3]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[1]);
+    }
+    m_gizmo.entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+}
+
 void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
     auto bgEnt = createBrowserBackground(MenuID::BallSelect, ctx);
@@ -3141,6 +3214,19 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_hairEditorTexture.getTexture());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto avEnt = entity;
+    //gizmo
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 26.f, 4.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setTexture(ctx.spriteSheet.getTexture());
+    avEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    ctx.spriteSheet.getSprite("x").getVertexData(m_gizmo.x);
+    ctx.spriteSheet.getSprite("y").getVertexData(m_gizmo.y);
+    ctx.spriteSheet.getSprite("z").getVertexData(m_gizmo.z);
+    m_gizmo.entity = entity;
+    updateGizmo();
 
     //help string
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
