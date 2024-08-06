@@ -62,7 +62,9 @@ struct AvatarPreview final
 {
     std::int32_t type = 0;
     std::size_t hairIndex = 0; //TODO this doesn't really need to be per model...
+    std::size_t hatIndex = 0; //TODO this doesn't really need to be per model...
     cro::Attachment* hairAttachment = nullptr;
+    cro::Attachment* hatAttachment = nullptr;
     cro::Entity previewModel;
     std::vector<cro::Entity> previewAudio;
     std::size_t previewIndex = 0; //actual index may differ because of locked models
@@ -223,6 +225,7 @@ private:
 
     void setAvatarIndex(std::size_t);
     void setHairIndex(std::size_t);
+    void setHatIndex(std::size_t);
     void setBallIndex(std::size_t);
 
     struct PageHandles final

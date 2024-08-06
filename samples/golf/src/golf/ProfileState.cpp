@@ -751,6 +751,7 @@ void ProfileState::buildScene()
                     //refresh the avatar settings
                     setAvatarIndex(indexFromAvatarID(m_activeProfile.skinID));
                     setHairIndex(indexFromHairID(m_activeProfile.hairID));
+                    setHatIndex(indexFromHairID(m_activeProfile.hatID));
                     setBallIndex(indexFromBallID(m_activeProfile.ballID) % m_ballModels.size());
                     refreshMugshot();
                     refreshSwatch();
@@ -1180,6 +1181,7 @@ void ProfileState::buildScene()
                 {
                     //randomise hair
                     setHairIndex(cro::Util::Random::value(0u, m_avatarHairModels.size() - 1));
+                    setHatIndex(0);
 
                     //randomise avatar
                     setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
@@ -2122,6 +2124,13 @@ void ProfileState::buildPreviewScene()
                 auto id = entity.getComponent<cro::Skeleton>().getAttachmentIndex("head");
                 if (id > -1)
                 {
+                    //duplicate the hat attachment first so we don't invalidate pointers
+                    //when adding the attachment resizes the attachment vector
+                    auto hatAttachment = entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                    auto hatID = entity.getComponent<cro::Skeleton>().addAttachment(hatAttachment);
+
+                    avt.hatAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[hatID];
+
                     //hair is optional so OK if this doesn't exist
                     avt.hairAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[id];
                 }
@@ -2240,6 +2249,7 @@ void ProfileState::buildPreviewScene()
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
 
     setHairIndex(indexFromHairID(m_activeProfile.hairID));
+    setHatIndex(indexFromHairID(m_activeProfile.hatID));
 
     auto ballTexCallback = [&](cro::Camera& cam)
     {
@@ -3019,7 +3029,14 @@ void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& 
                 if (activated(evt))
                 {
                     //apply selection
-                    setHairIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                    if (m_headwearID == HeadwearID::Hair)
+                    {
+                        setHairIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                    }
+                    else
+                    {
+                        setHatIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                    }
                     quitMenu();
                 }
                 else if (deactivated(evt))
@@ -3561,9 +3578,16 @@ std::size_t ProfileState::indexFromHairID(std::uint32_t hairID) const
 void ProfileState::setAvatarIndex(std::size_t idx)
 {
     auto hairIdx = m_avatarModels[m_avatarIndex].hairIndex;
+    auto hatIdx = m_avatarModels[m_avatarIndex].hatIndex;
+
     if (m_avatarModels[m_avatarIndex].hairAttachment)
     {
         m_avatarModels[m_avatarIndex].hairAttachment->setModel({});
+    }
+
+    if (m_avatarModels[m_avatarIndex].hatAttachment)
+    {
+        m_avatarModels[m_avatarIndex].hatAttachment->setModel({});
     }
 
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
@@ -3594,6 +3618,13 @@ void ProfileState::setAvatarIndex(std::size_t idx)
         m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIdx]);
         m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
     }
+
+    if (m_avatarModels[m_avatarIndex].hatAttachment)
+    {
+        m_avatarModels[m_avatarIndex].hatAttachment->setModel(m_avatarHairModels[hatIdx]);
+        m_avatarModels[m_avatarIndex].hatIndex = hatIdx;
+    }
+
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
@@ -3631,8 +3662,8 @@ void ProfileState::setHairIndex(std::size_t idx)
         && m_avatarHairModels[hairIndex].isValid())
     {
         m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIndex]);
-        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
-        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
 
         const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairRot] * cro::Util::Const::degToRad;
         m_avatarHairModels[hairIndex].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairTx]);
@@ -3646,6 +3677,41 @@ void ProfileState::setHairIndex(std::size_t idx)
     m_activeProfile.hairID = m_sharedData.hairInfo[hairIndex].uid;
 
     m_headwearPreviewRects[HeadwearID::Hair] = getHeadwearTextureRect(hairIndex);
+}
+
+void ProfileState::setHatIndex(std::size_t idx)
+{
+    auto hatIndex = m_avatarModels[m_avatarIndex].hatIndex;
+
+    if (m_avatarHairModels[hatIndex].isValid())
+    {
+        m_avatarHairModels[hatIndex].getComponent<cro::Model>().setHidden(true);
+    }
+    hatIndex = idx;
+    if (m_avatarHairModels[hatIndex].isValid())
+    {
+        m_avatarHairModels[hatIndex].getComponent<cro::Model>().setHidden(false);
+    }
+
+    if (m_avatarModels[m_avatarIndex].hatAttachment
+        && m_avatarHairModels[hatIndex].isValid())
+    {
+        m_avatarModels[m_avatarIndex].hatAttachment->setModel(m_avatarHairModels[hatIndex]);
+        m_avatarHairModels[hatIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
+        m_avatarHairModels[hatIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
+
+        const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HatRot] * cro::Util::Const::degToRad;
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HatTx]);
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setScale(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HatScale]);
+    }
+    m_avatarModels[m_avatarIndex].hatIndex = hatIndex;
+
+    m_activeProfile.hatID = m_sharedData.hairInfo[hatIndex].uid;
+
+    m_headwearPreviewRects[HeadwearID::Hat] = getHeadwearTextureRect(hatIndex);
 }
 
 void ProfileState::setBallIndex(std::size_t idx)
