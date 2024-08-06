@@ -244,7 +244,11 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             }
             else if (n == "rotation_0")
             {
+                //rotations are store +/- 1 and eventually multiplied by pi
                 headwearOffsets[1] = prop.getValue<glm::vec3>();
+                headwearOffsets[1][0] = std::clamp(headwearOffsets[1][0], -1.f, 1.f);
+                headwearOffsets[1][1] = std::clamp(headwearOffsets[1][1], -1.f, 1.f);
+                headwearOffsets[1][2] = std::clamp(headwearOffsets[1][2], -1.f, 1.f);
             }
             else if (n == "scale_0")
             {
@@ -257,6 +261,9 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             else if (n == "rotation_1")
             {
                 headwearOffsets[4] = prop.getValue<glm::vec3>();
+                headwearOffsets[4][0] = std::clamp(headwearOffsets[4][0], -1.f, 1.f);
+                headwearOffsets[4][1] = std::clamp(headwearOffsets[4][1], -1.f, 1.f);
+                headwearOffsets[4][2] = std::clamp(headwearOffsets[4][2], -1.f, 1.f);
             }
             else if (n == "scale_1")
             {

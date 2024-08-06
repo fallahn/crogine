@@ -216,6 +216,7 @@ private:
         std::vector<cro::Vertex2D> z;
     }m_gizmo;
     void updateGizmo();
+    void updateHeadwearTransform();
 
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);

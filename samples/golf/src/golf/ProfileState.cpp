@@ -2892,6 +2892,27 @@ void ProfileState::updateGizmo()
     m_gizmo.entity.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
 
+void ProfileState::updateHeadwearTransform()
+{
+    auto idx = 0;
+    auto idxOffset = PlayerData::HeadwearOffset::HatTx * m_headwearID;
+    if (m_headwearID == HeadwearID::Hair)
+    {
+        idx = m_avatarModels[m_avatarIndex].hairIndex;
+    }
+    else
+    {
+        idx = m_avatarModels[m_avatarIndex].hatIndex;
+    }
+
+    const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairRot + idxOffset] * cro::Util::Const::PI;
+    m_avatarHairModels[idx].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairTx + idxOffset]);
+    m_avatarHairModels[idx].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+    m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+    m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+    m_avatarHairModels[idx].getComponent<cro::Transform>().setScale(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairScale + idxOffset]);
+}
+
 void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
     auto bgEnt = createBrowserBackground(MenuID::BallSelect, ctx, CloseButton);
@@ -3431,19 +3452,94 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     constexpr float RowSpacing = 14.f;
     constexpr float ColSpacing = 74.f;
 
-    auto selectedID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+    struct ButtonContext final
+    {
+        std::uint32_t i = 0;
+        std::uint32_t j = 0;
+        float minVal = 0.f;
+        float maxVal = 0.f;
+        float minStep = 0.f;
+        float maxStep = 0.f;
+
+        cro::Clock timer;
+        bool isActive = false;
+    };
+
+    const auto selectedID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) 
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
         });
-    auto unselectedID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+    const auto unselectedID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
-    //TODO create a button specific context then use a single activated
-    //callback on all below buttons which acts on context.
+    const auto buttonLeftDown = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                auto& context = e.getComponent<ButtonContext>();
+                context.timer.restart();
+                context.isActive = true;
+            }
+        });
+    const auto buttonRightDown = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                auto& context = e.getComponent<ButtonContext>();
+                context.timer.restart();
+                context.isActive = true;
+            }
+        });
+    const auto buttonLeftUp = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                auto& context = e.getComponent<ButtonContext>();
+                if (context.timer.elapsed().asSeconds() < 1)
+                {
+                    //short click
+                    auto idx = (PlayerData::HeadwearOffset::HairTx + context.i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+                    float& val = m_activeProfile.headwearOffsets[idx][context.j];
+                    val = std::max(context.minVal, val - context.maxStep);
+
+                    updateHeadwearTransform();
+                }
+
+                context.isActive = false;
+            }
+        });
+    const auto buttonRightUp = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                auto& context = e.getComponent<ButtonContext>();
+                if (context.timer.elapsed().asSeconds() < 1)
+                {
+                    //short click
+                    auto idx = (PlayerData::HeadwearOffset::HairTx + context.i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+                    float& val = m_activeProfile.headwearOffsets[idx][context.j];
+                    val = std::min(context.maxVal, val + context.maxStep);
+
+                    updateHeadwearTransform();
+                }
+
+                context.isActive = false;
+            }
+        });
+    const auto mouseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e, glm::vec2, const cro::MotionEvent&)
+        {
+            e.getComponent<ButtonContext>().isActive = false;
+        });
+
     bounds = ctx.spriteSheet.getSprite("arrow_highlight").getTextureBounds();
 
     constexpr std::size_t cCount = 3;
@@ -3451,8 +3547,13 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     constexpr std::size_t buttonCount = 2; //buttons per item
     constexpr std::size_t rButtonCount = cCount * buttonCount; //buttons per row
 
+    constexpr std::array MinValues = { -0.1f, -1.f, 0.f };
+    constexpr std::array MaxValues = { 0.1f, 1.f, 1.4f };
+    constexpr std::array MinSteps = { 0.001f, 0.002f, 0.01f };
+    constexpr std::array MaxSteps = { 0.01f, 0.02f, 0.1f };
+
     glm::vec3 pos(310.f, YStart, 0.1f);
-    std::array temp = { "X", "Y", "Z" };
+
     for (auto i = 0u; i < cCount; ++i) //cols pos, rot, scale
     {
         for (auto j = 0u; j < rCount; ++j) //rows x, y, z
@@ -3460,11 +3561,30 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(pos);
             entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(infoFont).setString(temp[j]);
+            entity.addComponent<cro::Text>(infoFont).setString("-0.00");
             entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
             entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
             entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, i, j](cro::Entity e, float)
+                {
+                    auto idx = (PlayerData::HeadwearOffset::HairTx + i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+                    float val = m_activeProfile.headwearOffsets[idx][j];
+                    std::stringstream ss;
+                    ss.precision(2);
+                    ss << val;
+                    e.getComponent<cro::Text>().setString(ss.str());
+                };
             bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            ButtonContext buttonContext;
+            buttonContext.i = i;
+            buttonContext.j = j;
+            buttonContext.minVal = MinValues[i];
+            buttonContext.maxVal = MaxValues[i];
+            buttonContext.minStep = MinSteps[i];
+            buttonContext.maxStep = MaxSteps[i];
 
             auto numEnt = entity;
             const auto rowStart = IndexTrans + (j * rButtonCount);
@@ -3522,6 +3642,10 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
             entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = buttonLeftDown;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = buttonLeftUp;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = mouseExit;
+            entity.addComponent<ButtonContext>() = buttonContext;
             numEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             buttonIndex++;
@@ -3566,6 +3690,10 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
             entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = buttonRightDown;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = buttonRightUp;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = mouseExit;
+            entity.addComponent<ButtonContext>() = buttonContext;
             numEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             pos.y -= RowSpacing;
@@ -3924,7 +4052,7 @@ void ProfileState::setHairIndex(std::size_t idx)
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
 
-        const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairRot] * cro::Util::Const::degToRad;
+        const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairRot] * cro::Util::Const::PI;
         m_avatarHairModels[hairIndex].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairTx]);
         m_avatarHairModels[hairIndex].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
         m_avatarHairModels[hairIndex].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
@@ -3965,7 +4093,7 @@ void ProfileState::setHatIndex(std::size_t idx)
         m_avatarHairModels[hatIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
         m_avatarHairModels[hatIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
 
-        const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HatRot] * cro::Util::Const::degToRad;
+        const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HatRot] * cro::Util::Const::PI;
         m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HatTx]);
         m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
         m_avatarHairModels[hatIndex].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);

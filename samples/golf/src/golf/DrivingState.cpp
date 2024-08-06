@@ -2505,7 +2505,7 @@ void DrivingState::createPlayer()
                         matCount = 2;
                     }
 
-                    const auto rot = playerData.headwearOffsets[PlayerData::HeadwearOffset::HairRot + transformIndexOffset] * cro::Util::Const::degToRad;
+                    const auto rot = playerData.headwearOffsets[PlayerData::HeadwearOffset::HairRot + transformIndexOffset] * cro::Util::Const::PI;
                     ent.getComponent<cro::Transform>().setPosition(playerData.headwearOffsets[PlayerData::HeadwearOffset::HairTx + transformIndexOffset]);
                     ent.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
                     ent.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
