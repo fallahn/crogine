@@ -125,7 +125,8 @@ private:
 
             BallBrowser,
             HairBrowser,
-            HairEditor, HairHelp, HairPreview,
+            HairEditor, HairHelp, 
+            HairPreview, HairColourPreview,
 
             Count
         };
