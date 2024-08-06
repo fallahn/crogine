@@ -37,6 +37,7 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "CallbackData.hpp"
 #include "PlayerColours.hpp"
+#include "ButtonHoldSystem.hpp"
 #include "ProfileEnum.inl"
 #include "../GolfGame.hpp"
 #include "../Colordome-32.hpp"
@@ -668,6 +669,7 @@ void ProfileState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_uiScene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
+    m_uiScene.addSystem<ButtonHoldSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -3452,18 +3454,6 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     constexpr float RowSpacing = 14.f;
     constexpr float ColSpacing = 74.f;
 
-    struct ButtonContext final
-    {
-        std::uint32_t i = 0;
-        std::uint32_t j = 0;
-        float minVal = 0.f;
-        float maxVal = 0.f;
-        float minStep = 0.f;
-        float maxStep = 0.f;
-
-        cro::Clock timer;
-        bool isActive = false;
-    };
 
     const auto selectedID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) 
@@ -3481,9 +3471,12 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
         {
             if (activated(evt))
             {
-                auto& context = e.getComponent<ButtonContext>();
+                auto& context = e.getComponent<ButtonHoldContext>();
                 context.timer.restart();
                 context.isActive = true;
+
+                //ctx.target = TODO use i,j to get target
+                context.step = -context.minStep;
             }
         });
     const auto buttonRightDown = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -3491,9 +3484,12 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
         {
             if (activated(evt))
             {
-                auto& context = e.getComponent<ButtonContext>();
+                auto& context = e.getComponent<ButtonHoldContext>();
                 context.timer.restart();
                 context.isActive = true;
+
+                //ctx.target = TODO use i,j to get target
+                context.step = context.minStep;
             }
         });
     const auto buttonLeftUp = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -3501,7 +3497,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
         {
             if (activated(evt))
             {
-                auto& context = e.getComponent<ButtonContext>();
+                auto& context = e.getComponent<ButtonHoldContext>();
                 if (context.timer.elapsed().asSeconds() < 1)
                 {
                     //short click
@@ -3513,6 +3509,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 }
 
                 context.isActive = false;
+                context.target = nullptr;
             }
         });
     const auto buttonRightUp = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -3520,7 +3517,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
         {
             if (activated(evt))
             {
-                auto& context = e.getComponent<ButtonContext>();
+                auto& context = e.getComponent<ButtonHoldContext>();
                 if (context.timer.elapsed().asSeconds() < 1)
                 {
                     //short click
@@ -3532,12 +3529,15 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 }
 
                 context.isActive = false;
+                context.target = nullptr;
             }
         });
     const auto mouseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e, glm::vec2, const cro::MotionEvent&)
         {
-            e.getComponent<ButtonContext>().isActive = false;
+            auto& context = e.getComponent<ButtonHoldContext>();
+            context.isActive = false;
+            context.target = nullptr;
         });
 
     bounds = ctx.spriteSheet.getSprite("arrow_highlight").getTextureBounds();
@@ -3561,7 +3561,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(pos);
             entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(infoFont).setString("-0.00");
+            entity.addComponent<cro::Text>(infoFont).setString("0.00");
             entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
             entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
             entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -3578,13 +3578,14 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 };
             bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-            ButtonContext buttonContext;
+            ButtonHoldContext buttonContext;
             buttonContext.i = i;
             buttonContext.j = j;
             buttonContext.minVal = MinValues[i];
             buttonContext.maxVal = MaxValues[i];
             buttonContext.minStep = MinSteps[i];
             buttonContext.maxStep = MaxSteps[i];
+            buttonContext.callback = std::bind(&ProfileState::updateHeadwearTransform, this);
 
             auto numEnt = entity;
             const auto rowStart = IndexTrans + (j * rButtonCount);
@@ -3645,7 +3646,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = buttonLeftDown;
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = buttonLeftUp;
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = mouseExit;
-            entity.addComponent<ButtonContext>() = buttonContext;
+            entity.addComponent<ButtonHoldContext>() = buttonContext;
             numEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             buttonIndex++;
@@ -3693,7 +3694,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = buttonRightDown;
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = buttonRightUp;
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = mouseExit;
-            entity.addComponent<ButtonContext>() = buttonContext;
+            entity.addComponent<ButtonHoldContext>() = buttonContext;
             numEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             pos.y -= RowSpacing;

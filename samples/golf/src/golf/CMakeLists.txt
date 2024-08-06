@@ -10,6 +10,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/BilliardsStateUI.cpp
   ${PROJECT_DIR}/golf/BilliardsSystem.cpp
   #${PROJECT_DIR}/golf/BilliardsSystemReact.cpp
+  ${PROJECT_DIR}/golf/ButtonHoldSystem.cpp
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
   ${PROJECT_DIR}/golf/Career.cpp
   ${PROJECT_DIR}/golf/CareerState.cpp

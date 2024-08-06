@@ -609,6 +609,7 @@
     <ClCompile Include="src\golf\BilliardsStateUI.cpp" />
     <ClCompile Include="src\golf\BilliardsSystem.cpp" />
     <ClCompile Include="src\golf\BilliardsSystemReact.cpp" />
+    <ClCompile Include="src\golf\ButtonHoldSystem.cpp" />
     <ClCompile Include="src\golf\CameraFollowSystem.cpp" />
     <ClCompile Include="src\golf\Career.cpp" />
     <ClCompile Include="src\golf\CareerState.cpp" />
@@ -738,6 +739,7 @@
     <ClInclude Include="src\golf\BilliardsSystem.hpp" />
     <ClInclude Include="src\golf\BilliardsInput.hpp" />
     <ClInclude Include="src\golf\BilliardsSystemReact.hpp" />
+    <ClInclude Include="src\golf\ButtonHoldSystem.hpp" />
     <ClInclude Include="src\golf\CallbackData.hpp" />
     <ClInclude Include="src\golf\CameraFollowSystem.hpp" />
     <ClInclude Include="src\golf\Career.hpp" />
