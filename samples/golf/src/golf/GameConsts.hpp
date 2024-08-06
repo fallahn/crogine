@@ -346,17 +346,6 @@ struct Avatar final
     cro::Entity ballModel;
 };
 
-//TODO these aren't used now
-//static inline const std::array BallTints =
-//{
-//    cro::Colour(1.f,0.937f,0.752f), //default
-//    cro::Colour(1.f,0.364f,0.015f), //pumpkin
-//    cro::Colour(0.1176f, 0.2f, 0.45f), //planet
-//    cro::Colour(0.937f, 0.76f, 0.235f), //snail
-//    cro::Colour(0.015f,0.031f,1.f), //bowling
-//    cro::Colour(0.964f,1.f,0.878f) //snowman
-//};
-
 static inline std::int32_t courseOfTheMonth()
 {
     return 9 + (cro::SysTime::now().months() % 3);
@@ -367,8 +356,8 @@ static inline float getWindMultiplier(float ballHeight, float distanceToPin)
     static constexpr float MinWind = 10.f;
     static constexpr float MaxWind = 30.f;
 
-    static constexpr float MinHeight = 40.f;
-    static constexpr float MaxHeight = 50.f;
+    static constexpr float MinHeight = 24.f;// 40.f;
+    static constexpr float MaxHeight = 30.f;// 50.f;
     const float HeightMultiplier = std::clamp((ballHeight - MinHeight) / (MaxHeight / MinHeight), 0.f, 1.f);
     
     float multiplier = std::clamp((distanceToPin - MinWind) / (MaxWind - MinWind), 0.f, 1.f);
