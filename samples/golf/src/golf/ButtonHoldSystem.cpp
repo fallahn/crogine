@@ -42,7 +42,9 @@ void ButtonHoldSystem::process(float)
     for (auto entity : entities)
     {
         auto& ctx = entity.getComponent<ButtonHoldContext>();
-        if (ctx.isActive && ctx.target != nullptr)
+        if (ctx.isActive 
+            && ctx.target != nullptr
+            && ctx.timer.elapsed().asSeconds() > ButtonHoldContext::MinClickTime)
         {
             *ctx.target = std::clamp(*ctx.target + ctx.step, ctx.minVal, ctx.maxVal);
             ctx.callback(); //bound to view refresh func

@@ -50,6 +50,8 @@ struct ButtonHoldContext final
 
     cro::Clock timer;
     bool isActive = false;
+
+    static constexpr float MinClickTime = 0.3f;
 };
 
 /*
