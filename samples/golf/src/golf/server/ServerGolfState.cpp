@@ -1616,74 +1616,95 @@ void GolfState::initScene()
     //count and the number of requested clients per group
     std::fill(m_groupAssignments.begin(), m_groupAssignments.end(), 0);
 
-    std::int32_t clientCount = 0;
-    for (const auto& client : m_sharedData.clients)
+    struct ClientSortData final
     {
-        if (client.connected)
-        {
-            clientCount++;
-        }
-    }
-    std::int32_t groupCount = 1;
-    switch (m_sharedData.groupMode)
-    {
-    default: break;
-    case ClientGrouping::Even:
-        groupCount = 2;
-        break;
-    case ClientGrouping::One:
-        groupCount = clientCount;
-        break;
-    case ClientGrouping::Two:
-        groupCount = (clientCount / 2) + (clientCount % 2);
-        break;
-    case ClientGrouping::Three:
-        groupCount = (clientCount / 3) + ((clientCount % 3) != 0 ? 1 : 0);
-        break;
-    case ClientGrouping::Four:
-        groupCount = (clientCount / 4) + ((clientCount % 4) != 0 ? 1 : 0);
-        break;
-    }
-    m_playerInfo.resize(groupCount);
+        std::uint8_t clientID = 0;
+        std::uint8_t playerCount = 0;
+    };
+    std::vector<ClientSortData> clientSortData;
 
-    auto startLives = StartLives;
-    clientCount = 0;
+    std::int32_t clientCount = 0;
+    std::int32_t playerCount = 0; //used for score setting, below
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
     {
         if (m_sharedData.clients[i].connected)
+        {
+            clientCount++;
+            clientSortData.emplace_back().clientID = static_cast<std::uint8_t>(i);
+            clientSortData.back().playerCount = m_sharedData.clients[i].playerCount;
+
+            playerCount += m_sharedData.clients[i].playerCount;
+        }
+    }
+    //by sorting clients by the number of players we can more easily balance (although not
+    //perfectly) the number of players per group overall.
+    std::sort(clientSortData.begin(), clientSortData.end(), 
+        [](const ClientSortData& a, const ClientSortData& b) 
+        {
+            return a.playerCount > b.playerCount;
+        });
+
+
+    if (m_sharedData.groupMode == ClientGrouping::Even)
+    {
+        m_playerInfo.resize(std::min(clientCount, 2));
+    }
+    else
+    {
+        m_playerInfo.resize(1);
+    }
+
+    auto startLives = StartLives;
+    clientCount = 0;
+    //for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
+    for(const auto& d : clientSortData)
+    {
+        //if (m_sharedData.clients[d.clientID].connected) //this should always be true if the client made it into the sort data
         {
             auto groupID = 0;
             switch (m_sharedData.groupMode)
             {
             default: break;
             case ClientGrouping::Even:
-                groupID = clientCount % 2;
+                if (clientSortData.size() > 1)
+                {
+                    groupID = m_playerInfo[0].playerCount < m_playerInfo[1].playerCount ? 0 : 1;
+                }
                 break;
             case ClientGrouping::One:
                 //remember these clients might not be consecutive!
                 //eg it's possible only clients 1 & 6 are connected...
                 groupID = clientCount;
+                clientCount++;
                 break;
             case ClientGrouping::Two:
-                groupID = clientCount / 2;
-                break;
             case ClientGrouping::Three:
-                groupID = clientCount / 3;
-                break;
             case ClientGrouping::Four:
-                groupID = clientCount / 4;
+                //find first group with fewer than X players else create a new group
+                for (const auto& g : m_playerInfo)
+                {
+                    if (g.playerCount >= m_sharedData.groupMode - 2)
+                    {
+                        groupID++;
+                    }
+                }
                 break;
             }
-            clientCount++;
 
-            m_groupAssignments[i] = groupID;
-            m_playerInfo[groupID].clientIDs.push_back(i); //tracks all client IDs in this group
+            if (groupID == m_playerInfo.size()) //we should never be greater...
+            {
+                m_playerInfo.emplace_back();
+            }
+
+            m_groupAssignments[d.clientID] = groupID;
+            m_playerInfo[groupID].clientIDs.push_back(d.clientID); //tracks all client IDs in this group
             m_playerInfo[groupID].id = std::uint8_t(groupID);
+            m_playerInfo[groupID].playerCount += d.playerCount;
 
-            for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
+            for (auto j = 0u; j < m_sharedData.clients[d.clientID].playerCount; ++j)
             {
                 auto& player = m_playerInfo[groupID].playerInfo.emplace_back();
-                player.client = i;
+                player.client = d.clientID;
                 player.player = j;
                 player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
@@ -1695,12 +1716,6 @@ void GolfState::initScene()
 
     //fudgenstein - 4 is the max start lives but we
     //want it with 4 players or fewer, not 5
-    std::int32_t playerCount = 0;
-    for (const auto& group : m_playerInfo)
-    {
-        playerCount += group.playerInfo.size();
-    }
-
     if (playerCount == 4)
     {
         startLives++;
