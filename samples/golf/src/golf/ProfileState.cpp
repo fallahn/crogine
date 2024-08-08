@@ -983,7 +983,7 @@ void ProfileState::buildScene()
                 }
             });
 
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonHairColour);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonHairBrowse);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonName, ButtonRandomise);
     entity.setLabel("Open Steam Workshop In Overlay");
 #endif
@@ -1123,7 +1123,11 @@ void ProfileState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonHairBrowse);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonSkinTone);
+#ifdef USE_GNS
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonWorkshop);
+#else
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonRandomise);
+#endif
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 
         uiSystem.addCallback([rect](cro::Entity e) {e.getComponent<cro::Sprite>().setTextureRect(rect); });
     rect.bottom += rect.height;
