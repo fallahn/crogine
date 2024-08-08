@@ -71,6 +71,9 @@ struct XPStringID final
         CareerSeasonComplete,
         HoleWon,
 
+        FIR,
+        GIR,
+
         Count
     };
 };
@@ -111,5 +114,8 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
 
     "Career Round Complete",
     "Career Season Complete",
-    "Hole Winner"
+    "Hole Winner",
+
+    "Fairway In Regulation",
+    "Green In Regulation"
 };

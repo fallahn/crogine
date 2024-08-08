@@ -4604,6 +4604,12 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 auto* msg2 = postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg2->type = GolfEvent::HoleInOne;
                 msg2->position = m_holeData[m_currentHole].pin;
+
+                if (getClub() != ClubID::Putter)
+                {
+                    Social::awardXP(5, XPStringID::GIR);
+                    Social::awardXP(2, XPStringID::FIR);
+                }
             }
 
             if (score <= ScoreID::Par

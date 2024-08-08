@@ -1629,6 +1629,17 @@ void GolfState::handleMessage(const cro::Message& msg)
                             m_achievementTracker.twoShotsSpare = false;
                         }
                     }
+
+                    const auto currScore = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
+                    if (m_holeData[m_currentHole].par - currScore > 1)
+                    {
+                        Social::awardXP(5, XPStringID::GIR);
+                    }
+                    if (m_holeData[m_currentHole].par > 3
+                        && currScore == 1)
+                    {
+                        Social::awardXP(2, XPStringID::FIR);
+                    }
                 }
                 break;
             case TerrainID::Fairway:
@@ -1637,6 +1648,13 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.4f);
                 }
+
+                if (m_holeData[m_currentHole].par > 3
+                    && m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 1)
+                {
+                    Social::awardXP(2, XPStringID::FIR);
+                }
+                
                 break;
             }
 
