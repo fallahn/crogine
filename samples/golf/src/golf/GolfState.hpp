@@ -153,6 +153,7 @@ private:
     cro::Clock m_idleTimer;
 
     bool m_wantsGameState;
+    std::uint8_t m_serverGroup;
     bool m_allowAchievements;
     cro::Clock m_readyClock; //pings ready state until ack'd
 

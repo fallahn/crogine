@@ -529,6 +529,7 @@ void GolfState::netBroadcast()
                 info.playerID = player.player;
                 info.state = static_cast<std::uint8_t>(ballC.state);
                 info.lie = ballC.lie;
+                info.groupID = group.id;
                 m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
             }
         }
@@ -658,6 +659,9 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
             return;
         }
 
+        //tell the client which group we were assigned to
+        m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::GroupID, std::uint8_t(m_groupAssignments[clientID]), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
         //send all the ball positions
         auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
@@ -681,6 +685,7 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
             //make sure to enforce club set if needed
             if (m_sharedData.clubLimit)
             {
+                //TODO we don't really need to be sorting this every time we send to a new client...
                 std::sort(m_sharedData.clubLevels.begin(), m_sharedData.clubLevels.end(),
                     [](std::uint8_t a, std::uint8_t b)
                     {
@@ -1673,6 +1678,7 @@ void GolfState::initScene()
 
             m_groupAssignments[i] = groupID;
             m_playerInfo[groupID].clientIDs.push_back(i); //tracks all client IDs in this group
+            m_playerInfo[groupID].id = std::uint8_t(groupID);
 
             for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
             {
@@ -1743,7 +1749,7 @@ void GolfState::buildWorld()
     //TODO what are the chances of this overlapping with the client?
     if (m_sharedData.leagueID != 0)
     {
-        const auto groupID = 0; //assume this is snigle player always
+        const auto groupID = 0; //assume this is single player always
 
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(m_holeData.size());

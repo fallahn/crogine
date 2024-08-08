@@ -173,6 +173,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_cpuGolfer             (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_humanCount            (0),
     m_wantsGameState        (true),
+    m_serverGroup           (0),
     m_allowAchievements     (false),
     m_lightVolumeDefinition (m_resources),
     m_scaleBuffer           ("PixelScale"),
@@ -3989,6 +3990,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::GroupID:
+            m_serverGroup = evt.packet.as<std::uint8_t>();
+            break;
         case PacketID::HoleComplete:
         {
             //hmm maybe we should be sending the hole number too
@@ -4899,6 +4903,8 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
+    m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(m_serverGroup);
+
     if (m_sharedData.scoreType == ScoreType::ClubShuffle)
     {
         m_sharedData.inputBinding.clubset = ClubID::getRandomSet();
@@ -6356,41 +6362,45 @@ void GolfState::updateActor(const ActorInfo& update)
                 //cro::Transform::QUAT_IDENTITY;
                 interp.addPoint({ update.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp});
 
-                //update spectator camera
-                cro::Command cmd2;
-                cmd2.targetFlags = CommandID::SpectatorCam;
-                cmd2.action = [&, e](cro::Entity en, float)
+                //only follow the ball with the camera if it belongs to the active group
+                if (update.groupID == m_gameScene.getSystem<CameraFollowSystem>()->getTargetGroup())
                 {
-                    en.getComponent<CameraFollower>().target = e;
-                    en.getComponent<CameraFollower>().playerPosition = m_currentPlayer.position;
-                    en.getComponent<CameraFollower>().holePosition = m_holeData[m_currentHole].pin;
-                };
-                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
+                    //update spectator camera
+                    cro::Command cmd2;
+                    cmd2.targetFlags = CommandID::SpectatorCam;
+                    cmd2.action = [&, e](cro::Entity en, float)
+                        {
+                            en.getComponent<CameraFollower>().target = e;
+                            en.getComponent<CameraFollower>().playerPosition = m_currentPlayer.position;
+                            en.getComponent<CameraFollower>().holePosition = m_holeData[m_currentHole].pin;
+                        };
+                    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
 
-                //set this ball as the flight cam target
-                m_flightCam.getComponent<cro::Callback>().setUserData<cro::Entity>(e);
+                    //set this ball as the flight cam target
+                    m_flightCam.getComponent<cro::Callback>().setUserData<cro::Entity>(e);
 
-                //if the dest point moves the ball out of a certain radius
-                //then set the drone cam to follow (if it's active)
-                if (m_currentCamera == CameraID::Sky
-                    && m_drone.isValid())
-                {
-                    auto p = m_cameras[CameraID::Sky].getComponent<cro::Transform>().getPosition();
-                    glm::vec2 camPos(p.x, p.z);
-                    p = e.getComponent<cro::Transform>().getPosition();
-                    glm::vec2 ballPos(p.x, p.z);
-                    glm::vec2 destPos(update.position.x, update.position.z);
-
-                    //Later note: I found this half written code^^ and can't remember what
-                    //I was planning, so here we go:
-                    static constexpr float MaxRadius = 15.f * 15.f;
-                    if (glm::length2(camPos - ballPos) < MaxRadius
-                        && glm::length2(camPos - destPos) > MaxRadius)
+                    //if the dest point moves the ball out of a certain radius
+                    //then set the drone cam to follow (if it's active)
+                    if (m_currentCamera == CameraID::Sky
+                        && m_drone.isValid())
                     {
-                        auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
-                        auto d = glm::normalize(ballPos - camPos) * 8.f;
-                        data.resetPosition += glm::vec3(d.x, 0.f, d.y);
-                        data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
+                        auto p = m_cameras[CameraID::Sky].getComponent<cro::Transform>().getPosition();
+                        glm::vec2 camPos(p.x, p.z);
+                        p = e.getComponent<cro::Transform>().getPosition();
+                        glm::vec2 ballPos(p.x, p.z);
+                        glm::vec2 destPos(update.position.x, update.position.z);
+
+                        //Later note: I found this half written code^^ and can't remember what
+                        //I was planning, so here we go:
+                        static constexpr float MaxRadius = 15.f * 15.f;
+                        if (glm::length2(camPos - ballPos) < MaxRadius
+                            && glm::length2(camPos - destPos) > MaxRadius)
+                        {
+                            auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+                            auto d = glm::normalize(ballPos - camPos) * 8.f;
+                            data.resetPosition += glm::vec3(d.x, 0.f, d.y);
+                            data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
+                        }
                     }
                 }
             }

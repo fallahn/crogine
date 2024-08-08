@@ -82,6 +82,7 @@ namespace sv
             bool warned = false;
             std::vector<PlayerStatus> playerInfo;
             std::vector<std::uint8_t> clientIDs; //list of clients which should be notified of this info
+            std::uint8_t id = 0; //this group's ID, save keep measuring it
         };
         std::vector<PlayerGroup> m_playerInfo;
 

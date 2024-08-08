@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -117,7 +117,8 @@ namespace
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
     : cro::System   (mb, typeid(CameraFollowSystem)),
-    m_closestCamera (CameraID::Player)
+    m_closestCamera (CameraID::Player),
+    m_targetGroup   (0)
 {
     requireComponent<cro::Transform>();
     requireComponent<cro::Camera>();
