@@ -223,7 +223,7 @@ private:
     void createHairEditor(cro::Entity, const CallbackContext&);
     cro::FloatRect getHeadwearTextureRect(std::size_t);
     std::size_t fetchUIIndexFromColour(std::uint8_t colourIndex, std::int32_t paletteIndex);
-    cro::Entity createBrowserBackground(std::int32_t, const CallbackContext&, std::size_t closeButtonIndex);
+    std::pair<cro::Entity, cro::Entity> createBrowserBackground(std::int32_t, const CallbackContext&);
 
     void quitState();
 

@@ -2971,7 +2971,7 @@ void ProfileState::updateHeadwearTransform()
 
 void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
-    auto bgEnt = createBrowserBackground(MenuID::BallSelect, ctx, CloseButton);
+    auto [bgEnt, _] = createBrowserBackground(MenuID::BallSelect, ctx);
     m_menuEntities[EntityID::BallBrowser] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
@@ -3121,7 +3121,7 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
 
 void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
-    auto bgEnt = createBrowserBackground(MenuID::HairSelect, ctx, CloseButton);
+    auto [bgEnt, _] = createBrowserBackground(MenuID::HairSelect, ctx);
     bgEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, 0.85f });
     m_menuEntities[EntityID::HairBrowser] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
@@ -3281,13 +3281,18 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     constexpr std::size_t IndexThumb = 10000;
     constexpr std::size_t IndexCol   = 10001;
     constexpr std::size_t IndexHat   = 10002;
-    constexpr std::size_t IndexTrans = 10003;
-    constexpr std::size_t IndexClose = 10021;
+    constexpr std::size_t IndexClose = 10003;
+    constexpr std::size_t IndexTrans = 10004;
+    constexpr std::size_t IndexReset = 10022;
 
-    auto bgEnt = createBrowserBackground(MenuID::HairEditor, ctx, IndexClose);
+    auto [bgEnt, closeButtonEnt] = createBrowserBackground(MenuID::HairEditor, ctx);
     bgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, 10.f));
     m_menuEntities[EntityID::HairEditor] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
+
+    closeButtonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexClose);
+    closeButtonEnt.getComponent<cro::UIInput>().setNextIndex(IndexThumb, IndexTrans + 5);
+    closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexThumb, IndexHat);
 
     //avatar preview
     m_hairEditorTexture.create(HairEditTexSize.x, HairEditTexSize.y);
@@ -3352,7 +3357,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
     entity.getComponent<cro::UIInput>().setSelectionIndex(IndexThumb);
     entity.getComponent<cro::UIInput>().setNextIndex(IndexCol, IndexTrans);
-    entity.getComponent<cro::UIInput>().setPrevIndex(IndexHat, IndexTrans + 12);
+    entity.getComponent<cro::UIInput>().setPrevIndex(IndexHat, IndexReset);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -3391,8 +3396,8 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
     entity.getComponent<cro::UIInput>().setSelectionIndex(IndexCol);
-    entity.getComponent<cro::UIInput>().setNextIndex(IndexHat, IndexTrans + 2);
-    entity.getComponent<cro::UIInput>().setPrevIndex(IndexThumb, IndexTrans + 14);
+    entity.getComponent<cro::UIInput>().setNextIndex(IndexHat, IndexClose);
+    entity.getComponent<cro::UIInput>().setPrevIndex(IndexThumb, IndexReset + 1);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -3437,14 +3442,14 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto textEnt = entity;
 
-    entity = m_uiScene.createEntity();
+    /*entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 437.f, 172.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("SAMPLE\nTEXT");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
 
 
     //hair/hat button
@@ -3470,8 +3475,8 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexHat);
-    buttonEnt.getComponent<cro::UIInput>().setNextIndex(IndexThumb, IndexTrans + 4);
-    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexCol, IndexClose);
+    buttonEnt.getComponent<cro::UIInput>().setNextIndex(IndexThumb, IndexClose);
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexCol, IndexReset + 2);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -3503,8 +3508,6 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
 
                     const auto idx = m_headwearID == HeadwearID::Hair ? pc::ColourKey::Hair : pc::ColourKey::Hat;
                     colourPreview.getComponent<cro::Sprite>().setColour(pc::Palette[m_activeProfile.avatarFlags[idx]]);
-
-                    //TODO set pointers to transform values for inputs below
                 }
             });
     buttonEnt.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -3643,7 +3646,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                     float val = m_activeProfile.headwearOffsets[idx][j];
                     std::stringstream ss;
                     ss.precision(2);
-                    ss << val;
+                    ss << std::fixed << val;
                     e.getComponent<cro::Text>().setString(ss.str());
                 };
             bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3677,7 +3680,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 }
                 else
                 {
-                    up = IndexHat;
+                    up = IndexClose;
                 }
                 down = buttonIndex + rButtonCount;
                 break;
@@ -3687,14 +3690,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 break;
             case 2:
                 //bottom row
-                if ((i*2) < 3)
-                {
-                    down = IndexThumb;
-                }
-                else
-                {
-                    down = IndexClose;
-                }
+                down = IndexReset + i;
                 up = buttonIndex - rButtonCount;
                 break;
             }
@@ -3731,7 +3727,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 down = buttonIndex + rButtonCount;
                 if (i * 2 == 2)
                 {
-                    up = IndexHat;
+                    up = IndexClose;
                 }
                 break;
             case 1:
@@ -3741,15 +3737,11 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
             case 2:
                 //bottom row
                 up = buttonIndex - rButtonCount;
-                if (i * 2 == 2)
-                {
-                    down = IndexClose;
-                }
                 break;
             }
 
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(glm::vec2(15.f, -9.f));
+            entity.addComponent<cro::Transform>().setPosition(glm::vec2(16.f, -9.f));
             entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("arrow_highlight");
@@ -3771,6 +3763,46 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
         }
         pos.x += ColSpacing;
         pos.y = YStart;
+    }
+
+
+    //tx reset buttons
+    glm::vec2 buttonPos(310.f, 35.f);
+
+    for (auto i = 0; i < 3; ++i)
+    {
+        buttonEnt = m_uiScene.createEntity();
+        buttonEnt.addComponent<cro::Transform>().setPosition(glm::vec3(buttonPos, 0.1f));
+        buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        buttonEnt.addComponent<cro::Drawable2D>();
+        buttonEnt.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("select_highlight");
+        buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+        buttonEnt.addComponent<cro::UIInput>().area = bounds;
+        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+        buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexReset + i);
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(IndexReset + ((i + 1) % 3), IndexThumb + i);
+        buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexReset + ((i + 2) % 3), (IndexReset + i) - (3 + (3 -i)));
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, i](cro::Entity e, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        auto idx = (PlayerData::HeadwearOffset::HairTx + i) + (m_headwearID * PlayerData::HeadwearOffset::HatTx);
+                        m_activeProfile.headwearOffsets[idx] = (idx % 3) == 2 ? glm::vec3(1.f) : glm::vec3(0.f);
+                        updateHeadwearTransform();
+
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    }
+                });
+        buttonEnt.addComponent<cro::Callback>().function = MenuTextCallback();
+        buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        bgEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+        buttonPos.x += 74.f;
     }
 }
 
@@ -3796,7 +3828,7 @@ std::size_t ProfileState::fetchUIIndexFromColour(std::uint8_t colourIndex, std::
     return (y * PaletteColumnCount + x) % pc::PairCounts[paletteIndex];
 }
 
-cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const CallbackContext& ctx, std::size_t closeButtonIndex)
+std::pair<cro::Entity, cro::Entity> ProfileState::createBrowserBackground(std::int32_t menuID, const CallbackContext& ctx)
 {
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -3856,7 +3888,7 @@ cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const Cal
     buttonEnt.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("close_button");
     buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     buttonEnt.addComponent<cro::UIInput>().setGroup(menuID);
-    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(closeButtonIndex);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CloseButton);
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.getComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
@@ -3877,7 +3909,7 @@ cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const Cal
     buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
-    return entity;
+    return { entity, buttonEnt };
 }
 
 void ProfileState::quitState()
