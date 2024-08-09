@@ -164,14 +164,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                     }),
                     playerInfo.end());
 
-                //if this group is now empty, remove it
-                if (playerInfo.empty())
+                if (playerInfo.empty()
+                    || wantNewPlayer)
                 {
-                    //hmmm but this will mess up the group indexing in m_groupAssignments
-                    //m_playerInfo.erase();
-                }
-                else if (wantNewPlayer)
-                {
+                    //if this group is empty setNextPlayer() will still
+                    //test if we want the next hole if other groups are waiting
                     setNewPlayer = m_groupAssignments[playerInfo[0].client];
                 }
             }
@@ -923,26 +920,23 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     auto& playerInfo = m_playerInfo[groupID].playerInfo;
 
     //all players may have disconnected this group mid-game
-    if (playerInfo.empty())
+    if (!playerInfo.empty())
     {
-        return;
-    }
-
-    //broadcast current player's score first
-    ScoreUpdate su;
-    su.strokeDistance = playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance;
-    su.client = playerInfo[0].client;
-    su.player = playerInfo[0].player;
-    su.score = playerInfo[0].totalScore;
-    su.stroke = playerInfo[0].holeScore[m_currentHole];
-    su.distanceScore = playerInfo[0].distanceScore[m_currentHole];
-    su.matchScore = playerInfo[0].matchWins;
-    su.skinsScore = playerInfo[0].skins;
-    su.hole = m_currentHole;
+        //broadcast current player's score first
+        ScoreUpdate su;
+        su.strokeDistance = playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance;
+        su.client = playerInfo[0].client;
+        su.player = playerInfo[0].player;
+        su.score = playerInfo[0].totalScore;
+        su.stroke = playerInfo[0].holeScore[m_currentHole];
+        su.distanceScore = playerInfo[0].distanceScore[m_currentHole];
+        su.matchScore = playerInfo[0].matchWins;
+        su.skinsScore = playerInfo[0].skins;
+        su.hole = m_currentHole;
     
-    m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-    playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
-
+        m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
+    }
 
     //apply the rules to ALL players on the course
     std::vector<PlayerStatus> allPlayers;
@@ -1058,27 +1052,30 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             //current first position and swap them in to first if so
             //TODO we could probably include this in the predicate above
             //but ehhhh no harm in being explicit I guess?
-            if (playerInfo[0].client != m_honour[0]
-                || playerInfo[0].player != m_honour[1])
+            if (!playerInfo.empty())
             {
-                auto r = std::find_if(playerInfo.begin(), playerInfo.end(),
-                    [&](const PlayerStatus& ps)
-                    {
-                        return ps.client == m_honour[0] && ps.player == m_honour[1];
-                    });
-
-                if (r != playerInfo.end())
+                if (playerInfo[0].client != m_honour[0]
+                    || playerInfo[0].player != m_honour[1])
                 {
-                    if (r->holeScore[m_currentHole - 1] == playerInfo[0].holeScore[m_currentHole - 1])
+                    auto r = std::find_if(playerInfo.begin(), playerInfo.end(),
+                        [&](const PlayerStatus& ps)
+                        {
+                            return ps.client == m_honour[0] && ps.player == m_honour[1];
+                        });
+
+                    if (r != playerInfo.end())
                     {
-                        std::swap(playerInfo[std::distance(playerInfo.begin(), r)], playerInfo[0]);
+                        if (r->holeScore[m_currentHole - 1] == playerInfo[0].holeScore[m_currentHole - 1])
+                        {
+                            std::swap(playerInfo[std::distance(playerInfo.begin(), r)], playerInfo[0]);
+                        }
                     }
                 }
-            }
 
-            //set whoever is first as current honour taker
-            m_honour[0] = playerInfo[0].client;
-            m_honour[1] = playerInfo[0].player;
+                //set whoever is first as current honour taker
+                m_honour[0] = playerInfo[0].client;
+                m_honour[1] = playerInfo[0].player;
+            }
         }
     }
 
@@ -1109,11 +1106,10 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 
         setNextHole();
     }
-    else
+    else if (!playerInfo.empty())
     {
         //go to next player if current front player is not in the hole...
         //otherwise we wait until the above triggers next hole
-
         if (playerInfo[0].distanceToHole != 0)
         {
             ActivePlayer player = playerInfo[0]; //deliberate slice.
