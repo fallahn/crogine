@@ -78,6 +78,7 @@ static constexpr float GreenCamRadiusMedium = 10.f;
 static constexpr float GreenCamRadiusSmall = 5.7f;
 static constexpr float SkyCamRadius = 80.f;
 
+static constexpr float CameraFarPlane = 320.f;
 static constexpr float GreenCamZoomFast = 2.5f;
 static constexpr float GreenCamZoomSlow = 1.8f;
 static constexpr float SkyCamZoomSpeed = 1.1f;// 3.f;
@@ -87,9 +88,11 @@ static constexpr float MinFlightCamDistance = 0.132f;
 static constexpr float FlightCamRotation = -0.158f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);//320,200
+//static constexpr glm::uvec2 MapSize(640u, 320u);
 static constexpr glm::vec2 MapSizeFloat(MapSize);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
 static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f); //used to validate the sub-target property of a hole
+static constexpr glm::uvec2 MiniMapSize(320u, 200u);
 
 static constexpr float CameraStrokeHeight = 2.f;
 static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
@@ -863,16 +866,20 @@ static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)
 static inline std::pair<std::uint8_t, float> readMap(const cro::ImageArray<std::uint8_t>& img, float px, float py)
 {
     auto size = glm::vec2(img.getDimensions());
+
+    //if the point is out of bounds of our texture map, assume water
+    const cro::FloatRect bounds(glm::vec2(0.f), size - glm::vec2(1.f));
+    if (!bounds.contains(glm::vec2(px, py)))
+    {
+        return { TerrainID::Water, 0.f };
+    }
+
     //I forget why our coords are float - this makes for horrible casts :(
     std::uint32_t x = static_cast<std::uint32_t>(std::min(size.x - 1.f, std::max(0.f, std::floor(px))));
     std::uint32_t y = static_cast<std::uint32_t>(std::min(size.y - 1.f, std::max(0.f, std::floor(py))));
 
     std::uint32_t stride = img.getChannels();
     //TODO we should have already asserted the format is RGBA elsewhere...
-    /*if (img.getFormat() == cro::ImageFormat::RGB)
-    {
-        stride = 3;
-    }*/
 
     auto index = (y * static_cast<std::uint32_t>(size.x) + x) * stride;
 

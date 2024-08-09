@@ -1632,7 +1632,8 @@ void GolfState::buildUI()
     };
 
     m_mapRoot = m_uiScene.createEntity();
-    m_mapRoot.addComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_mapRoot.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.2f});
+    m_mapRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapRoot.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 1);
     m_mapRoot.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
@@ -1910,7 +1911,7 @@ void GolfState::buildUI()
     //set up the overhead cam for the mini map
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
-        glm::uvec2 previewSize = MapSize * 8u;
+        glm::uvec2 previewSize = MiniMapSize * 8u;
 
         m_mapTexture.create(previewSize.x, previewSize.y);
         m_mapTextureMRT.create(previewSize.x, previewSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
@@ -1930,7 +1931,7 @@ void GolfState::buildUI()
     };
 
     m_mapCam = m_gameScene.createEntity();
-    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, /*38.f*/36.f, -static_cast<float>(MapSize.y) / 2.f});
+    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MiniMapSize.x) / 2.f, 36.f, -static_cast<float>(MiniMapSize.y) / 2.f});
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     updateMiniView(miniCam);
@@ -1947,7 +1948,7 @@ void GolfState::buildUI()
     //and the mini view of the green
     auto updateGreenView = [&, greenEnt](cro::Camera& greenCam) mutable
     {
-        auto texSize = MapSize.y / 2u;
+        auto texSize = MiniMapSize.y / 2u;
 
         auto windowScale = getViewScale();
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
@@ -2093,13 +2094,13 @@ void GolfState::buildUI()
 
         //update minimap
         const auto uiSize = size / m_viewScale;
-        auto mapSize = glm::vec2(MapSize / 2u);
+        auto mapSize = glm::vec2(MiniMapSize / 2u);
         mapSize /= 2.f;
         m_mapRoot.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.85f }); //map sprite is rotated 90
 
 
-        greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });
-        greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MapSize.y) / 4.f));
+        greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MiniMapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });
+        greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MiniMapSize.y) / 4.f));
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(WindIndicatorPosition.x, WindIndicatorPosition.y));
         windEnt2.getComponent<cro::Transform>().setPosition(glm::vec2(WindIndicatorPosition.x, WindIndicatorPosition.y));

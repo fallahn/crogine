@@ -47,19 +47,22 @@ source distribution.
 
 namespace
 {
-    //8x5 texture grid @ 1280x1280px
-    //gives us 40 metres per tile, 32 pixels per metre
-    static_assert(MapSize.x == 320, "These values should be driven by the map size");
-    constexpr std::uint32_t TextureSize = 1280u;
-    constexpr std::uint32_t ColCount = 8u;
-    constexpr std::uint32_t RowCount = 5u;
+    //40 metres per tile, 32 pixels per metre
+
+    constexpr std::uint32_t MetresPerTile = 40u;
+    static_assert((MapSize.x % MetresPerTile) == 0 && (MapSize.y % MetresPerTile) == 0, "Map size must be multiple of 40");
+
+    //TODO this could be much optimised by only creating as many layers as actually
+    //intersect the terrain. No idea how to calculate that though
+    constexpr std::uint32_t TextureSize = 1280u;// *(MapSize.x / 320u); //this creates 128(!!!) of these...
+    constexpr std::uint32_t ColCount = MapSize.x / MetresPerTile;
+    constexpr std::uint32_t RowCount = MapSize.y / MetresPerTile;
     constexpr std::uint32_t TextureCount = ColCount * RowCount;
     constexpr float TileSize = MapSizeFloat.x / ColCount;
 
     constexpr float CameraHeight = 10.f;
     constexpr float MaxDepth = TerrainLevel - WaterLevel;
 
-    //static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320");
     const std::string TerrainVertex = 
         R"(
         ATTRIBUTE vec4 a_position;

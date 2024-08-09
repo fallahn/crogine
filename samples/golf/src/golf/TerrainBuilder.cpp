@@ -1177,6 +1177,15 @@ void TerrainBuilder::threadFunc()
                 {
                     auto size = mapImage.getDimensions();
 
+                    if (x < 0 || x >= size.x)
+                    {
+                        return 0.f;
+                    }
+                    if (y < 0 || y >= size.y)
+                    {
+                        return 0.f;
+                    }
+
                     x = std::min(size.x - 1, std::max(0u, x));
                     y = std::min(size.y - 1, std::max(0u, y));
 
