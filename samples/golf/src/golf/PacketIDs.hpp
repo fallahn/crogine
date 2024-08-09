@@ -166,6 +166,8 @@ namespace PacketID
         MaxStrokes, //< uint8 MaxStrokeID player reached stroke limit (so client can print message)
         HoleComplete, //< uint16 client OR'd player - let clients know a player was forfeited for the current hole
         MaxClubs, //< tells the client to use this club set
+        SpectateGroup, //< uint8 tells idle player groups to spectate this one
+        SetIdle, //< tell the client we're idle and to spectate the uint8 group idle
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation

@@ -84,6 +84,8 @@ namespace sv
             std::vector<std::uint8_t> clientIDs; //list of clients which should be notified of this info
             std::uint8_t id = 0; //this group's ID, save keep measuring it
             std::uint8_t playerCount = 0; //total number of players in the group for all clients
+
+            bool waitingForHole = false; //waiting for other groups to complte the hole
         };
         std::vector<PlayerGroup> m_playerInfo;
 

@@ -1125,7 +1125,25 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         }
         else
         {
-            //TODO send a message saying we're waiting
+            m_playerInfo[groupID].waitingForHole = true;
+
+            std::uint8_t spectateGroup = 0;
+            for (auto i = 0u; i < m_playerInfo.size(); ++i)
+            {
+                if (!m_playerInfo[i].waitingForHole)
+                {
+                    //tell all waiting clients to spectate this group
+                    spectateGroup = std::uint8_t(i);
+                    m_sharedData.host.broadcastPacket(PacketID::SpectateGroup, spectateGroup, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    break;
+                }
+            }
+
+            //send a message saying we're waiting - hmm trouble is
+            for (auto c : m_playerInfo[groupID].clientIDs)
+            {
+                m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::SetIdle, spectateGroup, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
         }
     }
 
@@ -1166,6 +1184,7 @@ void GolfState::setNextHole()
 
             m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
+        group.waitingForHole = false;
     }
 
     //set clients as not yet loaded

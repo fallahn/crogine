@@ -153,6 +153,7 @@ private:
     cro::Clock m_idleTimer;
 
     bool m_wantsGameState;
+    bool m_groupIdle; //in group play we're waiting for other clients to finish
     std::uint8_t m_serverGroup;
     bool m_allowAchievements;
     cro::Clock m_readyClock; //pings ready state until ack'd
