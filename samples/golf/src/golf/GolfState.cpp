@@ -3554,6 +3554,8 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+
     if (!m_sharedData.nightTime)
     {
         //large shadow seen close up
@@ -6424,6 +6426,20 @@ void GolfState::updateActor(const ActorInfo& update)
                 e.getComponent<ClientCollider>().active = active;
                 e.getComponent<ClientCollider>().state = update.state;
                 e.getComponent<ClientCollider>().lie = update.lie;
+            }
+
+            if (update.groupID != m_serverGroup)
+            {
+                //this is another player so activate the callback to grow the model
+                static constexpr float minDist = 0.5f;
+                static constexpr float minDistSqr = minDist * minDist;
+
+                if (glm::length2(e.getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].tee) > minDistSqr
+                    && e.getComponent<cro::Transform>().getScale().x == 0)
+                {
+                    e.getComponent<cro::Callback>().active = true;
+                }
+
             }
         }
     };

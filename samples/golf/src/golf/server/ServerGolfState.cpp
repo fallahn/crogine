@@ -526,7 +526,7 @@ void GolfState::netBroadcast()
                 info.playerID = player.player;
                 info.state = static_cast<std::uint8_t>(ballC.state);
                 info.lie = ballC.lie;
-                info.groupID = group.id;
+                info.groupID = m_groupAssignments[player.client];
                 m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
             }
         }
@@ -1275,6 +1275,7 @@ void GolfState::setNextHole()
                             info.timestamp = timestamp;
                             info.clientID = player.client;
                             info.playerID = player.player;
+                            info.groupID = m_groupAssignments[player.client];
                             info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
                             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                         }
@@ -1404,6 +1405,7 @@ void GolfState::applyMulligan()
         info.playerID = playerInfo[0].player;
         info.state = static_cast<std::uint8_t>(ballC.state);
         info.lie = ballC.lie;
+        info.groupID = m_groupAssignments[playerInfo[0].client];
         m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable);
 
         ballC.lastStrokeDistance = 0.f;

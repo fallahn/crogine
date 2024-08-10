@@ -326,7 +326,7 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
                 if (glm::dot(alt, fwd) > 0)
                 {
                     m_baseTarget = m_target = fallback;
-                    LogI << "set to fallback on activate" << std::endl;
+                    //LogI << "set to fallback on activate" << std::endl;
                 }
             }
         }

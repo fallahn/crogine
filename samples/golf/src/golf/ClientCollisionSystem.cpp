@@ -116,7 +116,6 @@ void ClientCollisionSystem::process(float)
 
         if (collider.terrain == TerrainID::Green)
         {
-
             //check if we're in the hole
             glm::vec2 pin(m_holeData[m_holeIndex].pin.x, m_holeData[m_holeIndex].pin.z);
             glm::vec2 pos(position.x, position.z);
