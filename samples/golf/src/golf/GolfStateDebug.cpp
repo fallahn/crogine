@@ -55,6 +55,11 @@ namespace
     {
         "Default", "Punch", "Flop"
     };
+
+    std::array<std::string, ClientGrouping::Count> GroupingNames =
+    {
+        "None", "Even", "One", "Two", "Three", "Four"
+    };
 }
 
 #include <crogine/graphics/MeshData.hpp>
@@ -242,16 +247,16 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    /*registerWindow([&]() 
+    registerWindow([&]() 
         {
             if (ImGui::Begin("asefsd"))
             {
-                auto up = m_collisionMesh.getTerrain(m_currentPlayer.position).normal;
-                ImGui::Text("Level: %3.4f, %3.4f", m_terrainLevel.x, m_terrainLevel.y);
-                ImGui::Text("Up: %3.4f, %3.4f", up.x, up.y);
+                ImGui::Text("Group mode: %s", GroupingNames[m_sharedData.groupMode].c_str());
+                ImGui::Text("Server Group: %d", m_serverGroup);
+                ImGui::Text("Camera Target Group: %d", m_gameScene.getSystem<CameraFollowSystem>()->getTargetGroup());
             }
             ImGui::End();
-        });*/
+        });
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

@@ -674,9 +674,10 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
                 info.clientID = player.client;
                 info.playerID = player.player;
                 info.timestamp = timestamp;
+                info.groupID = m_groupAssignments[player.client];
                 
                 //all clients should spawn a ball
-                m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, info, net::NetFlag::Reliable);
+                m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, net::NetFlag::Reliable);
             }
 
             //make sure to enforce club set if needed
@@ -1079,70 +1080,72 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         }
     }
 
-
-    //TODO move this to some game rule check function
-    if (allPlayers[0].distanceToHole == 0 //all players must be in the hole
-        || (m_sharedData.scoreType == ScoreType::NearestThePin && allPlayers[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
-        || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers.size() == 1) //players have quit the game so attempt next hole
-        || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers[1].eliminated)) //(which triggers the rules to end the game)    
+    if (!allPlayers.empty())
     {
-        //if we're nearest the pin sort by closest player so current winner goes first
-        //and we can award something for winning the hole
-        if (m_sharedData.scoreType == ScoreType::NearestThePin)
+        //TODO move this to some game rule check function
+        if (allPlayers[0].distanceToHole == 0 //all players must be in the hole
+            || (m_sharedData.scoreType == ScoreType::NearestThePin && allPlayers[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
+            || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers.size() == 1) //players have quit the game so attempt next hole
+            || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers[1].eliminated)) //(which triggers the rules to end the game)    
         {
-            std::sort(playerInfo.begin(), playerInfo.end(),
-                [&](const PlayerStatus& a, const PlayerStatus& b)
+            //if we're nearest the pin sort by closest player so current winner goes first
+            //and we can award something for winning the hole
+            if (m_sharedData.scoreType == ScoreType::NearestThePin)
+            {
+                std::sort(playerInfo.begin(), playerInfo.end(),
+                    [&](const PlayerStatus& a, const PlayerStatus& b)
+                    {
+                        return (a.distanceScore[m_currentHole] < b.distanceScore[m_currentHole]);
+                    });
+
+                //don't send this if all players forfeit
+                if (allPlayers[0].holeScore[m_currentHole] == MaxNTPStrokes)
                 {
-                    return (a.distanceScore[m_currentHole] < b.distanceScore[m_currentHole]);
-                });
-
-            //don't send this if all players forfeit
-            if (allPlayers[0].holeScore[m_currentHole] == MaxNTPStrokes)
-            {
-                std::uint16_t d = (std::uint16_t(allPlayers[0].client) << 8) | allPlayers[0].player;
-                m_sharedData.host.broadcastPacket(PacketID::HoleWon, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            }
-        }
-
-        setNextHole();
-    }
-    else if (!playerInfo.empty())
-    {
-        //go to next player if current front player is not in the hole...
-        //otherwise we wait until the above triggers next hole
-        if (playerInfo[0].distanceToHole != 0)
-        {
-            ActivePlayer player = playerInfo[0]; //deliberate slice.
-            for (auto c : m_playerInfo[groupID].clientIDs)
-            {
-                m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::SetPlayer, player, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::ActorAnimation, std::uint8_t(AnimationID::Idle), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-            }
-        }
-        else
-        {
-            m_playerInfo[groupID].waitingForHole = true;
-
-            std::uint8_t spectateGroup = 0;
-            for (auto i = 0u; i < m_playerInfo.size(); ++i)
-            {
-                if (!m_playerInfo[i].waitingForHole)
-                {
-                    //tell all waiting clients to spectate this group
-                    spectateGroup = std::uint8_t(i);
-                    m_sharedData.host.broadcastPacket(PacketID::SpectateGroup, spectateGroup, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    break;
+                    std::uint16_t d = (std::uint16_t(allPlayers[0].client) << 8) | allPlayers[0].player;
+                    m_sharedData.host.broadcastPacket(PacketID::HoleWon, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             }
 
-            //send a message saying we're waiting - hmm trouble is
-            for (auto c : m_playerInfo[groupID].clientIDs)
+            setNextHole();
+        }
+        else if (!playerInfo.empty())
+        {
+            //go to next player if current front player is not in the hole...
+            //otherwise we wait until the above triggers next hole
+            if (playerInfo[0].distanceToHole != 0)
             {
-                m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::SetIdle, spectateGroup, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                ActivePlayer player = playerInfo[0]; //deliberate slice.
+                for (auto c : m_playerInfo[groupID].clientIDs)
+                {
+                    m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::SetPlayer, player, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::ActorAnimation, std::uint8_t(AnimationID::Idle), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
+            else
+            {
+                m_playerInfo[groupID].waitingForHole = true;
+
+                std::uint8_t spectateGroup = 0;
+                for (auto i = 0u; i < m_playerInfo.size(); ++i)
+                {
+                    if (!m_playerInfo[i].waitingForHole)
+                    {
+                        //tell all waiting clients to spectate this group
+                        spectateGroup = std::uint8_t(i);
+                        m_sharedData.host.broadcastPacket(PacketID::SpectateGroup, spectateGroup, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                        break;
+                    }
+                }
+
+                //send a message saying we're waiting - hmm trouble is
+                for (auto c : m_playerInfo[groupID].clientIDs)
+                {
+                    m_sharedData.host.sendPacket(m_sharedData.clients[c].peer, PacketID::SetIdle, spectateGroup, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
             }
         }
-    }
 
+    }
     m_playerInfo[groupID].turnTimer.restart();
 }
 

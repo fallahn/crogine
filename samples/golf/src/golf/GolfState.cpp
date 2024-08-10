@@ -368,6 +368,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0,1,2));
     }
 
+    //prevents the non-steam account getting multiple writes from the same profile
+    //when debugging networking
     //m_allowAchievements = false;
 }
 
@@ -3462,12 +3464,13 @@ void GolfState::spawnBall(const ActorInfo& info)
     //material.blendMode = cro::Material::BlendMode::Multiply; //causes shadow to actually get darker as alpha reaches zero.. duh
 
     bool showTrail = !(m_sharedData.connectionData[info.clientID].playerData[info.playerID].isCPU && m_sharedData.fastCPU);
-
+    showTrail = showTrail && (m_serverGroup == info.groupID);
 
     //point shadow seen from distance
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();// .setPosition(info.position);
     entity.addComponent<cro::Callback>().active = true;
+
 
     if (m_sharedData.nightTime)
     {
@@ -3539,7 +3542,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                             if (m_sharedData.showBallTrail && (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
                                 && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
                             {
-                                m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
+                                m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition(), e.getIndex());
                             }
                         }
                     }
@@ -3994,6 +3997,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::SetIdle:
             m_groupIdle = true;
             m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(evt.packet.as<std::uint8_t>());
+
+            setActiveCamera(CameraID::Green);
             break;
         case PacketID::SpectateGroup:
             if (m_groupIdle)
@@ -4003,6 +4008,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::GroupID:
             m_serverGroup = evt.packet.as<std::uint8_t>();
+            m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(m_serverGroup);
             break;
         case PacketID::HoleComplete:
         {
@@ -5688,7 +5694,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     timelineDesc += " (" + ScoreTypes[m_sharedData.scoreType] + ")";
     Timeline::setTimelineDesc(timelineDesc);
 #endif
-
     m_buttonStates = {};
     m_gameScene.getSystem<PropFollowSystem>()->setPlayerPosition(player.position);
 
@@ -6415,11 +6420,11 @@ void GolfState::updateActor(const ActorInfo& update)
                         }
                     }
                 }
-            }
 
-            e.getComponent<ClientCollider>().active = active;
-            e.getComponent<ClientCollider>().state = update.state;
-            e.getComponent<ClientCollider>().lie = update.lie;
+                e.getComponent<ClientCollider>().active = active;
+                e.getComponent<ClientCollider>().state = update.state;
+                e.getComponent<ClientCollider>().lie = update.lie;
+            }
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

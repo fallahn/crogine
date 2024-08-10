@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,9 @@ source distribution.
 
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <crogine/gui/GuiClient.hpp>
+
+//#include <crogine/core/HiResTimer.hpp>
 
 #include <vector>
 #include <array>
@@ -42,7 +45,7 @@ namespace cro
     class Colour;
 }
 
-class BallTrail final
+class BallTrail final //: public cro::GuiClient
 {
 public:
     BallTrail();
@@ -50,7 +53,7 @@ public:
     void create(cro::Scene&, cro::ResourceCollection&, std::int32_t, bool courseSize = true);
 
     void setNext();
-    void addPoint(glm::vec3);
+    void addPoint(glm::vec3, std::uint32_t = 0);
 
     void update();
     void reset();
@@ -84,4 +87,8 @@ private:
 
     glm::vec4 m_baseColour;
 
+    //float m_insertTime = 0.f;
+    //float m_updateTime = 0.f;
+    //cro::HiResTimer m_insertTimer;
+    //cro::HiResTimer m_updateTimer;
 };

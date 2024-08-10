@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,8 @@ source distribution.
 #include "Terrain.hpp"
 #include "GameConsts.hpp"
 
+#include <crogine/gui/Gui.hpp>
+
 #include <crogine/ecs/Scene.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -46,13 +48,44 @@ source distribution.
 namespace
 {
     const std::uint32_t VertexSize = 7; //num floats
+
+    //std::size_t insertedIndex = 0;
+    //std::size_t insertCount = 0;
+
+    //std::vector<std::uint32_t> debugPoints;
 }
 
 BallTrail::BallTrail()
     : m_bufferIndex (0),
-    m_baseColour    (0.f)
+    m_baseColour    (0.f)/*,
+    m_insertTime    (0.f),
+    m_updateTime    (0.f)*/
 {
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Ball Trail"))
+    //        {
+    //            ImGui::Text("Buffer Index %lu", m_bufferIndex);
 
+    //            std::string s = m_trails[0].active ? "active" : "inactive";
+    //            ImGui::Text("Trail 0 %s", s.c_str());
+
+    //            s = m_trails[1].active ? "active" : "inactive";
+    //            ImGui::Text("Trail 1 %s", s.c_str());
+
+    //            ImGui::Text("Update Time %1.8f", m_updateTime);
+    //            ImGui::Text("Insert Time %1.8f", m_insertTime);
+
+    //            ImGui::Text("Inserted Count %lu", insertCount);
+    //            ImGui::Text("Inserted Index %lu", insertedIndex);
+
+    //            for (auto v : debugPoints)
+    //            {
+    //                ImGui::Text("%u", v);
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
 }
 
 //public
@@ -98,27 +131,28 @@ void BallTrail::setNext()
 {
     //if we switched before reaching min-index size we need
     //to activate the old buffer so that it tidies itself up
-    if (!m_trails[m_bufferIndex].active)
-    {
-        m_trails[m_bufferIndex].active = true;
-    }
-
+    m_trails[m_bufferIndex].active = !m_trails[m_bufferIndex].vertexData.empty();
 
     m_bufferIndex = (m_bufferIndex + 1) % BufferCount;
 }
 
-void BallTrail::addPoint(glm::vec3 position)
+void BallTrail::addPoint(glm::vec3 position, std::uint32_t callerIndex)
 {
     m_trails[m_bufferIndex].vertexData.emplace_back(position, m_baseColour);
 
     m_trails[m_bufferIndex].indices.push_back(static_cast<std::uint32_t>(m_trails[m_bufferIndex].indices.size()));
 
-    if (!m_trails[m_bufferIndex].active && m_trails[m_bufferIndex].indices.size() > 120)
+    if (m_trails[m_bufferIndex].indices.size() > 120)
     {
         m_trails[m_bufferIndex].active = true;
 
         //TODO track parent entity and set to shown
     }
+
+    //insertedIndex = m_bufferIndex;
+    //insertCount++;
+    //debugPoints.push_back(callerIndex);
+    //m_insertTime = m_insertTimer.restart();
 }
 
 void BallTrail::update()
@@ -175,6 +209,9 @@ void BallTrail::update()
             }
         }
     }
+    //insertCount = 0;
+    //debugPoints.clear();
+    //m_updateTime = m_updateTimer.restart();
 }
 
 void BallTrail::reset()
