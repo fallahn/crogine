@@ -106,6 +106,24 @@ namespace
         "Balanced",
         "One", "Two", "Three", "Four"
     };
+
+    const std::string HelpString =
+R"(
+Grouping allows splitting the round's players into smaller groups which
+play concurrently for a shorter round time. Multiple players on the same
+client or in the same group continue to play consecutively. Groups are
+approximate as players on the same client cannot be split betwen groups.
+
+Group modes are:
+None - all players play consecutively as usual.
+Balanced - players are split as evenly as possible between 2 groups.
+One - each play has their own group, unless there are multiple players
+on the client.
+Two - players are split into approximate groups of two.
+Three - players are split into approximate groups of three.
+Four - players are split into approximate groups of four.
+
+)";
 }
 
 PlayerManagementState::PlayerManagementState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)

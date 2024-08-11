@@ -1364,6 +1364,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             break;
         case SceneEvent::TransitionComplete:
         {
+            Timeline::addEvent(Timeline::Event::NewHole, holeNumberFromIndex());
+
             if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
             {
                 Progress::write(m_sharedData.leagueRoundID, m_currentHole, m_sharedData.connectionData[0].playerData[0].holeScores);
@@ -1387,6 +1389,11 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             setUIHidden(false);
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Ball;
+            cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Transform>().setScale(glm::vec3(0.f)); };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
             break;
         case SceneEvent::RequestSwitchCamera:
@@ -5590,7 +5597,6 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     m_sharedData.minimapData.courseName += "\nPar: " + std::to_string(m_holeData[m_currentHole].par);
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions[m_sharedData.crowdDensity]);
 
-    Timeline::addEvent(Timeline::Event::NewHole, holeNumberFromIndex());
 
     if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
     {
