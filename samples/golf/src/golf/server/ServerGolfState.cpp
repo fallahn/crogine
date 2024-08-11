@@ -1112,7 +1112,8 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         {
             //go to next player if current front player is not in the hole...
             //otherwise we wait until the above triggers next hole
-            if (playerInfo[0].distanceToHole != 0)
+            if ((m_sharedData.scoreType != ScoreType::NearestThePin && playerInfo[0].distanceToHole != 0)
+                || (m_sharedData.scoreType == ScoreType::NearestThePin && playerInfo[0].holeScore[m_currentHole] < MaxNTPStrokes))
             {
                 ActivePlayer player = playerInfo[0]; //deliberate slice.
                 for (auto c : m_playerInfo[groupID].clientIDs)
