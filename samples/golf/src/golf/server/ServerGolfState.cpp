@@ -1092,11 +1092,12 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
             //and we can award something for winning the hole
             if (m_sharedData.scoreType == ScoreType::NearestThePin)
             {
-                std::sort(playerInfo.begin(), playerInfo.end(),
-                    [&](const PlayerStatus& a, const PlayerStatus& b)
+                const auto predicate = [&](const PlayerStatus& a, const PlayerStatus& b)
                     {
                         return (a.distanceScore[m_currentHole] < b.distanceScore[m_currentHole]);
-                    });
+                    };
+                std::sort(playerInfo.begin(), playerInfo.end(), predicate);
+                std::sort(allPlayers.begin(), allPlayers.end(), predicate);
 
                 //don't send this if all players forfeit
                 if (allPlayers[0].holeScore[m_currentHole] == MaxNTPStrokes)

@@ -1573,6 +1573,15 @@ void GolfState::startFlyBy()
     entity.getComponent<cro::Callback>().function =
         [&, SpeedMultiplier](cro::Entity e, float dt)
         {
+            //keep the balls hidden during transition
+            cro::Command c;
+            c.targetFlags = CommandID::Ball;
+            c.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(c);
+
             auto& data = e.getComponent<cro::Callback>().getUserData<FlyByTarget>();
             data.progress = /*std::min*/(data.progress + (dt / data.speeds[data.currentTarget])/*, 1.f*/);
 
@@ -1742,12 +1751,13 @@ void GolfState::startFlyBy()
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //hide ball models so they aren't seen floating mid-air
-    cmd.targetFlags = CommandID::Ball;
-    cmd.action = [](cro::Entity e, float)
-        {
-            e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-        };
-    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    //this is moved so it's done continuously by the fly-by callback
+    //cmd.targetFlags = CommandID::Ball;
+    //cmd.action = [](cro::Entity e, float)
+    //    {
+    //        e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    //    };
+    //m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
     msg->type = SceneEvent::TransitionStart;
