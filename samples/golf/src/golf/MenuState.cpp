@@ -383,6 +383,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             cmd.action = [&, spriteID](cro::Entity e, float)
                 {
                     e.getComponent<cro::Sprite>() = m_sprites[spriteID];
+                    e.getComponent<cro::UIInput>().area = m_sprites[spriteID].getTextureBounds();
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -2738,6 +2739,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         cmd.action = [&](cro::Entity e, float)
         {
             e.getComponent<cro::Sprite>() = m_sprites[SpriteID::StartGame];
+            e.getComponent<cro::UIInput>().area = m_sprites[SpriteID::StartGame].getTextureBounds();
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -2821,6 +2823,7 @@ void MenuState::finaliseGameJoin(std::uint64_t hostID)
     cmd.action = [&](cro::Entity e, float)
     {
         e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp];
+        e.getComponent<cro::UIInput>().area = m_sprites[SpriteID::ReadyUp].getTextureBounds();
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
