@@ -939,11 +939,19 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance = 0.f;
     }
 
+    
+    std::uint32_t waitingCount = 0;
+    
     //apply the rules to ALL players on the course
     std::vector<PlayerStatus> allPlayers;
     for (auto& group : m_playerInfo)
     {
         allPlayers.insert(allPlayers.end(), group.playerInfo.begin(), group.playerInfo.end());
+        if (group.waitingForHole
+            || group.playerInfo.empty())
+        {
+            waitingCount++;
+        }
     }
 
 
@@ -1083,10 +1091,11 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     if (!allPlayers.empty())
     {
         //TODO move this to some game rule check function
-        if (allPlayers[0].distanceToHole == 0 //all players must be in the hole
+        if ((allPlayers[0].distanceToHole == 0 //all players must be in the hole
             || (m_sharedData.scoreType == ScoreType::NearestThePin && allPlayers[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
             || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers.size() == 1) //players have quit the game so attempt next hole
-            || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers[1].eliminated)) //(which triggers the rules to end the game)    
+            || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers[1].eliminated)) //(which triggers the rules to end the game)  
+            && waitingCount >= m_playerInfo.size() - 1) //don't move on until all but this group are waiting
         {
             //if we're nearest the pin sort by closest player so current winner goes first
             //and we can award something for winning the hole

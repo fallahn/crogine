@@ -4007,7 +4007,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             m_groupIdle = true;
             m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(evt.packet.as<std::uint8_t>());
 
-            setActiveCamera(CameraID::Green);
+            //setActiveCamera(CameraID::Green);
             break;
         case PacketID::SpectateGroup:
             if (m_groupIdle)
@@ -4930,6 +4930,8 @@ void GolfState::removeClient(std::uint8_t clientID)
 void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
     m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(m_serverGroup);
+    setActiveCamera(CameraID::Player);
+
     m_groupIdle = false;
 
     if (m_sharedData.scoreType == ScoreType::ClubShuffle)

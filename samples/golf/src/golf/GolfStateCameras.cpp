@@ -1579,6 +1579,7 @@ void GolfState::startFlyBy()
             c.action = [](cro::Entity e, float)
                 {
                     e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                    e.getComponent<cro::Callback>().active = false;
                 };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(c);
 
