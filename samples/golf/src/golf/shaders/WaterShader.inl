@@ -130,12 +130,12 @@ uniform sampler2DArray u_depthMap;
 #if !defined(NO_DEPTH)
     float getDepth()
     {
-        const float ColCount = 8.0;
-        const float MetresPerTexture = 40.0;
+
+#include DEPTH_CONSTS
 
         float x = floor((v_worldPosition.x / MetresPerTexture));
         float y = floor((-v_worldPosition.z / MetresPerTexture));
-        float index = clamp((y * ColCount) + x, 0.0, 39.0);
+        float index = clamp((y * ColCount) + x, 0.0, MaxTiles);
 
         float u = (v_worldPosition.x - (x * MetresPerTexture)) / MetresPerTexture;
         float v = -((y * MetresPerTexture) + v_worldPosition.z) / MetresPerTexture;

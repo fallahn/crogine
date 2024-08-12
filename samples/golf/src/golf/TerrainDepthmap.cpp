@@ -177,6 +177,16 @@ glm::ivec2 TerrainDepthmap::getGridCount() const
     return { ColCount, RowCount };
 }
 
+std::int32_t TerrainDepthmap::getTileCount() const
+{
+    return TextureCount;
+}
+
+std::int32_t TerrainDepthmap::getMetresPerTile() const
+{
+    return MetresPerTile;
+}
+
 //private
 void TerrainDepthmap::buildScene()
 {

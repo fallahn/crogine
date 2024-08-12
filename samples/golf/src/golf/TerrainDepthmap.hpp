@@ -57,6 +57,8 @@ public:
     void forceSwap() { std::swap(m_srcTexture, m_dstTexture); }
 
     glm::ivec2 getGridCount() const;
+    std::int32_t getTileCount() const;
+    std::int32_t getMetresPerTile() const;
 
 private:
     std::uint32_t m_gridIndex;

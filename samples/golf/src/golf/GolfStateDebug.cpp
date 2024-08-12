@@ -922,31 +922,31 @@ void GolfState::registerDebugWindows()
     //        ImGui::End();
     //    });
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Depthmap"))
-            {
-                auto size = m_depthMap.getGridCount();
-                for (auto y = size.y - 1; y >= 0; --y)
-                {
-                    for (auto x = 0; x < size.x; ++x)
-                    {
-                        auto idx = y * size.x + x;
-                        ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                        ImGui::SameLine();
-                    }
-                    ImGui::NewLine();
-                }
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Depthmap"))
+    //        {
+    //            auto size = m_depthMap.getGridCount();
+    //            for (auto y = size.y - 1; y >= 0; --y)
+    //            {
+    //                for (auto x = 0; x < size.x; ++x)
+    //                {
+    //                    auto idx = y * size.x + x;
+    //                    ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //                    ImGui::SameLine();
+    //                }
+    //                ImGui::NewLine();
+    //            }
 
-                /*const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-                for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
-                {
-                    ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::SameLine();
-                }*/
-            }
-            ImGui::End();
-        });
+    //            /*const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    //            for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
+    //            {
+    //                ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //                ImGui::SameLine();
+    //            }*/
+    //        }
+    //        ImGui::End();
+    //    });
 
     //registerWindow([&]()
     //    {

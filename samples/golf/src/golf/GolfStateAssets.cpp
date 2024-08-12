@@ -1805,6 +1805,13 @@ void GolfState::loadMaterials()
     //{
     //    waterDefines = "#define RAIN\n";
     //}
+
+    static const std::string DepthConsts = "const float ColCount = "+ std::to_string(m_depthMap.getGridCount().x) 
+        + ".0;const float MetresPerTexture = "+ std::to_string(m_depthMap.getMetresPerTile())
+        + ".0;const float MaxTiles = "
+        + std::to_string(m_depthMap.getTileCount() - 1) + ".0;";
+    m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());
+
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define USE_MRT\n" + waterDefines);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
