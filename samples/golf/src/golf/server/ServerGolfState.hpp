@@ -69,7 +69,7 @@ namespace sv
         bool m_allMapsLoaded;
         bool m_skinsFinals;
         std::uint8_t m_currentHole;
-        //std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
+
         std::uint8_t m_skinsPot;
         std::uint8_t m_currentBest; //current best score for hole, non-stroke games end if no-one can beat it
         std::uint8_t m_randomTargetCount;
@@ -88,7 +88,7 @@ namespace sv
             bool waitingForHole = false; //waiting for other groups to complte the hole
         };
         std::vector<PlayerGroup> m_playerInfo;
-        std::vector<PlayerStatus> m_sortedData; //this tracks all players in all groups so rules can be applied as a whole
+
 
         //this is the group IDs indexed by client ID so we can look up a group for a given client
         std::array<std::int32_t, ConstVal::MaxClients> m_groupAssignments = {};

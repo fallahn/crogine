@@ -906,6 +906,7 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 {
     //each player is sequential (ideally with fewest skins, use connect ID to tie break)
+    //sigh this is duplicated in ServerGolfRules.cpp
     const auto skinsPredicate = 
         [&](const PlayerStatus& a, const PlayerStatus& b)
     {
@@ -1155,7 +1156,6 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                 }
             }
         }
-        allPlayers.swap(m_sortedData);
     }
     m_playerInfo[groupID].turnTimer.restart();
 }
