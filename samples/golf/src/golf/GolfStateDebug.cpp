@@ -849,41 +849,41 @@ void GolfState::registerDebugWindows()
     //        }
     //    });
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Target Info"))
-            {
-                auto pos = m_freeCam.getComponent<cro::Transform>().getPosition();
-                auto dir = m_freeCam.getComponent<cro::Transform>().getForwardVector() * 100.f;
-                auto result = m_collisionMesh.getTerrain(pos, dir);
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Target Info"))
+    //        {
+    //            auto pos = m_freeCam.getComponent<cro::Transform>().getPosition();
+    //            auto dir = m_freeCam.getComponent<cro::Transform>().getForwardVector() * 100.f;
+    //            auto result = m_collisionMesh.getTerrain(pos, dir);
 
-                if (result.wasRayHit)
-                {
-                    ImGui::Text("Terrain: %s", TerrainStrings[result.terrain].c_str());
-                    ImGui::Text("Trigger ID: %d", result.trigger);
-                }
-                else
-                {
-                    ImGui::Text("Inf.");
-                }
+    //            if (result.wasRayHit)
+    //            {
+    //                ImGui::Text("Terrain: %s", TerrainStrings[result.terrain].c_str());
+    //                ImGui::Text("Trigger ID: %d", result.trigger);
+    //            }
+    //            else
+    //            {
+    //                ImGui::Text("Inf.");
+    //            }
 
-                ImGui::Text("Current Camera %s", CameraStrings[m_currentCamera].c_str());
-            }        
-            ImGui::End();
+    //            ImGui::Text("Current Camera %s", CameraStrings[m_currentCamera].c_str());
+    //        }        
+    //        ImGui::End();
 
-            //hacky stand in for reticule :3
-            if (m_gameScene.getActiveCamera() == m_freeCam)
-            {
-                auto size = glm::vec2(cro::App::getWindow().getSize());
-                const glm::vec2 pointSize(6.f);
+    //        //hacky stand in for reticule :3
+    //        if (m_gameScene.getActiveCamera() == m_freeCam)
+    //        {
+    //            auto size = glm::vec2(cro::App::getWindow().getSize());
+    //            const glm::vec2 pointSize(6.f);
 
-                auto pos = (size - pointSize) / 2.f;
-                ImGui::SetNextWindowPos({ pos.x, pos.y });
-                ImGui::SetNextWindowSize({ pointSize.x, pointSize.y });
-                ImGui::Begin("Point");
-                ImGui::End();
-            }
-        });
+    //            auto pos = (size - pointSize) / 2.f;
+    //            ImGui::SetNextWindowPos({ pos.x, pos.y });
+    //            ImGui::SetNextWindowSize({ pointSize.x, pointSize.y });
+    //            ImGui::Begin("Point");
+    //            ImGui::End();
+    //        }
+    //    });
 
     //registerWindow([&]()
     //    {
@@ -922,30 +922,31 @@ void GolfState::registerDebugWindows()
     //        ImGui::End();
     //    });
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Depthmap"))
-    //        {
-    //            /*for (auto y = 4; y >= 0; --y)
-    //            {
-    //                for (auto x = 0; x < 8; ++x)
-    //                {
-    //                    auto idx = y * 8 + x;
-    //                    ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //                    ImGui::SameLine();
-    //                }
-    //                ImGui::NewLine();
-    //            }*/
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Depthmap"))
+            {
+                auto size = m_depthMap.getGridCount();
+                for (auto y = size.y - 1; y >= 0; --y)
+                {
+                    for (auto x = 0; x < size.x; ++x)
+                    {
+                        auto idx = y * size.x + x;
+                        ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                        ImGui::SameLine();
+                    }
+                    ImGui::NewLine();
+                }
 
-    //            const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    //            for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
-    //            {
-    //                ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //                ImGui::SameLine();
-    //            }
-    //        }
-    //        ImGui::End();
-    //    },true);
+                /*const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+                for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
+                {
+                    ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::SameLine();
+                }*/
+            }
+            ImGui::End();
+        });
 
     //registerWindow([&]()
     //    {

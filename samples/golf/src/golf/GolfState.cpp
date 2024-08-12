@@ -140,7 +140,7 @@ namespace
 
 #endif // CRO_DEBUG_
 
-    std::uint32_t depthUpdateCount = 1;
+    std::int32_t depthUpdateCount = 1;
 
     float godmode = 1.f;
     std::int32_t survivorXP = 25;
@@ -357,8 +357,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
-    registerDebugWindows();
 #endif
+    registerDebugWindows();
     registerDebugCommands(); //includes cubemap creation
 
     cro::App::getInstance().resetFrameTime();

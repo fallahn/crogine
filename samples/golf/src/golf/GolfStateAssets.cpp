@@ -1309,7 +1309,7 @@ void GolfState::loadMap()
         }
 
         m_depthMap.setModel(m_holeData[0]);
-        m_depthMap.update(40);
+        m_depthMap.update(-1);
     }
 
     m_terrainBuilder.create(m_resources, m_gameScene, theme);
@@ -1375,7 +1375,7 @@ void GolfState::loadMap()
                 m_terrainBuilder.applyHoleIndex(m_currentHole);
                 
                 m_depthMap.setModel(m_holeData[m_currentHole]);
-                m_depthMap.update(40);
+                m_depthMap.update(-1);
 
                 auto& player = m_sharedData.connectionData[0].playerData[0];
                 player.holeScores.swap(scores);

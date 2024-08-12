@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -112,7 +112,13 @@ TerrainDepthmap::TerrainDepthmap()
 //public
 void TerrainDepthmap::setModel(const HoleData& holeData)
 {
-    m_heightmap.loadFromFile(holeData.mapPath);
+    //handle cases where images don't match map size
+    cro::Image img;
+    img.loadFromFile(holeData.mapPath);
+    
+    //m_heightmap.loadFromFile(holeData.mapPath);
+    m_heightmap.create(MapSize.x, MapSize.y, img.getFormat());
+    m_heightmap.update(img.getPixelData(), false, { 0,0,std::min(img.getSize().x, MapSize.x), std::min(img.getSize().y, MapSize.y) });
     m_terrainEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_heightMap", cro::TextureID(m_heightmap));
 
     //destroy old model and create new from meshdata / custom material
@@ -130,8 +136,13 @@ void TerrainDepthmap::setModel(const HoleData& holeData)
     std::swap(m_srcTexture, m_dstTexture);
 }
 
-void TerrainDepthmap::update(std::uint32_t count)
+void TerrainDepthmap::update(std::int32_t count)
 {
+    if (count == -1)
+    {
+        count = TextureCount;
+    }
+
     for (auto i = 0u; i < count && m_gridIndex < TextureCount; ++i, ++m_gridIndex)
     {
         auto x = m_gridIndex % ColCount;
@@ -159,6 +170,11 @@ cro::TextureID TerrainDepthmap::getTextureAt(std::uint32_t idx) const
 #else
     return m_textures[m_srcTexture].getTexture(idx);
 #endif
+}
+
+glm::ivec2 TerrainDepthmap::getGridCount() const
+{
+    return { ColCount, RowCount };
 }
 
 //private

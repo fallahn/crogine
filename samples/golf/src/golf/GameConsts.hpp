@@ -87,8 +87,8 @@ static constexpr glm::vec3 FlightCamOffset = glm::vec3(0.f, 0.098f, 0.f);
 static constexpr float MinFlightCamDistance = 0.132f;
 static constexpr float FlightCamRotation = -0.158f;
 
-static constexpr glm::uvec2 MapSize(320u, 200u);//320,200
-//static constexpr glm::uvec2 MapSize(640u, 320u);
+//static constexpr glm::uvec2 MapSize(320u, 200u);//320,200
+static constexpr glm::uvec2 MapSize(640u, 320u);
 static constexpr glm::vec2 MapSizeFloat(MapSize);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
 static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f); //used to validate the sub-target property of a hole

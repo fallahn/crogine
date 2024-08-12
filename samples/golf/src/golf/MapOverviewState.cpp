@@ -768,7 +768,7 @@ void MapOverviewState::refreshMap()
     glUniform1f(m_shaderUniforms.heatAmount, m_shaderValues[m_shaderValueIndex].second);
     glUniform1f(m_shaderUniforms.gridScale, /*std::ceil(m_zoomScale / 4.f)*/std::round(m_zoomScale));
 
-    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
+    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MiniMapSize.x;
 
     glm::vec2 teePos = 
     {
@@ -814,7 +814,7 @@ void MapOverviewState::updateNormals()
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, mask.data());
 
 
-    const auto PixelsPerMetre = (imageSize.x / MapSize.x) * 2;
+    const auto PixelsPerMetre = (imageSize.x / MiniMapSize.x) * 2;
     const auto Stride = 4 * PixelsPerMetre;
 
     //TODO remind ourself how to do the vert building with std::async
