@@ -1911,21 +1911,21 @@ void GolfState::buildUI()
     //set up the overhead cam for the mini map
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
-        glm::uvec2 previewSize = MiniMapSize * 8u;
+        constexpr glm::uvec2 texSize = MiniMapSize * 8u;
 
-        m_mapTexture.create(previewSize.x, previewSize.y);
-        m_mapTextureMRT.create(previewSize.x, previewSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
+        m_mapTexture.create(texSize.x, texSize.y);
+        m_mapTextureMRT.create(texSize.x, texSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
         m_sharedData.minimapData.mrt = &m_mapTextureMRT;
 
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
-        mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });
+        mapEnt.getComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, texSize.y / 2.f });
         mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = 16.f; //TODO this is always double the map size multiplier
-        m_minimapZoom.mapScale = previewSize / MapSize;
-        m_minimapZoom.pan = previewSize / 2u;
-        m_minimapZoom.textureSize = previewSize;
+        m_minimapZoom.mapScale = texSize / MiniMapSize;
+        m_minimapZoom.pan = texSize / 2u;
+        m_minimapZoom.textureSize = texSize;
         m_minimapZoom.updateShader();
 
-        glm::vec2 viewSize(MapSize);
+        glm::vec2 viewSize(MiniMapSize);
         miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 60.f);
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
@@ -5521,8 +5521,8 @@ void GolfState::retargetMinimap(bool reset)
         auto bb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
         target.end.pan = m_minimapZoom.textureSize / 2.f;
 
-        auto xZoom = std::clamp(static_cast<float>(MapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), 0.9f, 16.f);
-        auto zZoom = std::clamp(static_cast<float>(MapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), 0.9f, 16.f);
+        auto xZoom = std::clamp(static_cast<float>(MiniMapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), 0.9f, 16.f);
+        auto zZoom = std::clamp(static_cast<float>(MiniMapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), 0.9f, 16.f);
         target.end.zoom = xZoom > zZoom ? xZoom : zZoom;
     }
     else
@@ -5574,7 +5574,7 @@ void GolfState::retargetMinimap(bool reset)
         float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.7f; //remember this is world coords
 
         //scale zoom on long edge of map by box length and clamp to 16x
-        target.end.zoom = std::clamp(static_cast<float>(MapSize.x) / viewLength, 0.8f, 16.f);
+        target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, 0.8f, 16.f);
     }
 
     //create a temp ent to interp between start and end values
