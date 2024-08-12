@@ -88,6 +88,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
             break;
         case ScoreType::Match:
         case ScoreType::Skins:
+            //forfeit this hole if we can't beat the best score
             if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
             {
                 m_playerInfo[groupID].playerInfo[0].distanceToHole = 0;
@@ -141,41 +142,73 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
             //if this is skins sudden death then make everyone else the loser
             if (m_skinsFinals)
             {
-                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                /*for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
                     m_playerInfo[groupID].playerInfo[i].distanceToHole = 0.f;
                     m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] = m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] + 1;
+                }*/
+                const auto& winner = m_sortedData[0];
+                for (auto& group : m_playerInfo)
+                {
+                    for (auto& p : group.playerInfo)
+                    {
+                        if (p.client != winner.client && p.player != winner.player)
+                        {
+                            p.distanceToHole = 0.f;
+                            p.holeScore[m_currentHole] = winner.holeScore[m_currentHole] + 1;
+                        }
+                    }
                 }
             }
             else
             {
                 //eliminate anyone who can't beat this score
-                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                const auto& winner = m_sortedData[0];
+                for (auto& group : m_playerInfo)
                 {
-                    if ((m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole]) >=
-                        m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole])
+                    for (auto& p : group.playerInfo)
                     {
-                        if (m_playerInfo[groupID].playerInfo[i].distanceToHole > 0) //not already holed
+                        if (p.client != winner.client && p.player != winner.player)
                         {
-                            m_playerInfo[groupID].playerInfo[i].distanceToHole = 0.f;
-                            m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
+                            //for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                            {
+                                /*if ((m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole]) >=
+                                    m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole])*/
+                                if(p.holeScore[m_currentHole] >= winner.holeScore[m_currentHole])
+                                {
+                                    //if (m_playerInfo[groupID].playerInfo[i].distanceToHole > 0) //not already holed
+                                    if(p.distanceToHole > 0)
+                                    {
+                                        p.distanceToHole = 0.f;
+                                        p.holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
+                                    }
+                                }
+                            }
                         }
                     }
                 }
-
                 //if this is the second hole and it has the same as the current best
                 //force a draw by eliminating anyone who can't beat it
-                if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] == m_currentBest)
+                //if (m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] == m_currentBest)
+                if (winner.holeScore[m_currentHole] == m_currentBest)
                 {
-                    for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                    for (auto& group : m_playerInfo)
                     {
-                        if ((m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] + 1) >=
-                            m_currentBest)
+                        for (auto& p : group.playerInfo)
                         {
-                            if (m_playerInfo[groupID].playerInfo[i].distanceToHole > 0)
+                            if (p.client != winner.client && p.player != winner.player)
                             {
-                                m_playerInfo[groupID].playerInfo[i].distanceToHole = 0.f;
-                                m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] + 1));
+                                //for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                                {
+                                    if ((p.holeScore[m_currentHole] + 1) >= m_currentBest)
+                                    {
+                                        if (p.distanceToHole > 0)
+                                        {
+                                            p.distanceToHole = 0.f;
+                                            p.holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(p.holeScore[m_currentHole] + 1));
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -228,28 +261,53 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
         default: break;
         case ScoreType::Match:
         case ScoreType::Skins:
+        {
+            const auto& winner = m_sortedData[0];
+
             //if this is skins sudden death then make everyone else the loser
+            //ACTUALLY gimmes should never occur on sudden death rounds
             if (m_skinsFinals)
             {
-                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                /*for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
                     m_playerInfo[groupID].playerInfo[i].distanceToHole = 0.f;
                     m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] = m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] + 1;
+                }*/
+                for (auto& group : m_playerInfo)
+                {
+                    for (auto& p : group.playerInfo)
+                    {
+                        if (p.client != winner.client && p.player != winner.player)
+                        {
+                            p.distanceToHole = 0.f;
+                            p.holeScore[m_currentHole] = winner.holeScore[m_currentHole] + 1;
+                        }
+                    }
                 }
             }
             else
             {
                 //check if our score is even with anyone holed already and forfeit
-                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                for (auto& group : m_playerInfo)
                 {
-                    if (m_playerInfo[groupID].playerInfo[i].distanceToHole == 0
-                        && m_playerInfo[groupID].playerInfo[i].holeScore[m_currentHole] < m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole])
+                    for (auto& p : group.playerInfo)
                     {
-                        m_playerInfo[groupID].playerInfo[0].distanceToHole = 0;
+                        if (p.client != winner.client && p.player != winner.player)
+                        {
+                            //for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                            {
+                                if (p.distanceToHole == 0
+                                    && p.holeScore[m_currentHole] < winner.holeScore[m_currentHole])
+                                {
+                                    m_playerInfo[m_groupAssignments[winner.client]].playerInfo[/*winner.player*/0].distanceToHole = 0;
+                                }
+                            }
+                        }
                     }
                 }
             }
             break;
+        }
         }
     }
 }
@@ -262,7 +320,7 @@ bool GolfState::summariseRules()
 
     for (auto& group : m_playerInfo)
     {
-        if (group.playerInfo.size() > 1)
+        if (!group.playerInfo.empty())
         {
             //this is an intentional copy
             sortData.insert(sortData.end(), group.playerInfo.begin(), group.playerInfo.end());

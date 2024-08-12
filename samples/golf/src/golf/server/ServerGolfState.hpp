@@ -88,6 +88,7 @@ namespace sv
             bool waitingForHole = false; //waiting for other groups to complte the hole
         };
         std::vector<PlayerGroup> m_playerInfo;
+        std::vector<PlayerStatus> m_sortedData; //this tracks all players in all groups so rules can be applied as a whole
 
         //this is the group IDs indexed by client ID so we can look up a group for a given client
         std::array<std::int32_t, ConstVal::MaxClients> m_groupAssignments = {};

@@ -1155,7 +1155,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                 }
             }
         }
-
+        allPlayers.swap(m_sortedData);
     }
     m_playerInfo[groupID].turnTimer.restart();
 }
