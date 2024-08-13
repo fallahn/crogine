@@ -3766,7 +3766,8 @@ void GolfState::spawnBall(const ActorInfo& info)
 
         e.getComponent<cro::Transform>().setPosition(labelPos);
 
-        if (terrain == TerrainID::Green)
+        if (terrain == TerrainID::Green
+            || m_groupIdle)
         {
             if (m_currentPlayer.player == playerID
                 && m_sharedData.clientConnection.connectionID == clientID)
@@ -4961,6 +4962,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     
     m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(m_serverGroup);
     setActiveCamera(CameraID::Player);
+    m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
 
     m_groupIdle = false;
 
