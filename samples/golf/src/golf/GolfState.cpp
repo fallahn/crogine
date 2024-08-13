@@ -4058,6 +4058,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::GroupID:
             m_serverGroup = evt.packet.as<std::uint8_t>();
             m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(m_serverGroup);
+            m_idleCameraIndex = m_serverGroup;
             break;
         case PacketID::HoleComplete:
         {

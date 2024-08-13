@@ -1855,18 +1855,24 @@ void GolfState::spectateNextPlayer(std::size_t stride)
     } while (m_idleCameraIndex != start
         && m_groupPlayerPositions[m_idleCameraIndex].client == 255);
 
+
     if (m_idleCameraIndex != start)
     {
         const auto& pPos = m_groupPlayerPositions[m_idleCameraIndex];
         setCameraTarget(pPos);
 
-        //make sure to set this so next time the animation is called it's up to date
         auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+
+        //make sure to set this so next time the animation is called it's up to date
         targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
         targetInfo.startHeight = targetInfo.targetHeight;
         targetInfo.startOffset = targetInfo.targetOffset;
-
+        //TODO this is creataing a NaN somewhere
         setCameraPosition(pPos.position, targetInfo.targetHeight, targetInfo.targetOffset);
+
+
+        //TODO set the UI name to the name of the person we're viewing
+        //TODO if the selected camera is updated from the server then update it to the new value
     }
 }
 
