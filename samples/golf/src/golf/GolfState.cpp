@@ -4764,7 +4764,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     {
                         //this just does some effects
                         auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
-                        msg->type = GolfEvent::PowerShot;
+                        msg->type = GolfEvent::PlayerRemoved;
                         msg->position = e.getComponent<cro::Transform>().getWorldPosition();
 
                         m_gameScene.destroyEntity(e);

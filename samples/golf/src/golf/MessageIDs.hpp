@@ -78,7 +78,8 @@ struct GolfEvent final
         Gimme,
         RoundEnd,
         ClientDisconnect,
-        Mulligan
+        Mulligan,
+        PlayerRemoved
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);

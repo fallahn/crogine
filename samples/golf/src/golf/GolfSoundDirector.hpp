@@ -163,6 +163,7 @@ public:
             SkinsWin,
             Snapshot,
             Toot,
+            PlayerQuit,
 
             CrowdClearThroat,
             CrowdCough,

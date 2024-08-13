@@ -3168,7 +3168,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 #ifndef USE_GNS
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<UIElement>().absolutePosition = { -160.f, -4.f };
+    entity.addComponent<UIElement>().absolutePosition = { -10.f, -4.f };
     entity.getComponent<UIElement>().relativePosition = { 1.f, 1.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::ServerInfo;
     entity.addComponent<cro::Drawable2D>();
@@ -3177,6 +3177,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
     entity.getComponent<cro::Text>().setShadowColour(cro::Colour(std::uint8_t(110), 179, 157));
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 #endif
 

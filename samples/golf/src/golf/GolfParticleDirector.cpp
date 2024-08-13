@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -165,7 +165,8 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         {
             getEnt(ParticleID::Star, data.position);
         }
-        else if (data.type == GolfEvent::PowerShot)
+        else if (data.type == GolfEvent::PowerShot
+            || data.type == GolfEvent::PlayerRemoved)
         {
             getEnt(ParticleID::PowerShot, data.position);
         }

@@ -184,6 +184,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/menu/skins.wav",
         "assets/golf/sound/menu/snapshot.wav",
         "assets/golf/sound/menu/toot2.wav",
+        "assets/golf/sound/menu/lobby_exit.wav",
 
         "assets/golf/sound/ambience/crowd_clear_throat.wav",
         "assets/golf/sound/ambience/crowd_cough.wav",
@@ -418,6 +419,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         }
                     }
                 }
+                break;
+            case GolfEvent::PlayerRemoved:
+                playSound(AudioID::PlayerQuit, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                 break;
             case GolfEvent::ClubSwing:
             {
