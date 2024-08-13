@@ -1977,6 +1977,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             Activity a;
             a.type = data.type;
+            a.client = m_sharedData.localConnectionData.connectionID;
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
@@ -4004,10 +4005,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         {
         default: break;
         case PacketID::SetIdle:
-            m_groupIdle = true;
-            m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(evt.packet.as<std::uint8_t>());
-
-            //setActiveCamera(CameraID::Green);
+        {
+            setIdleGroup(evt.packet.as<std::uint8_t>());
+        }
             break;
         case PacketID::SpectateGroup:
             if (m_groupIdle)
@@ -4929,6 +4929,36 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
+    if (m_photoMode)
+    {
+        //hard reset the free cam if we were idle in group
+        m_gameScene.setActiveCamera(m_defaultCam);
+        m_gameScene.setActiveListener(m_defaultCam);
+
+        m_defaultCam.getComponent<cro::Camera>().active = true;
+        m_freeCam.getComponent<cro::Camera>().active = false;
+
+        //restore fade distance - TODO what if this is putt from tee?
+        m_resolutionUpdate.targetFade = CourseFadeDistance;
+
+        //unhide UI
+        setUIHidden(false);
+        m_gameScene.setSystemActive<FpsCameraSystem>(false);
+        m_waterEnt.getComponent<cro::Callback>().active = true;
+        enableDOF(false);
+        m_freecamMenuEnt.getComponent<cro::Callback>().active = false;
+
+        for (auto i = 0; i < 4; ++i)
+        {
+            cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
+        }
+
+        Activity a;
+        a.client = m_sharedData.clientConnection.connectionID;
+        a.type = Activity::FreecamEnd;
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
+    
     m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(m_serverGroup);
     setActiveCamera(CameraID::Player);
 

@@ -28,7 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "TerrainChunks.hpp"
-#include "GameConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -38,6 +37,11 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Matrix.hpp>
+
+/*
+NOTE THIS ISN'T USED - you probably want the ChunkVisSystem...
+*/
+
 
 namespace
 {

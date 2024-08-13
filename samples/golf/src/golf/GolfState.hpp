@@ -401,7 +401,7 @@ private:
     }m_lensFlare;
     void updateLensFlare(cro::Entity, float); //bound as a callback to the lens flare entity
 
-
+    void setIdleGroup(std::uint8_t);
 
     static const cro::Time DefaultIdleTime;
     cro::Time m_idleTime;

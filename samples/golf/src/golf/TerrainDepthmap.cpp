@@ -54,7 +54,7 @@ namespace
 
     //TODO this could be much optimised by only creating as many layers as actually
     //intersect the terrain. No idea how to calculate that though
-    constexpr std::uint32_t TextureSize = 1280u;// *(MapSize.x / 320u); //this creates 128(!!!) of these...
+    constexpr std::uint32_t TextureSize = 1280u;
     constexpr std::uint32_t ColCount = MapSize.x / MetresPerTile;
     constexpr std::uint32_t RowCount = MapSize.y / MetresPerTile;
     constexpr std::uint32_t TextureCount = ColCount * RowCount;

@@ -762,8 +762,9 @@ void GolfState::toggleFreeCam()
     if (!m_photoMode)
     {
         //only switch if we're the active player and the input is active
-        if (!m_inputParser.getActive() || m_currentCamera != CameraID::Player
-            || m_emoteWheel.currentScale != 0)
+        if (!m_groupIdle &&
+            (!m_inputParser.getActive() || m_currentCamera != CameraID::Player
+            || m_emoteWheel.currentScale != 0))
         {
             return;
         }
@@ -1928,4 +1929,27 @@ void GolfState::updateLensFlare(cro::Entity e, float)
             e.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, depth });
         }
     }
+}
+
+void GolfState::setIdleGroup(std::uint8_t group)
+{
+    m_groupIdle = true;
+    m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
+
+    //hide the player model
+    if (m_activeAvatar)
+    {
+        m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
+        m_activeAvatar->model.getComponent<cro::Callback>().active = true;
+    }
+
+    //and the power bar
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::Root;
+    cmd.action = [](cro::Entity e, float)
+        {
+            e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = 1;
+            e.getComponent<cro::Callback>().active = true;
+        };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
