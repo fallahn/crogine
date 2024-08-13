@@ -4660,7 +4660,7 @@ void MenuState::updateUnlockedItems()
 
 void MenuState::createPreviousScoreCard()
 {
-    static constexpr float OffscreenPos = -300.f;
+    static constexpr float OffscreenPos = -360.f;
 
     //background image
     auto& tex = m_resources.textures.get("assets/golf/images/lobby_scoreboard.png");

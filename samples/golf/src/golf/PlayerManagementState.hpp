@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -75,6 +75,7 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
+    cro::Entity m_helpRoot;
 
     struct PlayerList final
     {

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
+#include "CallbackData.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
@@ -80,7 +81,7 @@ namespace
     {
         enum
         {
-            Main, Confirm
+            Main, Confirm, Help, Dummy
         };
     };
 
@@ -91,9 +92,10 @@ namespace
     constexpr std::size_t KickIndex    = 102;
     constexpr std::size_t QuitIndex    = 103;
     constexpr std::size_t GroupIndex   = 104;
+    constexpr std::size_t HelpIndex    = 105;
 
-    constexpr std::size_t PrevGroupID  = 105;
-    constexpr std::size_t NextGroupID  = 106;
+    constexpr std::size_t PrevGroupID  = 106;
+    constexpr std::size_t NextGroupID  = 107;
 
     constexpr glm::vec2 MenuNodePosition(112.f, -76.f);
     constexpr glm::vec2 MenuHiddenPosition(-10000.f);
@@ -112,17 +114,23 @@ R"(
 Grouping allows splitting the round's players into smaller groups which
 play concurrently for a shorter round time. Multiple players on the same
 client or in the same group continue to play consecutively. Groups are
-approximate as players on the same client cannot be split betwen groups.
+approximate as players on the same client cannot be split between groups.
+
 
 Group modes are:
-None - all players play consecutively as usual.
-Balanced - players are split as evenly as possible between 2 groups.
-One - each play has their own group, unless there are multiple players
-on the client.
-Two - players are split into approximate groups of two.
-Three - players are split into approximate groups of three.
-Four - players are split into approximate groups of four.
 
+None - all players play consecutively as usual.
+
+Balanced - players are split as evenly as possible between 2 groups.
+
+One - each player has their own group, unless there are multiple players
+on the client.
+
+Two - players are split into approximate groups of two.
+
+Three - players are split into approximate groups of three.
+
+Four - players are split into approximate groups of four.
 )";
 }
 
@@ -148,13 +156,28 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
         return false;
     }
 
+    const auto closeHelp = [&]()
+        {
+            m_helpRoot.getComponent<cro::Callback>().getUserData<MenuBackgroundData>().direction = 1;
+            m_helpRoot.getComponent<cro::Callback>().active = true;
+
+            m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+        };
+
+    auto currMenu = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
     if (evt.type == SDL_KEYUP)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+            || evt.key.keysym.sym == SDLK_ESCAPE)
         {
-            quitState();
+            if (currMenu == MenuID::Help)
+            {
+                closeHelp();
+            }
+            else
+            {
+                quitState();
+            }
             return false;
         }
     }
@@ -177,7 +200,14 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
         if (evt.cbutton.button == cro::GameController::ButtonB
             || evt.cbutton.button == cro::GameController::ButtonStart)
         {
-            quitState();
+            if (currMenu == MenuID::Help)
+            {
+                closeHelp();
+            }
+            else
+            {
+                quitState();
+            }
             return false;
         }
     }
@@ -185,7 +215,14 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
     {
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
-            quitState();
+            if (currMenu == MenuID::Help)
+            {
+                closeHelp();
+            }
+            else
+            {
+                quitState();
+            }
             return false;
         }
     }
@@ -507,11 +544,93 @@ void PlayerManagementState::buildScene()
     //grouping
     if (m_sharedData.baseState == StateID::Menu)
     {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
+
+        //help menu items
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -10.f, 0.5f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        entity.addComponent<cro::Callback>().setUserData<MenuBackgroundData>();
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                const auto Speed = dt * 3.f;
+
+                auto& [dir, progress] = e.getComponent<cro::Callback>().getUserData<MenuBackgroundData>();
+                if (dir == 0)
+                {
+                    //grow
+                    progress = std::min(1.f, progress + Speed);
+                    if(progress == 1)
+                    {
+                        dir = 1;
+                        e.getComponent<cro::Callback>().active = false;
+                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Help);
+                    }
+                }
+                else
+                {
+                    //shrink
+                    progress = std::max(0.f, progress - Speed);
+                    if (progress == 0)
+                    {
+                        dir = 0;
+                        e.getComponent<cro::Callback>().active = false;
+                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+                    }
+                }
+
+                const auto scale = cro::Util::Easing::easeOutCubic(progress);
+                e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+            };
+
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        auto helpRoot = entity;
+        m_helpRoot = helpRoot;
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -250.f, 160.f, 0.2f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString(HelpString);
+        entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.addComponent<cro::UIInput>().setGroup(MenuID::Help);
+        helpRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>().setVertexData(
+            {
+            cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(-0.5f), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(0.5f), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(0.5f, -0.5f), cro::Colour::Black)
+            });
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = 
+            [helpRoot](cro::Entity e, float)
+            {
+                auto size = glm::vec2(cro::App::getWindow().getSize());
+                const float scale = helpRoot.getComponent<cro::Transform>().getScale().x;
+                e.getComponent<cro::Transform>().setScale(size * scale);
+
+                auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+                for (auto& v : verts)
+                {
+                    v.colour.setAlpha(0.9f * scale);
+                }
+            };
+        helpRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
         entity = createItem({ 0.f, -32.f }, "Grouping: " + GroupStrings[m_sharedData.groupMode], menuEntity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
         entity.getComponent<cro::UIInput>().setSelectionIndex(GroupIndex);
-        entity.getComponent<cro::UIInput>().setNextIndex(BaseSelectionIndex, PokeIndex);
-        entity.getComponent<cro::UIInput>().setPrevIndex(BaseSelectionIndex, QuitIndex);
+        entity.getComponent<cro::UIInput>().setNextIndex(HelpIndex, PokeIndex);
+        entity.getComponent<cro::UIInput>().setPrevIndex(HelpIndex, QuitIndex);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
@@ -525,6 +644,43 @@ void PlayerManagementState::buildScene()
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 86.f, -44.f, 0.1f });
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("help_button");
+        entity.addComponent<cro::UIInput>().area = spriteSheet.getSprite("help_button").getTextureBounds();
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(HelpIndex);
+        entity.getComponent<cro::UIInput>().setNextIndex(GroupIndex, PokeIndex);
+        entity.getComponent<cro::UIInput>().setPrevIndex(GroupIndex, QuitIndex);
+        bounds = spriteSheet.getSprite("help_button").getTextureRect();
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+            uiSystem.addCallback([&, bounds](cro::Entity e) 
+                {
+                    auto b = bounds;
+                    b.left += bounds.width;
+                    e.getComponent<cro::Sprite>().setTextureRect(b);
+                    e.getComponent<cro::AudioEmitter>().play();
+                });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+            uiSystem.addCallback([&, bounds](cro::Entity e)
+                {
+                    e.getComponent<cro::Sprite>().setTextureRect(bounds);
+                });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            uiSystem.addCallback([&, helpRoot](cro::Entity e, cro::ButtonEvent evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        helpRoot.getComponent<cro::Callback>().active = true;
+                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    }
+                });
+
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
     //return to game

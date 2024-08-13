@@ -136,7 +136,8 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             //disconnect notification packet is sent in Server
             std::int32_t setNewPlayer = -1;
-            auto& playerInfo = m_playerInfo[m_groupAssignments[data.clientID]].playerInfo;
+            auto& group = m_playerInfo[m_groupAssignments[data.clientID]];
+            auto& playerInfo = group.playerInfo;
             //for (auto i = 0; i < m_playerInfo.size(); ++i)
             {
                 //if this client was the current player check if there's
@@ -148,6 +149,13 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
 
                 //remove the player data
+                group.playerCount -= m_sharedData.clients[data.clientID].playerCount; //hmm this has probably already been reset before this message arrives
+                group.clientIDs.erase(std::remove_if(group.clientIDs.begin(), group.clientIDs.end(), 
+                    [data](std::uint8_t i)
+                    {
+                        return data.clientID == i;
+                    }), group.clientIDs.end());
+
                 playerInfo.erase(std::remove_if(playerInfo.begin(), playerInfo.end(),
                     [&, data](const PlayerStatus& p)
                     {
@@ -176,7 +184,8 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             if (!m_playerInfo.empty())
             {
-                if (setNewPlayer != -1)
+                if (setNewPlayer != -1
+                    && m_gameStarted) //don't do this on the summary screen
                 {
                     setNextPlayer(setNewPlayer);
                 }

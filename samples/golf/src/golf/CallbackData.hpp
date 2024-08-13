@@ -29,10 +29,15 @@ source distribution.
 
 #pragma once
 
+#include "MenuConsts.hpp"
+
 #include <crogine/ecs/Entity.hpp>
 
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+
+#include <crogine/util/Easings.hpp>
 
 //used for though/chat bubble animation
 struct CogitationData final
@@ -174,3 +179,4 @@ struct AnimDirection final
 using WindHideData = AvatarAnimCallbackData;
 using BullsEyeData = AvatarAnimCallbackData;
 using FreecamHideData = AvatarAnimCallbackData;
+using MenuBackgroundData = AvatarAnimCallbackData;
