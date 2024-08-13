@@ -1272,6 +1272,76 @@ void GolfState::togglePuttingView(bool putt)
         };
 }
 
+void GolfState::setCameraTarget(const ActivePlayer& playerData)
+{
+    auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+    if (playerData.terrain == TerrainID::Green)
+    {
+        targetInfo.targetHeight = CameraPuttHeight;
+        //if (!m_holeData[m_currentHole].puttFromTee)
+        {
+            targetInfo.targetHeight *= CameraTeeMultiplier;
+        }
+        targetInfo.targetOffset = CameraPuttOffset;
+    }
+    else
+    {
+        targetInfo.targetHeight = CameraStrokeHeight;
+        targetInfo.targetOffset = CameraStrokeOffset;
+    }
+
+    //if we have a sub-target see if that should be active
+    auto activeTarget = findTargetPos(playerData.position);
+
+
+    auto targetDir = activeTarget - playerData.position;
+    auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
+    targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+
+    //always look at the target in mult-target mode and target not yet hit
+    if (m_sharedData.scoreType == ScoreType::MultiTarget
+        && !m_sharedData.connectionData[playerData.client].playerData[playerData.player].targetHit)
+    {
+        targetInfo.targetLookAt = m_holeData[m_currentHole].target;
+    }
+    else
+    {
+        //if both the pin and the target are in front of the player
+        if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
+        {
+            //set the target depending on how close it is
+            auto pinDist = glm::length2(pinDir);
+            auto targetDist = glm::length2(targetDir);
+            if (pinDist < targetDist)
+            {
+                //always target pin if its closer
+                targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+            }
+            else
+            {
+                //target the pin if the target is too close
+                //TODO this is really to do with whether or not we're putting
+                //when this check happens, but it's unlikely to have
+                //a target on the green in other cases.
+                const float MinDist = m_holeData[m_currentHole].puttFromTee ? 9.f : 2500.f;
+                if (targetDist < MinDist) //remember this in len2
+                {
+                    targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                }
+                else
+                {
+                    targetInfo.targetLookAt = activeTarget;
+                }
+            }
+        }
+        else
+        {
+            //else set the pin as the target
+            targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+        }
+    }
+}
+
 void GolfState::createTransition(const ActivePlayer& playerData)
 {
     //float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
@@ -1349,78 +1419,13 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
 
     //set up the camera target
-    auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
-    if (playerData.terrain == TerrainID::Green)
-    {
-        targetInfo.targetHeight = CameraPuttHeight;
-        //if (!m_holeData[m_currentHole].puttFromTee)
-        {
-            targetInfo.targetHeight *= CameraTeeMultiplier;
-        }
-        targetInfo.targetOffset = CameraPuttOffset;
-    }
-    else
-    {
-        targetInfo.targetHeight = CameraStrokeHeight;
-        targetInfo.targetOffset = CameraStrokeOffset;
-    }
-
-    //if we have a sub-target see if that should be active
-    auto activeTarget = findTargetPos(playerData.position);
-
-
-    auto targetDir = activeTarget - playerData.position;
-    auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
-    targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
-
-    //always look at the target in mult-target mode and target not yet hit
-    if (m_sharedData.scoreType == ScoreType::MultiTarget
-        && !m_sharedData.connectionData[playerData.client].playerData[playerData.player].targetHit)
-    {
-        targetInfo.targetLookAt = m_holeData[m_currentHole].target;
-    }
-    else
-    {
-        //if both the pin and the target are in front of the player
-        if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
-        {
-            //set the target depending on how close it is
-            auto pinDist = glm::length2(pinDir);
-            auto targetDist = glm::length2(targetDir);
-            if (pinDist < targetDist)
-            {
-                //always target pin if its closer
-                targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
-            }
-            else
-            {
-                //target the pin if the target is too close
-                //TODO this is really to do with whether or not we're putting
-                //when this check happens, but it's unlikely to have
-                //a target on the green in other cases.
-                const float MinDist = m_holeData[m_currentHole].puttFromTee ? 9.f : 2500.f;
-                if (targetDist < MinDist) //remember this in len2
-                {
-                    targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
-                }
-                else
-                {
-                    targetInfo.targetLookAt = activeTarget;
-                }
-            }
-        }
-        else
-        {
-            //else set the pin as the target
-            targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
-        }
-    }
+    setCameraTarget(playerData);
 
     //creates an entity which calls setCamPosition() in an
     //interpolated manner until we reach the dest,
     //at which point we update the active player and
     //the ent destroys itself
-    auto startPos = m_currentPlayer.position;
+    auto startPos = m_currentPlayer.position; //TODO we need to track the player the camera is currently looking at if we're idle
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(startPos);
@@ -1840,6 +1845,31 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     }
 }
 
+void GolfState::spectateNextPlayer(std::size_t stride)
+{
+    //update the current index to next player
+    auto start = m_idleCameraIndex;
+    do
+    {
+        m_idleCameraIndex = (m_idleCameraIndex + stride) % m_groupPlayerPositions.size();
+    } while (m_idleCameraIndex != start
+        && m_groupPlayerPositions[m_idleCameraIndex].client == 255);
+
+    if (m_idleCameraIndex != start)
+    {
+        const auto& pPos = m_groupPlayerPositions[m_idleCameraIndex];
+        setCameraTarget(pPos);
+
+        //make sure to set this so next time the animation is called it's up to date
+        auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+        targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+        targetInfo.startHeight = targetInfo.targetHeight;
+        targetInfo.startOffset = targetInfo.targetOffset;
+
+        setCameraPosition(pPos.position, targetInfo.targetHeight, targetInfo.targetOffset);
+    }
+}
+
 void GolfState::updateLensFlare(cro::Entity e, float)
 {
     if (!m_sharedData.useLensFlare)
@@ -1931,10 +1961,11 @@ void GolfState::updateLensFlare(cro::Entity e, float)
     }
 }
 
-void GolfState::setIdleGroup(std::uint8_t group)
+void GolfState::setIdleGroup(std::uint8_t/* group*/)
 {
     m_groupIdle = true;
-    m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
+    //m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
+    m_gameScene.setSystemActive<CameraFollowSystem>(false);
 
     //hide the player model
     if (m_activeAvatar)

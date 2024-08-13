@@ -414,10 +414,16 @@ private:
         bool isEnabled = false;
     }m_puttViewState;
     void togglePuttingView(bool); //only used when switching to putter manually
+    void setCameraTarget(const ActivePlayer&);//target for createTranstion() and spectateNextPlayer()
     void createTransition(const ActivePlayer&);
     void startFlyBy();
     void setCameraPosition(glm::vec3, float, float);
 
+    //tracks the player positions in group play so we can switch cameras
+    //between them while idling (1 for each active group)
+    std::array<ActivePlayer, ConstVal::MaxClients> m_groupPlayerPositions = {};
+    std::size_t m_idleCameraIndex;
+    void spectateNextPlayer(std::size_t stride);
 
     //follows the ball mid-flight
     cro::Entity m_flightCam;

@@ -182,6 +182,7 @@ namespace PacketID
         TargetID, //< uint16 billiards player OR'd ball ID to update the UI
         ServerAchievement, //< uint8 client, uint8 player, uint8 achievement id - up to client to decide if to award
         GroupID, //< uint8 groupID to which the desitnation client was assigned
+        GroupPosition, //< GroupPosition struct
 
         EntityRemoved, //< uint32 entity ID
         ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end

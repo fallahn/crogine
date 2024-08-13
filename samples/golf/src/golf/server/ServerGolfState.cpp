@@ -70,10 +70,6 @@ namespace
 
     bool hadTennisBounce = false;
 
-    //placeholder group ID TODO remove this and implement finding
-    //the correct ID for events which occur etc
-    //static constexpr std::int32_t GroupID = 0;
-
     //glm::vec3 randomOffset3()
     //{
     //    auto x = cro::Util::Random::value(0, 1) * 2;
@@ -1167,6 +1163,12 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
         }
     }
     m_playerInfo[groupID].turnTimer.restart();
+
+    //notify all clients of new position
+    GroupPosition pos;
+    pos.groupID = groupID;
+    pos.playerData = m_playerInfo[groupID].playerInfo[0]; //deliberate slice
+    m_sharedData.host.broadcastPacket(PacketID::GroupPosition, pos, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void GolfState::setNextHole()

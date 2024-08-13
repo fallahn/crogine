@@ -190,6 +190,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_audioPath             ("assets/golf/sound/ambience.xas"),
     m_currentCamera         (CameraID::Player),
     m_idleTime              (cro::seconds(180.f)),
+    m_idleCameraIndex       (0),
     m_photoMode             (false),
     m_useDOF                (false),
     m_restoreInput          (false),
@@ -282,6 +283,10 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 #endif
 
+    for (auto& p : m_groupPlayerPositions)
+    {
+        p.client = 255;
+    }
 
     //This is set when setting active player.
     Achievements::setActive(m_allowAchievements);
@@ -547,6 +552,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
+        if (m_groupIdle)
+        {
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+            {
+                spectateNextPlayer(1);
+            }
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+            {
+                spectateNextPlayer(m_groupPlayerPositions.size() - 1);
+            }
+        }
+
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         //hideMouse(); //TODO this should only react to current keybindings
         switch (evt.key.keysym.sym)
@@ -894,6 +911,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
             m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
                 SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+
+            if (m_groupIdle)
+            {
+                if (evt.cbutton.button == cro::GameController::ButtonRightShoulder)
+                {
+                    spectateNextPlayer(1);
+                }
+                else if (evt.cbutton.button == cro::GameController::ButtonLeftShoulder)
+                {
+                    spectateNextPlayer(m_groupPlayerPositions.size() - 1);
+                }
+            }
         }
 
         hideMouse();
@@ -4005,6 +4034,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::GroupPosition:
+        {
+            auto data = evt.packet.as<GroupPosition>();
+            if (data.groupID >= 0 &&
+                data.groupID < static_cast<std::int32_t>(ConstVal::MaxClients))
+            {
+                m_groupPlayerPositions[data.groupID] = data.playerData;
+            }
+        }
+            break;
         case PacketID::SetIdle:
         {
             setIdleGroup(evt.packet.as<std::uint8_t>());
@@ -4902,6 +4941,14 @@ void GolfState::handleMaxStrokes(std::uint8_t reason)
 
 void GolfState::removeClient(std::uint8_t clientID)
 {
+    for (auto& p : m_groupPlayerPositions)
+    {
+        if (p.client == clientID)
+        {
+            p.client = 255;
+        }
+    }
+
     cro::String str = m_sharedData.connectionData[clientID].playerData[0].name;
     for (auto i = 1u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
     {

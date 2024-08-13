@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -67,6 +67,12 @@ struct PlayerStatus final : public ActivePlayer
     std::uint8_t skins = 0; //stores number of lives in elimination mode
     std::uint8_t matchWins = 0; //used as a 'life lost' flag in elimination
     bool readyQuit = false; //used at round end to see if all players want to skip scores
+};
+
+struct GroupPosition final
+{
+    std::int32_t groupID = 0;
+    ActivePlayer playerData;
 };
 
 struct ActorInfo final
