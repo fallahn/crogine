@@ -3794,8 +3794,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
         e.getComponent<cro::Transform>().setPosition(labelPos);
 
-        if (terrain == TerrainID::Green
-            || m_groupIdle)
+        if (terrain == TerrainID::Green)
         {
             if (m_currentPlayer.player == playerID
                 && m_sharedData.clientConnection.connectionID == clientID)
@@ -3810,7 +3809,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 auto camPos = camTx.getPosition();
                 auto ballVec = position - camPos;
                 auto len2 = glm::length2(ballVec);
-                static constexpr float MinLength = 64.f; //8m^2
+                static constexpr float MinLength = 10000.f;// 64.f; //8m^2
                 float alpha = smoothstep(0.05f, 0.5f, 1.f - std::min(1.f, std::max(0.f, len2 / MinLength)));
 
                 //fade slightly near the centre of the screen
@@ -3826,20 +3825,30 @@ void GolfState::spawnBall(const ActorInfo& info)
                 float currentAlpha = colour;
                 colour = std::max(0.f, std::min(1.f, currentAlpha + (dt * cro::Util::Maths::sgn(alpha - currentAlpha))));
             }
-
-            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+        }
+        else if (m_groupIdle)
+        {
+            if (playerID == m_groupPlayerPositions[m_idleCameraIndex].player
+                && clientID == m_groupPlayerPositions[m_idleCameraIndex].client)
             {
-                v.colour.setAlpha(colour);
+                colour = 1.f;
             }
+            else
+            {
+                colour = std::max(0.f, colour - dt);
+            }
+
         }
         else
         {
             colour = std::max(0.f, colour - dt);
-            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
-            {
-                v.colour.setAlpha(colour);
-            }
         }
+
+        for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+        {
+            v.colour.setAlpha(colour);
+        }
+
 
         float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
@@ -4044,7 +4053,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 if (m_groupIdle)
                 {
                     //check the ball and see if we can spectate it
-                    const auto& currData = m_groupPlayerPositions[m_idleCameraIndex];
+                    //const auto& currData = m_groupPlayerPositions[m_idleCameraIndex];
                     
                     //if(!m_avatars[currData.client][currData.player].ballModel.isValid())
                         //|| m_avatars[currData.client][currData.player].ballModel.getComponent<ClientCollider>().state == std::uint8_t(Ball::State::Idle))

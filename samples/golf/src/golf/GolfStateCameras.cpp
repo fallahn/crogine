@@ -1864,17 +1864,10 @@ void GolfState::spectateGroup(std::uint8_t group)
         setCameraTarget(pPos);
         createTransition(pPos, false);
 
+        retargetMinimap(true);
+
         //TODO try re-enabling camera follower again, remember to reset to player cam when shot is done
-        //TODO update minimap zoom too
-
-        //auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
-
-        ////make sure to set this so next time the animation is called it's up to date
-        //targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
-        //targetInfo.startHeight = targetInfo.targetHeight;
-        //targetInfo.startOffset = targetInfo.targetOffset;
-        ////TODO this is creataing a NaN somewhere
-        //setCameraPosition(pPos.position, targetInfo.targetHeight, targetInfo.targetOffset);
+        m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
 
         m_spectateTimer.restart();
         m_idleCameraIndex = group;
@@ -1985,11 +1978,11 @@ void GolfState::updateLensFlare(cro::Entity e, float)
     }
 }
 
-void GolfState::setIdleGroup(std::uint8_t/* group*/)
+void GolfState::setIdleGroup(std::uint8_t group)
 {
     m_groupIdle = true;
     //m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
-    m_gameScene.setSystemActive<CameraFollowSystem>(false);
+    //m_gameScene.setSystemActive<CameraFollowSystem>(false);
 
     //hide the player model
     if (m_activeAvatar)
@@ -2007,4 +2000,6 @@ void GolfState::setIdleGroup(std::uint8_t/* group*/)
             e.getComponent<cro::Callback>().active = true;
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    spectateGroup(group);
 }
