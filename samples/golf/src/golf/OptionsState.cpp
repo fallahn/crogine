@@ -4493,11 +4493,11 @@ void OptionsState::refreshDeviceLabel()
     }
     else
     {
-        if (Social::isSteamdeck())
+        /*if (Social::isSteamdeck())
         {
             str = "Default";
         }
-        else
+        else*/
         {
             str = cro::AudioDevice::getActiveDevice();
         }

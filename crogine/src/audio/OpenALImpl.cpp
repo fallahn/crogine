@@ -93,7 +93,7 @@ bool OpenALImpl::init()
     enumerateDevices();
 
     if (!m_preferredDevice.empty()
-        && m_preferredDevice != "Default")
+        && cro::Util::String::toLower(m_preferredDevice) != "default")
     {
         m_device = alcOpenDevice(m_preferredDevice.c_str());
 
@@ -622,7 +622,7 @@ void OpenALImpl::setSpeedOfSound(float speed)
 
 void OpenALImpl::setActiveDevice(const std::string& str)
 {
-    if (str == "Default")
+    if (cro::Util::String::toLower(str) == "default")
     {
         reconnect(nullptr);
     }
@@ -889,7 +889,7 @@ void OpenALImpl::refreshDeviceList()
     auto enumAvailable = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
     if (enumAvailable)
     {
-        const auto* deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+        const auto* deviceList = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
         if (deviceList)
         {
             auto* next = deviceList + 1;
@@ -905,8 +905,12 @@ void OpenALImpl::refreshDeviceList()
                 next += (len + 2);
             }
         }
+        m_devices.push_back("Default");
     }
-    m_devices.push_back("Default");
+    else
+    {
+        m_devices.push_back("default");
+    }
 }
 
 void OpenALImpl::reconnect(const char* deviceStr)

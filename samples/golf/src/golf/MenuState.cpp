@@ -980,6 +980,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             showOptions();
             break;
+        case SDLK_F11:
+            cro::Console::doCommand("al_config");
+            break;
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
