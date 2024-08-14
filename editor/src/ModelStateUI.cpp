@@ -2671,7 +2671,7 @@ void ModelState::drawBrowser()
     ImGui::End();
 }
 
-void ModelState::drawInfo()
+void ModelState::drawInfo() const
 {
     auto [pos, size] = WindowLayouts[WindowID::Info];
     ImGui::SetNextWindowPos({ pos.x, pos.y });

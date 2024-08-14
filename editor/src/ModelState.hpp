@@ -239,7 +239,7 @@ private:
     void showSaveMessage();
     void drawInspector();
     void drawBrowser();
-    void drawInfo();
+    void drawInfo() const;
     void drawGizmo();
     void drawImageCombiner();
     void updateLayout(std::int32_t, std::int32_t);

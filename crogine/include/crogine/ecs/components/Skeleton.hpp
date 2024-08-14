@@ -220,9 +220,9 @@ namespace cro
 
         /*!
         \brief Returns the index of the animation with the given name if it exists
-        else returns 0
+        else returns -1
         */
-        std::size_t getAnimationIndex(const std::string& name) const;
+        std::int32_t getAnimationIndex(const std::string& name) const;
 
         /*!
         \brief Returns the index of the current animation
@@ -234,6 +234,16 @@ namespace cro
         The required frames must have already been added to the skeleton
         */
         void addAnimation(const SkeletalAnim&);
+
+        /*!
+        \brief Copies an animation from an existing Skeleton component into this one
+        If an animation with the name already exists then it is overwritten!
+        \param source The skeleton component to copy from
+        \param idx The index of the animation to copy. If this is out of range nothing is copied
+        Note that animations in this compnent will be re-indexed so existing indices will be invalid
+        \returns true on success else returns false
+        */
+        bool addAnimation(const Skeleton& source, std::size_t idx);
 
         /*!
         \brief Adds a frame of animation.

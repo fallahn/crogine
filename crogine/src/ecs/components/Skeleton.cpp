@@ -152,15 +152,15 @@ Skeleton::State Skeleton::getState() const
     return m_state;
 }
 
-std::size_t Skeleton::getAnimationIndex(const std::string& name) const
+std::int32_t Skeleton::getAnimationIndex(const std::string& name) const
 {
     if (auto result = std::find_if(m_animations.begin(), m_animations.end(), 
         [&name](const SkeletalAnim& a) {return a.name == name;}); result != m_animations.end())
     {
-        return std::distance(m_animations.begin(), result);
+        return static_cast<std::int32_t>(std::distance(m_animations.begin(), result));
     }
 
-    return 0;
+    return -1;
 }
 
 void Skeleton::addAnimation(const SkeletalAnim& anim)
@@ -170,6 +170,59 @@ void Skeleton::addAnimation(const SkeletalAnim& anim)
     m_animations.back().frameTime = 1.f / m_animations.back().frameRate;
     m_animations.back().interpolationOutput.resize(m_frameSize);
     m_animations.back().resetInterp(*this);
+}
+
+bool Skeleton::addAnimation(const Skeleton& source, std::size_t idx)
+{
+    if (m_frameSize != 0 && source.m_frameSize != m_frameSize)
+    {
+        LogE << "Cannot add animation - bone counts are different" << std::endl;
+        return false;
+    }
+
+    const auto& srcAnims = source.getAnimations();
+    if (srcAnims.empty())
+    {
+        LogE << "Cannot add animation - source animations are empty" << std::endl;
+        return false;
+    }
+
+    if (idx >= srcAnims.size())
+    {
+        LogE << "Cannot add animation - source index is out of range" << std::endl;
+        return false;
+    }
+
+    stop();
+    m_currentAnimation = 0;
+
+    const auto& srcAnim = srcAnims[idx];
+    if (auto exists = getAnimationIndex(srcAnim.name); exists != -1)
+    {
+        removeAnimation(exists);
+        LogI << "Replaced animation " << srcAnim.name << std::endl;
+    }
+
+    if (m_frameSize == 0)
+    {
+        m_frameSize == source.m_frameSize;
+        m_currentFrame.resize(m_frameSize);
+    }
+
+    auto dstAnim = srcAnim;
+    dstAnim.startFrame = m_frameCount;
+
+    const auto rangeStart = (srcAnim.startFrame * m_frameSize);
+    const auto rangeEnd = rangeStart + (srcAnim.frameCount * m_frameSize);
+
+    m_frames.insert(m_frames.end(), source.m_frames.begin() + rangeStart, source.m_frames.begin() + rangeEnd);
+    m_notifications.insert(m_notifications.end(),
+        source.m_notifications.begin() + srcAnim.startFrame, source.m_notifications.begin() + srcAnim.startFrame + srcAnim.frameCount);
+
+    m_frameCount += srcAnim.frameCount;
+    addAnimation(dstAnim);
+
+    return true;
 }
 
 void Skeleton::addFrame(const std::vector<Joint>& frame)
