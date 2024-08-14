@@ -1342,7 +1342,7 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
     }
 }
 
-void GolfState::createTransition(const ActivePlayer& playerData)
+void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPlayer)
 {
     //float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
 
@@ -1361,63 +1361,65 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().target = zoom;
     m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
 
-    //hide player avatar
-    if (m_activeAvatar)
+    if (setNextPlayer)
     {
-        //check distance and animate 
-        if (playerData.terrain == TerrainID::Green)
+        //hide player avatar
+        if (m_activeAvatar)
         {
-            auto scale = m_activeAvatar->model.getComponent<cro::Transform>().getScale();
-            scale.y = 0.f;
-            scale.z = 0.f;
-            m_activeAvatar->model.getComponent<cro::Transform>().setScale(scale);
-            m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
-
-            if (m_activeAvatar->hands)
+            //check distance and animate 
+            if (playerData.terrain == TerrainID::Green)
             {
-                //we have to free this up alse the model might
-                //become attached to two avatars...
-                m_activeAvatar->hands->setModel({});
+                auto scale = m_activeAvatar->model.getComponent<cro::Transform>().getScale();
+                scale.y = 0.f;
+                scale.z = 0.f;
+                m_activeAvatar->model.getComponent<cro::Transform>().setScale(scale);
+                m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
+
+                if (m_activeAvatar->hands)
+                {
+                    //we have to free this up alse the model might
+                    //become attached to two avatars...
+                    m_activeAvatar->hands->setModel({});
+                }
+            }
+            else
+            {
+                m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
+                m_activeAvatar->model.getComponent<cro::Callback>().active = true;
             }
         }
-        else
-        {
-            m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
-            m_activeAvatar->model.getComponent<cro::Callback>().active = true;
-        }
+
+
+        //hide hud
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::Root;
+        cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = 1;
+                e.getComponent<cro::Callback>().active = true;
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        cmd.targetFlags = CommandID::UI::PlayerName;
+        cmd.action =
+            [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f)); //also hides attached icon
+                auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
+                data.string = " ";
+                e.getComponent<cro::Callback>().active = true;
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        cmd.targetFlags = CommandID::UI::PlayerIcon;
+        cmd.action =
+            [&](cro::Entity e, float)
+            {
+                e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     }
-
-
-    //hide hud
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::Root;
-    cmd.action = [](cro::Entity e, float)
-        {
-            e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = 1;
-            e.getComponent<cro::Callback>().active = true;
-        };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-    cmd.targetFlags = CommandID::UI::PlayerName;
-    cmd.action =
-        [&](cro::Entity e, float)
-        {
-            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f)); //also hides attached icon
-            auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
-            data.string = " ";
-            e.getComponent<cro::Callback>().active = true;
-        };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-    cmd.targetFlags = CommandID::UI::PlayerIcon;
-    cmd.action =
-        [&](cro::Entity e, float)
-        {
-            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-
     //set up the camera target
     setCameraTarget(playerData);
 
@@ -1425,14 +1427,14 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     //interpolated manner until we reach the dest,
     //at which point we update the active player and
     //the ent destroys itself
-    auto startPos = m_currentPlayer.position; //TODO we need to track the player the camera is currently looking at if we're idle
+    auto startPos = setNextPlayer ? m_currentPlayer.position : m_lastSpectatePosition;
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(startPos);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<ActivePlayer>(playerData);
     entity.getComponent<cro::Callback>().function =
-        [&, startPos](cro::Entity e, float dt)
+        [&, startPos, setNextPlayer](cro::Entity e, float dt)
         {
             const auto& playerData = e.getComponent<cro::Callback>().getUserData<ActivePlayer>();
 
@@ -1455,7 +1457,11 @@ void GolfState::createTransition(const ActivePlayer& playerData)
                 //can cause a jump in view
 
                 //setCameraPosition(playerData.position, targetInfo.targetHeight, targetInfo.targetOffset);
-                requestNextPlayer(playerData);
+                if (setNextPlayer)
+                {
+                    requestNextPlayer(playerData);
+                }
+                m_lastSpectatePosition = playerData.position;
 
                 m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(glm::vec3(0.f));
 
@@ -1845,34 +1851,46 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     }
 }
 
-void GolfState::spectateNextPlayer(std::size_t stride)
+void GolfState::spectateGroup(std::uint8_t group)
 {
+    const cro::Time MinSpectateTime = cro::seconds(4.f);
+
     //update the current index to next player
-    auto start = m_idleCameraIndex;
-    do
+    if (group != m_serverGroup //trying to spectate ourself causes a NaN in the camera transform
+        && m_groupPlayerPositions[group].client != 255
+        && m_spectateTimer.elapsed() > MinSpectateTime)
     {
-        m_idleCameraIndex = (m_idleCameraIndex + stride) % m_groupPlayerPositions.size();
-    } while (m_idleCameraIndex != start
-        && m_groupPlayerPositions[m_idleCameraIndex].client == 255);
-
-
-    if (m_idleCameraIndex != start)
-    {
-        const auto& pPos = m_groupPlayerPositions[m_idleCameraIndex];
+        const auto& pPos = m_groupPlayerPositions[group];
         setCameraTarget(pPos);
+        createTransition(pPos, false);
 
-        auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+        //TODO try re-enabling camera follower again, remember to reset to player cam when shot is done
+        //TODO update minimap zoom too
 
-        //make sure to set this so next time the animation is called it's up to date
-        targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
-        targetInfo.startHeight = targetInfo.targetHeight;
-        targetInfo.startOffset = targetInfo.targetOffset;
-        //TODO this is creataing a NaN somewhere
-        setCameraPosition(pPos.position, targetInfo.targetHeight, targetInfo.targetOffset);
+        //auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
 
+        ////make sure to set this so next time the animation is called it's up to date
+        //targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+        //targetInfo.startHeight = targetInfo.targetHeight;
+        //targetInfo.startOffset = targetInfo.targetOffset;
+        ////TODO this is creataing a NaN somewhere
+        //setCameraPosition(pPos.position, targetInfo.targetHeight, targetInfo.targetOffset);
 
-        //TODO set the UI name to the name of the person we're viewing
-        //TODO if the selected camera is updated from the server then update it to the new value
+        m_spectateTimer.restart();
+        m_idleCameraIndex = group;
+
+        //set the UI name to the name of the person we're viewing
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::PlayerName;
+        cmd.action =
+            [&](cro::Entity e, float)
+            {
+                auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
+                data.string = m_sharedData.connectionData[pPos.client].playerData[pPos.player].name;
+                e.getComponent<cro::Callback>().active = true;
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 }
 

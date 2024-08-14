@@ -220,6 +220,14 @@ void ClientCollisionSystem::process(float)
                 {
                     entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f));
                 }
+
+                if (result.trigger >= TriggerID::Volcano)
+                {
+                    auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+                    msg->type = CollisionEvent::Trigger;
+                    msg->position = position;
+                    msg->terrain = result.trigger;
+                }
             }
             else if(collider.terrain == TerrainID::Hole
                 &&(collider.previousHeight > result.height - (Ball::Radius * 2.f)

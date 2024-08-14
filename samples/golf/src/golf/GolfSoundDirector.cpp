@@ -185,6 +185,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/menu/snapshot.wav",
         "assets/golf/sound/menu/toot2.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
+        "assets/golf/sound/menu/start_game.wav",
 
         "assets/golf/sound/ambience/crowd_clear_throat.wav",
         "assets/golf/sound/ambience/crowd_cough.wav",
@@ -680,6 +681,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     playSoundDelayed(AudioID::NearMiss, data.position, 0.5f, 1.f, MixerChannel::Effects);
                     //playSound(AudioID::NearHole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 }
+            }
+            else if (data.type == CollisionEvent::Trigger)
+            {
+                playSound(AudioID::Fore, glm::vec3(0.f));
             }
         }
         break;

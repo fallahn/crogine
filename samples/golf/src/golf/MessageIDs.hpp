@@ -131,7 +131,7 @@ struct CollisionEvent final
 {
     enum Type
     {
-        Begin, End, NearMiss
+        Begin, End, NearMiss, Trigger
     }type = Begin;
 
     enum Special

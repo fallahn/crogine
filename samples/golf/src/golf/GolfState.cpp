@@ -191,6 +191,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_currentCamera         (CameraID::Player),
     m_idleTime              (cro::seconds(180.f)),
     m_idleCameraIndex       (0),
+    m_lastSpectatePosition  (0.f),
     m_photoMode             (false),
     m_useDOF                (false),
     m_restoreInput          (false),
@@ -552,7 +553,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
-        if (m_groupIdle)
+        /*if (m_groupIdle)
         {
             if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
             {
@@ -562,7 +563,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             {
                 spectateNextPlayer(m_groupPlayerPositions.size() - 1);
             }
-        }
+        }*/
 
         m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         //hideMouse(); //TODO this should only react to current keybindings
@@ -912,7 +913,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
                 SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
 
-            if (m_groupIdle)
+            /*if (m_groupIdle)
             {
                 if (evt.cbutton.button == cro::GameController::ButtonRightShoulder)
                 {
@@ -922,7 +923,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 {
                     spectateNextPlayer(m_groupPlayerPositions.size() - 1);
                 }
-            }
+            }*/
         }
 
         hideMouse();
@@ -3475,9 +3476,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
     
-    //revisit this if we can interpolate spawn positions
-    //entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/rockit.cps", m_resources.textures);
-
+    
     entity.addComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
@@ -4041,6 +4040,18 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 data.groupID < static_cast<std::int32_t>(ConstVal::MaxClients))
             {
                 m_groupPlayerPositions[data.groupID] = data.playerData;
+
+                if (m_groupIdle)
+                {
+                    //check the ball and see if we can spectate it
+                    const auto& currData = m_groupPlayerPositions[m_idleCameraIndex];
+                    
+                    //if(!m_avatars[currData.client][currData.player].ballModel.isValid())
+                        //|| m_avatars[currData.client][currData.player].ballModel.getComponent<ClientCollider>().state == std::uint8_t(Ball::State::Idle))
+                    {
+                        spectateGroup(data.groupID);
+                    }
+                }
             }
         }
             break;

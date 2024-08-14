@@ -164,6 +164,7 @@ public:
             Snapshot,
             Toot,
             PlayerQuit,
+            Fore,
 
             CrowdClearThroat,
             CrowdCough,
