@@ -62,6 +62,7 @@ namespace
     const cro::Time ChatSoundTime = cro::seconds(0.05f);
     const cro::Time PowerSoundTime = cro::seconds(0.5f);
     const cro::Time ApplauseSoundTime = cro::seconds(3.5f);
+    const cro::Time ForeSoundTime = cro::seconds(13.5f);
 
     bool hadBeefstick = false;
 }
@@ -684,7 +685,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             else if (data.type == CollisionEvent::Trigger)
             {
-                playSound(AudioID::Fore, glm::vec3(0.f));
+                if (m_soundTimers[AudioID::Fore].elapsed() > ForeSoundTime)
+                {
+                    playSound(AudioID::Fore, glm::vec3(0.f));
+                }
             }
         }
         break;

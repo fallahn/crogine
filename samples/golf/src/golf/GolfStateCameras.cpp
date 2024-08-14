@@ -1856,18 +1856,29 @@ void GolfState::spectateGroup(std::uint8_t group)
     const cro::Time MinSpectateTime = cro::seconds(4.f);
 
     //update the current index to next player
-    if (group != m_serverGroup //trying to spectate ourself causes a NaN in the camera transform
+    if (m_groupPlayerPositions[group].client != m_sharedData.localConnectionData.connectionID //trying to spectate ourself causes a NaN in the camera transform
         && m_groupPlayerPositions[group].client != 255
         && m_spectateTimer.elapsed() > MinSpectateTime)
     {
-        const auto& pPos = m_groupPlayerPositions[group];
+        auto& pPos = m_groupPlayerPositions[group];
+
+        //check we're at least 3m from the pin
+        static constexpr float MinCamDist = 3.f;
+        auto dir = pPos.position - m_holeData[m_currentHole].pin;
+        const auto len = glm::length(dir);
+        if (len < MinCamDist)
+        {
+            pPos.position = m_holeData[m_currentHole].pin + (dir * (MinCamDist / len));
+        }
+
         setCameraTarget(pPos);
         createTransition(pPos, false);
 
         retargetMinimap(true);
 
-        //TODO try re-enabling camera follower again, remember to reset to player cam when shot is done
-        m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
+        //hm, doesn't really work
+        //m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
+        //m_gameScene.setSystemActive<CameraFollowSystem>(true);
 
         m_spectateTimer.restart();
         m_idleCameraIndex = group;

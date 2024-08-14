@@ -3794,7 +3794,22 @@ void GolfState::spawnBall(const ActorInfo& info)
 
         e.getComponent<cro::Transform>().setPosition(labelPos);
 
-        if (terrain == TerrainID::Green)
+        
+        if (m_groupIdle
+            && terrain != TerrainID::Hole)
+        {
+            if (playerID == m_groupPlayerPositions[m_idleCameraIndex].player
+                && clientID == m_groupPlayerPositions[m_idleCameraIndex].client)
+            {
+                colour = 1.f;
+            }
+            else
+            {
+                colour = std::max(0.f, colour - dt);
+            }
+
+        }
+        else if (terrain == TerrainID::Green)
         {
             if (m_currentPlayer.player == playerID
                 && m_sharedData.clientConnection.connectionID == clientID)
@@ -3825,19 +3840,6 @@ void GolfState::spawnBall(const ActorInfo& info)
                 float currentAlpha = colour;
                 colour = std::max(0.f, std::min(1.f, currentAlpha + (dt * cro::Util::Maths::sgn(alpha - currentAlpha))));
             }
-        }
-        else if (m_groupIdle)
-        {
-            if (playerID == m_groupPlayerPositions[m_idleCameraIndex].player
-                && clientID == m_groupPlayerPositions[m_idleCameraIndex].client)
-            {
-                colour = 1.f;
-            }
-            else
-            {
-                colour = std::max(0.f, colour - dt);
-            }
-
         }
         else
         {
@@ -4057,6 +4059,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     
                     //if(!m_avatars[currData.client][currData.player].ballModel.isValid())
                         //|| m_avatars[currData.client][currData.player].ballModel.getComponent<ClientCollider>().state == std::uint8_t(Ball::State::Idle))
+                    if(m_currentCamera == CameraID::Player)
                     {
                         spectateGroup(data.groupID);
                     }
