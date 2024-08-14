@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -241,6 +241,14 @@ namespace cro
         of a single frame. Subsequent frames must match this number of joints.
         */
         void addFrame(const std::vector<Joint>&);
+
+        /*!
+        \brief Removes the animation at the given index.
+        Note that all animations with subsequent indices will be
+        re-indexed.
+        Returns false if no animation was removed - eg index was out of range
+        */
+        bool removeAnimation(std::size_t index);
 
         /*!
         \brief Returns the index of the current frame from the beginning of

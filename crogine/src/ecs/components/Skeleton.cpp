@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -184,6 +184,38 @@ void Skeleton::addFrame(const std::vector<Joint>& frame)
     m_frames.insert(m_frames.end(), frame.begin(), frame.end());
     m_notifications.emplace_back();
     m_frameCount++;
+}
+
+bool Skeleton::removeAnimation(std::size_t idx)
+{
+    if (idx >= m_animations.size()
+        || m_animations.empty())
+    {
+        return false;
+    }
+
+    stop();
+    m_currentAnimation = 0;
+
+    auto rangeStart = m_animations[idx].startFrame * m_frameSize;
+    auto rangeEnd = rangeStart + (m_animations[idx].frameCount * m_frameSize);
+
+    m_frames.erase(m_frames.begin() + rangeStart, m_frames.begin() + rangeEnd);
+    m_notifications.erase(m_notifications.begin() + m_animations[idx].startFrame, m_notifications.begin() + m_animations[idx].startFrame + m_animations[idx].frameCount);
+
+    auto frameCount = m_animations[idx].frameCount;
+    m_animations.erase(m_animations.begin() + idx);
+
+    if (idx < m_animations.size())
+    {
+        for (auto i = idx; i < m_animations.size(); ++i)
+        {
+            m_animations[i].startFrame -= frameCount;
+        }
+    }
+    m_frameCount -= frameCount;
+
+    return true;
 }
 
 std::size_t Skeleton::getCurrentFrame() const

@@ -144,6 +144,11 @@ Transform& Transform::operator=(Transform&& other) noexcept
             m_parent->removeChild(*this);
         }
 
+        /*
+        If you get errors here in debug build chances are
+        your project requires PARALLEL_GLOBAL_DISABLE to be defined
+        */
+
         //orphan any children
         for (auto c : m_children)
         {

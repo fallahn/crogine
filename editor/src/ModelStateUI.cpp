@@ -279,6 +279,13 @@ namespace
         ImGui::SameLine();
         ImGui::Checkbox("Loop", &anim.looped);
         
+        ImGui::SameLine();
+        if (ImGui::Button("Delete Animation"))
+        {
+            //TODO we really want a confirmation box here...
+            skel.removeAnimation(selectedAnim);
+        }
+
         ImGui::NewLine();
         ImGui::Separator();
     }
