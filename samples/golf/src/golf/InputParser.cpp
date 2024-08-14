@@ -423,11 +423,13 @@ void InputParser::handleEvent(const cro::Event& evt)
             m_mouseWheel += evt.wheel.y;
         }
         else if (evt.type == SDL_MOUSEBUTTONDOWN
-            && m_sharedData.useMouseAction)
+            && m_sharedData.useMouseAction
+            && !m_isCPU)
         {
             m_inputFlags |= InputFlag::Action;
         }
-        else if (evt.type == SDL_MOUSEBUTTONUP)
+        else if (evt.type == SDL_MOUSEBUTTONUP
+            && !m_isCPU)
         {
             m_inputFlags &= ~InputFlag::Action;
         }

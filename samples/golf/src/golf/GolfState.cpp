@@ -3809,7 +3809,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 auto camPos = camTx.getPosition();
                 auto ballVec = position - camPos;
                 auto len2 = glm::length2(ballVec);
-                static constexpr float MinLength = 10000.f;// 64.f; //8m^2
+                static constexpr float MinLength = 64.f; //8m^2
                 float alpha = smoothstep(0.05f, 0.5f, 1.f - std::min(1.f, std::max(0.f, len2 / MinLength)));
 
                 //fade slightly near the centre of the screen
