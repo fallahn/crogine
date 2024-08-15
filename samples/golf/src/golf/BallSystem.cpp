@@ -71,7 +71,7 @@ namespace
     static constexpr float MinRollSlope = 0.95f; //ball won't stop rolling if the ground is steeper that this
 
     static constexpr float MinRollVelocity = -0.25f;
-    static constexpr float MaxStoneSlope = 0.9f; //dot prod with vertical - ball is OOB if less than this
+    static constexpr float MaxStoneSlope = 0.95f; //dot prod with vertical - ball is OOB if less than this
 
     static constexpr float MaxRestitutionIncrease = 0.05f; //depending on the angle of the bounce up to this much is added to restitution multiplier
 
