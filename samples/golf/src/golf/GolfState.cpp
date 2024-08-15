@@ -1876,6 +1876,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.action = [&](cro::Entity e, float)
                 {
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+                    m_spectateGhost.getComponent<cro::Model>().setMaterialProperty(0, "u_rimColour", getBeaconColour(m_sharedData.beaconColour));
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -3217,6 +3218,68 @@ void GolfState::buildScene()
         }
     }
 
+
+    //spectator ghost
+    md.loadFromFile("assets/golf/models/group_spectate.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+    if (entity.hasComponent<cro::Skeleton>())
+    {
+        entity.getComponent<cro::Skeleton>().play(0);
+    }
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    entity.addComponent<cro::Callback>().setUserData<GhostCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            const float Speed = dt * 3.f;
+            auto& data = e.getComponent<cro::Callback>().getUserData<GhostCallbackData>();
+            if (data.direction == GhostCallbackData::In)
+            {
+                //grow
+                data.scale = std::min(1.f, data.scale + Speed);
+                if (data.scale == 1)
+                {
+                    data.direction = GhostCallbackData::Hold;
+                }
+            }
+            else if (data.direction == GhostCallbackData::Hold)
+            {
+                //time the animation and switch if necessary
+                if (data.animation == 0)
+                {
+                    data.animationTime -= dt;
+                    if (data.animationTime < 0)
+                    {
+                        data.animation = 1;
+                        e.getComponent<cro::Skeleton>().play(1, 1.f, 2.f);
+                        data.animationTime += GhostCallbackData::MinAnimationTime + cro::Util::Random::value(-2, 5);
+                    }
+                }
+                else
+                {
+                    if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::State::Stopped)
+                    {
+                        e.getComponent<cro::Skeleton>().play(0, 1.f, 2.f);
+                        data.animation = 0;
+                    }
+                }
+            }
+            else
+            {
+                //shrink
+                data.scale = std::max(0.f, data.scale - Speed);
+                if (data.scale == 0)
+                {
+                    data.direction = GhostCallbackData::In;
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+            const float modelScale = cro::Util::Easing::easeOutBack(data.scale);
+            e.getComponent<cro::Transform>().setScale(glm::vec3(1.f, modelScale, modelScale));
+        };
+    m_spectateGhost = entity;
 
     createCameras();
 

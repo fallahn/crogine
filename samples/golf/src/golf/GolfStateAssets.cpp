@@ -1896,7 +1896,7 @@ void GolfState::loadModels()
 {
     /*
     This deals with loading the models for avatars/hair/balls
-    props and course models are parsed in loadAssets();
+    props and course models are parsed in loadMap();
     */
 
 

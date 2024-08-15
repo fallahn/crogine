@@ -1345,6 +1345,7 @@ void GolfState::setCameraTarget(const ActivePlayer& playerData)
 void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPlayer)
 {
     //float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
+    m_spectateGhost.getComponent<cro::Callback>().getUserData<GhostCallbackData>().direction = GhostCallbackData::Out;
 
     //set the target zoom on the player camera
     float zoom = 1.f;
@@ -1462,6 +1463,7 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
                     requestNextPlayer(playerData);
                 }
                 m_lastSpectatePosition = playerData.position;
+                setGhostPosition(playerData.position);
 
                 m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(glm::vec3(0.f));
 
@@ -1848,6 +1850,50 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     if (targetInfo.waterPlane.isValid())
     {
         targetInfo.waterPlane.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
+    }
+}
+
+void GolfState::setGhostPosition(glm::vec3 pos)
+{
+    auto res = m_collisionMesh.getTerrain(pos);
+
+    if (m_groupIdle && 
+        (res.terrain == TerrainID::Rough || res.terrain == TerrainID::Fairway))
+    {
+        m_spectateGhost.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation + (cro::Util::Const::PI / 2.f));
+        
+        const auto goodPos = 
+            [&](glm::vec3& p)
+            {
+                res = m_collisionMesh.getTerrain(p);
+                p.y = res.height;
+                return (res.terrain == TerrainID::Fairway
+                    || res.terrain == TerrainID::Rough
+                    || res.terrain == TerrainID::Stone);
+            };
+
+        static constexpr auto offset = glm::vec3(-1.6f, 0.f, 0.2f);
+        auto move = m_spectateGhost.getComponent<cro::Transform>().getRotation() * offset;
+
+        auto newPos = pos + move;
+        bool posIsGood = false;
+        if (posIsGood = goodPos(newPos); !posIsGood)
+        {
+            //try flipping the x axis if the first pos is no good
+            move = offset;
+            move.x *= -1.f;
+            move = m_spectateGhost.getComponent<cro::Transform>().getRotation() * move;
+            newPos = pos + move;
+            posIsGood = goodPos(newPos);
+        }        
+        
+        if (posIsGood)
+        {
+            m_spectateGhost.getComponent<cro::Transform>().setPosition(newPos);
+            m_spectateGhost.getComponent<cro::Model>().setMaterialProperty(0, "u_rimColour", getBeaconColour(m_sharedData.beaconColour));
+            m_spectateGhost.getComponent<cro::Callback>().getUserData<GhostCallbackData>().direction = GhostCallbackData::In;
+            m_spectateGhost.getComponent<cro::Callback>().active = true;
+        }
     }
 }
 

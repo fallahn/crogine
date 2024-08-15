@@ -108,6 +108,16 @@ struct PlayerCallbackData final
     float scale = 0.f;
 };
 
+struct GhostCallbackData final
+{
+    enum{In, Hold, Out};
+    std::int32_t animation = 0;
+    std::int32_t direction = 0;
+    float scale = 0.f;
+    static constexpr float MinAnimationTime = 10.f;
+    float animationTime = MinAnimationTime;
+};
+
 class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
@@ -425,6 +435,8 @@ private:
     std::size_t m_idleCameraIndex; //index of group we're currently watching
     cro::Clock m_spectateTimer;
     glm::vec3 m_lastSpectatePosition;
+    cro::Entity m_spectateGhost;
+    void setGhostPosition(glm::vec3);
     void spectateGroup(std::uint8_t group);
 
     //follows the ball mid-flight
