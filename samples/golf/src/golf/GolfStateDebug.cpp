@@ -247,16 +247,16 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("asefsd"))
-    //        {
-    //            ImGui::Text("Group mode: %s", GroupingNames[m_sharedData.groupMode].c_str());
-    //            ImGui::Text("Server Group: %d", m_serverGroup);
-    //            ImGui::Text("Camera Target Group: %d", m_gameScene.getSystem<CameraFollowSystem>()->getTargetGroup());
-    //        }
-    //        ImGui::End();
-    //    });
+    /*registerWindow([&]() 
+        {
+            if (ImGui::Begin("asefsd"))
+            {
+                ImGui::Text("Server Group: %d", m_serverGroup);
+                ImGui::Text("Target Group: %lu", m_idleCameraIndex);
+                ImGui::Text("Target Client: %d, Target Player: %d", m_groupPlayerPositions[m_idleCameraIndex].client, m_groupPlayerPositions[m_idleCameraIndex].player);
+            }
+            ImGui::End();
+        });*/
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

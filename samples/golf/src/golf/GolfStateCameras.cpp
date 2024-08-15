@@ -1890,7 +1890,7 @@ void GolfState::setGhostPosition(glm::vec3 pos)
         if (posIsGood)
         {
             m_spectateGhost.getComponent<cro::Transform>().setPosition(newPos);
-            m_spectateGhost.getComponent<cro::Model>().setMaterialProperty(0, "u_rimColour", getBeaconColour(m_sharedData.beaconColour));
+            m_spectateGhost.getComponent<cro::Model>().setMaterialProperty(0, "u_rimColour", getBeaconColour(m_sharedData.beaconColour) * glm::vec4(glm::vec3(0.8f), 1.f));
             m_spectateGhost.getComponent<cro::Callback>().getUserData<GhostCallbackData>().direction = GhostCallbackData::In;
             m_spectateGhost.getComponent<cro::Callback>().active = true;
         }
@@ -1910,11 +1910,22 @@ void GolfState::spectateGroup(std::uint8_t group)
 
         //check we're at least 3m from the pin
         static constexpr float MinCamDist = 3.f;
+        static constexpr float MinCamDistSqr = MinCamDist * MinCamDist;
         auto dir = pPos.position - m_holeData[m_currentHole].pin;
-        const auto len = glm::length(dir);
-        if (len < MinCamDist)
+        auto len = glm::length2(dir);
+        if (len < MinCamDistSqr)
         {
-            pPos.position = m_holeData[m_currentHole].pin + (dir * (MinCamDist / len));
+            pPos.position = m_holeData[m_currentHole].pin + (dir * (MinCamDist / std::sqrt(len)));
+        }
+        else
+        {
+            auto dir = pPos.position - m_currentPlayer.position;
+            auto len = glm::length2(dir);
+
+            if (len < MinCamDistSqr)
+            {
+                pPos.position = m_currentPlayer.position + (dir * (MinCamDist / std::sqrt(len)));
+            }
         }
 
         setCameraTarget(pPos);

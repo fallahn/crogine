@@ -1172,10 +1172,14 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     m_playerInfo[groupID].turnTimer.restart();
 
     //notify all clients of new position
-    GroupPosition pos;
-    pos.groupID = groupID;
-    pos.playerData = m_playerInfo[groupID].playerInfo[0]; //deliberate slice
-    m_sharedData.host.broadcastPacket(PacketID::GroupPosition, pos, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    if (!playerInfo.empty()
+        && playerInfo[0].distanceToHole > 0.5f)
+    {
+        GroupPosition pos;
+        pos.groupID = groupID;
+        pos.playerData = playerInfo[0]; //deliberate slice
+        m_sharedData.host.broadcastPacket(PacketID::GroupPosition, pos, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
 }
 
 void GolfState::setNextHole()

@@ -2235,6 +2235,38 @@ bool GolfState::simulate(float dt)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+
+    //track followed ball if we're idle
+    if (m_groupIdle)
+    {
+        const auto c = m_groupPlayerPositions[m_idleCameraIndex].client;
+        const auto p = m_groupPlayerPositions[m_idleCameraIndex].player;
+        
+        if (m_avatars[c][p].ballModel.isValid())
+        {
+            const auto ballPos = m_avatars[c][p].ballModel.getComponent<cro::Transform>().getWorldPosition();
+
+            const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
+                && !m_sharedData.connectionData[c].playerData[p].targetHit);
+            const auto ballTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+            const float ballDist = glm::length(ballPos - ballTarget);
+
+            cmd.targetFlags = CommandID::UI::PinDistance;
+            cmd.action = [&, ballDist, isMultiTarget](cro::Entity e, float)
+                {
+                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, isMultiTarget);
+
+                    auto bounds = cro::Text::getLocalBounds(e);
+                    bounds.width = std::floor(bounds.width / 2.f);
+                    e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+        //}
+    }
+
+
+
     //don't update the CPU or gamepad if there are any menus open
     if (getStateCount() == 1
         && !m_textChat.isVisible())
@@ -4740,6 +4772,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         std::max(std::sqrt(msg->travelDistance), m_personalBests[m_currentPlayer.player][m_currentHole].longestDrive);
                 }
             }
+
+            if (m_groupIdle)
+            {
+                setActiveCamera(CameraID::Player);
+            }
         }
         break;
         case PacketID::ClientDisconnected:
@@ -6661,30 +6698,30 @@ void GolfState::updateActor(const ActorInfo& update)
     {
         m_skipState.state = -1;
 
-        if (m_groupIdle)
-        {
-            //if this update is the spectated ball, update the ui
-            if (update.clientID == m_groupPlayerPositions[m_idleCameraIndex].client
-                && update.playerID == m_groupPlayerPositions[m_idleCameraIndex].player)
-            {
-                const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
-                    && !m_sharedData.connectionData[update.clientID].playerData[update.playerID].targetHit);
-                const auto ballTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
-                const float ballDist = glm::length(update.position - ballTarget);
+        //if (m_groupIdle)
+        //{
+        //    //if this update is the spectated ball, update the ui
+        //    if (update.clientID == m_groupPlayerPositions[m_idleCameraIndex].client
+        //        && update.playerID == m_groupPlayerPositions[m_idleCameraIndex].player)
+        //    {
+        //        const bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
+        //            && !m_sharedData.connectionData[update.clientID].playerData[update.playerID].targetHit);
+        //        const auto ballTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+        //        const float ballDist = glm::length(update.position - ballTarget);
 
-                cro::Command cmd;
-                cmd.targetFlags = CommandID::UI::PinDistance;
-                cmd.action = [&, ballDist, isMultiTarget](cro::Entity e, float)
-                    {
-                        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, isMultiTarget);
+        //        cro::Command cmd;
+        //        cmd.targetFlags = CommandID::UI::PinDistance;
+        //        cmd.action = [&, ballDist, isMultiTarget](cro::Entity e, float)
+        //            {
+        //                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, isMultiTarget);
 
-                        auto bounds = cro::Text::getLocalBounds(e);
-                        bounds.width = std::floor(bounds.width / 2.f);
-                        e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
-                    };
-                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-            }
-        }
+        //                auto bounds = cro::Text::getLocalBounds(e);
+        //                bounds.width = std::floor(bounds.width / 2.f);
+        //                e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+        //            };
+        //        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        //    }
+        //}
     }
 
 
