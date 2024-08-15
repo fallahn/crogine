@@ -5938,14 +5938,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    cmd.targetFlags = CommandID::UI::PlayerIcon;
+    /*cmd.targetFlags = CommandID::UI::PlayerIcon;
     cmd.action =
         [&](cro::Entity e, float)
     {
         e.getComponent<cro::Callback>().active = true;
         e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
     };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
 
     cmd.targetFlags = CommandID::UI::PinDistance;
     cmd.action =

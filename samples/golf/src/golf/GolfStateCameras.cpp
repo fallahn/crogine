@@ -1412,13 +1412,13 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
             };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-        cmd.targetFlags = CommandID::UI::PlayerIcon;
+        /*cmd.targetFlags = CommandID::UI::PlayerIcon;
         cmd.action =
             [&](cro::Entity e, float)
             {
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
             };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
 
     }
     //set up the camera target

@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/core/Log.hpp>
 
+#include "../detail/GLCheck.hpp"
+
 using namespace cro;
 using namespace cro::Material;
 
@@ -192,6 +194,31 @@ void Data::setProperty(const std::string& name, CubemapID value)
     {
         result->second.second.textureID = value.textureID;
         result->second.second.type = value.isArray() ? Property::CubemapArray : Property::Cubemap;
+    }
+}
+
+void Data::addCustomSetting(std::uint32_t e)
+{
+    if (m_customSettingsCount < (MaxCustomSettings - 2))
+    {
+        m_customSettings[m_customSettingsCount] = e;
+        m_customSettingsCount++;
+    }
+}
+
+void Data::enableCustomSettings() const
+{
+    for (auto i = 0u; i < m_customSettingsCount; ++i)
+    {
+        glCheck(glEnable(m_customSettings[i]));
+    }
+}
+
+void Data::disableCustomSettings() const
+{
+    for (auto i = 0u; i < m_customSettingsCount; ++i)
+    {
+        glCheck(glDisable(m_customSettings[i]));
     }
 }
 

@@ -223,8 +223,11 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
                 applyBlendMode(model.m_materials[Mesh::IndexData::Final][i]/*.blendMode*/);
 
+                //TODO move these to custom settings list
                 glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
                 glCheck(model.m_materials[Mesh::IndexData::Final][i].enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
+
+                model.m_materials[Mesh::IndexData::Final][i].enableCustomSettings();
 
 #ifdef PLATFORM_DESKTOP
                 model.draw(i, Mesh::IndexData::Final);
@@ -254,10 +257,11 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 for (auto j = 0u; j < model.m_materials[Mesh::IndexData::Final][i].attribCount; ++j)
                 {
                     glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
-            }
+                }
 #endif //PLATFORM 
+                model.m_materials[Mesh::IndexData::Final][i].disableCustomSettings();
+            }
         }
-    }
 
 #ifdef PLATFORM_DESKTOP
         glCheck(glBindVertexArray(0));
@@ -272,7 +276,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glDisable(GL_CULL_FACE));
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
-}
+    }
 }
 
 std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex) const
