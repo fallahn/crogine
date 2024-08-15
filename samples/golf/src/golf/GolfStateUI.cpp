@@ -554,9 +554,9 @@ void GolfState::buildUI()
             if (data.currentChar == 0
                 && prevChar != 0)
             {
-                e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_currentPlayer.client].getTexture());
+                e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[data.client].getTexture());
 
-                cro::FloatRect bounds = getAvatarBounds(m_currentPlayer.player);
+                cro::FloatRect bounds = getAvatarBounds(data.player);
                 e.getComponent<cro::Sprite>().setTextureRect(bounds);
             }
             prevChar = data.currentChar;

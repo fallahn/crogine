@@ -1891,6 +1891,8 @@ void GolfState::spectateGroup(std::uint8_t group)
             {
                 auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
                 data.string = m_sharedData.connectionData[pPos.client].playerData[pPos.player].name;
+                data.client = pPos.client;
+                data.player - pPos.player;
                 e.getComponent<cro::Callback>().active = true;
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             };

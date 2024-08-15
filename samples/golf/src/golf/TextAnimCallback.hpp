@@ -38,6 +38,8 @@ source distribution.
 //used to animate strings with a text callback, ie player name
 struct TextCallbackData final
 {
+    std::uint8_t client = 0;
+    std::uint8_t player = 0;
     cro::String string;
     std::uint32_t currentChar = 0;
     float timer = 0.f;
