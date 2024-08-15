@@ -342,6 +342,8 @@ R"(
         return c;
     }
 
+    const float WaterLevel = -0.019;
+
     void main()
     {
         vec3 normal = normalize(v_data.normal);
@@ -372,7 +374,7 @@ R"(
         int y = int(mod(xy.y, MatrixSize));
 
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_data.ditherAmount));
-        if (textureColour.a * alpha < 0.3) discard;
+        if (textureColour.a * alpha * step(WaterLevel - 0.001, v_data.worldPos.y) < 0.3) discard;
 
         textureColour.rgb *= v_data.darkenAmount;
 
@@ -497,6 +499,8 @@ inline const std::string BranchFragment = R"(
 #include BAYER_MATRIX
 #include LIGHT_COLOUR
 
+    const float WaterLevel = -0.019; //TODO also used in billboard, bush and cel shaders - want to constify this.
+
     void main()
     {
         vec4 colour = TEXTURE(u_diffuseMap, v_texCoord);
@@ -524,7 +528,7 @@ inline const std::string BranchFragment = R"(
 
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
 #if defined ALPHA_CLIP
-        alpha *= colour.a;
+        alpha *= colour.a * step(WaterLevel - 0.001, v_worldPosition.y);
 #endif
 
         if (alpha < 0.1) discard;
