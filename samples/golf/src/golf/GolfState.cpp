@@ -4055,11 +4055,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 if (m_groupIdle)
                 {
                     //check the ball and see if we can spectate it
-                    //const auto& currData = m_groupPlayerPositions[m_idleCameraIndex];
-                    
-                    //if(!m_avatars[currData.client][currData.player].ballModel.isValid())
-                        //|| m_avatars[currData.client][currData.player].ballModel.getComponent<ClientCollider>().state == std::uint8_t(Ball::State::Idle))
-                    if(m_currentCamera == CameraID::Player)
+                    if(!m_sharedData.connectionData[data.playerData.client].playerData[data.playerData.player].holeComplete[m_currentHole]
+                        && m_currentCamera == CameraID::Player)
                     {
                         spectateGroup(data.groupID);
                     }
