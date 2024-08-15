@@ -398,10 +398,10 @@ inline const std::string CelFragmentShader = R"(
     }
 
 #include LIGHT_COLOUR
+#include WATER_LEVEL
 
     const float Quantise = 10.0;
     const float TerrainLevel = -0.049;
-    const float WaterLevel = -0.019;
 
     const vec3 SlopeShade = vec3(0.439, 0.368, 0.223);
     const vec3 BaseContourColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion

@@ -196,7 +196,7 @@ inline const std::string BillboardFragmentShader = R"(
     #include BAYER_MATRIX
     #include LIGHT_COLOUR
 
-const float WaterLevel = -0.019;
+    #include WATER_LEVEL
 
     void main()
     {

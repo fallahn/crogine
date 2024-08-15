@@ -342,7 +342,7 @@ R"(
         return c;
     }
 
-    const float WaterLevel = -0.019;
+#include WATER_LEVEL
 
     void main()
     {
@@ -499,7 +499,7 @@ inline const std::string BranchFragment = R"(
 #include BAYER_MATRIX
 #include LIGHT_COLOUR
 
-    const float WaterLevel = -0.019; //TODO also used in billboard, bush and cel shaders - want to constify this.
+#include WATER_LEVEL
 
     void main()
     {
