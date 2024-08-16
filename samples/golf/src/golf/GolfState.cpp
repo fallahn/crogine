@@ -1390,6 +1390,12 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (m_activeAvatar)
             {
                 m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.rotation);
+                
+                auto rot = cro::Util::Net::compressFloat(data.rotation, 8);
+                std::uint32_t data = (m_currentPlayer.client << 24);
+                data |= (m_currentPlayer.player << 16);
+                data |= static_cast<std::uint32_t>(rot & 0xffff);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::AvatarRotation, data, cro::NetFlag::Unreliable);
             }
             break;
         case SceneEvent::TransitionComplete:
@@ -4154,6 +4160,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::AvatarRotation:
+            remoteRotation(evt.packet.as<std::uint32_t>());
+            break;
         case PacketID::GroupPosition:
         {
             auto data = evt.packet.as<GroupPosition>();
@@ -6747,6 +6756,36 @@ void GolfState::updateActor(const ActorInfo& update)
         auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg->position = m_drone.getComponent<cro::Transform>().getPosition();
         msg->type = GolfEvent::DroneHit;
+    }
+}
+
+void GolfState::remoteRotation(std::uint32_t data)
+{
+    if (m_activeAvatar)
+    {
+        const std::int16_t rotation = (data & 0xffff);
+        const float rotationFloat = cro::Util::Net::decompressFloat(rotation, 8);
+
+        const auto client = (data & 0xff000000) >> 24;
+        const auto player = (data & 0x00ff0000) >> 16;
+
+        //LogI << "Rx: " << std::hex << data << std::endl;
+        //LogI << "Client: " << client << ", player: " << player << ", rotation: " << rotationFloat << std::endl;
+
+        if (client != m_sharedData.localConnectionData.connectionID)
+        {
+            //this isn't us
+            if (m_currentPlayer.client == client &&
+                m_currentPlayer.player == player)
+            {
+                //TODO interpolate this
+                m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotationFloat);
+            }
+        }
+    }
+    else
+    {
+        LogI << "Avatat is nullptr" << std::endl;
     }
 }
 

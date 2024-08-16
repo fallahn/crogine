@@ -353,6 +353,7 @@ private:
     void predictBall(float);
     void hitBall();
     void updateActor(const ActorInfo&);
+    void remoteRotation(std::uint32_t); //rotates the avatar based on remote player input
     std::int32_t getClub() const;
 
 

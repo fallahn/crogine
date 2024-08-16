@@ -1857,8 +1857,8 @@ void GolfState::setGhostPosition(glm::vec3 pos)
 {
     auto res = m_collisionMesh.getTerrain(pos);
 
-    //if (m_groupIdle && 
-    //    (res.terrain == TerrainID::Rough || res.terrain == TerrainID::Fairway))
+    if (m_groupIdle && 
+        (res.terrain == TerrainID::Rough || res.terrain == TerrainID::Fairway))
     {
         m_spectateGhost.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_camRotation + (cro::Util::Const::PI / 2.f));
         
