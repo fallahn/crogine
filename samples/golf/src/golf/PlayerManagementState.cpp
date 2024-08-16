@@ -116,21 +116,16 @@ play concurrently for a shorter round time. Multiple players on the same
 client or in the same group continue to play consecutively. Groups are
 approximate as players on the same client cannot be split between groups.
 
+Skins rounds and Match play ignore group settings.
 
 Group modes are:
-
-None - all players play consecutively as usual.
-
-Balanced - players are split as evenly as possible between 2 groups.
-
-One - each player has their own group, unless there are multiple players
-on the client.
-
-Two - players are split into approximate groups of two.
-
-Three - players are split into approximate groups of three.
-
-Four - players are split into approximate groups of four.
+   None     - All players play consecutively as usual.
+   Balanced - Players are split as evenly as possible between two groups.
+   One      - Each player has their own group, unless there are multiple
+              players on the client.
+   Two      - Players are split into approximate groups of two.
+   Three    - Players are split into approximate groups of three.
+   Four     - Players are split into approximate groups of four.
 )";
 }
 
@@ -591,7 +586,17 @@ void PlayerManagementState::buildScene()
         m_helpRoot = helpRoot;
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -250.f, 160.f, 0.2f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 172.f, 0.2f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Group Mode");
+        entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        helpRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -258.f, 140.f, 0.2f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(HelpString);
         entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);

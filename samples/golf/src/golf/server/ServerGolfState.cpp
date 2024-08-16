@@ -1701,8 +1701,14 @@ void GolfState::initScene()
             return a.playerCount > b.playerCount;
         });
 
+    auto groupMode = m_sharedData.groupMode;
+    if (m_sharedData.scoreType == ScoreType::Skins
+        || m_sharedData.scoreType == ScoreType::Match)
+    {
+        groupMode = ClientGrouping::None;
+    }
 
-    if (m_sharedData.groupMode == ClientGrouping::Even)
+    if (groupMode == ClientGrouping::Even)
     {
         m_playerInfo.resize(std::min(clientCount, 2));
     }
@@ -1719,7 +1725,7 @@ void GolfState::initScene()
         //if (m_sharedData.clients[d.clientID].connected) //this should always be true if the client made it into the sort data
         {
             auto groupID = 0;
-            switch (m_sharedData.groupMode)
+            switch (groupMode)
             {
             default: break;
             case ClientGrouping::Even:
@@ -1740,7 +1746,7 @@ void GolfState::initScene()
                 //find first group with fewer than X players else create a new group
                 for (const auto& g : m_playerInfo)
                 {
-                    if (g.playerCount >= m_sharedData.groupMode - 2)
+                    if (g.playerCount >= groupMode - 2)
                     {
                         groupID++;
                     }
