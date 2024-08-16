@@ -108,16 +108,6 @@ struct PlayerCallbackData final
     float scale = 0.f;
 };
 
-struct GhostCallbackData final
-{
-    enum{In, Hold, Out};
-    std::int32_t animation = 0;
-    std::int32_t direction = 0;
-    float scale = 0.f;
-    static constexpr float MinAnimationTime = 10.f;
-    float animationTime = MinAnimationTime;
-};
-
 class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:

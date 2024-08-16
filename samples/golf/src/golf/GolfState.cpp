@@ -3252,16 +3252,26 @@ void GolfState::buildScene()
 
 
     //spectator ghost
+    GhostCallbackData ghostData;
     md.loadFromFile("assets/golf/models/group_spectate.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     md.createModel(entity);
     if (entity.hasComponent<cro::Skeleton>())
     {
-        entity.getComponent<cro::Skeleton>().play(0);
+        std::fill(ghostData.animationIDs.begin(), ghostData.animationIDs.end(), 0);
+        auto& skel = entity.getComponent<cro::Skeleton>();
+
+        ghostData.animationIDs[GhostCallbackData::Idle] = skel.getAnimationIndex("Idle");
+        ghostData.animationIDs[GhostCallbackData::Looking] = skel.getAnimationIndex("Looking");
+        ghostData.animationIDs[GhostCallbackData::Clap] = skel.getAnimationIndex("Clapping");
+        ghostData.animation = ghostData.animationIDs[GhostCallbackData::Idle];
+        skel.play(ghostData.animationIDs[GhostCallbackData::Idle]);
+
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::Ghost;
     }
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-    entity.addComponent<cro::Callback>().setUserData<GhostCallbackData>();
+    entity.addComponent<cro::Callback>().setUserData<GhostCallbackData>(ghostData);
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
         {
@@ -3279,22 +3289,23 @@ void GolfState::buildScene()
             else if (data.direction == GhostCallbackData::Hold)
             {
                 //time the animation and switch if necessary
-                if (data.animation == 0)
+                if (data.animation == data.animationIDs[GhostCallbackData::Looking])
                 {
-                    data.animationTime -= dt;
-                    if (data.animationTime < 0)
+                    if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::State::Stopped)
                     {
-                        data.animation = 1;
-                        e.getComponent<cro::Skeleton>().play(1, 1.f, 2.f);
-                        data.animationTime += GhostCallbackData::MinAnimationTime + cro::Util::Random::value(-2, 5);
+                        data.animation = data.animationIDs[GhostCallbackData::Idle];
+                        e.getComponent<cro::Skeleton>().play(data.animation, 1.f, 2.f);
                     }
                 }
                 else
                 {
-                    if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::State::Stopped)
+                    data.animationTime -= dt;
+                    if (data.animationTime < 0)
                     {
-                        e.getComponent<cro::Skeleton>().play(0, 1.f, 2.f);
-                        data.animation = 0;
+                        data.animation = data.animation == data.animationIDs[GhostCallbackData::Clap] 
+                            ? data.animationIDs[GhostCallbackData::Idle] : data.animationIDs[GhostCallbackData::Looking];
+                        e.getComponent<cro::Skeleton>().play(data.animation, 1.f, 1.5f);
+                        data.animationTime += GhostCallbackData::MinAnimationTime + cro::Util::Random::value(-2, 5);
                     }
                 }
             }
@@ -3306,6 +3317,10 @@ void GolfState::buildScene()
                 {
                     data.direction = GhostCallbackData::In;
                     e.getComponent<cro::Callback>().active = false;
+
+                    //reset to idle in case we were mid-animation
+                    data.animation = data.animationIDs[GhostCallbackData::Idle];
+                    e.getComponent<cro::Skeleton>().play(data.animation, 1.f, 2.f);
                 }
             }
             const float modelScale = cro::Util::Easing::easeOutBack(data.scale);

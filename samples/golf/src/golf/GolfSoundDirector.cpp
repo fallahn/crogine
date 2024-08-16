@@ -36,6 +36,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "VatAnimationSystem.hpp"
 #include "XPAwardStrings.hpp"
+#include "CallbackData.hpp"
 
 #include <crogine/audio/AudioResource.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -988,5 +989,19 @@ void GolfSoundDirector::applaud()
     {
         e.getComponent<cro::Callback>().setUserData<bool>(true);
     };
+    getScene().getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::Ghost;
+    cmd.action = [](cro::Entity e, float)
+        {
+            auto& data = e.getComponent<cro::Callback>().getUserData<GhostCallbackData>();
+            if (data.direction == GhostCallbackData::Hold)
+            {
+                data.animation = data.animationIDs[GhostCallbackData::Clap];
+                e.getComponent<cro::Skeleton>().play(data.animation, 1.f, 0.5f);
+
+                data.animationTime = 5.f;
+            }
+        };
     getScene().getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

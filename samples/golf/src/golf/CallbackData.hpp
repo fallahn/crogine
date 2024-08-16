@@ -82,6 +82,21 @@ struct CogitationCallback final
     }
 };
 
+//ghostly spectator...
+struct GhostCallbackData final
+{
+    enum { In, Hold, Out };
+    std::int32_t direction = 0;
+
+    enum { Idle, Looking, Clap, Count };
+    std::array<std::int32_t, Count> animationIDs = {};
+    std::int32_t animation = 0;
+
+    float scale = 0.f;
+    static constexpr float MinAnimationTime = 10.f;
+    float animationTime = MinAnimationTime;
+};
+
 //scrolling text in league and career state
 struct ScrollData final
 {
