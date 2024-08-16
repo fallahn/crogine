@@ -1494,6 +1494,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             mulliganCount = 0;
             m_sharedData.hasMulligan = false;
 
+            Achievements::awardAchievement(AchievementStrings[AchievementID::TryTryAgain]);
+
             //hide the stroke indicator
             cro::Command cmd;
             cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
@@ -4707,6 +4709,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                                 Social::getMonthlyChallenge().updateChallenge(ChallengeID::One, 0);
                                 special = true;
                             }
+
+                            if (m_currentPlayer.terrain != TerrainID::Green)
+                            {
+                                Achievements::awardAchievement(AchievementStrings[AchievementID::FringeBenefit]);
+                            }
                         }
                         else
                         {
@@ -4725,6 +4732,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             else if (m_achievementTracker.hadTopspin)
                             {
                                 Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::TopSpinSkill);
+                            }
+
+                            if (Club::getModifierIndex() == 1)
+                            {
+                                Achievements::awardAchievement(AchievementStrings[AchievementID::PunchIt]);
+                            }
+
+                            else if (Club::getModifierIndex() == 2)
+                            {
+                                Achievements::awardAchievement(AchievementStrings[AchievementID::TopOfTheFlops]);
                             }
                         }
 
@@ -6469,7 +6486,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto fcRot = m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldRotation();
     m_freeCam.getComponent<FpsCamera>().resetTransition(fcPos, fcRot);
     m_freeCam.getComponent<cro::Camera>().resizeCallback(m_freeCam.getComponent<cro::Camera>());
-
 
     //if we're not on the tee and there's a mulligan available
     //set it to be allowed from the menu

@@ -1909,7 +1909,7 @@ void GolfState::spectateGroup(std::uint8_t group)
         auto& pPos = m_groupPlayerPositions[group];
 
         //check we're at least 3m from the pin
-        static constexpr float MinCamDist = 3.f;
+        static constexpr float MinCamDist = 1.6f;
         static constexpr float MinCamDistSqr = MinCamDist * MinCamDist;
         auto dir = pPos.position - m_holeData[m_currentHole].pin;
         auto len = glm::length2(dir);
@@ -1949,7 +1949,7 @@ void GolfState::spectateGroup(std::uint8_t group)
                 auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
                 data.string = m_sharedData.connectionData[pPos.client].playerData[pPos.player].name;
                 data.client = pPos.client;
-                data.player - pPos.player;
+                data.player = pPos.player;
                 e.getComponent<cro::Callback>().active = true;
                 e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             };
