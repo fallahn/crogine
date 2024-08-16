@@ -1398,7 +1398,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 std::uint32_t data = (m_currentPlayer.client << 24);
                 data |= (m_currentPlayer.player << 16);
                 data |= static_cast<std::uint32_t>(rot & 0xffff);
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::AvatarRotation, data, cro::NetFlag::Unreliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::AvatarRotation, data, net::NetFlag::Unreliable);
             }
             break;
         case SceneEvent::TransitionComplete:

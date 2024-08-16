@@ -441,7 +441,7 @@ void GolfState::netEvent(const net::NetEvent& evt)
             m_sharedData.host.broadcastPacket(PacketID::DronePosition, evt.packet.as<std::array<std::int16_t, 3u>>(), net::NetFlag::Unreliable);
             break;
         case PacketID::AvatarRotation:
-            m_sharedData.host.broadcastPacket(PacketID::AvatarRotation, evt.packet.as<std::uint32_t>(), cro::NetFlag::Unreliable);
+            m_sharedData.host.broadcastPacket(PacketID::AvatarRotation, evt.packet.as<std::uint32_t>(), net::NetFlag::Unreliable);
             break;
         case PacketID::NewPlayer:
             //checks if player is CPU and requires fast move
