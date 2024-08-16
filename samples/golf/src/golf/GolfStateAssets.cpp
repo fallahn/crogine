@@ -35,6 +35,7 @@ source distribution.
 #include "PropFollowSystem.hpp"
 #include "PoissonDisk.hpp"
 #include "Career.hpp"
+#include "AvatarRotationSystem.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -2175,6 +2176,8 @@ void GolfState::loadModels()
                 entity.getComponent<cro::Model>().setHidden(true);
                 entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
                 m_avatars[i][j].model = entity;
+
+                entity.addComponent<AvatarRotation>();
 
                 if (m_sharedData.avatarInfo[avatarIndex].workshopID
                     && i == m_sharedData.localConnectionData.connectionID)

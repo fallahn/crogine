@@ -956,6 +956,9 @@
     <ClInclude Include="src\golf\ButtonHoldSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\AvatarRotationSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

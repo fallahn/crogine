@@ -60,6 +60,7 @@ source distribution.
 #include "CallbackData.hpp"
 #include "XPAwardStrings.hpp"
 #include "ChunkVisSystem.hpp"
+#include "AvatarRotationSystem.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -1390,6 +1391,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (m_activeAvatar)
             {
                 m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.rotation);
+                m_activeAvatar->model.getComponent<AvatarRotation>().currentRotation = data.rotation;
+                m_activeAvatar->model.getComponent<AvatarRotation>().targetRotation = data.rotation;
                 
                 auto rot = cro::Util::Net::compressFloat(data.rotation, 8);
                 std::uint32_t data = (m_currentPlayer.client << 24);
@@ -2616,6 +2619,7 @@ void GolfState::addSystems()
 
     m_gameScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb);
     m_gameScene.addSystem<CloudSystem>(mb);
+    m_gameScene.addSystem<AvatarRotationSystem>(mb);
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
     m_gameScene.addSystem<PropFollowSystem>(mb, m_collisionMesh);
@@ -6217,6 +6221,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
         m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);
         m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, playerRotation);
+        m_activeAvatar->model.getComponent<AvatarRotation>().currentRotation = playerRotation;
+        m_activeAvatar->model.getComponent<AvatarRotation>().targetRotation = playerRotation;
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().scale = 0.f;
         m_activeAvatar->model.getComponent<cro::Callback>().active = true;
@@ -6778,8 +6784,8 @@ void GolfState::remoteRotation(std::uint32_t data)
             if (m_currentPlayer.client == client &&
                 m_currentPlayer.player == player)
             {
-                //TODO interpolate this
-                m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotationFloat);
+                m_activeAvatar->model.getComponent<AvatarRotation>().targetRotation = rotationFloat;
+                m_activeAvatar->model.getComponent<AvatarRotation>().active = true;
             }
         }
     }
