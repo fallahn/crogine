@@ -424,6 +424,7 @@ std::uint8_t Server::addClient(const net::NetPeer& peer, std::uint8_t playerCoun
 
                 auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
                 msg->clientID = i;
+                msg->playerCount = playerCount;
                 msg->type = ConnectionEvent::Connected;
 
                 m_clientCount++;
@@ -463,12 +464,12 @@ void Server::removeClient(std::size_t clientID)
 {
     m_playerCount -= m_sharedData.clients[clientID].playerCount;
 
-    m_sharedData.clients[clientID] = sv::ClientConnection(); //resets the data, setting 'connected' to false etc
-
     auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
     msg->clientID = static_cast<std::uint8_t>(clientID);
+    msg->playerCount = m_sharedData.clients[clientID].playerCount;
     msg->type = ConnectionEvent::Disconnected;
 
+    m_sharedData.clients[clientID] = sv::ClientConnection(); //resets the data, setting 'connected' to false etc
     m_sharedData.clubLevels[clientID] = 2; //reset this if quitting, else we might clamp to the level of a quit player
 
     //broadcast to all connected clients

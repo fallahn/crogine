@@ -48,6 +48,7 @@ namespace sv::MessageID
 struct ConnectionEvent final
 {
     std::uint8_t clientID = ConstVal::NullValue;
+    std::uint8_t playerCount = 0;
     enum
     {
         Connected, Disconnected, Kicked

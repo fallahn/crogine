@@ -145,7 +145,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
 
                 //remove the player data
-                group.playerCount -= m_sharedData.clients[data.clientID].playerCount; //hmm this has probably already been reset before this message arrives
+                group.playerCount -= data.playerCount;
                 group.clientIDs.erase(std::remove_if(group.clientIDs.begin(), group.clientIDs.end(), 
                     [data](std::uint8_t i)
                     {
@@ -176,7 +176,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                     setNewPlayer = m_groupAssignments[playerInfo[0].client];
                 }
             }
-
 
             if (!m_playerInfo.empty())
             {
