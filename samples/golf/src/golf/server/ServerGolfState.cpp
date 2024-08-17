@@ -426,7 +426,6 @@ void GolfState::netEvent(const net::NetEvent& evt)
             applyMulligan();
             break;
         case PacketID::ClubChanged:
-            //m_sharedData.host.broadcastPacket(PacketID::ClubChanged, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         {
             auto data = evt.packet.as<std::uint16_t>();
             auto client = data & 0xff;
@@ -451,7 +450,6 @@ void GolfState::netEvent(const net::NetEvent& evt)
             skipCurrentTurn(evt.packet.as<std::uint8_t>());
             break;
         case PacketID::Activity:
-            //m_sharedData.host.broadcastPacket(PacketID::Activity, evt.packet.as<Activity>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         {
             const auto pkt = evt.packet.as<Activity>();
             const auto& group = m_playerInfo[m_groupAssignments[pkt.client]];
@@ -1777,8 +1775,7 @@ void GolfState::initScene()
         }
     }
 
-    //fudgenstein - 4 is the max start lives but we
-    //want it with 4 players or fewer, not 5
+    //fudgenstein - when playing with 4 or 4 players we want 3 lives
     if (playerCount == 4)
     {
         startLives++;

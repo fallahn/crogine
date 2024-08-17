@@ -56,31 +56,31 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
     }
 
 
-    const auto getAllData =
-        [&]()
-        {
-            //concat all the player info and do a single sort/compare on the total results
-            std::vector<PlayerStatus> allData;
-            allData.reserve(2 * ConstVal::MaxPlayers);
+    //const auto getAllData =
+    //    [&]()
+    //    {
+    //        //concat all the player info and do a single sort/compare on the total results
+    //        std::vector<PlayerStatus> allData;
+    //        allData.reserve(2 * ConstVal::MaxPlayers);
 
-            for (auto& group : m_playerInfo)
-            {
-                if (!group.playerInfo.empty())
-                {
-                    //this is an intentional copy
-                    allData.insert(allData.end(), group.playerInfo.begin(), group.playerInfo.end());
-                }
-            }
-            return allData;
-        };
+    //        for (auto& group : m_playerInfo)
+    //        {
+    //            if (!group.playerInfo.empty())
+    //            {
+    //                //this is an intentional copy
+    //                allData.insert(allData.end(), group.playerInfo.begin(), group.playerInfo.end());
+    //            }
+    //        }
+    //        return allData;
+    //    };
 
-    auto playerFromInfo = 
-        [&](const PlayerStatus& info) mutable
-    {
-            auto& pi = m_playerInfo[m_groupAssignments[info.client]].playerInfo;
-            auto res = std::find_if(pi.begin(), pi.end(), [info](const PlayerStatus& ps) {return ps.player == info.player; });
-            return res; //ugh this assumes we didn't get pi.end();
-    };
+    //auto playerFromInfo = 
+    //    [&](const PlayerStatus& info) mutable
+    //{
+    //        auto& pi = m_playerInfo[m_groupAssignments[info.client]].playerInfo;
+    //        auto res = std::find_if(pi.begin(), pi.end(), [info](const PlayerStatus& ps) {return ps.player == info.player; });
+    //        return res; //ugh this assumes we didn't get pi.end();
+    //};
 
     if (data.type == GolfBallEvent::TurnEnded)
     {
@@ -167,13 +167,20 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
         case ScoreType::Match:
         case ScoreType::Skins:
         {
-            auto allData = getAllData();
+            //auto allData = getAllData();
+            auto& playerInfo = m_playerInfo[groupID].playerInfo;
             //if this is skins sudden death then make everyone else the loser
             if (m_skinsFinals)
             {
-                //std::sort(sortedData.begin(), sortedData.end(), skinsPredicate);
-                const auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
-                for (const auto& d : allData)
+                //skins and match play are always in a single group
+                //so we don't consider other players here
+                const auto& currPlayer = playerInfo[0];
+                for (auto i = 1; i < playerInfo.size(); ++i)
+                {
+                    playerInfo[i].distanceToHole = 0.f;
+                    playerInfo[i].holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
+                }
+                /*for (const auto& d : allData)
                 {
                     if (d != currPlayer)
                     {
@@ -181,35 +188,57 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                         player->distanceToHole = 0.f;
                         player->holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
                     }
-                }
+                }*/
             }
             else
             {
                 //eliminate anyone who can't beat this score
-                const auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
-                for (auto& d : allData)
+                //again - assume all players exist in the dame group
+                const auto& currPlayer = playerInfo[0];
+                for (auto i = 1; i < playerInfo.size(); ++i)
                 {
-                    if (d != currPlayer &&
-                        d.holeScore[m_currentHole] >= currPlayer.holeScore[m_currentHole])
+                    if (playerInfo[i].holeScore[m_currentHole] >= currPlayer.holeScore[m_currentHole])
                     {
-                        if (d.distanceToHole > 0) //not already holed
+                        if (playerInfo[i].distanceToHole > 0) //not already holed
                         {
-                            auto player = playerFromInfo(d);
-                            player->distanceToHole = 0.f;
-                            player->holeScore[m_currentHole]++;
-
-                            //also update the sorted data as we rely on the results below
-                            d.distanceToHole = 0.f;
-                            d.holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
+                            playerInfo[i].distanceToHole = 0.f;
+                            playerInfo[i].holeScore[m_currentHole]++;
                         }
                     }
                 }
+
+                //for (auto& d : allData)
+                //{
+                //    if (d != currPlayer &&
+                //        d.holeScore[m_currentHole] >= currPlayer.holeScore[m_currentHole])
+                //    {
+                //        if (d.distanceToHole > 0) //not already holed
+                //        {
+                //            auto player = playerFromInfo(d);
+                //            player->distanceToHole = 0.f;
+                //            player->holeScore[m_currentHole]++;
+
+                //            //also update the sorted data as we rely on the results below
+                //            d.distanceToHole = 0.f;
+                //            d.holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
+                //        }
+                //    }
+                //}
 
                 //if this is the second hole and it has the same as the current best
                 //force a draw by eliminating anyone who can't beat it
                 if (currPlayer.holeScore[m_currentHole] == m_currentBest)
                 {
-                    for (auto& d : allData)
+                    for (auto i = 1; i < playerInfo.size(); ++i)
+                    {
+                        if (playerInfo[i].holeScore[m_currentHole] + 1 >= m_currentBest)
+                        {
+                            playerInfo[i].distanceToHole = 0.f;
+                            playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(playerInfo[i].holeScore[m_currentHole] + 1));
+                        }
+                    }
+
+                    /*for (auto& d : allData)
                     {
                         if (d != currPlayer &&
                             d.holeScore[m_currentHole] + 1 >= m_currentBest)
@@ -221,7 +250,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                                 player->holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(d.holeScore[m_currentHole] + 1));
                             }
                         }
-                    }
+                    }*/
                 }
             }
         }
@@ -273,14 +302,22 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
         case ScoreType::Match:
         case ScoreType::Skins:
         {
-            auto allData = getAllData();
+            //auto allData = getAllData();
+            auto& playerInfo = m_playerInfo[groupID].playerInfo;
 
             //if this is skins sudden death then make everyone else the loser
             //ACTUALLY gimmes should never occur on sudden death rounds
             if (m_skinsFinals)
             {
+                //skins / match play should always be in the same group
                 const auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
-                for (auto& d : allData)
+                for (auto i = 1; i < playerInfo.size(); ++i)
+                {
+                    playerInfo[i].distanceToHole = 0.f;
+                    playerInfo[i].holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
+                }
+
+                /*for (auto& d : allData)
                 {
                     if (d != currPlayer)
                     {
@@ -288,13 +325,21 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                         player->distanceToHole = 0.f;
                         player->holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
                     }
-                }
+                }*/
             }
             else
             {
                 //check if our score is even with anyone holed already and forfeit
-                const auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
-                for (auto& d : allData)
+                auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
+                for (auto i = 1; i < playerInfo.size(); ++i)
+                {
+                    if (playerInfo[i].distanceToHole == 0
+                        && playerInfo[i].holeScore[m_currentHole] < currPlayer.holeScore[m_currentHole])
+                    {
+                        currPlayer.distanceToHole = 0.f;
+                    }
+                }
+                /*for (auto& d : allData)
                 {
                     if (d != currPlayer
                         && d.distanceToHole == 0
@@ -302,7 +347,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                     {
                         m_playerInfo[groupID].playerInfo[0].distanceToHole = 0.f;
                     }
-                }
+                }*/
             }
             break;
         }
