@@ -1628,7 +1628,7 @@ void GolfState::buildUI()
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         }
-        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f / ratio, newScale / ratio));
+        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f / ratio, newScale / ratio) * MapSizeRatio);
     };
 
     //these are const so calc them once here and capture them
@@ -1755,7 +1755,7 @@ void GolfState::buildUI()
         [&, mapEnt](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].pin), 0.02f));
-        e.getComponent<cro::Transform>().setScale((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f);
+        e.getComponent<cro::Transform>().setScale(((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f) * (glm::vec2(1.f) / MapSizeRatio));
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
         auto flagBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
@@ -1910,10 +1910,12 @@ void GolfState::buildUI()
     createScoreboard();
 
 
-    //set up the overhead cam for the mini map
+    //set up the overhead cam for the mini map - this renders the entire hole
+    //to a texture - the view of the minimap is controlled in the shader which draws it
+    //see minimapZoom
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
-        constexpr glm::uvec2 texSize = MiniMapSize * MapSizeMultiplier;
+        constexpr glm::uvec2 texSize = MapSize * MapSizeMultiplier;
 
         m_mapTexture.create(texSize.x, texSize.y);
         m_mapTextureMRT.create(texSize.x, texSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
@@ -1922,18 +1924,18 @@ void GolfState::buildUI()
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
         mapEnt.getComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, texSize.y / 2.f });
         mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = static_cast<float>(MapSizeMultiplier * 2);
-        m_minimapZoom.mapScale = texSize / MiniMapSize;
+        m_minimapZoom.mapScale = texSize / MapSize;
         m_minimapZoom.pan = texSize / 2u;
         m_minimapZoom.textureSize = texSize;
         m_minimapZoom.updateShader();
 
-        glm::vec2 viewSize(MiniMapSize);
+        glm::vec2 viewSize(MapSize);
         miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 60.f);
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     m_mapCam = m_gameScene.createEntity();
-    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MiniMapSize.x) / 2.f, 36.f, -static_cast<float>(MiniMapSize.y) / 2.f});
+    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 36.f, -static_cast<float>(MapSize.y) / 2.f});
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     updateMiniView(miniCam);
@@ -5521,7 +5523,11 @@ void GolfState::retargetMinimap(bool reset)
         target.end.tilt = 0.f; //TODO this could be wound several times past TAU and should be only fmod this value
 
         auto bb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
-        target.end.pan = m_minimapZoom.textureSize / 2.f;
+        //target.end.pan = m_minimapZoom.textureSize / 2.f;
+
+        //auto centre = ((m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee) / 2.f) + m_holeData[m_currentHole].pin;
+        auto centre = bb.getCentre();
+        target.end.pan = glm::vec2(centre.x, -centre.z) * m_minimapZoom.mapScale;
 
         auto xZoom = std::clamp(static_cast<float>(MiniMapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), 0.9f, 16.f);
         auto zZoom = std::clamp(static_cast<float>(MiniMapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), 0.9f, 16.f);
@@ -5884,6 +5890,8 @@ void MinimapZoom::updateShader()
     matrix = glm::rotate(matrix, -tilt, cro::Transform::Z_AXIS);
     matrix = glm::scale(matrix, glm::vec3(aspect, 1.f, 1.f));
     matrix = glm::scale(matrix, glm::vec3(1.f / zoom));
+
+    matrix = glm::scale(matrix, glm::vec3(MapSizeRatio, 1.f));
 
     matrix = glm::translate(matrix, -centre);
     invTx = glm::inverse(matrix);
