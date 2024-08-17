@@ -276,7 +276,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLE_STRIP));
     auto terrainMat = resources.materials.get(materialID);
     terrainMat.setProperty("u_noiseColour", theme.grassTint);
-    terrainMat.blendMode = cro::Material::BlendMode::Alpha;
+    terrainMat.addCustomSetting(GL_CLIP_DISTANCE1);
 
     auto entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, TerrainLevel, 0.f });

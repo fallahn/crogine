@@ -659,7 +659,7 @@ inline const std::string CelFragmentShader = R"(
 
 #if defined(TERRAIN_CLIP)
     FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118) * u_lightColour.rgb, FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
-    FRAG_OUT.a = step(WaterLevel - 0.001, v_worldPosition.y);
+    //FRAG_OUT.a = step(WaterLevel - 0.001, v_worldPosition.y);
 #endif
 
 #if defined (MASK_MAP)
