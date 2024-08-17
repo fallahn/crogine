@@ -1632,7 +1632,7 @@ void GolfState::buildUI()
     };
 
     //these are const so calc them once here and capture them
-    glm::vec2 mapOffset(MiniMapSize.y / MapSizeMultiplier, MiniMapSize.x / MapSizeMultiplier);
+    glm::vec2 mapOffset = glm::vec2(MiniMapSize.y / MapSizeMultiplier, (MiniMapSize.x - 32.f) / MapSizeMultiplier) * glm::vec2(MapSizeRatio.y, MapSizeRatio.x);
     const float l = glm::length(mapOffset);
     mapOffset = glm::normalize(mapOffset);
 
@@ -5523,9 +5523,6 @@ void GolfState::retargetMinimap(bool reset)
         target.end.tilt = 0.f; //TODO this could be wound several times past TAU and should be only fmod this value
 
         auto bb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
-        //target.end.pan = m_minimapZoom.textureSize / 2.f;
-
-        //auto centre = ((m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee) / 2.f) + m_holeData[m_currentHole].pin;
         auto centre = bb.getCentre();
         target.end.pan = glm::vec2(centre.x, -centre.z) * m_minimapZoom.mapScale;
 
