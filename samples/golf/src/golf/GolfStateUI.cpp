@@ -1631,12 +1631,17 @@ void GolfState::buildUI()
         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f / ratio, newScale / ratio));
     };
 
+    //these are const so calc them once here and capture them
+    glm::vec2 mapOffset(MiniMapSize.y / MapSizeMultiplier, MiniMapSize.x / MapSizeMultiplier);
+    const float l = glm::length(mapOffset);
+    mapOffset = glm::normalize(mapOffset);
+
     m_mapRoot = m_uiScene.createEntity();
     m_mapRoot.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.2f});
     m_mapRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapRoot.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 1);
     m_mapRoot.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [l, mapOffset](cro::Entity e, float dt)
         {
             auto& [progress, dir] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
             if (dir == 0)
@@ -1656,12 +1661,9 @@ void GolfState::buildUI()
                     e.getComponent<cro::Callback>().active = false;
                 }
             }
-
-            static constexpr glm::vec2 offset(0.5299f, 0.84799f); //1/8 map size, rotated 90deg, normalised
-            static constexpr float l = 47.167f;// glm::length(offset); //aww no constexpr
             
             const auto p = cro::Util::Easing::easeOutExpo(progress);
-            auto o = offset * l * p;
+            auto o = mapOffset * l * p;
             o.x = std::round(o.x);
             o.y = std::round(o.y);
 
@@ -1911,7 +1913,7 @@ void GolfState::buildUI()
     //set up the overhead cam for the mini map
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
-        constexpr glm::uvec2 texSize = MiniMapSize * 8u;
+        constexpr glm::uvec2 texSize = MiniMapSize * MapSizeMultiplier;
 
         m_mapTexture.create(texSize.x, texSize.y);
         m_mapTextureMRT.create(texSize.x, texSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
@@ -1919,7 +1921,7 @@ void GolfState::buildUI()
 
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
         mapEnt.getComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, texSize.y / 2.f });
-        mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = 16.f; //TODO this is always double the map size multiplier
+        mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = static_cast<float>(MapSizeMultiplier * 2);
         m_minimapZoom.mapScale = texSize / MiniMapSize;
         m_minimapZoom.pan = texSize / 2u;
         m_minimapZoom.textureSize = texSize;
