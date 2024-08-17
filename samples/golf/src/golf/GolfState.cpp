@@ -4734,12 +4734,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                                 Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::TopSpinSkill);
                             }
 
-                            if (Club::getModifierIndex() == 1)
+                            if (m_achievementTracker.hadPunch)
                             {
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::PunchIt]);
                             }
 
-                            else if (Club::getModifierIndex() == 2)
+                            if (m_achievementTracker.hadFlop)
                             {
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::TopOfTheFlops]);
                             }
@@ -5955,6 +5955,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cro::App::getWindow().setMouseCaptured(true);
     m_achievementTracker.hadBackspin = false;
     m_achievementTracker.hadTopspin = false;
+    m_achievementTracker.hadFlop = false;
+    m_achievementTracker.hadPunch = false;
     m_achievementTracker.nearMissChallenge = false;
     m_turnTimer.restart();
     m_idleTimer.restart();
@@ -6557,6 +6559,8 @@ void GolfState::hitBall()
     m_restoreInput = false;
     m_achievementTracker.hadBackspin = (spin.y < 0);
     m_achievementTracker.hadTopspin = (spin.y > 0);
+    m_achievementTracker.hadFlop = Club::getModifierIndex() == 2;
+    m_achievementTracker.hadPunch = Club::getModifierIndex() == 1;
 
     //increase the local stroke count so that the UI is updated
     //the server will set the actual value

@@ -1070,7 +1070,7 @@ void DrivingState::createUI()
             spinEnt.getComponent<cro::Transform>().move({ 0.f, 32.f, 0.f });
         }
 
-        rootNode.getComponent<cro::Transform>().setPosition(uiPos);
+        rootNode.getComponent<cro::Transform>().setPosition(glm::vec3(uiPos, 0.1f));
     };
 
     entity = m_uiScene.createEntity();

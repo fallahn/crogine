@@ -631,6 +631,8 @@ private:
         bool hadFoul = false; //tracks 'boomerang' stat
         bool hadBackspin = false; //tracks 'spin class' and xp award
         bool hadTopspin = false; //tracks XP award
+        bool hadFlop = false;
+        bool hadPunch = false;
 
         bool noHolesOverPar = true; //no mistake
         bool noGimmeUsed = true; //never give you up
