@@ -5173,6 +5173,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
     
+    m_spectateGhost.getComponent<cro::Callback>().getUserData<GhostCallbackData>().direction = GhostCallbackData::Out;
+
     m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(m_serverGroup);
     setActiveCamera(CameraID::Player);
     m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);

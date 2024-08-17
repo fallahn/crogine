@@ -5576,7 +5576,7 @@ void GolfState::retargetMinimap(bool reset)
         target.end.pan *= m_minimapZoom.mapScale;
 
         //get distance between flag and player and expand by 1.7 (about 3m around a putting hole)
-        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.7f; //remember this is world coords
+        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.5f; //remember this is world coords
 
         //scale zoom on long edge of map by box length and clamp to 16x
         target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, 0.8f, 16.f);

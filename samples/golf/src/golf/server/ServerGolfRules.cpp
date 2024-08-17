@@ -74,6 +74,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
     //        return allData;
     //    };
 
+    //HMMMM this doesn't work because for some reason mutating the iterator doesn't actually update the data
     //auto playerFromInfo = 
     //    [&](const PlayerStatus& info) mutable
     //{
