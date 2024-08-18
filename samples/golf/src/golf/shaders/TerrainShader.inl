@@ -107,7 +107,7 @@ static inline const std::string TerrainVertexShader = R"(
 
         gl_ClipDistance[0] = dot(position, u_clipPlane);
 
-        gl_ClipDistance[1] = dot(position, glm::vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
+        gl_ClipDistance[1] = dot(position, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
 
 static inline const std::string SlopeVertexShader =
