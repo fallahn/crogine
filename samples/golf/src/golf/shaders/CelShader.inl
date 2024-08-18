@@ -110,8 +110,9 @@ inline const std::string CelVertexShader = R"(
 
 #if defined (NORMAL_MAP)
     VARYING_OUT vec2 v_normalTexCoord;
-#include MAP_SIZE
 #endif
+
+#include MAP_SIZE
 
 
 #include WIND_CALC

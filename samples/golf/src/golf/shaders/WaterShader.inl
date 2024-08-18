@@ -128,10 +128,10 @@ uniform sampler2DArray u_depthMap;
     }
 
 #if !defined(NO_DEPTH)
+#include DEPTH_CONSTS
+
     float getDepth()
     {
-
-#include DEPTH_CONSTS
 
         float x = floor((v_worldPosition.x / MetresPerTexture));
         float y = floor((-v_worldPosition.z / MetresPerTexture));
