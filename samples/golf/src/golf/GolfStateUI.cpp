@@ -1623,6 +1623,8 @@ void GolfState::buildUI()
     auto mapEnt = entity;
     m_minimapEnt = entity;
 
+
+
     //cro::SpriteSheet spriteSheet;
     //spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
 
@@ -2048,7 +2050,7 @@ void GolfState::buildUI()
         const auto uiSize = size / m_viewScale;
         auto mapSize = glm::vec2(MiniMapSize / 2u);
         mapSize /= 2.f;
-        m_mapRoot.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.85f }); //map sprite is rotated 90
+        m_mapRoot.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.65f }); //map sprite is rotated 90
 
 
         greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MiniMapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });

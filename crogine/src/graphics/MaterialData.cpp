@@ -199,11 +199,14 @@ void Data::setProperty(const std::string& name, CubemapID value)
 
 void Data::addCustomSetting(std::uint32_t e)
 {
-    //TODO hmmm, there's nothing to stop you (well, me) from adding the same setting more than once...
-    if (m_customSettingsCount < (MaxCustomSettings))
+    const auto& end = m_customSettings.cbegin() + m_customSettingsCount;
+    if (auto set = std::find(m_customSettings.cbegin(), end, e); set == end)
     {
-        m_customSettings[m_customSettingsCount] = e;
-        m_customSettingsCount++;
+        if (m_customSettingsCount < (MaxCustomSettings))
+        {
+            m_customSettings[m_customSettingsCount] = e;
+            m_customSettingsCount++;
+        }
     }
 }
 
@@ -214,9 +217,10 @@ void Data::removeCustomSetting(std::uint32_t e)
         return;
     }
 
-    if (auto set = std::find(m_customSettings.begin(), m_customSettings.begin() + m_customSettingsCount, e); set != m_customSettings.end())
+    const auto& end = m_customSettings.cbegin() + m_customSettingsCount;
+    if (auto set = std::find(m_customSettings.cbegin(), end, e); set != end)
     {
-        auto pos = std::distance(m_customSettings.begin(), set);
+        auto pos = std::distance(m_customSettings.cbegin(), set);
         m_customSettingsCount--;
         std::swap(m_customSettings[pos], m_customSettings[m_customSettingsCount]);
     }

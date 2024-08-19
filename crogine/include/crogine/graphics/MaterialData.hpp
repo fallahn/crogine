@@ -370,7 +370,6 @@ namespace cro
             std::unordered_map<std::string, bool> m_warnings;
             void exists(const std::string&);
 
-
             static constexpr std::size_t MaxCustomSettings = 10;
             std::size_t m_customSettingsCount = 0;
             std::array<std::uint32_t, MaxCustomSettings> m_customSettings = {};

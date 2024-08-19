@@ -265,12 +265,30 @@ void Model::setDepthTestEnabled(std::size_t idx, bool enabled)
 {
     CRO_ASSERT(idx < m_materials.size(), "Out of Range");
     m_materials[Mesh::IndexData::Pass::Final][idx].enableDepthTest = enabled;
+    
+    //if (enabled)
+    //{
+    //    m_materials[Mesh::IndexData::Pass::Final][idx].addCustomSetting(GL_DEPTH_TEST);
+    //}
+    //else
+    //{
+    //    m_materials[Mesh::IndexData::Pass::Final][idx].removeCustomSetting(GL_DEPTH_TEST);
+    //}
 }
 
 void Model::setDoubleSided(std::size_t idx, bool doubleSided)
 {
     CRO_ASSERT(idx < m_materials.size(), "Out of Range");
     m_materials[Mesh::IndexData::Pass::Final][idx].doubleSided = doubleSided;
+
+    //if (doubleSided)
+    //{
+    //    m_materials[Mesh::IndexData::Pass::Final][idx].removeCustomSetting(GL_CULL_FACE);
+    //}
+    //else
+    //{
+    //    m_materials[Mesh::IndexData::Pass::Final][idx].addCustomSetting(GL_CULL_FACE);
+    //}
 }
 
 void Model::setSkeleton(glm::mat4* frame, std::size_t jointCount)
