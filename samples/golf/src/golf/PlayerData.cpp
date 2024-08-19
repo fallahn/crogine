@@ -346,6 +346,10 @@ ProfileTexture::ProfileTexture(const std::string& path)
             case pc::Keys[pc::ColourKey::Hair]:
                 if (alpha) m_keyIndices[pc::ColourKey::Hair].push_back(i / stride);
                 break;
+
+            case pc::Keys[pc::ColourKey::Hat]:
+                if (alpha) m_keyIndices[pc::ColourKey::Hat].push_back(i / stride);
+                break;
             }
         }
 

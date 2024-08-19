@@ -2403,7 +2403,7 @@ void ProfileState::createPalettes(cro::Entity parent)
                     m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
 
                     //update texture
-                    m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(i), m_activeProfile.avatarFlags[colourKey]);
+                    m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(colourKey), m_activeProfile.avatarFlags[colourKey]);
                     m_profileTextures[m_avatarIndex].apply();
 
                     //refresh hair colour
