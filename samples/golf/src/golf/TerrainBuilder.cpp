@@ -424,11 +424,15 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
         //create a child entity for instanced geometry
         std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
-        //these are the plants etc that appear newar the water
+        //these are the plants etc that appear near the water
         if (shrubDef.loadFromFile(instancePath, true))
         {
             auto material = resources.materials.get(reedMaterialID);
+            material.setProperty("u_noiseTexture", noiseTex);
+            material.addCustomSetting(GL_CLIP_DISTANCE1);
+
             auto shadowMat = resources.materials.get(reedShadowID);
+            shadowMat.setProperty("u_noiseTexture", noiseTex);
 
             auto childEnt = scene.createEntity();
             childEnt.addComponent<cro::Transform>();
@@ -437,11 +441,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             for (auto j = 0u; j < shrubDef.getMaterialCount(); ++j)
             {
                 applyMaterialData(shrubDef, material, j);
-                material.setProperty("u_noiseTexture", noiseTex);
                 childEnt.getComponent<cro::Model>().setMaterial(j, material);
 
                 applyMaterialData(shrubDef, shadowMat, j);
-                shadowMat.setProperty("u_noiseTexture", noiseTex);
                 childEnt.getComponent<cro::Model>().setShadowMaterial(j, shadowMat);
             }
             childEnt.getComponent<cro::Model>().setHidden(true);
