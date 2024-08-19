@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -296,6 +296,12 @@ namespace cro
             afterwards. Excessive use can cause unnecessary context switching
             */
             void addCustomSetting(std::uint32_t setting);
+
+            /*!
+            \brief Remove and existing custom setting
+            \param setting The setting to remove
+            */
+            void removeCustomSetting(std::uint32_t setting);
 
             /*!
             \brief Used when rendering to activate this material's

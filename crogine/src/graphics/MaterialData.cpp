@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -199,10 +199,26 @@ void Data::setProperty(const std::string& name, CubemapID value)
 
 void Data::addCustomSetting(std::uint32_t e)
 {
-    if (m_customSettingsCount < (MaxCustomSettings - 2))
+    //TODO hmmm, there's nothing to stop you (well, me) from adding the same setting more than once...
+    if (m_customSettingsCount < (MaxCustomSettings))
     {
         m_customSettings[m_customSettingsCount] = e;
         m_customSettingsCount++;
+    }
+}
+
+void Data::removeCustomSetting(std::uint32_t e)
+{
+    if (m_customSettingsCount == 0)
+    {
+        return;
+    }
+
+    if (auto set = std::find(m_customSettings.begin(), m_customSettings.begin() + m_customSettingsCount, e); set != m_customSettings.end())
+    {
+        auto pos = std::distance(m_customSettings.begin(), set);
+        m_customSettingsCount--;
+        std::swap(m_customSettings[pos], m_customSettings[m_customSettingsCount]);
     }
 }
 

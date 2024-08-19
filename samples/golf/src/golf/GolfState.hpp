@@ -551,6 +551,7 @@ private:
     SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();
+    void updateMinimapTexture();
     void catAuth();
     glm::vec3 findTargetPos(glm::vec3 playerPos) const; //decides if we should be using the sub-target (if it exists)
 
@@ -611,7 +612,7 @@ private:
 
     cro::Entity m_mapCam;
     cro::Entity m_mapRoot;
-    cro::RenderTexture m_mapTexture;
+    //cro::RenderTexture m_mapTexture;
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
 
     void updateMiniMap();

@@ -305,6 +305,11 @@ const Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::si
     CRO_ASSERT(submesh < m_materials[pass].size(), "submesh index out of range");
     return m_materials[pass][submesh];
 }
+Material::Data& Model::getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh)
+{
+    CRO_ASSERT(submesh < m_materials[pass].size(), "submesh index out of range");
+    return m_materials[pass][submesh];
+}
 
 void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
 {
