@@ -1459,10 +1459,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.useLargePowerBar = prop.getValue<bool>();
                     }
-                    else if (name == "group_mode")
+                    /*else if (name == "group_mode")
                     {
                         m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
-                    }
+                    }*/
                 }
             }
         }

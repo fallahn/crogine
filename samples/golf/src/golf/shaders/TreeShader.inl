@@ -77,8 +77,10 @@ R"(
     const float MaxWindOffset = 0.1f;
     const float Amp = 0.01;
 
-const float MinVisibility = 0.3;
-const float MinWindDistance = 50.0;
+    const float MinVisibility = 0.3;
+    const float MinWindDistance = 50.0;
+
+#include WATER_LEVEL
 
     void main()
     {
@@ -231,6 +233,8 @@ if(visibility > MinVisibility){
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
         v_data.worldPos = worldPosition.xyz;
+
+        gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
 
 inline const std::string BushGeom = R"(
@@ -374,7 +378,9 @@ R"(
         int y = int(mod(xy.y, MatrixSize));
 
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_data.ditherAmount));
-        if (textureColour.a * alpha * step(WaterLevel - 0.001, v_data.worldPos.y) < 0.3) discard;
+        if (textureColour.a * alpha < 0.3) discard;
+
+//* step(WaterLevel - 0.001, v_data.worldPos.y)
 
         textureColour.rgb *= v_data.darkenAmount;
 
@@ -418,6 +424,7 @@ inline const std::string BranchVertex = R"(
     VARYING_OUT float v_darkenAmount;
 
 #include WIND_CALC
+#include WATER_LEVEL
 
     void main()
     {
@@ -479,6 +486,8 @@ inline const std::string BranchVertex = R"(
         v_ditherAmount *= 1.0 - clamp((distance - 255.0) / 25.0, 0.0, 1.0);
 
         v_darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
+
+        gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
 
 inline const std::string BranchFragment = R"(
@@ -528,7 +537,7 @@ inline const std::string BranchFragment = R"(
 
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
 #if defined ALPHA_CLIP
-        alpha *= colour.a * step(WaterLevel - 0.001, v_worldPosition.y);
+        alpha *= colour.a;// * step(WaterLevel - 0.001, v_worldPosition.y);
 #endif
 
         if (alpha < 0.1) discard;

@@ -1598,7 +1598,7 @@ void GolfState::loadMaterials()
 
     std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble + targetDefines);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n#define TERRAIN_CLIP" + wobble + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1613,6 +1613,7 @@ void GolfState::loadMaterials()
     auto& shaleTex = m_resources.textures.get("assets/golf/images/shale.png", true);
     shaleTex.setRepeated(true);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);
+    m_resources.materials.get(m_materialIDs[MaterialID::Course]).addCustomSetting(GL_CLIP_DISTANCE1);
 
 
     m_resources.shaders.loadFromString(ShaderID::CourseGreen, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
@@ -1655,6 +1656,7 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Billboard]).addCustomSetting(GL_CLIP_DISTANCE1);
 
 
     //shaders used by terrain
@@ -1812,7 +1814,7 @@ void GolfState::loadMaterials()
         + ".0;\nconst float MaxTiles = "
         + std::to_string(m_depthMap.getTileCount() - 1) + ".0;\n";
     m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());
-    LogI << DepthConsts << std::endl;
+
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define USE_MRT\n" + waterDefines);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);

@@ -113,7 +113,7 @@ inline const std::string CelVertexShader = R"(
 #endif
 
 #include MAP_SIZE
-
+#include WATER_LEVEL
 
 #include WIND_CALC
 
@@ -238,7 +238,9 @@ inline const std::string CelVertexShader = R"(
 #if defined(MULTI_TARGET)
         v_targetProjection = u_targetViewProjectionMatrix * u_worldMatrix * a_position;
 #endif
-
+#if defined(TERRAIN_CLIP)
+    gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
+#endif
         //v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
     })";
 

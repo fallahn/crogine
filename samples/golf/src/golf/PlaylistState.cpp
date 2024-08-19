@@ -719,6 +719,7 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Branch] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Branch]).setProperty("u_noiseTexture", noiseTex);
+    m_resources.materials.get(m_materialIDs[MaterialID::Branch]).addCustomSetting(GL_CLIP_DISTANCE1);
 
     m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushGeom, BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
@@ -726,6 +727,7 @@ void PlaylistState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaf] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Leaf]).addCustomSetting(GL_CLIP_DISTANCE1);
 
     m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetShadow);

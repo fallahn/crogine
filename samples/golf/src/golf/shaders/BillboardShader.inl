@@ -67,6 +67,7 @@ inline const std::string BillboardVertexShader = R"(
     VARYING_OUT vec3 v_worldPosition;
 
 #include WIND_CALC
+#include WATER_LEVEL
 
     void main()
     {
@@ -173,8 +174,9 @@ inline const std::string BillboardVertexShader = R"(
 
         v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 #endif
-        gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
-
+        vec4 worldPos = /*u_worldMatrix **/ vec4(position, 1.0);
+        gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
+        gl_ClipDistance[1] = dot(worldPos, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
 
 

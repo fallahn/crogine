@@ -464,6 +464,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     auto material = resources.materials.get(branchMaterialID);
                     applyMaterialData(shrubDef, material, idx);
                     material.setProperty("u_noiseTexture", noiseTex);
+                    material.addCustomSetting(GL_CLIP_DISTANCE1);
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                     material = resources.materials.get(treeShadowMaterialID);
@@ -482,6 +483,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     material.setProperty("u_randAmount", theme.treesets[j].randomness);
                     material.setProperty("u_colour", theme.treesets[j].colour);
                     material.setProperty("u_noiseTexture", noiseTex);
+                    material.addCustomSetting(GL_CLIP_DISTANCE1);
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                     material = resources.materials.get(leafShadowMaterialID);
@@ -520,6 +522,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     applyMaterialData(crowdDef, material);
 
                     material.setProperty("u_arrayMap", *tex);
+                    material.addCustomSetting(GL_CLIP_DISTANCE1);
 
                     auto shadowMaterial = resources.materials.get(shadowArrayMaterialID);
                     shadowMaterial.setProperty("u_arrayMap", *tex);
@@ -536,6 +539,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                     material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
                     material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
+                    material.addCustomSetting(GL_CLIP_DISTANCE1);
 
                     auto shadowMaterial = resources.materials.get(shadowMaterialID);
                     shadowMaterial.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));

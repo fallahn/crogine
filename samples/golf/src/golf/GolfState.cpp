@@ -4710,7 +4710,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                                 special = true;
                             }
 
-                            if (m_currentPlayer.terrain != TerrainID::Green)
+                            if (!m_achievementTracker.wasGreen)
                             {
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::FringeBenefit]);
                             }
@@ -5959,6 +5959,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_achievementTracker.hadTopspin = false;
     m_achievementTracker.hadFlop = false;
     m_achievementTracker.hadPunch = false;
+    m_achievementTracker.wasGreen = player.terrain == TerrainID::Green;
     m_achievementTracker.nearMissChallenge = false;
     m_turnTimer.restart();
     m_idleTimer.restart();
@@ -6563,6 +6564,7 @@ void GolfState::hitBall()
     m_achievementTracker.hadTopspin = (spin.y > 0);
     m_achievementTracker.hadFlop = Club::getModifierIndex() == 2;
     m_achievementTracker.hadPunch = Club::getModifierIndex() == 1;
+    m_achievementTracker.wasGreen = m_currentPlayer.terrain == TerrainID::Green;
 
     //increase the local stroke count so that the UI is updated
     //the server will set the actual value
