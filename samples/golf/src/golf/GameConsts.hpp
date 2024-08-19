@@ -93,7 +93,7 @@ static constexpr glm::vec2 MapSizeFloat(MapSize);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
 static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f); //used to validate the sub-target property of a hole
 static constexpr glm::uvec2 MiniMapSize(320u, 200u);
-static constexpr std::uint32_t MapSizeMultiplier = 4u; //increases the texture resolution by this much
+static constexpr std::uint32_t MapSizeMultiplier = 8u;// 4u; //increases the texture resolution by this much
 static constexpr glm::vec2 MapSizeRatio = glm::vec2(MiniMapSize) / MapSizeFloat;
 
 static constexpr float CameraStrokeHeight = 2.f;

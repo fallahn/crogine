@@ -5185,6 +5185,7 @@ void GolfState::updateMinimapTexture()
         model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).removeCustomSetting(GL_CLIP_DISTANCE1);
     }
 
+
     cro::Colour c = cro::Colour::Transparent;
     //cro::Colour c(std::uint8_t(39), 56, 153);
     //m_mapTexture.clear(c);
