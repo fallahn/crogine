@@ -1867,7 +1867,6 @@ void GolfState::buildUI()
     {
         constexpr glm::uvec2 texSize = MapSize * MapSizeMultiplier;
 
-        //m_mapTexture.create(texSize.x, texSize.y);
         m_mapTextureMRT.create(texSize.x, texSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
         m_sharedData.minimapData.mrt = &m_mapTextureMRT;
 
@@ -5152,76 +5151,6 @@ void GolfState::refreshUI()
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
-void GolfState::updateMinimapTexture()
-{
-    if (m_sharedData.scoreType == ScoreType::MultiTarget)
-    {
-        auto* shader = m_holeData[m_currentHole].puttFromTee ? &m_resources.shaders.get(ShaderID::CourseGrid) : &m_resources.shaders.get(ShaderID::Course);
-        m_targetShader.shaderID = shader->getGLHandle();
-        m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
-
-        m_targetShader.size = 5.f; //we don't actually know what size has been chosen, so this is a rough average
-        if (m_holeData[m_currentHole].puttFromTee)
-        {
-            m_targetShader.size *= 0.032f;
-        }
-        m_targetShader.position = m_holeData[m_currentHole].target;
-        m_targetShader.update();
-    }
-
-    m_mapCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-
-    //update render
-    glUseProgram(m_gridShaders[1].shaderID);
-    glUniform1f(m_gridShaders[1].transparency, 0.f); //hides any putting grid
-
-    auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
-    m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
-    //m_gameScene.simulate(0.f);
-
-    auto& model = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>();
-    const auto matCount = model.getMeshData().submeshCount;
-    for (auto i = 0u; i < matCount; ++i)
-    {
-        model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).removeCustomSetting(GL_CLIP_DISTANCE1);
-    }
-
-
-    cro::Colour c = cro::Colour::Transparent;
-    //cro::Colour c(std::uint8_t(39), 56, 153);
-    //m_mapTexture.clear(c);
-    //m_gameScene.render();
-    //m_mapTexture.display();
-    m_mapTextureMRT.clear(c);
-    m_gameScene.render();
-    m_mapTextureMRT.display();
-    m_gameScene.setActiveCamera(oldCam);
-    //m_mapTextureMRT.setBorderColour(c);
-
-    for (auto i = 0u; i < matCount; ++i)
-    {
-        model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).addCustomSetting(GL_CLIP_DISTANCE1);
-    }
-
-    //this triggers a map refresh so don't set it until
-    //we know the texture is up to date.
-    m_sharedData.minimapData.holeNumber = m_currentHole;
-
-    //disable the cam again
-    m_mapCam.getComponent<cro::Camera>().active = false;
-
-    retargetMinimap(true);
-
-    auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
-    msg->type = SceneEvent::MinimapUpdated;
-
-    if (m_sharedData.scoreType == ScoreType::MultiTarget)
-    {
-        m_targetShader.size = 0.f;
-        m_targetShader.update();
-    }
-}
-
 void GolfState::catAuth()
 {
     cro::SpriteSheet sheet;
@@ -5498,6 +5427,73 @@ void GolfState::buildTrophyScene()
     //as a hacky way of making sure the double sided property is
     //applied to the badge materials.
     m_trophyScene.simulate(0.f);
+}
+
+void GolfState::updateMinimapTexture()
+{
+    if (m_sharedData.scoreType == ScoreType::MultiTarget)
+    {
+        auto* shader = m_holeData[m_currentHole].puttFromTee ? &m_resources.shaders.get(ShaderID::CourseGrid) : &m_resources.shaders.get(ShaderID::Course);
+        m_targetShader.shaderID = shader->getGLHandle();
+        m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+
+        m_targetShader.size = 5.f; //we don't actually know what size has been chosen, so this is a rough average
+        if (m_holeData[m_currentHole].puttFromTee)
+        {
+            m_targetShader.size *= 0.032f;
+        }
+        m_targetShader.position = m_holeData[m_currentHole].target;
+        m_targetShader.update();
+    }
+
+    m_mapCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+
+    //update render
+    glUseProgram(m_gridShaders[1].shaderID);
+    glUniform1f(m_gridShaders[1].transparency, 0.f); //hides any putting grid
+
+    auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
+    m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
+    //m_gameScene.simulate(0.f);
+
+    auto& model = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>();
+    const auto matCount = model.getMeshData().submeshCount;
+    for (auto i = 0u; i < matCount; ++i)
+    {
+        model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).removeCustomSetting(GL_CLIP_DISTANCE1);
+    }
+
+
+    cro::Colour c = cro::Colour::Transparent;
+    //cro::Colour c(std::uint8_t(39), 56, 153);
+    m_mapTextureMRT.clear(c);
+    m_gameScene.render();
+    m_mapTextureMRT.display();
+    m_gameScene.setActiveCamera(oldCam);
+    //m_mapTextureMRT.setBorderColour(c);
+
+    for (auto i = 0u; i < matCount; ++i)
+    {
+        model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).addCustomSetting(GL_CLIP_DISTANCE1);
+    }
+
+    //this triggers a map refresh so don't set it until
+    //we know the texture is up to date.
+    m_sharedData.minimapData.holeNumber = m_currentHole;
+
+    //disable the cam again
+    m_mapCam.getComponent<cro::Camera>().active = false;
+
+    retargetMinimap(true);
+
+    auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+    msg->type = SceneEvent::MinimapUpdated;
+
+    if (m_sharedData.scoreType == ScoreType::MultiTarget)
+    {
+        m_targetShader.size = 0.f;
+        m_targetShader.update();
+    }
 }
 
 void GolfState::updateMiniMap()

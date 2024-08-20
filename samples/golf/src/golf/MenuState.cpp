@@ -1735,6 +1735,18 @@ void MenuState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
     }
 
+    if (md.loadFromFile("assets/golf/models/spectators/sitting/02.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
+        md.createModel(entity);
+
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        entity.getComponent<cro::Skeleton>().play(1);
+    }
+
     if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
@@ -1973,7 +1985,34 @@ void MenuState::createScene()
     cam.setShadowExpansion(140.f);
     updateView(cam);
 
-    //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });
+    /*camEnt.getComponent<cro::Transform>().setPosition({ 12.2f, 1.8f, 15.6f });
+    registerWindow([camEnt]() mutable
+        {
+            ImGui::Begin("SFSD");
+            auto p = camEnt.getComponent<cro::Transform>().getPosition();
+            ImGui::Text("%3.2f, %3.2f, %3.2f", p.x, p.y, p.z);
+            if (ImGui::Button("L"))
+            {
+                camEnt.getComponent<cro::Transform>().move(glm::vec3(-0.1f, 0.f, 0.f));
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("R"))
+            {
+                camEnt.getComponent<cro::Transform>().move(glm::vec3(0.1f, 0.f, 0.f));
+            }
+            if (ImGui::Button("F"))
+            {
+                camEnt.getComponent<cro::Transform>().move(glm::vec3(0.f, 0.f, -0.1f));
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("B"))
+            {
+                camEnt.getComponent<cro::Transform>().move(glm::vec3(0.f, 0.f, 0.1f));
+            }
+
+            ImGui::End();
+        });*/
+
     camEnt.getComponent<cro::Transform>().setPosition({ -18.3f, 5.2f, 23.3144f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -31.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
