@@ -4172,6 +4172,36 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::GroupHoled:
+            if (m_groupIdle && evt.packet.as<std::int32_t>() == m_idleCameraIndex)
+            {
+                //triggers audio/animation
+                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::SpectateApplaud;
+            }
+            //break;
+            [[fallthrough]];
+        case PacketID::GroupTurnEnded:
+            if (m_groupIdle && evt.packet.as<std::int32_t>() == m_idleCameraIndex)
+            {
+                //creates a delay before switching back to player cam
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(1.5f);
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
+                    {
+                        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                        currTime -= dt;
+
+                        if (currTime < 0)
+                        {
+                            setActiveCamera(CameraID::Player);
+                            e.getComponent<cro::Callback>().active = false;
+                            m_gameScene.destroyEntity(e);
+                        }
+                    };
+            }
+            break;
         case PacketID::AvatarRotation:
             remoteRotation(evt.packet.as<std::uint32_t>());
             break;

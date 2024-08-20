@@ -745,6 +745,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 playSoundDelayed(AudioID::ApplausePlus, glm::vec3(0.f), 0.6f, MixerChannel::Effects);
                 applaud();
             }
+            else if (data.type == SceneEvent::SpectateApplaud)
+            {
+                playSound(AudioID::Applause, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                applaud();
+            }
             else if (data.type == SceneEvent::Poke)
             {
                 playSound(AudioID::Poke, glm::vec3(0.f), 0.5f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);

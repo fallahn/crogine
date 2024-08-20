@@ -276,6 +276,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 handleRules(groupID, data);
 
                 setNextPlayer(groupID);
+
+                m_sharedData.host.broadcastPacket(PacketID::GroupTurnEnded, groupID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             else if (data.type == GolfBallEvent::Holed)
             {
@@ -293,6 +295,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
 
                 setNextPlayer(groupID);
+
+                m_sharedData.host.broadcastPacket(PacketID::GroupHoled, groupID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             else if (data.type == GolfBallEvent::Foul)
             {
@@ -322,7 +326,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                 BallUpdate bu;
                 bu.terrain = data.terrain;
                 bu.position = data.position;
-                //m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, net::NetFlag::Reliable);
 
                 for (auto c : m_playerInfo[groupID].clientIDs)
                 {

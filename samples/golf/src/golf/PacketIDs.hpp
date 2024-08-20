@@ -174,6 +174,8 @@ namespace PacketID
         ActorSpawn, //< ActorInfo
         WindDirection, //< compressed vec3
         BallLanded, //< BallUpdate struct
+        GroupHoled, //int32 groupID if in group play
+        GroupTurnEnded, //int32 groupID if in group play
         Gimme, //< uint16 client << 8 | player turn was ended on a gimme
         Elimination, //< uint16 client << 8 | player was eliminated
         LifeLost, //< uint16 client << 8 | player

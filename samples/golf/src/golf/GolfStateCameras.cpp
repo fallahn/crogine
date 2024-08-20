@@ -2066,8 +2066,8 @@ void GolfState::updateLensFlare(cro::Entity e, float)
 void GolfState::setIdleGroup(std::uint8_t group)
 {
     m_groupIdle = true;
-    //m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
-    //m_gameScene.setSystemActive<CameraFollowSystem>(false);
+    m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
+    m_gameScene.setSystemActive<CameraFollowSystem>(true);
 
     //hide the player model
     if (m_activeAvatar)

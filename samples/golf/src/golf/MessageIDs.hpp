@@ -116,7 +116,8 @@ struct SceneEvent
         Poke,
         PlayerEliminated,
         PlayerLifeLost,
-        PlayerLifeGained
+        PlayerLifeGained,
+        SpectateApplaud
     }type = TransitionComplete;
 
     //union
