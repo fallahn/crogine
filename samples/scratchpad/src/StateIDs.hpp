@@ -57,6 +57,11 @@ namespace States
             EndlessDriving,
             TrackOverlay,
 
+            PseutheBackground,
+            PseutheGame,
+            PseutheMenu,
+
+
             Count
         };
     };

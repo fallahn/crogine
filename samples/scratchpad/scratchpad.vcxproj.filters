@@ -145,6 +145,12 @@
     <Filter Include="Source Files\track overlay">
       <UniqueIdentifier>{01acaa1a-2247-406b-bdd5-9a8986bec227}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\pseuthe">
+      <UniqueIdentifier>{e298bf17-f727-4f59-80ea-2feb08267c1d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\pseuthe">
+      <UniqueIdentifier>{cca9977b-2ad1-4924-ba3b-6945697aa7b3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -284,6 +290,15 @@
     </ClCompile>
     <ClCompile Include="src\trackoverlay\TrackOverlayState.cpp">
       <Filter>Source Files\track overlay</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pseuthe\PseutheBackgroundState.cpp">
+      <Filter>Source Files\pseuthe</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pseuthe\PseutheGameState.cpp">
+      <Filter>Source Files\pseuthe</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pseuthe\PseutheMenuState.cpp">
+      <Filter>Source Files\pseuthe</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -472,6 +487,15 @@
     </ClInclude>
     <ClInclude Include="src\trackoverlay\TrackOverlayState.hpp">
       <Filter>Header Files\track overlay</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pseuthe\PseutheBackgroundState.hpp">
+      <Filter>Header Files\pseuthe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pseuthe\PseutheGameState.hpp">
+      <Filter>Header Files\pseuthe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pseuthe\PseutheMenuState.hpp">
+      <Filter>Header Files\pseuthe</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

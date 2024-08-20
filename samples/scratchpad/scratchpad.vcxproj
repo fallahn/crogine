@@ -327,6 +327,9 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
+    <ClCompile Include="src\pseuthe\PseutheBackgroundState.cpp" />
+    <ClCompile Include="src\pseuthe\PseutheGameState.cpp" />
+    <ClCompile Include="src\pseuthe\PseutheMenuState.cpp" />
     <ClCompile Include="src\retro\RetroState.cpp" />
     <ClCompile Include="src\rolling\RollingState.cpp" />
     <ClCompile Include="src\rolling\RollingSystem.cpp" />
@@ -389,6 +392,9 @@
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
+    <ClInclude Include="src\pseuthe\PseutheBackgroundState.hpp" />
+    <ClInclude Include="src\pseuthe\PseutheGameState.hpp" />
+    <ClInclude Include="src\pseuthe\PseutheMenuState.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\retro\RetroState.hpp" />
     <ClInclude Include="src\rolling\RollingState.hpp" />
