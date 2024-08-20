@@ -4173,7 +4173,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         {
         default: break;
         case PacketID::GroupHoled:
-            if (m_groupIdle && evt.packet.as<std::int32_t>() == m_idleCameraIndex)
+            if (m_groupIdle && evt.packet.as<std::int32_t>() == m_serverGroup)
             {
                 //triggers audio/animation
                 postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::SpectateApplaud;
@@ -4181,7 +4181,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             //break;
             [[fallthrough]];
         case PacketID::GroupTurnEnded:
-            if (m_groupIdle && evt.packet.as<std::int32_t>() == m_idleCameraIndex)
+            if (m_groupIdle 
+                && evt.packet.as<std::int32_t>() == m_gameScene.getSystem<CameraFollowSystem>()->getTargetGroup())
             {
                 //creates a delay before switching back to player cam
                 auto entity = m_gameScene.createEntity();

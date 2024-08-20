@@ -1435,6 +1435,13 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
         targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
         targetInfo.startHeight = targetInfo.targetHeight;
         targetInfo.startOffset = targetInfo.targetOffset;
+
+        if (setNextPlayer)
+        {
+            requestNextPlayer(playerData);
+        }
+        m_lastSpectatePosition = playerData.position;
+        setGhostPosition(playerData.position);
     }
     else
     {
@@ -1955,6 +1962,9 @@ void GolfState::spectateGroup(std::uint8_t group)
         m_spectateTimer.restart();
         m_idleCameraIndex = group;
 
+        m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
+        m_gameScene.setSystemActive<CameraFollowSystem>(true);
+
         //set the UI name to the name of the person we're viewing
         cro::Command cmd;
         cmd.targetFlags = CommandID::UI::PlayerName;
@@ -2066,8 +2076,8 @@ void GolfState::updateLensFlare(cro::Entity e, float)
 void GolfState::setIdleGroup(std::uint8_t group)
 {
     m_groupIdle = true;
-    m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
-    m_gameScene.setSystemActive<CameraFollowSystem>(true);
+    /*m_gameScene.getSystem<CameraFollowSystem>()->setTargetGroup(group);
+    m_gameScene.setSystemActive<CameraFollowSystem>(true);*/
 
     //hide the player model
     if (m_activeAvatar)
