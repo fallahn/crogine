@@ -1,6 +1,9 @@
 //Auto-generated source file for Scratchpad Stub 20/08/2024, 12:39:17
 
 #include "PseutheBackgroundState.hpp"
+#include "PseutheConsts.hpp"
+#include "PoissonDisk.hpp"
+#include "PseutheBallSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -17,7 +20,17 @@
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
+
+namespace
+{
+    constexpr std::size_t BallCount = 19;
+    constexpr std::int32_t MinBallSize = 40;
+    constexpr std::int32_t MaxBallSize = 92;
+    constexpr float BallSize = 128.f; //this is the sprite size
+}
 
 PseutheBackgroundState::PseutheBackgroundState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
@@ -28,7 +41,9 @@ PseutheBackgroundState::PseutheBackgroundState(cro::StateStack& stack, cro::Stat
         loadAssets();
         createScene();
         
-        //TODO precache the other states and push menu on load
+        //TODO push menu on load
+        cacheState(States::ScratchPad::PseutheGame);
+        cacheState(States::ScratchPad::PseutheMenu);
     });
 }
 
@@ -77,6 +92,7 @@ void PseutheBackgroundState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<PseutheBallSystem>(mb);
     m_gameScene.addSystem<cro::SpriteSystem2D>(mb);
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
@@ -89,15 +105,31 @@ void PseutheBackgroundState::loadAssets()
 
 void PseutheBackgroundState::createScene()
 {
-    auto resize = [](cro::Camera& cam)
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("pseuthe/assets/sprites/ball.spt", m_resources.textures);
+
+
+    //for the sake of simplicity we'll use 1px/m - so max size is 128m
+    std::vector<std::array<float, 2u>> p = pd::PoissonDiskSampling(256.f, std::array{0.f, 0.f}, std::array{SceneSizeFloat.x, SceneSizeFloat.y});
+    for (auto i = 0u; i < BallCount && i < p.size(); ++i)
     {
-        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setOrthographic(0.f, 1920.f, 0.f, 1080.f, -10.f, 20.f);
-    };
+        const glm::vec2 pos(p[i][0], p[i][1]);
+        const float radius = static_cast<float>(cro::Util::Random::value(MinBallSize, MaxBallSize));
+
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(pos);
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(radius / BallSize));
+        entity.getComponent<cro::Transform>().setOrigin(glm::vec2(BallSize) / 2.f);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ball");
+        entity.addComponent<cro::SpriteAnimation>().play(0);
+        entity.addComponent<PseutheBall>(radius);
+    }
+
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    cam.resizeCallback = resize;
-    resize(cam);
+    cam.resizeCallback = std::bind(cameraCallback, std::placeholders::_1);
+    cameraCallback(cam);
 
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
 }

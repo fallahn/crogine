@@ -300,6 +300,9 @@
     <ClCompile Include="src\pseuthe\PseutheMenuState.cpp">
       <Filter>Source Files\pseuthe</Filter>
     </ClCompile>
+    <ClCompile Include="src\pseuthe\PseutheBallSystem.cpp">
+      <Filter>Source Files\pseuthe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -495,6 +498,12 @@
       <Filter>Header Files\pseuthe</Filter>
     </ClInclude>
     <ClInclude Include="src\pseuthe\PseutheMenuState.hpp">
+      <Filter>Header Files\pseuthe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pseuthe\PseutheConsts.hpp">
+      <Filter>Header Files\pseuthe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pseuthe\PseutheBallSystem.hpp">
       <Filter>Header Files\pseuthe</Filter>
     </ClInclude>
   </ItemGroup>

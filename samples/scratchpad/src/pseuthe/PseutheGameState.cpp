@@ -1,6 +1,7 @@
 //Auto-generated source file for Scratchpad Stub 20/08/2024, 12:39:17
 
 #include "PseutheGameState.hpp"
+#include "PseutheConsts.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -99,28 +100,18 @@ void PseutheGameState::loadAssets()
 
 void PseutheGameState::createScene()
 {
-    auto resize = [](cro::Camera& cam)
-    {
-        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setOrthographic(0.f, 1920.f, 0.f, 1080.f, -10.f, 20.f);
-    };
+
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    cam.resizeCallback = resize;
-    resize(cam);
-
-    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
+    cam.resizeCallback = std::bind(cameraCallback, std::placeholders::_1);
+    cameraCallback(cam);
 }
 
 void PseutheGameState::createUI()
 {
-    auto resize = [](cro::Camera& cam)
-    {
-        cam.viewport = {0.f, 0.f, 1.f, 1.f};
-        cam.setOrthographic(0.f, 1920.f, 0.f, 1080.f, -10.f, 20.f);
-    };
+
 
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
-    cam.resizeCallback = resize;
-    resize(cam);
+    cam.resizeCallback = std::bind(cameraCallback, std::placeholders::_1);
+    cameraCallback(cam);
 }
