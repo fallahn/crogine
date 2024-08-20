@@ -1244,7 +1244,8 @@ void GolfState::togglePuttingView(bool putt)
 
                 m_cameras[CameraID::Player].getComponent<cro::Callback>().getUserData<float>() = DefaultZoomSpeed;
                 
-                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+                if (!m_groupIdle &&
+                    m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
                 {
                     m_inputParser.setSuspended(false);
                 }
@@ -1421,21 +1422,31 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
 
     }
-    //set up the camera target
-    setCameraTarget(playerData);
 
     //creates an entity which calls setCamPosition() in an
     //interpolated manner until we reach the dest,
     //at which point we update the active player and
     //the ent destroys itself
     auto startPos = setNextPlayer ? m_currentPlayer.position : m_lastSpectatePosition;
+    if (startPos == playerData.position)
+    {
+        //we're already there
+        auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+        targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
+        targetInfo.startHeight = targetInfo.targetHeight;
+        targetInfo.startOffset = targetInfo.targetOffset;
+    }
+    else
+    {
+        //set up the camera target
+        setCameraTarget(playerData);
 
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(startPos);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<ActivePlayer>(playerData);
-    entity.getComponent<cro::Callback>().function =
-        [&, startPos, setNextPlayer](cro::Entity e, float dt)
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(startPos);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<ActivePlayer>(playerData);
+        entity.getComponent<cro::Callback>().function =
+            [&, startPos, setNextPlayer](cro::Entity e, float dt)
         {
             const auto& playerData = e.getComponent<cro::Callback>().getUserData<ActivePlayer>();
 
@@ -1473,7 +1484,10 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
             else
             {
                 const auto totalDist = glm::length(playerData.position - startPos);
+                if (std::isnan(totalDist)) throw std::length_error("pos & start pos are the same");
+                if (totalDist == 0) throw std::length_error("this will cause div0");
                 const auto currentDist = glm::length(travel);
+                if (std::isnan(currentDist)) throw;
                 const auto percent = 1.f - (currentDist / totalDist);
 
                 targetInfo.currentLookAt = targetInfo.prevLookAt + ((targetInfo.targetLookAt - targetInfo.prevLookAt) * percent);
@@ -1490,6 +1504,7 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
                 m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(travel * Speed);
             }
         };
+    }
 }
 
 void GolfState::startFlyBy()
@@ -2060,6 +2075,8 @@ void GolfState::setIdleGroup(std::uint8_t group)
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 1;
         m_activeAvatar->model.getComponent<cro::Callback>().active = true;
     }
+
+    resetIdle();
 
     //and the power bar
     cro::Command cmd;

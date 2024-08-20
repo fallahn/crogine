@@ -1770,12 +1770,17 @@ void GolfState::handleMessage(const cro::Message& msg)
         break;
         case GolfEvent::DroneHit:
         {
-            Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOneMillion]);
-            Social::awardXP(XPValues[XPID::Special] * 5, XPStringID::DroneHit);
-
-            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+            //this may have been done by someone we're playing with
+            //in which case the best we can do is not falsely award it
+            if (m_sharedData.groupMode == ClientGrouping::None)
             {
-                Achievements::incrementStat(StatStrings[StatID::DroneHits]);
+                //make sure we were the current player on the local client
+                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+                {
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOneMillion]);
+                    Social::awardXP(XPValues[XPID::Special] * 5, XPStringID::DroneHit);
+                    Achievements::incrementStat(StatStrings[StatID::DroneHits]);
+                }
             }
 
             m_gameScene.destroyEntity(m_drone);
@@ -2379,7 +2384,8 @@ bool GolfState::simulate(float dt)
 #ifndef CAMERA_TRACK
     //play avatar sound if player idles
     if (m_sharedData.gameMode != GameMode::Tutorial
-        && !m_roundEnded)
+        && !m_roundEnded
+        && !m_groupIdle)
     {
         if (m_idleTimer.elapsed() > m_idleTime)
         {

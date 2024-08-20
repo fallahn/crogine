@@ -4463,7 +4463,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         std::int32_t offset = m_sharedData.showPuttingPower ? 1 : 0;
 
         //if this is a local player update achievements
-        if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+        if (!m_groupIdle &&
+            m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
         {
             if (m_achievementTracker.hadFoul && overPar < 1
                 && m_sharedData.scoreType != ScoreType::Elimination)

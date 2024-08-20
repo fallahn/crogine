@@ -2659,6 +2659,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             }
         }
             break;
+        case PacketID::GroupMode:
+            m_sharedData.groupMode = std::min(std::int32_t(ClientGrouping::Four), evt.packet.as<std::int32_t>());
+            break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
             {
