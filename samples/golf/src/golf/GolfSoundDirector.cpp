@@ -1005,7 +1005,7 @@ void GolfSoundDirector::applaud()
                 data.animation = data.animationIDs[GhostCallbackData::Clap];
                 e.getComponent<cro::Skeleton>().play(data.animation, 1.f, 0.5f);
 
-                data.animationTime = 5.f;
+                data.animationTime = 3.f;
             }
         };
     getScene().getSystem<cro::CommandSystem>()->sendCommand(cmd);

@@ -2258,7 +2258,8 @@ bool GolfState::simulate(float dt)
         const auto c = m_groupPlayerPositions[m_idleCameraIndex].client;
         const auto p = m_groupPlayerPositions[m_idleCameraIndex].player;
         
-        if (m_avatars[c][p].ballModel.isValid())
+        if (c != 255 //player may have quit
+            && m_avatars[c][p].ballModel.isValid())
         {
             const auto ballPos = m_avatars[c][p].ballModel.getComponent<cro::Transform>().getWorldPosition();
 
@@ -4173,7 +4174,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         {
         default: break;
         case PacketID::GroupHoled:
-            if (m_groupIdle && evt.packet.as<std::int32_t>() == m_serverGroup)
+            if (m_groupIdle && evt.packet.as<std::int32_t>() != m_serverGroup)
             {
                 //triggers audio/animation
                 postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::SpectateApplaud;
