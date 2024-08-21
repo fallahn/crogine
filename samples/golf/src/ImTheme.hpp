@@ -129,6 +129,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     configB.FontBuilderFlags |= (1 << 8) | (1 << 9);
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    //const std::string winPath = "assets/golf/fonts/TwemojiCOLRv0.ttf";
     if (cro::FileSystem::fileExists(winPath))
     {
         fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());// ->Scale = 0.5f;
@@ -138,7 +139,7 @@ static inline void applyImGuiStyle(SharedStateData& sd)
     else
 #endif
     {
-        const std::string path = "assets/golf/fonts/OpenMoji.ttf";
+        const std::string path = "assets/golf/fonts/TwemojiCOLRv0.ttf";
         //const std::string path = "assets/golf/fonts/NotoEmoji-Regular.ttf";
         fonts->AddFontFromFileTTF((rp + path).c_str(), 10.f, &config, rangesB.data());
         sd.chatFonts.buttonLarge = fonts->AddFontFromFileTTF((rp + path).c_str(), 32.0f, &configB, rangesB.data());
