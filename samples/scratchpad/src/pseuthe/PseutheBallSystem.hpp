@@ -54,6 +54,7 @@ private:
         float penetration = 0.f;
     };
 
+    std::int32_t m_collisionCount;
     std::set<std::pair<cro::Entity, cro::Entity>> m_collisionPairs;
     bool testCollision(glm::vec3 position, float radius, cro::Entity other);
 };

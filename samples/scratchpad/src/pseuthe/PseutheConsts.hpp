@@ -7,6 +7,21 @@
 static inline constexpr glm::uvec2 SceneSize(1920u, 1080u);
 static inline constexpr glm::vec2 SceneSizeFloat(SceneSize);
 
+static inline constexpr float MinLightPos = -30.f;
+static inline constexpr float MaxLightPos = SceneSizeFloat.x - MinLightPos;
+static inline constexpr float LightFullBright = 150.f;
+
+struct ShaderID final
+{
+    enum
+    {
+        LightRay,
+
+
+        Count
+    };
+};
+
 static inline void cameraCallback(cro::Camera& cam)
 {
     const auto windowSize = glm::vec2(cro::App::getWindow().getSize());

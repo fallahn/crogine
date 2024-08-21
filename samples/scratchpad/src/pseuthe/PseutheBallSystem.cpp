@@ -8,10 +8,12 @@
 namespace
 {
     constexpr float Elasticity = 0.81f;
+    const std::int32_t MaxCollisions = 160; //after this we reset the velocity of all balls at random
 }
 
 PseutheBallSystem::PseutheBallSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(PseutheBallSystem))
+    : cro::System       (mb, typeid(PseutheBallSystem)),
+    m_collisionCount    (0)
 {
     requireComponent<PseutheBall>();
     requireComponent<cro::Transform>();
@@ -35,20 +37,20 @@ void PseutheBallSystem::process(float dt)
 
         //wrap around
         auto pos = tx.getPosition();
-        if (pos.x < 0)
+        if (pos.x < 0 - ball.radius)
         {
             pos.x += SceneSizeFloat.x;
         }
-        else if (pos.x > SceneSizeFloat.x)
+        else if (pos.x > SceneSizeFloat.x + ball.radius)
         {
             pos.x -= SceneSizeFloat.x;
         }
 
-        if (pos.y < 0)
+        if (pos.y < 0 - ball.radius)
         {
             pos.y += SceneSizeFloat.y;
         }
-        else if (pos.y > SceneSizeFloat.y)
+        else if (pos.y > SceneSizeFloat.y + ball.radius)
         {
             pos.y -= SceneSizeFloat.y;
         }
@@ -75,6 +77,18 @@ void PseutheBallSystem::process(float dt)
                 }
             }
         }
+
+        if (m_collisionCount > MaxCollisions)
+        {
+            ball.velocity.x = static_cast<float>(cro::Util::Random::value(-MaxVelocity, MaxVelocity));
+            ball.velocity.y = static_cast<float>(cro::Util::Random::value(-MaxVelocity, MaxVelocity));
+        }
+    }
+
+    if (m_collisionCount > MaxCollisions)
+    {
+        m_collisionCount = 0;
+        //TODO raise a notification to play the sound
     }
 
     for (auto& [a1, a2] : m_collisionPairs)
@@ -107,6 +121,8 @@ void PseutheBallSystem::process(float dt)
         b2.velocity += m.transferForce;
         //b2.velocity = glm::reflect(b2.velocity, glm::vec2(m.normal));
         tx2.move(-((b1.mass / (b1.mass + b2.mass) * m.penetration) * m.normal));
+
+        m_collisionCount++;
     }
 }
 

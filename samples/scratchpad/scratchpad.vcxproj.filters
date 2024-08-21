@@ -529,5 +529,8 @@
     <None Include="src\interiormapping\ProjectionShader.inl">
       <Filter>Header Files\interior mapping</Filter>
     </None>
+    <None Include="src\pseuthe\PseutheShaders.inl">
+      <Filter>Header Files\pseuthe</Filter>
+    </None>
   </ItemGroup>
 </Project>
