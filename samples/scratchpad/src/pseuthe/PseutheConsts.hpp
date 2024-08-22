@@ -11,6 +11,12 @@ static inline constexpr float MinLightPos = -30.f;
 static inline constexpr float MaxLightPos = SceneSizeFloat.x - MinLightPos;
 static inline constexpr float LightFullBright = 150.f;
 
+static inline constexpr float BackgroundDepth = -10.f;
+static inline constexpr float LightRayDepth = -9.f;
+static inline constexpr float ParticleDepth = -8.f;
+static inline constexpr float BallDepth = 0.f;
+static inline constexpr float ScreenFadeDepth = 1.f;
+
 struct ShaderID final
 {
     enum

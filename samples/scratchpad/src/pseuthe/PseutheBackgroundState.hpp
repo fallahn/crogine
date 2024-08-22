@@ -31,4 +31,6 @@ private:
     void createScene();
 
     void createLightRays();
+    void createParticles();
+    void createBalls();
 };

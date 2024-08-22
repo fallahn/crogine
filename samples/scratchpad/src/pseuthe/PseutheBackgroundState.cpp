@@ -130,7 +130,7 @@ void PseutheBackgroundState::createScene()
     }
 
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({SceneSizeFloat.x / 2.f, SceneSizeFloat.y / 2.f, -10.f});
+    entity.addComponent<cro::Transform>().setPosition({SceneSizeFloat.x / 2.f, SceneSizeFloat.y / 2.f, BackgroundDepth});
     entity.addComponent<cro::Drawable2D>().setVertexData(verts);
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_FAN);
 
@@ -195,28 +195,8 @@ void PseutheBackgroundState::createScene()
 
 
     createLightRays();
-
-
-    //balls
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("pseuthe/assets/sprites/ball.spt", m_resources.textures);
-
-    //for the sake of simplicity we'll use 1px/m - so max size is 128m
-    std::vector<std::array<float, 2u>> p = pd::PoissonDiskSampling(256.f, std::array{ 0.f, 0.f }, std::array{ SceneSizeFloat.x, SceneSizeFloat.y });
-    for (auto i = 0u; i < BallCount && i < p.size(); ++i)
-    {
-        const glm::vec2 pos(p[i][0], p[i][1]);
-        const float dia = static_cast<float>(cro::Util::Random::value(MinBallSize, MaxBallSize));
-
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(pos);
-        entity.getComponent<cro::Transform>().setScale(glm::vec2(dia / BallSize));
-        entity.getComponent<cro::Transform>().setOrigin(glm::vec2(BallSize) / 2.f);
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ball");
-        entity.addComponent<cro::SpriteAnimation>().play(0);
-        entity.addComponent<PseutheBall>(dia / 2.f);
-    }
+    createParticles();
+    createBalls();
 
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -224,6 +204,8 @@ void PseutheBackgroundState::createScene()
     cameraCallback(cam);
 
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
+
+    //TODO create wrap-around cameras
 }
 
 void PseutheBackgroundState::createLightRays()
@@ -236,7 +218,7 @@ void PseutheBackgroundState::createLightRays()
 
     //root not which moves the rays
     auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ SceneSizeFloat.x / 2.f, SceneSizeFloat.y + 200.f, -10.f });
+    entity.addComponent<cro::Transform>().setPosition({ SceneSizeFloat.x / 2.f, SceneSizeFloat.y + 200.f, LightRayDepth });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<LightPosData>();
     entity.getComponent<cro::Callback>().function =
@@ -369,5 +351,170 @@ void PseutheBackgroundState::createLightRays()
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function = RayData();
         lightRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+}
+
+void PseutheBackgroundState::createParticles()
+{
+    struct Particle final
+    {
+        glm::vec3 velocity = glm::vec3(0.f);
+        glm::vec3 position = glm::vec3(0.f);
+        float angularVelocity = 0.f;
+        float rotation = 0.f;
+
+        glm::vec3 scale = glm::vec3(1.f);
+        std::array<cro::Vertex2D, 6u> vertices = {};
+
+        void update(float dt)
+        {
+            position += velocity * dt;
+            rotation += angularVelocity * dt;
+
+            if (position.x < MinLightPos)
+            {
+                position.x += SceneSizeFloat.x;
+            }
+            else if (position.x > MaxLightPos)
+            {
+                position.x -= SceneSizeFloat.x;
+            }
+
+            if (position.y < MinLightPos)
+            {
+                position.y += SceneSizeFloat.y;
+            }
+            else if (position.y > (SceneSizeFloat.y + MinLightPos))
+            {
+                position.y -= SceneSizeFloat.y;
+            }
+        }
+
+        std::vector<cro::Vertex2D> getTransformedVertices() const
+        {
+            glm::mat4 tx = glm::mat4(1.f);
+            tx = glm::translate(tx, position);
+            tx = glm::rotate(tx, rotation, cro::Transform::Z_AXIS);
+            tx = glm::scale(tx, scale);
+
+            std::vector<cro::Vertex2D> retVal;
+            for (auto v : vertices)
+            {
+                v.position = glm::vec2(tx * glm::vec4(v.position, 0.f, 1.f));
+                retVal.push_back(v);
+            }
+
+            return retVal;
+        }
+    };
+
+    static constexpr std::uint32_t MaxParticles = 100;
+    static constexpr float MaxVelLength = 40.f;
+    static constexpr float BaseColour = 190.f / 255.f;
+    static constexpr float BaseAlpha = 150.f / 255.f;
+    static constexpr float ParticleSize = 16.f;
+    static constexpr float ParticleHalfSize = ParticleSize / 2.f;
+    static constexpr float CoordWidth = 1.f / 4.f; //4x4 texture
+
+    struct ParticleData final
+    {
+        std::vector<Particle> particles;
+
+        ParticleData()
+        {
+            const glm::vec3 DefaultVelocity =
+            {
+            static_cast<float>(cro::Util::Random::value(-MaxVelLength, MaxVelLength)),
+            static_cast<float>(cro::Util::Random::value(-MaxVelLength, MaxVelLength)),
+            0.f
+            };
+
+            std::vector<std::array<float, 2u>> positions = pd::PoissonDiskSampling(110.f, std::array{ 0.f, 0.f }, std::array{ SceneSizeFloat.x, SceneSizeFloat.y });
+            for (auto i = 0u; i < positions.size() && i < MaxParticles; ++i)
+            {
+                glm::vec3 pos = glm::vec3(positions[i][0], positions[i][1], 0.f);
+
+                const float scale = static_cast<float>(cro::Util::Random::value(2, 10)) / 10.f;
+
+                Particle p;
+                p.angularVelocity = static_cast<float>(cro::Util::Random::value(-120, 120)) * cro::Util::Const::degToRad;
+                p.velocity = scale * scale * DefaultVelocity;
+                p.scale = glm::vec3(scale);
+                p.position = pos;
+                p.rotation = static_cast<float>(cro::Util::Random::value(0, 360)) * cro::Util::Const::degToRad;
+                
+                const cro::FloatRect TextureRect =
+                {
+                    cro::Util::Random::value(0,3) * CoordWidth,
+                    cro::Util::Random::value(0,3) * CoordWidth,
+                    CoordWidth, CoordWidth
+                };
+
+                const auto c = (scale * BaseColour);
+                cro::Colour pColour(c, c, c, BaseAlpha * scale);
+                p.vertices[0] = cro::Vertex2D(glm::vec2(-ParticleHalfSize, ParticleHalfSize), 
+                    glm::vec2(TextureRect.left, TextureRect.bottom + TextureRect.height), pColour);
+                p.vertices[1] = cro::Vertex2D(glm::vec2(-ParticleHalfSize), 
+                    glm::vec2(TextureRect.left, TextureRect.bottom), pColour);
+                p.vertices[2] = cro::Vertex2D(glm::vec2(ParticleHalfSize), 
+                    glm::vec2(TextureRect.left + TextureRect.width, TextureRect.bottom + TextureRect.height), pColour);
+
+                p.vertices[3] = cro::Vertex2D(glm::vec2(ParticleHalfSize), 
+                    glm::vec2(TextureRect.left + TextureRect.width, TextureRect.bottom + TextureRect.height), pColour);
+                p.vertices[4] = cro::Vertex2D(glm::vec2(-ParticleHalfSize), 
+                    glm::vec2(TextureRect.left, TextureRect.bottom), pColour);
+                p.vertices[5] = cro::Vertex2D(glm::vec2(ParticleHalfSize, -ParticleHalfSize), 
+                    glm::vec2(TextureRect.left + TextureRect.width, TextureRect.bottom), pColour);
+
+                particles.push_back(p);
+            }
+        }
+
+        void operator()(cro::Entity e, float dt)
+        {
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            verts.clear();
+
+            //TODO we could parallel execute this but perfs not a problem
+            //also apple suck.
+            for (auto& p : particles)
+            {
+                p.update(dt);
+                auto pVerts = p.getTransformedVertices();
+                verts.insert(verts.end(), pVerts.begin(), pVerts.end());
+            }
+        }
+    };
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, ParticleDepth });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds(cro::FloatRect(glm::vec2(0.f), SceneSizeFloat));
+    entity.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("pseuthe/assets/images/particles/field.png"));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = ParticleData();
+}
+
+void PseutheBackgroundState::createBalls()
+{
+    //balls
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("pseuthe/assets/sprites/ball.spt", m_resources.textures);
+
+    //for the sake of simplicity we'll use 1px/m - so max size is 128m
+    std::vector<std::array<float, 2u>> p = pd::PoissonDiskSampling(256.f, std::array{ 0.f, 0.f }, std::array{ SceneSizeFloat.x, SceneSizeFloat.y });
+    for (auto i = 0u; i < BallCount && i < p.size(); ++i)
+    {
+        const glm::vec2 pos(p[i][0], p[i][1]);
+        const float dia = static_cast<float>(cro::Util::Random::value(MinBallSize, MaxBallSize));
+
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, BallDepth));
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(dia / BallSize));
+        entity.getComponent<cro::Transform>().setOrigin(glm::vec2(BallSize) / 2.f);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ball");
+        entity.addComponent<cro::SpriteAnimation>().play(0);
+        entity.addComponent<PseutheBall>(dia / 2.f);
     }
 }
