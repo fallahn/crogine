@@ -26,6 +26,23 @@ private:
     cro::Scene m_gameScene;
     cro::ResourceCollection m_resources;
 
+    //TODO we could arrange some of these in a UBO
+    struct ShaderBlocks final
+    {
+        struct LightRay final
+        {
+            std::uint32_t shaderID = 0;
+            std::int32_t intensityID = -1;
+        }lightRay;
+
+        struct Ball final
+        {
+            std::uint32_t shaderID = 0;
+            std::int32_t lightPosID = -1;
+            std::int32_t intensityID = -1;
+        }ball;
+    }m_shaderBlocks;
+
     void addSystems();
     void loadAssets();
     void createScene();

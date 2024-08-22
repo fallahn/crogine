@@ -237,19 +237,12 @@ void PseutheBackgroundState::createScene()
 
 void PseutheBackgroundState::createLightRays()
 {
-    struct LightPosData final
-    {
-        std::uint32_t shaderID = 0;
-        std::int32_t uniformID = -1;
-    };
-
     //root not which moves the rays
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ SceneSizeFloat.x / 2.f, SceneSizeFloat.y + 200.f, LightRayDepth });
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<LightPosData>();
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
         {
             static constexpr glm::vec2 Movement(10.f, 0.f);
             e.getComponent<cro::Transform>().move(Movement * dt);
@@ -265,9 +258,12 @@ void PseutheBackgroundState::createLightRays()
             //this needs to be applied to the balls as 'intensity' - probably UBO/shader include
             const float brightness = (pos.x / SceneSizeFloat.x) * cro::Util::Const::PI;
 
-            const auto& data = e.getComponent<cro::Callback>().getUserData<LightPosData>();
-            glUseProgram(data.shaderID);
-            glUniform1f(data.uniformID, brightness);
+            glUseProgram(m_shaderBlocks.lightRay.shaderID);
+            glUniform1f(m_shaderBlocks.lightRay.intensityID, brightness);
+
+            glUseProgram(m_shaderBlocks.ball.shaderID);
+            glUniform1f(m_shaderBlocks.ball.intensityID, brightness);
+            glUniform3f(m_shaderBlocks.ball.lightPosID, pos.x, pos.y, 10.f);
 
             const auto dist = (pos.x - (SceneSizeFloat.x / 2.f)) / (MaxLightPos / 2.f);
             const float rotation = dist * (cro::Util::Const::PI / 8.f);
@@ -325,9 +321,8 @@ void PseutheBackgroundState::createLightRays()
 
     m_resources.shaders.loadFromString(ShaderID::LightRay, RayVertex, RayFragment);
     auto& shader = m_resources.shaders.get(ShaderID::LightRay);
-    auto& lightPosData = lightRoot.getComponent<cro::Callback>().getUserData<LightPosData>();
-    lightPosData.shaderID = shader.getGLHandle();
-    lightPosData.uniformID = shader.getUniformID("u_alpha");
+    m_shaderBlocks.lightRay.shaderID = shader.getGLHandle();
+    m_shaderBlocks.lightRay.intensityID = shader.getUniformID("u_alpha");
 
     //each ray
     static constexpr std::int32_t RayCount = 7;
@@ -528,6 +523,16 @@ void PseutheBackgroundState::createBalls()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("pseuthe/assets/sprites/ball.spt", m_resources.textures);
 
+    auto& normalMap = m_resources.textures.get("pseuthe/assets/images/particles/ball_normal_animated.png");
+    m_resources.shaders.loadFromString(ShaderID::Ball, OrbVertex, OrbFragment);
+    auto* shader = &m_resources.shaders.get(ShaderID::Ball);
+    m_shaderBlocks.ball.shaderID = shader->getGLHandle();
+    m_shaderBlocks.ball.intensityID = shader->getUniformID("u_lightIntensity");
+    m_shaderBlocks.ball.lightPosID = shader->getUniformID("u_lightPosition");
+
+    static constexpr float BaseAlpha = 240.f / 255.f;
+    static constexpr float BaseColour = 185.f / 255.f;
+
     //for the sake of simplicity we'll use 1px/m - so max size is 128m
     std::vector<std::array<float, 2u>> p = pd::PoissonDiskSampling(256.f, std::array{ 0.f, 0.f }, std::array{ SceneSizeFloat.x, SceneSizeFloat.y });
     for (auto i = 0u; i < BallCount && i < p.size(); ++i)
@@ -535,13 +540,21 @@ void PseutheBackgroundState::createBalls()
         const glm::vec2 pos(p[i][0], p[i][1]);
         const float dia = static_cast<float>(cro::Util::Random::value(MinBallSize, MaxBallSize));
 
+        const float c = (dia / MaxBallSize) * BaseColour;
+        cro::Colour colour(c, c, c, (dia / MaxBallSize) * BaseAlpha);
+
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, BallDepth));
         entity.getComponent<cro::Transform>().setScale(glm::vec2(dia / BallSize));
         entity.getComponent<cro::Transform>().setOrigin(glm::vec2(BallSize) / 2.f);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ball");
+        entity.getComponent<cro::Sprite>().setColour(colour);
         entity.addComponent<cro::SpriteAnimation>().play(0);
         entity.addComponent<PseutheBall>(dia / 2.f);
+
+        entity.getComponent<cro::Drawable2D>().setShader(shader);
+        entity.getComponent<cro::Drawable2D>().bindUniform("u_normalMap", cro::TextureID(normalMap));
+
     }
 }

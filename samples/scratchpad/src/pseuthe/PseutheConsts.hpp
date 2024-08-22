@@ -21,7 +21,7 @@ struct ShaderID final
 {
     enum
     {
-        LightRay,
+        LightRay, Ball,
 
 
         Count

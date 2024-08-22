@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/graphics/RenderTarget.hpp>
 #include <crogine/util/Rectangle.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
 
@@ -280,6 +281,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 //glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, &(worldMat[0].x)));
                 glCheck(glUniformMatrix4fv(drawable.m_viewProjectionUniform, 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
                 glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, glm::value_ptr(worldMat)));
+                glCheck(glUniformMatrix3fv(drawable.m_normalMatrixUniform, 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
                 //apply texture if active
                 if (drawable.m_textureInfo.textureID.textureID)
