@@ -23,7 +23,7 @@ void main()
 
 static inline const std::string RayFragment =
 R"(
-uniform float u_alpha = 1.0;
+uniform float u_alpha = 1.0; //normalised X dist * PI
 
 VARYING_IN vec4 v_colour;
 VARYING_IN vec2 v_position;
@@ -37,11 +37,15 @@ void main()
 {
     float falloffAlpha = 1.0;
     float rayLen = length(v_position);
-    float amount = 1.0 - step(FalloffStart, rayLen);
+    float amount = step(FalloffStart, rayLen);
 
+    //x screen position
+    float positionAlpha = 1.0 - pow(cos(u_alpha), 4.0);
+
+    //ray length falloff
     falloffAlpha -= clamp((rayLen - FalloffStart) / FalloffDistance, 0.0, 1.0) * amount;
 
-    FRAG_OUT = v_colour * u_alpha * falloffAlpha;
-    FRAG_OUT.a *= u_alpha * falloffAlpha;
+    FRAG_OUT.rgb = v_colour.rgb * v_colour.a * positionAlpha * falloffAlpha;
+    FRAG_OUT.a = 1.0; //using additive blending
 }
 )";

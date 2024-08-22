@@ -352,6 +352,10 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 }
 
                 glCheck(glFrontFace(drawable.m_facing));
+                if (drawable.m_doubleSided)
+                {
+                    glCheck(glDisable(GL_CULL_FACE));
+                }
 
 #ifdef PLATFORM_DESKTOP
                 glCheck(glBindVertexArray(drawable.m_vao));
@@ -380,6 +384,10 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 }
 
 #endif //PLATFORM 
+                if (drawable.m_doubleSided)
+                {
+                    glCheck(glEnable(GL_CULL_FACE));
+                }
             }
         }
 

@@ -113,6 +113,13 @@ namespace cro
         void setBlendMode(Material::BlendMode);
 
         /*!
+        \brief If set to true the backface culling is disabled for
+        this drawable and it will render regardless of vertex winding
+        \param sidedness True to enable double sided, false to disable
+        */
+        void setDoubleSided(bool sidedness) { m_doubleSided = sidedness; }
+
+        /*!
         \brief Sets the area in local coordinates to crop this drawable.
         If this area is larger or does not overlap the local bounds then
         no cropping is visible. Useful for UI components such as cropping
@@ -155,6 +162,13 @@ namespace cro
         \brief Returns the current blend mode
         */
         Material::BlendMode getBlendMode() const;
+
+        /*!
+        \brief Returns true if this drawable is set to be rendered
+        double sided.
+        \see setDoubleSided()
+        */
+        bool getDoubleSided() const { return m_doubleSided; }
 
         /*!
         \brief Returns the current cropping area.
@@ -314,6 +328,7 @@ namespace cro
         std::int32_t m_viewProjectionUniform;
 
         std::uint32_t m_facing;
+        bool m_doubleSided;
 
         Material::BlendMode m_blendMode;
         std::uint32_t m_primitiveType;

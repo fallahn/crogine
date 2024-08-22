@@ -44,6 +44,7 @@ Drawable2D::Drawable2D()
     m_worldUniform          (-1),
     m_viewProjectionUniform (-1),
     m_facing                (GL_CCW),
+    m_doubleSided           (false),
     m_blendMode             (Material::BlendMode::Alpha),
     m_primitiveType         (GL_TRIANGLE_STRIP),
     m_vbo                   (0),

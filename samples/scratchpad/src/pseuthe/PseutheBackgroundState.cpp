@@ -252,13 +252,15 @@ void PseutheBackgroundState::createLightRays()
                 e.getComponent<cro::Transform>().setPosition(pos);
             }
 
-            const auto dist = (pos.x - (SceneSizeFloat.x / 2.f)) / (MaxLightPos / 2.f);
-            const float brightness = std::min((0.5f * (1.f - std::abs(dist))) + 0.5f, 1.f);
+            //on the shader the final brightness is 1.0 - pow(cos(brightness), 4.f)
+            //this needs to be applied to the balls as 'intensity' - probably UBO/shader include
+            const float brightness = (pos.x / SceneSizeFloat.x) * cro::Util::Const::PI;
 
             const auto& data = e.getComponent<cro::Callback>().getUserData<LightPosData>();
             glUseProgram(data.shaderID);
             glUniform1f(data.uniformID, brightness);
 
+            const auto dist = (pos.x - (SceneSizeFloat.x / 2.f)) / (MaxLightPos / 2.f);
             const float rotation = dist * (cro::Util::Const::PI / 8.f);
             e.getComponent<cro::Transform>().setRotation(-rotation);
         };
@@ -302,8 +304,8 @@ void PseutheBackgroundState::createLightRays()
         {
             auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
             auto v = wavetable[currIndex];
-            verts[1].position.x = verts[2].position.x = verts[4].position.x = -FalloffSize + v;
-            verts[12].position.x = verts[15].position.x = verts[17].position.x = FalloffSize - v;
+            verts[0].position.x = verts[1].position.x = verts[4].position.x = -FalloffSize + v;
+            verts[12].position.x = verts[13].position.x = verts[16].position.x = FalloffSize - v;
 
             currIndex = (currIndex + 1) % wavetable.size();
         }
@@ -328,38 +330,39 @@ void PseutheBackgroundState::createLightRays()
         rotation -= static_cast<float>(cro::Util::Random::value(4, MaxAngle));
 
         entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setRotation(rotation * cro::Util::Const::degToRad);
+        entity.addComponent<cro::Transform>().setRotation(rotation* cro::Util::Const::degToRad);
         entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
         entity.getComponent< cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
         entity.getComponent<cro::Drawable2D>().setShader(&shader);
+        entity.getComponent<cro::Drawable2D>().setDoubleSided(true);
 
         std::vector<cro::Vertex2D> verts =
         {
+            cro::Vertex2D(glm::vec2(-FalloffSize, 0.f), cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(-FalloffSize, RayLength), RayColour),
             cro::Vertex2D(glm::vec2(-1.f, 0.f), RayColour),
-            cro::Vertex2D(glm::vec2(-FalloffSize, 0.f), RayColour),
-            cro::Vertex2D(glm::vec2(-FalloffSize, RayLength), cro::Colour::Transparent),
 
             cro::Vertex2D(glm::vec2(-1.f, 0.f), RayColour),
-            cro::Vertex2D(glm::vec2(-FalloffSize, RayLength), cro::Colour::Transparent),
-            cro::Vertex2D(glm::vec2(-1.f, RayLength), cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(-FalloffSize, RayLength), RayColour),
+            cro::Vertex2D(glm::vec2(-1.f, RayLength), RayColour),
 
 
-            cro::Vertex2D(glm::vec2(1.f, 0.f), RayColour),
             cro::Vertex2D(glm::vec2(-1.f, 0.f), RayColour),
             cro::Vertex2D(glm::vec2(-1.f, RayLength), RayColour),
+            cro::Vertex2D(glm::vec2(1.f, 0.f), RayColour),
 
             cro::Vertex2D(glm::vec2(1.f, 0.f), RayColour),
             cro::Vertex2D(glm::vec2(-1.f, RayLength), RayColour),
             cro::Vertex2D(glm::vec2(1.f, RayLength), RayColour),
 
 
-            cro::Vertex2D(glm::vec2(FalloffSize, 0.f), RayColour),
+            cro::Vertex2D(glm::vec2(FalloffSize, 0.f), cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(FalloffSize, RayLength), RayColour),
             cro::Vertex2D(glm::vec2(1.f, 0.f), RayColour),
-            cro::Vertex2D(glm::vec2(1.f, RayLength), cro::Colour::Transparent),
 
-            cro::Vertex2D(glm::vec2(FalloffSize, 0.f), RayColour),
-            cro::Vertex2D(glm::vec2(1.f, RayLength), cro::Colour::Transparent),
-            cro::Vertex2D(glm::vec2(FalloffSize, RayLength), cro::Colour::Transparent),
+            cro::Vertex2D(glm::vec2(1.f, 0.f), RayColour),
+            cro::Vertex2D(glm::vec2(FalloffSize, RayLength), RayColour),
+            cro::Vertex2D(glm::vec2(1.f, RayLength), RayColour),
         };
         entity.getComponent<cro::Drawable2D>().setVertexData(verts);
 
