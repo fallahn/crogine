@@ -15,7 +15,7 @@ static inline constexpr float BackgroundDepth = -10.f;
 static inline constexpr float LightRayDepth = -9.f;
 static inline constexpr float ParticleDepth = -8.f;
 static inline constexpr float BallDepth = 0.f;
-static inline constexpr float ScreenFadeDepth = 1.f;
+static inline constexpr float ScreenFadeDepth = 6.f;
 
 struct ShaderID final
 {

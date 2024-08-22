@@ -198,6 +198,33 @@ void PseutheBackgroundState::createScene()
     createParticles();
     createBalls();
 
+    //overlay for fade in
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, ScreenFadeDepth });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, SceneSizeFloat.y), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Black),
+            cro::Vertex2D(SceneSizeFloat, cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(SceneSizeFloat.x, 0.f), cro::Colour::Black),
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::max(0.f, currTime - dt);
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour.setAlpha(currTime);
+            }
+            if (currTime == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = std::bind(cameraCallback, std::placeholders::_1);
