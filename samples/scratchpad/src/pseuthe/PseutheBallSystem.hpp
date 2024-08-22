@@ -34,7 +34,7 @@ struct PseutheBall final
     explicit PseutheBall(float r)
         : radius    (r), 
         radiusSqr   (r*r),
-        mass        ((radius * radius) * cro::Util::Const::PI * BallDensity / 2.f), 
+        mass        (radiusSqr * cro::Util::Const::PI * BallDensity / 2.f), 
         inverseMass (1.f / mass) {}
 };
 

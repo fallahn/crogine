@@ -36,8 +36,8 @@ void PseutheBallSystem::process(float dt)
         tx.move(ball.velocity * dt);
 
         //wrap around
-        auto pos = tx.getPosition();
-        if (pos.x < 0 - ball.radius)
+        auto pos = tx.getPosition();       
+        if (pos.x < -ball.radius)
         {
             pos.x += SceneSizeFloat.x;
         }
@@ -46,7 +46,7 @@ void PseutheBallSystem::process(float dt)
             pos.x -= SceneSizeFloat.x;
         }
 
-        if (pos.y < 0 - ball.radius)
+        if (pos.y < -ball.radius)
         {
             pos.y += SceneSizeFloat.y;
         }
@@ -55,6 +55,7 @@ void PseutheBallSystem::process(float dt)
             pos.y -= SceneSizeFloat.y;
         }
         tx.setPosition(pos);
+
 
         //check for intersection with the edge of the screen and mark for double collision test
         ball.edges[PseutheBall::Left] = std::abs(pos.x) < ball.radius;
@@ -67,7 +68,7 @@ void PseutheBallSystem::process(float dt)
         {
             if (other != entity)
             {
-                if (testCollision(pos, ball.radiusSqr, other))
+                if (testCollision(pos, ball.radius, other))
                 {
                     m_collisionPairs.insert(std::minmax(entity, other,
                         [](const cro::Entity& a, const cro::Entity& b)
@@ -91,11 +92,8 @@ void PseutheBallSystem::process(float dt)
         //TODO raise a notification to play the sound
     }
 
-    for (auto& [a1, a2] : m_collisionPairs)
+    for (auto [e1, e2] : m_collisionPairs)
     {
-        auto e1 = a1; //hack to remove constness
-        auto e2 = a2;
-
         auto& tx1 = e1.getComponent<cro::Transform>();
         auto& tx2 = e2.getComponent<cro::Transform>();
 
@@ -104,34 +102,45 @@ void PseutheBallSystem::process(float dt)
 
         Manifold m;
         const auto collisionVec = tx2.getPosition() - tx1.getPosition();
-        m.normal = glm::normalize(collisionVec);
-        m.penetration = std::sqrt((b1.radiusSqr + b2.radiusSqr) - glm::length2(collisionVec)) / 2.f;
-
-        const float relForce = -glm::dot(glm::vec2(m.normal), b1.velocity - b2.velocity);
-        const float impulse = (Elasticity * relForce) / (b1.inverseMass + b2.inverseMass);
-        m.transferForce = m.normal * (impulse / b2.mass);
+        const auto collisionLen = glm::length(collisionVec);
+        m.normal = collisionVec / collisionLen;
+        CRO_ASSERT(!std::isnan(m.normal.x), "");
+        CRO_ASSERT(!std::isnan(m.normal.y), "");
+        CRO_ASSERT(!std::isnan(m.normal.z), "");
         
-        b1.velocity += m.transferForce;
-        //b1.velocity = glm::reflect(b1.velocity, glm::vec2(m.normal));
-        tx1.move(-((b2.mass / (b2.mass + b1.mass) * m.penetration) * m.normal));
-
-        m.normal = -m.normal;
-        m.transferForce = m.normal * (impulse / b1.mass);
         
-        b2.velocity += m.transferForce;
-        //b2.velocity = glm::reflect(b2.velocity, glm::vec2(m.normal));
-        tx2.move(-((b1.mass / (b1.mass + b2.mass) * m.penetration) * m.normal));
+        //hmm there must be a bug here because occasionally collisionLen
+        //is longer than the sum of the radii - which would mean there isn't a collision!
+        m.penetration = ((b1.radius + b2.radius) - collisionLen);// / 2.f;
 
-        m_collisionCount++;
+        CRO_ASSERT(!std::isnan(m.penetration), "");
+
+        if (m.penetration > 0)
+        {
+            const float relForce = -glm::dot(glm::vec2(m.normal), b1.velocity - b2.velocity);
+            const float impulse = (Elasticity * relForce) / (b1.inverseMass + b2.inverseMass);
+            m.transferForce = m.normal * (impulse / b2.mass);
+
+            b1.velocity += m.transferForce;
+            tx1.move(-((b2.mass / (b2.mass + b1.mass) * m.penetration) * m.normal));
+
+            m.normal = -m.normal;
+            m.transferForce = m.normal * (impulse / b1.mass);
+
+            b2.velocity += m.transferForce;
+            tx2.move(-((b1.mass / (b1.mass + b2.mass) * m.penetration) * m.normal));
+
+            m_collisionCount++;
+        }
     }
 }
 
 //private
-bool PseutheBallSystem::testCollision(glm::vec3 pos, float radiusSqr, cro::Entity other)
+bool PseutheBallSystem::testCollision(glm::vec3 pos, float radius, cro::Entity other)
 {
     const auto dir = other.getComponent<cro::Transform>().getPosition() - pos;
     const auto len2 = glm::length2(dir);
-    const float totalRad = radiusSqr + other.getComponent<PseutheBall>().radiusSqr;
+    const float totalRad = radius + other.getComponent<PseutheBall>().radius;
 
-    return len2 < totalRad;
+    return len2 < (totalRad * totalRad);
 }
