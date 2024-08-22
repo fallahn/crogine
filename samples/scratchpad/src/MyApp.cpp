@@ -185,7 +185,8 @@ bool MyApp::initialise()
     m_stateStack.pushState(States::ScratchPad::PseutheBackground);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
-    m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    m_stateStack.pushState(States::ScratchPad::PseutheBackground);
 #endif
 
     return true;

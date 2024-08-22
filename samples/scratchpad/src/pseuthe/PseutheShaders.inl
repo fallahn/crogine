@@ -45,7 +45,7 @@ void main()
     //ray length falloff
     falloffAlpha -= clamp((rayLen - FalloffStart) / FalloffDistance, 0.0, 1.0) * amount;
 
-    FRAG_OUT.rgb = v_colour.rgb * v_colour.a * positionAlpha * falloffAlpha;
+    FRAG_OUT.rgb = v_colour.rgb * v_colour.a * positionAlpha;// * falloffAlpha;
     FRAG_OUT.a = 1.0; //using additive blending
 }
 )";
@@ -108,6 +108,8 @@ VARYING_IN vec2 v_texCoord;
 const vec3 lightColour = vec3(1.0, 0.98, 0.745);
 const float inverseRange = 0.005;
 
+vec2 UVSize = vec2(1.0/8.0, 1.0/4.0);
+
 void main()
 {
     vec4 diffuseColour = TEXTURE(u_texture, v_texCoord);
@@ -125,6 +127,11 @@ void main()
 
     FRAG_OUT.rgb = blendedColour;
     FRAG_OUT.a = diffuseColour.a; //this is moot we're using additive blending
+
+    //outer circle
+    vec2 UVNorm = mod(v_texCoord, UVSize) / UVSize;
+    float l = length(UVNorm - vec2(0.5));
+    FRAG_OUT.rgb = mix(blendedColour, vec3(1.0), step(0.48, l) * (1.0 - step(0.5, l)));
 
     FRAG_OUT *= v_colour;
 })";

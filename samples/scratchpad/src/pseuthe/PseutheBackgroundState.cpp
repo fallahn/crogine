@@ -259,10 +259,10 @@ void PseutheBackgroundState::createLightRays()
             const float brightness = (pos.x / SceneSizeFloat.x) * cro::Util::Const::PI;
 
             glUseProgram(m_shaderBlocks.lightRay.shaderID);
-            glUniform1f(m_shaderBlocks.lightRay.intensityID, brightness);
+            glUniform1f(m_shaderBlocks.lightRay.intensityID, brightness); //hm this isn't getting set on nvidia cards
 
             glUseProgram(m_shaderBlocks.ball.shaderID);
-            glUniform1f(m_shaderBlocks.ball.intensityID, brightness);
+            glUniform1f(m_shaderBlocks.ball.intensityID, brightness); //and neither are these...
             glUniform3f(m_shaderBlocks.ball.lightPosID, pos.x, pos.y, 10.f);
 
             const auto dist = (pos.x - (SceneSizeFloat.x / 2.f)) / (MaxLightPos / 2.f);
@@ -555,6 +555,6 @@ void PseutheBackgroundState::createBalls()
 
         entity.getComponent<cro::Drawable2D>().setShader(shader);
         entity.getComponent<cro::Drawable2D>().bindUniform("u_normalMap", cro::TextureID(normalMap));
-
+        //TODO add uniform to set outer ring colour to c
     }
 }
