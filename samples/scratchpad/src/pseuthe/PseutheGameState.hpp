@@ -31,4 +31,7 @@ private:
     void loadAssets();
     void createScene();
     void createUI();
+
+    void createPlayer();
+    void addBodyPart(cro::Entity);
 };

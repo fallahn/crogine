@@ -132,9 +132,13 @@ void main()
     //outer circle
     vec3 ringColour = v_colour.rgb * 0.5;
     ringColour *= u_ambientColour;
-    ringColour += (lightColour * lightIntensity) * v_colour.rgb * 0.5;
+    ringColour += (lightColour * lightIntensity) * v_colour.rgb;
 
     vec2 UVNorm = mod(v_texCoord, UVSize) / UVSize;
     float l = length(UVNorm - vec2(0.5));
-    FRAG_OUT.rgb = mix(blendedColour, ringColour, smoothstep(0.47, 0.472, l) * (1.0 - smoothstep(0.498, 0.5, l)));
+    float circleInner = smoothstep(0.46, 0.482, l);
+    
+    blendedColour += vec3(v_colour.r * (100.0 / 255.0)) * (1.0 - circleInner);
+    FRAG_OUT.rgb = mix(blendedColour, ringColour, circleInner * (1.0 - smoothstep(0.498, 0.5, l)));
+
 })";

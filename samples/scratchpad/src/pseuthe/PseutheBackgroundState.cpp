@@ -49,10 +49,12 @@ PseutheBackgroundState::PseutheBackgroundState(cro::StateStack& stack, cro::Stat
         loadAssets();
         createScene();
         
-        //TODO push menu on load
         cacheState(States::ScratchPad::PseutheGame);
         cacheState(States::ScratchPad::PseutheMenu);
     });
+
+    //TODO push menu on load
+    requestStackPush(States::ScratchPad::PseutheGame);
 }
 
 //public

@@ -1505,6 +1505,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Callback>().active = false;
                 };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            m_inputParser.setActive(false, m_currentPlayer.terrain);
         }
         break;
         case GolfEvent::NiceTiming:

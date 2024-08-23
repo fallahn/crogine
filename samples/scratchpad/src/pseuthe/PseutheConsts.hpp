@@ -3,6 +3,7 @@
 #include <crogine/core/App.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/detail/glm/vec2.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 static inline constexpr glm::uvec2 SceneSize(1920u, 1080u);
 static inline constexpr glm::vec2 SceneSizeFloat(SceneSize);
@@ -21,6 +22,9 @@ constexpr std::size_t BallCount = 19;
 constexpr std::int32_t MinBallSize = 40;
 constexpr std::int32_t MaxBallSize = 92;
 constexpr float BallSize = 128.f; //this is the sprite size
+
+//constexpr cro::Colour PlayerColour(std::uint8_t(200u), 200u, 230u, 180u);
+constexpr cro::Colour PlayerColour(std::uint8_t(140u), 140u, 161u, 180u);
 
 struct ShaderID final
 {
