@@ -29,11 +29,6 @@ namespace
 {
 #include "PseutheShaders.inl"
 
-    constexpr std::size_t BallCount = 19;
-    constexpr std::int32_t MinBallSize = 40;
-    constexpr std::int32_t MaxBallSize = 92;
-    constexpr float BallSize = 128.f; //this is the sprite size
-
     constexpr std::uint8_t Alpha = 60;
     const std::vector<cro::Colour> BackgroundColours =
     {
@@ -555,6 +550,5 @@ void PseutheBackgroundState::createBalls()
 
         entity.getComponent<cro::Drawable2D>().setShader(shader);
         entity.getComponent<cro::Drawable2D>().bindUniform("u_normalMap", cro::TextureID(normalMap));
-        //TODO add uniform to set outer ring colour to c
     }
 }

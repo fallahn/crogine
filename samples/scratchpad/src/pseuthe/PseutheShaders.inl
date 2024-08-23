@@ -125,13 +125,16 @@ void main()
     float lightIntensity = 1.0 - pow(cos(u_lightIntensity), 4.0);
     blendedColour += (lightColour * lightIntensity) * diffuseColour.rgb * diffuseAmount;
 
-    FRAG_OUT.rgb = blendedColour;
+    FRAG_OUT.rgb = blendedColour * v_colour.rgb;
     FRAG_OUT.a = diffuseColour.a; //this is moot we're using additive blending
 
+
     //outer circle
+    vec3 ringColour = v_colour.rgb * 0.5;
+    ringColour *= u_ambientColour;
+    ringColour += (lightColour * lightIntensity) * v_colour.rgb * 0.5;
+
     vec2 UVNorm = mod(v_texCoord, UVSize) / UVSize;
     float l = length(UVNorm - vec2(0.5));
-    FRAG_OUT.rgb = mix(blendedColour, vec3(1.0), step(0.48, l) * (1.0 - step(0.5, l)));
-
-    FRAG_OUT *= v_colour;
+    FRAG_OUT.rgb = mix(blendedColour, ringColour, smoothstep(0.47, 0.472, l) * (1.0 - smoothstep(0.498, 0.5, l)));
 })";

@@ -22,13 +22,6 @@ struct PseutheBall final
     float mass = 1.f;
     float inverseMass = 0.f;
 
-    enum
-    {
-        Top, Bottom, Left, Right,
-        Count
-    };
-    std::array<bool, Count> edges = { false, false, false, false };
-
     PseutheBall() = default;
 
     explicit PseutheBall(float r)

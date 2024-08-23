@@ -9,6 +9,11 @@ namespace
 {
     constexpr float Elasticity = 0.81f;
     const std::int32_t MaxCollisions = 160; //after this we reset the velocity of all balls at random
+
+    constexpr float BoundsWidth = SceneSizeFloat.x + BallSize;
+    constexpr float BoundsHeight = SceneSizeFloat.y + BallSize;
+    constexpr glm::vec2 BoundsMin = glm::vec2(-BallSize / 2.f);
+    constexpr glm::vec2 BoundsMax = glm::vec2(BoundsWidth, BoundsHeight) + BoundsMin;
 }
 
 PseutheBallSystem::PseutheBallSystem(cro::MessageBus& mb)
@@ -37,32 +42,24 @@ void PseutheBallSystem::process(float dt)
 
         //wrap around
         auto pos = tx.getPosition();       
-        if (pos.x < -ball.radius)
+        if (pos.x < BoundsMin.x)
         {
-            pos.x += SceneSizeFloat.x;
+            pos.x += BoundsWidth;
         }
-        else if (pos.x > SceneSizeFloat.x + ball.radius)
+        else if (pos.x > BoundsMax.x)
         {
-            pos.x -= SceneSizeFloat.x;
+            pos.x -= BoundsWidth;
         }
 
-        if (pos.y < -ball.radius)
+        if (pos.y < BoundsMin.y)
         {
-            pos.y += SceneSizeFloat.y;
+            pos.y += BoundsHeight;
         }
-        else if (pos.y > SceneSizeFloat.y + ball.radius)
+        else if (pos.y > BoundsMax.y)
         {
-            pos.y -= SceneSizeFloat.y;
+            pos.y -= BoundsHeight;
         }
         tx.setPosition(pos);
-
-
-        //check for intersection with the edge of the screen and mark for double collision test
-        ball.edges[PseutheBall::Left] = std::abs(pos.x) < ball.radius;
-        ball.edges[PseutheBall::Right] = std::abs(SceneSizeFloat.x - pos.x) < ball.radius;
-
-        ball.edges[PseutheBall::Bottom] = std::abs(pos.y) < ball.radius;
-        ball.edges[PseutheBall::Top] = std::abs(SceneSizeFloat.y - pos.y) < ball.radius;
 
         for (auto other : collisionEntities)
         {
@@ -89,7 +86,7 @@ void PseutheBallSystem::process(float dt)
     if (m_collisionCount > MaxCollisions)
     {
         m_collisionCount = 0;
-        //TODO raise a notification to play the sound
+        //TODO raise a notification to play the sound/particle effect
     }
 
     for (auto [e1, e2] : m_collisionPairs)

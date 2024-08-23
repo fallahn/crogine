@@ -17,6 +17,11 @@ static inline constexpr float ParticleDepth = -8.f;
 static inline constexpr float BallDepth = 0.f;
 static inline constexpr float ScreenFadeDepth = 6.f;
 
+constexpr std::size_t BallCount = 19;
+constexpr std::int32_t MinBallSize = 40;
+constexpr std::int32_t MaxBallSize = 92;
+constexpr float BallSize = 128.f; //this is the sprite size
+
 struct ShaderID final
 {
     enum
