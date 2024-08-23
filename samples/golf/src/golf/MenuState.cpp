@@ -494,6 +494,72 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 #endif
+    registerCommand("group_mode", [&](const std::string& param)
+        {
+            const std::array GroupStrings =
+            {
+                std::string("None"),
+                std::string("Even"),
+                std::string("One"),
+                std::string("Two"),
+                std::string("Three"),
+                std::string("Four"),
+            };
+
+            const auto updateServer = [&]()
+                {
+                    if (m_sharedData.hosting
+                        && m_sharedData.clientConnection.connected)
+                    {
+                        m_sharedData.clientConnection.netClient.sendPacket(
+                            PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
+                    cro::Console::print("Grouping set to " + GroupStrings[m_sharedData.groupMode]);
+                };
+
+            if (param == "0")
+            {
+                m_sharedData.groupMode = ClientGrouping::None;
+                updateServer();
+            }
+            else if (param == "even")
+            {
+                m_sharedData.groupMode = ClientGrouping::Even;
+                updateServer();
+            }
+            else if (param == "1")
+            {
+                m_sharedData.groupMode = ClientGrouping::One;
+                updateServer();
+            }
+            else if (param == "2")
+            {
+                m_sharedData.groupMode = ClientGrouping::Two;
+                updateServer();
+            }
+            else if (param == "3")
+            {
+                m_sharedData.groupMode = ClientGrouping::Three;
+                updateServer();
+            }
+            else if (param == "4")
+            {
+                m_sharedData.groupMode = ClientGrouping::Four;
+                updateServer();
+            }
+            else
+            {
+                cro::Console::print("Usage: group_mode <mode>");
+                cro::Console::print("Possible Modes:");
+                cro::Console::print("0: Disable Grouping");
+                cro::Console::print("even: Balanced Grouping");
+                cro::Console::print("1: 1 Player Per Group");
+                cro::Console::print("2: 2 Players Per Group");
+                cro::Console::print("3: 3 Players Per Group");
+                cro::Console::print("4: 4 Players Per Group");
+            }
+        });
+
 
 #if defined USE_WORKSHOP && !defined __APPLE__
     if (!Social::isSteamdeck())

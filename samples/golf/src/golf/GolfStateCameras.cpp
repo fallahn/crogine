@@ -1491,10 +1491,10 @@ void GolfState::createTransition(const ActivePlayer& playerData, bool setNextPla
             else
             {
                 const auto totalDist = glm::length(playerData.position - startPos);
-                if (std::isnan(totalDist)) throw std::length_error("pos & start pos are the same");
-                if (totalDist == 0) throw std::length_error("this will cause div0");
+                //if (std::isnan(totalDist)) throw std::length_error("pos & start pos are the same");
+                //if (totalDist == 0) throw std::length_error("this will cause div0");
                 const auto currentDist = glm::length(travel);
-                if (std::isnan(currentDist)) throw;
+                //if (std::isnan(currentDist)) throw;
                 const auto percent = 1.f - (currentDist / totalDist);
 
                 targetInfo.currentLookAt = targetInfo.prevLookAt + ((targetInfo.targetLookAt - targetInfo.prevLookAt) * percent);

@@ -75,7 +75,7 @@ struct StoredValue final
     }
     void write()
     {
-        //writeValue(value, ext);
+        writeValue(value, ext);
     }
 
     explicit StoredValue(const std::string& e) : ext(e) {}
