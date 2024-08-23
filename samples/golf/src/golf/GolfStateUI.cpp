@@ -1580,7 +1580,7 @@ void GolfState::buildUI()
     };
 
     //these are const so calc them once here and capture them
-    glm::vec2 mapOffset = glm::vec2(MiniMapSize.y / MapSizeMultiplier, (MiniMapSize.x - 32.f) / MapSizeMultiplier) * glm::vec2(MapSizeRatio.y, MapSizeRatio.x);
+    glm::vec2 mapOffset = glm::vec2(MapSize.y / MapSizeMultiplier, (MapSize.x/* - 32.f*/) / MapSizeMultiplier) * glm::vec2(MapSizeRatio.y, MapSizeRatio.x);
     const float l = glm::length(mapOffset);
     mapOffset = glm::normalize(mapOffset);
 

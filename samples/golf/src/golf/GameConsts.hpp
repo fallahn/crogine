@@ -359,9 +359,9 @@ static inline std::int32_t courseOfTheMonth()
 static inline float getWindMultiplier(float ballHeight, float distanceToPin)
 {
     static constexpr float MinWind = 10.f;
-    static constexpr float MaxWind = 30.f;
+    static constexpr float MaxWind = 32.f;
 
-    static constexpr float MinHeight = 24.f;// 40.f;
+    static constexpr float MinHeight = 20.f;// 40.f;
     static constexpr float MaxHeight = 30.f;// 50.f;
     const float HeightMultiplier = std::clamp((ballHeight - MinHeight) / (MaxHeight / MinHeight), 0.f, 1.f);
     
