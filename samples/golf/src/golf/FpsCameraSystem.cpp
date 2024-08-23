@@ -170,7 +170,8 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         }
         else if (evt.key.keysym.sym == SDLK_LSHIFT)
         {
-            m_input.buttonFlags |= Input::Sprint;
+            //we toggle this in keyup now
+            //m_input.buttonFlags |= Input::Sprint;
         }
 
         break;
@@ -213,7 +214,14 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         }
         else if (evt.key.keysym.sym == SDLK_LSHIFT)
         {
-            m_input.buttonFlags &= ~Input::Sprint;
+            if (m_input.buttonFlags & Input::Sprint)
+            {
+                m_input.buttonFlags &= ~Input::Sprint;
+            }
+            else
+            {
+                m_input.buttonFlags |= Input::Sprint;
+            }
         }
         break;
     case SDL_MOUSEBUTTONDOWN:
@@ -221,7 +229,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDL_BUTTON_RIGHT:
-            m_input.buttonFlags |= Input::Sprint;
+            //m_input.buttonFlags |= Input::Sprint;
             break;
         case SDL_BUTTON_LEFT:
             Social::takeScreenshot(m_screenshotLocation, m_sharedData.courseIndex);
@@ -233,7 +241,14 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDL_BUTTON_RIGHT:
-            m_input.buttonFlags &= ~Input::Sprint;
+            if (m_input.buttonFlags & Input::Sprint)
+            {
+                m_input.buttonFlags &= ~Input::Sprint;
+            }
+            else
+            {
+                m_input.buttonFlags |= Input::Sprint;
+            }
             break;
         case SDL_BUTTON_LEFT:
             //m_input.buttonFlags &= ~Input::Sprint;
@@ -270,7 +285,7 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 m_input.buttonFlags |= Input::Flags::Down;
                 break;*/
             case cro::GameController::ButtonLeftStick:
-                m_input.buttonFlags |= Input::Flags::Sprint;
+                //m_input.buttonFlags |= Input::Flags::Sprint;
                 break;
             case cro::GameController::ButtonX:
                 m_input.buttonFlags |= Input::Flags::Walk;
@@ -311,7 +326,15 @@ void FpsCameraSystem::handleEvent(const cro::Event& evt)
                 m_input.buttonFlags &= ~Input::Flags::Down;
                 break;*/
             case cro::GameController::ButtonLeftStick:
-                m_input.buttonFlags &= ~Input::Flags::Sprint;
+                //m_input.buttonFlags &= ~Input::Flags::Sprint;
+                if (m_input.buttonFlags & Input::Sprint)
+                {
+                    m_input.buttonFlags &= ~Input::Sprint;
+                }
+                else
+                {
+                    m_input.buttonFlags |= Input::Sprint;
+                }
                 break;
             case cro::GameController::ButtonX:
                 m_input.buttonFlags &= ~Input::Flags::Walk;
