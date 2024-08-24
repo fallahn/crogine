@@ -94,6 +94,7 @@ bool PseutheBackgroundState::simulate(float dt)
 
 void PseutheBackgroundState::render()
 {
+
     m_gameScene.render();
 }
 
@@ -103,8 +104,8 @@ void PseutheBackgroundState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<PseutheBallSystem>(mb);
-    m_gameScene.addSystem<cro::SpriteSystem2D>(mb);
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
+    m_gameScene.addSystem<cro::SpriteSystem2D>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::RenderSystem2D>(mb);
 }
@@ -192,7 +193,7 @@ void PseutheBackgroundState::createScene()
 
 
     createLightRays();
-    createParticles();
+    //createParticles();
     createBalls();
 
     //overlay for fade in
@@ -228,8 +229,6 @@ void PseutheBackgroundState::createScene()
     cameraCallback(cam);
 
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
-
-    //TODO create wrap-around cameras
 }
 
 void PseutheBackgroundState::createLightRays()
@@ -251,15 +250,14 @@ void PseutheBackgroundState::createLightRays()
                 e.getComponent<cro::Transform>().setPosition(pos);
             }
 
-            //on the shader the final brightness is 1.0 - pow(cos(brightness), 4.f)
-            //this needs to be applied to the balls as 'intensity' - probably UBO/shader include
+            //on the shader the final brightness is 1.0 - clamp(pow(cos(brightness), 4.f), 0.0, 1.0)
             const float brightness = (pos.x / SceneSizeFloat.x) * cro::Util::Const::PI;
 
             glUseProgram(m_shaderBlocks.lightRay.shaderID);
-            glUniform1f(m_shaderBlocks.lightRay.intensityID, brightness); //hm this isn't getting set on nvidia cards
+            glUniform1f(m_shaderBlocks.lightRay.intensityID, brightness);
 
             glUseProgram(m_shaderBlocks.ball.shaderID);
-            glUniform1f(m_shaderBlocks.ball.intensityID, brightness); //and neither are these...
+            glUniform1f(m_shaderBlocks.ball.intensityID, brightness);
             glUniform3f(m_shaderBlocks.ball.lightPosID, pos.x, pos.y, 10.f);
 
             const auto dist = (pos.x - (SceneSizeFloat.x / 2.f)) / (MaxLightPos / 2.f);
@@ -502,12 +500,19 @@ void PseutheBackgroundState::createParticles()
                 auto pVerts = p.getTransformedVertices();
                 verts.insert(verts.end(), pVerts.begin(), pVerts.end());
             }
+            int buns = 0;
         }
     };
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, ParticleDepth });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    /*entity.getComponent<cro::Drawable2D>().setVertexData(
+        {
+        cro::Vertex2D(glm::vec2(0.f, 80.f), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Red),
+        cro::Vertex2D(glm::vec2(80.f), cro::Colour::Red),
+        });*/
     entity.getComponent<cro::Drawable2D>().updateLocalBounds(cro::FloatRect(glm::vec2(0.f), SceneSizeFloat));
     entity.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("pseuthe/assets/images/particles/field.png"));
     entity.addComponent<cro::Callback>().active = true;

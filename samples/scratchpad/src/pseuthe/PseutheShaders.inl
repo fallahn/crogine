@@ -40,7 +40,7 @@ void main()
     float amount = step(FalloffStart, rayLen);
 
     //x screen position
-    float positionAlpha = 1.0 - pow(cos(u_alpha), 4.0);
+    float positionAlpha = 1.0 - clamp(pow(cos(u_alpha), 4.0), 0.0, 1.0);
 
     //ray length falloff
     falloffAlpha -= clamp((rayLen - FalloffStart) / FalloffDistance, 0.0, 1.0) * amount;
@@ -122,7 +122,7 @@ void main()
     vec3 falloffDirection = v_lightDirection * inverseRange;
     float falloff = clamp(1.0 - dot(falloffDirection, falloffDirection), 0.0, 1.0);
     
-    float lightIntensity = 1.0 - pow(cos(u_lightIntensity), 4.0);
+    float lightIntensity = 1.0 - clamp(pow(cos(u_lightIntensity), 4.0), 0.0, 1.0);
     blendedColour += (lightColour * lightIntensity) * diffuseColour.rgb * diffuseAmount;
 
     FRAG_OUT.rgb = blendedColour * v_colour.rgb;
