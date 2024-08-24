@@ -29,6 +29,7 @@
 namespace
 {
 #include "PseutheShaders.inl"
+#include "PseuthePostFX.inl"
 
     constexpr std::uint8_t Alpha = 60;
     const std::vector<cro::Colour> BackgroundColours =
@@ -95,8 +96,18 @@ bool PseutheBackgroundState::simulate(float dt)
 
 void PseutheBackgroundState::render()
 {
-
+    //m_backgroundBuffer.clear(cro::Colour::Black);
     m_gameScene.render();
+    //m_backgroundBuffer.display();
+
+
+    //m_blurBufferH.clear(cro::Colour::Black);
+    //m_backgroundQuad.draw();
+    //m_blurBufferH.display();
+
+
+    //m_blurQuadH.draw();
+
 }
 
 //private
@@ -113,8 +124,19 @@ void PseutheBackgroundState::addSystems()
 
 void PseutheBackgroundState::loadAssets()
 {
+    m_resources.shaders.loadFromString(ShaderID::BlurH, cro::SimpleDrawable::getDefaultVertexShader(), GaussianFrag, "#define HORIZONTAL\n");
+    m_resources.shaders.loadFromString(ShaderID::BlurV, cro::SimpleDrawable::getDefaultVertexShader(), GaussianFrag, "#define VERTICAL\n");
 
+    m_backgroundBuffer.create(SceneSize.x/2, SceneSize.y/2, false);
+    m_backgroundBuffer.setSmooth(true);
+    m_backgroundQuad.setTexture(m_backgroundBuffer.getTexture());
+    m_backgroundQuad.setScale(glm::vec2(2.f));
+    //m_backgroundQuad.setShader(m_resources.shaders.get(ShaderID::BlurH));
 
+    m_blurBufferH.create(SceneSize.x, SceneSize.y, false);
+    m_blurQuadH.setTexture(m_blurBufferH.getTexture());
+    
+    
 }
 
 void PseutheBackgroundState::createScene()
@@ -228,8 +250,23 @@ void PseutheBackgroundState::createScene()
         };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    cam.resizeCallback = std::bind(cameraCallback, std::placeholders::_1);
+    cam.resizeCallback = std::bind(&cameraCallback, std::placeholders::_1);
     cameraCallback(cam);
+
+    //cam.resizeCallback = [&](cro::Camera& c)
+    //    {
+    //        c.setOrthographic(0.f, SceneSizeFloat.x, 0.f, SceneSizeFloat.y, NearPlane, FarPlane);;
+    //        c.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+    //        auto winSize = glm::vec2(cro::App::getWindow().getSize());
+    //        auto viewScale = winSize.x / SceneSizeFloat.x;
+    //        m_blurQuadH.setScale(glm::vec2(viewScale));
+
+    //        float offset = (winSize.y - (SceneSize.y * viewScale)) / 2.f;
+    //        m_blurQuadH.setPosition(glm::vec2(0.f, offset));
+    //    };
+    //cam.resizeCallback(cam);
+
 
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
 }

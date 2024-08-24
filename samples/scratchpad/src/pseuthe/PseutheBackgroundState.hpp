@@ -8,6 +8,8 @@
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 class PseutheBackgroundState final : public cro::State, public cro::GuiClient
 {
@@ -25,6 +27,13 @@ private:
 
     cro::Scene m_gameScene;
     cro::ResourceCollection m_resources;
+
+    cro::RenderTexture m_blurBufferH;
+    cro::SimpleQuad m_blurQuadH;
+
+    cro::RenderTexture m_backgroundBuffer;
+    cro::SimpleQuad m_backgroundQuad;
+
 
     //TODO we could arrange some of these in a UBO
     struct ShaderBlocks final

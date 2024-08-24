@@ -946,21 +946,23 @@ void App::removeWindows(const GuiClient* c)
 
 App::WindowSettings App::loadSettings() const
 {
-    WindowSettings settings;
+    SDL_DisplayMode mode;
+    SDL_GetDesktopDisplayMode(0, &mode);
 
+    WindowSettings settings;
     ConfigFile cfg;
     if (cfg.loadFromFile(m_prefPath + cfgName, false))
     {
         const auto& properties = cfg.getProperties();
         for (const auto& prop : properties)
         {
-            if (prop.getName() == "width" && prop.getValue<int>() > 0)
+            if (prop.getName() == "width")
             {
-                settings.width = prop.getValue<int>();
+                settings.width = std::clamp(prop.getValue<std::int32_t>(), std::min(640, mode.w - 1), mode.w);
             }
-            else if (prop.getName() == "height" && prop.getValue<int>() > 0)
+            else if (prop.getName() == "height")
             {
-                settings.height = prop.getValue<int>();
+                settings.height = std::clamp(prop.getValue<std::int32_t>(), std::min(480, mode.h - 1), mode.h);
             }
             else if (prop.getName() == "fullscreen")
             {
@@ -980,7 +982,12 @@ App::WindowSettings App::loadSettings() const
             }
             else if (prop.getName() == "window_size")
             {
+                const float modeWidth = static_cast<float>(mode.w);
+                const float modeHeight = static_cast<float>(mode.h);
+
                 settings.windowedSize = prop.getValue<glm::vec2>();
+                settings.windowedSize.x = std::clamp(settings.windowedSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
+                settings.windowedSize.x = std::clamp(settings.windowedSize.y, std::min(640.f, modeHeight - 1.f), modeHeight);
             }
         }
 
@@ -1005,12 +1012,13 @@ App::WindowSettings App::loadSettings() const
                 {
                     auto name = p.getName();
                     auto found = name.find("channel");
-                    if (found != std::string::npos)
+                    if (found != std::string::npos
+                        && name.size() > found + 7)
                     {
                         auto ident = name.substr(found + 7);
                         try
                         {
-                            auto channel = std::stoi(ident);
+                            auto channel = std::clamp(std::stoi(ident), 0, static_cast<std::int32_t>(AudioMixer::MaxChannels));
                             AudioMixer::setVolume(p.getValue<float>(), channel);
                         }
                         catch (...)

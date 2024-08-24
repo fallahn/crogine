@@ -18,13 +18,13 @@ static inline constexpr float ParticleDepth = -8.f;
 static inline constexpr float BallDepth = 0.f;
 static inline constexpr float ScreenFadeDepth = 6.f;
 
-constexpr std::size_t BallCount = 19;
-constexpr std::int32_t MinBallSize = 40;
-constexpr std::int32_t MaxBallSize = 92;
-constexpr float BallSize = 128.f; //this is the sprite size
+static inline constexpr std::size_t BallCount = 19;
+static inline constexpr std::int32_t MinBallSize = 40;
+static inline constexpr std::int32_t MaxBallSize = 92;
+static inline constexpr float BallSize = 128.f; //this is the sprite size
 
 //constexpr cro::Colour PlayerColour(std::uint8_t(200u), 200u, 230u, 180u);
-constexpr cro::Colour PlayerColour(std::uint8_t(140u), 140u, 161u, 180u);
+static inline constexpr cro::Colour PlayerColour(std::uint8_t(140u), 140u, 161u, 180u);
 
 struct ShaderID final
 {
@@ -32,11 +32,13 @@ struct ShaderID final
     {
         LightRay, Ball,
 
-
+        BlurH, BlurV,
         Count
     };
 };
 
+static inline constexpr float NearPlane = -10.f;
+static inline constexpr float FarPlane = 20.f;
 static inline void cameraCallback(cro::Camera& cam)
 {
     const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
@@ -47,5 +49,5 @@ static inline void cameraCallback(cro::Camera& cam)
     const float bottom = (1.f - height) / 2.f;
 
     cam.viewport = { 0.f, bottom, 1.f, height };
-    cam.setOrthographic(0.f, SceneSizeFloat.x, 0.f, SceneSizeFloat.y, -10.f, 20.f);
+    cam.setOrthographic(0.f, SceneSizeFloat.x, 0.f, SceneSizeFloat.y, NearPlane, FarPlane);
 }

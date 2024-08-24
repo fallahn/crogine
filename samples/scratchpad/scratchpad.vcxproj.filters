@@ -532,5 +532,8 @@
     <None Include="src\pseuthe\PseutheShaders.inl">
       <Filter>Header Files\pseuthe</Filter>
     </None>
+    <None Include="src\pseuthe\PseuthePostFX.inl">
+      <Filter>Header Files\pseuthe</Filter>
+    </None>
   </ItemGroup>
 </Project>
