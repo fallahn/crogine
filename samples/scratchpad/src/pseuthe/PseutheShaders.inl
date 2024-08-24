@@ -39,13 +39,13 @@ void main()
     float rayLen = length(v_position);
     float amount = step(FalloffStart, rayLen);
 
-    //x screen position
-    float positionAlpha = 1.0 - clamp(pow(cos(u_alpha), 4.0), 0.0, 1.0);
+    //x screen position - TODO this should really be an include as it's used for balls too
+    float positionAlpha = smoothstep(0.05, 0.15, u_alpha) * (1.0 - smoothstep(0.85, 0.95, u_alpha));
 
     //ray length falloff
     falloffAlpha -= clamp((rayLen - FalloffStart) / FalloffDistance, 0.0, 1.0) * amount;
 
-    FRAG_OUT.rgb = v_colour.rgb * v_colour.a * positionAlpha;// * falloffAlpha;
+    FRAG_OUT.rgb = v_colour.rgb * v_colour.a * positionAlpha * falloffAlpha;
     FRAG_OUT.a = 1.0; //using additive blending
 }
 )";
@@ -122,7 +122,7 @@ void main()
     vec3 falloffDirection = v_lightDirection * inverseRange;
     float falloff = clamp(1.0 - dot(falloffDirection, falloffDirection), 0.0, 1.0);
     
-    float lightIntensity = 1.0 - clamp(pow(cos(u_lightIntensity), 4.0), 0.0, 1.0);
+    float lightIntensity = smoothstep(0.05, 0.15, u_lightIntensity) * (1.0 - smoothstep(0.85, 0.95, u_lightIntensity));
     blendedColour += (lightColour * lightIntensity) * diffuseColour.rgb * diffuseAmount;
 
     FRAG_OUT.rgb = blendedColour * v_colour.rgb;
@@ -130,13 +130,13 @@ void main()
 
 
     //outer circle
-    vec3 ringColour = v_colour.rgb * 0.5;
-    ringColour *= u_ambientColour;
-    ringColour += (lightColour * lightIntensity) * v_colour.rgb;
+    vec3 ringColour = v_colour.rgb * 0.15;
+    //ringColour *= u_ambientColour;
+    ringColour += (lightColour * lightIntensity) * v_colour.rgb * 0.7;
 
     vec2 UVNorm = mod(v_texCoord, UVSize) / UVSize;
     float l = length(UVNorm - vec2(0.5));
-    float circleInner = smoothstep(0.46, 0.482, l);
+    float circleInner = smoothstep(0.43, 0.482, l);
     
     blendedColour += vec3(v_colour.r * (100.0 / 255.0)) * (1.0 - circleInner);
     FRAG_OUT.rgb = mix(blendedColour, ringColour, circleInner * (1.0 - smoothstep(0.498, 0.5, l)));

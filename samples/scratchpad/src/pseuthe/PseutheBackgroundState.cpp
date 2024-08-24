@@ -23,6 +23,7 @@
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Wavetable.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
 namespace
@@ -112,6 +113,8 @@ void PseutheBackgroundState::addSystems()
 
 void PseutheBackgroundState::loadAssets()
 {
+
+
 }
 
 void PseutheBackgroundState::createScene()
@@ -193,7 +196,7 @@ void PseutheBackgroundState::createScene()
 
 
     createLightRays();
-    //createParticles();
+    createParticles();
     createBalls();
 
     //overlay for fade in
@@ -250,8 +253,8 @@ void PseutheBackgroundState::createLightRays()
                 e.getComponent<cro::Transform>().setPosition(pos);
             }
 
-            //on the shader the final brightness is 1.0 - clamp(pow(cos(brightness), 4.f), 0.0, 1.0)
-            const float brightness = (pos.x / SceneSizeFloat.x) * cro::Util::Const::PI;
+            //on the shader the final brightness is smoothstep(0.2, 0.4, u_alpha) * (1.0 - smoothstep(0.6, 0.8, u_alpha));
+            const float brightness = (pos.x / SceneSizeFloat.x);
 
             glUseProgram(m_shaderBlocks.lightRay.shaderID);
             glUniform1f(m_shaderBlocks.lightRay.intensityID, brightness);
@@ -265,19 +268,16 @@ void PseutheBackgroundState::createLightRays()
             e.getComponent<cro::Transform>().setRotation(-rotation);
         };
     auto lightRoot = entity;
-
     //registerWindow([lightRoot]() mutable
     //    {
-    //        ImGui::Begin("SEDF");
-    //        static float P = 960.f;
+    //        ImGui::Begin("sdf");
+    //        static float pos = 0.f;
 
-    //        if (ImGui::SliderFloat("p", &P, MinLightPos, MaxLightPos))
+    //        if (ImGui::SliderFloat("S", &pos, 0.f, SceneSizeFloat.x))
     //        {
-    //            auto pos = lightRoot.getComponent<cro::Transform>().getPosition();
-    //            pos.x = P;
-    //            lightRoot.getComponent<cro::Transform>().setPosition(pos);
+    //            lightRoot.getComponent<cro::Transform>().setPosition({ pos, SceneSizeFloat.y + 200.f });
     //        }
-
+    //    
     //        ImGui::End();
     //    });
 
@@ -489,8 +489,11 @@ void PseutheBackgroundState::createParticles()
 
         void operator()(cro::Entity e, float dt)
         {
-            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-            verts.clear();
+            //for some reason we can't recycle the existing vector
+            //on nvidia cards, it causes a crash in the driver trying
+            //to dereference a nullptr
+            std::vector<cro::Vertex2D> verts;
+            verts.reserve(600);
 
             //TODO we could parallel execute this but perfs not a problem
             //also apple suck.
@@ -500,19 +503,13 @@ void PseutheBackgroundState::createParticles()
                 auto pVerts = p.getTransformedVertices();
                 verts.insert(verts.end(), pVerts.begin(), pVerts.end());
             }
-            int buns = 0;
+            e.getComponent<cro::Drawable2D>().setVertexData(verts);
         }
     };
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, ParticleDepth });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    /*entity.getComponent<cro::Drawable2D>().setVertexData(
-        {
-        cro::Vertex2D(glm::vec2(0.f, 80.f), cro::Colour::Red),
-        cro::Vertex2D(glm::vec2(0.f), cro::Colour::Red),
-        cro::Vertex2D(glm::vec2(80.f), cro::Colour::Red),
-        });*/
     entity.getComponent<cro::Drawable2D>().updateLocalBounds(cro::FloatRect(glm::vec2(0.f), SceneSizeFloat));
     entity.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("pseuthe/assets/images/particles/field.png"));
     entity.addComponent<cro::Callback>().active = true;

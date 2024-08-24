@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -326,6 +326,12 @@ void Console::draw()
 
                     static bool fullScreen = App::getWindow().isFullscreen();
                     ui::Checkbox("Full Screen", &fullScreen);
+
+                    bool exclusive = App::getWindow().getExclusiveFullscreen();
+                    if (ImGui::Checkbox("Exclusive Full Screen", &exclusive))
+                    {
+                        App::getWindow().setExclusiveFullscreen(exclusive);
+                    }
 
                     bool vsync = App::getWindow().getVsyncEnabled();
                     if (ImGui::Checkbox("Vsync", &vsync))

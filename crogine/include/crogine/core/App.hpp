@@ -260,6 +260,7 @@ namespace cro
             std::int32_t width = 800;
             std::int32_t height = 600;
             bool fullscreen = false;
+            bool exclusive = false;
             bool vsync = true;
             bool useMultisampling = false;
             glm::vec2 windowedSize = glm::vec2(0.f);

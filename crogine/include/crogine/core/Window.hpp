@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -150,6 +150,22 @@ namespace cro
         bool isFullscreen() const { return m_fullscreen; }
 
         /*!
+        \brief Sets the full screen mode
+        \param exclusive If set to true the window is set to 'true' full screen
+        mode at the current resolutions when full screen mode is activated
+        else the window is set to borderless full screen at the current desktop
+        resolution.
+        This has no effect on macOS which is always borderless full screen
+        */
+        void setExclusiveFullscreen(bool exclusive) { m_exclusiveFullScreen = exclusive; }
+
+        /*!
+        \brief Returns the current full screen mode
+        \see setExclusiveFullScreen()
+        */
+        bool getExclusiveFullscreen() const { return m_exclusiveFullScreen; }
+
+        /*!
         \brief Set the window position in desktop coordinates.
         \param x Horizontal position to place the window. A negative number
         will centre the window horizontally
@@ -254,6 +270,7 @@ namespace cro
         mutable std::vector<glm::uvec2> m_resolutions;
 
         bool m_fullscreen;
+        bool m_exclusiveFullScreen;
         bool m_multisamplingEnabled;
 
         glm::uvec2 m_previousWindowSize; //restore to this if toggling full screen

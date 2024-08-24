@@ -401,6 +401,7 @@ void App::run()
         ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), fontBuff.size(), 13.f, &config, ranges);
 
         m_window.setIcon(defaultIcon);
+        m_window.setExclusiveFullscreen(settings.exclusive);
         m_window.setFullScreen(settings.fullscreen);
         m_window.setVsyncEnabled(settings.vsync);
         m_window.setMultisamplingEnabled(settings.useMultisampling);
@@ -965,6 +966,10 @@ App::WindowSettings App::loadSettings() const
             {
                 settings.fullscreen = prop.getValue<bool>();
             }
+            else if (prop.getName() == "exclusive")
+            {
+                settings.exclusive = prop.getValue<bool>();
+            }
             else if (prop.getName() == "vsync")
             {
                 settings.vsync = prop.getValue<bool>();
@@ -1029,6 +1034,7 @@ void App::saveSettings()
     saveSettings.addProperty("width", std::to_string(size.x));
     saveSettings.addProperty("height", std::to_string(size.y));
     saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
+    saveSettings.addProperty("exclusive").setValue(m_window.getExclusiveFullscreen());
     saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
     saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
     saveSettings.addProperty("window_size").setValue(m_window.getWindowedSize());
