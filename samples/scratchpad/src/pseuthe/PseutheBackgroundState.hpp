@@ -31,6 +31,9 @@ private:
     cro::RenderTexture m_blurBufferH;
     cro::SimpleQuad m_blurQuadH;
 
+    cro::RenderTexture m_blurBufferV;
+    cro::SimpleQuad m_blurQuadV;
+
     cro::RenderTexture m_backgroundBuffer;
     cro::SimpleQuad m_backgroundQuad;
 

@@ -96,18 +96,21 @@ bool PseutheBackgroundState::simulate(float dt)
 
 void PseutheBackgroundState::render()
 {
-    //m_backgroundBuffer.clear(cro::Colour::Black);
-    m_gameScene.render();
+    //m_backgroundBuffer.clear();
+    //m_gameScene.render();
     //m_backgroundBuffer.display();
 
-
-    //m_blurBufferH.clear(cro::Colour::Black);
+    //m_blurBufferH.clear();
     //m_backgroundQuad.draw();
     //m_blurBufferH.display();
 
-
+    //m_blurBufferV.clear();
     //m_blurQuadH.draw();
+    //m_blurBufferV.display();
 
+    //m_blurQuadV.draw();
+
+    m_gameScene.render();
 }
 
 //private
@@ -127,16 +130,16 @@ void PseutheBackgroundState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::BlurH, cro::SimpleDrawable::getDefaultVertexShader(), GaussianFrag, "#define HORIZONTAL\n");
     m_resources.shaders.loadFromString(ShaderID::BlurV, cro::SimpleDrawable::getDefaultVertexShader(), GaussianFrag, "#define VERTICAL\n");
 
-    m_backgroundBuffer.create(SceneSize.x/2, SceneSize.y/2, false);
-    m_backgroundBuffer.setSmooth(true);
+    m_backgroundBuffer.create(SceneSize.x, SceneSize.y, false);
     m_backgroundQuad.setTexture(m_backgroundBuffer.getTexture());
-    m_backgroundQuad.setScale(glm::vec2(2.f));
-    //m_backgroundQuad.setShader(m_resources.shaders.get(ShaderID::BlurH));
+    m_backgroundQuad.setShader(m_resources.shaders.get(ShaderID::BlurH));
 
     m_blurBufferH.create(SceneSize.x, SceneSize.y, false);
     m_blurQuadH.setTexture(m_blurBufferH.getTexture());
+    m_blurQuadH.setShader(m_resources.shaders.get(ShaderID::BlurV));
     
-    
+    m_blurBufferV.create(SceneSize.x, SceneSize.y, false);
+    m_blurQuadV.setTexture(m_blurBufferV.getTexture());
 }
 
 void PseutheBackgroundState::createScene()
@@ -260,10 +263,10 @@ void PseutheBackgroundState::createScene()
 
     //        auto winSize = glm::vec2(cro::App::getWindow().getSize());
     //        auto viewScale = winSize.x / SceneSizeFloat.x;
-    //        m_blurQuadH.setScale(glm::vec2(viewScale));
+    //        m_blurQuadV.setScale(glm::vec2(viewScale));
 
     //        float offset = (winSize.y - (SceneSize.y * viewScale)) / 2.f;
-    //        m_blurQuadH.setPosition(glm::vec2(0.f, offset));
+    //        m_blurQuadV.setPosition(glm::vec2(0.f, offset));
     //    };
     //cam.resizeCallback(cam);
 
