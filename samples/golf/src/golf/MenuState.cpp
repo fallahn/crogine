@@ -1781,7 +1781,7 @@ void MenuState::createScene()
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.2f });
-        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.9f));
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.7f));
         md.createModel(entity);
 
         texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);

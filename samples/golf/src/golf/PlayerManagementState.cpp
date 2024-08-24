@@ -537,7 +537,8 @@ void PlayerManagementState::buildScene()
     };
 
     //grouping
-    if (m_sharedData.baseState == StateID::Menu)
+    if (false &&
+        m_sharedData.baseState == StateID::Menu)
     {
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
