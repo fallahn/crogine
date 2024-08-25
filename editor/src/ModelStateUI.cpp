@@ -963,7 +963,8 @@ void ModelState::drawInspector()
                             }
                         }
                     }
-                    ImGui::NewLine();
+                    ImGui::Separator();
+                    ImGui::BeginChild("##verts", { size.x / 3.f, 200.f });
                     ImGui::Text("Vertex Attributes:");
                     for (auto i = 0u; i < meshData.attributes.size(); ++i)
                     {
@@ -977,6 +978,17 @@ void ModelState::drawInspector()
                         ImGui::Text("%s", AttribStrings[i]);
                         ImGui::PopStyleColor();
                     }
+                    ImGui::EndChild();
+                    ImGui::SameLine();
+                    ImGui::BeginChild("##bbox", {size.x / 2.f, 100.f});
+                    auto mn = meshData.boundingBox[0];
+                    auto mx = meshData.boundingBox[1];
+                    auto sz = meshData.boundingBox.getSize();
+                    ImGui::Text("Bounding Data");
+                    ImGui::Text("  Bounds Min: %3.2f, %3.2f, %3.2f", mn.x, mn.y, mn.z);
+                    ImGui::Text("  Bounds Max: %3.2f, %3.2f, %3.2f", mx.x, mx.y, mx.z);
+                    ImGui::Text("  Bounds Size: %3.2f, %3.2f, %3.2f", sz.x, sz.y, sz.z);
+                    ImGui::EndChild();
 
                     ImGui::NewLine();
                     ImGui::Separator();
