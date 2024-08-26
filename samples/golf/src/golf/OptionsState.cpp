@@ -98,7 +98,7 @@ namespace
     constexpr float TabWindowDepth = 0.1f;
     constexpr float TabBarDepth = 0.15f;
 
-    constexpr glm::vec3 PanelPosition(4.f, 52.f, TabWindowDepth); //y is 20 if we increase panel by 66
+    constexpr glm::vec3 PanelPosition(55.f, 128.f, TabWindowDepth); //y is 20 if we increase panel by 66
     constexpr glm::vec3 HiddenPosition(-10000.f);
 
     constexpr float HighlightOffset = 0.25f;
@@ -880,7 +880,7 @@ void OptionsState::buildScene()
     };
 
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/options_v2.spt", m_sharedData.sharedResources->textures);
 
     //options background
     entity = m_scene.createEntity();
@@ -904,10 +904,12 @@ void OptionsState::buildScene()
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
+    spriteSheet.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
+
     //video options
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PanelPosition);
-    entity.getComponent<cro::Transform>();
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 86.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("audio_video");
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -950,7 +952,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 0.f, bgSize.y - bounds.height, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 53.f, bgSize.y - bounds.height, TabBarDepth });
     controlButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideControls = [controlEnt]() mutable
@@ -990,7 +992,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ach_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 0.f, bgSize.y - bounds.height, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 53.f, bgSize.y - bounds.height, TabBarDepth });
     achButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideAchievements = [achEnt]() mutable
@@ -1027,7 +1029,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stat_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 0.f, bgSize.y - bounds.height, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 53.f, bgSize.y - bounds.height, TabBarDepth });
     statsButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideStats = [statsEnt]() mutable
@@ -1141,10 +1143,10 @@ void OptionsState::buildScene()
 
     const std::array<glm::vec3, 4u> TabPositions =
     {
-        glm::vec3(1.f, 237.f, TabBarDepth + HighlightOffset),
-        glm::vec3(101.f, 237.f, TabBarDepth + HighlightOffset),
-        glm::vec3(201.f, 237.f, TabBarDepth + HighlightOffset),
-        glm::vec3(301.f, 237.f, TabBarDepth + HighlightOffset)
+        glm::vec3(54.f, 323.f, TabBarDepth + HighlightOffset),
+        glm::vec3(154.f, 323.f, TabBarDepth + HighlightOffset),
+        glm::vec3(254.f, 323.f, TabBarDepth + HighlightOffset),
+        glm::vec3(354.f, 323.f, TabBarDepth + HighlightOffset)
     };
 
     auto createTab = [&, spriteSelectedID, spriteUnselectedID](cro::Entity parent, std::size_t index, std::int32_t menuID, std::size_t selectionIndex)
@@ -1175,12 +1177,15 @@ void OptionsState::buildScene()
         return ent;
     };
     entity = createTab(videoButtonEnt, 1, MenuID::Video, TabController);
+    entity.getComponent<cro::Transform>().move(videoEnt.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, AVMixerRight);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowCredits);
     entity = createTab(videoButtonEnt, 2, MenuID::Video, TabAchievements);
+    entity.getComponent<cro::Transform>().move(videoEnt.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setNextIndex(TabStats, AVVolumeDown);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);
     entity = createTab(videoButtonEnt, 3, MenuID::Video, TabStats);
+    entity.getComponent<cro::Transform>().move(videoEnt.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setNextIndex(TabController, AVVolumeUp);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowClose);
 
@@ -1381,7 +1386,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     const auto& titleFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto titleEnt = m_scene.createEntity();
-    titleEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, 174.f, TextOffset });
+    titleEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, 260.f, TextOffset });
     titleEnt.addComponent<cro::Drawable2D>();
     titleEnt.addComponent<cro::Text>(titleFont).setString("Audio & Video");
     titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1403,7 +1408,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //audio label
-    auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 133.f, 156.f), MixerLabels[mixerChannelIndex]);
+    auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 133.f, 242.f), MixerLabels[mixerChannelIndex]);
     centreText(audioLabel);
     audioLabel.addComponent<cro::Callback>().active = true;
     audioLabel.getComponent<cro::Callback>().function =
@@ -1413,7 +1418,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
 
-    m_deviceLabel = createLabel(glm::vec2(244.f, 156.f), " ");
+    m_deviceLabel = createLabel(glm::vec2(244.f, 242.f), " ");
     m_deviceLabel.getComponent<cro::Drawable2D>().setCroppingArea(LabelCrop);
     m_deviceLabel.addComponent<cro::Callback>().active = true;
     m_deviceLabel.getComponent<cro::Callback>().setUserData<TextScrollData>();
@@ -1454,7 +1459,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     refreshDeviceLabel();
 
     //antialiasing label
-    auto aliasLabel = createLabel(glm::vec2(12.f, 131.f), "Antialiasing");
+    auto aliasLabel = createLabel(glm::vec2(12.f, 217.f), "Antialiasing");
     aliasLabel.addComponent<cro::Callback>().active = true;
     aliasLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1462,23 +1467,23 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             updateToolTip(e, ToolTipID::AA);
         };
 
-    auto aaLabel = createLabel(glm::vec2(136.f, 131.f), AAStrings[AAIndexMap[m_sharedData.multisamples]]);
+    auto aaLabel = createLabel(glm::vec2(136.f, 217.f), AAStrings[AAIndexMap[m_sharedData.multisamples]]);
     centreText(aaLabel);
 
     //FOV label
-    auto fovLabel = createLabel(glm::vec2(12.f, 115.f), "FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
+    auto fovLabel = createLabel(glm::vec2(12.f, 201.f), "FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
 
     //resolution label
-    auto resLabel = createLabel(glm::vec2(12.f, 97.f), "Resolution");
+    auto resLabel = createLabel(glm::vec2(12.f, 183.f), "Resolution");
     //centreText(resLabel);
 
     //resolution value text
-    resLabel = createLabel(glm::vec2(136.f, 99.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+    resLabel = createLabel(glm::vec2(136.f, 185.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
     centreText(resLabel);
     resolutionLabel = resLabel; //global static used by callback to update display when window is toggled FS
 
     //pixel scale label
-    auto pixelLabel = createLabel(glm::vec2(12.f, 83.f), "Pixel Scaling");
+    auto pixelLabel = createLabel(glm::vec2(12.f, 169.f), "Pixel Scaling");
     pixelLabel.addComponent<cro::Callback>().active = true;
     pixelLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1487,7 +1492,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //vertex snap label
-    auto vertLabel = createLabel(glm::vec2(12.f, 67.f), "Vertex Snap      (requires restart)");
+    auto vertLabel = createLabel(glm::vec2(12.f, 153.f), "Vertex Snap      (requires restart)");
     vertLabel.addComponent<cro::Callback>().active = true;
     vertLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1496,13 +1501,13 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //full screen label
-    createLabel(glm::vec2(12.f, 51.f), "Full Screen");
+    createLabel(glm::vec2(12.f, 137.f), "Full Screen");
 
     //vsync label
-    createLabel(glm::vec2(12.f, 35.f), "Enable VSync");
+    createLabel(glm::vec2(12.f, 121.f), "Enable VSync");
 
     //beacon label
-    auto beaconLabel = createLabel(glm::vec2(12.f, 19.f), "Flag Beacon");
+    auto beaconLabel = createLabel(glm::vec2(12.f, 105.f), "Flag Beacon");
     beaconLabel.addComponent<cro::Callback>().active = true;
     beaconLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1511,10 +1516,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //ball trail label
-    createLabel({ 204.f, 131.f }, "Enable       Ball Trail");
+    createLabel({ 204.f, 217.f }, "Enable       Ball Trail");
 
     //putting assist
-    auto puttingEnt = createLabel({ 204.f, 115.f }, "Enable       Putting Assist");
+    auto puttingEnt = createLabel({ 204.f, 201.f }, "Enable       Putting Assist");
     puttingEnt.addComponent<cro::Callback>().active = true;
     puttingEnt.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1524,10 +1529,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //post process label
-    createLabel({ 204.f, 99.f }, "Post FX");
+    createLabel({ 204.f, 185.f }, "Post FX");
 
     //measurements
-    auto measureLabel = createLabel({ 204.f, 83.f }, "Units         Imperial Measurements");
+    auto measureLabel = createLabel({ 204.f, 169.f }, "Units         Imperial Measurements");
     measureLabel.addComponent<cro::Callback>().active = true;
     measureLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1536,10 +1541,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //grid transparency
-    createLabel({ 204.f, 67.f }, "Grid Amount");
+    createLabel({ 204.f, 153.f }, "Grid Amount");
 
     //tree quality
-    auto treeLabel = createLabel({ 204.f, 51.f }, "Tree Quality");
+    auto treeLabel = createLabel({ 204.f, 137.f }, "Tree Quality");
     treeLabel.addComponent<cro::Callback>().active = true;
     treeLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1549,10 +1554,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //shadow quality
-    createLabel({ 204.f, 35.f }, "Shadow Quality");
+    createLabel({ 204.f, 121.f }, "Shadow Quality");
 
     //crowd density
-    /*auto crowdLabel =*/ createLabel({ 204, 19.f }, "Crowd Density");
+    /*auto crowdLabel =*/ createLabel({ 204, 105.f }, "Crowd Density");
     //crowdLabel.addComponent<cro::Callback>().active = true;
     //crowdLabel.getComponent<cro::Callback>().function =
     //    [&](cro::Entity e, float)
@@ -1588,7 +1593,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //volume slider
-    auto volSlider = createSlider(glm::vec2(143.f, 153.f), 65.f);
+    auto volSlider = createSlider(glm::vec2(143.f, 239.f), 65.f);
 
     auto tipEnt = m_scene.createEntity();
     tipEnt.addComponent<cro::Transform>();
@@ -1627,7 +1632,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //fov slider
-    constexpr auto fovPos = glm::vec2(99.f, 112.f);
+    constexpr auto fovPos = glm::vec2(99.f, 198.f);
     auto fovSlider = createSlider(fovPos);
     auto userData = SliderData(fovPos, 76.f);
     userData.onActivate =
@@ -1692,7 +1697,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     fovSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
 
     //grid transparency
-    auto transPos = glm::vec2(281.f, 64.f);
+    auto transPos = glm::vec2(281.f, 150.f);
     auto transSlider = createSlider(transPos);
     auto ud = SliderData(transPos, 90.f);
     ud.onActivate =
@@ -1729,11 +1734,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             auto pos = helpEnt.getComponent<cro::Transform>().getPosition();
             if (str.find('\n') != std::string::npos)
             {
-                pos.y = -9.f;
+                pos.y = 17.f;
             }
             else
             {
-                pos.y = -15.f;
+                pos.y = 11.f;
             }
             helpEnt.getComponent<cro::Transform>().setPosition(pos);
             helpEnt.getComponent<cro::Text>().setString(str);
@@ -1771,7 +1776,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //channel select down
-    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 188.f, 147.f));
+    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 188.f, 233.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVMixerLeft);
     entity.getComponent<cro::UIInput>().setNextIndex(AVMixerRight, AVAAL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVDeviceUp, WindowCredits);
@@ -1788,7 +1793,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
 
     //channel select up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 87.f, 147.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 87.f, 233.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVMixerRight);
     entity.getComponent<cro::UIInput>().setNextIndex(AVVolumeDown, AVAAL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVMixerLeft, TabController);
@@ -1806,14 +1811,14 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //audio down
-    entity = createHighlight(glm::vec2(125.f, 147.f));
+    entity = createHighlight(glm::vec2(125.f, 233.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVolumeDown);
     entity.getComponent<cro::UIInput>().setNextIndex(AVVolumeUp, AVAAL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVMixerRight, TabController);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(m_audioEnts[AudioID::Accept]));
 
     //audio up
-    entity = createHighlight(glm::vec2(215.f, 147.f));
+    entity = createHighlight(glm::vec2(215.f, 233.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVolumeUp);
     entity.getComponent<cro::UIInput>().setNextIndex(AVDeviceDown, AVAAR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeDown, TabAchievements);
@@ -1821,7 +1826,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //audio device down
-    entity = createHighlight(glm::vec2(231.f, 147.f));
+    entity = createHighlight(glm::vec2(231.f, 233.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVDeviceDown);
     entity.getComponent<cro::UIInput>().setNextIndex(AVDeviceUp, AVTrail);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVVolumeUp, TabAchievements);
@@ -1842,7 +1847,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //audio device up
-    entity = createHighlight(glm::vec2(373.f, 147.f));
+    entity = createHighlight(glm::vec2(373.f, 233.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVDeviceUp);
     entity.getComponent<cro::UIInput>().setNextIndex(AVMixerLeft, AVTrailR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVDeviceDown, TabStats);
@@ -1863,7 +1868,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //aa down
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 115.f, 122.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 115.f, 208.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVAAL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVAAR, AVFOVL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVTrailR, AVMixerLeft);
@@ -1887,7 +1892,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     //aa up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 122.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 208.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVAAR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTrail, AVFOVR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVAAL, AVVolumeUp);
@@ -1912,7 +1917,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //FOV down
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 115.f, 106.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 115.f, 192.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVFOVL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVFOVR, AVResolutionL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVPuttAss, AVAAL);
@@ -1943,7 +1948,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     //FOV up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 106.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 192.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVFOVR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVPuttAss, AVResolutionR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVFOVL, AVAAR);
@@ -1975,7 +1980,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //res down
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 115.f, 90.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 115.f, 176.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVResolutionL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVResolutionR, AVPixelScale);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVPostR, AVFOVL);
@@ -1993,7 +1998,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     //res up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 90.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 176.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVResolutionR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVPost, AVBeaconR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVResolutionL, AVFOVR);
@@ -2012,7 +2017,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //pixel scale check box
-    entity = createHighlight(glm::vec2(81.f, 74.f));
+    entity = createHighlight(glm::vec2(81.f, 160.f));
     entity.setLabel("Scale up pixels to match the screen resolution.\nShortcut: +/- on numpad");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVPixelScale);
     entity.getComponent<cro::UIInput>().setNextIndex(AVUnits, AVVertSnap);
@@ -2030,7 +2035,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //pixel scale checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 76.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 162.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -2049,7 +2054,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //vertex snap checkbox
-    entity = createHighlight(glm::vec2(81.f, 58.f));
+    entity = createHighlight(glm::vec2(81.f, 144.f));
     entity.setLabel("Usually used in conjunction with Pixel Scaling. Default is OFF.\nMay cause z-fighting.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVertSnap);
     entity.getComponent<cro::UIInput>().setNextIndex(AVGridL, AVFullScreen);
@@ -2065,7 +2070,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
     //vertex snap centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 60.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 146.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -2086,7 +2091,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //full screen check box
-    entity = createHighlight(glm::vec2(81.f, 42.f));
+    entity = createHighlight(glm::vec2(81.f, 128.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVFullScreen);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTreeL, AVVSync);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVTreeR, AVVertSnap);
@@ -2103,7 +2108,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //full screen checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 44.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 130.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -2123,7 +2128,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //vsync checkbox
-    entity = createHighlight(glm::vec2(81.f, 26.f));
+    entity = createHighlight(glm::vec2(81.f, 112.f));
     if (Social::isSteamdeck())
     {
         entity.setLabel("Requires Disable Frame Limit set on Steam Deck.\nHigher frame rates may reduce battery life.");
@@ -2146,7 +2151,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //vsync checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 28.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 114.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -2166,7 +2171,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //beacon check box
-    entity = createHighlight(glm::vec2(81.f, 10.f));
+    entity = createHighlight(glm::vec2(81.f, 96.f));
     entity.setLabel("Displays a beacon on the course at the pin position.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVBeacon);
 #ifdef _WIN32
@@ -2194,7 +2199,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //beacon checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 12.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 98.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -2215,7 +2220,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //beacon colour preview
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(99.f, 12.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(99.f, 98.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().setVertexData(
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), cro::Colour::Magenta),
@@ -2234,7 +2239,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     glUseProgram(shaderID);
     glUniform1f(uniformID, m_sharedData.beaconColour);
 
-    entity = createHighlight(glm::vec2(113.f, 10.f));
+    entity = createHighlight(glm::vec2(113.f, 96.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVBeaconL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVBeaconR, WindowCredits);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVBeacon, AVFullScreen);
@@ -2251,7 +2256,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
-    entity = createHighlight(glm::vec2(182.f, 10.f));
+    entity = createHighlight(glm::vec2(182.f, 96.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVBeaconR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdL, TabController);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVBeaconL, AVResolutionR);
@@ -2269,7 +2274,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     //colour slider
-    auto colourPos = glm::vec2(131.f, 16.f);
+    auto colourPos = glm::vec2(131.f, 102.f);
     auto colourSlider = createSlider(colourPos);
     auto sliderData = SliderData(colourPos, 44.f);
     sliderData.onActivate =
@@ -2292,7 +2297,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //ball trail checkbox
-    entity = createHighlight(glm::vec2(246.f, 122.f));
+    entity = createHighlight(glm::vec2(246.f, 208.f));
     entity.setLabel("Draws a trail behind the ball when it is in flight.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTrail);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTrailL, AVPuttAss);
@@ -2310,7 +2315,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //ball trail checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 124.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 210.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -2330,7 +2335,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //trail colour text
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 350.f, 132.f, HighlightOffset });
+    entity.addComponent<cro::Transform>().setPosition({ 350.f, 218.f, HighlightOffset });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(m_sharedData.trailBeaconColour ? "Beacon" : "White");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -2340,7 +2345,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto trailLabel = entity;
 
     //prev/next trail colour
-    entity = createHighlight(glm::vec2(313.f, 122.f));
+    entity = createHighlight(glm::vec2(313.f, 208.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTrailL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTrailR, AVPostL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVTrail, AVVolumeUp);
@@ -2358,7 +2363,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
     //just toggles a bool so share the callback.
     auto cbID = entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
-    entity = createHighlight(glm::vec2(378.f, 122.f));
+    entity = createHighlight(glm::vec2(378.f, 208.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTrailR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVAAL, AVPostR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVTrailL, AVDeviceUp);
@@ -2366,7 +2371,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //putting assist toggle
-    entity = createHighlight(glm::vec2(246.f, 106.f));
+    entity = createHighlight(glm::vec2(246.f, 192.f));
     entity.setLabel("Displays a power estimation when putting at the cost of awarded XP.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVPuttAss);
     entity.getComponent<cro::UIInput>().setNextIndex(AVFOVL, AVPost);
@@ -2384,7 +2389,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //putting assist checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 108.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 194.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -2406,7 +2411,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //post process checkbox
-    entity = createHighlight(glm::vec2(246.f, 90.f));
+    entity = createHighlight(glm::vec2(246.f, 176.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVPost);
     entity.getComponent<cro::UIInput>().setNextIndex(AVPostL, AVUnits);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVResolutionR, AVPuttAss);
@@ -2425,7 +2430,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //post process checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 92.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 178.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -2443,11 +2448,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto shaderLabel = createLabel(glm::vec2(325.f, 99.f), ShaderNames[m_sharedData.postProcessIndex]);
+    auto shaderLabel = createLabel(glm::vec2(325.f, 185.f), ShaderNames[m_sharedData.postProcessIndex]);
     centreText(shaderLabel);
 
     //prev/next post process
-    entity = createHighlight(glm::vec2(263.f, 90.f));
+    entity = createHighlight(glm::vec2(263.f, 176.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVPostL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVPostR, AVGridL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVPost, AVTrailL);
@@ -2467,7 +2472,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
-    entity = createHighlight(glm::vec2(378.f, 90.f));
+    entity = createHighlight(glm::vec2(378.f, 176.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVPostR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVResolutionL, AVGridR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVPostL, AVTrailR);
@@ -2488,7 +2493,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     //imperial measurements
-    entity = createHighlight(glm::vec2(246.f, 74.f));
+    entity = createHighlight(glm::vec2(246.f, 160.f));
     entity.setLabel("Enables imperial measurements in yards, feet and inches.\nDefault is metric (metres and centimetres).");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVUnits);
     entity.getComponent<cro::UIInput>().setNextIndex(AVPixelScale, AVGridL);
@@ -2506,7 +2511,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //imperial checkbox centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 76.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 162.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -2527,7 +2532,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //prev/next grid transparency
-    entity = createHighlight(glm::vec2(263.f, 58.f));
+    entity = createHighlight(glm::vec2(263.f, 144.f));
     entity.setLabel("Sets the transparency of the grid on the green when putting.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVGridL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVGridR, AVTreeL);
@@ -2543,7 +2548,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
-    entity = createHighlight(glm::vec2(378.f, 58.f));
+    entity = createHighlight(glm::vec2(378.f, 144.f));
     entity.setLabel("Sets the transparency of the grid on the green when putting.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVGridR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVVertSnap, AVTreeR);
@@ -2563,11 +2568,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     {
         "Classic", "Low", "High"
     };
-    auto treeQualityText = createLabel({ 325.f, 51.f }, TreeLabels[m_sharedData.treeQuality]);
+    auto treeQualityText = createLabel({ 325.f, 137.f }, TreeLabels[m_sharedData.treeQuality]);
     centreText(treeQualityText);
 
     //prev / next tree quality
-    entity = createHighlight(glm::vec2(286.f, 42.f));
+    entity = createHighlight(glm::vec2(286.f, 128.f));
     entity.setLabel("Switch between billboard and 3D trees.\nClassic trees are applied when the game is loaded.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTreeL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTreeR, AVShadowL);
@@ -2587,7 +2592,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
-    entity = createHighlight(glm::vec2(355.f, 42.f));
+    entity = createHighlight(glm::vec2(355.f, 128.f));
     entity.setLabel("Switch between billboard and 3D trees.\nClassic trees are applied when the game is loaded.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTreeR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVFullScreen, AVShadowR);
@@ -2608,7 +2613,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
 
-    auto shadowQualityText = createLabel({ 325.f, 35.f }, m_sharedData.hqShadows ? "High" : "Low");
+    auto shadowQualityText = createLabel({ 325.f, 121.f }, m_sharedData.hqShadows ? "High" : "Low");
     centreText(shadowQualityText);
 
     //prev / next shadow quality
@@ -2626,13 +2631,13 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
-    entity = createHighlight(glm::vec2(286.f, 26.f));
+    entity = createHighlight(glm::vec2(286.f, 112.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVShadowL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVShadowR, AVCrowdL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVVSync, AVTreeL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChanged;
 
-    entity = createHighlight(glm::vec2(355.f, 26.f));
+    entity = createHighlight(glm::vec2(355.f, 112.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVShadowR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVVSync, AVCrowdR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVShadowL, AVTreeR);
@@ -2646,7 +2651,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         std::string("High"),
         std::string("Extreme")
     };
-    auto crowdDensityText = createLabel({ 325.f, 19.f }, CrowdLabels[m_sharedData.crowdDensity]);
+    auto crowdDensityText = createLabel({ 325.f, 105.f }, CrowdLabels[m_sharedData.crowdDensity]);
     centreText(crowdDensityText);
 
     const auto crowdChanged = uiSystem.addCallback([&, crowdDensityText](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -2672,7 +2677,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             }
         });
 
-    entity = createHighlight(glm::vec2(286.f, 10.f));
+    entity = createHighlight(glm::vec2(286.f, 96.f));
     entity.setLabel("Very high density crowds may cause a drop in performance.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVCrowdL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVCrowdR, AVLensFlare);
@@ -2686,7 +2691,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::UIInput>().setPrevIndex(AVBeaconR, AVShadowL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = crowdChanged;
 
-    entity = createHighlight(glm::vec2(355.f, 10.f));
+    entity = createHighlight(glm::vec2(355.f, 96.f));
     entity.setLabel("Very high density crowds may cause a drop in performance.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVCrowdR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVBeacon, AVLargePower);
@@ -2698,7 +2703,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     if (!Social::isSteamdeck())
     {
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 12.f, -5.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 12.f, 81.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("use_tts");
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2745,7 +2750,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //lens flare
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 204.f, -5.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 204.f, 81.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("use_flare");
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2867,7 +2872,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
     //displays help/info at bottom
     auto infoEnt = m_scene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, -4.f, TextOffset });
+    infoEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, -74.f, TextOffset });
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(infoFont).setAlignment(cro::Text::Alignment::Centre);
     if (!Social::isSteamdeck()) //layout ent hasn't been assigned yet...
@@ -4236,7 +4241,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //credits
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(2.f, 1.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(55.f, 1.f));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("large_highlight");
@@ -4275,7 +4280,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //advanced
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(78.f, 1.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(131.f, 1.f));
     entity.addComponent<cro::Drawable2D>();
     pageButtons.buttons[ButtonID::Advanced] = entity;
     
@@ -4322,7 +4327,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //apply
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(297.f, 1.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(350.f, 1.f));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("small_highlight");
@@ -4369,7 +4374,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //close
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(348.f, 1.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(401.f, 1.f));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("small_highlight");
@@ -4517,7 +4522,7 @@ void OptionsState::refreshDeviceLabel()
     {
         m_deviceLabel.getComponent<cro::Callback>().active = true;
         m_deviceLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Left);
-        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 244.f, 156.f });
+        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 244.f, 242.f });
         m_deviceLabel.getComponent<cro::Drawable2D>().setCroppingArea(LabelCrop);
     }
     else
