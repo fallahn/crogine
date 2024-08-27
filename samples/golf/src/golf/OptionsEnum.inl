@@ -54,6 +54,7 @@ enum OptionsIndex
     AVPixelScale,
     AVVertSnap,
     AVFullScreen,
+    AVFullScreenMode,
     AVVSync,
     AVBeacon,
     AVBeaconL,
