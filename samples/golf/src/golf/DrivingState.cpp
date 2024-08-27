@@ -887,6 +887,14 @@ void DrivingState::handleMessage(const cro::Message& msg)
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                cmd.targetFlags = CommandID::UI::BarEnt;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
+                            ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
                 //updates the position of the entities based on bar size
                 auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
                 cam.resizeCallback(cam);
@@ -1225,6 +1233,7 @@ void DrivingState::loadAssets()
     //UI stuff
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar_wide");
+    m_sprites[SpriteID::PowerBar10] = spriteSheet.getSprite("power_bar_wide_10");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner_wide");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindTextBg] = spriteSheet.getSprite("wind_text_bg");

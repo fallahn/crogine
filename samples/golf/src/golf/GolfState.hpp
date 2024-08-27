@@ -452,6 +452,7 @@ private:
         enum
         {
             PowerBar,
+            PowerBar10,
             PowerBarInner,
             HookBar,
             SlopeStrength,

@@ -1987,6 +1987,15 @@ void GolfState::handleMessage(const cro::Message& msg)
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                cmd.targetFlags = CommandID::UI::BarEnt;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar 
+                            ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
                 //updates the position of the entities based on bar size
                 auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
                 cam.resizeCallback(cam);

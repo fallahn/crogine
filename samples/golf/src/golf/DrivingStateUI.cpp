@@ -750,7 +750,8 @@ void DrivingState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBar];
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::BarEnt;
+    entity.addComponent<cro::Sprite>() = m_sharedData.decimatePowerBar ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

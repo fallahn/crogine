@@ -88,6 +88,7 @@ struct CommandID final
             TerrainType          = 0x4000000,
             AFKWarn              = 0x8000000,
             PuttingLabel         = 0x10000000, //29
+            BarEnt               = 0x20000000
         };
     };
 
