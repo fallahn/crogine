@@ -1152,7 +1152,7 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
     target.addComponent<cro::Model>(meshData, material);
 }
 
-static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool isTarget = false)
+static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool decimal, bool isTarget = false)
 {
     static constexpr float ToYards = 1.094f;
     static constexpr float ToFeet = 3.281f;
@@ -1179,24 +1179,37 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
 
             target.setString(ss.str());*/
 
-            distance *= ToFeet;
-            if (distance > 1)
+            if (decimal)
             {
                 std::stringstream ss;
-                ss.precision(1);
+                ss.precision(2);
                 ss << "Distance: ";
-                ss << std::fixed << distance;
-                ss << "ft";
+                ss << std::fixed << (distance * ToYards);
+                ss << "yds";
 
                 target.setString(ss.str());
-
-                /*auto dist = static_cast<std::int32_t>(distance);
-                target.setString("Distance: " + std::to_string(dist) + "ft");*/
             }
             else
             {
-                auto dist = static_cast<std::int32_t>(distance * ToInches);
-                target.setString("Distance: " + std::to_string(dist) + "in");
+                distance *= ToFeet;
+                if (distance > 1)
+                {
+                    std::stringstream ss;
+                    ss.precision(1);
+                    ss << "Distance: ";
+                    ss << std::fixed << distance;
+                    ss << "ft";
+
+                    target.setString(ss.str());
+
+                    /*auto dist = static_cast<std::int32_t>(distance);
+                    target.setString("Distance: " + std::to_string(dist) + "ft");*/
+                }
+                else
+                {
+                    auto dist = static_cast<std::int32_t>(distance * ToInches);
+                    target.setString("Distance: " + std::to_string(dist) + "in");
+                }
             }
         }
     }
@@ -1209,8 +1222,21 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
         }
         else
         {
-            auto dist = static_cast<std::int32_t>(distance * 100.f);
-            target.setString("Distance: " + std::to_string(dist) + "cm");
+            if (decimal)
+            {
+                std::stringstream ss;
+                ss.precision(2);
+                ss << "Distance: ";
+                ss << std::fixed << distance;
+                ss << "m";
+
+                target.setString(ss.str());
+            }
+            else
+            {
+                auto dist = static_cast<std::int32_t>(distance * 100.f);
+                target.setString("Distance: " + std::to_string(dist) + "cm");
+            }
         }
     }
 }

@@ -1936,7 +1936,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.action =
                     [&](cro::Entity e, float)
                 {
-                    formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+                    formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
 
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
@@ -2273,7 +2273,7 @@ bool GolfState::simulate(float dt)
             cmd.targetFlags = CommandID::UI::PinDistance;
             cmd.action = [&, ballDist, isMultiTarget](cro::Entity e, float)
                 {
-                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, isMultiTarget);
+                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, isMultiTarget);
 
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
@@ -6078,7 +6078,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action =
         [&](cro::Entity e, float)
     {
-        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
 
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);
@@ -6777,7 +6777,7 @@ void GolfState::updateActor(const ActorInfo& update)
         cmd.targetFlags = CommandID::UI::PinDistance;
         cmd.action = [&, ballDist, isMultiTarget](cro::Entity e, float)
         {
-            formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, isMultiTarget);
+            formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, isMultiTarget);
 
             auto bounds = cro::Text::getLocalBounds(e);
             bounds.width = std::floor(bounds.width / 2.f);
