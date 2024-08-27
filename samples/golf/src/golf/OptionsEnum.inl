@@ -78,6 +78,8 @@ enum OptionsIndex
     AVCrowdR,
     AVLensFlare,
     AVLargePower,
+    AVDecPower,
+    AVDecDist,
 
 
     Controls = 300,
