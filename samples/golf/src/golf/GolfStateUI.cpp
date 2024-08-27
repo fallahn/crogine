@@ -5544,8 +5544,8 @@ void GolfState::retargetMinimap(bool reset)
         auto centre = bb.getCentre();
         target.end.pan = glm::vec2(centre.x, -centre.z) * m_minimapZoom.mapScale;
 
-        auto xZoom = std::clamp(static_cast<float>(MiniMapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), 0.9f, 16.f);
-        auto zZoom = std::clamp(static_cast<float>(MiniMapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), 0.9f, 16.f);
+        auto xZoom = std::clamp(static_cast<float>(MiniMapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), 0.9f, 32.f);
+        auto zZoom = std::clamp(static_cast<float>(MiniMapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), 0.9f, 32.f);
         target.end.zoom = xZoom > zZoom ? xZoom : zZoom;
     }
     else
@@ -5596,8 +5596,8 @@ void GolfState::retargetMinimap(bool reset)
         //get distance between flag and player and expand by 1.7 (about 3m around a putting hole)
         float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.5f; //remember this is world coords
 
-        //scale zoom on long edge of map by box length and clamp to 16x
-        target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, 0.8f, 16.f);
+        //scale zoom on long edge of map by box length and clamp to 32x
+        target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, 0.8f, 32.f);
     }
 
     //create a temp ent to interp between start and end values
