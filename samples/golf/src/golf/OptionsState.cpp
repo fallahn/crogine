@@ -965,8 +965,10 @@ void OptionsState::buildScene()
     };
 
     //achievements
+    static constexpr float HorizontalOffset = 42.f;
+    static constexpr float VerticalOffset = 70.f; //hack for bigger background - we ought to be adding this to PanelPosition.y
     bounds = spriteSheet.getSprite("input").getTextureBounds();
-    const glm::uvec2 bufferSize(bounds.width, bounds.height);
+    const glm::uvec2 bufferSize(bounds.width + (HorizontalOffset * 2.f), bounds.height + VerticalOffset);
 
     m_achievementBuffer.create(bufferSize.x, bufferSize.y, false);
     m_achievementBuffer.clear(cro::Colour::Green);
@@ -974,6 +976,7 @@ void OptionsState::buildScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(HiddenPosition);
+    entity.getComponent<cro::Transform>().setOrigin({ HorizontalOffset - 2.f, VerticalOffset, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_achievementBuffer.getTexture());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -992,7 +995,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ach_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 53.f, bgSize.y - bounds.height, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 53.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
     achButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideAchievements = [achEnt]() mutable
@@ -1011,6 +1014,7 @@ void OptionsState::buildScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(HiddenPosition);
+    entity.getComponent<cro::Transform>().setOrigin({ HorizontalOffset - 2.f, VerticalOffset });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_statsBuffer.getTexture());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1029,7 +1033,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stat_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 53.f, bgSize.y - bounds.height, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 53.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
     statsButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideStats = [statsEnt]() mutable
@@ -1200,22 +1204,28 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowClose);
 
     entity = createTab(achButtonEnt, 0, MenuID::Achievements, TabAV);
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowAdvanced);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowAdvanced);
     entity = createTab(achButtonEnt, 1, MenuID::Achievements, TabController);
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabStats, WindowCredits);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowCredits);
     entity = createTab(achButtonEnt, 3, MenuID::Achievements, TabStats);
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollUp);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowClose);
 
     entity = createTab(statsButtonEnt, 0, MenuID::Stats, TabAV);
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowCredits);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowCredits);
     entity = createTab(statsButtonEnt, 1, MenuID::Stats, TabController);
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, ResetStats);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowAdvanced);
     entity = createTab(statsButtonEnt, 2, MenuID::Stats, TabAchievements);
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ResetCareer);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);
 
@@ -3692,7 +3702,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
     auto parentBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
     auto titleEnt = m_scene.createEntity();
-    titleEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, 174.f, TextOffset });
+    titleEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, 174.f + 70.f, TextOffset });
     titleEnt.addComponent<cro::Drawable2D>();
     titleEnt.addComponent<cro::Text>(largeFont).setString("Achievements");
     titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -3906,7 +3916,7 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
 
     auto parentBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
     auto titleEnt = m_scene.createEntity();
-    titleEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, 174.f, TextOffset });
+    titleEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, 174.f + 70.f, TextOffset });
     titleEnt.addComponent<cro::Drawable2D>();
     titleEnt.addComponent<cro::Text>(largeFont).setString("Stats");
     titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -4175,11 +4185,13 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     std::size_t downRightA = 0;
     std::size_t downRightB = 0;
 
+    glm::vec2 offset = glm::vec2(0.f); //ugh such frikkin hack
     switch (menuID)
     {
     default:
         break;
     case MenuID::Video:
+        offset.y = 86.f;
         downLeftA = AVMixerLeft;
         downLeftB = TabController;
         downRightA = TabAchievements;
@@ -4207,6 +4219,8 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         upRightB = CtrlA;
         break;
     case MenuID::Achievements:
+        offset.x = 40.f;
+        offset.y = 70.f;
         downLeftA = TabAV;
         downLeftB = TabController;
         downRightA = TabStats;
@@ -4217,6 +4231,8 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         upRightB = ScrollDown;
         break;
     case MenuID::Stats:
+        offset.x = 40.f;
+        offset.y = 70.f;
         downLeftA = TabAV;
         downLeftB = TabController;
         downRightA = TabAchievements;
@@ -4241,7 +4257,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //credits
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(55.f, 1.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(55.f, 1.f)+ offset);
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("large_highlight");
@@ -4280,7 +4296,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //advanced
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(131.f, 1.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(131.f, 1.f) + offset);
     entity.addComponent<cro::Drawable2D>();
     pageButtons.buttons[ButtonID::Advanced] = entity;
     
@@ -4327,7 +4343,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //apply
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(350.f, 1.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(350.f, 1.f) + offset);
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("small_highlight");
@@ -4374,7 +4390,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //close
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(401.f, 1.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(401.f, 1.f) + offset);
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("small_highlight");
