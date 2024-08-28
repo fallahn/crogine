@@ -161,8 +161,6 @@ void Social::awardXP(std::int32_t amount, std::int32_t reason)
         StoredValues[ValueID::XP].value += amount;
         StoredValues[ValueID::XP].write();
 
-        LogI << "Awarded " << amount << " XP, wrote value " << StoredValues[ValueID::XP].value << std::endl;
-
         //raise event to notify players
         auto* msg = cro::App::postMessage<SocialEvent>(MessageID::SocialMessage);
         msg->type = SocialEvent::XPAwarded;
@@ -182,7 +180,6 @@ void Social::awardXP(std::int32_t amount, std::int32_t reason)
 std::int32_t Social::getXP()
 {
     StoredValues[ValueID::XP].read();
-    LogI << "Got XP value of " << StoredValues[ValueID::XP].value << std::endl;
     return StoredValues[ValueID::XP].value;
 }
 
@@ -215,7 +212,7 @@ Social::ProgressData Social::getLevelProgress()
     StoredValues[ValueID::XP].read();
     auto currXP = StoredValues[ValueID::XP].value;
     auto currLevel = getLevelFromXP(currXP);
-    LogI << "Level progress XP is " << StoredValues[ValueID::XP].value << std::endl;
+
     auto startXP = getXPFromLevel(currLevel);
     auto endXP = getXPFromLevel(currLevel + 1);
 
