@@ -5,8 +5,12 @@
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/graphics/Colour.hpp>
 
-static inline constexpr glm::uvec2 SceneSize(1920u, 1080u);
+static inline constexpr glm::uvec2 SceneSize(1920u, 1088u); //this allows dividing cells into 64px
 static inline constexpr glm::vec2 SceneSizeFloat(SceneSize);
+
+static inline constexpr std::uint32_t CellSize = 64;
+static inline constexpr auto CellCountX = SceneSize.x / CellSize;
+static inline constexpr auto CellCountY = SceneSize.y / CellSize;
 
 static inline constexpr float MinLightPos = -30.f;
 static inline constexpr float MaxLightPos = SceneSizeFloat.x - MinLightPos;
