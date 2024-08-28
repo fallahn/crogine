@@ -239,4 +239,5 @@ public:
     static std::int32_t getMonth();
 
     static void showWebPage(const std::string&) {}
+    static void readAllStats();
 };
