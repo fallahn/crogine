@@ -72,10 +72,17 @@ static void winFPE(int)
 
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
-#include "../detail/fa-regular-400.hpp"
+#include "../detail/fa-regular-400.hpp" //icon font for ImGui
 #include "../detail/IconsFontAwesome6.h"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_sdl.h"
+
+//this is only implemented with visual studio
+//on windows - update the CMake file if this is
+//needed on other platforms...
+#if defined CLIP_SCREENSHOT
+#include "../detail/clipboard/clip.h"
+#endif
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../detail/stb_image_write.h"
@@ -574,12 +581,14 @@ void App::saveScreenshot()
         writeResult.wait();
     }
 
+    static constexpr std::uint32_t bpp = 3;
+
     //TODO this assumes we're calling this with the main buffer
     //active - if a texture buffer is currently active we should be
     //checking the size of that at the very least...
     auto size = m_window.getSize();
     static std::vector<GLubyte> buffer;
-    buffer.resize(size.x * size.y * 3);
+    buffer.resize(size.x * size.y * bpp);
 
     glCheck(glPixelStorei(GL_PACK_ALIGNMENT, 1));
     glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGB, GL_UNSIGNED_BYTE, buffer.data()));
@@ -587,7 +596,8 @@ void App::saveScreenshot()
     postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::ScreenshotTaken;
 
 
-    writeResult = std::async(std::launch::async, [size]() {
+    writeResult = std::async(std::launch::async, [size]()
+    {
         //flip row order
         stbi_flip_vertically_on_write(1);
 
@@ -616,14 +626,52 @@ void App::saveScreenshot()
         out.file = SDL_RWFromFile(filename.c_str(), "w");
         if (out.file)
         {
-            stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 3, buffer.data(), size.x * 3);
+            stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, bpp, buffer.data(), size.x * bpp);
             LogI << "Saved " << filename << std::endl;
+
+#if defined CLIP_SCREENSHOT
+            //apparently we *must* have an alpha channel when writing to clipboard (plus we need flipping...)
+            //but hey we're in a separate thread here so we can afford the time it takes to do this.
+            std::vector<uint8_t> flipBuffer;
+            buffer.reserve(size.x * size.y * 4);
+
+            auto y = static_cast<std::int32_t>(size.y - 1);
+            for (; y >= 0; --y)
+            {
+                for (auto x = 0u; x < size.x; ++x)
+                {
+                    auto index = (y * (size.x * bpp)) + (x * bpp);
+                    flipBuffer.push_back(buffer[index]);
+                    flipBuffer.push_back(buffer[index+1]);
+                    flipBuffer.push_back(buffer[index+2]);
+                    flipBuffer.push_back(0xff);
+                }
+            }
+
+            clip::image_spec spec;
+            spec.width = size.x;
+            spec.height = size.y;
+            spec.bits_per_pixel = 8 * 4;
+            spec.bytes_per_row = spec.width * 4;
+            spec.red_mask = 0xff;
+            spec.green_mask = 0xff00;
+            spec.blue_mask = 0xff0000;
+            spec.alpha_mask = 0xff000000;
+            spec.red_shift = 0;
+            spec.green_shift = 8;
+            spec.blue_shift = 16;
+            spec.alpha_shift = 24;
+            clip::image img(flipBuffer.data(), spec);
+            clip::set_image(img);
+
+            LogI << "Copied screenshot to clipboard" << std::endl;
+#endif
         }
         else
         {
             LogE << SDL_GetError() << std::endl;
         }
-        });
+    });
 }
 
 //protected

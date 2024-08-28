@@ -205,7 +205,7 @@ bool Skeleton::addAnimation(const Skeleton& source, std::size_t idx)
 
     if (m_frameSize == 0)
     {
-        m_frameSize == source.m_frameSize;
+        m_frameSize = source.m_frameSize;
         m_currentFrame.resize(m_frameSize);
     }
 

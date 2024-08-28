@@ -112,6 +112,9 @@
     <Filter Include="Source Files\audio\sound system\effects chain">
       <UniqueIdentifier>{f30d9079-45dd-45f9-a64f-2d84589e1096}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\detail\clipboard">
+      <UniqueIdentifier>{fd22cd03-9f11-4ab0-a4a1-d3b89863e060}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\crogine\include\crogine\Config.hpp">
@@ -1291,6 +1294,21 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp">
       <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_image.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_win.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_win_bmp.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_win_wic.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

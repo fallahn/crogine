@@ -300,6 +300,11 @@
     <ClCompile Include="..\crogine\src\core\Window.cpp" />
     <ClCompile Include="..\crogine\src\detail\backward.cpp" />
     <ClCompile Include="..\crogine\src\detail\BalancedTree.cpp" />
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip.cpp" />
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_win.cpp" />
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_win_bmp.cpp" />
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_win_wic.cpp" />
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_image.cpp" />
     <ClCompile Include="..\crogine\src\detail\DistanceField.cpp" />
     <ClCompile Include="..\crogine\src\detail\enet\callbacks.c" />
     <ClCompile Include="..\crogine\src\detail\enet\compress.c" />
@@ -618,7 +623,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>PARALLEL_GLOBAL_DISABLE;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CLIP_SCREENSHOT;_SCL_SECURE_NO_WARNINGS;PARALLEL_GLOBAL_DISABLE;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;CRO_DEBUG_;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/w34457 /w34456 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -694,7 +699,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GL41;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CLIP_SCREENSHOT;_SCL_SECURE_NO_WARNINGS;GL41;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
