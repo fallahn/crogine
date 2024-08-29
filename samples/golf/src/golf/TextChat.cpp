@@ -467,6 +467,19 @@ void TextChat::handleMessage(const cro::Message& msg)
 bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 {
     const auto msg = pkt.as<TextMessage>();
+
+    if (msg.client >= ConstVal::MaxClients)
+    {
+        LogE << "Recieved message from client " << (int)msg.client << ": Invalid client ID!!" << std::endl;
+        return;
+    }
+
+    if (m_sharedData.connectionData[msg.client].playerCount == 0)
+    {
+        LogW << "Recieved message from client " << (int)msg.client << ": This client is no connected!" << std::endl;
+        return;
+    }
+
     //only one person can type on a connected computer anyway
     //so we'll always assume it's player 0
     auto outStr = m_sharedData.connectionData[msg.client].playerData[0].name;
