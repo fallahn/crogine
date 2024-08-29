@@ -6,11 +6,13 @@
 #include <crogine/ecs/System.hpp>
 
 #include <cstdint>
+#include <array>
 
 struct PseuthePlayer final
 {
     glm::ivec2 gridPosition = glm::ivec2(0);
     glm::ivec2 gridDirection = glm::ivec2(0);
+    glm::ivec2 nextDirection = glm::ivec2(0);
 
     //true if successful, false if collision
     bool step()
@@ -36,6 +38,21 @@ struct PseuthePlayer final
         };
     };
     std::int32_t state = State::Start;
+
+    void setState(std::int32_t s)
+    {
+        state = s;
+        if (nextPart.isValid())
+        {
+            auto& player = nextPart.getComponent<PseuthePlayer>();
+            player.setState(s);
+        }
+    }
+
+    static constexpr float RotationMultiplier = 8.f;
+
+    cro::Entity nextPart;
+    cro::Entity tail; //only used on head part
 };
 
 
@@ -47,5 +64,13 @@ public:
     void process(float) override;
 
 private:
+    //marks a cell as having a body part or not
+    struct Cell final
+    {
+        glm::ivec2 exit = glm::ivec2(0);
+        bool occupied = false;
+    };
+    std::array<Cell, CellCountX * CellCountY> m_cells = {};
+
     void updateActive(cro::Entity, float);
 };

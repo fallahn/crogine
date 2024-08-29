@@ -105,6 +105,22 @@ void PseutheGameState::addSystems()
 
 void PseutheGameState::loadAssets()
 {
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile("pseuthe/assets/sprites/body.spt", m_resources.textures))
+    {
+        m_sprites[SpriteID::Body] = spriteSheet.getSprite("body");
+    }
+
+    //TODO there's also a food 02
+    if (spriteSheet.loadFromFile("pseuthe/assets/sprites/food01.spt", m_resources.textures))
+    {
+        m_sprites[SpriteID::Amoeba] = spriteSheet.getSprite("food01");
+    }
+
+    if (spriteSheet.loadFromFile("pseuthe/assets/sprites/food03.spt", m_resources.textures))
+    {
+        m_sprites[SpriteID::Jelly] = spriteSheet.getSprite("food03");
+    }
 }
 
 void PseutheGameState::createScene()
@@ -165,6 +181,8 @@ void PseutheGameState::createPlayer()
     entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<PseuthePlayer>().gridPosition = GridPos;
     entity.getComponent<PseuthePlayer>().gridDirection = PseuthePlayer::Direction::Right;
+    entity.getComponent<PseuthePlayer>().nextDirection = PseuthePlayer::Direction::Right;
+    entity.getComponent<PseuthePlayer>().tail = entity;
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     auto headEnt = entity;
@@ -178,18 +196,10 @@ void PseutheGameState::createPlayer()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("mouth");
     entity.getComponent<cro::Sprite>().setColour(PlayerColour);
-    entity.addComponent<cro::SpriteAnimation>();// .play(0);
+    entity.addComponent<cro::SpriteAnimation>();
     headEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //antennae root
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.1f });
-    headEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto rootEnt = entity;
-
 
     constexpr float WigglerOffset = 24.f;
-
     struct WigglerCallback final
     {
         const float Rotation = 35.f * cro::Util::Const::degToRad;
@@ -202,8 +212,10 @@ void PseutheGameState::createPlayer()
         void operator()(cro::Entity e, float dt)
         {
             const auto rot = head.getComponent<cro::Transform>().getRotation2D();
-            const auto amt = cro::Util::Maths::shortestRotation(e.getComponent<cro::Transform>().getRotation2D() - rot, rot + (Rotation * direction));
+            const auto amt = cro::Util::Maths::shortestRotation(e.getComponent<cro::Transform>().getRotation2D(), 
+                                                                rot + (Rotation * direction)) * (PseuthePlayer::RotationMultiplier / 2.f);
             e.getComponent<cro::Transform>().rotate(amt * dt);
+            e.getComponent<cro::Transform>().setPosition(glm::vec2(head.getComponent<cro::Transform>().getPosition()));
         }
     };
 
@@ -219,7 +231,6 @@ void PseutheGameState::createPlayer()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width + WigglerOffset, bounds.height / 2.f });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = WigglerCallback(1.f, headEnt);
-    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //right wiggler
     entity = m_gameScene.createEntity();
@@ -232,14 +243,55 @@ void PseutheGameState::createPlayer()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width + WigglerOffset, bounds.height / 2.f });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = WigglerCallback(-1.f, headEnt);
-    rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //TODO implement the 'tail' part
+
+    //TODO implement the 'ribbon trail' part
+
+    //TODO add bubble trail particle
+
+    addBodyPart();
+    addBodyPart();
+    addBodyPart();
 }
 
-void PseutheGameState::addBodyPart(cro::Entity)
+void PseutheGameState::addBodyPart()
 {
+    auto tail = m_player.getComponent<PseuthePlayer>().tail;
+    auto& tailPlayer = tail.getComponent<PseuthePlayer>();
 
+
+    //find nearest free cell (or if all cells full, unlikely, but even so, end game)
+    glm::vec2 basePos = tail.getComponent<cro::Transform>().getPosition();
+    glm::vec2 spawnPos = basePos - glm::vec2(tailPlayer.gridDirection * static_cast<std::int32_t>(CellSize));
+    
+    glm::ivec2 gridPos = getGridPosition(spawnPos);
+    glm::ivec2 nextDirection = tailPlayer.gridPosition - gridPos;
+
+    //TODO test position is free and relocate if not
+
+
+    //calc initial rotation based on direction to tail
+
+
+    //set new part as nextPart of current tail
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(spawnPos);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Body];
+    entity.getComponent<cro::Sprite>().setColour(PlayerColour);
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<PseuthePlayer>().gridPosition = gridPos;
+    entity.getComponent<PseuthePlayer>().gridDirection = nextDirection;
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+    tailPlayer.nextPart = entity;
+
+    //set new part as player tail
+    m_player.getComponent<PseuthePlayer>().tail = entity;
+
+
+    //TODO raise a message for spawn particles and sound
 }
 
 void PseutheGameState::playerInput(const cro::Event& evt)
@@ -250,44 +302,29 @@ void PseutheGameState::playerInput(const cro::Event& evt)
         {
             if (player.gridDirection != PseuthePlayer::Direction::Right)
             {
-                player.gridDirection = PseuthePlayer::Direction::Left;
-                if (player.state == PseuthePlayer::State::Start)
-                {
-                    player.state = PseuthePlayer::State::Active;
-                }
+                player.nextDirection = PseuthePlayer::Direction::Left;
             }
         };
     const auto right = [&]() 
         {
             if (player.gridDirection != PseuthePlayer::Direction::Left)
             {
-                player.gridDirection = PseuthePlayer::Direction::Right;
-                if (player.state == PseuthePlayer::State::Start)
-                {
-                    player.state = PseuthePlayer::State::Active;
-                }
+                player.nextDirection = PseuthePlayer::Direction::Right;
+                player.setState(PseuthePlayer::State::Active);
             }
         };
     const auto up = [&]() 
         {
             if (player.gridDirection != PseuthePlayer::Direction::Down)
             {
-                player.gridDirection = PseuthePlayer::Direction::Up;
-                if (player.state == PseuthePlayer::State::Start)
-                {
-                    player.state = PseuthePlayer::State::Active;
-                }
+                player.nextDirection = PseuthePlayer::Direction::Up;
             }
         };
     const auto down = [&]() 
         {
             if (player.gridDirection != PseuthePlayer::Direction::Up)
             {
-                player.gridDirection = PseuthePlayer::Direction::Down;
-                if (player.state == PseuthePlayer::State::Start)
-                {
-                    player.state = PseuthePlayer::State::Active;
-                }
+                player.nextDirection = PseuthePlayer::Direction::Down;
             }
         };
 

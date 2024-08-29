@@ -6,6 +6,7 @@
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
@@ -28,8 +29,20 @@ private:
     cro::ResourceCollection m_resources;
 
     cro::Entity m_player;
-    std::int16_t m_axisX;
+    std::int16_t m_axisX; //game controller axes
     std::int16_t m_axisY;
+
+
+    struct SpriteID final
+    {
+        enum
+        {
+            Body, Amoeba, Jelly,
+
+            Count
+        };
+    };
+    std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
     void addSystems();
     void loadAssets();
@@ -37,7 +50,7 @@ private:
     void createUI();
 
     void createPlayer();
-    void addBodyPart(cro::Entity);
+    void addBodyPart();
 
     void playerInput(const cro::Event&);
 };
