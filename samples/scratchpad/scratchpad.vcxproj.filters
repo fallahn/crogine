@@ -303,6 +303,9 @@
     <ClCompile Include="src\pseuthe\PseutheBallSystem.cpp">
       <Filter>Source Files\pseuthe</Filter>
     </ClCompile>
+    <ClCompile Include="src\pseuthe\PseuthePlayerSystem.cpp">
+      <Filter>Source Files\pseuthe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -504,6 +507,9 @@
       <Filter>Header Files\pseuthe</Filter>
     </ClInclude>
     <ClInclude Include="src\pseuthe\PseutheBallSystem.hpp">
+      <Filter>Header Files\pseuthe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\pseuthe\PseuthePlayerSystem.hpp">
       <Filter>Header Files\pseuthe</Filter>
     </ClInclude>
   </ItemGroup>

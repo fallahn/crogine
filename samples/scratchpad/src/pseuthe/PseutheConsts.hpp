@@ -8,9 +8,10 @@
 static inline constexpr glm::uvec2 SceneSize(1920u, 1088u); //this allows dividing cells into 64px
 static inline constexpr glm::vec2 SceneSizeFloat(SceneSize);
 
-static inline constexpr std::uint32_t CellSize = 64;
-static inline constexpr auto CellCountX = SceneSize.x / CellSize;
-static inline constexpr auto CellCountY = SceneSize.y / CellSize;
+static inline constexpr std::uint32_t CellSize = 64u;
+static inline constexpr auto CellCountX = static_cast<std::int32_t>(SceneSize.x / CellSize);
+static inline constexpr auto CellCountY = static_cast<std::int32_t>(SceneSize.y / CellSize);
+static inline constexpr glm::vec2 CellCentre = glm::vec2(CellSize / 2);
 
 static inline constexpr float MinLightPos = -30.f;
 static inline constexpr float MaxLightPos = SceneSizeFloat.x - MinLightPos;
@@ -54,4 +55,14 @@ static inline void cameraCallback(cro::Camera& cam)
 
     cam.viewport = { 0.f, bottom, 1.f, height };
     cam.setOrthographic(0.f, SceneSizeFloat.x, 0.f, SceneSizeFloat.y, NearPlane, FarPlane);
+}
+
+static inline glm::ivec2 getGridPosition(glm::vec2 worldPosition)
+{
+    return glm::ivec2(std::floor(worldPosition.x / CellSize), std::floor(worldPosition.y / CellSize));
+}
+
+static inline glm::vec2 getWorldPosition(glm::ivec2 gridPosition)
+{
+    return glm::vec2(gridPosition.x * CellSize, gridPosition.y * CellSize);
 }

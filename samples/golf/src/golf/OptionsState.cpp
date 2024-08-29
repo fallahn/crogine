@@ -1579,7 +1579,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     createLabel({ 204.f, 89.f }, "Use Larger Power Bar");
     createLabel({ 204.f, 73.f }, "Use Decimated Power Bar");
-    createLabel({ 204.f, 57.f }, "Use Decimated Distances");
+    createLabel({ 204.f, 57.f }, "Use Decimalised Distances");
 
 
     auto createSlider = [&](glm::vec2 position, float width = 142.f)

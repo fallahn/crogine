@@ -27,6 +27,10 @@ private:
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
+    cro::Entity m_player;
+    std::int16_t m_axisX;
+    std::int16_t m_axisY;
+
     void addSystems();
     void loadAssets();
     void createScene();
@@ -34,4 +38,6 @@ private:
 
     void createPlayer();
     void addBodyPart(cro::Entity);
+
+    void playerInput(const cro::Event&);
 };

@@ -331,6 +331,7 @@
     <ClCompile Include="src\pseuthe\PseutheBallSystem.cpp" />
     <ClCompile Include="src\pseuthe\PseutheGameState.cpp" />
     <ClCompile Include="src\pseuthe\PseutheMenuState.cpp" />
+    <ClCompile Include="src\pseuthe\PseuthePlayerSystem.cpp" />
     <ClCompile Include="src\retro\RetroState.cpp" />
     <ClCompile Include="src\rolling\RollingState.cpp" />
     <ClCompile Include="src\rolling\RollingSystem.cpp" />
@@ -398,6 +399,7 @@
     <ClInclude Include="src\pseuthe\PseutheConsts.hpp" />
     <ClInclude Include="src\pseuthe\PseutheGameState.hpp" />
     <ClInclude Include="src\pseuthe\PseutheMenuState.hpp" />
+    <ClInclude Include="src\pseuthe\PseuthePlayerSystem.hpp" />
     <ClInclude Include="src\ResourceIDs.hpp" />
     <ClInclude Include="src\retro\RetroState.hpp" />
     <ClInclude Include="src\rolling\RollingState.hpp" />

@@ -471,13 +471,13 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     if (msg.client >= ConstVal::MaxClients)
     {
         LogE << "Recieved message from client " << (int)msg.client << ": Invalid client ID!!" << std::endl;
-        return;
+        return false;
     }
 
     if (m_sharedData.connectionData[msg.client].playerCount == 0)
     {
         LogW << "Recieved message from client " << (int)msg.client << ": This client is no connected!" << std::endl;
-        return;
+        return false;
     }
 
     //only one person can type on a connected computer anyway
