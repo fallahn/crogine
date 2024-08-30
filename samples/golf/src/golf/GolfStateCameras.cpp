@@ -38,6 +38,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "TextAnimCallback.hpp"
 #include "Clubs.hpp"
+#include "LightAnimationSystem.hpp"
 
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -2104,6 +2105,13 @@ void GolfState::updatePointFlares(cro::Entity e, float)
 
     for (auto light : visibleLights)
     {
+        //this is a bit hacky, but we don't want to add flares to lights
+        //that simulate flames, so we'll just skip any with an animation
+        if (light.hasComponent<LightAnimation>())
+        {
+            continue;
+        }
+
         static constexpr float MaxLightDist = 50.f;
         static constexpr float MaxLightDistSqr = MaxLightDist * MaxLightDist;
 
