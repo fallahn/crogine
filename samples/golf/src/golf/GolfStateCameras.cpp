@@ -1991,11 +1991,6 @@ void GolfState::updateLensFlare(cro::Entity e, float)
     }
     e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
-    const auto ndcVisible = [](glm::vec2 p)
-        {
-            return p.x >= -1.f && p.x <= 1.f && p.y >= -1.f && p.y <= 1.f;
-        };
-
     auto ndc = m_skyScene.getActiveCamera().getComponent<cro::Camera>().getActivePass().viewProjectionMatrix * glm::vec4(m_lensFlare.sunPos, 1.f);
 
     bool visible = (ndc.w > 0);
@@ -2071,6 +2066,86 @@ void GolfState::updateLensFlare(cro::Entity e, float)
             e.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, depth });
         }
     }
+}
+
+void GolfState::updatePointFlares(cro::Entity e, float)
+{
+    if (!m_sharedData.useLensFlare)
+    {
+        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        return;
+    }
+    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+
+    const auto texSize = glm::vec2(e.getComponent<cro::Drawable2D>().getTexture()->getSize());
+
+    std::vector<cro::Vertex2D> verts;
+
+    const auto addQuad = [&](glm::vec2 scale, glm::vec2 position, cro::Colour c)
+        {
+            const auto size = (texSize * scale) / 2.f;
+
+            verts.emplace_back(position + glm::vec2(-size.x, size.y), glm::vec2(0.f, 1.f), c);
+            verts.emplace_back(position -size, glm::vec2(0.f), c);
+            verts.emplace_back(position + size, glm::vec2(1.f), c);
+
+            verts.emplace_back(position + size, glm::vec2(1.f), c);
+            verts.emplace_back(position - size, glm::vec2(0.f), c);
+            verts.emplace_back(position + glm::vec2(size.x, -size.y), glm::vec2(1.f, 0.f), c);
+        };
+    
+    const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    const auto& visibleLights = 
+        m_gameScene.getSystem<cro::LightVolumeSystem>()->getDrawList(cam.getDrawListIndex());
+    
+    const glm::vec2 OutputSize(cro::App::getWindow().getSize() / 2u);
+    const auto camPosition = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+
+    for (auto light : visibleLights)
+    {
+        static constexpr float MaxLightDist = 50.f;
+        static constexpr float MaxLightDistSqr = MaxLightDist * MaxLightDist;
+
+        const auto lightPos = light.getComponent<cro::Transform>().getPosition();
+        if (glm::length2(lightPos - camPosition) > MaxLightDistSqr)
+        {
+            //skip lights further than max dist
+            continue;
+        }
+
+        auto ndc = cam.getPass(cro::Camera::Pass::Final).viewProjectionMatrix * glm::vec4(lightPos, 1.f);
+        
+        bool visible = (ndc.w > 0);
+        bool occluded = false;
+
+        if (visible)
+        {
+            glm::vec2 screenPos(ndc);
+            screenPos /= ndc.w;
+            occluded = !ndcVisible(screenPos);
+
+            if (!occluded)
+            {
+                auto depthUV = screenPos + glm::vec2(1.f);
+                depthUV /= 2.f;
+
+                const float Brightness = (cro::Util::Easing::easeOutCubic(1.f - std::min(1.f, glm::length(screenPos))) * 0.4f) + 0.1f;
+
+                cro::Colour c(depthUV.x, depthUV.y, ndc.z / ndc.w, Brightness);
+                const auto pos = (screenPos * OutputSize) + OutputSize;
+                const float Scale = 1.f - (glm::length(lightPos - camPosition) / MaxLightDist);
+
+                addQuad(glm::vec2(Scale) * m_viewScale.x, pos, c);
+            }
+        }
+    }
+
+    e.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+    //make sure we're still visible in free cam mode/hidden UI
+    float depth = m_courseEnt.getComponent<cro::Transform>().getOrigin().z;
+    e.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, depth });
 }
 
 void GolfState::setIdleGroup(std::uint8_t group)

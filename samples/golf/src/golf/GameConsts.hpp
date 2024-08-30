@@ -312,7 +312,8 @@ struct ShaderID final
         TV,
         PointLight,
         Glass,
-        LensFlare
+        LensFlare,
+        PointFlare,
 
     };
 };
@@ -1268,4 +1269,9 @@ static inline cro::Colour getBeaconColour(float rotation)
     c = hsv2rgb(c);
 
     return cro::Colour(c.r, c.g, c.b, 1.f);
+}
+
+static inline bool ndcVisible(glm::vec2 p)
+{
+    return p.x >= -1.f && p.x <= 1.f && p.y >= -1.f && p.y <= 1.f;
 }

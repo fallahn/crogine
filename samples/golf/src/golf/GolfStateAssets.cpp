@@ -387,6 +387,13 @@ void GolfState::loadMap()
         }
     }
 
+    if (m_sharedData.nightTime
+        && m_resources.shaders.loadFromString(ShaderID::PointFlare, cro::RenderSystem2D::getDefaultVertexShader(), PointFlareFrag, "#define TEXTURED\n"))
+    {
+        //again, not a proper material, juts a signal we loaded successfully
+        m_materialIDs[MaterialID::PointFlare] = ShaderID::PointFlare;
+    }
+
     if (m_sharedData.nightTime)
     {
         auto skyDark = SkyBottom.getVec4() * SkyNight.getVec4();

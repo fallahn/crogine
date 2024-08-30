@@ -64,3 +64,32 @@ void main()
     FRAG_OUT.a = 1.0;
 }
 )";
+
+static inline const std::string PointFlareFrag =
+R"(
+uniform sampler2D u_texture;
+uniform sampler2D u_depthTexture;
+
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+
+OUTPUT
+
+//#include FOG_COLOUR
+
+//v_colour has depthmap coords in rg, and projected depth in b
+//v_colour.a controls overall brightness
+
+void main()
+{
+    float depth = TEXTURE(u_depthTexture, v_colour.rg).r;
+    //float dist = getDistance(depth);
+
+    vec2 offsetP = (v_colour.rg - vec2(0.5)) * 0.041;
+    float r = TEXTURE(u_texture, v_texCoord + offsetP).r;
+    float g = TEXTURE(u_texture, v_texCoord).g;
+    float b = TEXTURE(u_texture, v_texCoord - offsetP).b;
+
+    FRAG_OUT.rgb = vec3(r,g,b) * v_colour.a * step(v_colour.b, depth);// step(getDistance(v_colour.b), dist);
+    FRAG_OUT.a = 1.0;
+})";

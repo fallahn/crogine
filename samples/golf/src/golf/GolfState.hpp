@@ -283,6 +283,7 @@ private:
             PointLight,
             Glass,
             LensFlare,
+            PointFlare,
 
             Count
         };
@@ -401,6 +402,7 @@ private:
 
     }m_lensFlare;
     void updateLensFlare(cro::Entity, float); //bound as a callback to the lens flare entity
+    void updatePointFlares(cro::Entity, float); //bound as a callback to UI entity if night time
 
     void setIdleGroup(std::uint8_t);
 

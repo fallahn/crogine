@@ -316,6 +316,27 @@ void GolfState::buildUI()
         }
     }
 
+    //lens flares for point lights
+    if (m_sharedData.nightTime
+        && m_materialIDs[MaterialID::PointFlare] != -1)
+    {
+        auto& t = m_resources.textures.get("assets/golf/images/flare02.png");
+        t.setRepeated(false);
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.02f });
+        entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+        entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
+        entity.getComponent<cro::Drawable2D>().setTexture(&t);
+        entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::PointFlare));
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            std::bind(&GolfState::updatePointFlares, this, std::placeholders::_1, std::placeholders::_2);
+
+        entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getDepthTexture());
+    }
+
+
     //displays the trophies on round end - has to be displayed over top of scoreboard
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();

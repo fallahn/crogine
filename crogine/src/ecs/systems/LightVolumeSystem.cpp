@@ -379,6 +379,10 @@ void LightVolumeSystem::setSourceBuffer(TextureID id, std::int32_t index)
     m_bufferIDs[index] = id;
 }
 
+const std::vector<Entity>& LightVolumeSystem::getDrawList(std::size_t index) const
+{
+    return m_drawLists[index];
+}
 
 #ifdef PARALLEL_DISABLE
 #ifndef PARALLEL_GLOBAL_DISABLE
