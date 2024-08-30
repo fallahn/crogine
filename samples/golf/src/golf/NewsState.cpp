@@ -514,7 +514,7 @@ void NewsState::buildScene()
                         prev += "---";
 
                         ent = m_scene.createEntity();
-                        ent.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 30.f, 0.2f));
+                        ent.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 38.f, 0.2f));
                         ent.getComponent<cro::Transform>().setOrigin(glm::vec2(188.f, 0.f));
                         ent.addComponent<cro::Drawable2D>();
                         ent.addComponent<cro::Text>(font).setString(prev);
@@ -587,7 +587,7 @@ void NewsState::buildScene()
 #ifdef USE_GNS
     //section thumbnail
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -6.f, -86.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ -6.f, -77.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.25f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/news_thumbs.png"));
@@ -599,15 +599,51 @@ void NewsState::buildScene()
 
     //section titles
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -170.f, 8.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ -170.f, 25.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextEditColour);
-    entity.getComponent<cro::Text>().setString("Community\n\n\n\n\n\nGuides");
+    entity.getComponent<cro::Text>().setString("Guides\n\n\n\n\n\nCommunity");
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    
+    
+
     auto titleEnt = entity;
-    entity = createSmallItem(glm::vec2(8.f, -12.f), "Join The Chat Room", titleEnt);
+
+    entity = createSmallItem(glm::vec2(8.f, -12.f), "How To Play Guide", titleEnt);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 3);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    Social::showWebPage("https://steamcommunity.com/sharedfiles/filedetails/?id=2910207511");
+                }
+            });
+    entity = createSmallItem(glm::vec2(8.f, -23.f), "How To Add Custom Music", titleEnt);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 2);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    Social::showWebPage("https://steamcommunity.com/sharedfiles/filedetails/?id=3013809801");
+                }
+            });
+    entity = createSmallItem(glm::vec2(8.f, -34.f), "Using The Steam Workshop", titleEnt);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 1);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    Social::showWebPage("https://steamcommunity.com/sharedfiles/filedetails/?id=2925549958");
+                }
+            });
+
+
+    entity = createSmallItem(glm::vec2(8.f, -60.f), "Join The Chat Room", titleEnt);
     entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 6);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -619,7 +655,7 @@ void NewsState::buildScene()
             });
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
 
-    entity = createSmallItem(glm::vec2(8.f, -23.f), "Join The Clubhouse", titleEnt);
+    entity = createSmallItem(glm::vec2(8.f, -71.f), "Join The Clubhouse", titleEnt);
     entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 5);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -632,7 +668,7 @@ void NewsState::buildScene()
     bounds.bottom += bounds.height;
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
 
-    entity = createSmallItem(glm::vec2(8.f, -34.f), "Discord Server", titleEnt);
+    entity = createSmallItem(glm::vec2(8.f, -82.f), "Discord Server", titleEnt);
     entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 4);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -653,37 +689,93 @@ void NewsState::buildScene()
 
 
 
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 12.f, -102.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Share:");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    titleEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createSmallItem(glm::vec2(8.f, -60.f), "How To Play Guide", titleEnt);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 3);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+    auto sel = uiSystem.addCallback([](cro::Entity e)
+        {
+            auto b = e.getComponent<cro::Sprite>().getTextureRect();
+            b.bottom = 18.f; //ugh.
+            e.getComponent<cro::Sprite>().setTextureRect(b);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    auto unsel = uiSystem.addCallback([](cro::Entity e)
+        {
+            auto b = e.getComponent<cro::Sprite>().getTextureRect();
+            b.bottom = 0.f;
+            e.getComponent<cro::Sprite>().setTextureRect(b);
+        });
+
+    const auto createButton = [&](glm::vec2 pos, const std::string& spriteName)
+        {
+            auto e = m_scene.createEntity();
+            e.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.f));
+            e.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            e.addComponent<cro::Drawable2D>();
+            e.addComponent<cro::Sprite>() = socialSprites.getSprite(spriteName);
+            auto b = e.getComponent<cro::Sprite>().getTextureBounds();
+            e.addComponent<cro::UIInput>().area = b;
+            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = sel;
+            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unsel;
+            e.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
+
+            entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+            return e;
+        };
+
+    static const std::string msg = "Check%20out%20Super%20Video%20Golf%21";
+    static const std::string url = "https%3A%2F%2Fstore.steampowered.com%2Fapp%2F2173760%2FSuper_Video_Golf%2F";
+
+    auto fb = createButton({ 56.f, -4.f }, "facebook");
+    fb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    Social::showWebPage("https://steamcommunity.com/sharedfiles/filedetails/?id=2910207511");
+                    const std::string dst = "https://www.facebook.com/sharer/sharer.php?u=" + url;
+                    cro::Util::String::parseURL(dst);
                 }
             });
-    entity = createSmallItem(glm::vec2(8.f, -71.f), "How To Add Custom Music", titleEnt);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 2);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+    auto twit = createButton({ 80.f, -4.f }, "twitter");
+    twit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    Social::showWebPage("https://steamcommunity.com/sharedfiles/filedetails/?id=3013809801");
+                    const std::string dst = "https://twitter.com/intent/tweet?url=" + url + "&text=" + msg;
+                    cro::Util::String::parseURL(dst);
                 }
             });
-    entity = createSmallItem(glm::vec2(8.f, -82.f), "Using The Steam Workshop", titleEnt);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 1);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+    auto tel = createButton({ 100.f, -4.f }, "telegram");
+    tel.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    Social::showWebPage("https://steamcommunity.com/sharedfiles/filedetails/?id=2925549958");
+                    const std::string dst = "https://t.me/share/url?url=" + url + "&text=" + msg;
+                    cro::Util::String::parseURL(dst);
                 }
             });
+
+    auto red = createButton({ 122.f, -4.f }, "reddit");
+    red.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    const std::string dst = "http://www.reddit.com/submit?url=" + url + "&title=" + msg;
+                    cro::Util::String::parseURL(dst);
+                }
+            });
+
+
+
+
 #else
     entity = createItem(glm::vec2(-76.f, -93.f), "Discord Server", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
