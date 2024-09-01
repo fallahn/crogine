@@ -96,21 +96,21 @@ bool PseutheBackgroundState::simulate(float dt)
 
 void PseutheBackgroundState::render()
 {
-    //m_backgroundBuffer.clear();
-    //m_gameScene.render();
-    //m_backgroundBuffer.display();
-
-    //m_blurBufferH.clear();
-    //m_backgroundQuad.draw();
-    //m_blurBufferH.display();
-
-    //m_blurBufferV.clear();
-    //m_blurQuadH.draw();
-    //m_blurBufferV.display();
-
-    //m_blurQuadV.draw();
-
+    m_backgroundBuffer.clear();
     m_gameScene.render();
+    m_backgroundBuffer.display();
+
+    m_blurBufferH.clear();
+    m_backgroundQuad.draw();
+    m_blurBufferH.display();
+
+    m_blurBufferV.clear();
+    m_blurQuadH.draw();
+    m_blurBufferV.display();
+
+    m_blurQuadV.draw();
+
+    //m_gameScene.render();
 }
 
 //private
@@ -132,14 +132,17 @@ void PseutheBackgroundState::loadAssets()
 
     m_backgroundBuffer.create(SceneSize.x, SceneSize.y, false);
     m_backgroundQuad.setTexture(m_backgroundBuffer.getTexture());
+    m_backgroundQuad.setBlendMode(cro::Material::BlendMode::None);
     m_backgroundQuad.setShader(m_resources.shaders.get(ShaderID::BlurH));
 
     m_blurBufferH.create(SceneSize.x, SceneSize.y, false);
     m_blurQuadH.setTexture(m_blurBufferH.getTexture());
+    m_blurQuadH.setBlendMode(cro::Material::BlendMode::None);
     m_blurQuadH.setShader(m_resources.shaders.get(ShaderID::BlurV));
     
     m_blurBufferV.create(SceneSize.x, SceneSize.y, false);
     m_blurQuadV.setTexture(m_blurBufferV.getTexture());
+    m_blurQuadV.setBlendMode(cro::Material::BlendMode::None);
 }
 
 void PseutheBackgroundState::createScene()
@@ -253,22 +256,22 @@ void PseutheBackgroundState::createScene()
         };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    cam.resizeCallback = std::bind(&cameraCallback, std::placeholders::_1);
-    cameraCallback(cam);
+    //cam.resizeCallback = std::bind(&cameraCallback, std::placeholders::_1);
+    //cameraCallback(cam);
 
-    //cam.resizeCallback = [&](cro::Camera& c)
-    //    {
-    //        c.setOrthographic(0.f, SceneSizeFloat.x, 0.f, SceneSizeFloat.y, NearPlane, FarPlane);;
-    //        c.viewport = { 0.f, 0.f, 1.f, 1.f };
+    cam.resizeCallback = [&](cro::Camera& c)
+        {
+            c.setOrthographic(0.f, SceneSizeFloat.x, 0.f, SceneSizeFloat.y, NearPlane, FarPlane);;
+            c.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-    //        auto winSize = glm::vec2(cro::App::getWindow().getSize());
-    //        auto viewScale = winSize.x / SceneSizeFloat.x;
-    //        m_blurQuadV.setScale(glm::vec2(viewScale));
+            auto winSize = glm::vec2(cro::App::getWindow().getSize());
+            auto viewScale = winSize.x / SceneSizeFloat.x;
+            m_blurQuadV.setScale(glm::vec2(viewScale));
 
-    //        float offset = (winSize.y - (SceneSize.y * viewScale)) / 2.f;
-    //        m_blurQuadV.setPosition(glm::vec2(0.f, offset));
-    //    };
-    //cam.resizeCallback(cam);
+            float offset = (winSize.y - (SceneSize.y * viewScale)) / 2.f;
+            m_blurQuadV.setPosition(glm::vec2(0.f, offset));
+        };
+    cam.resizeCallback(cam);
 
 
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });

@@ -86,6 +86,9 @@ void PseuthePlayerSystem::updateActive(cro::Entity entity, float dt)
         player.setState(PseuthePlayer::State::End);
 
         //TODO raise a message for sound/particles/game rules
+
+
+        return; //we changed state so the rest of this update function is inapplicable
     }
 
 
