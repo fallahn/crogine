@@ -2142,7 +2142,7 @@ void GolfState::updatePointFlares(cro::Entity e, float)
 
                 cro::Colour c(depthUV.x, depthUV.y, ndc.z / ndc.w, Brightness);
                 const auto pos = (screenPos * OutputSize) + OutputSize;
-                const float Scale = (1.f - (glm::length(lightPos - camPosition) / MaxLightDist)) * light.getComponent<cro::Transform>().getWorldScale().x;
+                const float Scale = (1.f - (glm::length(lightPos - camPosition) / MaxLightDist));// *light.getComponent<cro::Transform>().getWorldScale().x;
 
                 addQuad(glm::vec2(Scale) * m_viewScale.x, pos, c);
             }
