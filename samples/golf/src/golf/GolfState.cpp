@@ -3859,6 +3859,9 @@ void GolfState::spawnBall(const ActorInfo& info)
             entity.getComponent<cro::LightVolume>().colour = miniBallColour.getVec4() / 2.f;
             entity.getComponent<cro::Model>().setHidden(true);
 
+            //hack to stop the point light lens flares drawing on balls
+            entity.addComponent<LightAnimation>().pattern.clear();
+
             ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
     }
