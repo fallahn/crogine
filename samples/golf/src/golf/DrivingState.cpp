@@ -621,31 +621,31 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     {
         pauseGame();
     }
-    else if (evt.type == SDL_WINDOWEVENT)
-    {
-        switch (evt.window.event)
-        {
-        default: break;
-        case SDL_WINDOWEVENT_FOCUS_GAINED:
-            //this needs to be delayed a frame so mouse clicking on the
-            //open window doesn't get sent to the input parser
-        {
-            auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float)
-                {
-                    m_inputParser.setSuspended(false);
-                    e.getComponent<cro::Callback>().active = false;
-                    m_uiScene.destroyEntity(e);
-                };
-        }
-            break;
-        case SDL_WINDOWEVENT_FOCUS_LOST:
-            m_inputParser.setSuspended(true);
-            break;
-            }
-    }
+    //else if (evt.type == SDL_WINDOWEVENT)
+    //{
+    //    switch (evt.window.event)
+    //    {
+    //    default: break;
+    //    case SDL_WINDOWEVENT_FOCUS_GAINED:
+    //        //this needs to be delayed a frame so mouse clicking on the
+    //        //open window doesn't get sent to the input parser
+    //    {
+    //        auto entity = m_uiScene.createEntity();
+    //        entity.addComponent<cro::Callback>().active = true;
+    //        entity.getComponent<cro::Callback>().function =
+    //            [&](cro::Entity e, float)
+    //            {
+    //                m_inputParser.setSuspended(false);
+    //                e.getComponent<cro::Callback>().active = false;
+    //                m_uiScene.destroyEntity(e);
+    //            };
+    //    }
+    //        break;
+    //    case SDL_WINDOWEVENT_FOCUS_LOST:
+    //        m_inputParser.setSuspended(true);
+    //        break;
+    //        }
+    //}
 
 #ifdef CRO_DEBUG_
     //m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);

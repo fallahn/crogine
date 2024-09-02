@@ -1063,37 +1063,37 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     }
 
-    else if (evt.type == SDL_WINDOWEVENT)
-    {
-        switch (evt.window.event)
-        {
-        default: break;
-        case SDL_WINDOWEVENT_FOCUS_GAINED:
-            //this needs to be delayed a frame so mouse clicking on the
-            //open window doesn't get sent to the input parser
-            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
-                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
-            {
-                auto entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().function =
-                    [&](cro::Entity e, float)
-                    {
-                        m_inputParser.setSuspended(false);
-                        e.getComponent<cro::Callback>().active = false;
-                        m_uiScene.destroyEntity(e);
-                    };
-            }
-            break;
-        case SDL_WINDOWEVENT_FOCUS_LOST:
-            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
-                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
-            {
-                m_inputParser.setSuspended(true);
-            }
-            break;
-        }
-    }
+    //else if (evt.type == SDL_WINDOWEVENT)
+    //{
+    //    switch (evt.window.event)
+    //    {
+    //    default: break;
+    //    case SDL_WINDOWEVENT_FOCUS_GAINED:
+    //        //this needs to be delayed a frame so mouse clicking on the
+    //        //open window doesn't get sent to the input parser
+    //        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+    //            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+    //        {
+    //            auto entity = m_uiScene.createEntity();
+    //            entity.addComponent<cro::Callback>().active = true;
+    //            entity.getComponent<cro::Callback>().function =
+    //                [&](cro::Entity e, float)
+    //                {
+    //                    m_inputParser.setSuspended(false);
+    //                    e.getComponent<cro::Callback>().active = false;
+    //                    m_uiScene.destroyEntity(e);
+    //                };
+    //        }
+    //        break;
+    //    case SDL_WINDOWEVENT_FOCUS_LOST:
+    //        if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+    //            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+    //        {
+    //            m_inputParser.setSuspended(true);
+    //        }
+    //        break;
+    //    }
+    //}
 
     m_gameScene.forwardEvent(evt);
     m_skyScene.forwardEvent(evt);
