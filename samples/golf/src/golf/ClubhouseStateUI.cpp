@@ -2477,7 +2477,7 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
         pos /= 2.f;
         pos.x = std::floor(pos.x);
         pos.y = std::floor(pos.y);
-        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.2f));
+        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.6f));
     };
 
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
