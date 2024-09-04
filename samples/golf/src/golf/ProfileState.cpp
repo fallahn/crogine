@@ -2965,12 +2965,15 @@ void ProfileState::updateHeadwearTransform()
         idx = m_avatarModels[m_avatarIndex].hatIndex;
     }
 
-    const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairRot + idxOffset] * cro::Util::Const::PI;
-    m_avatarHairModels[idx].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairTx + idxOffset]);
-    m_avatarHairModels[idx].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
-    m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
-    m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
-    m_avatarHairModels[idx].getComponent<cro::Transform>().setScale(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairScale + idxOffset]);
+    if (m_avatarHairModels[idx].isValid())
+    {
+        const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairRot + idxOffset] * cro::Util::Const::PI;
+        m_avatarHairModels[idx].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairTx + idxOffset]);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().setScale(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairScale + idxOffset]);
+    }
 }
 
 void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& ctx)
