@@ -1858,7 +1858,8 @@ void GolfGame::loadAvatars()
 
     if (m_profileData.playerProfiles.empty())
     {
-        m_profileData.playerProfiles.emplace_back().name = "I blame the dev";
+        m_profileData.playerProfiles.emplace_back().name = "Default Profile";
+        m_profileData.playerProfiles[0].saveProfile();
     }
     m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
 }

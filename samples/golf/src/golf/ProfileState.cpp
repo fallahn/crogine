@@ -4391,6 +4391,12 @@ void ProfileState::refreshBio()
     auto path = Social::getUserContentPath(Social::UserContent::Profile);
     if (cro::FileSystem::directoryExists(path))
     {
+        if (m_activeProfile.profileID.empty())
+        {
+            //this creates a new id
+            m_activeProfile.saveProfile();
+        }
+
         path += m_activeProfile.profileID + "/";
 
         if (cro::FileSystem::directoryExists(path))

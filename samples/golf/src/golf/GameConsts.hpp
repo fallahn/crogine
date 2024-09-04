@@ -572,27 +572,27 @@ static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std:
     }
 }
 
-static inline void saveAvatars(const SharedStateData& sd)
-{
-    cro::ConfigFile cfg("avatars");
-    for (const auto& player : sd.localConnectionData.playerData)
-    {
-        auto* avatar = cfg.addObject("avatar");
-        avatar->addProperty("name", player.name.empty() ? "Player" : player.name.toAnsiString()); //hmmm shame we can't save the encoding here
-        avatar->addProperty("ball_id").setValue(player.ballID);
-        avatar->addProperty("hair_id").setValue(player.hairID);
-        avatar->addProperty("skin_id").setValue(player.skinID);
-        avatar->addProperty("flipped").setValue(player.flipped);
-        avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
-        avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
-        avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
-        avatar->addProperty("flags3").setValue(player.avatarFlags[3]);
-        avatar->addProperty("cpu").setValue(player.isCPU);
-    }
-
-    auto path = cro::App::getPreferencePath() + "avatars.cfg";
-    cfg.save(path);
-}
+//static inline void saveAvatars(const SharedStateData& sd)
+//{
+//    cro::ConfigFile cfg("avatars");
+//    for (const auto& player : sd.localConnectionData.playerData)
+//    {
+//        auto* avatar = cfg.addObject("avatar");
+//        avatar->addProperty("name", player.name.empty() ? "Player" : reinterpret_cast<const char*>(player.name.toUtf8().c_str()));
+//        avatar->addProperty("ball_id").setValue(player.ballID);
+//        avatar->addProperty("hair_id").setValue(player.hairID);
+//        avatar->addProperty("skin_id").setValue(player.skinID);
+//        avatar->addProperty("flipped").setValue(player.flipped);
+//        avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
+//        avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
+//        avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
+//        avatar->addProperty("flags3").setValue(player.avatarFlags[3]);
+//        avatar->addProperty("cpu").setValue(player.isCPU);
+//    }
+//
+//    auto path = cro::App::getPreferencePath() + "avatars.cfg";
+//    cfg.save(path);
+//}
 
 static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts()
 {
