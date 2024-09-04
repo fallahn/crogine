@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -49,6 +49,16 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+//#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
+#include <execution>
+#include <mutex>
+#endif
+
 using namespace cro;
 
 namespace
@@ -70,7 +80,7 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 //public
 void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
-    auto& camComponent = cameraEnt.getComponent<Camera>();
+    const auto& camComponent = cameraEnt.getComponent<Camera>();
     if (m_drawLists.size() <= camComponent.getDrawListIndex())
     {
         m_drawLists.resize(camComponent.getDrawListIndex() + 1);
@@ -97,11 +107,30 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
     for (auto i = 0; i < passCount; ++i)
     {
+//apparently this won't work on gcc 9/10/11 (and should be disabled on lower versions anyway)
+#ifndef _MSC_VER
+#if __GNUC__ <= 14
+#ifdef USE_PARALLEL_PROCESSING
+#undef USE_PARALLEL_PROCESSING
+#define GNUC_UNSUPPORTED
+#endif //USE_PARALLEL_PROCESSING
+#endif //__GNUC__
+#endif //_MSC_VER
+
+#if defined USE_PARALLEL_PROCESSING
+        std::sort(std::execution::par, std::begin(drawList[i]), std::end(drawList[i]),
+#else
         std::sort(std::begin(drawList[i]), std::end(drawList[i]),
+#endif
             [](MaterialPair& a, MaterialPair& b)
             {
                 return a.second.flags < b.second.flags;
             });
+#ifdef GNUC_UNSUPPORTED
+#define USE_PARALLEL_PROCESSING
+#undef GNUC_UNSUPPORTED
+#endif
+
     }
 }
 
@@ -194,8 +223,11 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
                 applyBlendMode(model.m_materials[Mesh::IndexData::Final][i]/*.blendMode*/);
 
+                //TODO move these to custom settings list
                 glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
                 glCheck(model.m_materials[Mesh::IndexData::Final][i].enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
+
+                model.m_materials[Mesh::IndexData::Final][i].enableCustomSettings();
 
 #ifdef PLATFORM_DESKTOP
                 model.draw(i, Mesh::IndexData::Final);
@@ -225,10 +257,11 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 for (auto j = 0u; j < model.m_materials[Mesh::IndexData::Final][i].attribCount; ++j)
                 {
                     glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
-            }
+                }
 #endif //PLATFORM 
+                model.m_materials[Mesh::IndexData::Final][i].disableCustomSettings();
+            }
         }
-    }
 
 #ifdef PLATFORM_DESKTOP
         glCheck(glBindVertexArray(0));
@@ -243,7 +276,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glDisable(GL_CULL_FACE));
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
-}
+    }
 }
 
 std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex) const
@@ -319,7 +352,7 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
     //entities for the second pass...
     const auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
 
     //cull entities by viewable into draw lists by pass
@@ -327,13 +360,19 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
     {
         list.clear();
     }
+#ifdef USE_PARALLEL_PROCESSING
+    std::mutex mutex;
 
-    for (auto& entity : entities)
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](Entity entity)
+#else
+    for (auto entity : entities)
+#endif
     {
         auto& model = entity.getComponent<Model>();
         if (model.isHidden())
         {
-            continue;
+            EARLY_OUT;
         }
 
         if (model.m_meshBox != model.m_meshData.boundingBox)
@@ -422,16 +461,25 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 
                 if (!opaque.second.matIDs.empty())
                 {
+#ifdef USE_PARALLEL_PROCESSING
+                    std::scoped_lock l(mutex);
+#endif
                     drawList[p].push_back(opaque);
                 }
 
                 if (!transparent.second.matIDs.empty())
                 {
+#ifdef USE_PARALLEL_PROCESSING
+                    std::scoped_lock l(mutex);
+#endif
                     drawList[p].push_back(transparent);
                 }
             }
         }
     }
+#ifdef USE_PARALLEL_PROCESSING    
+    );
+#endif
 }
 
 void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
@@ -748,3 +796,9 @@ void ModelRenderer::applyBlendMode(const Material::Data& material)
         break;
     }
 }
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

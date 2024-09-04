@@ -69,27 +69,44 @@ namespace sv
         bool m_allMapsLoaded;
         bool m_skinsFinals;
         std::uint8_t m_currentHole;
-        std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
+
         std::uint8_t m_skinsPot;
         std::uint8_t m_currentBest; //current best score for hole, non-stroke games end if no-one can beat it
         std::uint8_t m_randomTargetCount;
 
-        cro::Clock m_turnTimer;
         std::array<std::uint8_t, 2u> m_honour = { 0, 0 };
+
+        struct PlayerGroup final
+        {
+            cro::Clock turnTimer;
+            bool warned = false;
+            std::vector<PlayerStatus> playerInfo;
+            std::vector<std::uint8_t> clientIDs; //list of clients which should be notified of this info
+            std::uint8_t id = 0; //this group's ID, save keep measuring it
+            std::uint8_t playerCount = 0; //total number of players in the group for all clients
+
+            bool waitingForHole = false; //waiting for other groups to complte the hole
+        };
+        std::vector<PlayerGroup> m_playerInfo;
+
+
+        //this is the group IDs indexed by client ID so we can look up a group for a given client
+        std::array<std::int32_t, ConstVal::MaxClients> m_groupAssignments = {};
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const net::NetEvent::Packet&, bool predict);
         void checkReadyQuit(std::uint8_t);
 
-        void setNextPlayer(bool newHole = false);
+        void setNextPlayer(std::int32_t groupID, bool newHole = false);
         void setNextHole();
         void skipCurrentTurn(std::uint8_t);
+        void applyMulligan();
 
         bool validateMap();
         void initScene();
         void buildWorld();
 
-        void handleRules(const struct GolfBallEvent&);
+        void handleRules(std::int32_t groupID, const struct GolfBallEvent&);
         bool summariseRules();
 
         void doServerCommand(const net::NetEvent&);

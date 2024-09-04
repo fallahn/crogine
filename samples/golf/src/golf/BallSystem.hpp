@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -89,6 +89,8 @@ struct Ball final
     float lastStrokeDistance = 0.f;
     bool hadAir = false; //toggled when passing over hole
 
+    std::uint8_t client = 0; //needs to be tracked when sending multiplayer messages
+
     //used for wall collision when putting
     btPairCachingGhostObject* collisionObject = nullptr;
 };
@@ -175,7 +177,7 @@ private:
 
     void doCollision(cro::Entity);
     void doBallCollision(cro::Entity);
-    void doBullsEyeCollision(glm::vec3);
+    void doBullsEyeCollision(glm::vec3, std::uint8_t client);
     void updateWind();
 
     std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;

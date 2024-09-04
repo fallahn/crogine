@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "GameConsts.hpp"
+
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
@@ -64,8 +66,11 @@ public:
     //swaps with existing
     void setChunks(std::vector<TerrainChunk>&);
 
-    static constexpr int32_t ChunkCountX = 6;
-    static constexpr int32_t ChunkCountY = 4;
+    //we want this to automatically vary with map size...
+    static constexpr int32_t ChunkCountX = MapSize.x / 55;
+    static constexpr int32_t ChunkCountY = MapSize.y / 50;
+    //static constexpr int32_t ChunkCountX = 6;
+    //static constexpr int32_t ChunkCountY = 4;
     static constexpr int32_t ChunkCount = ChunkCountX * ChunkCountY;
 
 private:

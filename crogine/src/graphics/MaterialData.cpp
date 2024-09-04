@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/core/Log.hpp>
+
+#include "../detail/GLCheck.hpp"
 
 using namespace cro;
 using namespace cro::Material;
@@ -192,6 +194,51 @@ void Data::setProperty(const std::string& name, CubemapID value)
     {
         result->second.second.textureID = value.textureID;
         result->second.second.type = value.isArray() ? Property::CubemapArray : Property::Cubemap;
+    }
+}
+
+void Data::addCustomSetting(std::uint32_t e)
+{
+    const auto& end = m_customSettings.cbegin() + m_customSettingsCount;
+    if (auto set = std::find(m_customSettings.cbegin(), end, e); set == end)
+    {
+        if (m_customSettingsCount < (MaxCustomSettings))
+        {
+            m_customSettings[m_customSettingsCount] = e;
+            m_customSettingsCount++;
+        }
+    }
+}
+
+void Data::removeCustomSetting(std::uint32_t e)
+{
+    if (m_customSettingsCount == 0)
+    {
+        return;
+    }
+
+    const auto& end = m_customSettings.cbegin() + m_customSettingsCount;
+    if (auto set = std::find(m_customSettings.cbegin(), end, e); set != end)
+    {
+        auto pos = std::distance(m_customSettings.cbegin(), set);
+        m_customSettingsCount--;
+        std::swap(m_customSettings[pos], m_customSettings[m_customSettingsCount]);
+    }
+}
+
+void Data::enableCustomSettings() const
+{
+    for (auto i = 0u; i < m_customSettingsCount; ++i)
+    {
+        glCheck(glEnable(m_customSettings[i]));
+    }
+}
+
+void Data::disableCustomSettings() const
+{
+    for (auto i = 0u; i < m_customSettingsCount; ++i)
+    {
+        glCheck(glDisable(m_customSettings[i]));
     }
 }
 

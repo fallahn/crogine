@@ -150,6 +150,7 @@ private:
             CelTextured,
             CelTexturedSkinned,
             Hair,
+            HairReflect,
             Billboard,
             BillboardShadow,
             Ground,
@@ -373,6 +374,8 @@ private:
     void updateLobbyList();
     void quitLobby();
     void addCourseSelectButtons();
+    void prevRules();
+    void nextRules();
     void prevHoleCount();
     void nextHoleCount();
     void prevCourse();

@@ -59,6 +59,7 @@ Window::Window()
     m_threadContext         (nullptr),
     m_mainContext           (nullptr),
     m_fullscreen            (false),
+    m_exclusiveFullScreen   (false),
     m_multisamplingEnabled  (false),
     m_previousWindowSize    (0),
     m_cursor                (nullptr)
@@ -252,7 +253,11 @@ void Window::setFullScreen(bool fullscreen)
     std::int32_t mode = 0;
     if (fullscreen)
     {
+#ifndef __APPLE__
+        mode = m_exclusiveFullScreen ? SDL_WINDOW_FULLSCREEN : FS_MODE;
+#else
         mode = FS_MODE;
+#endif
         m_previousWindowSize = getSize();
     }
 

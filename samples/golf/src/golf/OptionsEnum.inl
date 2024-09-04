@@ -43,6 +43,8 @@ enum OptionsIndex
     AVMixerRight,
     AVVolumeDown,
     AVVolumeUp,
+    AVDeviceDown,
+    AVDeviceUp,
     AVAAL,
     AVAAR,
     AVFOVL,
@@ -52,6 +54,7 @@ enum OptionsIndex
     AVPixelScale,
     AVVertSnap,
     AVFullScreen,
+    AVFullScreenMode,
     AVVSync,
     AVBeacon,
     AVBeaconL,
@@ -74,6 +77,9 @@ enum OptionsIndex
     AVCrowdL,
     AVCrowdR,
     AVLensFlare,
+    AVLargePower,
+    AVDecPower,
+    AVDecDist,
 
 
     Controls = 300,

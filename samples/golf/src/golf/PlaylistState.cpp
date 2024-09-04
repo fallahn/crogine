@@ -648,6 +648,13 @@ void PlaylistState::loadAssets()
     {
         m_resources.shaders.addInclude(name, str);
     }
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
+
+    //includes aren't ignored by #defines because they're our own hack
+    //so we have to add an empty one to get the water shader to compile...
+    static const std::string DepthConst = "\n";
+    m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConst.c_str());
 
     //materials
     m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
@@ -719,13 +726,15 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Branch] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Branch]).setProperty("u_noiseTexture", noiseTex);
+    m_resources.materials.get(m_materialIDs[MaterialID::Branch]).addCustomSetting(GL_CLIP_DISTANCE1);
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushGeom, BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaf] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Leaf]).addCustomSetting(GL_CLIP_DISTANCE1);
 
     m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
@@ -734,7 +743,7 @@ void PlaylistState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]).setProperty("u_noiseTexture", noiseTex);
 
     std::string alphaClip = m_sharedData.hqShadows ? "#define ALPHA_CLIP\n" : "";
-    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowGeom, ShadowFragment, "#define POINTS\n #define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n #define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::LeafShadow] = m_resources.materials.add(*shader);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -180,7 +180,7 @@ namespace cro
         float m_currentTimestamp;
         float m_emissionTimestamp;
 
-        bool m_pendingUpdate;
+        //bool m_pendingUpdate;
         std::uint64_t m_renderFlags;
 
         std::int32_t m_releaseCount;

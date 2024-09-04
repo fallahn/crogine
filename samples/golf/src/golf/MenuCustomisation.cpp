@@ -818,8 +818,20 @@ void MenuState::parseAvatarDirectory()
                     modelInfo.model.addComponent<cro::Transform>();
                     md.createModel(modelInfo.model);
 
-                    modelInfo.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
+                    auto material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                    applyMaterialData(md, material); //applies double sidedness
+
+                    modelInfo.model.getComponent<cro::Model>().setMaterial(0, material);
                     modelInfo.model.getComponent<cro::Model>().setHidden(true);
+
+                    if (md.getMaterialCount() == 2)
+                    {
+                        //add the shiny material on the second channel
+                        material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        applyMaterialData(md, material, 1);
+
+                        modelInfo.model.getComponent<cro::Model>().setMaterial(1, material);
+                    }
 
                     modelInfo.uid = info.uid;
                 }
@@ -853,19 +865,25 @@ void MenuState::parseAvatarDirectory()
     for (auto& profile : m_profileData.playerProfiles)
     {
         //make sure the profile avatar is actually available
-        auto skinIndex = indexFromAvatarID(profile.skinID);
+        const auto skinIndex = indexFromAvatarID(profile.skinID);
         if (profile.skinID == 0
             || m_sharedData.avatarInfo[skinIndex].locked)
         {
-            //use first valid skin
+            //use first valid skin - locked skins are never loaded first
             profile.skinID = m_sharedData.avatarInfo[0].uid;
         }
 
         //and the hair
-        auto hairIndex = indexFromHairID(profile.hairID);
+        const auto hairIndex = indexFromHairID(profile.hairID);
         if (m_sharedData.hairInfo[hairIndex].locked)
         {
             profile.hairID = m_sharedData.hairInfo[0].uid;
+        }
+
+        const auto hatIndex = indexFromHairID(profile.hairID);
+        if (m_sharedData.hairInfo[hatIndex].locked)
+        {
+            profile.hatID = 0;
         }
 
         //compare against list of unlocked balls and make sure we're in it
@@ -1059,6 +1077,12 @@ void MenuState::createAvatarScene()
                 if (id > -1)
                 {
                     //hair is optional so OK if this doesn't exist
+
+                    //manually duplicate this to create a hat attachment
+                    auto hatAttachment = entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                    auto hatID = entity.getComponent<cro::Skeleton>().addAttachment(hatAttachment);
+                    m_playerAvatars[i].hatAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[hatID];
+                    //do this last because adding an attachment will invalidate the pointer...
                     m_playerAvatars[i].hairAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[id];
                 }
 

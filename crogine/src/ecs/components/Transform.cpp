@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -144,6 +144,11 @@ Transform& Transform::operator=(Transform&& other) noexcept
             m_parent->removeChild(*this);
         }
 
+        /*
+        If you get errors here in debug build chances are
+        your project requires PARALLEL_GLOBAL_DISABLE to be defined
+        */
+
         //orphan any children
         for (auto c : m_children)
         {
@@ -230,6 +235,10 @@ Transform::~Transform()
 //public
 void Transform::setOrigin(glm::vec3 o)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
+
     m_origin = o;
     m_dirtyFlags |= Tx;
 }
@@ -241,12 +250,20 @@ void Transform::setOrigin(glm::vec2 o)
 
 void Transform::setPosition(glm::vec3 position)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
+
     m_position = position;
     m_dirtyFlags |= Tx;
 }
 
 void Transform::setPosition(glm::vec2 position)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
+
     m_position.x = position.x;
     m_position.y = position.t;
     m_dirtyFlags |= Tx;
@@ -254,6 +271,10 @@ void Transform::setPosition(glm::vec2 position)
 
 void Transform::setRotation(glm::vec3 axis, float angle)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
+
     glm::quat q = glm::quat(1.f, 0.f, 0.f, 0.f);
     m_rotation = glm::rotate(q, angle, axis);
     m_dirtyFlags |= Tx;
@@ -266,18 +287,28 @@ void Transform::setRotation(float radians)
 
 void Transform::setRotation(glm::quat rotation)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
+
     m_rotation = rotation;
     m_dirtyFlags |= Tx;
 }
 
 void Transform::setRotation(glm::mat4 rotation)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_rotation = glm::quat_cast(rotation);
     m_dirtyFlags |= Tx;
 }
 
 void Transform::setScale(glm::vec3 scale)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_scale = scale;
     m_dirtyFlags |= Tx;
 }
@@ -289,6 +320,9 @@ void Transform::setScale(glm::vec2 scale)
 
 void Transform::move(glm::vec3 distance)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_position += distance;
     m_dirtyFlags |= Tx;
 }
@@ -300,6 +334,9 @@ void Transform::move(glm::vec2 distance)
 
 void Transform::rotate(glm::vec3 axis, float rotation)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_rotation = glm::rotate(m_rotation, rotation, glm::normalize(axis));
     m_dirtyFlags |= Tx;
 }
@@ -311,17 +348,27 @@ void Transform::rotate(float amount)
 
 void Transform::rotate(glm::quat rotation)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_rotation = rotation * m_rotation;
     m_dirtyFlags |= Tx;
 }
 
 void Transform::rotate(glm::mat4 rotation)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_rotation = glm::quat_cast(rotation) * m_rotation;
+    m_dirtyFlags |= Tx;
 }
 
 void Transform::scale(glm::vec3 scale)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_scale *= scale;
     m_dirtyFlags |= Tx;
 }
@@ -343,7 +390,8 @@ glm::vec3 Transform::getPosition() const
 
 glm::vec3 Transform::getWorldPosition() const
 {
-    return glm::vec3(getWorldTransform()[3]) - ((m_origin * m_scale) * m_rotation);
+    const auto t = glm::vec3(getWorldTransform()[3]);
+    return t - ((m_origin * m_scale) * m_rotation);
 }
 
 glm::quat Transform::getRotation() const
@@ -381,8 +429,12 @@ glm::vec3 Transform::getWorldScale() const
 
 glm::mat4 Transform::getLocalTransform() const
 {
+   
     if (m_dirtyFlags & Tx)
     {
+#ifdef USE_PARALLEL_PROCESSING
+        std::scoped_lock l(m_mutex);
+#endif 
         m_transform = glm::translate(glm::mat4(1.f), m_position);
         m_transform *= glm::toMat4(m_rotation);
         m_transform = glm::scale(m_transform, m_scale);
@@ -398,6 +450,10 @@ glm::mat4 Transform::getLocalTransform() const
 
 void Transform::setLocalTransform(glm::mat4 transform)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
+
     m_position = transform[3];
     m_rotation = glm::quat_cast(transform);
     
@@ -471,6 +527,10 @@ bool Transform::addChild(Transform& child)
                 return true; //already added!
             }
 
+#ifdef USE_PARALLEL_PROCESSING
+            std::scoped_lock l(m_mutex);
+#endif
+
             auto& otherSiblings = child.m_parent->m_children;
             otherSiblings.erase(std::remove_if(otherSiblings.begin(), otherSiblings.end(),
                 [&child](const Transform* ptr)
@@ -478,7 +538,14 @@ bool Transform::addChild(Transform& child)
                     return ptr == &child;
                 }), otherSiblings.end());
         }
-        child.m_parent = this;
+
+        {
+#ifdef USE_PARALLEL_PROCESSING
+            std::scoped_lock l(m_mutex);
+#endif
+            child.m_parent = this;
+        }
+
 
         //correct the depth
         while (child.m_depth < (m_depth + 1))
@@ -490,7 +557,13 @@ bool Transform::addChild(Transform& child)
             child.decreaseDepth();
         }
 
-        m_children.push_back(&child);
+
+        {
+#ifdef USE_PARALLEL_PROCESSING
+            std::scoped_lock l(m_mutex);
+#endif
+            m_children.push_back(&child);
+        }
 
         return true;
     }
@@ -502,13 +575,22 @@ void Transform::removeChild(Transform& tx)
 {
     if (tx.m_parent != this) return;
 
-    tx.m_parent = nullptr;
+    {
+#ifdef USE_PARALLEL_PROCESSING
+        std::scoped_lock l(m_mutex);
+#endif
+        tx.m_parent = nullptr;
+    }
+
 
     while (tx.m_depth > 0)
     {
         tx.decreaseDepth();
     }
 
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_children.erase(std::remove_if(m_children.begin(), m_children.end(),
         [&tx](const Transform* ptr)
         {
@@ -518,12 +600,18 @@ void Transform::removeChild(Transform& tx)
 
 void Transform::addCallback(std::function<void()> cb)
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_callbacks.push_back(cb);
 }
 
 //private
 void Transform::reset()
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_origin = glm::vec3(0.f, 0.f, 0.f);
     m_position = glm::vec3(0.f, 0.f, 0.f);
     m_scale = glm::vec3(1.f, 1.f, 1.f);
@@ -553,6 +641,9 @@ void Transform::doCallbacks() const
 
 void Transform::increaseDepth()
 {
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
     m_depth++;
     for (auto& c : m_children)
     {
@@ -562,7 +653,14 @@ void Transform::increaseDepth()
 
 void Transform::decreaseDepth()
 {
-    if(m_depth > 0) m_depth--; //this is a hack, we should never call this if we're at 0 already
+#ifdef USE_PARALLEL_PROCESSING
+    std::scoped_lock l(m_mutex);
+#endif
+    if (m_depth > 0)
+    {
+        m_depth--; //this is a hack, we should never call this if we're at 0 already
+    }
+
     for (auto& c : m_children)
     {
         c->decreaseDepth();

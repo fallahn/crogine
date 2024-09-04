@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -41,16 +41,16 @@ namespace
     constexpr float CullDist = MaxDist * MaxDist;
 }
 
-ChunkVisSystem::ChunkVisSystem(cro::MessageBus& mb, glm::vec2 MapSize, TerrainBuilder* tb)
+ChunkVisSystem::ChunkVisSystem(cro::MessageBus& mb, glm::vec2 mapSize, TerrainBuilder* tb)
     : cro::System(mb, typeid(ChunkVisSystem)),
     m_terrainBuilder(tb),
-    m_chunkSize     (MapSize.x / ColCount, MapSize.y / RowCount),
+    m_chunkSize     (mapSize.x / ColCount, mapSize.y / RowCount),
     m_currentIndex  (0),
     m_indexList     (RowCount* ColCount)
 {
     static constexpr float DefaultHeight = 60.f;
-    static const float Width = MapSize.x / ColCount;
-    static const float Depth = -MapSize.y / RowCount; //Y size is mapped to -z in world coords
+    static const float Width = mapSize.x / ColCount;
+    static const float Depth = -mapSize.y / RowCount; //Y size is mapped to -z in world coords
 
     //init the bounding boxes. Point 0 is lower, 1 is upper
     for (auto y = 0; y < RowCount; ++y)

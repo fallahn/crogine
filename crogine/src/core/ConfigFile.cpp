@@ -488,6 +488,47 @@ ConfigObject::NameValue ConfigObject::getObjectName(const std::string& line)
 
 ConfigObject::NameValue ConfigObject::getPropertyName(const std::string& line)
 {
+    //cro::String cLine = cro::String::fromUtf8(line.begin(), line.end());
+    //auto result = cLine.find("=");
+    //auto firstArr = cLine.substr(0, result).toUtf8();
+    //firstArr.erase(std::remove(firstArr.begin(), firstArr.end(), ' '), firstArr.end());
+    //const std::string first = reinterpret_cast<const char*>(firstArr.c_str());
+
+    //auto secondArr = cLine.substr(result + 1).toUtf8();
+    //auto r1 = std::find(secondArr.begin(), secondArr.end(), '\"');
+    //if (r1 != secondArr.end())
+    //{
+    //    auto r2 = std::find(secondArr.rbegin(), secondArr.rend(), '\"');
+    //    if (r2 != secondArr.rend())
+    //    {
+    //        /*auto r2Pos = secondArr.rend() - r2 - 1;
+    //        std::basic_string<std::uint8_t> temp;
+    //        temp.resize(r2Pos - std::distance(secondArr.begin(), r1));
+    //        std::copy(r1, r1 + temp.size(), temp.begin());
+    //        secondArr.swap(temp);*/
+    //        secondArr.erase(std::remove(secondArr.begin(), secondArr.end(), '\"'), secondArr.end());
+
+    //    }
+    //    else
+    //    {
+    //        Logger::log("String property \'" + first + "\' has missing \'\"\', value may not be as expected", Logger::Type::Warning);
+    //    }
+    //}
+    //else
+    //{
+    //    secondArr.erase(std::remove(secondArr.begin(), secondArr.end(), ' '), secondArr.end());
+    //}
+    //std::string second;
+    //if (secondArr[0] == '/')
+    //{
+    //    second = reinterpret_cast<const char*>(&secondArr[1]);
+    //}
+    //else
+    //{
+    //    second = reinterpret_cast<const char*>(secondArr.c_str());
+    //}
+
+
     auto result = line.find_first_of("=");
     assert(result != std::string::npos);
 

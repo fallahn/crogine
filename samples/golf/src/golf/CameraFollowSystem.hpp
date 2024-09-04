@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -127,12 +127,17 @@ public:
     void handleMessage(const cro::Message&) override;
     void process(float) override;
 
+    void setTargetGroup(std::uint8_t group) { m_targetGroup = group; }
+    std::uint8_t getTargetGroup() const { return m_targetGroup; }
+
     //resets back to player cam and raises a message
     void resetCamera();
 
 private:
     std::int32_t m_closestCamera;
     cro::Entity m_currentCamera;
+
+    std::uint8_t m_targetGroup;
 
     void onEntityAdded(cro::Entity) override;
 };

@@ -127,6 +127,21 @@ namespace VoicePacket
     };
 }
 
+struct ClientGrouping final
+{
+    enum
+    {
+        None, //no grouping every client is in group 0
+        Even, //attempt to split evenly between 2 groups
+        One,  //every client has its own group
+        Two,  //two clients per group
+        Three,//three clients per group
+        Four,  //four clients per group
+
+        Count
+    };
+};
+
 namespace PacketID
 {
     enum
@@ -149,13 +164,18 @@ namespace PacketID
         FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
         MaxStrokes, //< uint8 MaxStrokeID player reached stroke limit (so client can print message)
+        HoleComplete, //< uint16 client OR'd player - let clients know a player was forfeited for the current hole
         MaxClubs, //< tells the client to use this club set
+        SpectateGroup, //< uint8 tells idle player groups to spectate this one
+        SetIdle, //< tell the client we're idle and to spectate the uint8 group idle
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation
         ActorSpawn, //< ActorInfo
         WindDirection, //< compressed vec3
         BallLanded, //< BallUpdate struct
+        GroupHoled, //int32 groupID if in group play
+        GroupTurnEnded, //int32 groupID if in group play
         Gimme, //< uint16 client << 8 | player turn was ended on a gimme
         Elimination, //< uint16 client << 8 | player was eliminated
         LifeLost, //< uint16 client << 8 | player
@@ -163,12 +183,15 @@ namespace PacketID
         TableInfo, //< TableInfo struct
         TargetID, //< uint16 billiards player OR'd ball ID to update the UI
         ServerAchievement, //< uint8 client, uint8 player, uint8 achievement id - up to client to decide if to award
+        GroupID, //< uint8 groupID to which the desitnation client was assigned
+        GroupPosition, //< GroupPosition struct
 
         EntityRemoved, //< uint32 entity ID
         ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end
         BullsEye, //< bullseye struct
         BullHit, //< BullHit struct
         FlagHit, //< BullHit struct
+        TargetHit, //< uint16 client|player - hack to broadcast to clients to update their scoreboards
         WarnTime, //< uint8 warning time for AFK in seconds
         WeatherChange, //< 0 off 1 on uint8
         Poke, //< uint8 0 - only sent to specific client
@@ -186,6 +209,8 @@ namespace PacketID
         BallPlaced, //< BilliardBallInput with position in offset member
         SkipTurn, //< uint8 clientID - requests server fast forward current turn
         ClubLevel, //< uint8 client ID | uint8 client club level (max clubs - used to limit to lowest player)
+        Mulligan, //< uint8 client ID - career mode requests a mulligan
+        GroupMode, //< int32 how multiplayer games should be grouped on a server
 
         //both directions
         ClientVersion, //uint16 FROM server on join contains the game mode, TO server CURRENT_VER of client. Clients are kicked if this does not match the server
@@ -211,7 +236,8 @@ namespace PacketID
         PlayerXP, //<uint16 level << 8 | client - used to share client xp/level info
         ChatMessage, //TextMessage struct
         DronePosition, //< compressed vec3 from host rebroadcast to clients
-        ClubChanged //< updates putt cam on remote clients: uint8 club | uint8 client
+        ClubChanged, //< updates putt cam on remote clients: uint8 club | uint8 client
+        AvatarRotation //uin32_t client | player | finalRotation compressed as int16
     };
 }
 

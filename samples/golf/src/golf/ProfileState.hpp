@@ -62,7 +62,9 @@ struct AvatarPreview final
 {
     std::int32_t type = 0;
     std::size_t hairIndex = 0; //TODO this doesn't really need to be per model...
+    std::size_t hatIndex = 0; //TODO this doesn't really need to be per model...
     cro::Attachment* hairAttachment = nullptr;
+    cro::Attachment* hatAttachment = nullptr;
     cro::Entity previewModel;
     std::vector<cro::Entity> previewAudio;
     std::size_t previewIndex = 0; //actual index may differ because of locked models
@@ -95,6 +97,7 @@ private:
 
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;
+    cro::RenderTexture m_hairEditorTexture;
     cro::ResourceCollection m_resources;
 
     cro::AudioScape m_menuSounds;
@@ -122,6 +125,8 @@ private:
 
             BallBrowser,
             HairBrowser,
+            HairEditor, HairHelp, 
+            HairPreview, HairColourPreview,
 
             Count
         };
@@ -133,6 +138,7 @@ private:
         enum
         {
             Avatar, Ball, Mugshot,
+            HairEdit,
 
             Count
         };
@@ -140,7 +146,7 @@ private:
     std::array<cro::Entity, CameraID::Count> m_cameras;
 
     std::vector<BallPreview> m_ballModels;
-    std::vector<cro::Entity> m_ballHairModels;
+    std::vector<cro::Entity> m_previewHairModels;
     std::size_t m_ballIndex;
     std::size_t m_ballHairIndex;
 
@@ -168,6 +174,7 @@ private:
     FlyoutMenu m_ballColourFlyout;
 
     std::size_t m_lastSelected;
+    float m_avatarRotation;
 
     void addSystems();
     void loadResources();
@@ -184,13 +191,39 @@ private:
         std::int32_t arrowUnselected = 0;
         std::int32_t closeSelected = 0;
         std::int32_t closeUnselected = 0;
+        glm::vec3 closeButtonPosition = glm::vec3({ 468.f, 331.f, 0.1f });
         cro::SpriteSheet spriteSheet;
         std::function<cro::Entity(std::int32_t)> createArrow;
+        std::function<void()> onClose;
     };
+
+    struct HeadwearID final
+    {
+        enum
+        {
+            Hair, Hat,
+            Count
+        };
+    };
+    std::int32_t m_headwearID;
+    std::array<cro::FloatRect, HeadwearID::Count> m_headwearPreviewRects = {};
+
+    struct Gizmo final
+    {
+        cro::Entity entity;
+        std::vector<cro::Vertex2D> x;
+        std::vector<cro::Vertex2D> y;
+        std::vector<cro::Vertex2D> z;
+    }m_gizmo;
+    void updateGizmo();
+    void updateHeadwearTransform();
 
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
-    cro::Entity createBrowserBackground(std::int32_t, const CallbackContext&);
+    void createHairEditor(cro::Entity, const CallbackContext&);
+    cro::FloatRect getHeadwearTextureRect(std::size_t);
+    std::size_t fetchUIIndexFromColour(std::uint8_t colourIndex, std::int32_t paletteIndex);
+    std::pair<cro::Entity, cro::Entity> createBrowserBackground(std::int32_t, const CallbackContext&);
 
     void quitState();
 
@@ -204,6 +237,7 @@ private:
 
     void setAvatarIndex(std::size_t);
     void setHairIndex(std::size_t);
+    void setHatIndex(std::size_t);
     void setBallIndex(std::size_t);
 
     struct PageHandles final

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -50,7 +50,7 @@ MessageBus::MessageBus()
 
 const Message& MessageBus::poll()
 {
-    static auto size = sizeof(Message);
+    static constexpr auto size = sizeof(Message);
     const Message& m = *reinterpret_cast<Message*>(m_outPointer);
     m_outPointer += (size + m.m_dataSize);
     m_currentCount--;
@@ -62,6 +62,9 @@ bool MessageBus::empty()
 {
     if (m_currentCount == 0)
     {
+#ifdef USE_PARALLEL_PROCESSING
+        std::scoped_lock l(m_mutex);
+#endif
         m_currentBuffer.swap(m_pendingBuffer);
         m_inPointer = m_pendingBuffer.data();
         m_outPointer = m_currentBuffer.data();

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -220,9 +220,9 @@ namespace cro
 
         /*!
         \brief Returns the index of the animation with the given name if it exists
-        else returns 0
+        else returns -1
         */
-        std::size_t getAnimationIndex(const std::string& name) const;
+        std::int32_t getAnimationIndex(const std::string& name) const;
 
         /*!
         \brief Returns the index of the current animation
@@ -236,11 +236,29 @@ namespace cro
         void addAnimation(const SkeletalAnim&);
 
         /*!
+        \brief Copies an animation from an existing Skeleton component into this one
+        If an animation with the name already exists then it is overwritten!
+        \param source The skeleton component to copy from
+        \param idx The index of the animation to copy. If this is out of range nothing is copied
+        Note that animations in this compnent will be re-indexed so existing indices will be invalid
+        \returns true on success else returns false
+        */
+        bool addAnimation(const Skeleton& source, std::size_t idx);
+
+        /*!
         \brief Adds a frame of animation.
         If this is the first frame then this will set the frame size (aka joint count)
         of a single frame. Subsequent frames must match this number of joints.
         */
         void addFrame(const std::vector<Joint>&);
+
+        /*!
+        \brief Removes the animation at the given index.
+        Note that all animations with subsequent indices will be
+        re-indexed.
+        Returns false if no animation was removed - eg index was out of range
+        */
+        bool removeAnimation(std::size_t index);
 
         /*!
         \brief Returns the index of the current frame from the beginning of

@@ -47,6 +47,9 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+//#define NO_WIND
+
+
 using namespace cl;
 
 namespace
@@ -54,7 +57,7 @@ namespace
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
-    static constexpr float AttractRadius = HoleRadius * 1.2f;
+    static constexpr float AttractRadius = HoleRadius * 1.24f; //1.2f;
     static constexpr float MinAttractRadius = AttractRadius * AttractRadius;
     static constexpr float Margin = 1.02f;
     static constexpr float BallHoleDistance = (HoleRadius * Margin) * (HoleRadius * Margin);
@@ -65,9 +68,28 @@ namespace
     static constexpr float BallRollTimeout = -10.f;
     static constexpr float BallTimeoutVelocity = 0.04f;
     static constexpr float MinSpinPower = 0.05f; //min velocity to stop doesn't kick in if there's more than this much top/back spin to apply
+    static constexpr float MinRollSlope = 0.95f; //ball won't stop rolling if the ground is steeper that this
 
     static constexpr float MinRollVelocity = -0.25f;
-    static constexpr float MaxStoneSlope = 0.9f; //dot prod with vertical - ball is OOB if less than this
+    static constexpr float MaxStoneSlope = 0.95f; //dot prod with vertical - ball is OOB if less than this
+
+    static constexpr float MaxRestitutionIncrease = 0.05f; //depending on the angle of the bounce up to this much is added to restitution multiplier
+
+    float getRestitution(glm::vec3 vel, glm::vec3 norm)
+    {
+        //TODO this needs to be a lookup table for the punch values for each club
+        //however I don't think we *actually know* the club server side. Perhaps
+        //we could use the length of velocity, but there's probably too much overlap
+        //between the different clubs.
+        const float StartAngle = 0.35f;
+        const float l = glm::length(vel);
+
+        const float d = glm::dot(-(vel / l), norm);
+        //LogI << "Vel: " << l << ", dot: " << d << std::endl;
+        const float amt = 0.1f + (0.9f * glm::smoothstep(0.001f, StartAngle, d));
+        //LogI << amt << std::endl;
+        return (1.f - amt) * MaxRestitutionIncrease;
+    }
 
     static constexpr std::array<float, TerrainID::Count> Friction =
     {
@@ -174,7 +196,13 @@ void BallSystem::process(float dt)
     m_currentWindInterpTime = std::min(m_windInterpTime, m_currentWindInterpTime + dt);
     float interp = std::min(1.f, std::max(0.f, m_currentWindInterpTime / m_windInterpTime));
     m_windDirection = interpolate(m_windDirSrc, m_windDirTarget, interp);
+
+#ifdef NO_WIND
+    m_windStrength = 0.f;
+#else
     m_windStrength = interpolate(m_windStrengthSrc, m_windStrengthTarget, interp);
+#endif
+
 
     CRO_ASSERT(!std::isnan(m_windDirection.x), "");
     CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
@@ -295,6 +323,7 @@ void BallSystem::fastForward(cro::Entity entity)
     //still have to raise the final event...
     auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
     *msg = predictionEvent;
+    msg->client = entity.getComponent<Ball>().client;
 }
 
 #ifdef CRO_DEBUG_
@@ -441,7 +470,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             newPos.y = terrainContact.intersection.y;
             tx.setPosition(newPos);
         }
-        doBullsEyeCollision(tx.getPosition());
+        doBullsEyeCollision(tx.getPosition(), ball.client);
 
 
         const auto resetBall = [&](Ball::State state, std::uint8_t terrain)
@@ -455,6 +484,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             msg->type = GolfBallEvent::Landed;
             msg->terrain = ball.terrain;
             msg->position = newPos;
+            msg->client = ball.client;
         };
 
         //check if we rolled onto the green
@@ -479,7 +509,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         //finally check to see if we're slow enough to stop
         constexpr float TimeOut = (BallRollTimeout / 2.f);
         auto len2 = glm::length2(ball.velocity);
-        if ((len2 < MinVelocitySqr && std::abs(ball.spin.y) < MinSpinPower)
+        if ((len2 < MinVelocitySqr 
+            && std::abs(ball.spin.y) < MinSpinPower
+            && glm::dot(cro::Transform::Y_AXIS, terrainContact.normal) > MinRollSlope)
+
             || ((ball.delay < TimeOut) && (len2 < BallTimeoutVelocity))
             || (ball.delay < (TimeOut * 2.f)))
         {
@@ -693,6 +726,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 auto* msg = postEvent();
                 msg->type = GolfBallEvent::Landed;
                 msg->terrain = ball.terrain;
+                msg->client = ball.client;
                 return;
             }
 
@@ -704,12 +738,15 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             //check for target
             if (vel2 != 0)
             {
-                doBullsEyeCollision(tx.getPosition());
+                doBullsEyeCollision(tx.getPosition(), ball.client);
             }
 
             //if we've slowed down or fallen more than the
             //ball's diameter (radius??) stop the ball
-            if ((vel2 < MinVelocitySqr && std::abs(ball.spin.y) < MinSpinPower)//this might be true when there's still spin to be applied
+            if ((vel2 < MinVelocitySqr 
+                && std::abs(ball.spin.y) < MinSpinPower //this might be true when there's still spin to be applied
+                && glm::dot(cro::Transform::Y_AXIS, terrainContact.normal) > MinRollSlope) //and we don't want to stop on a slope                
+                
                 || (terrainContact.penetration > (Ball::Radius * 2.5f)) 
                 || ((ball.delay < BallRollTimeout) && (vel2 < BallTimeoutVelocity))
                 || (ball.delay < (BallRollTimeout * 2.f)))
@@ -740,6 +777,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 auto* msg = postEvent();
                 msg->type = GolfBallEvent::Landed;
                 msg->terrain = ((terrainContact.penetration > Ball::Radius) || (len2 < MinBallDistance)) ? TerrainID::Hole : ball.terrain;
+                msg->client = ball.client;
 
                 if (msg->terrain == TerrainID::Hole)
                 {
@@ -897,6 +935,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             msg->type = GolfBallEvent::Foul;
             msg->terrain = terrain;
             msg->position = tx.getPosition();
+            msg->client = ball.client;
 
             //set ball to reset / correct terrain
             ball.delay = 0.5f;
@@ -926,6 +965,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             {
                 auto* msg2 = postEvent();
                 msg2->type = GolfBallEvent::Gimme;
+                msg2->client = ball.client;
 
                 position.x = m_holeData->pin.x;
                 position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
@@ -951,6 +991,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             //send message to report status
             auto* msg = postEvent();
             msg->terrain = ball.terrain;
+            msg->client = ball.client;
 
             if (ball.terrain == TerrainID::Hole)
             {
@@ -1031,6 +1072,7 @@ void BallSystem::doCollision(cro::Entity entity)
             msg->terrain = CollisionEvent::FlagPole;
             msg->position = pos;
             msg->type = CollisionEvent::Begin;
+            msg->client = ball.client;
         }
     }
 
@@ -1047,6 +1089,7 @@ void BallSystem::doCollision(cro::Entity entity)
         msg->type = GolfBallEvent::Landed;
         msg->terrain = ball.terrain;
         msg->position = tx.getPosition();
+        msg->client = ball.client;
     };
     const auto startRoll = [](Ball::State state, Ball& ball)
     {
@@ -1087,6 +1130,7 @@ void BallSystem::doCollision(cro::Entity entity)
             {
                 auto* msg2 = postMessage<TriggerEvent>(sv::MessageID::TriggerMessage);
                 msg2->triggerID = terrainResult.trigger;
+                msg2->client = ball.client;
             }
 
             break;
@@ -1101,9 +1145,9 @@ void BallSystem::doCollision(cro::Entity entity)
             //else bounce
             [[fallthrough]];
         case TerrainID::Rough:
-            doBullsEyeCollision(tx.getPosition());
+            doBullsEyeCollision(tx.getPosition(), ball.client);
 
-            ball.velocity *= Restitution[terrainResult.terrain];
+            ball.velocity *= Restitution[terrainResult.terrain] + getRestitution(ball.velocity, terrainResult.normal);
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             //ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
             ball.spin *= SpinReduction[terrainResult.terrain];
@@ -1120,7 +1164,7 @@ void BallSystem::doCollision(cro::Entity entity)
             }
             else //bounce
             {
-                ball.velocity *= Restitution[terrainResult.terrain];
+                ball.velocity *= Restitution[terrainResult.terrain] + getRestitution(ball.velocity, terrainResult.normal);
                 ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
                 //ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
                 ball.spin *= SpinReduction[terrainResult.terrain];
@@ -1180,6 +1224,7 @@ void BallSystem::doCollision(cro::Entity entity)
             {
                 auto* msg2 = postMessage<TriggerEvent>(sv::MessageID::TriggerMessage);
                 msg2->triggerID = terrainResult.trigger;
+                msg2->client = ball.client;
             }
         }
     }
@@ -1253,7 +1298,7 @@ void BallSystem::doBallCollision(cro::Entity entity)
     }
 }
 
-void BallSystem::doBullsEyeCollision(glm::vec3 ballPos)
+void BallSystem::doBullsEyeCollision(glm::vec3 ballPos, std::uint8_t client)
 {
     if (m_bullsEye.spawn && m_processFlags != ProcessFlags::Predicting)
     {
@@ -1276,6 +1321,7 @@ void BallSystem::doBullsEyeCollision(glm::vec3 ballPos)
                 msg->accuracy = std::clamp(1.f - (std::sqrt(len2) / BullRad), 0.f, 1.f);
             }
             msg->position = ballPos;
+            msg->client = client;
         }
     }
 }

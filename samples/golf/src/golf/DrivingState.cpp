@@ -57,6 +57,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Timeline.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -272,6 +273,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     std::fill(m_topScores.begin(), m_topScores.end(), 0.f);
     loadScores();   
     
+    Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     m_sharedData.hosting = false; //TODO shouldn't have to do this...
     context.mainWindow.loadResources([this]() {
 #ifdef USE_GNS
@@ -291,6 +293,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         cacheState(StateID::Pause);
         cacheState(StateID::GC);
     });
+    Timeline::setGameMode(Timeline::GameMode::Playing);
+    Timeline::setTimelineDesc("On The Driving Range");
 
     Achievements::setActive(true);
     Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });
@@ -450,12 +454,12 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
+        m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         resetIdle();
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_p:
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
         case SDLK_PAUSE:
@@ -527,6 +531,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        m_sharedData.activeInput = SharedStateData::ActiveInput::Keyboard;
         m_skipState.displayControllerMessage = false;
         switch (evt.key.keysym.sym)
         {
@@ -541,14 +546,20 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        resetIdle();
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (std::abs(evt.caxis.value) > LeftThumbDeadZone)
         {
+            m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
+                SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+
+            resetIdle();
             cro::App::getWindow().setMouseCaptured(true);
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.cbutton.which)) ?
+            SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
+
         resetIdle();
         m_skipState.displayControllerMessage = true;
 
@@ -610,6 +621,32 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     {
         pauseGame();
     }
+    //else if (evt.type == SDL_WINDOWEVENT)
+    //{
+    //    switch (evt.window.event)
+    //    {
+    //    default: break;
+    //    case SDL_WINDOWEVENT_FOCUS_GAINED:
+    //        //this needs to be delayed a frame so mouse clicking on the
+    //        //open window doesn't get sent to the input parser
+    //    {
+    //        auto entity = m_uiScene.createEntity();
+    //        entity.addComponent<cro::Callback>().active = true;
+    //        entity.getComponent<cro::Callback>().function =
+    //            [&](cro::Entity e, float)
+    //            {
+    //                m_inputParser.setSuspended(false);
+    //                e.getComponent<cro::Callback>().active = false;
+    //                m_uiScene.destroyEntity(e);
+    //            };
+    //    }
+    //        break;
+    //    case SDL_WINDOWEVENT_FOCUS_LOST:
+    //        m_inputParser.setSuspended(true);
+    //        break;
+    //        }
+    //}
+
 #ifdef CRO_DEBUG_
     //m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
 #endif
@@ -828,13 +865,39 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 {
                     float ballDist = 
                         glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
-                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
 
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
                     e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //and the power bar
+                cmd.targetFlags = CommandID::UI::Root;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        auto [state, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+                        if (state == 1)
+                        {
+                            //we've visible
+                            const float scale = m_sharedData.useLargePowerBar ? 2.f : 1.f;
+                            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                        }
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::BarEnt;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
+                            ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //updates the position of the entities based on bar size
+                auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
+                cam.resizeCallback(cam);
 
                 m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
             }
@@ -1048,6 +1111,8 @@ void DrivingState::loadAssets()
     {
         m_resources.shaders.addInclude(name, str);
     }
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
     
     //models
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
@@ -1056,6 +1121,7 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define USER_COLOUR\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::HairReflect, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define FADE_INPUT\n#define USER_COLOUR\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
 
@@ -1093,6 +1159,11 @@ void DrivingState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
     m_resolutionBuffer.addShader(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::HairReflect);
+    m_materialIDs[MaterialID::HairReflect] = m_resources.materials.add(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
 
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
@@ -1162,6 +1233,7 @@ void DrivingState::loadAssets()
     //UI stuff
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar_wide");
+    m_sprites[SpriteID::PowerBar10] = spriteSheet.getSprite("power_bar_wide_10");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner_wide");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::WindTextBg] = spriteSheet.getSprite("wind_text_bg");
@@ -2372,7 +2444,6 @@ void DrivingState::createPlayer()
     material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][0]); //there's only ever going to be one player so just use the first tex
     entity.getComponent<cro::Model>().setMaterial(0, material);
 
-
     std::fill(m_avatar.animationIDs.begin(), m_avatar.animationIDs.end(), AnimationID::Invalid);
     if (entity.hasComponent<cro::Skeleton>())
     {
@@ -2404,8 +2475,104 @@ void DrivingState::createPlayer()
             }
         }
 
-        //find attachment points for club model
-        auto id = skel.getAttachmentIndex("hands");
+        auto id = skel.getAttachmentIndex("head");
+        if (id > -1)
+        {
+            const auto findID = [&](std::uint32_t hID)
+                {
+                    if (auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
+                        [&](const SharedStateData::HairInfo& h) {return h.uid == hID; });
+                        hair != m_sharedData.hairInfo.end())
+                    {
+                        return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
+                    }
+                    return 0;
+                };
+
+            const auto createHeadEnt = [&](std::int32_t colourKey, std::int32_t transformIndexOffset)
+                {
+                    auto ent = m_gameScene.createEntity();
+                    ent.addComponent<cro::Transform>();
+                    md.createModel(ent);
+
+                    //set material and colour
+                    const auto hairColour = pc::Palette[playerData.avatarFlags[colourKey]];
+                    auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                    applyMaterialData(md, mat, 0); //applies double sisded property
+                    mat.setProperty("u_hairColour", hairColour);
+                    ent.getComponent<cro::Model>().setMaterial(0, mat);
+
+                    //this needs to be captured by player callback, below
+                    auto matCount = 1;
+                    if (md.getMaterialCount() == 2)
+                    {
+                        mat = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        applyMaterialData(md, mat, 1);
+                        mat.setProperty("u_hairColour", hairColour);
+                        ent.getComponent<cro::Model>().setMaterial(1, mat);
+
+                        matCount = 2;
+                    }
+
+                    const auto rot = playerData.headwearOffsets[PlayerData::HeadwearOffset::HairRot + transformIndexOffset] * cro::Util::Const::PI;
+                    ent.getComponent<cro::Transform>().setPosition(playerData.headwearOffsets[PlayerData::HeadwearOffset::HairTx + transformIndexOffset]);
+                    ent.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+                    ent.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+                    ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+                    ent.getComponent<cro::Transform>().setScale(playerData.headwearOffsets[PlayerData::HeadwearOffset::HairScale + transformIndexOffset]);
+
+                    if (playerData.flipped)
+                    {
+                        ent.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                    }
+
+                    //fade callback
+                    ent.addComponent<cro::Callback>().active = true;
+                    ent.getComponent<cro::Callback>().function =
+                        [&, matCount](cro::Entity e, float)
+                        {
+                            float alpha = std::abs(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
+                            alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
+
+                            e.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
+
+                            if (matCount == 2)
+                            {
+                                e.getComponent<cro::Model>().setMaterialProperty(1, "u_fadeAmount", alpha);
+                            }
+                        };
+
+                    return ent;
+                };
+
+
+            //we want to duplicate the attachment *first*
+            //else we briefly have the hair entity set on 2 attachments...
+            const auto hatID = findID(playerData.hatID);
+            if (hatID != 0
+                && md.loadFromFile(m_sharedData.hairInfo[hatID].modelPath))
+            {
+                //duplicate the hair attachment
+                auto at = skel.getAttachments()[id];
+                auto hatAtID = skel.addAttachment(at);
+
+                auto hatEnt = createHeadEnt(pc::ColourKey::Hat, PlayerData::HeadwearOffset::HatTx);
+                skel.getAttachments()[hatAtID].setModel(hatEnt);
+            }
+
+
+            //see if we have a hair model
+            const std::int32_t hairID = findID(playerData.hairID);            
+            if (hairID != 0
+                && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
+            {
+                auto hairEnt = createHeadEnt(pc::ColourKey::Hair, 0);
+                skel.getAttachments()[id].setModel(hairEnt);
+            }
+        }
+
+        //find attachment points for club model - do this second else above might duplicate attachment and invalidate the pointer
+        id = skel.getAttachmentIndex("hands");
         if (id > -1)
         {
             m_avatar.hands = &skel.getAttachments()[id];
@@ -2417,51 +2584,6 @@ void DrivingState::createPlayer()
             //avatar data in to the menu
             LogW << "No attachment point named \'hands\' was found" << std::endl;
         }
-
-        id = skel.getAttachmentIndex("head");
-        if (id > -1)
-        {
-            //see if we have a hair model
-            std::int32_t hairID = 0;
-            if (auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
-                [&](const SharedStateData::HairInfo& h) {return h.uid == playerData.hairID; });
-                hair != m_sharedData.hairInfo.end())
-            {
-                hairID = static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
-            }
-
-            if (hairID != 0
-                && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
-            {
-                auto hairEnt = m_gameScene.createEntity();
-                hairEnt.addComponent<cro::Transform>();
-                md.createModel(hairEnt);
-
-                //set material and colour
-                auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
-                mat.setProperty("u_hairColour", pc::Palette[playerData.avatarFlags[pc::ColourKey::Hair]]);
-                hairEnt.getComponent<cro::Model>().setMaterial(0, mat);
-
-                skel.getAttachments()[id].setModel(hairEnt);
-
-                if (playerData.flipped)
-                {
-                    hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
-                }
-
-                //fade callback
-                hairEnt.addComponent<cro::Callback>().active = true;
-                hairEnt.getComponent<cro::Callback>().function =
-                    [&](cro::Entity e, float)
-                {
-                    float alpha = std::abs(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
-                    alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
-
-                    e.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
-                };
-            }
-        }
-
         //skel.setInterpolationEnabled(false);
     }
 
@@ -2724,7 +2846,7 @@ void DrivingState::createBall()
                 float ballDist =
                     glm::length(pos - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
 
-                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
 
                 auto bounds = cro::Text::getLocalBounds(e);
                 bounds.width = std::floor(bounds.width / 2.f);
@@ -3286,7 +3408,7 @@ void DrivingState::setHole(std::int32_t index)
     cmd.action = [&, index](cro::Entity e, float)
     {
         float ballDist = glm::length(PlayerPosition - m_holeData[index].pin);
-        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
 
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);
@@ -3472,6 +3594,9 @@ void DrivingState::forceRestart()
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+
+    //reset any active animation from the avatar else it'll resume and hit the ball...
+    m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Idle]);
 }
 
 void DrivingState::triggerGC(glm::vec3 position)

@@ -30,7 +30,7 @@ source distribution.
 #pragma once
 
 #include <string>
-
+//static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320");
 inline const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -110,9 +110,10 @@ inline const std::string CelVertexShader = R"(
 
 #if defined (NORMAL_MAP)
     VARYING_OUT vec2 v_normalTexCoord;
-    const vec2 MapSize = vec2(320.0, 200.0);
 #endif
 
+#include MAP_SIZE
+#include WATER_LEVEL
 
 #include WIND_CALC
 
@@ -237,7 +238,9 @@ inline const std::string CelVertexShader = R"(
 #if defined(MULTI_TARGET)
         v_targetProjection = u_targetViewProjectionMatrix * u_worldMatrix * a_position;
 #endif
-
+#if defined(TERRAIN_CLIP)
+    gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
+#endif
         //v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
     })";
 
@@ -398,10 +401,10 @@ inline const std::string CelFragmentShader = R"(
     }
 
 #include LIGHT_COLOUR
+#include WATER_LEVEL
 
     const float Quantise = 10.0;
     const float TerrainLevel = -0.049;
-    const float WaterLevel = -0.019;
 
     const vec3 SlopeShade = vec3(0.439, 0.368, 0.223);
     const vec3 BaseContourColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
@@ -455,7 +458,7 @@ inline const std::string CelFragmentShader = R"(
         float amount = dot(normal, lightDirection);
 
 #if defined (USER_COLOUR)
-        float mixAmount = step(0.95, (v_colour.r + v_colour.g + v_colour.b) / 3.0);        
+        float mixAmount = step(0.95, (v_colour.r + v_colour.g + v_colour.b) / 3.0);
         colour.rgb = mix(v_colour.rgb, u_hairColour.rgb, mixAmount) * getLightColour().rgb;
 #endif
         float checkAmount = smoothstep(0.3, 0.9, 1.0 - amount);
@@ -658,13 +661,8 @@ inline const std::string CelFragmentShader = R"(
 
 
 #if defined(TERRAIN_CLIP)
-    FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118) * u_lightColour.rgb, FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
-
-//if(v_worldPosition.y < WaterLevel - 0.001)
-//{
-//discard;
-//}
-
+    //FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118) * u_lightColour.rgb, FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
+    //FRAG_OUT.a = step(WaterLevel - 0.001, v_worldPosition.y);
 #endif
 
 #if defined (MASK_MAP)

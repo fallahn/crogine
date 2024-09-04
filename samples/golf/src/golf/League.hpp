@@ -126,6 +126,9 @@ public:
     //indexed by player name index
     const std::array<HoleScores, PlayerCount>& getHoleScores() const { return m_holeScores; }
 
+    //returns the name index of our nemesis, if we have one
+    std::int32_t getNemesis() const { return m_nemesis; }
+
 private:
     const std::int32_t m_id;
     const std::int32_t m_maxIterations;
@@ -140,6 +143,7 @@ private:
     std::int32_t m_lastIterationPosition;
 
     std::int32_t m_currentBest;
+    std::int32_t m_nemesis;
 
     mutable cro::String m_previousResults;
     mutable std::int32_t m_previousPosition;

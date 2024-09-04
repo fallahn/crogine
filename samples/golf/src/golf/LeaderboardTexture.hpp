@@ -42,8 +42,8 @@ namespace cro
 struct LeaderboardEntry final
 {
     glm::vec2 position = glm::vec2(0.f);
-    std::string str;
-    LeaderboardEntry(glm::vec2 p, const std::string& s)
+    cro::String str;
+    LeaderboardEntry(glm::vec2 p, const cro::String& s)
         : position(p), str(s) {}
 };
 

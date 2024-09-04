@@ -829,6 +829,30 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         statNode.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 
 
+        //flop/punch info
+        auto mod = ClubShot[clubID];
+        if (mod != ShotType::Regular)
+        {
+            if (mod == (ShotType::Regular |ShotType::Flop))
+            {
+                label = "(+Flop)";
+            }
+            else if (mod == (ShotType::Regular | ShotType::Punch))
+            {
+                label = "(+Punch)";
+            }
+            else
+            {
+                label = "(+Punch/Flop)";
+            }
+            labelEnt = m_scene.createEntity();
+            labelEnt.addComponent<cro::Transform>().setPosition(glm::vec2(4.f, 0.f));
+            labelEnt.addComponent<cro::Drawable2D>();
+            labelEnt.addComponent<cro::Text>(font).setString(label);
+            labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            statNode.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+        }
 
 
         auto unlockLevel = ClubID::getUnlockLevel(clubID);
@@ -1994,7 +2018,12 @@ void StatsState::refreshAwardsTab(std::int32_t page)
     }
 
     m_awardPageIndex = page;
-    m_awardPageCount = (awards.size() / ItemsPerPage) + 1;
+    m_awardPageCount = (awards.size() / ItemsPerPage);
+
+    if (awards.size() % ItemsPerPage)
+    {
+        m_awardPageCount++;
+    }
 
     if (m_awardPageCount > 1)
     {

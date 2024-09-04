@@ -84,7 +84,7 @@ namespace
         "/me asks for a selfie"
     };
 
-    const std::array<std::string, 17u> HappyStrings =
+    const std::array<std::string, 18u> HappyStrings =
     {
         "/me is ecstatic",
         "/me grins from ear to ear",
@@ -102,7 +102,8 @@ namespace
         "/me is on top of the world",
         "/me pirouettes jubilantly",
         "/me feels like a dog with two tails",
-        "/me lets out a squeak"
+        "/me lets out a squeak",
+        "/me oscillates with glee"
     };
 
     const std::array<std::string, 14u> LaughStrings =
@@ -466,6 +467,19 @@ void TextChat::handleMessage(const cro::Message& msg)
 bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 {
     const auto msg = pkt.as<TextMessage>();
+
+    if (msg.client >= ConstVal::MaxClients)
+    {
+        LogE << "Recieved message from client " << (int)msg.client << ": Invalid client ID!!" << std::endl;
+        return false;
+    }
+
+    if (m_sharedData.connectionData[msg.client].playerCount == 0)
+    {
+        LogW << "Recieved message from client " << (int)msg.client << ": This client is no connected!" << std::endl;
+        return false;
+    }
+
     //only one person can type on a connected computer anyway
     //so we'll always assume it's player 0
     auto outStr = m_sharedData.connectionData[msg.client].playerData[0].name;

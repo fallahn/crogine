@@ -45,7 +45,7 @@ ParticleEmitter::ParticleEmitter()
     m_prevTimestamp         (0.f),
     m_currentTimestamp      (0.f),
     m_emissionTimestamp     (0.f),
-    m_pendingUpdate         (true),
+    //m_pendingUpdate         (true),
     m_renderFlags           (std::numeric_limits<std::uint64_t>::max()),
     m_releaseCount          (-1)
 {

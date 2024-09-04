@@ -153,6 +153,8 @@ private:
     cro::Clock m_idleTimer;
 
     bool m_wantsGameState;
+    bool m_groupIdle; //in group play we're waiting for other clients to finish
+    std::uint8_t m_serverGroup;
     bool m_allowAchievements;
     cro::Clock m_readyClock; //pings ready state until ack'd
 
@@ -238,6 +240,7 @@ private:
     std::uint32_t m_currentHole;
     float m_distanceToHole;
     float m_NTPDistance; //in NTP mode how far away from the pin the shot landed
+    float m_strokeTimer; //reset at the beginning of the stroke to time the potential timeline clip
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
     bool m_resumedFromSave;
@@ -267,6 +270,7 @@ private:
             Leaderboard,
             Player,
             Hair,
+            HairReflect,
             Course,
             Ball,
             BallNight,
@@ -279,6 +283,7 @@ private:
             PointLight,
             Glass,
             LensFlare,
+            PointFlare,
 
             Count
         };
@@ -343,11 +348,13 @@ private:
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint16_t, bool forceTransition = false); //(number << 8) | par
+    std::uint32_t holeNumberFromIndex() const;
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
     void predictBall(float);
     void hitBall();
     void updateActor(const ActorInfo&);
+    void remoteRotation(std::uint32_t); //rotates the avatar based on remote player input
     std::int32_t getClub() const;
 
 
@@ -395,8 +402,9 @@ private:
 
     }m_lensFlare;
     void updateLensFlare(cro::Entity, float); //bound as a callback to the lens flare entity
+    void updatePointFlares(cro::Entity, float); //bound as a callback to UI entity if night time
 
-
+    void setIdleGroup(std::uint8_t);
 
     static const cro::Time DefaultIdleTime;
     cro::Time m_idleTime;
@@ -409,10 +417,20 @@ private:
         bool isEnabled = false;
     }m_puttViewState;
     void togglePuttingView(bool); //only used when switching to putter manually
-    void createTransition(const ActivePlayer&);
+    void setCameraTarget(const ActivePlayer&);//target for createTranstion() and spectateNextPlayer()
+    void createTransition(const ActivePlayer&, bool = true);
     void startFlyBy();
     void setCameraPosition(glm::vec3, float, float);
 
+    //tracks the player positions in group play so we can switch cameras
+    //between them while idling (1 for each active group)
+    std::array<ActivePlayer, ConstVal::MaxClients> m_groupPlayerPositions = {};
+    std::size_t m_idleCameraIndex; //index of group we're currently watching
+    cro::Clock m_spectateTimer;
+    glm::vec3 m_lastSpectatePosition;
+    cro::Entity m_spectateGhost;
+    void setGhostPosition(glm::vec3);
+    void spectateGroup(std::uint8_t group);
 
     //follows the ball mid-flight
     cro::Entity m_flightCam;
@@ -436,6 +454,7 @@ private:
         enum
         {
             PowerBar,
+            PowerBar10,
             PowerBarInner,
             HookBar,
             SlopeStrength,
@@ -485,6 +504,7 @@ private:
     };
     std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
+    glm::vec3 m_terrainLevel;
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;
     bool m_newHole; //prevents closing scoreboard until everyone is ready
@@ -500,6 +520,7 @@ private:
     cro::Entity m_miniGreenEnt;
     cro::Entity m_miniGreenIndicatorEnt;
     cro::Entity m_scoreboardEnt;
+    cro::Entity m_nemesisEnt;
     cro::Entity m_droneTextEnt;
     cro::Entity m_freecamMenuEnt;
     std::uint8_t m_readyQuitFlags;
@@ -512,6 +533,7 @@ private:
     void showScoreboard(bool visible);
     void updateWindDisplay(glm::vec3);
     float estimatePuttPower();
+    void calcTerrainLevel();
 
     enum class MessageBoardID
     {
@@ -592,9 +614,8 @@ private:
 
     cro::Entity m_mapCam;
     cro::Entity m_mapRoot;
-    cro::RenderTexture m_mapTexture;
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
-
+    void updateMinimapTexture();
     void updateMiniMap();
 
     MinimapZoom m_minimapZoom;
@@ -612,6 +633,9 @@ private:
         bool hadFoul = false; //tracks 'boomerang' stat
         bool hadBackspin = false; //tracks 'spin class' and xp award
         bool hadTopspin = false; //tracks XP award
+        bool hadFlop = false;
+        bool hadPunch = false;
+        bool wasGreen = false; //putt from fringe
 
         bool noHolesOverPar = true; //no mistake
         bool noGimmeUsed = true; //never give you up

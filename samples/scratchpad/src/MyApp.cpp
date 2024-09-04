@@ -50,6 +50,9 @@ source distribution.
 #include "LoadingScreen.hpp"
 #include "arc/ArcState.hpp"
 #include "trackoverlay/TrackOverlayState.hpp"
+#include "pseuthe/PseutheBackgroundState.hpp"
+#include "pseuthe/PseutheGameState.hpp"
+#include "pseuthe/PseutheMenuState.hpp"
 
 #include <crogine/core/Clock.hpp>
 
@@ -174,11 +177,16 @@ bool MyApp::initialise()
     m_stateStack.registerState<EndlessDrivingState>(States::ScratchPad::EndlessDriving);
     m_stateStack.registerState<TrackOverlayState>(States::ScratchPad::TrackOverlay);
 
+    m_stateStack.registerState<PseutheBackgroundState>(States::ScratchPad::PseutheBackground);
+    m_stateStack.registerState<PseutheGameState>(States::ScratchPad::PseutheGame);
+    m_stateStack.registerState<PseutheMenuState>(States::ScratchPad::PseutheMenu);
+
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::TrackOverlay);
+    m_stateStack.pushState(States::ScratchPad::PseutheBackground);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
-    m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    m_stateStack.pushState(States::ScratchPad::PseutheBackground);
 #endif
 
     return true;

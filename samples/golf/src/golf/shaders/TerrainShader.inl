@@ -69,9 +69,9 @@ static inline const std::string TerrainVertexShader = R"(
 
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_OUTPUTS
-    //VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
-    //VARYING_OUT float v_viewDepth;
 #endif
+
+#include WATER_LEVEL
 
     void main()
     {
@@ -106,6 +106,8 @@ static inline const std::string TerrainVertexShader = R"(
         v_texCoord = vec2(position.x / 100.0, position.z / -62.5);
 
         gl_ClipDistance[0] = dot(position, u_clipPlane);
+
+#include CLIP_DISTANCE
     })";
 
 static inline const std::string SlopeVertexShader =

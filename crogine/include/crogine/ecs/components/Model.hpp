@@ -195,6 +195,7 @@ namespace cro
         \param sub-mesh Index of the sub-mesh to retrieve.
         \returns const reference to the material if it exists
         */
+        Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh);
         const Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const;
 
         /*!

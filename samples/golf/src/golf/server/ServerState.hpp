@@ -53,11 +53,20 @@ namespace sv
         std::uint8_t ballColourIndex = 255;
         std::uint32_t ballID = 0;
         std::uint32_t hairID = 0;
+        std::uint32_t hatID = 0;
         std::uint32_t skinID = 0;
         bool flipped = false; //we don't really care about this on the server, but we do need to forward it to clients.
         bool isCPU = false; //only allow CPU players to request predictions
 
+        std::array<glm::vec3, 6u> headwearOffsets = {};
+
         PlayerInfo& operator = (const PlayerData&);
+        PlayerInfo() 
+        {
+            std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f)); 
+            headwearOffsets[2] = glm::vec3(1.f); //these are scale
+            headwearOffsets[5] = glm::vec3(1.f);
+        }
     };
 
     struct ClientConnection final
@@ -88,6 +97,7 @@ namespace sv
         std::uint8_t clubLimit = 0;
         std::uint8_t fastCPU = 1;
 
+        std::int32_t groupMode = 0;
         std::array<std::uint8_t, ConstVal::MaxClients> clubLevels = {};
 
         std::atomic_uint64_t hostID = 0;

@@ -276,6 +276,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_TRIANGLE_STRIP));
     auto terrainMat = resources.materials.get(materialID);
     terrainMat.setProperty("u_noiseColour", theme.grassTint);
+    terrainMat.addCustomSetting(GL_CLIP_DISTANCE1);
 
     auto entity = scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, TerrainLevel, 0.f });
@@ -423,11 +424,15 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
         //create a child entity for instanced geometry
         std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
-        //these are the plants etc that appear newar the water
+        //these are the plants etc that appear near the water
         if (shrubDef.loadFromFile(instancePath, true))
         {
             auto material = resources.materials.get(reedMaterialID);
+            material.setProperty("u_noiseTexture", noiseTex);
+            material.addCustomSetting(GL_CLIP_DISTANCE1);
+
             auto shadowMat = resources.materials.get(reedShadowID);
+            shadowMat.setProperty("u_noiseTexture", noiseTex);
 
             auto childEnt = scene.createEntity();
             childEnt.addComponent<cro::Transform>();
@@ -436,11 +441,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             for (auto j = 0u; j < shrubDef.getMaterialCount(); ++j)
             {
                 applyMaterialData(shrubDef, material, j);
-                material.setProperty("u_noiseTexture", noiseTex);
                 childEnt.getComponent<cro::Model>().setMaterial(j, material);
 
                 applyMaterialData(shrubDef, shadowMat, j);
-                shadowMat.setProperty("u_noiseTexture", noiseTex);
                 childEnt.getComponent<cro::Model>().setShadowMaterial(j, shadowMat);
             }
             childEnt.getComponent<cro::Model>().setHidden(true);
@@ -463,6 +466,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     auto material = resources.materials.get(branchMaterialID);
                     applyMaterialData(shrubDef, material, idx);
                     material.setProperty("u_noiseTexture", noiseTex);
+                    material.addCustomSetting(GL_CLIP_DISTANCE1);
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                     material = resources.materials.get(treeShadowMaterialID);
@@ -481,6 +485,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     material.setProperty("u_randAmount", theme.treesets[j].randomness);
                     material.setProperty("u_colour", theme.treesets[j].colour);
                     material.setProperty("u_noiseTexture", noiseTex);
+                    material.addCustomSetting(GL_CLIP_DISTANCE1);
                     childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                     material = resources.materials.get(leafShadowMaterialID);
@@ -519,6 +524,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     applyMaterialData(crowdDef, material);
 
                     material.setProperty("u_arrayMap", *tex);
+                    material.addCustomSetting(GL_CLIP_DISTANCE1);
 
                     auto shadowMaterial = resources.materials.get(shadowArrayMaterialID);
                     shadowMaterial.setProperty("u_arrayMap", *tex);
@@ -535,6 +541,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                     material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
                     material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
+                    material.addCustomSetting(GL_CLIP_DISTANCE1);
 
                     auto shadowMaterial = resources.materials.get(shadowMaterialID);
                     shadowMaterial.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
@@ -1176,6 +1183,15 @@ void TerrainBuilder::threadFunc()
                 const auto heightAt = [&](std::uint32_t x, std::uint32_t y)
                 {
                     auto size = mapImage.getDimensions();
+
+                    if (x < 0 || x >= size.x)
+                    {
+                        return 0.f;
+                    }
+                    if (y < 0 || y >= size.y)
+                    {
+                        return 0.f;
+                    }
 
                     x = std::min(size.x - 1, std::max(0u, x));
                     y = std::min(size.y - 1, std::max(0u, y));

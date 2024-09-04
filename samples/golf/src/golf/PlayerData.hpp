@@ -68,14 +68,27 @@ struct PlayerData final
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[2] - 1)),
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[3] - 1)),
         std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[4] - 1)),
-        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[5] - 1))    
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[5] - 1)),   
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[6] - 1)),   
     }; //indices into colours
     std::uint8_t ballColourIndex = 255; //ignore the palette if not in range and set to white
     std::uint32_t ballID = 0;
     std::uint32_t hairID = 0;
+    std::uint32_t hatID = 0;
     std::uint32_t skinID = 0; //uid as loaded from the avatar data file
     bool flipped = false; //whether or not avatar flipped/southpaw
     bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
+
+    struct HeadwearOffset final
+    {
+        enum
+        {
+            HairTx, HairRot, HairScale,
+            HatTx, HatRot, HatScale,
+            Count
+        };
+    };
+    std::array<glm::vec3, HeadwearOffset::Count> headwearOffsets = {};
 
     //these aren't included in serialise/deserialise
     std::vector<std::uint8_t> holeScores;
@@ -99,6 +112,13 @@ struct PlayerData final
 
     bool isSteamID = false;
     mutable bool isCustomName = false; //if not true and is a steam profile use the current steam name
+
+    PlayerData()
+    {
+        std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f));
+        headwearOffsets[HeadwearOffset::HairScale] = glm::vec3(1.f);
+        headwearOffsets[HeadwearOffset::HatScale] = glm::vec3(1.f);
+    }
 };
 
 struct ProfileTexture

@@ -51,7 +51,8 @@ struct CommandID final
         BeaconColour    = 0x8000,
         DroneCam        = 0x10000,
         HoleRing        = 0x20000,
-        BullsEye        = 0x40000
+        BullsEye        = 0x40000,
+        Ghost           = 0x80000
     };
 
     struct UI final
@@ -87,6 +88,7 @@ struct CommandID final
             TerrainType          = 0x4000000,
             AFKWarn              = 0x8000000,
             PuttingLabel         = 0x10000000, //29
+            BarEnt               = 0x20000000
         };
     };
 

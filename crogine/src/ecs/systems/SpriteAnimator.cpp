@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,6 +34,16 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
 
+//#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
+#include <mutex>
+#include <execution>
+#endif
+
 using namespace cro;
 
 namespace
@@ -55,8 +65,16 @@ void SpriteAnimator::process(float dt)
 {
     m_animationEvents.clear();
 
-    auto& entities = getEntities();
-    for (auto& entity : entities) 
+    const auto& entities = getEntities();
+
+#ifdef USE_PARALLEL_PROCESSING
+    std::mutex mutex;
+
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(),
+        [&, dt](Entity entity)
+#else
+    for (auto entity : entities)
+#endif
     {
         auto& animation = entity.getComponent<SpriteAnimation>();
 
@@ -72,7 +90,7 @@ void SpriteAnimator::process(float dt)
             if (animation.id >= static_cast<std::int32_t>(sprite.m_animations.size()))
             {
                 animation.stop();
-                continue;
+                EARLY_OUT;
             }
 
             //TODO this should be an assertion as we should never have
@@ -80,11 +98,11 @@ void SpriteAnimator::process(float dt)
             if (sprite.m_animations[animation.id].frames.empty())
             {
                 animation.stop();
-                continue;
+                EARLY_OUT;
             }
             //really these two cases should be fixed by moving the frame
             //data into the animation component, however this will break sprite sheets.
-            
+
             const auto frameTime = (1.f / (sprite.m_animations[animation.id].framerate * animation.playbackRate));
             animation.currentFrameTime = std::min(animation.currentFrameTime - dt, frameTime);
             if (animation.currentFrameTime < 0)
@@ -101,7 +119,7 @@ void SpriteAnimator::process(float dt)
                     if (!sprite.m_animations[animation.id].looped)
                     {
                         animation.stop();
-                        continue;
+                        EARLY_OUT;
                     }
                     else
                     {
@@ -115,11 +133,17 @@ void SpriteAnimator::process(float dt)
                 if (frame.event != -1
                     && m_animationEvents.size() < MaxEvents)
                 {
+#ifdef USE_PARALLEL_PROCESSING
+                    std::scoped_lock l(mutex);
+#endif
                     m_animationEvents.emplace_back(entity, frame.event);
                 }
             }
         }
     }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 
     for (const auto& [entity, eventID] : m_animationEvents)
     {
@@ -128,3 +152,9 @@ void SpriteAnimator::process(float dt)
         msg->userType = eventID;
     }
 }
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

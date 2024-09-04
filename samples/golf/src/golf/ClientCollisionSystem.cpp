@@ -116,7 +116,6 @@ void ClientCollisionSystem::process(float)
 
         if (collider.terrain == TerrainID::Green)
         {
-
             //check if we're in the hole
             glm::vec2 pin(m_holeData[m_holeIndex].pin.x, m_holeData[m_holeIndex].pin.z);
             glm::vec2 pos(position.x, position.z);
@@ -220,6 +219,14 @@ void ClientCollisionSystem::process(float)
                 else
                 {
                     entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f));
+                }
+
+                if (result.trigger >= TriggerID::Volcano)
+                {
+                    auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+                    msg->type = CollisionEvent::Trigger;
+                    msg->position = position;
+                    msg->terrain = result.trigger;
                 }
             }
             else if(collider.terrain == TerrainID::Hole

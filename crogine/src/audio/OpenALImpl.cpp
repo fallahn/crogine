@@ -93,7 +93,7 @@ bool OpenALImpl::init()
     enumerateDevices();
 
     if (!m_preferredDevice.empty()
-        && m_preferredDevice != "Default")
+        && cro::Util::String::toLower(m_preferredDevice) != "default")
     {
         m_device = alcOpenDevice(m_preferredDevice.c_str());
 
@@ -113,6 +113,14 @@ bool OpenALImpl::init()
         }
     }
     
+    
+    //store which device we connected to in case we need to resume at some point
+    auto enumAvailable = alcIsExtensionPresent(m_device, "ALC_ENUMERATION_EXT");
+    if (enumAvailable)
+    {
+        m_deviceName = alcGetString(m_device, ALC_ALL_DEVICES_SPECIFIER);
+    }
+
     /*alcCheck*/(m_context = alcCreateContext(m_device, nullptr));
     if (!m_context)
     {
@@ -612,6 +620,24 @@ void OpenALImpl::setSpeedOfSound(float speed)
     alCheck(alSpeedOfSound(speed));
 }
 
+void OpenALImpl::setActiveDevice(const std::string& str)
+{
+    if (cro::Util::String::toLower(str) == "default")
+    {
+        reconnect(nullptr);
+    }
+    else
+    {
+        reconnect(str.c_str());
+    }
+
+    m_preferredDevice = m_deviceName;
+    
+    ConfigFile cfg;
+    cfg.addProperty("preferred_device", m_preferredDevice);
+    cfg.save(getPreferencePath());
+}
+
 void OpenALImpl::playbackDisconnectEvent()
 {
     reconnect(nullptr);
@@ -619,7 +645,39 @@ void OpenALImpl::playbackDisconnectEvent()
 
 void OpenALImpl::recordDisconnectEvent()
 {
+    refreshDeviceList();
+}
 
+void OpenALImpl::playbackConnectEvent()
+{
+    refreshDeviceList();
+}
+
+void OpenALImpl::recordConnectEvent()
+{
+    refreshDeviceList();
+}
+
+void OpenALImpl::resume()
+{
+    //when the device wakes from sleep this
+    //impl may be resumed before devices which
+    //were previously being used are. In this
+    //case we re-enumerate available devices and
+    //reconnect to the previous device is it exists
+    //in the list
+    if (!m_deviceName.empty())
+    {
+        refreshDeviceList();
+        if (std::find(m_devices.begin(), m_devices.end(), m_deviceName) != m_devices.end())
+        {
+            reconnect(m_deviceName.c_str());
+        }
+        /*else
+        {
+            reconnect(nullptr);
+        }*/
+    }
 }
 
 void OpenALImpl::printDebug()
@@ -678,15 +736,11 @@ void OpenALImpl::resizeSourcePool()
 
 void OpenALImpl::enumerateDevices()
 {
-    getDeviceList();
+    refreshDeviceList();
 
     if (!m_devices.empty())
     {
-        char* pp = SDL_GetPrefPath("Trederia", "common");
-        auto prefPath = std::string(pp);
-        SDL_free(pp);
-        std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
-        prefPath += u8"audio_device.cfg";
+        const auto prefPath = getPreferencePath();
 
         static bool showWindow = false;
 
@@ -697,7 +751,7 @@ void OpenALImpl::enumerateDevices()
 
                 if (showWindow)
                 {
-                    getDeviceList();
+                    refreshDeviceList();
                 }
             });
 
@@ -735,7 +789,7 @@ void OpenALImpl::enumerateDevices()
 
                         if (ImGui::Button("Refresh"))
                         {
-                            getDeviceList();
+                            refreshDeviceList();
                         }
                         ImGui::Separator();
                         ImGui::NewLine();
@@ -779,6 +833,17 @@ void OpenALImpl::enumerateDevices()
     }
 }
 
+std::string OpenALImpl::getPreferencePath() const
+{
+    char* pp = SDL_GetPrefPath("Trederia", "common");
+    auto prefPath = std::string(pp);
+    SDL_free(pp);
+    std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
+    prefPath += u8"audio_device.cfg";
+
+    return prefPath;
+}
+
 OpenALStream& OpenALImpl::getNextFreeStream()
 {
     //we shouldn't have to lock here as the stream's thread has not yet been created
@@ -816,7 +881,7 @@ bool OpenALImpl::initStream(OpenALStream& stream)
     return false;
 }
 
-void OpenALImpl::getDeviceList()
+void OpenALImpl::refreshDeviceList()
 {
     m_devices.clear();
 
@@ -824,7 +889,7 @@ void OpenALImpl::getDeviceList()
     auto enumAvailable = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
     if (enumAvailable)
     {
-        const auto* deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+        const auto* deviceList = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
         if (deviceList)
         {
             auto* next = deviceList + 1;
@@ -839,8 +904,12 @@ void OpenALImpl::getDeviceList()
                 deviceList += (len + 1);
                 next += (len + 2);
             }
-            m_devices.push_back("Default");
         }
+        m_devices.push_back("Default");
+    }
+    else
+    {
+        m_devices.push_back("default");
     }
 }
 
@@ -862,7 +931,7 @@ void OpenALImpl::reconnect(const char* deviceStr)
         if (alcReopenDeviceSOFT(device, deviceStr, nullptr))
         {
             m_device = device;
-            getDeviceList();
+            refreshDeviceList();
 
             if (deviceStr)
             {
@@ -873,6 +942,8 @@ void OpenALImpl::reconnect(const char* deviceStr)
                 LogI << "Connected audio output to default device" << std::endl;
             }
 
+            //update the device name as it may have changed
+            m_deviceName = alcGetString(m_device, ALC_ALL_DEVICES_SPECIFIER);
 
             return;
         }

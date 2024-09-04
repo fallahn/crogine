@@ -51,6 +51,7 @@ source distribution.
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
 #include <Input.hpp>
+#include <Timeline.hpp>
 
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -3167,7 +3168,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 #ifndef USE_GNS
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<UIElement>().absolutePosition = { -160.f, -4.f };
+    entity.addComponent<UIElement>().absolutePosition = { -10.f, -4.f };
     entity.getComponent<UIElement>().relativePosition = { 1.f, 1.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::ServerInfo;
     entity.addComponent<cro::Drawable2D>();
@@ -3176,6 +3177,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::White);
     entity.getComponent<cro::Text>().setShadowColour(cro::Colour(std::uint8_t(110), 179, 157));
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 #endif
 
@@ -3385,6 +3387,12 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
                 Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
             }
 
+            if (indexFromHairID(cd.playerData[i].hatID) == 0)
+            {
+                //no local hat model
+                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Social::UserContent::Hair);
+            }
+
             if (indexFromAvatarID(cd.playerData[i].skinID) == 0)
             {
                 //no local avatar model
@@ -3578,6 +3586,9 @@ void MenuState::quitLobby()
 
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
     Social::setGroup(0);
+
+    Timeline::setGameMode(Timeline::GameMode::Menu);
+    Timeline::setTimelineDesc("Main Menu");
 }
 
 void MenuState::addCourseSelectButtons()
@@ -4180,6 +4191,22 @@ void MenuState::addCourseSelectButtons()
     }
 }
 
+void MenuState::prevRules()
+{
+    m_sharedData.scoreType = (m_sharedData.scoreType + (ScoreType::Count - 1)) % ScoreType::Count;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+}
+
+void MenuState::nextRules()
+{
+    m_sharedData.scoreType = (m_sharedData.scoreType + 1) % ScoreType::Count;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+}
+
 void MenuState::prevHoleCount()
 {
     m_sharedData.holeCount = (m_sharedData.holeCount + 2) % 3;
@@ -4634,7 +4661,7 @@ void MenuState::updateUnlockedItems()
 
 void MenuState::createPreviousScoreCard()
 {
-    static constexpr float OffscreenPos = -300.f;
+    static constexpr float OffscreenPos = -360.f;
 
     //background image
     auto& tex = m_resources.textures.get("assets/golf/images/lobby_scoreboard.png");

@@ -730,3 +730,11 @@ void Social::invalidateTopFive(const std::string& course, std::uint8_t holeCount
     //GJ::invalidateTopFive(course, holeCount);
 #endif
 }
+
+void Social::readAllStats()
+{
+    for (auto& v : StoredValues)
+    {
+        v.read();
+    }
+}

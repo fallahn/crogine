@@ -29,7 +29,8 @@ source distribution.
 
 #include "../golf/SharedStateData.hpp"
 #include "../golf/MenuConsts.hpp"
-#include "Social.hpp"
+#include <Social.hpp>
+#include <Timeline.hpp>
 
 #ifdef USE_GNS
 #include "ArcadeLeaderboard.hpp"
@@ -110,6 +111,9 @@ EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Con
     addSystems();
     loadAssets();
     createUI();
+
+    Timeline::setGameMode(Timeline::GameMode::Playing);
+    Timeline::setTimelineDesc("Arcade Game: Endless Runner");
 }
 
 //public

@@ -289,6 +289,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             {
             default: break;
             case StateID::Options:
+            case StateID::PlayerManagement:
                 saveSettings();
                 savePreferences();
                 break;
@@ -849,6 +850,8 @@ bool GolfGame::initialise()
     {
         m_sharedData.sharedResources->shaders.addInclude(name, str);
     }
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_sharedData.sharedResources->shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");
@@ -1061,7 +1064,7 @@ void GolfGame::initFonts()
 
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
-    //const std::string winPath = "assets/golf/fonts/OpenMoji.ttf";
+    //const std::string winPath = "assets/golf/fonts/TwemojiCOLRv0.ttf";
     //const std::string winPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
     
     if (cro::FileSystem::fileExists(winPath))
@@ -1079,7 +1082,7 @@ void GolfGame::initFonts()
     else
 #endif
     {
-        const std::string path = "assets/golf/fonts/OpenMoji.ttf";
+        const std::string path = "assets/golf/fonts/TwemojiCOLRv0.ttf";
         //const std::string monoPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
 
         for (const auto& r : Ranges)
@@ -1351,6 +1354,8 @@ void GolfGame::loadPreferences()
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
     if (!safeMode)
     {
+        m_sharedData.useLargePowerBar = Social::isSteamdeck();
+
         path = Social::getBaseContentPath() + "user_prefs.cfg";
         if (cro::FileSystem::fileExists(path))
         {
@@ -1450,6 +1455,22 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.useMouseAction = prop.getValue<bool>();
                     }
+                    else if (name == "large_power")
+                    {
+                        m_sharedData.useLargePowerBar = prop.getValue<bool>();
+                    }
+                    else if (name == "decimate_power")
+                    {
+                        m_sharedData.decimatePowerBar = prop.getValue<bool>();
+                    }
+                    else if (name == "decimate_distance")
+                    {
+                        m_sharedData.decimateDistance = prop.getValue<bool>();
+                    }
+                    /*else if (name == "group_mode")
+                    {
+                        m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
+                    }*/
                 }
             }
         }
@@ -1567,6 +1588,10 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_tts").setValue(m_sharedData.useTTS);
     cfg.addProperty("use_flare").setValue(m_sharedData.useLensFlare);
     cfg.addProperty("use_mouse_action").setValue(m_sharedData.useMouseAction);
+    cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
+    cfg.addProperty("decimate_power").setValue(m_sharedData.decimatePowerBar);
+    cfg.addProperty("decimate_distance").setValue(m_sharedData.decimateDistance);
+    cfg.addProperty("group_mode").setValue(m_sharedData.groupMode);
     cfg.save(path);
 
 
@@ -1833,7 +1858,8 @@ void GolfGame::loadAvatars()
 
     if (m_profileData.playerProfiles.empty())
     {
-        m_profileData.playerProfiles.emplace_back().name = "I blame the dev";
+        m_profileData.playerProfiles.emplace_back().name = "Default Profile";
+        m_profileData.playerProfiles[0].saveProfile();
     }
     m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
 }

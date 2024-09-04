@@ -50,9 +50,12 @@ PlayerInfo& PlayerInfo::operator=(const PlayerData& pd)
     ballColourIndex = pd.ballColourIndex;
     ballID = pd.ballID;
     hairID = pd.hairID;
+    hatID = pd.hatID;
     skinID = pd.skinID;
     flipped = pd.flipped;
     isCPU = pd.isCPU;
+
+    headwearOffsets = pd.headwearOffsets;
 
     return *this;
 }
@@ -178,6 +181,13 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             {
                 m_sharedData.clubLimit = evt.packet.as<std::uint8_t>();
                 m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case PacketID::GroupMode:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.groupMode = evt.packet.as<std::int32_t>();
+                m_sharedData.host.broadcastPacket(PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
         case PacketID::ClubLevel:

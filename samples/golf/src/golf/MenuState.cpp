@@ -50,6 +50,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Timeline.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -173,6 +174,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f),
     m_scrollSpeed           (1.f)
 {
+    Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
+    Timeline::setTimelineDesc("Main Menu");
+
     for (auto i = 0; i < 4; ++i)
     {
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
@@ -197,10 +201,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //launches a loading screen (registered in MyApp.cpp)
     CRO_ASSERT(!isCached(), "Don't use loading screen on cached states!");
     context.mainWindow.loadResources([&]() {
-        addSystems();
-        loadAssets();
-        createScene();
-        setVoiceCallbacks();
 
 #ifdef USE_GNS
         Social::findLeaderboards(Social::BoardType::Courses);
@@ -213,7 +213,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             Achievements::update();
         }
 #endif
-        updateUnlockedItems();
+
+        updateUnlockedItems(); //do this before attempting to load the assets...
+        addSystems();
+        loadAssets();
+        createScene();
+        setVoiceCallbacks();
+
         cacheState(StateID::Unlock);
         cacheState(StateID::Options);
         cacheState(StateID::Profile);
@@ -377,6 +383,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             cmd.action = [&, spriteID](cro::Entity e, float)
                 {
                     e.getComponent<cro::Sprite>() = m_sprites[spriteID];
+                    e.getComponent<cro::UIInput>().area = m_sprites[spriteID].getTextureBounds();
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -409,6 +416,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         m_sharedData.inviteID = 0;
         m_sharedData.lobbyID = 0;
         });
+    
+    Timeline::setGameMode(Timeline::GameMode::Menu);
+        
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
 #ifndef __APPLE__
@@ -484,6 +494,72 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 #endif
+    registerCommand("group_mode", [&](const std::string& param)
+        {
+            const std::array GroupStrings =
+            {
+                std::string("None"),
+                std::string("Even"),
+                std::string("One"),
+                std::string("Two"),
+                std::string("Three"),
+                std::string("Four"),
+            };
+
+            const auto updateServer = [&]()
+                {
+                    if (m_sharedData.hosting
+                        && m_sharedData.clientConnection.connected)
+                    {
+                        m_sharedData.clientConnection.netClient.sendPacket(
+                            PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
+                    cro::Console::print("Grouping set to " + GroupStrings[m_sharedData.groupMode]);
+                };
+
+            if (param == "0")
+            {
+                m_sharedData.groupMode = ClientGrouping::None;
+                updateServer();
+            }
+            else if (param == "even")
+            {
+                m_sharedData.groupMode = ClientGrouping::Even;
+                updateServer();
+            }
+            else if (param == "1")
+            {
+                m_sharedData.groupMode = ClientGrouping::One;
+                updateServer();
+            }
+            else if (param == "2")
+            {
+                m_sharedData.groupMode = ClientGrouping::Two;
+                updateServer();
+            }
+            else if (param == "3")
+            {
+                m_sharedData.groupMode = ClientGrouping::Three;
+                updateServer();
+            }
+            else if (param == "4")
+            {
+                m_sharedData.groupMode = ClientGrouping::Four;
+                updateServer();
+            }
+            else
+            {
+                cro::Console::print("Usage: group_mode <mode>");
+                cro::Console::print("Possible Modes:");
+                cro::Console::print("0: Disable Grouping");
+                cro::Console::print("even: Balanced Grouping");
+                cro::Console::print("1: 1 Player Per Group");
+                cro::Console::print("2: 2 Players Per Group");
+                cro::Console::print("3: 3 Players Per Group");
+                cro::Console::print("4: 4 Players Per Group");
+            }
+        });
+
 
 #if defined USE_WORKSHOP && !defined __APPLE__
     if (!Social::isSteamdeck())
@@ -552,10 +628,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
     const auto doNext = [&]()
         {
             if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby
-                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+                && m_currentMenu == MenuID::Lobby)
             {
-                nextCourse();
+                if (m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+                {
+                    nextCourse();
+                }
+                else if (m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().getScale().x == 0)
+                {
+                    nextRules();
+                }
             }
             else if (m_currentMenu == MenuID::Avatar)
             {
@@ -568,10 +650,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
     const auto doPrev = [&]()
         {
             if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby
-                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+                && m_currentMenu == MenuID::Lobby)
             {
-                prevCourse();
+                if (m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
+                {
+                    prevCourse();
+                }
+                else if (m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().getScale().x == 0)
+                {
+                    prevRules();
+                }
             }
             else if (m_currentMenu == MenuID::Avatar)
             {
@@ -957,6 +1045,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_p:
             showOptions();
+            break;
+        case SDLK_F11:
+            cro::Console::doCommand("al_config");
             break;
         }
     }
@@ -1496,6 +1587,8 @@ void MenuState::loadAssets()
     {
         m_resources.shaders.addInclude(name, str);
     }
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
@@ -1503,6 +1596,7 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n");
+    m_resources.shaders.loadFromString(ShaderID::HairReflect, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define REFLECTIONS\n");
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
     m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" /*+ wobble*/);
@@ -1548,6 +1642,14 @@ void MenuState::loadAssets()
     //fudge this for the previews
     m_resources.materials.get(m_materialIDs[MaterialID::Hair]).doubleSided = true;
     m_profileData.profileMaterials.hair = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+
+    shader = &m_resources.shaders.get(ShaderID::HairReflect);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::HairReflect] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    m_profileData.profileMaterials.hairReflection = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+
+
 
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
@@ -1679,7 +1781,7 @@ void MenuState::createScene()
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.2f });
-        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.9f));
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.7f));
         md.createModel(entity);
 
         texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
@@ -1697,6 +1799,18 @@ void MenuState::createScene()
         texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
+    if (md.loadFromFile("assets/golf/models/spectators/sitting/02.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
+        md.createModel(entity);
+
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        entity.getComponent<cro::Skeleton>().play(1);
     }
 
     if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
@@ -1937,7 +2051,34 @@ void MenuState::createScene()
     cam.setShadowExpansion(140.f);
     updateView(cam);
 
-    //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });
+    /*camEnt.getComponent<cro::Transform>().setPosition({ 12.2f, 1.8f, 15.6f });
+    registerWindow([camEnt]() mutable
+        {
+            ImGui::Begin("SFSD");
+            auto p = camEnt.getComponent<cro::Transform>().getPosition();
+            ImGui::Text("%3.2f, %3.2f, %3.2f", p.x, p.y, p.z);
+            if (ImGui::Button("L"))
+            {
+                camEnt.getComponent<cro::Transform>().move(glm::vec3(-0.1f, 0.f, 0.f));
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("R"))
+            {
+                camEnt.getComponent<cro::Transform>().move(glm::vec3(0.1f, 0.f, 0.f));
+            }
+            if (ImGui::Button("F"))
+            {
+                camEnt.getComponent<cro::Transform>().move(glm::vec3(0.f, 0.f, -0.1f));
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("B"))
+            {
+                camEnt.getComponent<cro::Transform>().move(glm::vec3(0.f, 0.f, 0.1f));
+            }
+
+            ImGui::End();
+        });*/
+
     camEnt.getComponent<cro::Transform>().setPosition({ -18.3f, 5.2f, 23.3144f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -31.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
@@ -2178,6 +2319,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 m_matchMaking.leaveLobby(); //doesn't really leave the game, it quits the lobby
                 requestStackClear();
                 requestStackPush(StateID::Golf);
+
+                Timeline::setTimelineDesc("");
             }
             break;
         case PacketID::ConnectionAccepted:
@@ -2621,6 +2764,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             }
         }
             break;
+        case PacketID::GroupMode:
+            m_sharedData.groupMode = std::min(std::int32_t(ClientGrouping::Four), evt.packet.as<std::int32_t>());
+            break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
             {
@@ -2704,6 +2850,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         cmd.action = [&](cro::Entity e, float)
         {
             e.getComponent<cro::Sprite>() = m_sprites[SpriteID::StartGame];
+            e.getComponent<cro::UIInput>().area = m_sprites[SpriteID::StartGame].getTextureBounds();
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -2753,6 +2900,13 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::GroupMode, m_sharedData.groupMode, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+        {
+            Timeline::setGameMode(Timeline::GameMode::Lobby);
+            Timeline::setTimelineDesc("Hosting Game");
+        }
     }
 }
 
@@ -2780,6 +2934,7 @@ void MenuState::finaliseGameJoin(std::uint64_t hostID)
     cmd.action = [&](cro::Entity e, float)
     {
         e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp];
+        e.getComponent<cro::UIInput>().area = m_sprites[SpriteID::ReadyUp].getTextureBounds();
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -2799,6 +2954,9 @@ void MenuState::finaliseGameJoin(std::uint64_t hostID)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     refreshLobbyButtons(); //makes sure buttons point to correct target when navigating
+
+    Timeline::setGameMode(Timeline::GameMode::Lobby);
+    Timeline::setTimelineDesc("Joined Game");
 }
 
 void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

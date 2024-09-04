@@ -59,9 +59,11 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         sizes[i] = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, playerData[i].name.size() * sizeof(std::uint32_t)));
 
         sizes[i] += sizeof(playerData[i].avatarFlags);
+        sizes[i] += sizeof(playerData[i].headwearOffsets);
         sizes[i] += sizeof(playerData[i].ballColourIndex);
         sizes[i] += sizeof(playerData[i].ballID);
         sizes[i] += sizeof(playerData[i].hairID);
+        sizes[i] += sizeof(playerData[i].hatID);
         sizes[i] += sizeof(playerData[i].skinID);
         sizes[i] += sizeof(std::uint8_t); //bool flags
 
@@ -79,6 +81,9 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         std::memcpy(&buffer[offset], playerData[i].avatarFlags.data(), sizeof(playerData[i].avatarFlags));
         offset += sizeof(playerData[i].avatarFlags);
 
+        std::memcpy(&buffer[offset], playerData[i].headwearOffsets.data(), sizeof(playerData[i].headwearOffsets));
+        offset += sizeof(playerData[i].headwearOffsets);
+
         std::memcpy(&buffer[offset], &playerData[i].ballColourIndex, sizeof(playerData[i].ballColourIndex));
         offset += sizeof(playerData[i].ballColourIndex);
         
@@ -87,6 +92,9 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
 
         std::memcpy(&buffer[offset], &playerData[i].hairID, sizeof(playerData[i].hairID));
         offset += sizeof(playerData[i].hairID);
+
+        std::memcpy(&buffer[offset], &playerData[i].hatID, sizeof(playerData[i].hatID));
+        offset += sizeof(playerData[i].hatID);
 
         std::memcpy(&buffer[offset], &playerData[i].skinID, sizeof(playerData[i].skinID));
         offset += sizeof(playerData[i].skinID);
@@ -102,8 +110,6 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
             buffer[offset] |= BoolFlags::CPUPlayer;
         }
         offset++;
-
-
 
         //do string last as it's not fixed size
         auto stringSize = playerData[i].name.size() * sizeof(std::uint32_t);
@@ -177,6 +183,10 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         offset += sizeof(playerData[i].avatarFlags);
         stringSize -= sizeof(playerData[i].avatarFlags);
 
+        std::memcpy(&playerData[i].headwearOffsets, ptr + offset, sizeof(playerData[i].headwearOffsets));
+        offset += sizeof(playerData[i].headwearOffsets);
+        stringSize -= sizeof(playerData[i].headwearOffsets);
+
         std::memcpy(&playerData[i].ballColourIndex, ptr + offset, sizeof(playerData[i].ballColourIndex));
         offset += sizeof(playerData[i].ballColourIndex);
         stringSize -= sizeof(playerData[i].ballColourIndex);        
@@ -188,6 +198,10 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         std::memcpy(&playerData[i].hairID, ptr + offset, sizeof(playerData[i].hairID));
         offset += sizeof(playerData[i].hairID);
         stringSize -= sizeof(playerData[i].hairID);
+
+        std::memcpy(&playerData[i].hatID, ptr + offset, sizeof(playerData[i].hatID));
+        offset += sizeof(playerData[i].hatID);
+        stringSize -= sizeof(playerData[i].hatID);
 
         std::memcpy(&playerData[i].skinID, ptr + offset, sizeof(playerData[i].skinID));
         offset += sizeof(playerData[i].skinID);

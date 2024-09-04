@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -47,13 +47,18 @@ source distribution.
 
 namespace
 {
-    //8x5 texture grid @ 1280x1280px
-    //gives us 40 metres per tile, 32 pixels per metre
+    //40 metres per tile, 32 pixels per metre
+
+    constexpr std::uint32_t MetresPerTile = 40u;
+    static_assert((MapSize.x % MetresPerTile) == 0 && (MapSize.y % MetresPerTile) == 0, "Map size must be multiple of 40");
+
+    //TODO this could be much optimised by only creating as many layers as actually
+    //intersect the terrain. No idea how to calculate that though
     constexpr std::uint32_t TextureSize = 1280u;
-    constexpr std::uint32_t ColCount = 8u;
-    constexpr std::uint32_t RowCount = 5u;
+    constexpr std::uint32_t ColCount = MapSize.x / MetresPerTile;
+    constexpr std::uint32_t RowCount = MapSize.y / MetresPerTile;
     constexpr std::uint32_t TextureCount = ColCount * RowCount;
-    constexpr float TileSize = 320.f / ColCount;
+    constexpr float TileSize = MapSizeFloat.x / ColCount;
 
     constexpr float CameraHeight = 10.f;
     constexpr float MaxDepth = TerrainLevel - WaterLevel;
@@ -67,7 +72,8 @@ namespace
 
         uniform sampler2D u_heightMap;
         const float MaxHeight = MAX_HEIGHT;
-        const vec2 MapSize = vec2(320.0, 200.0);
+        
+#include MAP_SIZE
 
 
         void main()
@@ -106,7 +112,13 @@ TerrainDepthmap::TerrainDepthmap()
 //public
 void TerrainDepthmap::setModel(const HoleData& holeData)
 {
-    m_heightmap.loadFromFile(holeData.mapPath);
+    //handle cases where images don't match map size
+    cro::Image img;
+    img.loadFromFile(holeData.mapPath);
+    
+    //m_heightmap.loadFromFile(holeData.mapPath);
+    m_heightmap.create(MapSize.x, MapSize.y, img.getFormat());
+    m_heightmap.update(img.getPixelData(), false, { 0,0,std::min(img.getSize().x, MapSize.x), std::min(img.getSize().y, MapSize.y) });
     m_terrainEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_heightMap", cro::TextureID(m_heightmap));
 
     //destroy old model and create new from meshdata / custom material
@@ -124,8 +136,13 @@ void TerrainDepthmap::setModel(const HoleData& holeData)
     std::swap(m_srcTexture, m_dstTexture);
 }
 
-void TerrainDepthmap::update(std::uint32_t count)
+void TerrainDepthmap::update(std::int32_t count)
 {
+    if (count == -1)
+    {
+        count = TextureCount;
+    }
+
     for (auto i = 0u; i < count && m_gridIndex < TextureCount; ++i, ++m_gridIndex)
     {
         auto x = m_gridIndex % ColCount;
@@ -155,9 +172,28 @@ cro::TextureID TerrainDepthmap::getTextureAt(std::uint32_t idx) const
 #endif
 }
 
+glm::ivec2 TerrainDepthmap::getGridCount() const
+{
+    return { ColCount, RowCount };
+}
+
+std::int32_t TerrainDepthmap::getTileCount() const
+{
+    return TextureCount;
+}
+
+std::int32_t TerrainDepthmap::getMetresPerTile() const
+{
+    return MetresPerTile;
+}
+
 //private
 void TerrainDepthmap::buildScene()
 {
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
+
+
     //create material
     auto shaderID = m_shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     auto materialID = m_materials.add(m_shaders.get(shaderID));

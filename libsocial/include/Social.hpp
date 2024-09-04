@@ -49,11 +49,12 @@ source distribution.
 //(ball started sending wind effect 1120 -> 1124)
 //(added night mode/weather 1141 -> 1150)
 //(player avatar data format changed 1153->1160)
-static constexpr std::uint16_t CURRENT_VER = 1170;
+//(player avatar data format changed 1170->1180)
+static constexpr std::uint16_t CURRENT_VER = 1180;
 #ifdef __APPLE__
-static const std::string StringVer("1.17.0 (macOS beta)");
+static const std::string StringVer("1.18.0 (macOS beta)");
 #else
-static const std::string StringVer("1.17.0");
+static const std::string StringVer("1.18.0");
 #endif
 
 struct HallEntry final
@@ -238,4 +239,5 @@ public:
     static std::int32_t getMonth();
 
     static void showWebPage(const std::string&) {}
+    static void readAllStats();
 };

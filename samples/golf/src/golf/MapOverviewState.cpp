@@ -530,7 +530,7 @@ void MapOverviewState::loadAssets()
     m_mapString.setFillColour(TextNormalColour);
     m_mapString.setShadowColour(LeaderboardTextDark);
     m_mapString.setShadowOffset({ 8.f, -8.f });
-    m_mapString.setCharacterSize(LabelTextSize * 8); //really should be reading the texture scale
+    m_mapString.setCharacterSize(LabelTextSize * MapSizeMultiplier); //really should be reading the texture scale
     m_mapString.setAlignment(2);
 }
 
@@ -782,7 +782,7 @@ void MapOverviewState::refreshMap()
     //};
 
     auto charScale = std::round(MaxZoom - (m_zoomScale - MinZoom));
-    charScale = std::round((charScale / MaxZoom) * 8.f);
+    charScale = std::round((charScale / MaxZoom) * MapSizeMultiplier);
     m_mapString.setCharacterSize(LabelTextSize * charScale);
     m_mapString.setShadowOffset({ charScale, -charScale });
 

@@ -35,6 +35,7 @@ source distribution.
 #include "WeatherAnimationSystem.hpp"
 #include "ChunkVisSystem.hpp"
 #include "Career.hpp"
+#include "Clubs.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -48,6 +49,16 @@ namespace
     const std::array<std::string, CameraID::Count> CameraStrings =
     {
         "Player", "Bystander", "Sky", "Green", "Transition", "Idle", "Drone"
+    };
+
+    const std::array<std::string, 3u> ModifierNames =
+    {
+        "Default", "Punch", "Flop"
+    };
+
+    std::array<std::string, ClientGrouping::Count> GroupingNames =
+    {
+        "None", "Even", "One", "Two", "Three", "Four"
     };
 }
 
@@ -73,7 +84,7 @@ void GolfState::initBallDebug()
     auto material = m_resources.materials.get(materialID);
     material.enableDepthTest = false;
     meshData = &m_resources.meshes.getMesh(meshID);
-    meshData->boundingBox = { glm::vec3(0.f), glm::vec3(320.f, 100.f, -200.f) };
+    meshData->boundingBox = { glm::vec3(0.f), glm::vec3(MApSizeFloat.x, 100.f, -MapSizeFloat.y) };
     meshData->boundingSphere = meshData->boundingBox;
 
     auto entity = m_gameScene.createEntity();
@@ -146,7 +157,7 @@ void GolfState::addCameraDebugging()
             auto material = m_resources.materials.get(materialID);
             material.enableDepthTest = false;
             auto meshData = m_resources.meshes.getMesh(meshID);
-            meshData.boundingBox = { glm::vec3(0.f), glm::vec3(320.f, 100.f, -200.f) };
+            meshData.boundingBox = { glm::vec3(0.f), glm::vec3(MapSizeFloat.x, 100.f, -MapSizeFloat.y) };
             meshData.boundingSphere = meshData.boundingBox;
 
             auto entity = m_gameScene.createEntity();
@@ -240,24 +251,9 @@ void GolfState::registerDebugCommands()
         {
             if (ImGui::Begin("asefsd"))
             {
-                auto holeDir = m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin;
-                holeDir.y = 0.f;
-
-                auto windDir = m_windUpdate.windVector;
-                windDir.y = 0.f;
-
-                const float headWind = (glm::dot(glm::normalize(holeDir), glm::normalize(windDir)) + 1.f) * 0.5f;
-
-                static constexpr float BaseReduction = 0.9f;
-                float resultF = headWind * BaseReduction * m_windUpdate.windVector.y;
-                resultF /= (1.f + static_cast<float>(m_sharedData.clubSet));
-
-                const std::int32_t resultI = static_cast<std::int32_t>(std::round(resultF * 100.f));
-
-                ImGui::Text("Headwind %3.1f", headWind);
-                ImGui::Text("Strength %3.1f", m_windUpdate.windVector.y);
-
-                ImGui::Text("Likelyhood %d%", resultI);
+                ImGui::Text("Server Group: %d", m_serverGroup);
+                ImGui::Text("Target Group: %lu", m_idleCameraIndex);
+                ImGui::Text("Target Client: %d, Target Player: %d", m_groupPlayerPositions[m_idleCameraIndex].client, m_groupPlayerPositions[m_idleCameraIndex].player);
             }
             ImGui::End();
         });*/
@@ -453,6 +449,26 @@ void GolfState::registerDebugCommands()
             else
             {
                 cro::Console::print("Usage: cl_drawhud <0|1>");
+            }
+        });
+
+    registerCommand("sv_cheats", [&](const std::string&)
+        {
+            static std::int32_t count = 0;
+            switch (count)
+            {
+            case 0:
+                cro::Console::print("Nice try, but you probably don't want to do that again...");
+                count++;
+                break;
+            case 1:
+                cro::Console::print("Back for more eh? Seriously though, this won't do what you think it does.");
+                count++;
+                break;
+            case 2:
+                cro::FileSystem::showMessageBox("Oh Dear", "Well, this was fun.");
+                cro::App::quit();
+                break;
             }
         });
 
@@ -833,41 +849,41 @@ void GolfState::registerDebugWindows()
     //        }
     //    });
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Target Info"))
-            {
-                auto pos = m_freeCam.getComponent<cro::Transform>().getPosition();
-                auto dir = m_freeCam.getComponent<cro::Transform>().getForwardVector() * 100.f;
-                auto result = m_collisionMesh.getTerrain(pos, dir);
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Target Info"))
+    //        {
+    //            auto pos = m_freeCam.getComponent<cro::Transform>().getPosition();
+    //            auto dir = m_freeCam.getComponent<cro::Transform>().getForwardVector() * 100.f;
+    //            auto result = m_collisionMesh.getTerrain(pos, dir);
 
-                if (result.wasRayHit)
-                {
-                    ImGui::Text("Terrain: %s", TerrainStrings[result.terrain].c_str());
-                    ImGui::Text("Trigger ID: %d", result.trigger);
-                }
-                else
-                {
-                    ImGui::Text("Inf.");
-                }
+    //            if (result.wasRayHit)
+    //            {
+    //                ImGui::Text("Terrain: %s", TerrainStrings[result.terrain].c_str());
+    //                ImGui::Text("Trigger ID: %d", result.trigger);
+    //            }
+    //            else
+    //            {
+    //                ImGui::Text("Inf.");
+    //            }
 
-                ImGui::Text("Current Camera %s", CameraStrings[m_currentCamera].c_str());
-            }        
-            ImGui::End();
+    //            ImGui::Text("Current Camera %s", CameraStrings[m_currentCamera].c_str());
+    //        }        
+    //        ImGui::End();
 
-            //hacky stand in for reticule :3
-            if (m_gameScene.getActiveCamera() == m_freeCam)
-            {
-                auto size = glm::vec2(cro::App::getWindow().getSize());
-                const glm::vec2 pointSize(6.f);
+    //        //hacky stand in for reticule :3
+    //        if (m_gameScene.getActiveCamera() == m_freeCam)
+    //        {
+    //            auto size = glm::vec2(cro::App::getWindow().getSize());
+    //            const glm::vec2 pointSize(6.f);
 
-                auto pos = (size - pointSize) / 2.f;
-                ImGui::SetNextWindowPos({ pos.x, pos.y });
-                ImGui::SetNextWindowSize({ pointSize.x, pointSize.y });
-                ImGui::Begin("Point");
-                ImGui::End();
-            }
-        });
+    //            auto pos = (size - pointSize) / 2.f;
+    //            ImGui::SetNextWindowPos({ pos.x, pos.y });
+    //            ImGui::SetNextWindowSize({ pointSize.x, pointSize.y });
+    //            ImGui::Begin("Point");
+    //            ImGui::End();
+    //        }
+    //    });
 
     //registerWindow([&]()
     //    {
@@ -910,26 +926,27 @@ void GolfState::registerDebugWindows()
     //    {
     //        if (ImGui::Begin("Depthmap"))
     //        {
-    //            /*for (auto y = 4; y >= 0; --y)
+    //            auto size = m_depthMap.getGridCount();
+    //            for (auto y = size.y - 1; y >= 0; --y)
     //            {
-    //                for (auto x = 0; x < 8; ++x)
+    //                for (auto x = 0; x < size.x; ++x)
     //                {
-    //                    auto idx = y * 8 + x;
+    //                    auto idx = y * size.x + x;
     //                    ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
     //                    ImGui::SameLine();
     //                }
     //                ImGui::NewLine();
-    //            }*/
+    //            }
 
-    //            const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    //            /*const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     //            for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
     //            {
     //                ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
     //                ImGui::SameLine();
-    //            }
+    //            }*/
     //        }
     //        ImGui::End();
-    //    },true);
+    //    });
 
     //registerWindow([&]()
     //    {

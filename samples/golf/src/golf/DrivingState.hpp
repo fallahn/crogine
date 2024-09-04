@@ -137,6 +137,7 @@ private:
             CelTexturedSkinned,
             Course,
             Hair,
+            HairReflect,
             Wireframe,
             WireframeCulled,
             Beacon,
@@ -158,6 +159,7 @@ private:
         enum
         {
             PowerBar,
+            PowerBar10,
             PowerBarInner,
             HookBar,
             WindIndicator,

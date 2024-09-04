@@ -35,6 +35,7 @@ source distribution.
 #include "PropFollowSystem.hpp"
 #include "PoissonDisk.hpp"
 #include "Career.hpp"
+#include "AvatarRotationSystem.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
@@ -386,6 +387,13 @@ void GolfState::loadMap()
         }
     }
 
+    if (m_sharedData.nightTime
+        && m_resources.shaders.loadFromString(ShaderID::PointFlare, cro::RenderSystem2D::getDefaultVertexShader(), PointFlareFrag, "#define TEXTURED\n"))
+    {
+        //again, not a proper material, juts a signal we loaded successfully
+        m_materialIDs[MaterialID::PointFlare] = ShaderID::PointFlare;
+    }
+
     if (m_sharedData.nightTime)
     {
         auto skyDark = SkyBottom.getVec4() * SkyNight.getVec4();
@@ -495,15 +503,15 @@ void GolfState::loadMap()
             {
                 //TODO not sure how we ensure these are sane values?
                 holeData.pin = holeProp.getValue<glm::vec3>();
-                holeData.pin.x = glm::clamp(holeData.pin.x, 0.f, 320.f);
-                holeData.pin.z = glm::clamp(holeData.pin.z, -200.f, 0.f);
+                holeData.pin.x = glm::clamp(holeData.pin.x, 0.f, MapSizeFloat.x);
+                holeData.pin.z = glm::clamp(holeData.pin.z, -MapSizeFloat.y, 0.f);
                 propCount++;
             }
             else if (name == "tee")
             {
                 holeData.tee = holeProp.getValue<glm::vec3>();
-                holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, 320.f);
-                holeData.tee.z = glm::clamp(holeData.tee.z, -200.f, 0.f);
+                holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, MapSizeFloat.x);
+                holeData.tee.z = glm::clamp(holeData.tee.z, -MapSizeFloat.y, 0.f);
                 propCount++;
             }
             else if (name == "target")
@@ -1309,7 +1317,7 @@ void GolfState::loadMap()
         }
 
         m_depthMap.setModel(m_holeData[0]);
-        m_depthMap.update(40);
+        m_depthMap.update(-1);
     }
 
     m_terrainBuilder.create(m_resources, m_gameScene, theme);
@@ -1375,7 +1383,7 @@ void GolfState::loadMap()
                 m_terrainBuilder.applyHoleIndex(m_currentHole);
                 
                 m_depthMap.setModel(m_holeData[m_currentHole]);
-                m_depthMap.update(40);
+                m_depthMap.update(-1);
 
                 auto& player = m_sharedData.connectionData[0].playerData[0];
                 player.holeScores.swap(scores);
@@ -1436,14 +1444,17 @@ void GolfState::loadMaterials()
         m_resources.shaders.addInclude(name, str);
     }
 
+    static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
+    m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
+
     //cel shaded material
-    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define TERRAIN_CLIP\n" + wobble);
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define SKINNED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n#define SKINNED\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelSkinned);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1483,7 +1494,7 @@ void GolfState::loadMaterials()
     auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
     noiseTex.setRepeated(true);
     noiseTex.setSmooth(true);
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define SUBRECT\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1493,7 +1504,7 @@ void GolfState::loadMaterials()
 
 
     //this is only used on prop models, in case they are emissive or reflective
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define MASK_MAP\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedMasked);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1504,7 +1515,7 @@ void GolfState::loadMaterials()
 
     //disable wind/vert animation on models with no colour channel
     //saves on probably significant amount of vertex processing...
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedNoWind, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedNoWind, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedNoWind);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1513,7 +1524,7 @@ void GolfState::loadMaterials()
 
 
     //this is only used on prop models, in case they are emissive or reflective
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedMaskedNoWind, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMaskedNoWind, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define MASK_MAP\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedMaskedNoWind);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1535,12 +1546,12 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n");
+    m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SUBRECT\n#define TERRAIN_CLIP\n");
     shader = &m_resources.shaders.get(ShaderID::Leaderboard);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaderboard] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define SUBRECT\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define SUBRECT\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1548,7 +1559,7 @@ void GolfState::loadMaterials()
 
 
     //again, on props only
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define SUBRECT\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define SUBRECT\n#define MASK_MAP\n#define TERRAIN_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinnedMasked);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1577,14 +1588,24 @@ void GolfState::loadMaterials()
     m_resources.materials.get(m_materialIDs[MaterialID::Player]).setProperty("u_maskMap", m_defaultMaskMap);
 
 
+    //hair
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
+
+    m_resources.shaders.loadFromString(ShaderID::HairReflect, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define REFLECTIONS\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::HairReflect);
+    m_materialIDs[MaterialID::HairReflect] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+
+
+
+
     std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble + targetDefines);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n#define TERRAIN_CLIP\n" + wobble + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1599,6 +1620,7 @@ void GolfState::loadMaterials()
     auto& shaleTex = m_resources.textures.get("assets/golf/images/shale.png", true);
     shaleTex.setRepeated(true);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);
+    m_resources.materials.get(m_materialIDs[MaterialID::Course]).addCustomSetting(GL_CLIP_DISTANCE1);
 
 
     m_resources.shaders.loadFromString(ShaderID::CourseGreen, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
@@ -1641,10 +1663,11 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Billboard]).addCustomSetting(GL_CLIP_DISTANCE1);
 
 
     //shaders used by terrain
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define INSTANCING\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define INSTANCING\n#define TERRAIN_CLIP\n");
     shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1655,7 +1678,7 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define TEXTURED\n");
+    m_resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define TEXTURED\n#define TERRAIN_CLIP\n");
     shader = &m_resources.shaders.get(ShaderID::Crowd);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1663,7 +1686,7 @@ void GolfState::loadMaterials()
     m_resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define DITHERED\n#define INSTANCING\n#define VATS\n");
     m_resolutionBuffer.addShader(m_resources.shaders.get(ShaderID::CrowdShadow));
 
-    m_resources.shaders.loadFromString(ShaderID::CrowdArray, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define TEXTURED\n#define ARRAY_MAPPING\n");
+    m_resources.shaders.loadFromString(ShaderID::CrowdArray, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define TEXTURED\n#define ARRAY_MAPPING\n#define TERRAIN_CLIP\n");
     shader = &m_resources.shaders.get(ShaderID::CrowdArray);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1792,6 +1815,13 @@ void GolfState::loadMaterials()
     //{
     //    waterDefines = "#define RAIN\n";
     //}
+
+    static const std::string DepthConsts = "\nconst float ColCount = " + std::to_string(m_depthMap.getGridCount().x) 
+        + ".0;\nconst float MetresPerTexture = "+ std::to_string(m_depthMap.getMetresPerTile())
+        + ".0;\nconst float MaxTiles = "
+        + std::to_string(m_depthMap.getTileCount() - 1) + ".0;\n";
+    m_resources.shaders.addInclude("DEPTH_CONSTS", DepthConsts.c_str());
+
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define USE_MRT\n" + waterDefines);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
@@ -1833,6 +1863,7 @@ void GolfState::loadSprites()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar_wide");
+    m_sprites[SpriteID::PowerBar10] = spriteSheet.getSprite("power_bar_wide_10");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner_wide");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::SlopeStrength] = spriteSheet.getSprite("slope_indicator");
@@ -1876,7 +1907,7 @@ void GolfState::loadModels()
 {
     /*
     This deals with loading the models for avatars/hair/balls
-    props and course models are parsed in loadAssets();
+    props and course models are parsed in loadMap();
     */
 
 
@@ -2020,13 +2051,6 @@ void GolfState::loadModels()
                 {
                     auto& skel = entity.getComponent<cro::Skeleton>();
 
-                    //find attachment points for club model
-                    auto id = skel.getAttachmentIndex("hands");
-                    if (id > -1)
-                    {
-                        m_avatars[i][j].hands = &skel.getAttachments()[id];
-                    }
-
                     const auto& anims = skel.getAnimations();
                     for (auto k = 0u; k < std::min(anims.size(), static_cast<std::size_t>(AnimationID::Count)); ++k)
                     {
@@ -2062,39 +2086,86 @@ void GolfState::loadModels()
                     }
 
                     //and attachment for hair/hats
-                    id = skel.getAttachmentIndex("head");
+                    auto id = skel.getAttachmentIndex("head");
                     if (id > -1)
                     {
+                        const auto& pd = m_sharedData.connectionData[i].playerData[j];
+
+                        const auto createHeadEnt = [&](std::int32_t colourKey, std::int32_t transformIndexOffset)
+                            {
+                                auto ent = m_gameScene.createEntity();
+                                ent.addComponent<cro::Transform>();
+                                md.createModel(ent);
+
+                                //set material and colour
+                                material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                                applyMaterialData(md, material); //applies double sidedness
+
+                                const auto hairColour = pc::Palette[pd.avatarFlags[colourKey]];
+                                material.setProperty("u_hairColour", hairColour);
+                                ent.getComponent<cro::Model>().setMaterial(0, material);
+                                ent.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
+
+                                if (md.getMaterialCount() == 2)
+                                {
+                                    material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                                    applyMaterialData(md, material, 1);
+                                    material.setProperty("u_hairColour", hairColour);
+                                    ent.getComponent<cro::Model>().setMaterial(1, material);
+                                }
+
+                                //apply any profile specific transforms
+                                const auto rot = pd.headwearOffsets[PlayerData::HeadwearOffset::HairRot + transformIndexOffset] * cro::Util::Const::PI;
+                                ent.getComponent<cro::Transform>().setPosition(pd.headwearOffsets[PlayerData::HeadwearOffset::HairTx + transformIndexOffset]);
+                                ent.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+                                ent.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+                                ent.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+                                ent.getComponent<cro::Transform>().setScale(pd.headwearOffsets[PlayerData::HeadwearOffset::HairScale + transformIndexOffset]);
+
+                                if (m_avatars[i][j].flipped)
+                                {
+                                    ent.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+                                }
+
+                                ent.addComponent<cro::Callback>().active = true;
+                                ent.getComponent<cro::Callback>().function =
+                                    [entity](cro::Entity e, float)
+                                    {
+                                        e.getComponent<cro::Model>().setHidden(entity.getComponent<cro::Model>().isHidden());
+                                    };
+
+                                return ent;
+                            };
+
+
+                        //do this first so we duplicate a blank attachment if needs be
+                        auto hatID = indexFromHairID(m_sharedData.connectionData[i].playerData[j].hatID);
+                        if (hatID != 0
+                            && md.loadFromFile(m_sharedData.hairInfo[hatID].modelPath))
+                        {
+                            auto hatEnt = createHeadEnt(pc::ColourKey::Hat, PlayerData::HeadwearOffset::HatTx);
+
+                            auto hatAttachment = entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                            auto hatAtID = entity.getComponent<cro::Skeleton>().addAttachment(hatAttachment);
+                            skel.getAttachments()[hatAtID].setModel(hatEnt);
+
+                            //play time tracking
+                            if (m_sharedData.hairInfo[hatID].workshopID
+                                && i == m_sharedData.localConnectionData.connectionID)
+                            {
+                                m_modelStats.push_back(m_sharedData.hairInfo[hatID].workshopID);
+                            }
+                        }
+
+
                         //look to see if we have a hair model to attach
-                        auto hairID = indexFromHairID(m_sharedData.connectionData[i].playerData[j].hairID);
+                        auto hairID = indexFromHairID(pd.hairID);
 
                         if (hairID != 0
                             && md.loadFromFile(m_sharedData.hairInfo[hairID].modelPath))
                         {
-                            auto hairEnt = m_gameScene.createEntity();
-                            hairEnt.addComponent<cro::Transform>();
-                            md.createModel(hairEnt);
-
-                            //set material and colour
-                            material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
-                            applyMaterialData(md, material); //applies double sidedness
-                            material.setProperty("u_hairColour", pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]]);
-                            hairEnt.getComponent<cro::Model>().setMaterial(0, material);
-                            hairEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
-
+                            auto hairEnt = createHeadEnt(pc::ColourKey::Hair, 0);
                             skel.getAttachments()[id].setModel(hairEnt);
-
-                            if (m_avatars[i][j].flipped)
-                            {
-                                hairEnt.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
-                            }
-
-                            hairEnt.addComponent<cro::Callback>().active = true;
-                            hairEnt.getComponent<cro::Callback>().function =
-                                [entity](cro::Entity e, float)
-                                {
-                                    e.getComponent<cro::Model>().setHidden(entity.getComponent<cro::Model>().isHidden());
-                                };
 
                             if (m_sharedData.hairInfo[hairID].workshopID
                                 && i == m_sharedData.localConnectionData.connectionID)
@@ -2103,11 +2174,20 @@ void GolfState::loadModels()
                             }
                         }
                     }
+
+                    //find attachment points for club model
+                    id = skel.getAttachmentIndex("hands");
+                    if (id > -1)
+                    {
+                        m_avatars[i][j].hands = &skel.getAttachments()[id];
+                    }
                 }
 
                 entity.getComponent<cro::Model>().setHidden(true);
                 entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
                 m_avatars[i][j].model = entity;
+
+                entity.addComponent<AvatarRotation>();
 
                 if (m_sharedData.avatarInfo[avatarIndex].workshopID
                     && i == m_sharedData.localConnectionData.connectionID)

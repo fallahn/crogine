@@ -37,6 +37,7 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "CallbackData.hpp"
 #include "PlayerColours.hpp"
+#include "ButtonHoldSystem.hpp"
 #include "ProfileEnum.inl"
 #include "../GolfGame.hpp"
 #include "../Colordome-32.hpp"
@@ -99,7 +100,9 @@ namespace
             BallThumb, BallColour,
 
             //browser windows
-            BallSelect, HairSelect
+            BallSelect, HairSelect,
+            
+            HairEditor
         };
     };
     
@@ -113,6 +116,7 @@ namespace
     constexpr glm::uvec2 BallTexSize(96u, 110u);
     constexpr glm::uvec2 AvatarTexSize(130u, 202u);
     constexpr glm::uvec2 MugshotTexSize(192u, 96u);
+    constexpr glm::uvec2 HairEditTexSize(200u, 200u);
 
     constexpr std::size_t ThumbColCount = 8;
     constexpr std::size_t ThumbRowCount = 4;
@@ -135,7 +139,7 @@ namespace
     constexpr std::size_t PaletteColumnCount = 8;
     constexpr std::array SwatchPositions =
     {
-        glm::vec2(37.f, 171.f),
+        glm::vec2(392.f, 130.f),
         glm::vec2(37.f, 139.f),
         glm::vec2(21.f, 107.f),
         glm::vec2(53.f, 107.f),
@@ -165,6 +169,8 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_avatarIndex       (0),
     m_lockedAvatarCount (0),
     m_lastSelected      (0),
+    m_avatarRotation    (0.f),
+    m_headwearID        (HeadwearID::Hair),
     m_mugshotUpdated    (false)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -183,26 +189,9 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     //    {
     //        if (ImGui::Begin("Flaps"))
     //        {
-    //            if (m_ballThumbs.available())
-    //            {
-    //                glm::vec2 size(m_ballThumbs.getSize());
-    //                ImGui::Image(m_ballThumbs.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-    //            }
-    //            
-    //            /*if (m_mugshotTexture.available())
-    //            {
-    //                ImGui::Image(m_mugshotTexture.getTexture(), { 192.f, 96.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //            }*/
-
-    //            /*auto pos = m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().getPosition();
-    //            if (ImGui::SliderFloat("Height", &pos.y, 0.f, 2.f))
-    //            {
-    //                m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
-    //            }
-    //            if (ImGui::SliderFloat("Depth", &pos.z, -2.f, 4.f))
-    //            {
-    //                m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
-    //            }*/
+    //            auto r = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().getRotation();
+    //            ImGui::Text("X: %3.2f Y: %3.2f W: %3.2f", r.x, r.y, r.w);
+    //            ImGui::Text("AV Rot: %3.2f", m_avatarRotation);
     //        }
     //        ImGui::End();
     //    });
@@ -225,10 +214,12 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             if (hasPSLayout(controllerID))
             {
                 m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(PSString);
+                m_menuEntities[EntityID::HairHelp].getComponent<cro::Text>().setString("L1/R1 Rotate");
             }
             else
             {
                 m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(XboxString);
+                m_menuEntities[EntityID::HairHelp].getComponent<cro::Text>().setString("LB/RB Rotate");
             }
         }
         else
@@ -242,8 +233,16 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
             str += " Rotate/Zoom";
             m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(str);
+
+
+            str = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]);
+            str += ", ";
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]);
+            str += " Rotate";
+            m_menuEntities[EntityID::HairHelp].getComponent<cro::Text>().setString(str);
         }
         centreText(m_menuEntities[EntityID::HelpText]);
+        centreText(m_menuEntities[EntityID::HairHelp]);
     };
 
     const auto quitMenu = [&]()
@@ -264,6 +263,36 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
+            else if (groupID == MenuID::HairEditor)
+            {
+                m_menuEntities[EntityID::HairEditor].getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        };
+
+    const auto closeFlyout = [&](std::size_t flyoutID)
+        {
+            m_flyouts[flyoutID].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(flyoutID == PaletteID::Hair ? MenuID::HairEditor : MenuID::Main);
+            m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
+            m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
+
+            //restore model preview colours
+            m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(flyoutID), m_activeProfile.avatarFlags[flyoutID]);
+            m_profileTextures[m_avatarIndex].apply();
+
+            //refresh hair colour
+            if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
+            {
+                m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+                m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+            }
+
+            if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hatIndex].isValid())
+            {
+                m_avatarHairModels[m_avatarModels[m_avatarIndex].hatIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
+                m_avatarHairModels[m_avatarModels[m_avatarIndex].hatIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
+            }        
         };
 
     if (evt.type == SDL_KEYUP)
@@ -278,8 +307,24 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         case SDLK_BACKSPACE:
         if (m_textEdit.string == nullptr)
         {
-            quitMenu();
-            return false;
+            auto currentMenu = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
+            switch (currentMenu)
+            {
+            default:
+                quitMenu();
+                return false;
+            case MenuID::Hair:
+            case MenuID::BottomD:
+            case MenuID::BottomL:
+            case MenuID::Skin:
+            case MenuID::TopL:
+            case MenuID::TopD:
+            {
+                auto flyoutID = currentMenu - MenuID::Hair;
+                closeFlyout(flyoutID);
+                return false;
+            }
+            }
         }
             break;
         case SDLK_RETURN:
@@ -354,7 +399,27 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             }
                 break;
             case cro::GameController::ButtonB:
-                quitMenu();
+            {
+                auto currentMenu = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
+                switch (currentMenu)
+                {
+                default:
+                    quitMenu();
+                    return false;
+                case MenuID::Hair:
+                case MenuID::BottomD:
+                case MenuID::BottomL:
+                case MenuID::Skin:
+                case MenuID::TopL:
+                case MenuID::TopD:
+                {
+                    auto flyoutID = currentMenu - MenuID::Hair;
+                    closeFlyout(flyoutID);
+                    return false;
+                }
+                break;
+                }
+            }
                 return false;
             }
         }
@@ -395,6 +460,13 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             if (evt.button.button == SDL_BUTTON_RIGHT)
             {
                 m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+            break;
+        case MenuID::HairEditor:
+            if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                m_menuEntities[EntityID::HairEditor].getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
             break;
@@ -443,20 +515,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 
             if (!bounds.contains(m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition())))
             {
-                m_flyouts[flyoutID].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
-                m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
-                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
-
-                //restore model preview colours
-                m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(flyoutID), m_activeProfile.avatarFlags[flyoutID]);
-                m_profileTextures[m_avatarIndex].apply();
-
-                //refresh hair colour
-                if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
-                {
-                    m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
-                }
+                closeFlyout(flyoutID);
 
                 //don't forward this to the menu system
                 return false;
@@ -474,6 +533,10 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             updateHelpString(cro::GameController::controllerID(evt.caxis.which));
         }
     }
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    {
+        updateHelpString(cro::GameController::controllerID(evt.cbutton.which));
+    }
     else if (evt.type == SDL_MOUSEMOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
@@ -486,7 +549,9 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         if (bounds.contains(mousePos)
             && cro::Mouse::isButtonPressed(cro::Mouse::Button::Left))
         {
-            m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, static_cast<float>(evt.motion.xrel) * (1.f/60.f));
+            m_avatarRotation += static_cast<float>(evt.motion.xrel) * (1.f / 60.f);
+            m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_avatarRotation);
+            updateGizmo();
         }
     }
     else if (evt.type == SDL_MOUSEWHEEL)
@@ -578,20 +643,25 @@ bool ProfileState::simulate(float dt)
     //rotate/zoom avatar
     if (!m_textEdit.entity.isValid())
     {
-        float rotation = 0.f;
-
+        bool refresh = false;
         if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
             || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
         {
-            rotation -= dt;
+            m_avatarRotation -= dt;
+            refresh = true;
         }
         if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonRightShoulder)
             || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
         {
-            rotation += dt;
+            refresh = true;
+            m_avatarRotation += dt;
         }
-        m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);
 
+        if (refresh)
+        {
+            m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_avatarRotation);
+            updateGizmo();
+        }
 
         float zoom = 0.f;
         if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > TriggerDeadZone
@@ -623,16 +693,25 @@ bool ProfileState::simulate(float dt)
 
 void ProfileState::render()
 {
-    m_ballTexture.clear(cro::Colour::Transparent);
-    m_modelScene.setActiveCamera(m_cameras[CameraID::Ball]);
-    m_modelScene.render();
-    m_ballTexture.display();
+    if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::HairEditor)
+    {
+        m_hairEditorTexture.clear(cro::Colour::Transparent);
+        m_modelScene.setActiveCamera(m_cameras[CameraID::HairEdit]);
+        m_modelScene.render();
+        m_hairEditorTexture.display();
+    }
+    else
+    {
+        m_ballTexture.clear(cro::Colour::Transparent);
+        m_modelScene.setActiveCamera(m_cameras[CameraID::Ball]);
+        m_modelScene.render();
+        m_ballTexture.display();
 
-    m_avatarTexture.clear(cro::Colour::Transparent);
-    m_modelScene.setActiveCamera(m_cameras[CameraID::Avatar]);
-    m_modelScene.render();
-    m_avatarTexture.display();
-
+        m_avatarTexture.clear(cro::Colour::Transparent);
+        m_modelScene.setActiveCamera(m_cameras[CameraID::Avatar]);
+        m_modelScene.render();
+        m_avatarTexture.display();
+    }
     m_uiScene.render();
 
 }
@@ -642,6 +721,7 @@ void ProfileState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_uiScene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
+    m_uiScene.addSystem<ButtonHoldSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -727,6 +807,7 @@ void ProfileState::buildScene()
                     //refresh the avatar settings
                     setAvatarIndex(indexFromAvatarID(m_activeProfile.skinID));
                     setHairIndex(indexFromHairID(m_activeProfile.hairID));
+                    setHatIndex(indexFromHairID(m_activeProfile.hatID));
                     setBallIndex(indexFromBallID(m_activeProfile.ballID) % m_ballModels.size());
                     refreshMugshot();
                     refreshSwatch();
@@ -807,7 +888,7 @@ void ProfileState::buildScene()
 
     auto bgEnt = entity;
 
-    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //active profile name
     entity = m_uiScene.createEntity();
@@ -902,62 +983,23 @@ void ProfileState::buildScene()
                 }
             });
 
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonHairColour);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonHairBrowse);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonName, ButtonRandomise);
     entity.setLabel("Open Steam Workshop In Overlay");
 #endif
 
     //colour swatch - this has its own update function
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_menuEntities[EntityID::Swatch] = entity;
     refreshSwatch();
 
-    auto fetchUIIndexFromColour =
-        [&](std::uint8_t colourIndex, std::int32_t paletteIndex) 
-    {
-        const auto rowCount = m_uiScene.getSystem<cro::UISystem>()->getGroupSize() / PaletteColumnCount;
-        const auto x = colourIndex % PaletteColumnCount;
-        auto y = colourIndex / PaletteColumnCount;
-
-        y = (rowCount - 1) - y;
-        return (y * PaletteColumnCount + x) % pc::PairCounts[paletteIndex];
-    };
-
     //colour buttons
-    auto hairColour = createButton("colour_highlight", glm::vec2(33.f, 167.f), ButtonHairColour);
-    hairColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-                    applyTextEdit();
-
-                    //show palette menu
-                    m_flyouts[PaletteID::Hair].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-
-                    //set column/row count for menu
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Hair);
-                    m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[0], pc::ColourKey::Hair));
-
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                    m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
-                }
-            });
-    hairColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevHair, ButtonSkinTone);
-#ifdef USE_GNS
-    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonWorkshop);
-#else
-    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonRandomise);
-#endif
-
     auto skinColour = createButton("colour_highlight", glm::vec2(33.f, 135.f), ButtonSkinTone);
     skinColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -974,13 +1016,13 @@ void ProfileState::buildScene()
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
-    skinColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevHair, ButtonTopLight);
-    skinColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonHairColour);
+    skinColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBody, ButtonTopLight);
+    skinColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonHairBrowse);
 
 
     auto topLightColour = createButton("colour_highlight", glm::vec2(17.f, 103.f), ButtonTopLight);
     topLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1003,7 +1045,7 @@ void ProfileState::buildScene()
 
     auto topDarkColour = createButton("colour_highlight", glm::vec2(49.f, 103.f), ButtonTopDark);
     topDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1026,7 +1068,7 @@ void ProfileState::buildScene()
 
     auto bottomLightColour = createButton("colour_highlight", glm::vec2(17.f, 69.f), ButtonBottomLight);
     bottomLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1048,7 +1090,7 @@ void ProfileState::buildScene()
 
     auto bottomDarkColour = createButton("colour_highlight", glm::vec2(49.f, 69.f), ButtonBottomDark);
     bottomDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1072,7 +1114,7 @@ void ProfileState::buildScene()
     //hat select button
     entity = m_uiScene.createEntity();
     entity.setLabel("Open Headwear Browser");
-    entity.addComponent<cro::Transform>().setPosition({163.f, 214.f, 0.5f});
+    entity.addComponent<cro::Transform>().setPosition({47.f, 180.f, 0.5f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("hat_select");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1080,8 +1122,12 @@ void ProfileState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonHairBrowse);
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonNextHair, ButtonNextBody);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevHair, ButtonPrevBody);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonSkinTone);
+#ifdef USE_GNS
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonWorkshop);
+#else
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonRandomise);
+#endif
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 
         uiSystem.addCallback([rect](cro::Entity e) {e.getComponent<cro::Sprite>().setTextureRect(rect); });
     rect.bottom += rect.height;
@@ -1089,7 +1135,7 @@ void ProfileState::buildScene()
         uiSystem.addCallback([&,rect](cro::Entity e)
             {
                 e.getComponent<cro::Sprite>().setTextureRect(rect);
-                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                 m_menuEntities[EntityID::TipText].getComponent<cro::Text>().setString(e.getLabel());
             });
@@ -1098,7 +1144,12 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-                    m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+                    applyTextEdit();
+                    m_menuEntities[EntityID::HairEditor].getComponent<cro::Callback>().active = true;
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().stop();
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().gotoFrame(0);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
@@ -1114,41 +1165,7 @@ void ProfileState::buildScene()
             e.getComponent<cro::UIInput>().area = bounds;
         };
 
-    //avatar arrow buttons
-    auto hairLeft = createButton("arrow_left", glm::vec2(87.f, 156.f), ButtonPrevHair);
-    hairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-                    auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
-                    setHairIndex(hairIndex);
-
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-                }
-            });
-    hairLeft.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonPrevBody);
-    hairLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonHairColour, ButtonPrevBody);
-    hairLeft.setLabel("Previous Headwear");
-    expandHitbox(hairLeft);
-
-    auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f), ButtonNextHair);
-    hairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-                    auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + 1) % m_avatarHairModels.size();
-                    setHairIndex(hairIndex);
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-                }
-            });
-    hairRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextBody);
-    hairRight.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonNextBody);
-    hairRight.setLabel("Next Headwear");
-    expandHitbox(hairRight);
-
-    auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 110.f), ButtonPrevBody);
+    auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 133.f), ButtonPrevBody);
     avatarLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1158,12 +1175,12 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    avatarLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonPrevHair);
-    avatarLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonTopDark, ButtonPrevHair);
+    avatarLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonHairBrowse);
+    avatarLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonTopDark, ButtonTopDark);
     avatarLeft.setLabel("Previous Avatar");
     expandHitbox(avatarLeft);
 
-    auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 110.f), ButtonNextBody);
+    auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 133.f), ButtonNextBody);
     avatarRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1173,8 +1190,8 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    avatarRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextHair);
-    avatarRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevBody, ButtonNextHair);
+    avatarRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonPrevBall);
+    avatarRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevBody, ButtonPrevBall);
     avatarRight.setLabel("Next Avatar");
     expandHitbox(avatarRight);
 
@@ -1226,6 +1243,7 @@ void ProfileState::buildScene()
                 {
                     //randomise hair
                     setHairIndex(cro::Util::Random::value(0u, m_avatarHairModels.size() - 1));
+                    setHatIndex(0);
 
                     //randomise avatar
                     setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
@@ -1244,6 +1262,7 @@ void ProfileState::buildScene()
                     if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
                     {
                         m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
                     }
 
                     //update swatch
@@ -1253,7 +1272,7 @@ void ProfileState::buildScene()
 #ifdef USE_GNS
     randomButton.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonWorkshop);
 #else
-    randomButton.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonHairColour);
+    randomButton.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonHairBrowse);
 #endif
     if (!Social::isSteamdeck())
     {
@@ -1341,7 +1360,7 @@ void ProfileState::buildScene()
                 }
             });
     ballLeft.getComponent<cro::UIInput>().setNextIndex(ButtonBallSelect, ButtonBallColour);
-    ballLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonName);
+    ballLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBody, ButtonName);
     ballLeft.setLabel("Previous Ball");
     expandHitbox(ballLeft);
 
@@ -1388,7 +1407,7 @@ void ProfileState::buildScene()
     ballColour.getComponent<cro::UIInput>().setNextIndex(ButtonBallColourReset, ButtonUpdateIcon);
     ballColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBody, ButtonBallSelect);
     ballColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -1801,7 +1820,7 @@ void ProfileState::buildScene()
                     m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
                 }
             });
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairColour, ButtonDescDown);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairBrowse, ButtonDescDown);
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonName);
     expandHitbox(entity);
 
@@ -1870,7 +1889,7 @@ void ProfileState::buildScene()
     //help string
     bounds = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({/*bounds.width / 2.f*/164.f, 14.f, 0.1f});
+    entity.addComponent<cro::Transform>().setPosition({164.f, 14.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1960,17 +1979,47 @@ void ProfileState::buildScene()
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
+    ctx.onClose = [&]()
+        {
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::HairEditor);
 
+            m_menuEntities[EntityID::HairPreview].getComponent<cro::Sprite>().setTextureRect(m_headwearPreviewRects[m_headwearID]);
+        };
 
     createPalettes(bgEnt);
-    createBallBrowser(rootNode, ctx);
     createHairBrowser(rootNode, ctx);
+
+    ctx.onClose = [&]()
+        {
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+            m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
+
+            if (m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Stopped)
+            {
+                auto idx = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing");
+                m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().play(idx);
+            }
+        };
+    createBallBrowser(rootNode, ctx);
+
+    CallbackContext ctx2;
+    ctx2.closeUnselected = ctx.closeUnselected;
+    ctx2.closeSelected = uiSystem.addCallback([&](cro::Entity e) mutable
+        {
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::Callback>().active = true;
+        });
+    ctx2.closeButtonPosition = { 438.f, 116.f, 0.1f };
+    ctx2.spriteSheet.loadFromFile("assets/golf/sprites/hair_editor.spt", m_resources.textures);
+    ctx2.onClose = ctx.onClose;
+    createHairEditor(rootNode, ctx2);
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
 
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -12.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         m_viewScale = glm::vec2(getViewScale());
@@ -2137,6 +2186,13 @@ void ProfileState::buildPreviewScene()
                 auto id = entity.getComponent<cro::Skeleton>().getAttachmentIndex("head");
                 if (id > -1)
                 {
+                    //duplicate the hat attachment first so we don't invalidate pointers
+                    //when adding the attachment resizes the attachment vector
+                    auto hatAttachment = entity.getComponent<cro::Skeleton>().getAttachments()[id];
+                    auto hatID = entity.getComponent<cro::Skeleton>().addAttachment(hatAttachment);
+
+                    avt.hatAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[hatID];
+
                     //hair is optional so OK if this doesn't exist
                     avt.hairAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[id];
                 }
@@ -2203,25 +2259,48 @@ void ProfileState::buildPreviewScene()
 
     //empty at front for 'bald'
     m_avatarHairModels.push_back({});
-    m_ballHairModels.push_back({});
+    m_previewHairModels.push_back({});
     for (auto& hair : m_profileData.hairDefs)
     {
         entity = m_modelScene.createEntity();
         entity.addComponent<cro::Transform>();
         hair.createModel(entity);
+
+        auto material = m_profileData.profileMaterials.hair;
+        applyMaterialData(hair, material);
+
         entity.getComponent<cro::Model>().setHidden(true);
-        entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.hair);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        if (hair.getMaterialCount() == 2)
+        {
+            auto material2 = m_profileData.profileMaterials.hairReflection;
+            applyMaterialData(hair, material2, 1);
+            entity.getComponent<cro::Model>().setMaterial(1, material2);
+        }
+
+
         m_avatarHairModels.push_back(entity);
         
+        //these arent ball hair, they're preview for thumbs
         entity = m_modelScene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(BallHairScale);
-        entity.getComponent<cro::Transform>().setOrigin(BallHairOffset);
+        entity.addComponent<cro::Transform>().setScale(PreviewHairScale);
+        entity.getComponent<cro::Transform>().setOrigin(PreviewHairOffset);
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.3f);
         hair.createModel(entity);
-        entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.hair);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", CD32::Colours[CD32::Orange]);
+
+        if (hair.getMaterialCount() == 2)
+        {
+            auto material2 = m_profileData.profileMaterials.hairReflection;
+            applyMaterialData(hair, material2, 1);
+            entity.getComponent<cro::Model>().setMaterial(1, material2);
+            entity.getComponent<cro::Model>().setMaterialProperty(2, "u_hairColour", CD32::Colours[CD32::Orange]);
+        }
+
         entity.getComponent<cro::Model>().setHidden(true);
-        m_ballHairModels.push_back(entity);
+        m_previewHairModels.push_back(entity);
     }
 
     m_avatarIndex = indexFromAvatarID(m_activeProfile.skinID);
@@ -2232,6 +2311,7 @@ void ProfileState::buildPreviewScene()
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
 
     setHairIndex(indexFromHairID(m_activeProfile.hairID));
+    setHatIndex(indexFromHairID(m_activeProfile.hatID));
 
     auto ballTexCallback = [&](cro::Camera& cam)
     {
@@ -2279,12 +2359,27 @@ void ProfileState::buildPreviewScene()
     cam2.setRenderFlags(cro::Camera::Pass::Final, ~(1 << 1));
 
 
+    m_cameras[CameraID::HairEdit] = m_modelScene.createEntity();
+    m_cameras[CameraID::HairEdit].addComponent<cro::Transform>().setPosition(MugCameraPosition);
+    m_cameras[CameraID::HairEdit].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    m_cameras[CameraID::HairEdit].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.057f);
+    auto& cam3 = m_cameras[CameraID::HairEdit].addComponent<cro::Camera>();
+    cam3.setPerspective(60.f * cro::Util::Const::degToRad, 1.f, 0.1f, 6.f);
+    cam3.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+
     m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 96.f * cro::Util::Const::degToRad);
     m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -39.f * cro::Util::Const::degToRad);
 }
 
 void ProfileState::createPalettes(cro::Entity parent)
 {
+    static const std::array<std::int32_t, PaletteID::BallThumb> PreviousMenus =
+    {
+        MenuID::HairEditor, MenuID::Main, MenuID::Main,
+        MenuID::Main, MenuID::Main, MenuID::Main
+    };
+
     for (auto i = 0u; i < PaletteID::BallThumb; ++i)
     {
         auto entity = createPaletteBackground(parent, m_flyouts[i], i);
@@ -2293,27 +2388,50 @@ void ProfileState::createPalettes(cro::Entity parent)
         m_flyouts[i].activateCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, i](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
+                auto colourKey = i;
+                if (i == PaletteID::Hair
+                    && m_headwearID == HeadwearID::Hat)
+                {
+                    colourKey = pc::ColourKey::Hat;
+                }
+
                 auto quitMenu = [&]()
                 {
                     m_flyouts[i].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(PreviousMenus[i]);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
                     m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
 
                     //update texture
-                    m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(i), m_activeProfile.avatarFlags[i]);
+                    m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(colourKey), m_activeProfile.avatarFlags[colourKey]);
                     m_profileTextures[m_avatarIndex].apply();
 
                     //refresh hair colour
                     if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
                     {
-                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+                    }
+
+                    if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hatIndex].isValid())
+                    {
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hatIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hatIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
+                    }
+
+                    if (m_headwearID == HeadwearID::Hair)
+                    {
+                        m_menuEntities[EntityID::HairColourPreview].getComponent<cro::Sprite>().setColour(pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+                    }
+                    else
+                    {
+                        m_menuEntities[EntityID::HairColourPreview].getComponent<cro::Sprite>().setColour(pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
                     }
                 };
 
                 if (activated(evt))
                 {
-                    m_activeProfile.avatarFlags[i] = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                    m_activeProfile.avatarFlags[colourKey] = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
                     quitMenu();
 
                     refreshSwatch();
@@ -2326,15 +2444,29 @@ void ProfileState::createPalettes(cro::Entity parent)
         m_flyouts[i].selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, entity, i](cro::Entity e) mutable
             {
+                auto colourKey = i;
                 if (i == PaletteID::Hair)
                 {
-                    if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
+                    if (m_headwearID == HeadwearID::Hair)
                     {
-                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[e.getComponent<cro::Callback>().getUserData<std::uint8_t>()]);
+                        if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
+                        {
+                            m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[e.getComponent<cro::Callback>().getUserData<std::uint8_t>()]);
+                            m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[e.getComponent<cro::Callback>().getUserData<std::uint8_t>()]);
+                        }
+                    }
+                    else
+                    {
+                        if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hatIndex].isValid())
+                        {
+                            m_avatarHairModels[m_avatarModels[m_avatarIndex].hatIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[e.getComponent<cro::Callback>().getUserData<std::uint8_t>()]);
+                            m_avatarHairModels[m_avatarModels[m_avatarIndex].hatIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[e.getComponent<cro::Callback>().getUserData<std::uint8_t>()]);
+                            colourKey = pc::ColourKey::Hat;
+                        }
                     }
                 }
 
-                m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(i), e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(colourKey), e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
                 m_profileTextures[m_avatarIndex].apply();
 
                 entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
@@ -2477,28 +2609,28 @@ void ProfileState::createItemThumbs()
     const auto showHair = [&](std::size_t idx)
         {
             //first item is bald so there's no model ent
-            if (m_ballHairModels[idx].isValid())
+            if (m_previewHairModels[idx].isValid())
             {
-                m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[idx].getComponent<cro::Transform>());
+                m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_previewHairModels[idx].getComponent<cro::Transform>());
                 m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTITY); //this will have been set when rendering balls
-                m_ballHairModels[idx].getComponent<cro::Model>().setHidden(false);
-                m_ballHairModels[idx].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                m_previewHairModels[idx].getComponent<cro::Model>().setHidden(false);
+                m_previewHairModels[idx].getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
             }
         };
 
     const auto hideHair = [&](std::size_t idx)
         {
-            if (m_ballHairModels[idx].isValid())
+            if (m_previewHairModels[idx].isValid())
             {
-                m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[idx].getComponent<cro::Transform>());
-                m_ballHairModels[idx].getComponent<cro::Model>().setHidden(true);
-                m_ballHairModels[idx].getComponent<cro::Transform>().removeChild(ent.getComponent<cro::Transform>());
+                m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_previewHairModels[idx].getComponent<cro::Transform>());
+                m_previewHairModels[idx].getComponent<cro::Model>().setHidden(true);
+                m_previewHairModels[idx].getComponent<cro::Transform>().removeChild(ent.getComponent<cro::Transform>());
                 m_modelScene.simulate(0.f);
             }
         };
 
     //hair thumbs
-    texSize = glm::uvec2(std::min(ThumbColCount, m_ballHairModels.size()) * BallThumbSize.x, ((m_ballHairModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
+    texSize = glm::uvec2(std::min(ThumbColCount, m_previewHairModels.size()) * BallThumbSize.x, ((m_previewHairModels.size() / ThumbColCount) + 1) * BallThumbSize.y);
     texSize *= ThumbTextureScale;
     vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x * ThumbTextureScale) / texSize.x, static_cast<float>(BallThumbSize.y * ThumbTextureScale) / texSize.y };
     cam.viewport = vp;
@@ -2509,8 +2641,8 @@ void ProfileState::createItemThumbs()
     m_pageContexts[PaginationID::Hair].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
     
     //fudge to render bald bust
-    ent.getComponent<cro::Transform>().setPosition(m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().getWorldPosition() - (BallHairOffset * BallHairScale));
-    ent.getComponent<cro::Transform>().setScale(BallHairScale);
+    ent.getComponent<cro::Transform>().setPosition(m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().getWorldPosition() - (PreviewHairOffset * PreviewHairScale));
+    ent.getComponent<cro::Transform>().setScale(PreviewHairScale);
     ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 0.3f);
     m_modelScene.simulate(0.f);
     m_modelScene.render();
@@ -2519,7 +2651,7 @@ void ProfileState::createItemThumbs()
     ent.getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTITY);
 
     //don't include bald at the front
-    for (auto i = 1u; i < m_ballHairModels.size(); ++i)
+    for (auto i = 1u; i < m_previewHairModels.size(); ++i)
     {
         const auto x = (i % ThumbColCount);
         const auto y = (i / ThumbColCount);
@@ -2736,9 +2868,117 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::in
     }
 }
 
+void ProfileState::updateGizmo()
+{
+    const float scaleX = std::cos(m_avatarRotation);
+    const float scaleZ = std::sin(m_avatarRotation);
+
+    //by default these are in triangle strips
+    //0   2
+    //| / |
+    //1   3
+
+    std::vector<cro::Vertex2D> verts;
+    verts.push_back(m_gizmo.y[0]);
+    verts.push_back(m_gizmo.y[1]);
+    verts.push_back(m_gizmo.y[2]);
+    verts.push_back(m_gizmo.y[2]);
+    verts.push_back(m_gizmo.y[1]);
+    verts.push_back(m_gizmo.y[3]);
+
+    float c = std::clamp(0.4f + (0.6f * std::abs(scaleX)), 0.f, 1.f);
+    cro::Colour col(c, c, c, 1.f);
+    for (auto& v : m_gizmo.x)
+    {
+        v.colour = col;
+    }
+
+    if (scaleX > 0)
+    {
+        verts.push_back(m_gizmo.x[0]);
+        verts.push_back(m_gizmo.x[1]);
+        verts.push_back(m_gizmo.x[2]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[2]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[1]);
+        verts.push_back(m_gizmo.x[3]);
+        verts.back().position.x *= scaleX;
+    }
+    else //fudge cos winding direction
+    {
+        verts.push_back(m_gizmo.x[2]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[3]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[0]);
+        verts.push_back(m_gizmo.x[0]);
+        verts.push_back(m_gizmo.x[3]);
+        verts.back().position.x *= scaleX;
+        verts.push_back(m_gizmo.x[1]);
+    }
+
+    c = std::clamp(0.4f + (0.6f * std::abs(scaleZ)), 0.f, 1.f);
+    col = cro::Colour(c, c, c, 1.f);
+    for (auto& v : m_gizmo.z)
+    {
+        v.colour = col;
+    }
+
+    if (scaleZ > 0)
+    {
+        verts.push_back(m_gizmo.z[0]);
+        verts.push_back(m_gizmo.z[1]);
+        verts.push_back(m_gizmo.z[2]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[2]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[1]);
+        verts.push_back(m_gizmo.z[3]);
+        verts.back().position.x *= scaleZ;
+    }
+    else
+    {
+        verts.push_back(m_gizmo.z[2]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[3]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[0]);
+        verts.push_back(m_gizmo.z[0]);
+        verts.push_back(m_gizmo.z[3]);
+        verts.back().position.x *= scaleZ;
+        verts.push_back(m_gizmo.z[1]);
+    }
+    m_gizmo.entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+}
+
+void ProfileState::updateHeadwearTransform()
+{
+    auto idx = 0;
+    auto idxOffset = PlayerData::HeadwearOffset::HatTx * m_headwearID;
+    if (m_headwearID == HeadwearID::Hair)
+    {
+        idx = m_avatarModels[m_avatarIndex].hairIndex;
+    }
+    else
+    {
+        idx = m_avatarModels[m_avatarIndex].hatIndex;
+    }
+
+    if (m_avatarHairModels[idx].isValid())
+    {
+        const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairRot + idxOffset] * cro::Util::Const::PI;
+        m_avatarHairModels[idx].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairTx + idxOffset]);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+        m_avatarHairModels[idx].getComponent<cro::Transform>().setScale(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairScale + idxOffset]);
+    }
+}
+
 void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
-    auto bgEnt = createBrowserBackground(MenuID::BallSelect, ctx);
+    auto [bgEnt, _] = createBrowserBackground(MenuID::BallSelect, ctx);
     m_menuEntities[EntityID::BallBrowser] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
@@ -2888,7 +3128,8 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
 
 void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
-    auto bgEnt = createBrowserBackground(MenuID::HairSelect, ctx);
+    auto [bgEnt, _] = createBrowserBackground(MenuID::HairSelect, ctx);
+    bgEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, 0.85f });
     m_menuEntities[EntityID::HairBrowser] = bgEnt;
     parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
@@ -2993,7 +3234,14 @@ void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& 
                 if (activated(evt))
                 {
                     //apply selection
-                    setHairIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                    if (m_headwearID == HeadwearID::Hair)
+                    {
+                        setHairIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                    }
+                    else
+                    {
+                        setHatIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                    }
                     quitMenu();
                 }
                 else if (deactivated(evt))
@@ -3035,7 +3283,559 @@ void ProfileState::createHairBrowser(cro::Entity parent, const CallbackContext& 
     activatePage(PaginationID::Hair, m_pageContexts[PaginationID::Hair].pageIndex, true);
 }
 
-cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const CallbackContext& ctx)
+void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& ctx)
+{
+    constexpr std::size_t IndexThumb = 10000;
+    constexpr std::size_t IndexCol   = 10001;
+    constexpr std::size_t IndexHat   = 10002;
+    constexpr std::size_t IndexClose = 10003;
+    constexpr std::size_t IndexTrans = 10004;
+    constexpr std::size_t IndexReset = 10022;
+
+    auto [bgEnt, closeButtonEnt] = createBrowserBackground(MenuID::HairEditor, ctx);
+    bgEnt.getComponent<cro::Transform>().move(glm::vec2(0.f, 10.f));
+    m_menuEntities[EntityID::HairEditor] = bgEnt;
+    parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
+
+    closeButtonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexClose);
+    closeButtonEnt.getComponent<cro::UIInput>().setNextIndex(IndexThumb, IndexTrans + 5);
+    closeButtonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexThumb, IndexHat);
+
+    //avatar preview
+    m_hairEditorTexture.create(HairEditTexSize.x, HairEditTexSize.y);
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 28.f, 29.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_hairEditorTexture.getTexture());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto avEnt = entity;
+    //gizmo
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 26.f, 4.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setTexture(ctx.spriteSheet.getTexture());
+    avEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    ctx.spriteSheet.getSprite("x").getVertexData(m_gizmo.x);
+    ctx.spriteSheet.getSprite("y").getVertexData(m_gizmo.y);
+    ctx.spriteSheet.getSprite("z").getVertexData(m_gizmo.z);
+    m_gizmo.entity = entity;
+    updateGizmo();
+
+    //help string
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto bounds = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({130.f, 14.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_menuEntities[EntityID::HairHelp] = entity;
+
+
+    m_headwearPreviewRects[HeadwearID::Hair] = getHeadwearTextureRect(m_avatarModels[m_avatarIndex].hairIndex);
+    m_headwearPreviewRects[HeadwearID::Hat] = getHeadwearTextureRect(m_avatarModels[m_avatarIndex].hatIndex);
+    
+
+    //hair / bust preview
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 276.f, 109.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_pageContexts[PaginationID::Hair].thumbnailTexture.getTexture());
+    entity.getComponent<cro::Sprite>().setTextureRect(m_headwearPreviewRects[HeadwearID::Hair]);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_menuEntities[EntityID::HairPreview] = entity;
+
+    //hair button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 274.f, 107.f, 0.15f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("hair_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(IndexThumb);
+    entity.getComponent<cro::UIInput>().setNextIndex(IndexCol, IndexTrans);
+    entity.getComponent<cro::UIInput>().setPrevIndex(IndexHat, IndexReset);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //colour preview
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 379.f, 187.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("item_colour");
+    entity.getComponent<cro::Sprite>().setColour(pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto colourPreview = entity;
+    m_menuEntities[EntityID::HairColourPreview] = entity;
+
+    //colour button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 375.f, 183.f, 0.15f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("palette_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(IndexCol);
+    entity.getComponent<cro::UIInput>().setNextIndex(IndexHat, IndexClose);
+    entity.getComponent<cro::UIInput>().setPrevIndex(IndexThumb, IndexReset + 1);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    //show palette menu
+                    m_flyouts[PaletteID::Hair].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                    //set column/row count for menu
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Hair);
+                    m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
+
+                    //check hair or hat index
+                    const auto idx = m_headwearID == HeadwearID::Hair ? pc::ColourKey::Hair : pc::ColourKey::Hat;
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[idx], idx));
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
+                }
+            });
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //title text
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 437.f, 224.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Select Hair");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto textEnt = entity;
+
+    /*entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 437.f, 172.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("SAMPLE\nTEXT");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
+
+
+    //hair/hat button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 407.f, 189.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("select_button");
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    static constexpr std::array ButtonPositions =
+    {
+        glm::vec2(69.f, 7.f),
+        glm::vec2(21.f, 7.f),
+    };
+
+    auto buttonEnt = m_uiScene.createEntity();
+    buttonEnt.addComponent<cro::Transform>().setPosition({ 69.f, 7.f, 0.1f });
+    buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    buttonEnt.addComponent<cro::Drawable2D>();
+    buttonEnt.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("select_highlight");
+    buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+    buttonEnt.addComponent<cro::UIInput>().area = bounds;
+    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexHat);
+    buttonEnt.getComponent<cro::UIInput>().setNextIndex(IndexThumb, IndexClose);
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexCol, IndexReset + 2);
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, entity, colourPreview, textEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    auto b = entity.getComponent<cro::Sprite>().getTextureRect();
+                    if (m_headwearID == HeadwearID::Hair)
+                    {
+                        m_headwearID = HeadwearID::Hat;
+                        b.bottom += (b.height + 2.f);
+                        textEnt.getComponent<cro::Text>().setString("Select Hat");
+                    }
+                    else
+                    {
+                        m_headwearID = HeadwearID::Hair;
+                        b.bottom -= (b.height + 2.f);
+                        textEnt.getComponent<cro::Text>().setString("Select Hair");
+                    }
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    e.getComponent<cro::Transform>().setPosition(ButtonPositions[m_headwearID]);
+                    entity.getComponent<cro::Sprite>().setTextureRect(b);
+
+
+                    //refresh colour preview and hair thumbnail with selected settings
+                    m_menuEntities[EntityID::HairPreview].getComponent<cro::Sprite>().setTextureRect(m_headwearPreviewRects[m_headwearID]);
+
+                    const auto idx = m_headwearID == HeadwearID::Hair ? pc::ColourKey::Hair : pc::ColourKey::Hat;
+                    colourPreview.getComponent<cro::Sprite>().setColour(pc::Palette[m_activeProfile.avatarFlags[idx]]);
+                }
+            });
+    buttonEnt.addComponent<cro::Callback>().function = MenuTextCallback();
+    buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+
+    //transform numbers
+    const auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    constexpr float YStart = 85.f;
+    constexpr float RowSpacing = 14.f;
+    constexpr float ColSpacing = 74.f;
+
+
+    const auto selectedID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e) 
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    const auto unselectedID = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+
+            auto& context = e.getComponent<ButtonHoldContext>();
+            context.isActive = false;
+            context.target = nullptr;
+        });
+    const auto buttonLeftDown = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                auto& context = e.getComponent<ButtonHoldContext>();
+                context.timer.restart();
+                context.isActive = true;
+
+                auto idx = (PlayerData::HeadwearOffset::HairTx + context.i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+                context.target = &m_activeProfile.headwearOffsets[idx][context.j];
+                context.step = -context.minStep;
+            }
+        });
+    const auto buttonRightDown = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                auto& context = e.getComponent<ButtonHoldContext>();
+                context.timer.restart();
+                context.isActive = true;
+
+                auto idx = (PlayerData::HeadwearOffset::HairTx + context.i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+                context.target = &m_activeProfile.headwearOffsets[idx][context.j];
+                context.step = context.minStep;
+            }
+        });
+    const auto buttonLeftUp = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                auto& context = e.getComponent<ButtonHoldContext>();
+                if (context.timer.elapsed().asSeconds() < ButtonHoldContext::MinClickTime)
+                {
+                    //short click
+                    auto idx = (PlayerData::HeadwearOffset::HairTx + context.i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+                    float& val = m_activeProfile.headwearOffsets[idx][context.j];
+                    val = std::max(context.minVal, val - context.maxStep);
+
+                    updateHeadwearTransform();
+                }
+
+                context.isActive = false;
+                context.target = nullptr;
+            }
+        });
+    const auto buttonRightUp = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                auto& context = e.getComponent<ButtonHoldContext>();
+                if (context.timer.elapsed().asSeconds() < ButtonHoldContext::MinClickTime)
+                {
+                    //short click
+                    auto idx = (PlayerData::HeadwearOffset::HairTx + context.i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+                    float& val = m_activeProfile.headwearOffsets[idx][context.j];
+                    val = std::min(context.maxVal, val + context.maxStep);
+
+                    updateHeadwearTransform();
+                }
+
+                context.isActive = false;
+                context.target = nullptr;
+            }
+        });
+    const auto mouseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e, glm::vec2, const cro::MotionEvent&)
+        {
+            auto& context = e.getComponent<ButtonHoldContext>();
+            context.isActive = false;
+            context.target = nullptr;
+        });
+
+    bounds = ctx.spriteSheet.getSprite("arrow_highlight").getTextureBounds();
+
+    constexpr std::size_t cCount = 3;
+    constexpr std::size_t rCount = 3;
+    constexpr std::size_t buttonCount = 2; //buttons per item
+    constexpr std::size_t rButtonCount = cCount * buttonCount; //buttons per row
+
+    constexpr std::array MinValues = { -0.1f, -1.f, 0.f };
+    constexpr std::array MaxValues = { 0.1f, 1.f, 1.4f };
+    constexpr std::array MinSteps = { 0.001f, 0.002f, 0.01f };
+    constexpr std::array MaxSteps = { 0.001f, 0.002f, 0.01f };
+
+    glm::vec3 pos(310.f, YStart, 0.1f);
+
+    for (auto i = 0u; i < cCount; ++i) //cols pos, rot, scale
+    {
+        for (auto j = 0u; j < rCount; ++j) //rows x, y, z
+        {
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(infoFont).setString("0.00");
+            entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, i, j](cro::Entity e, float)
+                {
+                    auto idx = (PlayerData::HeadwearOffset::HairTx + i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+                    float val = m_activeProfile.headwearOffsets[idx][j];
+                    std::stringstream ss;
+                    ss.precision(2);
+                    ss << std::fixed << val;
+                    e.getComponent<cro::Text>().setString(ss.str());
+                };
+            bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            ButtonHoldContext buttonContext;
+            buttonContext.i = i;
+            buttonContext.j = j;
+            buttonContext.minVal = MinValues[i];
+            buttonContext.maxVal = MaxValues[i];
+            buttonContext.minStep = MinSteps[i];
+            buttonContext.maxStep = MaxSteps[i];
+            buttonContext.callback = std::bind(&ProfileState::updateHeadwearTransform, this);
+
+            auto numEnt = entity;
+            const auto rowStart = IndexTrans + (j * rButtonCount);
+            std::size_t buttonIndex = rowStart + (i * buttonCount);
+            std::size_t right = rowStart + (((i * buttonCount) + 1) % rButtonCount);
+            std::size_t left = rowStart + (((i * buttonCount) + (rButtonCount - 1)) % rButtonCount);
+            
+            std::size_t up = 0;
+            std::size_t down = 0;
+
+            switch (j)
+            {
+            default:
+            case 0:
+                //top row
+                if ((i*2) < 3)
+                {
+                    up = IndexThumb;
+                }
+                else
+                {
+                    up = IndexClose;
+                }
+                down = buttonIndex + rButtonCount;
+                break;
+            case 1:
+                up = buttonIndex - rButtonCount;
+                down = buttonIndex + rButtonCount;
+                break;
+            case 2:
+                //bottom row
+                down = IndexReset + i;
+                up = buttonIndex - rButtonCount;
+                break;
+            }
+
+            //add up/down buttons
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec2(-25.f, -9.f));
+            entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("arrow_highlight");
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            entity.addComponent<cro::UIInput>().area = bounds;
+            entity.getComponent<cro::UIInput>().setSelectionIndex(buttonIndex);
+            entity.getComponent<cro::UIInput>().setNextIndex(right, down);
+            entity.getComponent<cro::UIInput>().setPrevIndex(left, up);
+            entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = buttonLeftDown;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = buttonLeftUp;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = mouseExit;
+            entity.addComponent<ButtonHoldContext>() = buttonContext;
+            numEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            buttonIndex++;
+            right = (((buttonIndex - rowStart) + 1) % rButtonCount) + rowStart;
+            left = (((buttonIndex - rowStart) + (rButtonCount - 1)) % rButtonCount) + rowStart;
+
+            switch (j)
+            {
+            default:
+            case 0:
+                //top row
+                down = buttonIndex + rButtonCount;
+                if (i * 2 == 2)
+                {
+                    up = IndexClose;
+                }
+                break;
+            case 1:
+                up = buttonIndex - rButtonCount;
+                down = buttonIndex + rButtonCount;
+                break;
+            case 2:
+                //bottom row
+                up = buttonIndex - rButtonCount;
+                break;
+            }
+
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(glm::vec2(16.f, -9.f));
+            entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("arrow_highlight");
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            entity.addComponent<cro::UIInput>().area = bounds;
+            entity.getComponent<cro::UIInput>().setSelectionIndex(buttonIndex);
+            entity.getComponent<cro::UIInput>().setNextIndex(right, down);
+            entity.getComponent<cro::UIInput>().setPrevIndex(left, up);
+            entity.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = buttonRightDown;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = buttonRightUp;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = mouseExit;
+            entity.addComponent<ButtonHoldContext>() = buttonContext;
+            numEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            pos.y -= RowSpacing;
+        }
+        pos.x += ColSpacing;
+        pos.y = YStart;
+    }
+
+
+    //tx reset buttons
+    glm::vec2 buttonPos(310.f, 35.f);
+
+    for (auto i = 0; i < 3; ++i)
+    {
+        buttonEnt = m_uiScene.createEntity();
+        buttonEnt.addComponent<cro::Transform>().setPosition(glm::vec3(buttonPos, 0.1f));
+        buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        buttonEnt.addComponent<cro::Drawable2D>();
+        buttonEnt.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("select_highlight");
+        buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+        buttonEnt.addComponent<cro::UIInput>().area = bounds;
+        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::HairEditor);
+        buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(IndexReset + i);
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(IndexReset + ((i + 1) % 3), IndexThumb + i);
+        buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexReset + ((i + 2) % 3), (IndexReset + i) - (3 + (3 -i)));
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = ctx.closeSelected;
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = ctx.closeUnselected;
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, i](cro::Entity e, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        auto idx = (PlayerData::HeadwearOffset::HairTx + i) + (m_headwearID * PlayerData::HeadwearOffset::HatTx);
+                        m_activeProfile.headwearOffsets[idx] = (idx % 3) == 2 ? glm::vec3(1.f) : glm::vec3(0.f);
+                        updateHeadwearTransform();
+
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    }
+                });
+        buttonEnt.addComponent<cro::Callback>().function = MenuTextCallback();
+        buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        bgEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+        buttonPos.x += 74.f;
+    }
+}
+
+cro::FloatRect ProfileState::getHeadwearTextureRect(std::size_t idx)
+{
+    cro::FloatRect textureBounds = { 0.f, 0.f, static_cast<float>(BallThumbSize.x * ThumbTextureScale), static_cast<float>(BallThumbSize.y * ThumbTextureScale) };
+
+    std::size_t x = idx % ThumbColCount;
+    std::size_t y = idx / ThumbColCount;
+    textureBounds.left = x * textureBounds.width;
+    textureBounds.bottom = y * textureBounds.height;
+
+    return textureBounds;
+}
+
+std::size_t ProfileState::fetchUIIndexFromColour(std::uint8_t colourIndex, std::int32_t paletteIndex)
+{
+    const auto rowCount = m_uiScene.getSystem<cro::UISystem>()->getGroupSize() / PaletteColumnCount;
+    const auto x = colourIndex % PaletteColumnCount;
+    auto y = colourIndex / PaletteColumnCount;
+
+    y = (rowCount - 1) - y;
+    return (y * PaletteColumnCount + x) % pc::PairCounts[paletteIndex];
+}
+
+std::pair<cro::Entity, cro::Entity> ProfileState::createBrowserBackground(std::int32_t menuID, const CallbackContext& ctx)
 {
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -3052,7 +3852,7 @@ cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const Cal
     };
     entity.addComponent<cro::Callback>().setUserData<BGCallbackData>();
     entity.getComponent<cro::Callback>().function =
-        [&, menuID](cro::Entity e, float dt)
+        [&, menuID, ctx](cro::Entity e, float dt)
         {
             glm::vec2 scale(1.f);
 
@@ -3078,10 +3878,10 @@ cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const Cal
 
                 if (currTime == 0)
                 {
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
                     dir = 0;
                     e.getComponent<cro::Callback>().active = false;
+
+                    ctx.onClose();
                 }
             }
             e.getComponent<cro::Transform>().setScale(scale);
@@ -3089,7 +3889,7 @@ cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const Cal
 
 
     auto buttonEnt = m_uiScene.createEntity();
-    buttonEnt.addComponent<cro::Transform>().setPosition({ 468.f, 331.f, 0.1f });
+    buttonEnt.addComponent<cro::Transform>().setPosition(ctx.closeButtonPosition);
     buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonEnt.addComponent<cro::Drawable2D>();
     buttonEnt.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("close_button");
@@ -3116,7 +3916,7 @@ cro::Entity ProfileState::createBrowserBackground(std::int32_t menuID, const Cal
     buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
-    return entity;
+    return { entity, buttonEnt };
 }
 
 void ProfileState::quitState()
@@ -3139,7 +3939,7 @@ cro::Entity ProfileState::createPaletteBackground(cro::Entity parent, FlyoutMenu
 
     //background
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(SwatchPositions[i], 0.5f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(SwatchPositions[i], 2.5f));
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
 
@@ -3270,9 +4070,16 @@ std::size_t ProfileState::indexFromHairID(std::uint32_t hairID) const
 void ProfileState::setAvatarIndex(std::size_t idx)
 {
     auto hairIdx = m_avatarModels[m_avatarIndex].hairIndex;
+    auto hatIdx = m_avatarModels[m_avatarIndex].hatIndex;
+
     if (m_avatarModels[m_avatarIndex].hairAttachment)
     {
         m_avatarModels[m_avatarIndex].hairAttachment->setModel({});
+    }
+
+    if (m_avatarModels[m_avatarIndex].hatAttachment)
+    {
+        m_avatarModels[m_avatarIndex].hatAttachment->setModel({});
     }
 
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
@@ -3303,6 +4110,13 @@ void ProfileState::setAvatarIndex(std::size_t idx)
         m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIdx]);
         m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
     }
+
+    if (m_avatarModels[m_avatarIndex].hatAttachment)
+    {
+        m_avatarModels[m_avatarIndex].hatAttachment->setModel(m_avatarHairModels[hatIdx]);
+        m_avatarModels[m_avatarIndex].hatIndex = hatIdx;
+    }
+
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
@@ -3324,6 +4138,11 @@ void ProfileState::setAvatarIndex(std::size_t idx)
 
 void ProfileState::setHairIndex(std::size_t idx)
 {
+    //don't set the same as the hat
+    if (idx == m_avatarModels[m_avatarIndex].hatIndex)
+    {
+        idx = 0;
+    }
     auto hairIndex = m_avatarModels[m_avatarIndex].hairIndex;
 
     if (m_avatarHairModels[hairIndex].isValid())
@@ -3340,28 +4159,79 @@ void ProfileState::setHairIndex(std::size_t idx)
         && m_avatarHairModels[hairIndex].isValid())
     {
         m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIndex]);
-        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hair]]);
+
+        const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairRot] * cro::Util::Const::PI;
+        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairTx]);
+        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+        m_avatarHairModels[hairIndex].getComponent<cro::Transform>().setScale(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HairScale]);
     }
     m_avatarModels[m_avatarIndex].hairIndex = hairIndex;
 
     m_activeProfile.hairID = m_sharedData.hairInfo[hairIndex].uid;
+
+    m_headwearPreviewRects[HeadwearID::Hair] = getHeadwearTextureRect(hairIndex);
+}
+
+void ProfileState::setHatIndex(std::size_t idx)
+{
+    //don't set the same as hair
+    if (idx == m_avatarModels[m_avatarIndex].hairIndex)
+    {
+        idx = 0;
+    }
+
+    auto hatIndex = m_avatarModels[m_avatarIndex].hatIndex;
+
+    if (m_avatarHairModels[hatIndex].isValid())
+    {
+        m_avatarHairModels[hatIndex].getComponent<cro::Model>().setHidden(true);
+    }
+    hatIndex = idx;
+    if (m_avatarHairModels[hatIndex].isValid())
+    {
+        m_avatarHairModels[hatIndex].getComponent<cro::Model>().setHidden(false);
+    }
+
+    if (m_avatarModels[m_avatarIndex].hatAttachment
+        && m_avatarHairModels[hatIndex].isValid())
+    {
+        m_avatarModels[m_avatarIndex].hatAttachment->setModel(m_avatarHairModels[hatIndex]);
+        m_avatarHairModels[hatIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
+        m_avatarHairModels[hatIndex].getComponent<cro::Model>().setMaterialProperty(1, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[pc::ColourKey::Hat]]);
+
+        const auto rot = m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HatRot] * cro::Util::Const::PI;
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setPosition(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HatTx]);
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rot.z);
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rot.y);
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rot.x);
+        m_avatarHairModels[hatIndex].getComponent<cro::Transform>().setScale(m_activeProfile.headwearOffsets[PlayerData::HeadwearOffset::HatScale]);
+    }
+    m_avatarModels[m_avatarIndex].hatIndex = hatIndex;
+
+    m_activeProfile.hatID = m_sharedData.hairInfo[hatIndex].uid;
+
+    m_headwearPreviewRects[HeadwearID::Hat] = getHeadwearTextureRect(hatIndex);
 }
 
 void ProfileState::setBallIndex(std::size_t idx)
 {
     CRO_ASSERT(idx < m_ballModels.size(), "");
 
-    if (m_ballHairModels[m_ballHairIndex].isValid())
+    if (m_previewHairModels[m_ballHairIndex].isValid())
     {
-        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
+        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_previewHairModels[m_ballHairIndex].getComponent<cro::Transform>());
     }
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
 
     m_ballIndex = idx;
 
-    if (m_ballHairModels[m_ballHairIndex].isValid())
+    if (m_previewHairModels[m_ballHairIndex].isValid())
     {
-        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
+        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_previewHairModels[m_ballHairIndex].getComponent<cro::Transform>());
     }
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_activeProfile.ballColour);
@@ -3499,9 +4369,9 @@ void ProfileState::refreshSwatch()
     static constexpr glm::vec2 SwatchSize = glm::vec2(20.f);
 
     std::vector<cro::Vertex2D> verts;
-    for (auto i = 0u; i < SwatchPositions.size(); ++i)
+    for (auto i = 1u; i < SwatchPositions.size(); ++i)//skip hair
     {
-        cro::Colour c = pc::Palette[m_activeProfile.avatarFlags[i]];
+        cro::Colour c = pc::Palette[m_activeProfile.avatarFlags[i]]; 
         auto pos = SwatchPositions[i];
 
         verts.emplace_back(glm::vec2(pos.x, pos.y + SwatchSize.y), c);
@@ -3521,6 +4391,12 @@ void ProfileState::refreshBio()
     auto path = Social::getUserContentPath(Social::UserContent::Profile);
     if (cro::FileSystem::directoryExists(path))
     {
+        if (m_activeProfile.profileID.empty())
+        {
+            //this creates a new id
+            m_activeProfile.saveProfile();
+        }
+
         path += m_activeProfile.profileID + "/";
 
         if (cro::FileSystem::directoryExists(path))

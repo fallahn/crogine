@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -289,6 +289,33 @@ namespace cro
             bool doubleSided = false;
 
             /*!
+            \brief Add up to 8 custom settings
+            \param setting GLenum to be used with glEnable/glDisable
+            Use sparingly - each of these are enabled before rendering
+            a submesh with this material, and disabled immediately 
+            afterwards. Excessive use can cause unnecessary context switching
+            */
+            void addCustomSetting(std::uint32_t setting);
+
+            /*!
+            \brief Remove and existing custom setting
+            \param setting The setting to remove
+            */
+            void removeCustomSetting(std::uint32_t setting);
+
+            /*!
+            \brief Used when rendering to activate this material's
+            custom settings.
+            \see addCustomSetting()
+            */
+            void enableCustomSettings() const;
+
+            /*!
+            \brief Used when rendering to disable any active custom settings
+            */
+            void disableCustomSettings() const;
+
+            /*!
             \brief Animation data used if material is animated
             Note that this cannot be changed once it is assigned
             to a Model, to apply updates the material needs to be
@@ -304,12 +331,6 @@ namespace cro
             }animation;
 
             /*!
-            \brief Applies a new shader to this material by updating the
-            the uniform and vertex attribute maps
-            */
-            void setShader(const Shader&);
-
-            /*!
             \brief Allows setting parameters for custom blend mode.
             Set the blendMode property to BlendMode::Custom to use these
             values. Must be explicitly initialised to sane values.
@@ -321,6 +342,12 @@ namespace cro
                 std::array<std::uint32_t, 2u> blendFunc = { 0,0 }; //! < GLenum pair passed to glBlendFunc()
                 std::vector<std::uint32_t> enableProperties; //! < list of GLenum passed to glEnable()
             }blendData;
+
+            /*!
+            \brief Applies a new shader to this material by updating the
+            the uniform and vertex attribute maps
+            */
+            void setShader(const Shader&);
 
             /*
             Here be dragons! Don't modify these variables as they are configured
@@ -342,6 +369,10 @@ namespace cro
         private:
             std::unordered_map<std::string, bool> m_warnings;
             void exists(const std::string&);
+
+            static constexpr std::size_t MaxCustomSettings = 10;
+            std::size_t m_customSettingsCount = 0;
+            std::array<std::uint32_t, MaxCustomSettings> m_customSettings = {};
         };
     }
 }

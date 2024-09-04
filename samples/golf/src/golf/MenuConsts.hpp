@@ -95,12 +95,14 @@ static inline const std::array<std::string, ScoreType::Count> RuleDescriptions =
 #ifdef USE_GNS
     "The player with the fewest total strokes wins.\nSolo or network play scores contribute to the\nmonthly and all time leaderboards.\nContributes to the Club League.\n\nRecommended for solo play or 2+ players.",
 #else
-    "The player with the fewest total strokes wins.\nContributes to the Club League.\n\nRecommended for solo play or 2+ players",
+    "The player with the fewest total strokes wins.\nContributes to the Club League.\n\n\n\nRecommended for solo play or 2+ players",
 #endif
     "Stroke play rules, however par is scored at\n2 points, with one extra point awarded for every\nstroke under par. Max strokes are reached when\nthere are no more points available. The player with\nthe most points wins. Contributes to the Club League.\nRecommended for solo play or 2+ players.",
     "Stableford rules, however one point for every\nstroke over par is deducted instead of reaching\nthe stroke limit. The player with the most points wins.\nContributes to the Club League.\n\nRecommended for solo play or 2+ players.",
-    "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.\n\nA head to head round, 2 players only.",
+    "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.\n\n\nA head to head round, 2 players only.",
     "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.\nTies are resolved with a sudden death round.\n\nMinimum 2 players, recommended for 2-4 players.",
+    //"Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.\nGroup mode is ignored.\n\nA head to head round, 2 players only.",
+    //"Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.\nTies are resolved with a sudden death round.\nGroup mode is ignored.\nMinimum 2 players, recommended for 2-4 players.",
     "Stroke play, but each player must hit the mid-point\ntarget before reaching the green. Not hitting the\ntarget forfeits the hole. Round times are usually\nlonger than average. Par is increased by one\non larger courses.\nRecommended for 2-4 players.",
 #ifdef USE_GNS
     "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected, and scores are omitted from\nthe leaderboards. Contributes to the Club League.\nRecommended for solo play or 2+ players.",

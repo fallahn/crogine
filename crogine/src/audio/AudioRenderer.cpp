@@ -221,6 +221,36 @@ void AudioRenderer::setSpeedOfSound(float speed)
     m_impl->setSpeedOfSound(std::max(0.01f, speed));
 }
 
+const std::string& AudioRenderer::getActiveDevice()
+{
+    if (m_impl)
+    {
+        return m_impl->getActiveDevice();
+    }
+
+    static std::string s("None Available");
+    return s;
+}
+
+const std::vector<std::string>& AudioRenderer::getDeviceList()
+{
+    if (m_impl)
+    {
+        return m_impl->getDeviceList();
+    }
+
+    static std::vector<std::string> s = { "None Available" };
+    return s;
+}
+
+void AudioRenderer::setActiveDevice(const std::string& dev)
+{
+    if (m_impl)
+    {
+        m_impl->setActiveDevice(dev);
+    }
+}
+
 void AudioRenderer::onPlaybackDisconnect()
 {
     if (m_impl)
@@ -234,6 +264,30 @@ void AudioRenderer::onRecordDisconnect()
     if (m_impl)
     {
         m_impl->recordDisconnectEvent();
+    }
+}
+
+void AudioRenderer::onPlaybackConnect()
+{
+    if (m_impl)
+    {
+        m_impl->playbackConnectEvent();
+    }
+}
+
+void AudioRenderer::onRecordConnect()
+{
+    if (m_impl)
+    {
+        m_impl->recordConnectEvent();
+    }
+}
+
+void AudioRenderer::resume() 
+{
+    if (m_impl)
+    {
+        m_impl->resume();
     }
 }
 

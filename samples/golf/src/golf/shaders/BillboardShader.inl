@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -67,6 +67,7 @@ inline const std::string BillboardVertexShader = R"(
     VARYING_OUT vec3 v_worldPosition;
 
 #include WIND_CALC
+#include WATER_LEVEL
 
     void main()
     {
@@ -143,8 +144,8 @@ inline const std::string BillboardVertexShader = R"(
 
         v_colour = vec4(1.0);
 
-#if defined(USE_MRT)
         v_worldPosition = position.xyz;
+#if defined(USE_MRT)
         v_normalVector = cross(camRight, camUp);
 #endif
 
@@ -173,8 +174,9 @@ inline const std::string BillboardVertexShader = R"(
 
         v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 #endif
-        gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
-
+        vec4 worldPos = /*u_worldMatrix **/ vec4(position, 1.0);
+        gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
+        gl_ClipDistance[1] = dot(worldPos, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
 
 
@@ -196,6 +198,8 @@ inline const std::string BillboardFragmentShader = R"(
     #include BAYER_MATRIX
     #include LIGHT_COLOUR
 
+    #include WATER_LEVEL
+
     void main()
     {
 #if defined(USE_MRT)
@@ -215,7 +219,7 @@ inline const std::string BillboardFragmentShader = R"(
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount));
-        FRAG_OUT.a *= alpha;
+        FRAG_OUT.a *= alpha * step(WaterLevel - 0.001, v_worldPosition.y);
 
         if(FRAG_OUT.a < 0.3) discard;
     })";

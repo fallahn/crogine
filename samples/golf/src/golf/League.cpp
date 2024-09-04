@@ -114,6 +114,7 @@ League::League(std::int32_t id, const SharedStateData& sd)
     m_currentPosition       (15),
     m_lastIterationPosition (15),
     m_currentBest           (15),
+    m_nemesis               (-1),
     m_previousPosition      (17)
 {
     CRO_ASSERT(id < LeagueRoundID::Count, "");
@@ -723,6 +724,8 @@ std::string League::getFilePath(const std::string& fn) const
 
 void League::createSortedTable()
 {
+    m_nemesis = -1;
+
     std::vector<TableEntry> entries;
     for (const auto& p : m_players)
     {
@@ -763,6 +766,36 @@ void League::createSortedTable()
     
     m_currentPosition = static_cast<std::int32_t>(std::distance(m_sortedTable.begin(), result));
     result->positionChange = std::clamp(m_lastIterationPosition - m_currentPosition, -1, 1) + 1;
+
+
+    //check nearest players to see who our nemesis is
+    //TODO this could be refactored to something more sensible
+    if (m_currentPosition > 0)
+    {
+        auto s = m_sortedTable[m_currentPosition - 1].score;
+
+        if (s == m_playerScore + 1)
+        {
+            m_nemesis = m_sortedTable[m_currentPosition - 1].name;
+        }
+        else if(m_currentPosition < m_sortedTable.size() - 1)
+        {
+            //check the player below
+            s = m_sortedTable[m_currentPosition + 1].score;
+            if (s == m_playerScore || s == m_playerScore + 1)
+            {
+                m_nemesis = m_sortedTable[m_currentPosition + 1].name;
+            }
+        }
+    }
+    else
+    {
+        const auto s = m_sortedTable[1].score;
+        if (s == m_playerScore || s == m_playerScore + 1)
+        {
+            m_nemesis = m_sortedTable[1].name;
+        }
+    }
 }
 
 void League::read()

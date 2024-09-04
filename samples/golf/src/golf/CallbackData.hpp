@@ -29,10 +29,15 @@ source distribution.
 
 #pragma once
 
+#include "MenuConsts.hpp"
+
 #include <crogine/ecs/Entity.hpp>
 
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
+
+#include <crogine/util/Easings.hpp>
 
 //used for though/chat bubble animation
 struct CogitationData final
@@ -75,6 +80,21 @@ struct CogitationCallback final
 
         e.getComponent<cro::Transform>().setScale({ scale, scale });
     }
+};
+
+//ghostly spectator...
+struct GhostCallbackData final
+{
+    enum { In, Hold, Out };
+    std::int32_t direction = 0;
+
+    enum { Idle, Looking, Clap, Count };
+    std::array<std::int32_t, Count> animationIDs = {};
+    std::int32_t animation = 0;
+
+    float scale = 0.f;
+    static constexpr float MinAnimationTime = 10.f;
+    float animationTime = MinAnimationTime;
 };
 
 //scrolling text in league and career state
@@ -174,3 +194,4 @@ struct AnimDirection final
 using WindHideData = AvatarAnimCallbackData;
 using BullsEyeData = AvatarAnimCallbackData;
 using FreecamHideData = AvatarAnimCallbackData;
+using MenuBackgroundData = AvatarAnimCallbackData;

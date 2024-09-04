@@ -53,7 +53,6 @@ namespace cro
         float getPlaybackRate() const;
 
     private:
-        mutable std::vector<glm::mat4> m_mixBuffer; //holds temporary output during animation blending
         
         void onEntityAdded(Entity) override;
 

@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/graphics/RenderTarget.hpp>
 #include <crogine/util/Rectangle.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
 
@@ -42,6 +43,16 @@ source distribution.
 #include "../../graphics/shaders/Sprite.hpp"
 
 #include <string>
+
+//#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
+#include <mutex>
+#include <execution>
+#endif
 
 namespace
 {
@@ -83,7 +94,7 @@ RenderSystem2D::~RenderSystem2D()
 //public
 void RenderSystem2D::updateDrawList(Entity camEnt)
 {
-    auto& camera = camEnt.getComponent<Camera>();
+    const auto& camera = camEnt.getComponent<Camera>();
     CRO_ASSERT(camera.isOrthographic(), "Camera is not orthographic");
 
     if (m_drawLists.size() <= camera.getDrawListIndex())
@@ -93,48 +104,68 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     auto& drawlist = m_drawLists[camera.getDrawListIndex()];
     drawlist.clear();
 
-    auto viewRect = camEnt.getComponent<cro::Transform>().getWorldTransform() * camera.getViewSize();
+    const auto viewRect = camEnt.getComponent<cro::Transform>().getWorldTransform() * camera.getViewSize();
+    const auto renderFlags = camera.getPass(Camera::Pass::Final).renderFlags;
 
+    const auto& entities = getEntities();
 
-    auto& entities = getEntities();
+#ifdef USE_PARALLEL_PROCESSING
+    std::mutex mutex;
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](Entity entity)
+#else
     for (auto entity : entities)
-    {
-        auto& drawable = entity.getComponent<Drawable2D>();
-        drawable.m_wasCulledLastFrame = true;
-
-        if ((camera.getPass(Camera::Pass::Final).renderFlags & drawable.m_renderFlags) == 0)
+#endif
         {
-            continue;
-        }
+            auto& drawable = entity.getComponent<Drawable2D>();
+            drawable.m_wasCulledLastFrame = true;
 
-        if (drawable.m_autoCrop)
-        {
-            auto scale = entity.getComponent<cro::Transform>().getWorldScale();
-            if (scale.x * scale.y != 0)
+            if ((renderFlags & drawable.m_renderFlags) == 0)
             {
-                const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
+                EARLY_OUT;
+            }
 
-                //check local bounds for visibility and draw if visible
-                auto bounds = drawable.m_localBounds.transform(worldMat);
-                if (bounds.intersects(viewRect))
+            if (drawable.m_autoCrop)
+            {
+                const auto scale = entity.getComponent<cro::Transform>().getWorldScale();
+                if (scale.x * scale.y != 0)
                 {
-                    drawlist.push_back(entity);
-                    drawable.m_wasCulledLastFrame = false;
+                    const auto worldMat = entity.getComponent<cro::Transform>().getWorldTransform();
+
+                    //check local bounds for visibility and draw if visible
+                    auto bounds = drawable.m_localBounds.transform(worldMat);
+                    if (bounds.intersects(viewRect))
+                    {
+                        drawable.m_wasCulledLastFrame = false;
+#ifdef USE_PARALLEL_PROCESSING
+                        std::scoped_lock l(mutex);
+#endif
+                        drawlist.push_back(entity);
+                    }
                 }
             }
+            else
+            {
+                drawable.m_wasCulledLastFrame = false;
+#ifdef USE_PARALLEL_PROCESSING
+                std::scoped_lock l(mutex);
+#endif
+                drawlist.push_back(entity);
+            }
         }
-        else
-        {
-            drawlist.push_back(entity);
-            drawable.m_wasCulledLastFrame = false;
-        }
-    }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 
     DPRINT("Visible 2D ents", std::to_string(drawlist.size()));
 
     if (m_needsSort)
     {
+#ifdef USE_PARALLEL_PROCESSING
+        std::sort(std::execution::par, drawlist.begin(), drawlist.end(),
+#else
         std::sort(drawlist.begin(), drawlist.end(),
+#endif
             [](Entity a, Entity b)
             {
                 return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
@@ -250,6 +281,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 //glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, &(worldMat[0].x)));
                 glCheck(glUniformMatrix4fv(drawable.m_viewProjectionUniform, 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
                 glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, glm::value_ptr(worldMat)));
+                glCheck(glUniformMatrix3fv(drawable.m_normalMatrixUniform, 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
                 //apply texture if active
                 if (drawable.m_textureInfo.textureID.textureID)
@@ -322,6 +354,10 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 }
 
                 glCheck(glFrontFace(drawable.m_facing));
+                if (drawable.m_doubleSided)
+                {
+                    glCheck(glDisable(GL_CULL_FACE));
+                }
 
 #ifdef PLATFORM_DESKTOP
                 glCheck(glBindVertexArray(drawable.m_vao));
@@ -350,6 +386,10 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 }
 
 #endif //PLATFORM 
+                if (drawable.m_doubleSided)
+                {
+                    glCheck(glEnable(GL_CULL_FACE));
+                }
             }
         }
 
@@ -456,3 +496,10 @@ void RenderSystem2D::resetDrawable(Entity entity)
 
 #endif //PLATFORM
 }
+
+#ifdef PARALLEL_DISABLE
+#undef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

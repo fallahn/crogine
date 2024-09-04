@@ -78,6 +78,7 @@ static constexpr float GreenCamRadiusMedium = 10.f;
 static constexpr float GreenCamRadiusSmall = 5.7f;
 static constexpr float SkyCamRadius = 80.f;
 
+static constexpr float CameraFarPlane = 320.f;
 static constexpr float GreenCamZoomFast = 2.5f;
 static constexpr float GreenCamZoomSlow = 1.8f;
 static constexpr float SkyCamZoomSpeed = 1.1f;// 3.f;
@@ -86,9 +87,14 @@ static constexpr glm::vec3 FlightCamOffset = glm::vec3(0.f, 0.098f, 0.f);
 static constexpr float MinFlightCamDistance = 0.132f;
 static constexpr float FlightCamRotation = -0.158f;
 
-static constexpr glm::uvec2 MapSize(320u, 200u);
+//static constexpr glm::uvec2 MapSize(320u, 200u);//320,200
+static constexpr glm::uvec2 MapSize(560u, 320u);
+static constexpr glm::vec2 MapSizeFloat(MapSize);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
 static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f); //used to validate the sub-target property of a hole
+static constexpr glm::uvec2 MiniMapSize(320u, 200u);
+static constexpr std::uint32_t MapSizeMultiplier = 8u;// 4u; //increases the texture resolution by this much
+static constexpr glm::vec2 MapSizeRatio = glm::vec2(MiniMapSize) / MapSizeFloat;
 
 static constexpr float CameraStrokeHeight = 2.f;
 static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
@@ -105,8 +111,8 @@ static constexpr float CourseFadeDistance = 2.f;
 static constexpr float ZoomFadeDistance = 10.f;
 
 static constexpr float GreenCamHeight = 3.f;
-static constexpr float SkyCamHeight = 16.f; //8.f for lower club set
-static constexpr float MinDroneHeight = 20.f; //12.f pushes at least this far above terrain on hilly courses
+static constexpr float SkyCamHeight = 8.f;// 16.f; //8.f for lower club set
+static constexpr float MinDroneHeight = 12.f;// 20.f; //12.f pushes at least this far above terrain on hilly courses
 static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f);
 
 static constexpr float BallPointSize = 1.4f;
@@ -155,8 +161,8 @@ static constexpr std::int16_t LeftThumbDeadZone = cro::GameController::LeftThumb
 static constexpr std::int16_t RightThumbDeadZone = cro::GameController::RightThumbDeadZone;
 static constexpr std::int16_t TriggerDeadZone = cro::GameController::TriggerDeadZone;
 
-static constexpr glm::vec3 BallHairScale(0.23f);
-static constexpr glm::vec3 BallHairOffset(0.f, -0.29f, -0.008f);
+static constexpr glm::vec3 PreviewHairScale(0.23f);
+static constexpr glm::vec3 PreviewHairOffset(0.f, -0.29f, -0.008f);
 
 static constexpr float MinMusicVolume = 0.001f;
 
@@ -273,6 +279,7 @@ struct ShaderID final
         Leaderboard,
         Player,
         Hair,
+        HairReflect,
         Course,
         CourseGreen,
         CourseGrid,
@@ -305,7 +312,8 @@ struct ShaderID final
         TV,
         PointLight,
         Glass,
-        LensFlare
+        LensFlare,
+        PointFlare,
 
     };
 };
@@ -344,17 +352,6 @@ struct Avatar final
     cro::Entity ballModel;
 };
 
-//TODO these aren't used now
-static inline const std::array BallTints =
-{
-    cro::Colour(1.f,0.937f,0.752f), //default
-    cro::Colour(1.f,0.364f,0.015f), //pumpkin
-    cro::Colour(0.1176f, 0.2f, 0.45f), //planet
-    cro::Colour(0.937f, 0.76f, 0.235f), //snail
-    cro::Colour(0.015f,0.031f,1.f), //bowling
-    cro::Colour(0.964f,1.f,0.878f) //snowman
-};
-
 static inline std::int32_t courseOfTheMonth()
 {
     return 9 + (cro::SysTime::now().months() % 3);
@@ -363,10 +360,10 @@ static inline std::int32_t courseOfTheMonth()
 static inline float getWindMultiplier(float ballHeight, float distanceToPin)
 {
     static constexpr float MinWind = 10.f;
-    static constexpr float MaxWind = 30.f;
+    static constexpr float MaxWind = 32.f;
 
-    static constexpr float MinHeight = 40.f;
-    static constexpr float MaxHeight = 50.f;
+    static constexpr float MinHeight = 30.f;// 40.f;
+    static constexpr float MaxHeight = 50.f;// 50.f;
     const float HeightMultiplier = std::clamp((ballHeight - MinHeight) / (MaxHeight / MinHeight), 0.f, 1.f);
     
     float multiplier = std::clamp((distanceToPin - MinWind) / (MaxWind - MinWind), 0.f, 1.f);
@@ -575,27 +572,27 @@ static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std:
     }
 }
 
-static inline void saveAvatars(const SharedStateData& sd)
-{
-    cro::ConfigFile cfg("avatars");
-    for (const auto& player : sd.localConnectionData.playerData)
-    {
-        auto* avatar = cfg.addObject("avatar");
-        avatar->addProperty("name", player.name.empty() ? "Player" : player.name.toAnsiString()); //hmmm shame we can't save the encoding here
-        avatar->addProperty("ball_id").setValue(player.ballID);
-        avatar->addProperty("hair_id").setValue(player.hairID);
-        avatar->addProperty("skin_id").setValue(player.skinID);
-        avatar->addProperty("flipped").setValue(player.flipped);
-        avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
-        avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
-        avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
-        avatar->addProperty("flags3").setValue(player.avatarFlags[3]);
-        avatar->addProperty("cpu").setValue(player.isCPU);
-    }
-
-    auto path = cro::App::getPreferencePath() + "avatars.cfg";
-    cfg.save(path);
-}
+//static inline void saveAvatars(const SharedStateData& sd)
+//{
+//    cro::ConfigFile cfg("avatars");
+//    for (const auto& player : sd.localConnectionData.playerData)
+//    {
+//        auto* avatar = cfg.addObject("avatar");
+//        avatar->addProperty("name", player.name.empty() ? "Player" : reinterpret_cast<const char*>(player.name.toUtf8().c_str()));
+//        avatar->addProperty("ball_id").setValue(player.ballID);
+//        avatar->addProperty("hair_id").setValue(player.hairID);
+//        avatar->addProperty("skin_id").setValue(player.skinID);
+//        avatar->addProperty("flipped").setValue(player.flipped);
+//        avatar->addProperty("flags0").setValue(player.avatarFlags[0]);
+//        avatar->addProperty("flags1").setValue(player.avatarFlags[1]);
+//        avatar->addProperty("flags2").setValue(player.avatarFlags[2]);
+//        avatar->addProperty("flags3").setValue(player.avatarFlags[3]);
+//        avatar->addProperty("cpu").setValue(player.isCPU);
+//    }
+//
+//    auto path = cro::App::getPreferencePath() + "avatars.cfg";
+//    cfg.save(path);
+//}
 
 static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts()
 {
@@ -610,44 +607,44 @@ static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts()
         cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
 
         //grey
-        cro::Vertex2D(glm::vec2(0.0575f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.0575f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0188f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0188f, -0.5f), TextGoldColour),
 
-        cro::Vertex2D(glm::vec2(0.0575f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.0575f, -0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0188f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0188f, -0.5f), Grey),
 
-        cro::Vertex2D(glm::vec2(0.0675f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.0675f, -0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0288f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0288f, -0.5f), Grey),
 
-        cro::Vertex2D(glm::vec2(0.0675f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.0675f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0288f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0288f, -0.5f), TextGoldColour),
 
 
         //black
-        cro::Vertex2D(glm::vec2(0.12f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.12f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.07f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.07f, -0.5f), TextGoldColour),
 
-        cro::Vertex2D(glm::vec2(0.12f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.12f, -0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.07f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.07f, -0.5f), LeaderboardTextDark),
 
-        cro::Vertex2D(glm::vec2(0.13f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.13f, -0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.08f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.08f, -0.5f), LeaderboardTextDark),
 
-        cro::Vertex2D(glm::vec2(0.13f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.13f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.08f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.08f, -0.5f), TextGoldColour),
 
         //grey
-        cro::Vertex2D(glm::vec2(0.1825f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.1825f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1525f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1525f, -0.5f), TextGoldColour),
 
-        cro::Vertex2D(glm::vec2(0.1825f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.1825f, -0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1525f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1525f, -0.5f), Grey),
 
-        cro::Vertex2D(glm::vec2(0.1925f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.1925f, -0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1625f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1625f, -0.5f), Grey),
 
-        cro::Vertex2D(glm::vec2(0.1925f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.1925f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1625f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1625f, -0.5f), TextGoldColour),
 
         //black
         cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
@@ -664,44 +661,44 @@ static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts()
 
 
         //grey
-        cro::Vertex2D(glm::vec2(0.3075f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.3075f, -0.5f), TextGoldColour),
-
-        cro::Vertex2D(glm::vec2(0.3075f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.3075f, -0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), TextGoldColour),
 
         cro::Vertex2D(glm::vec2(0.3175f, 0.5f), Grey),
         cro::Vertex2D(glm::vec2(0.3175f, -0.5f), Grey),
 
-        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.3275f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.3275f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.3275f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.3275f, -0.5f), TextGoldColour),
 
 
         //black
-        cro::Vertex2D(glm::vec2(0.37f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.37f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.395f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.395f, -0.5f), TextGoldColour),
 
-        cro::Vertex2D(glm::vec2(0.37f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.37f, -0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.395f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.395f, -0.5f), LeaderboardTextDark),
 
-        cro::Vertex2D(glm::vec2(0.38f, 0.5f), LeaderboardTextDark),
-        cro::Vertex2D(glm::vec2(0.38f, -0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.405f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.405f, -0.5f), LeaderboardTextDark),
 
-        cro::Vertex2D(glm::vec2(0.38f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.38f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.405f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.405f, -0.5f), TextGoldColour),
 
         //grey
-        cro::Vertex2D(glm::vec2(0.4325f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.4325f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4475f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4475f, -0.5f), TextGoldColour),
 
-        cro::Vertex2D(glm::vec2(0.4325f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.4325f, -0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4475f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4475f, -0.5f), Grey),
 
-        cro::Vertex2D(glm::vec2(0.4425f, 0.5f), Grey),
-        cro::Vertex2D(glm::vec2(0.4425f, -0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4575f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4575f, -0.5f), Grey),
 
-        cro::Vertex2D(glm::vec2(0.4425f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.4425f, -0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
 
         //gold
         cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
@@ -872,16 +869,20 @@ static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)
 static inline std::pair<std::uint8_t, float> readMap(const cro::ImageArray<std::uint8_t>& img, float px, float py)
 {
     auto size = glm::vec2(img.getDimensions());
+
+    //if the point is out of bounds of our texture map, assume water
+    const cro::FloatRect bounds(glm::vec2(0.f), size - glm::vec2(1.f));
+    if (!bounds.contains(glm::vec2(px, py)))
+    {
+        return { TerrainID::Water, 0.f };
+    }
+
     //I forget why our coords are float - this makes for horrible casts :(
     std::uint32_t x = static_cast<std::uint32_t>(std::min(size.x - 1.f, std::max(0.f, std::floor(px))));
     std::uint32_t y = static_cast<std::uint32_t>(std::min(size.y - 1.f, std::max(0.f, std::floor(py))));
 
     std::uint32_t stride = img.getChannels();
     //TODO we should have already asserted the format is RGBA elsewhere...
-    /*if (img.getFormat() == cro::ImageFormat::RGB)
-    {
-        stride = 3;
-    }*/
 
     auto index = (y * static_cast<std::uint32_t>(size.x) + x) * stride;
 
@@ -940,14 +941,14 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     cro::Image img;
     if (!img.loadFromFile(filePath))
     {
-        img.create(320, 300, DefaultColour);
+        img.create(MapSize.x, MapSize.y, DefaultColour);
     }
 
     auto size = img.getSize();
     if (size != MapSize)
     {
-        LogW << path << ": not loaded, image not 320x200" << std::endl;
-        img.create(320, 300, DefaultColour);
+        LogW << path << ": not loaded, image not " << MapSize << std::endl;
+        img.create(MapSize.x, MapSize.y, DefaultColour);
     }
 
     loadNormalMap(dst, img);
@@ -1152,11 +1153,12 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
     target.addComponent<cro::Model>(meshData, material);
 }
 
-static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool isTarget = false)
+static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool decimal, bool isTarget = false)
 {
     static constexpr float ToYards = 1.094f;
     static constexpr float ToFeet = 3.281f;
     static constexpr float ToInches = 12.f;
+
 
     const std::string Prefix = isTarget ? "Target: " : "Pin: ";
 
@@ -1178,24 +1180,37 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
 
             target.setString(ss.str());*/
 
-            distance *= ToFeet;
-            if (distance > 1)
+            if (decimal)
             {
                 std::stringstream ss;
-                ss.precision(1);
+                ss.precision(2);
                 ss << "Distance: ";
-                ss << std::fixed << distance;
-                ss << "ft";
+                ss << std::fixed << (distance * ToYards);
+                ss << "yds";
 
                 target.setString(ss.str());
-
-                /*auto dist = static_cast<std::int32_t>(distance);
-                target.setString("Distance: " + std::to_string(dist) + "ft");*/
             }
             else
             {
-                auto dist = static_cast<std::int32_t>(distance * ToInches);
-                target.setString("Distance: " + std::to_string(dist) + "in");
+                distance *= ToFeet;
+                if (distance > 1)
+                {
+                    std::stringstream ss;
+                    ss.precision(1);
+                    ss << "Distance: ";
+                    ss << std::fixed << distance;
+                    ss << "ft";
+
+                    target.setString(ss.str());
+
+                    /*auto dist = static_cast<std::int32_t>(distance);
+                    target.setString("Distance: " + std::to_string(dist) + "ft");*/
+                }
+                else
+                {
+                    auto dist = static_cast<std::int32_t>(distance * ToInches);
+                    target.setString("Distance: " + std::to_string(dist) + "in");
+                }
             }
         }
     }
@@ -1208,8 +1223,21 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
         }
         else
         {
-            auto dist = static_cast<std::int32_t>(distance * 100.f);
-            target.setString("Distance: " + std::to_string(dist) + "cm");
+            if (decimal)
+            {
+                std::stringstream ss;
+                ss.precision(2);
+                ss << "Distance: ";
+                ss << std::fixed << distance;
+                ss << "m";
+
+                target.setString(ss.str());
+            }
+            else
+            {
+                auto dist = static_cast<std::int32_t>(distance * 100.f);
+                target.setString("Distance: " + std::to_string(dist) + "cm");
+            }
         }
     }
 }
@@ -1241,4 +1269,9 @@ static inline cro::Colour getBeaconColour(float rotation)
     c = hsv2rgb(c);
 
     return cro::Colour(c.r, c.g, c.b, 1.f);
+}
+
+static inline bool ndcVisible(glm::vec2 p)
+{
+    return p.x >= -1.f && p.x <= 1.f && p.y >= -1.f && p.y <= 1.f;
 }

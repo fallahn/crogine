@@ -129,6 +129,13 @@ namespace cro
         void setSourceBuffer(TextureID id, std::int32_t index);
 
 
+        /*
+        \brief Returns the list of visible entities from the last culling
+        pass at the given camera index.
+        \see Camera::getDrawlistIndex();
+        */
+        const std::vector<Entity>& getDrawList(std::size_t index) const;
+
     private:
         std::int32_t m_spaceIndex;
 

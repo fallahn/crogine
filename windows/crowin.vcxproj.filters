@@ -112,6 +112,9 @@
     <Filter Include="Source Files\audio\sound system\effects chain">
       <UniqueIdentifier>{f30d9079-45dd-45f9-a64f-2d84589e1096}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\detail\clipboard">
+      <UniqueIdentifier>{fd22cd03-9f11-4ab0-a4a1-d3b89863e060}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\crogine\include\crogine\Config.hpp">
@@ -651,9 +654,6 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp">
       <Filter>Header Files\audio\ecs</Filter>
     </ClInclude>
-    <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp">
-      <Filter>Header Files\audio\ecs</Filter>
-    </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp">
       <Filter>Header Files\audio\ecs</Filter>
     </ClInclude>
@@ -761,6 +761,12 @@
     </ClInclude>
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\Playlist.hpp">
       <Filter>Header Files\audio\sound system</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\AudioDevice.hpp">
+      <Filter>Header Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp">
+      <Filter>Header Files\audio</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1181,9 +1187,6 @@
     <ClCompile Include="..\crogine\src\audio\AudioMixer.cpp">
       <Filter>Source Files\audio\ecs</Filter>
     </ClCompile>
-    <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp">
-      <Filter>Source Files\audio\ecs</Filter>
-    </ClCompile>
     <ClCompile Include="..\crogine\src\audio\AudioResource.cpp">
       <Filter>Source Files\audio\ecs</Filter>
     </ClCompile>
@@ -1285,6 +1288,27 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\sound_system\Playlist.cpp">
       <Filter>Source Files\audio\sound system</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioDevice.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_image.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_win.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_win_bmp.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\clipboard\clip_win_wic.cpp">
+      <Filter>Source Files\detail\clipboard</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

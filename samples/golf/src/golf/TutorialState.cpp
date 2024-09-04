@@ -2415,7 +2415,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, -40.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -30.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -2442,7 +2442,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-
+    //spin icon
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
@@ -2491,7 +2491,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
         }
         else
         {
-            scale = std::max(0.1f, scale - speed);
+            scale = std::max(0.01f, scale - speed);
         }
         auto s = scale;
         spinput.getComponent<cro::Transform>().setScale({ s,s });
@@ -2507,6 +2507,140 @@ void TutorialState::tutorialSpin(cro::Entity root)
     spinput.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //punch indicator
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto originOffset = spinput.getComponent<cro::Transform>().getOrigin();
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -36.f, 0.f, 0.f });
+    entity.getComponent<cro::Transform>().move(originOffset);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("PUNCH");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    spinput.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto textEnt = entity;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 8.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_lb");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            switch (m_sharedData.activeInput)
+            {
+            default:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                break;
+            case SharedStateData::ActiveInput::XBox:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::SpriteAnimation>().play(0);
+                break;
+            case SharedStateData::ActiveInput::PS:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::SpriteAnimation>().play(1);
+                break;
+            }
+        };
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //flop indicator
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 36.f, 0.f, 0.f });
+    entity.getComponent<cro::Transform>().move(originOffset);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("FLOP");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    spinput.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    textEnt = entity;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 8.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_rb");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            switch (m_sharedData.activeInput)
+            {
+            default:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                break;
+            case SharedStateData::ActiveInput::XBox:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::SpriteAnimation>().play(0);
+                break;
+            case SharedStateData::ActiveInput::PS:
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::SpriteAnimation>().play(1);
+                break;
+            }
+        };
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_sharedData.activeInput == SharedStateData::ActiveInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
     //second tip text
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -2515,7 +2649,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, -66.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -40.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -2599,7 +2733,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, -106.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -86.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -2637,7 +2771,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, -140.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -96.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -2671,6 +2805,49 @@ void TutorialState::tutorialSpin(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
+    entity.addComponent<cro::Text>(font).setString("Some clubs allow a Punch shot, and some allow a Flop shot.\nPunch shots are lower and may go further than intended.\nFlop shots are much higher and have little to no spin.");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -126.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt) mutable
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            cro::FloatRect area(bounds.left, bounds.bottom, bounds.width * currTime, bounds.height);
+            e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                showContinue();
+            }
+        };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto text05 = entity;
+
+    m_actionCallbacks.push_back([text05]() mutable
+        {
+            text05.getComponent<cro::Callback>().active = true;
+        });
+
+
+
+    //6/7 were combined into the above...
+
+
+
+    //eighth text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Text>(font).setString("Full club stats are available from the Career and Free Play menus");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -2697,7 +2874,7 @@ void TutorialState::tutorialSpin(cro::Entity root)
         };
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     centreText(entity);
-    auto text05 = entity;
+    auto text08 = entity;
 
 
     //club info
@@ -2730,9 +2907,9 @@ void TutorialState::tutorialSpin(cro::Entity root)
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto infoEnt = entity;
 
-    m_actionCallbacks.push_back([text05, infoEnt]() mutable
+    m_actionCallbacks.push_back([text08, infoEnt]() mutable
         {
-            text05.getComponent<cro::Callback>().active = true;
+            text08.getComponent<cro::Callback>().active = true;
             infoEnt.getComponent<cro::Callback>().active = true;
         });
 

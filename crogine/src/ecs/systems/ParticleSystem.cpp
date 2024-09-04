@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -45,6 +45,16 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+
+//#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
+#include <execution>
+#include <mutex>
+#endif
 
 #ifdef CRO_DEBUG_
 #include <crogine/gui/Gui.hpp>
@@ -318,7 +328,7 @@ ParticleSystem::~ParticleSystem()
 void ParticleSystem::updateDrawList(Entity cameraEnt)
 {   
     const auto& cam = cameraEnt.getComponent<Camera>();
-    auto passCount = cam.reflectionBuffer.available() ? 2 : 1;
+    const auto passCount = cam.reflectionBuffer.available() ? 2 : 1;
     const auto camPos = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
     const auto forwardVec = cro::Util::Matrix::getForwardVector(cameraEnt.getComponent<cro::Transform>().getWorldTransform());
 
@@ -334,34 +344,48 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
     }
 
     const auto& entities = getEntities();
+
+#ifdef USE_PARALLEL_PROCESSING
+    std::mutex mutex;
+
+    for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](Entity entity)
+#else
     for (auto entity : entities)
-    {
-        auto& emitter = entity.getComponent<ParticleEmitter>();
-        const auto emitterDirection = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
-
-        for (auto i = 0; i < passCount; ++i)
+#endif
         {
-            if ((emitter.m_renderFlags & cam.getPass(i).renderFlags) == 0)
-            {
-                continue;
-            }
+            auto& emitter = entity.getComponent<ParticleEmitter>();
+            const auto emitterDirection = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
 
-            if (glm::dot(forwardVec, emitterDirection) > 0)
+            for (auto i = 0; i < passCount; ++i)
             {
-                if (!emitter.m_pendingUpdate)
+                if ((emitter.m_renderFlags & cam.getPass(i).renderFlags) == 0)
                 {
-                    emitter.m_pendingUpdate = true;
-                    m_potentiallyVisible.push_back(entity);
+                    continue;
                 }
 
-                const auto& frustum = cam.getPass(i).getFrustum();
-                if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
+                if (glm::dot(forwardVec, emitterDirection) > 0)
                 {
-                    drawlist[i].push_back(entity);
+                    /*if (!emitter.m_pendingUpdate)
+                    {
+                        emitter.m_pendingUpdate = true;
+                        m_potentiallyVisible.push_back(entity);
+                    }*/
+
+                    const auto& frustum = cam.getPass(i).getFrustum();
+                    if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
+                    {
+#ifdef USE_PARALLEL_PROCESSING
+                        std::scoped_lock l(mutex);
+#endif
+                        drawlist[i].push_back(entity);
+                    }
                 }
             }
         }
-    }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 
     DPRINT("Visible particle Systems", std::to_string(drawlist[0].size()));
 }
@@ -373,8 +397,13 @@ void ParticleSystem::process(float dt)
         handle.boundThisFrame = false;
     }*/
 
-    auto& entities = getEntities();
-    for (auto& e : entities/*m_potentiallyVisible*/)
+    const auto& entities = getEntities();
+    const auto fallbackTextureID = m_fallbackTexture.getGLHandle();
+#ifdef USE_PARALLEL_PROCESSING
+    std::for_each(std::execution::par, entities.begin(), entities.end(), [dt, fallbackTextureID](Entity e)
+#else
+    for (auto e : entities/*m_potentiallyVisible*/)
+#endif
     {
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
@@ -396,14 +425,14 @@ void ParticleSystem::process(float dt)
             while (emitter.m_emissionTime > rate)
             {
                 //make sure not to update this again unless it gets marked as visible next frame
-                emitter.m_pendingUpdate = false;
+                //emitter.m_pendingUpdate = false;
 
                 //apply fallback texture if one doesn't exist
                 //this would be speedier to do once when adding the emitter to the system
                 //but the texture may change at runtime.
                 if (emitter.settings.textureID == 0)
                 {
-                    emitter.settings.textureID = m_fallbackTexture.getGLHandle();
+                    emitter.settings.textureID = fallbackTextureID;
                 }
 
                 emitter.m_emissionTime -= rate;
@@ -497,8 +526,8 @@ void ParticleSystem::process(float dt)
             {
                 p.velocity += f * dt;
             }
-            p.position += p.velocity * dt;            
-           
+            p.position += p.velocity * dt;
+
             p.lifetime -= dt;
             p.colour.setAlpha(std::min(1.f, std::max(p.lifetime / p.maxLifeTime, 0.f)));
 
@@ -542,12 +571,24 @@ void ParticleSystem::process(float dt)
                     && (emitter.m_particles[i].loopCount == 0)))
             {
                 emitter.m_nextFreeParticle--;
-                std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);                
+                std::swap(emitter.m_particles[i], emitter.m_particles[emitter.m_nextFreeParticle]);
             }
         }
         //DPRINT("Next free Particle", std::to_string(emitter.m_nextFreeParticle));
 
         //TODO sort verts by depth? should be drawing back to front for transparency really.
+
+        emitter.m_previousPosition = e.getComponent<cro::Transform>().getWorldPosition();
+
+#ifdef USE_PARALLEL_PROCESSING
+    });
+
+
+    //this still has to be done in the main thread cos OpenGL
+    for(auto e : entities)
+    {
+        auto& emitter = e.getComponent<ParticleEmitter>();
+#endif
 
         //update VBO
         std::size_t idx = 0;
@@ -573,13 +614,11 @@ void ParticleSystem::process(float dt)
         }
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
         glCheck(glBufferSubData(GL_ARRAY_BUFFER, 0, idx * sizeof(float), m_dataBuffer.data()));
-
-        emitter.m_previousPosition = e.getComponent<cro::Transform>().getWorldPosition();
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    m_potentiallyVisible.clear();
+    //m_potentiallyVisible.clear();
 }
 
 void ParticleSystem::render(Entity camera, const RenderTarget& rt)
@@ -785,3 +824,9 @@ void ParticleSystem::allocateBuffer()
 
     m_bufferCount++;
 }
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

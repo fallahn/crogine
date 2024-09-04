@@ -29,7 +29,6 @@ source distribution.
 
 #include "GameConsts.hpp"
 #include "Social.hpp"
-#include "../M3UPlaylist.hpp"
 
 #ifdef USE_GNS
 #include "Input.hpp"

@@ -118,14 +118,23 @@ namespace cro
             void setDopplerFactor(float) override;
             void setSpeedOfSound(float) override;
 
+            const std::string& getActiveDevice() const override { return m_deviceName; }
+            const std::vector<std::string>& getDeviceList() const override { return m_devices; }
+            void setActiveDevice(const std::string&) override;
+
             void playbackDisconnectEvent() override;
             void recordDisconnectEvent() override;
+            void playbackConnectEvent() override;
+            void recordConnectEvent() override;
+
+            void resume() override;
 
             void printDebug() override;
 
         private:
             ALCdevice* m_device;
             ALCcontext* m_context;
+            std::string m_deviceName;
 
             static constexpr std::size_t MaxStreams = 128;
             std::array<OpenALStream, MaxStreams> m_streams = {};
@@ -143,11 +152,12 @@ namespace cro
             std::vector<std::string> m_devices;
             std::string m_preferredDevice;
             void enumerateDevices();
+            std::string getPreferencePath() const;
 
             OpenALStream& getNextFreeStream();
             bool initStream(OpenALStream&);
 
-            void getDeviceList();
+            void refreshDeviceList();
             void reconnect(const char*);
         };
     }

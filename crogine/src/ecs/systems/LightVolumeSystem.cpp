@@ -27,6 +27,9 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+
+
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/Message.hpp>
 
@@ -43,6 +46,17 @@ source distribution.
 
 #include <crogine/graphics/Spatial.hpp>
 #include "../../detail/GLCheck.hpp"
+
+
+//#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
+#include <execution>
+#include <mutex>
+#endif
 
 #ifdef CRO_DEBUG_
 #include <crogine/gui/Gui.hpp>
@@ -182,17 +196,26 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
 //public
 void LightVolumeSystem::process(float)
 {
-    for (auto entity : getEntities())
+    const auto& entities = getEntities();
+#ifdef USE_PARALLEL_PROCESSING
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [](Entity entity)
+#else
+    for (auto entity : entities)
+#endif
     {
         const auto& model = entity.getComponent<Model>();
         auto sphere = model.getBoundingSphere();
         const auto& tx = entity.getComponent<Transform>();
 
-        auto scale = tx.getWorldScale();
+        const auto scale = tx.getWorldScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
         entity.getComponent<LightVolume>().lightScale = sphere.radius / entity.getComponent<LightVolume>().radius;
     }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 }
 
 void LightVolumeSystem::updateDrawList(Entity cameraEnt)
@@ -216,53 +239,66 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
     //TODO - and this goes for all culling functions
     //the world space transform of the sphere could be cached for a frame
     //instead of being recalculated for every active camera
+#ifdef USE_PARALLEL_PROCESSING
+    std::mutex mutex;
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](Entity entity)
+#else
     for (auto entity : entities)
-    {
-        const auto& model = entity.getComponent<Model>();
-        auto sphere = model.getBoundingSphere();
-        const auto& tx = entity.getComponent<Transform>();
+#endif
 
-        sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
-        auto scale = tx.getWorldScale();
-
-        if (scale.x * scale.y * scale.z == 0)
         {
-            continue;
+            const auto& model = entity.getComponent<Model>();
+            auto sphere = model.getBoundingSphere();
+            const auto& tx = entity.getComponent<Transform>();
+
+            sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
+            auto scale = tx.getWorldScale();
+
+            if (scale.x * scale.y * scale.z == 0)
+            {
+                EARLY_OUT;
+            }
+
+            //average for non-uniform scale
+            sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+
+            const auto direction = (sphere.centre - cameraPos);
+            const float distance = glm::dot(camComponent.getPass(Camera::Pass::Final).forwardVector, direction);
+
+            if (distance < -sphere.radius)
+            {
+                //model is behind the camera
+                EARLY_OUT;
+            }
+
+            auto& light = entity.getComponent<LightVolume>();
+            const auto l2 = glm::length2(direction);
+            if (l2 > light.maxVisibilityDistance)
+            {
+                //model is out of bounds
+                EARLY_OUT;
+            }
+
+            bool visible = true;
+            std::size_t j = 0;
+            while (visible && j < frustum.size())
+            {
+                visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+            }
+
+            if (visible)
+            {
+                light.cullAttenuation = 1.f - smoothstep(light.maxVisibilityDistance - (light.maxVisibilityDistance * 0.33f), light.maxVisibilityDistance, l2);
+#ifdef USE_PARALLEL_PROCESSING
+                std::scoped_lock l(mutex);
+#endif
+                drawList.push_back(entity);
+            }
         }
-
-        //average for non-uniform scale
-        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
-
-        const auto direction = (sphere.centre - cameraPos);
-        const float distance = glm::dot(camComponent.getPass(Camera::Pass::Final).forwardVector, direction);
-
-        if (distance < -sphere.radius)
-        {
-            //model is behind the camera
-            continue;
-        }
-
-        auto& light = entity.getComponent<LightVolume>();
-        const auto l2 = glm::length2(direction);
-        if (l2 >light.maxVisibilityDistance)
-        {
-            //model is out of bounds
-            continue;
-        }
-
-        bool visible = true;
-        std::size_t j = 0;
-        while (visible && j < frustum.size())
-        {
-            visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
-        }
-
-        if (visible)
-        {
-            light.cullAttenuation = 1.f - smoothstep(light.maxVisibilityDistance - (light.maxVisibilityDistance * 0.33f), light.maxVisibilityDistance, l2);
-            drawList.push_back(entity);
-        }
-    }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
 }
 
 void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
@@ -342,3 +378,14 @@ void LightVolumeSystem::setSourceBuffer(TextureID id, std::int32_t index)
     CRO_ASSERT(index != -1 && index < BufferID::Count, "");
     m_bufferIDs[index] = id;
 }
+
+const std::vector<Entity>& LightVolumeSystem::getDrawList(std::size_t index) const
+{
+    return m_drawLists[index];
+}
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

@@ -46,9 +46,17 @@ PlayerData& PlayerData::operator=(const sv::PlayerInfo& pi)
     ballColourIndex = pi.ballColourIndex;
     ballID = pi.ballID;
     hairID = pi.hairID;
+    hatID = pi.hatID;
     skinID = pi.skinID;
     flipped = pi.flipped;
     isCPU = pi.isCPU;
+
+    headwearOffsets = pi.headwearOffsets;
+
+    if (hatID == hairID)
+    {
+        hatID = 0;
+    }
 
     return *this;
 }
@@ -69,6 +77,7 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("ball_colour").setValue(ballColourIndex);
     cfg.addProperty("ball_id").setValue(ballID);
     cfg.addProperty("hair_id").setValue(hairID);
+    cfg.addProperty("hat_id").setValue(hatID);
     cfg.addProperty("skin_id").setValue(skinID);
     cfg.addProperty("flipped").setValue(flipped);
     cfg.addProperty("flags0").setValue(avatarFlags[0]);
@@ -77,8 +86,16 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("flags3").setValue(avatarFlags[3]);
     cfg.addProperty("flags4").setValue(avatarFlags[4]);
     cfg.addProperty("flags5").setValue(avatarFlags[5]);
+    cfg.addProperty("flags6").setValue(avatarFlags[6]);
     cfg.addProperty("cpu").setValue(isCPU);
     cfg.addProperty("custom_name").setValue(isCustomName);
+
+    cfg.addProperty("offset_0").setValue(headwearOffsets[0]);
+    cfg.addProperty("rotation_0").setValue(headwearOffsets[1]);
+    cfg.addProperty("scale_0").setValue(headwearOffsets[2]);
+    cfg.addProperty("offset_1").setValue(headwearOffsets[3]);
+    cfg.addProperty("rotation_1").setValue(headwearOffsets[4]);
+    cfg.addProperty("scale_1").setValue(headwearOffsets[5]);
 
     //hmmmm is it possible we might accidentally
     //create the ID of an existing profile?
@@ -113,6 +130,11 @@ bool PlayerData::saveProfile() const
 
 bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 {
+    std::fill(headwearOffsets.begin(), headwearOffsets.end(), glm::vec3(0.f));
+
+    headwearOffsets[2] = glm::vec3(1.f);
+    headwearOffsets[5] = glm::vec3(1.f);
+
     //profiles may not yet have the colour index property, so set to a default
     if (ballColourIndex < pc::Palette.size())
     {
@@ -156,6 +178,11 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
                 auto id = prop.getValue<std::uint32_t>();
                 hairID = id;
             }
+            else if (n == "hat_id")
+            {
+                auto id = prop.getValue<std::uint32_t>();
+                hatID = id;
+            }
             else if (n == "skin_id")
             {
                 auto id = prop.getValue<std::uint32_t>();
@@ -196,6 +223,11 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
                 auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[5];
                 avatarFlags[5] = static_cast<std::uint8_t>(flag);
             }
+            else if (n == "flags6")
+            {
+                auto flag = prop.getValue<std::uint32_t>() % pc::PairCounts[6];
+                avatarFlags[6] = static_cast<std::uint8_t>(flag);
+            }
 
             else if (n == "cpu")
             {
@@ -205,6 +237,42 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             {
                 isCustomName = prop.getValue<bool>();
             }
+
+            else if (n == "offset_0")
+            {
+                headwearOffsets[0] = prop.getValue<glm::vec3>();
+            }
+            else if (n == "rotation_0")
+            {
+                //rotations are store +/- 1 and eventually multiplied by pi
+                headwearOffsets[1] = prop.getValue<glm::vec3>();
+                headwearOffsets[1][0] = std::clamp(headwearOffsets[1][0], -1.f, 1.f);
+                headwearOffsets[1][1] = std::clamp(headwearOffsets[1][1], -1.f, 1.f);
+                headwearOffsets[1][2] = std::clamp(headwearOffsets[1][2], -1.f, 1.f);
+            }
+            else if (n == "scale_0")
+            {
+                headwearOffsets[2] = prop.getValue<glm::vec3>();
+            }
+            else if (n == "offset_1")
+            {
+                headwearOffsets[3] = prop.getValue<glm::vec3>();
+            }
+            else if (n == "rotation_1")
+            {
+                headwearOffsets[4] = prop.getValue<glm::vec3>();
+                headwearOffsets[4][0] = std::clamp(headwearOffsets[4][0], -1.f, 1.f);
+                headwearOffsets[4][1] = std::clamp(headwearOffsets[4][1], -1.f, 1.f);
+                headwearOffsets[4][2] = std::clamp(headwearOffsets[4][2], -1.f, 1.f);
+            }
+            else if (n == "scale_1")
+            {
+                headwearOffsets[5] = prop.getValue<glm::vec3>();
+            }
+        }
+        if (hatID == hairID)
+        {
+            hatID = 0;
         }
 
         profileID = uid;
@@ -277,6 +345,10 @@ ProfileTexture::ProfileTexture(const std::string& path)
 
             case pc::Keys[pc::ColourKey::Hair]:
                 if (alpha) m_keyIndices[pc::ColourKey::Hair].push_back(i / stride);
+                break;
+
+            case pc::Keys[pc::ColourKey::Hat]:
+                if (alpha) m_keyIndices[pc::ColourKey::Hat].push_back(i / stride);
                 break;
             }
         }

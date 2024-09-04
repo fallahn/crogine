@@ -613,11 +613,11 @@ void LeagueState::buildScene()
     auto bgNode = entity;
 
     m_tabNodes[TabID::League] = m_scene.createEntity();
-    m_tabNodes[TabID::League].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    m_tabNodes[TabID::League].addComponent<cro::Transform>().setPosition({ 0.f, 2.f, 0.2f });
     bgNode.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::League].getComponent<cro::Transform>());
 
     m_tabNodes[TabID::Info] = m_scene.createEntity();
-    m_tabNodes[TabID::Info].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    m_tabNodes[TabID::Info].addComponent<cro::Transform>().setPosition({ 0.f, 2.f, 0.2f });
     m_tabNodes[TabID::Info].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     bgNode.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::Info].getComponent<cro::Transform>());
 
@@ -647,7 +647,7 @@ void LeagueState::buildScene()
         {
             //close button (we have one for each menu group)
             auto entity = m_scene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ 468.f, 331.f, 0.1f });
+            entity.addComponent<cro::Transform>().setPosition({ 468.f, 329.f, 0.1f });
             entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("close_highlight");
@@ -941,7 +941,7 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
     //check if a previous season exists and scroll the results (updated by refreshNameList())
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 13.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(/*str*/" ");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1177,17 +1177,8 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     stripeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto statusString = "To compete play through all 36 rounds in Freeplay";
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ centre, 52.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString(statusString);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    centreText(entity);
-    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
 
     //cro::String str(" 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36\n 1/36\n23/36\n 7/36\n33/36");
@@ -1226,7 +1217,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
     //auto statusString = "PLAYER SCORE HERE";
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ centre, 52.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ centre, 59.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString(str[3]);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -1237,10 +1228,23 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_leagueText.personal = entity;
 
+    //how to play
+    auto statusString = "To compete play through all 36 rounds in Free Play";
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 50.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(statusString);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    centreText(entity);
+    m_leagueNodes[LeagueID::Global].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //text scroller
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.25f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 13.f, 0.25f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("-~-");// .setString("this is a test string. nothing to see here people, move along.");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);

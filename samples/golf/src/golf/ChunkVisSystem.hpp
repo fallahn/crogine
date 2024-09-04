@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,6 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #pragma once
+
+#include "GameConsts.hpp"
 
 #include <crogine/core/ProfileTimer.hpp>
 #include <crogine/detail/glm/vec2.hpp>
@@ -57,8 +59,8 @@ public:
 
     glm::vec2 getChunkSize() const { return m_chunkSize; }
 
-    static constexpr std::int32_t RowCount = 4;
-    static constexpr std::int32_t ColCount = 6;
+    static constexpr std::int32_t ColCount = MapSize.x / 55;
+    static constexpr std::int32_t RowCount = MapSize.y / 50;
 
 #ifdef CRO_DEBUG_
     //checks all boxes against frustum

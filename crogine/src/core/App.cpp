@@ -72,10 +72,17 @@ static void winFPE(int)
 
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
-#include "../detail/fa-regular-400.hpp"
+#include "../detail/fa-regular-400.hpp" //icon font for ImGui
 #include "../detail/IconsFontAwesome6.h"
 #include "../imgui/imgui_impl_opengl3.h"
 #include "../imgui/imgui_impl_sdl.h"
+
+//this is only implemented with visual studio
+//on windows - update the CMake file if this is
+//needed on other platforms...
+#if defined CLIP_SCREENSHOT
+#include "../detail/clipboard/clip.h"
+#endif
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../detail/stb_image_write.h"
@@ -401,6 +408,7 @@ void App::run()
         ImGui::GetIO().Fonts->AddFontFromMemoryTTF(fontBuff.data(), fontBuff.size(), 13.f, &config, ranges);
 
         m_window.setIcon(defaultIcon);
+        m_window.setExclusiveFullscreen(settings.exclusive);
         m_window.setFullScreen(settings.fullscreen);
         m_window.setVsyncEnabled(settings.vsync);
         m_window.setMultisamplingEnabled(settings.useMultisampling);
@@ -573,12 +581,14 @@ void App::saveScreenshot()
         writeResult.wait();
     }
 
+    static constexpr std::uint32_t bpp = 3;
+
     //TODO this assumes we're calling this with the main buffer
     //active - if a texture buffer is currently active we should be
     //checking the size of that at the very least...
     auto size = m_window.getSize();
     static std::vector<GLubyte> buffer;
-    buffer.resize(size.x * size.y * 3);
+    buffer.resize(size.x * size.y * bpp);
 
     glCheck(glPixelStorei(GL_PACK_ALIGNMENT, 1));
     glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGB, GL_UNSIGNED_BYTE, buffer.data()));
@@ -586,7 +596,8 @@ void App::saveScreenshot()
     postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::ScreenshotTaken;
 
 
-    writeResult = std::async(std::launch::async, [size]() {
+    writeResult = std::async(std::launch::async, [size]()
+    {
         //flip row order
         stbi_flip_vertically_on_write(1);
 
@@ -615,14 +626,52 @@ void App::saveScreenshot()
         out.file = SDL_RWFromFile(filename.c_str(), "w");
         if (out.file)
         {
-            stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 3, buffer.data(), size.x * 3);
+            stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, bpp, buffer.data(), size.x * bpp);
             LogI << "Saved " << filename << std::endl;
+
+#if defined CLIP_SCREENSHOT
+            //apparently we *must* have an alpha channel when writing to clipboard (plus we need flipping...)
+            //but hey we're in a separate thread here so we can afford the time it takes to do this.
+            std::vector<uint8_t> flipBuffer;
+            buffer.reserve(size.x * size.y * 4);
+
+            auto y = static_cast<std::int32_t>(size.y - 1);
+            for (; y >= 0; --y)
+            {
+                for (auto x = 0u; x < size.x; ++x)
+                {
+                    auto index = (y * (size.x * bpp)) + (x * bpp);
+                    flipBuffer.push_back(buffer[index]);
+                    flipBuffer.push_back(buffer[index+1]);
+                    flipBuffer.push_back(buffer[index+2]);
+                    flipBuffer.push_back(0xff);
+                }
+            }
+
+            clip::image_spec spec;
+            spec.width = size.x;
+            spec.height = size.y;
+            spec.bits_per_pixel = 8 * 4;
+            spec.bytes_per_row = spec.width * 4;
+            spec.red_mask = 0xff;
+            spec.green_mask = 0xff00;
+            spec.blue_mask = 0xff0000;
+            spec.alpha_mask = 0xff000000;
+            spec.red_shift = 0;
+            spec.green_shift = 8;
+            spec.blue_shift = 16;
+            spec.alpha_shift = 24;
+            clip::image img(flipBuffer.data(), spec);
+            clip::set_image(img);
+
+            LogI << "Copied screenshot to clipboard" << std::endl;
+#endif
         }
         else
         {
             LogE << SDL_GetError() << std::endl;
         }
-        });
+    });
 }
 
 //protected
@@ -673,6 +722,15 @@ void App::handleEvents()
         {
             //auto str = SDL_GetAudioDeviceName(evt.adevice.which, evt.adevice.iscapture);
             //LogI << str << " was connected " << std::endl;
+            if (evt.adevice.iscapture)
+            {
+                AudioRenderer::onRecordConnect();
+            }
+            else
+            {
+                AudioRenderer::onPlaybackConnect();
+            }
+            postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::AudioDeviceChanged;
         }
             break;
         case SDL_AUDIODEVICEREMOVED:
@@ -686,6 +744,7 @@ void App::handleEvents()
             {
                 AudioRenderer::onPlaybackDisconnect();
             }
+            postMessage<Message::SystemEvent>(Message::SystemMessage)->type = Message::SystemEvent::AudioDeviceChanged;
 
             //TODO how do we get something useful like the index/name of this device?
             //LogI << "Device " << evt.adevice.which << " was disconnected" << std::endl;
@@ -848,11 +907,19 @@ void App::handleMessages()
     {
         const auto& msg = m_messageBus.poll();
 
-        /*switch (msg.id)
+        switch (msg.id)
         {
-
+        case Message::SystemMessage:
+        {
+            const auto& data = msg.getData<Message::SystemEvent>();
+            if (data.type == Message::SystemEvent::ResumedFromSuspend)
+            {
+                AudioRenderer::resume();
+            }
+        }
+            break;
         default: break;
-        }*/
+        }
 
         handleMessage(msg);
     }
@@ -927,25 +994,31 @@ void App::removeWindows(const GuiClient* c)
 
 App::WindowSettings App::loadSettings() const
 {
-    WindowSettings settings;
+    SDL_DisplayMode mode;
+    SDL_GetDesktopDisplayMode(0, &mode);
 
+    WindowSettings settings;
     ConfigFile cfg;
     if (cfg.loadFromFile(m_prefPath + cfgName, false))
     {
         const auto& properties = cfg.getProperties();
         for (const auto& prop : properties)
         {
-            if (prop.getName() == "width" && prop.getValue<int>() > 0)
+            if (prop.getName() == "width")
             {
-                settings.width = prop.getValue<int>();
+                settings.width = std::clamp(prop.getValue<std::int32_t>(), std::min(640, mode.w - 1), mode.w);
             }
-            else if (prop.getName() == "height" && prop.getValue<int>() > 0)
+            else if (prop.getName() == "height")
             {
-                settings.height = prop.getValue<int>();
+                settings.height = std::clamp(prop.getValue<std::int32_t>(), std::min(480, mode.h - 1), mode.h);
             }
             else if (prop.getName() == "fullscreen")
             {
                 settings.fullscreen = prop.getValue<bool>();
+            }
+            else if (prop.getName() == "exclusive")
+            {
+                settings.exclusive = prop.getValue<bool>();
             }
             else if (prop.getName() == "vsync")
             {
@@ -957,7 +1030,12 @@ App::WindowSettings App::loadSettings() const
             }
             else if (prop.getName() == "window_size")
             {
+                const float modeWidth = static_cast<float>(mode.w);
+                const float modeHeight = static_cast<float>(mode.h);
+
                 settings.windowedSize = prop.getValue<glm::vec2>();
+                settings.windowedSize.x = std::clamp(settings.windowedSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
+                settings.windowedSize.x = std::clamp(settings.windowedSize.y, std::min(640.f, modeHeight - 1.f), modeHeight);
             }
         }
 
@@ -982,12 +1060,13 @@ App::WindowSettings App::loadSettings() const
                 {
                     auto name = p.getName();
                     auto found = name.find("channel");
-                    if (found != std::string::npos)
+                    if (found != std::string::npos
+                        && name.size() > found + 7)
                     {
                         auto ident = name.substr(found + 7);
                         try
                         {
-                            auto channel = std::stoi(ident);
+                            auto channel = std::clamp(std::stoi(ident), 0, static_cast<std::int32_t>(AudioMixer::MaxChannels));
                             AudioMixer::setVolume(p.getValue<float>(), channel);
                         }
                         catch (...)
@@ -1011,6 +1090,7 @@ void App::saveSettings()
     saveSettings.addProperty("width", std::to_string(size.x));
     saveSettings.addProperty("height", std::to_string(size.y));
     saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
+    saveSettings.addProperty("exclusive").setValue(m_window.getExclusiveFullscreen());
     saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
     saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
     saveSettings.addProperty("window_size").setValue(m_window.getWindowedSize());

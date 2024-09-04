@@ -42,8 +42,10 @@ Drawable2D::Drawable2D()
     m_autoCrop              (true),
     m_textureUniform        (-1),
     m_worldUniform          (-1),
+    m_normalMatrixUniform   (-1),
     m_viewProjectionUniform (-1),
     m_facing                (GL_CCW),
+    m_doubleSided           (false),
     m_blendMode             (Material::BlendMode::Alpha),
     m_primitiveType         (GL_TRIANGLE_STRIP),
     m_vbo                   (0),
@@ -330,6 +332,12 @@ void Drawable2D::applyShader()
             assert(true);
             setShader(nullptr);
             return;
+        }
+
+        //this is optional so we don't reset the shader if it's not found
+        if (m_shader->getUniformMap().count("u_normalMatrix") != 0)
+        {
+            m_normalMatrixUniform = m_shader->getUniformMap().at("u_normalMatrix");
         }
 
         //store available attribs so we can also use this on mobile

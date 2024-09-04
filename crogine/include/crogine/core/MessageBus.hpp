@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,10 @@ source distribution.
 #include <crogine/core/Message.hpp>
 
 #include <vector>
+
+#ifdef USE_PARALLEL_PROCESSING
+#include <mutex>
+#endif
 
 namespace cro
 {   
@@ -85,11 +89,26 @@ namespace cro
         {
             if (!m_enabled) return static_cast<T*>((void*)m_pendingBuffer.data());
 
+            static_assert(sizeof(T) < 128, "MEssage size limit is 128 bytes");
+
             const auto dataSize = sizeof(T);
             static const auto msgSize = sizeof(Message);
-            CRO_ASSERT(dataSize < 128, "message size exceeds 128 bytes"); //limit custom data to 128 bytes
+            //CRO_ASSERT(dataSize < 128, "message size exceeds 128 bytes"); //limit custom data to 128 bytes
             CRO_ASSERT(m_pendingBuffer.size() - (m_inPointer - m_pendingBuffer.data()) > (dataSize + msgSize), "buffer overflow " + std::to_string(m_pendingCount)); //make sure we have enough room in the buffer
             //CRO_WARNING(m_pendingBuffer.size() - (m_inPointer - m_pendingBuffer.data()) < 128, "Messagebus buffer is heavily contended!");
+
+
+            //this is probably not ideal - the returned
+            //message is probably modified outside of the lock
+            //however what we're *really* protecting here
+            //is creation of new messages on the bus
+            //ALSO a lot of threads waiting on this will probably cause
+            //a stall - if we're smart each thread/group of threads
+            //would have their own mutexes and the message bus
+            //would do a collection from all of them each frame
+#ifdef USE_PARALLEL_PROCESSING
+            std::scoped_lock l(m_mutex);
+#endif
 
             Message* msg = new (m_inPointer)Message();
             m_inPointer += msgSize;
@@ -129,5 +148,8 @@ namespace cro
         std::size_t m_pendingCount;
 
         bool m_enabled;
+#ifdef USE_PARALLEL_PROCESSING
+        std::mutex m_mutex;
+#endif
     };
 }

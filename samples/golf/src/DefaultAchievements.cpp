@@ -128,6 +128,9 @@ bool DefaultAchievements::init()
     trigger->achID = AchievementID::Vandal;
     trigger->threshold = 10;
 
+#ifndef USE_GNS
+    Social::readAllStats();
+#endif
     return true;
 }
 

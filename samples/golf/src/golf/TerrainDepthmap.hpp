@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -47,7 +47,7 @@ public:
     void setModel(const HoleData&);
 
     //updates the given number of tiles
-    void update(std::uint32_t count);
+    void update(std::int32_t count);
 
     cro::TextureID getTexture() const;
 
@@ -55,6 +55,10 @@ public:
 
     //if there's only one hole loaded then we need to force swap indices
     void forceSwap() { std::swap(m_srcTexture, m_dstTexture); }
+
+    glm::ivec2 getGridCount() const;
+    std::int32_t getTileCount() const;
+    std::int32_t getMetresPerTile() const;
 
 private:
     std::uint32_t m_gridIndex;

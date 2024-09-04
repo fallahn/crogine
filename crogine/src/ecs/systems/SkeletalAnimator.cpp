@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -42,6 +42,15 @@ source distribution.
 
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
+//#define PARALLEL_DISABLE
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
+#include <execution>
+#endif
+
 using namespace cro;
 
 namespace
@@ -80,75 +89,81 @@ void SkeletalAnimator::process(float dt)
     const auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
     const auto camDir = cro::Util::Matrix::getForwardVector(getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldTransform());
 
-    //TODO we might increase perf a bit if we split the entities across
-    //a series of joblists each in its own thread, then wait for those lists to complete
-    //gotta try it to find out. I have a feeling it'll actually be worse on low numbers
-    //also remember raising messages is not thread safe so might have to do all those
-    //on the main thread anyway...
 
-    auto& entities = getEntities();
-    for (auto& entity : entities)
-    {      
-        auto& skel = entity.getComponent<Skeleton>();
+    const auto& entities = getEntities();
+    
+    //const auto policy = entities.size() > 5 ? std::execution::par : std::execution::seq;
 
-        //check the model is roughly in front of the camera and within interp distance
-        auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
-        bool useInterpolation = (glm::dot(direction, camDir) > 0 //could squeeze a bit more out of this if we take FOV into account...
-            && glm::length2(direction) < skel.m_interpolationDistance
-            && skel.m_useInterpolation);
-
-        const AnimationContext ctx = 
+#ifdef USE_PARALLEL_PROCESSING
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(), 
+        [&](cro::Entity entity)
+#else
+    for (auto entity : entities)
+#endif
         {
-            useInterpolation,
-            entity.getComponent<cro::Transform>().getWorldTransform(),
-            dt,
-            skel.m_nextAnimation < 0
-        };
+            auto& skel = entity.getComponent<Skeleton>();
 
+            //check the model is roughly in front of the camera and within interp distance
+            const auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
+            bool useInterpolation = (glm::dot(direction, camDir) > 0 //could squeeze a bit more out of this if we take FOV into account...
+                && glm::length2(direction) < skel.m_interpolationDistance
+                && skel.m_useInterpolation);
 
-        //update current animation
-        updateAnimation(skel.m_animations[skel.m_currentAnimation], skel, entity, ctx);
-
-        //if we have a new animation start updating it and blend its output
-        //with the current anim according to blend time
-        if (skel.m_nextAnimation > -1)
-        {
-            //update the next animation to start blending it in
-            updateAnimation(skel.m_animations[skel.m_nextAnimation], skel, entity, ctx);
-
-            //blend to next animation
-            skel.m_currentBlendTime += dt;
-            if (!entity.getComponent<Model>().isHidden())
+            const AnimationContext ctx =
             {
-                //hmm if interpolation is disabled we probably only want to blend once
-                //per frame at the current framerate - although blend times are so short
-                //in most cases it's probably not worth the effort
-                float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
-                blendAnimations(skel.m_animations[skel.m_currentAnimation], skel.m_animations[skel.m_nextAnimation], interpTime, skel);
+                useInterpolation,
+                entity.getComponent<cro::Transform>().getWorldTransform(),
+                dt,
+                skel.m_nextAnimation < 0
+            };
+
+
+            //update current animation
+            updateAnimation(skel.m_animations[skel.m_currentAnimation], skel, entity, ctx);
+
+            //if we have a new animation start updating it and blend its output
+            //with the current anim according to blend time
+            if (skel.m_nextAnimation > -1)
+            {
+                //update the next animation to start blending it in
+                updateAnimation(skel.m_animations[skel.m_nextAnimation], skel, entity, ctx);
+
+                //blend to next animation
+                skel.m_currentBlendTime += dt;
+                if (!entity.getComponent<Model>().isHidden())
+                {
+                    //hmm if interpolation is disabled we probably only want to blend once
+                    //per frame at the current framerate - although blend times are so short
+                    //in most cases it's probably not worth the effort
+                    float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
+                    blendAnimations(skel.m_animations[skel.m_currentAnimation], skel.m_animations[skel.m_nextAnimation], interpTime, skel);
+                }
+
+                if (skel.m_currentBlendTime > skel.m_blendTime)
+                {
+                    //update to current animation to next animation
+                    skel.m_animations[skel.m_currentAnimation].playbackRate = 0.f;
+                    skel.m_currentAnimation = skel.m_nextAnimation;
+
+                    skel.m_nextAnimation = -1;
+                    skel.m_currentBlendTime = 0.f;
+                }
             }
 
-            if (skel.m_currentBlendTime > skel.m_blendTime)
+            //update the position of attachments.
+            //TODO only do this if the frame was updated (? won't account for entity transform changing though)
+            for (auto i = 0u; i < skel.m_attachments.size(); ++i)
             {
-                //update to current animation to next animation
-                skel.m_animations[skel.m_currentAnimation].playbackRate = 0.f;
-                skel.m_currentAnimation = skel.m_nextAnimation;
-
-                skel.m_nextAnimation = -1;
-                skel.m_currentBlendTime = 0.f;
+                auto& ap = skel.m_attachments[i];
+                if (ap.getModel().isValid())
+                {
+                    ap.getModel().getComponent<cro::Transform>().m_attachmentTransform = ctx.worldTransform * skel.getAttachmentTransform(i);
+                }
             }
         }
-
-        //update the position of attachments.
-        //TODO only do this if the frame was updated (? won't account for entity transform changing though)
-        for (auto i = 0u; i < skel.m_attachments.size(); ++i)
-        {
-            auto& ap = skel.m_attachments[i];
-            if (ap.getModel().isValid())
-            {
-                ap.getModel().getComponent<cro::Transform>().m_attachmentTransform = ctx.worldTransform * skel.getAttachmentTransform(i);
-            }
-        }
-    }
+#ifdef USE_PARALLEL_PROCESSING       
+        );
+#endif
 }
 
 void SkeletalAnimator::debugUI() const
@@ -314,20 +329,21 @@ void SkeletalAnimator::interpolateAnimation(SkeletalAnim& source, std::size_t ta
     //stores interpolated output in source so we can use it to blend.
     //we mix all the joints first to prevent it happening multiple times
     //when we create the world transforms.
-    m_mixBuffer.resize(skeleton.m_frameSize);
+
+    std::vector<glm::mat4> mixBuffer(skeleton.m_frameSize);
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        m_mixBuffer[i] = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time, source.interpolationOutput[i]);
+        mixBuffer[i] = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time, source.interpolationOutput[i]);
     }
 
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        glm::mat4 worldMatrix = m_mixBuffer[i];
+        glm::mat4 worldMatrix = mixBuffer[i];
 
         std::int32_t parent = skeleton.m_frames[startA + i].parent;
         while (parent != -1)
         {
-            worldMatrix = m_mixBuffer[parent] * worldMatrix;
+            worldMatrix = mixBuffer[parent] * worldMatrix;
             parent = skeleton.m_frames[startA + parent].parent;
         }
 
@@ -344,21 +360,21 @@ void SkeletalAnimator::interpolateAnimation(SkeletalAnim& source, std::size_t ta
 void SkeletalAnimator::blendAnimations(const SkeletalAnim& a, const SkeletalAnim& b, float time, Skeleton& skeleton) const
 {
     Joint temp; //we need something to pass as a func param
-    m_mixBuffer.resize(skeleton.m_frameSize);
+    std::vector<glm::mat4> mixBuffer(skeleton.m_frameSize);
 
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        m_mixBuffer[i] = mixJoint(a.interpolationOutput[i], b.interpolationOutput[i], time, temp);
+        mixBuffer[i] = mixJoint(a.interpolationOutput[i], b.interpolationOutput[i], time, temp);
     }
 
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        auto worldMat = m_mixBuffer[i];
+        auto worldMat = mixBuffer[i];
 
         auto parent = a.interpolationOutput[i].parent;
         while (parent != -1)
         {
-            worldMat = m_mixBuffer[parent] * worldMat;
+            worldMat = mixBuffer[parent] * worldMat;
             parent = a.interpolationOutput[parent].parent;
         }
 
@@ -427,3 +443,9 @@ void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::
         dest.m_keyFrameBounds.push_back(source.boundingBox);
     }
 }
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

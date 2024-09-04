@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -77,7 +77,9 @@ struct GolfEvent final
         TargetHit,
         Gimme,
         RoundEnd,
-        ClientDisconnect
+        ClientDisconnect,
+        Mulligan,
+        PlayerRemoved
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);
@@ -114,7 +116,8 @@ struct SceneEvent
         Poke,
         PlayerEliminated,
         PlayerLifeLost,
-        PlayerLifeGained
+        PlayerLifeGained,
+        SpectateApplaud
     }type = TransitionComplete;
 
     //union
@@ -129,12 +132,13 @@ struct CollisionEvent final
 {
     enum Type
     {
-        Begin, End, NearMiss
+        Begin, End, NearMiss, Trigger
     }type = Begin;
 
     enum Special
     {
-        Billboard = -3,
+        Timeout = -4,
+        Billboard,
         Firework,
         FlagPole
     };
@@ -142,6 +146,7 @@ struct CollisionEvent final
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t terrain = 0;
     std::int32_t clubID = -1;
+    std::uint8_t client = 0;
 };
 
 struct SystemEvent final

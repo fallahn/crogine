@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -286,6 +286,10 @@ vec3 dim(vec3 c)
     return mix(dimmed, desat, desatAmount * DESAT);
 })";
 
+static inline const std::string IncWaterLevel = R"(const float WaterLevel = -0.019;)";
+
+static inline const std::string ClipDistance = R"(gl_ClipDistance[1] = dot(position, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));)";
+
 static inline const std::unordered_map<std::string, const char*> IncludeMappings =
 {
     std::make_pair("WIND_BUFFER", WindBuffer.c_str()),
@@ -299,4 +303,6 @@ static inline const std::unordered_map<std::string, const char*> IncludeMappings
     std::make_pair("LIGHT_COLOUR", LightColour.c_str()),
     std::make_pair("OUTPUT_LOCATION", OutputLocation.c_str()),
     std::make_pair("FOG_COLOUR", FogColour.c_str()),
+    std::make_pair("WATER_LEVEL", IncWaterLevel.c_str()),
+    std::make_pair("CLIP_DISTANCE", ClipDistance.c_str()),
 };

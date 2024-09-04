@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -56,6 +56,8 @@ static inline bool operator != (const ActivePlayer& a, const ActivePlayer& b)
 struct PlayerStatus final : public ActivePlayer
 {
     cro::Entity ballEntity;
+    glm::vec3 prevBallPos = glm::vec3(0.f); //used for returning the ball after a mulligan
+    std::uint8_t previousBallScore = 0; //also used for mulligan
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
     std::vector<float> distanceScore;
@@ -65,6 +67,12 @@ struct PlayerStatus final : public ActivePlayer
     std::uint8_t skins = 0; //stores number of lives in elimination mode
     std::uint8_t matchWins = 0; //used as a 'life lost' flag in elimination
     bool readyQuit = false; //used at round end to see if all players want to skip scores
+};
+
+struct GroupPosition final
+{
+    std::int32_t groupID = 0;
+    ActivePlayer playerData;
 };
 
 struct ActorInfo final
@@ -80,6 +88,7 @@ struct ActorInfo final
     std::uint8_t playerID = 0;
     std::uint8_t state = 0;
     std::uint8_t lie = 0;
+    std::uint8_t groupID = 0;
 };
 
 static inline bool operator == (const ActorInfo& actor, const ActivePlayer& player)

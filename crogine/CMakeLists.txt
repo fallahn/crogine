@@ -27,6 +27,7 @@ SET(USE_OPENAL TRUE CACHE BOOL "Choose whether to use OpenAL for audio or SDL_Mi
 SET(TARGET_ANDROID FALSE CACHE BOOL "Build the library for Android devices")
 
 SET(USE_GL_41 FALSE CACHE BOOL "Use OpenGL 4.1 instead of 4.6 on desktop builds.")
+SET(USE_PARALLEL_EXECUTION TRUE CACHE BOOL "Enable parallel execution, requires compiler support")
 
 if(${TARGET_ANDROID})
   SET(${CMAKE_TOOLCHAIN_FILE} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/toolchains/android-arm.cmake")
@@ -58,13 +59,29 @@ if(NOT TARGET_ANDROID)
   endif()
 endif()
 
-if (msvc)
+if (MSVC)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+  if (NOT USE_PARALLEL_EXECUTION)
+    add_definitions(-DPARALLEL_GLOBAL_DISABLE)
+  endif()
 endif()
 
 if (APPLE)
-  add_definitions(-DGL_SILENCE_DEPRECATION)
+#silence opengl/openal deprecation warnings
+#plus apple clang doesn't support parallel exection policies
+  add_definitions(-DGL_SILENCE_DEPRECATION -DPARALLEL_GLOBAL_DISABLE)
 endif()
+
+#versions of gcc older than 9 don't support parallel execution policies
+if(CMAKE_COMPILER_IS_GNUCC AND
+  CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8 AND
+  USE_PARALLEL_EXECUTION)
+  SET(USE_TBB true)
+else()
+  add_definitions(-DPARALLEL_GLOBAL_DISABLE)
+endif()
+
+
 
 if (NOT BUILD_SHARED_LIBS)
   add_definitions(-DCRO_STATIC)
@@ -96,6 +113,9 @@ if(MSVC)
   find_package(DbgHelp REQUIRED)
 elseif(LINUX)
   find_package(Libunwind REQUIRED)
+  if(USE_TBB)
+    find_package(TBB REQUIRED)
+  endif()
 endif()
 
 include_directories(
@@ -148,6 +168,8 @@ if(NOT TARGET crogine)
     add_library(${PROJECT_NAME} SHARED ${PROJECT_SRC})
   endif()
 
+
+
   target_compile_definitions(${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG_>)
 
   target_link_libraries(${PROJECT_NAME}
@@ -166,6 +188,10 @@ if(NOT TARGET crogine)
     target_link_libraries(${PROJECT_NAME} winmm ws2_32 IPHLPAPI ${DBGHELP_LIBRARIES} shlwapi)
   elseif(LINUX)
     target_link_libraries(${PROJECT_NAME} ${LIBUNWIND_LIBRARIES})
+
+    if(USE_TBB)
+      target_link_libraries(${PROJECT_NAME} TBB::tbb)
+    endif()
   endif()
 
   target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
