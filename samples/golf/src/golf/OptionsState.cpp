@@ -3688,7 +3688,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
     //alt power input
     entity = createSquareHighlight(glm::vec2(97.f, 38.f));
-    entity.setLabel("When enabled press and hold Action to select stroke power\nelse use the default 2-tap method when disabled");
+    entity.setLabel("When enabled press and hold Action to select stroke power\nelse use the default 3-tap method when disabled");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlAltPower);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlSwg);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvY, CtrlVib);
