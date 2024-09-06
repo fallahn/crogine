@@ -4736,18 +4736,20 @@ void OptionsState::refreshDeviceLabel()
     m_deviceLabel.getComponent<cro::Text>().setString(str);
     auto bounds = cro::Text::getLocalBounds(m_deviceLabel);
 
+    static constexpr float VerticalPos = 242.f;
+
     if (bounds.width > LabelCrop.width)
     {
         m_deviceLabel.getComponent<cro::Callback>().active = true;
         m_deviceLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Left);
-        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 244.f, 242.f });
+        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 244.f, VerticalPos });
         m_deviceLabel.getComponent<cro::Drawable2D>().setCroppingArea(LabelCrop);
     }
     else
     {
         m_deviceLabel.getComponent<cro::Callback>().active = false;
         m_deviceLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 308.f, 156.f });
+        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 308.f, VerticalPos });
         bounds.left = -(bounds.width / 2.f);
         m_deviceLabel.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
     }
