@@ -92,7 +92,7 @@ source distribution.
 
 namespace
 {
-    cro::UISystem* uiSystem = nullptr;
+    //cro::UISystem* uiSystem = nullptr;
     cro::CommandSystem* commandSystem = nullptr;
 
     std::size_t queryCount = 0;
@@ -187,7 +187,7 @@ bool BatcatState::handleEvent(const cro::Event& evt)
         }
     }
 
-    uiSystem->handleEvent(evt);
+    //uiSystem->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return true;
 }
@@ -227,7 +227,7 @@ void BatcatState::addSystems()
 
     m_scene.addDirector<PlayerDirector>();
 
-    uiSystem = m_overlayScene.addSystem<cro::UISystem>(mb);
+    //uiSystem = m_overlayScene.addSystem<cro::UISystem>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
     m_overlayScene.addSystem<cro::SpriteSystem2D>(mb);
     m_overlayScene.addSystem<cro::TextSystem>(mb);
