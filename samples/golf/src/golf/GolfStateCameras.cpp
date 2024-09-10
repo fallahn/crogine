@@ -765,7 +765,8 @@ void GolfState::toggleFreeCam()
         //only switch if we're the active player and the input is active
         if (/*!m_groupIdle &&*/
             (!m_inputParser.getActive() || m_currentCamera != CameraID::Player
-            || m_emoteWheel.currentScale != 0))
+            || m_emoteWheel.currentScale != 0)
+            || m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
         {
             return;
         }
