@@ -132,9 +132,8 @@ namespace Progress
 
 
 
-        //10 here being the maxnumber of leagues (or greater than)
-        //if the league count ever increases more than this, this
-        //will break...
+        //MaxMulligans here being the max number of leagues (or greater than)
+        //if the league count ever increases more than this, this will break...
         std::array<std::int32_t, MaxMulligans> values = {};
         std::fill(values.begin(), values.end(), 0);
 

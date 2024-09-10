@@ -162,7 +162,7 @@ void GolfState::createCameras()
 
             //fetch this explicitly so the transition cam also gets the correct zoom
             float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;
-            cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, CameraFarPlane, m_shadowQuality.cascadeCount);
+            cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, CameraFarPlane /** 1.25f*/, m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
 
@@ -228,7 +228,7 @@ void GolfState::createCameras()
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.35f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane /** 1.25f*/,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
@@ -269,7 +269,7 @@ void GolfState::createCameras()
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower::ZoomData>().fov,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane /** 1.25f*/,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
@@ -307,7 +307,7 @@ void GolfState::createCameras()
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane/* * 1.25f*/,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
@@ -339,7 +339,7 @@ void GolfState::createCameras()
 
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 0.7f,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
@@ -387,7 +387,7 @@ void GolfState::createCameras()
 
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 0.7f,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
@@ -452,7 +452,7 @@ void GolfState::createCameras()
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective(m_sharedData.fov * camEnt.getComponent<FpsCamera>().fov * cro::Util::Const::degToRad,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane /** 1.25f*/,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };

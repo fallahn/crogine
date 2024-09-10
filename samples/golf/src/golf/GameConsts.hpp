@@ -78,7 +78,7 @@ static constexpr float GreenCamRadiusMedium = 10.f;
 static constexpr float GreenCamRadiusSmall = 5.7f;
 static constexpr float SkyCamRadius = 80.f;
 
-static constexpr float CameraFarPlane = 320.f;
+static constexpr float CameraFarPlane = 450.f;// 360.f;// 320.f;
 static constexpr float GreenCamZoomFast = 2.5f;
 static constexpr float GreenCamZoomSlow = 1.8f;
 static constexpr float SkyCamZoomSpeed = 1.1f;// 3.f;

@@ -82,6 +82,12 @@ R"(
 
 #include WATER_LEVEL
 
+#if defined(FAR_DISTANCE)
+    const float FarFadeDistance = FAR_DISTANCE;
+#else
+    const float FarFadeDistance = 360.f;
+#endif
+
     void main()
     {
         //int UID = gl_InstanceID << 16 | (gl_VertexID & 0x0000ffff);
@@ -222,13 +228,14 @@ if(visibility > MinVisibility){
 
 //proximity fade
         float fadeDistance = u_nearFadeDistance * 5.0;//2.0; //I forget what this magic number was for. Lesson learned?
-        const float farFadeDistance = 360.f;
 
         v_data.ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
-        //fades far leaves before culling kicks in at 280m
-        v_data.ditherAmount *= 1.0 - clamp((distance - 255.0) / 25.0, 0.0, 1.0);
+        //fades far leaves before culling kicks in at 280m - culling is now controlled by CameraFarPlane as isFarFadeDistance
+        //v_data.ditherAmount *= 1.0 - clamp((distance - 255.0) / 25.0, 0.0, 1.0);
 
-        v_data.darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
+v_data.ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 0.0, 1.0);
+
+        v_data.darkenAmount = (((1.0 - pow(clamp(distance / FarFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
 
@@ -426,6 +433,12 @@ inline const std::string BranchVertex = R"(
 #include WIND_CALC
 #include WATER_LEVEL
 
+#if defined(FAR_DISTANCE)
+    const float FarFadeDistance = FAR_DISTANCE;
+#else
+    const float FarFadeDistance = 360.f;
+#endif
+
     void main()
     {
     #if defined (INSTANCING)
@@ -478,14 +491,15 @@ inline const std::string BranchVertex = R"(
 
 //proximity fade
         float fadeDistance = u_nearFadeDistance * 5.0;//2.0;
-        const float farFadeDistance = 360.f;
         float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
         v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
-        //fades far leaves before culling kicks in at 280m
-        v_ditherAmount *= 1.0 - clamp((distance - 255.0) / 25.0, 0.0, 1.0);
+        //fades far leaves before culling kicks in at 280m - culling and FarFadeDistance are all controlled by CameraFarPlane now.
+        //v_ditherAmount *= 1.0 - clamp((distance - 255.0) / 25.0, 0.0, 1.0);
 
-        v_darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
+v_ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 0.0, 1.0);
+
+        v_darkenAmount = (((1.0 - pow(clamp(distance / FarFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 
         gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";

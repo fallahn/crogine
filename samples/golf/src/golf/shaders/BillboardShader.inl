@@ -69,6 +69,12 @@ inline const std::string BillboardVertexShader = R"(
 #include WIND_CALC
 #include WATER_LEVEL
 
+#if defined(FAR_DISTANCE)
+    const float FarFadeDistance = FAR_DISTANCE;
+#else
+    const float FarFadeDistance = 300.0;
+#endif
+
     void main()
     {
         //red low freq, green high freq, blue direction amount
@@ -164,15 +170,13 @@ inline const std::string BillboardVertexShader = R"(
 
 
         float fadeDistance = u_nearFadeDistance * 5.0;
-        const float farFadeDistance = 300.f;
         float distance = length(position - u_cameraWorldPosition);
 
         v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 5.0);
-        v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+        v_ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 0.0, 1.0);
 
 #if !defined(SHADOW_MAPPING)
-
-        v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
+        v_colour.rgb *= (((1.0 - pow(clamp(distance / FarFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 #endif
         vec4 worldPos = /*u_worldMatrix **/ vec4(position, 1.0);
         gl_ClipDistance[0] = dot(worldPos, u_clipPlane);

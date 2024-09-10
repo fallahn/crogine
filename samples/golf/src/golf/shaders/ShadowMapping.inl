@@ -104,6 +104,11 @@ inline const std::string ShadowVertex = R"(
     #include WIND_CALC
     #endif
 
+#if defined(FAR_DISTANCE)
+    const float FarFadeDistance = FAR_DISTANCE;
+#else
+    const float FarFadeDistance = 360.f;
+#endif
 
         void main()
         {
@@ -266,13 +271,12 @@ worldPosition.z += windResult.lowFreq.y;
 
 #if defined(DITHERED)
         float fadeDistance = u_nearFadeDistance * 2.0;
-        const float farFadeDistance = 360.f;
 
         vec4 p = worldMatrix * a_position;
         float d = length(p.xyz - u_cameraWorldPosition);
 
         v_ditherAmount = pow(clamp((d - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
-        v_ditherAmount *= 1.0 - clamp((d - farFadeDistance) / fadeDistance, 0.0, 1.0);
+        v_ditherAmount *= 1.0 - clamp((d - FarFadeDistance) / fadeDistance, 0.0, 1.0);
 #endif
 
 
