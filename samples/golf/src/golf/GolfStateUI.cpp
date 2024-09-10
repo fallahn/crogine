@@ -1425,6 +1425,18 @@ void GolfState::buildUI()
         mRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         auto tEnt = entity;
 
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f });
+        entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.getComponent<cro::Text>().setString("Options Menu");
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        mRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        auto oEnt = entity;
+
         struct MulliganData final
         {
             enum
@@ -1433,18 +1445,18 @@ void GolfState::buildUI()
                 Hold
             };
             std::int32_t state = 0;
+            std::int32_t idx = 0;
             float progress = 0.f;
             float currTime = 5.f;
-
         };
         static constexpr float SpinTime = 6.f; //Time between spins
 
         mRoot.addComponent<cro::Callback>().active = true;
         mRoot.getComponent<cro::Callback>().setUserData<MulliganData>();
         mRoot.getComponent<cro::Callback>().function =
-            [&, mEnt, tEnt](cro::Entity e, float dt) mutable
+            [&, mEnt, tEnt, oEnt](cro::Entity e, float dt) mutable
             {
-                auto& [state, progress, currTime] = e.getComponent<cro::Callback>().getUserData<MulliganData>();
+                auto& [state, idx, progress, currTime] = e.getComponent<cro::Callback>().getUserData<MulliganData>();
                 const float Speed = dt * 4.f;
 
                 switch (state)
@@ -1503,12 +1515,23 @@ void GolfState::buildUI()
                         if (mEnt.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Front)
                         {
                             mEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                            tEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            
+                            if (idx == 0)
+                            {
+                                tEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                                idx = 1;
+                            }
+                            else
+                            {
+                                oEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                                idx = 0;
+                            }
                         }
                         else
                         {
                             mEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                             tEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                            oEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                         }
                     }
                 }

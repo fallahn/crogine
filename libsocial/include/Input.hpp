@@ -146,6 +146,7 @@ namespace Progress
         {
             file2.file->read(file2.file, values.data(), sizeof(values), 1);
             SDL_RWclose(file2.file);
+            file2.file = nullptr;
         }
 
         values[leagueID] = std::min(1, mulliganCount);
@@ -205,8 +206,6 @@ namespace Progress
                 if (file2.file)
                 {
                     file2.file->read(file2.file, values.data(), sizeof(values), 1);
-                    SDL_RWclose(file2.file);
-
                     mulliganCount = std::min(1, values[leagueID]);
                 }
 
