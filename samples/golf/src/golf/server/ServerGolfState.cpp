@@ -1843,7 +1843,9 @@ void GolfState::buildWorld()
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(m_holeData.size());
 
-        if (Progress::read(m_sharedData.leagueID, h, scores)
+        std::int32_t temp = 0;
+
+        if (Progress::read(m_sharedData.leagueID, h, scores, temp)
             && h != 0)
         {
             m_currentHole = std::min(std::size_t(h), m_holeData.size() - 1);

@@ -244,6 +244,7 @@ private:
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
     bool m_resumedFromSave;
+    std::int32_t m_mulliganCount;
 
     TerrainBuilder m_terrainBuilder;
 

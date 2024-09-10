@@ -1374,7 +1374,8 @@ void GolfState::loadMap()
 
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(scoreSize);
-        if (Progress::read(m_sharedData.leagueRoundID, h, scores))
+        std::int32_t mulliganCount = 0;
+        if (Progress::read(m_sharedData.leagueRoundID, h, scores, mulliganCount))
         {
             if (h != 0)
             {
@@ -1411,6 +1412,10 @@ void GolfState::loadMap()
                 }
 
                 m_resumedFromSave = true;
+                if (m_currentHole == 0)
+                {
+                    mulliganCount = 1;
+                }
 
                 //this might be an upgrade from the old league system
                 //so we need to fill in the in-progress scores
@@ -1422,6 +1427,8 @@ void GolfState::loadMap()
                 }
             }
         }
+
+        m_mulliganCount = mulliganCount;
     }
 
 

@@ -152,7 +152,6 @@ namespace
     constexpr float MaxPuttRotation = 0.4f;// 0.24f;
 
     bool recordCam = false;
-    std::int32_t mulliganCount = 0;
 
     bool isFastCPU(const SharedStateData& sd, const ActivePlayer& activePlayer)
     {
@@ -187,6 +186,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_NTPDistance           (1.f), //don't init to 0 in case we get div0
     m_strokeTimer           (0.f),
     m_resumedFromSave       (false),
+    m_mulliganCount         (0),
     m_terrainBuilder        (sd, m_holeData),
     m_audioPath             ("assets/golf/sound/ambience.xas"),
     m_currentCamera         (CameraID::Player),
@@ -1407,7 +1407,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
             {
-                Progress::write(m_sharedData.leagueRoundID, m_currentHole, m_sharedData.connectionData[0].playerData[0].holeScores);
+                Progress::write(m_sharedData.leagueRoundID, m_currentHole, m_sharedData.connectionData[0].playerData[0].holeScores, m_mulliganCount);
             }
 
             if (m_resumedFromSave)
@@ -1491,7 +1491,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::Mulligan,
                 m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-            mulliganCount = 0;
+            m_mulliganCount = 0;
             m_sharedData.hasMulligan = false;
 
             Achievements::awardAchievement(AchievementStrings[AchievementID::TryTryAgain]);
@@ -5899,9 +5899,10 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions[m_sharedData.crowdDensity]);
 
 
-    if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+    if (m_sharedData.leagueRoundID != LeagueRoundID::Club
+        && (m_currentHole % 9) == 0)
     {
-        mulliganCount = 1;
+        m_mulliganCount = 1;
     }
 }
 
@@ -6549,7 +6550,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     if (glm::length2(m_holeData[m_currentHole].tee - player.position) > 0.1f)
     {
         //crude way of telling if we're not at the tee
-        m_sharedData.hasMulligan = m_sharedData.leagueRoundID != LeagueRoundID::Club && mulliganCount != 0;
+        m_sharedData.hasMulligan = m_sharedData.leagueRoundID != LeagueRoundID::Club && m_mulliganCount != 0;
     }
     else
     {
