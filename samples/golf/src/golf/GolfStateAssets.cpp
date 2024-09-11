@@ -548,8 +548,7 @@ void GolfState::loadMap()
                         holeData.modelPath = modelPath;
 
                         holeData.modelEntity = m_gameScene.createEntity();
-                        holeData.modelEntity.addComponent<cro::Transform>().setPosition(OriginOffset);
-                        holeData.modelEntity.getComponent<cro::Transform>().setOrigin(OriginOffset);
+                        holeData.modelEntity.addComponent<cro::Transform>();
                         holeData.modelEntity.addComponent<cro::Callback>();
                         modelDef.createModel(holeData.modelEntity);
                         holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
@@ -560,6 +559,13 @@ void GolfState::loadMap()
                             holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
                         }
                         propCount++;
+
+                        //allow the model to scale about its own centre, not world
+                        auto offset = holeData.modelEntity.getComponent<cro::Model>().getAABB().getCentre();
+                        offset.y = 0.f;
+                        holeData.modelEntity.getComponent<cro::Transform>().setPosition(offset);
+                        holeData.modelEntity.getComponent<cro::Transform>().setOrigin(offset);
+
 
                         prevHoleString = modelPath;
                         prevHoleEntity = holeData.modelEntity;
