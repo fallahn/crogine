@@ -218,7 +218,7 @@ if(visibility > MinVisibility){
 
         //after X distance set every other vert size to 0
         //which will cause the geom shader to cull it
-        pointSize *= 1.0 - (smoothstep(0.5, 1.0, distance / 150.0) * (gl_VertexID & 1));
+        //pointSize *= 1.0 - (smoothstep(0.5, 1.0, distance / 150.0) * (gl_VertexID & 1));
 
         gl_PointSize = pointSize;
 }else{ gl_PointSize = 0.0; }

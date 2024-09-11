@@ -1443,6 +1443,7 @@ void GolfState::loadMaterials()
         wobble = "#define WOBBLE\n";
     }
     const std::string FadeDistance = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane) + "\n";
+    const std::string FadeDistanceHQ = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane *0.8f) + "\n"; //fade closer for HQ trees beforethey are culled
 
     //load materials
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
@@ -1710,20 +1711,20 @@ void GolfState::loadMaterials()
         mrt = "#define USE_MRT\n";
     }
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble + mrt + FadeDistance);
+    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble + mrt + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble + mrt + FadeDistance);
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble + mrt + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble + FadeDistance);
+    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
     m_windBuffer.addShader(*shader);
 
@@ -1732,7 +1733,7 @@ void GolfState::loadMaterials()
     {
         alphaClip = "#define ALPHA_CLIP\n";
     }
-    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble + FadeDistance);
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
     m_windBuffer.addShader(*shader);
 
