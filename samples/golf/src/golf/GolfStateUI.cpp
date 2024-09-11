@@ -1808,18 +1808,19 @@ void GolfState::buildUI()
         const auto InverseScale = (1.f / mapEnt.getComponent<cro::Transform>().getScale().x);
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * InverseScale);
 
-        auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-        auto wt = e.getComponent<cro::Transform>().getWorldTransform();
-        auto q = glm::rotate(cro::Transform::QUAT_IDENTITY, -e.getComponent<cro::Transform>().getRotation2D(), cro::Transform::Z_AXIS);
+        //auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+        //auto wt = e.getComponent<cro::Transform>().getWorldTransform();
+        //auto q = glm::rotate(cro::Transform::QUAT_IDENTITY, -e.getComponent<cro::Transform>().getRotation2D(), cro::Transform::Z_AXIS);
 
-        miniBounds = glm::inverse(wt) * miniBounds;
+        //miniBounds = glm::inverse(wt) * miniBounds;
         //miniBounds = glm::toMat4(q) * miniBounds;
 
-        /*auto miniBounds = mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+        auto miniBounds = mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
         const auto wScale = mapEnt.getComponent<cro::Transform>().getWorldScale().x;
         miniBounds *= wScale;
-        miniBounds.left -= e.getComponent<cro::Transform>().getPosition().y * wScale;
-        miniBounds.bottom -= e.getComponent<cro::Transform>().getPosition().x * wScale;*/
+        miniBounds *= static_cast<float>(MapSizeMultiplier);
+        miniBounds.left -= e.getComponent<cro::Transform>().getPosition().x;
+        miniBounds.bottom -= e.getComponent<cro::Transform>().getPosition().y;
 
         e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds);
 
@@ -1832,9 +1833,10 @@ void GolfState::buildUI()
             cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
         };
         dbEnt.getComponent<cro::Drawable2D>().setVertexData(verts);
+        dbEnt.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().addChild(dbEnt.getComponent<cro::Transform>());
+    mapEnt.getComponent<cro::Transform>().addChild(dbEnt.getComponent<cro::Transform>());
 
 
     //green close up view
