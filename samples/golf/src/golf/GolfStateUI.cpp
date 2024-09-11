@@ -1804,8 +1804,15 @@ void GolfState::buildUI()
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * (1.f / mapEnt.getComponent<cro::Transform>().getScale().x));
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-        auto targBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
-        e.getComponent<cro::Drawable2D>().setCroppingArea(targBounds);
+        miniBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+        
+        /*auto miniBounds = mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+        const auto wScale = mapEnt.getComponent<cro::Transform>().getWorldScale().x;
+        miniBounds *= wScale;
+        miniBounds.left -= e.getComponent<cro::Transform>().getPosition().y * wScale;
+        miniBounds.bottom -= e.getComponent<cro::Transform>().getPosition().x * wScale;*/
+
+        e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

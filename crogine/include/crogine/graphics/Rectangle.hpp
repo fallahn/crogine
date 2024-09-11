@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -52,6 +52,8 @@ namespace cro
     class Rectangle final
     {
     public:
+        T left, bottom, width, height;
+
         constexpr Rectangle(T l = 0, T b = 0, T w = 0, T h = 0)
             : left(l), bottom(b), width(w), height(h) 
         {
@@ -74,7 +76,14 @@ namespace cro
             static_assert(std::is_floating_point<T>::value, "Only available for FloatRect");
         }
 
-        T left, bottom, width, height;
+        constexpr Rectangle& operator *= (T f)
+        {
+            left *= f;
+            bottom *= f;
+            width *= f;
+            height *= f;
+            return *this;
+        }
 
         /*!
         \brief Conversion constructor.
