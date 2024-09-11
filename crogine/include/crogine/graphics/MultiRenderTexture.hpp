@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -142,6 +142,15 @@ namespace cro
         \brief Returns the maximum number of colour attachments available
         */
         std::int32_t getMaxAttaments() const;
+
+        /*!
+        \brief Applies the given colour as a border clamp colour to the underlying Texture
+        used for the colour buffer (attachment 0)
+        \see Texture::setBorderColour()
+        \param colour A colour object representing the colour to which to set the border
+        */
+        void setBorderColour(Colour colour);
+
 
     private:
         std::uint32_t m_fboID;

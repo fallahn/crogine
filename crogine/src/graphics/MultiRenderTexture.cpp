@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -318,4 +318,9 @@ std::int32_t MultiRenderTexture::getMaxAttaments() const
         glCheck(glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &m_maxAttachments));
     }
     return m_maxAttachments;
+}
+
+void MultiRenderTexture::setBorderColour(Colour colour)
+{
+    m_defaultTexture.setBorderColour(colour);
 }

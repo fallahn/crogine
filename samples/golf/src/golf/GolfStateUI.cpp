@@ -1913,6 +1913,7 @@ void GolfState::buildUI()
         constexpr glm::uvec2 texSize = MapSize * MapSizeMultiplier;
 
         m_mapTextureMRT.create(texSize.x, texSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
+        m_mapTextureMRT.setBorderColour(cro::Colour::Transparent);
         m_sharedData.minimapData.mrt = &m_mapTextureMRT;
 
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTextureMRT.getTexture());
@@ -5641,8 +5642,9 @@ void GolfState::retargetMinimap(bool reset)
         //(pan is in texture coords hum)
         target.end.pan *= m_minimapZoom.mapScale;
 
-        //get distance between flag and player and expand by 1.7 (about 3m around a putting hole)
-        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.6f; //remember this is world coords
+        //get distance between flag and player and expand by 1.4 (about 3m around a putting hole)
+        //TODO this should be fixed 3m - as a percentage it's HUGE on big maps when fully zoomed
+        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.4f; //remember this is world coords
 
         //scale zoom on long edge of map by box length and clamp to 32x
         target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, MinZoom, MaxZoom);
