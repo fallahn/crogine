@@ -1928,6 +1928,7 @@ void GolfState::buildUI()
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
+
     m_mapCam = m_gameScene.createEntity();
     m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 36.f, -static_cast<float>(MapSize.y) / 2.f});
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
@@ -5579,6 +5580,9 @@ void GolfState::retargetMinimap(bool reset)
     target.start.tilt = m_minimapZoom.tilt;
     target.start.zoom = m_minimapZoom.zoom;
 
+    static constexpr float MinZoom = 0.5f;
+    static constexpr float MaxZoom = 32.f;
+
     if (reset)
     {
         //create a default view around the bounds of the hole model
@@ -5588,8 +5592,8 @@ void GolfState::retargetMinimap(bool reset)
         auto centre = bb.getCentre();
         target.end.pan = glm::vec2(centre.x, -centre.z) * m_minimapZoom.mapScale;
 
-        auto xZoom = std::clamp(static_cast<float>(MiniMapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), 0.9f, 32.f);
-        auto zZoom = std::clamp(static_cast<float>(MiniMapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), 0.9f, 32.f);
+        auto xZoom = std::clamp(static_cast<float>(MiniMapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), MinZoom, MaxZoom);
+        auto zZoom = std::clamp(static_cast<float>(MiniMapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), MinZoom, MaxZoom);
         target.end.zoom = xZoom > zZoom ? xZoom : zZoom;
     }
     else
@@ -5638,10 +5642,10 @@ void GolfState::retargetMinimap(bool reset)
         target.end.pan *= m_minimapZoom.mapScale;
 
         //get distance between flag and player and expand by 1.7 (about 3m around a putting hole)
-        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.5f; //remember this is world coords
+        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.6f; //remember this is world coords
 
         //scale zoom on long edge of map by box length and clamp to 32x
-        target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, 0.8f, 32.f);
+        target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, MinZoom, MaxZoom);
     }
 
     //create a temp ent to interp between start and end values
