@@ -1759,6 +1759,10 @@ void GolfState::buildUI()
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     
+    auto dbEnt = m_uiScene.createEntity();
+    dbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    dbEnt.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+
     //stroke indicator
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
@@ -1767,7 +1771,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, mapEnt](cro::Entity e, float dt)
+        [&, mapEnt, dbEnt](cro::Entity e, float dt) mutable
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.01f));
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
@@ -1801,11 +1805,16 @@ void GolfState::buildUI()
         }
 
         //4 is the relative size of the sprite to the texture... need to update this if we make sprite scale dynamic
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * (1.f / mapEnt.getComponent<cro::Transform>().getScale().x));
+        const auto InverseScale = (1.f / mapEnt.getComponent<cro::Transform>().getScale().x);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * InverseScale);
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-        miniBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
-        
+        auto wt = e.getComponent<cro::Transform>().getWorldTransform();
+        auto q = glm::rotate(cro::Transform::QUAT_IDENTITY, -e.getComponent<cro::Transform>().getRotation2D(), cro::Transform::Z_AXIS);
+
+        miniBounds = glm::inverse(wt) * miniBounds;
+        //miniBounds = glm::toMat4(q) * miniBounds;
+
         /*auto miniBounds = mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
         const auto wScale = mapEnt.getComponent<cro::Transform>().getWorldScale().x;
         miniBounds *= wScale;
@@ -1813,9 +1822,19 @@ void GolfState::buildUI()
         miniBounds.bottom -= e.getComponent<cro::Transform>().getPosition().x * wScale;*/
 
         e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds);
+
+        std::vector<cro::Vertex2D> verts =
+        {
+            cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(miniBounds.left + miniBounds.width, miniBounds.bottom), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(miniBounds.left + miniBounds.width, miniBounds.bottom + miniBounds.height), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom + miniBounds.height), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
+        };
+        dbEnt.getComponent<cro::Drawable2D>().setVertexData(verts);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    entity.getComponent<cro::Transform>().addChild(dbEnt.getComponent<cro::Transform>());
 
 
     //green close up view
