@@ -6472,7 +6472,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //see where the player is and move the sky cam if possible
     //else set it to the default position
     static constexpr float MinPlayerDist = 40.f * 40.f; //TODO should this be the sky cam radius^2?
-    auto dir = m_holeData[m_currentHole].pin - player.position;
+    auto dir = /*m_holeData[m_currentHole].pin*/target - player.position;
     if (auto len2 = glm::length2(dir); len2 > MinPlayerDist)
     {
         static constexpr float MaxHeightMultiplier = static_cast<float>(MapSize.x) * 0.8f; //probably should be diagonal but meh
@@ -6512,7 +6512,13 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     else
     {
        // auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(160.f, SkyCamHeight, -100.f) : DefaultSkycamPosition;
-        setCamTarget(DefaultSkycamPosition);
+        
+        
+        //setCamTarget(DefaultSkycamPosition);
+
+        auto p = m_holeData[m_currentHole].target;
+        p.y = SkyCamHeight;
+        setCamTarget(p);
     }
 
     setGreenCamPosition();

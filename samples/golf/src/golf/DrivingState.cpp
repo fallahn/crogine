@@ -2835,7 +2835,7 @@ void DrivingState::createBall()
         auto state = ent.getComponent<Ball>().state;
         auto pos = ent.getComponent<cro::Transform>().getPosition();
         
-        if (state == Ball::State::Flight)
+        if (state != Ball::State::Idle)
         {
             //update pin distance on ui
             cro::Command cmd;
