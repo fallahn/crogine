@@ -4003,7 +4003,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //miniball for player
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.01f * depthOffset });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-2.f, 2.f), miniBallColour),
@@ -4011,6 +4011,13 @@ void GolfState::spawnBall(const ActorInfo& info)
         cro::Vertex2D(glm::vec2(2.f), miniBallColour),
         cro::Vertex2D(glm::vec2(2.f, -2.f), miniBallColour)
     };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            auto miniBounds = m_minimapEnt.getComponent<cro::Transform>().getWorldTransform() * m_minimapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+            e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
+        };
     entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniBall;

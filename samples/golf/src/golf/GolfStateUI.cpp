@@ -1753,15 +1753,15 @@ void GolfState::buildUI()
         e.getComponent<cro::Transform>().setScale(((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f) * (glm::vec2(1.f) / MapSizeRatio));
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-        auto flagBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
-        e.getComponent<cro::Drawable2D>().setCroppingArea(flagBounds);
+        //auto flagBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+        e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     
-    auto dbEnt = m_uiScene.createEntity();
+    /*auto dbEnt = m_uiScene.createEntity();
     dbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
-    dbEnt.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    dbEnt.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);*/
 
     //stroke indicator
     entity = m_uiScene.createEntity();
@@ -1771,7 +1771,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, mapEnt, dbEnt](cro::Entity e, float dt) mutable
+        [&, mapEnt/*, dbEnt*/](cro::Entity e, float dt) mutable
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.01f));
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
@@ -1809,17 +1809,13 @@ void GolfState::buildUI()
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * InverseScale);
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-        auto wt = e.getComponent<cro::Transform>().getWorldTransform();
-        miniBounds = miniBounds.transform(glm::inverse(wt));
-
-
-        e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds);
+        e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
 
         //when the drawable is cropped the area is transformed by the ent's world tx
         //so we're doing this here purely to visualise
-        miniBounds = miniBounds.transform(e.getComponent<cro::Transform>().getWorldTransform());
+        //miniBounds = miniBounds.transform(e.getComponent<cro::Transform>().getWorldTransform());
 
-        std::vector<cro::Vertex2D> verts =
+        /*std::vector<cro::Vertex2D> verts =
         {
             cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
             cro::Vertex2D(glm::vec2(miniBounds.left + miniBounds.width, miniBounds.bottom), cro::Colour::Magenta),
@@ -1827,7 +1823,7 @@ void GolfState::buildUI()
             cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom + miniBounds.height), cro::Colour::Magenta),
             cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
         };
-        dbEnt.getComponent<cro::Drawable2D>().setVertexData(verts);
+        dbEnt.getComponent<cro::Drawable2D>().setVertexData(verts);*/
 
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

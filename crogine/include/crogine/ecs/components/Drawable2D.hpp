@@ -120,14 +120,19 @@ namespace cro
         void setDoubleSided(bool sidedness) { m_doubleSided = sidedness; }
 
         /*!
-        \brief Sets the area in local coordinates to crop this drawable.
+        \brief Sets the area outside of which to crop this drawable.
         If this area is larger or does not overlap the local bounds then
         no cropping is visible. Useful for UI components such as cropping
         Text components to fit text boxes. Note that Text components in
         particular have a *negative* bottom value as text is drawn (usually)
         from top to bottom.
+        \param area The area to which crop the drawable
+        \param abosolute If true the area is assume to be in absolute coordintates
+        and is transformed as-is to screen coords. If false the area is assumed to
+        be local to the Drawable and is first transformed into global space
+        by the Drawable's world transform before being converted to screen coords
         */
-        void setCroppingArea(FloatRect);
+        void setCroppingArea(FloatRect area, bool absolute = false);
 
         /*!
         \brief Sets the vertex data to be used when the geometry is drawn.
@@ -355,6 +360,7 @@ namespace cro
         FloatRect m_croppingArea;
         FloatRect m_croppingWorldArea;
         bool m_cropped;
+        bool m_absoluteCrop;
         bool m_wasCulledLastFrame;
 
         std::int32_t m_sortCriteria; //either Y or Z value depending on system sort mode
