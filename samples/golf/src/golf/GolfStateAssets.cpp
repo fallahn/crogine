@@ -561,7 +561,7 @@ void GolfState::loadMap()
                         propCount++;
 
                         //allow the model to scale about its own centre, not world
-                        auto offset = holeData.modelEntity.getComponent<cro::Model>().getAABB().getCentre();
+                        auto offset = holeData.modelEntity.getComponent<cro::Model>().getMeshData().boundingBox.getCentre();
                         offset.y = 0.f;
                         holeData.modelEntity.getComponent<cro::Transform>().setPosition(offset);
                         holeData.modelEntity.getComponent<cro::Transform>().setOrigin(offset);

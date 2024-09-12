@@ -3143,6 +3143,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         {
             e.getComponent<cro::AudioEmitter>().play();
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
     auto highlightUnselectID = uiSystem.addCallback(
         [&](cro::Entity e) mutable

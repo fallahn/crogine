@@ -80,6 +80,7 @@ namespace
         };
     };
     constexpr std::size_t TitleButtonIndex = 0;
+    constexpr std::size_t SocialButtonIndex = 500;
     constexpr std::size_t QuitButtonIndex = 1000;
 
     struct TextScrollCallback final
@@ -732,6 +733,7 @@ void NewsState::buildScene()
     static const std::string url = "https%3A%2F%2Fstore.steampowered.com%2Fapp%2F2173760%2FSuper_Video_Golf%2F";
 
     auto fb = createButton({ 56.f, -4.f }, "facebook");
+    fb.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex);
     fb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -742,6 +744,7 @@ void NewsState::buildScene()
                 }
             });
     auto twit = createButton({ 80.f, -4.f }, "twitter");
+    twit.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+1);
     twit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -752,6 +755,7 @@ void NewsState::buildScene()
                 }
             });
     auto tel = createButton({ 100.f, -4.f }, "telegram");
+    tel.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+2);
     tel.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -761,8 +765,8 @@ void NewsState::buildScene()
                     cro::Util::String::parseURL(dst);
                 }
             });
-
     auto red = createButton({ 122.f, -4.f }, "reddit");
+    red.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+3);
     red.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -839,6 +843,7 @@ void NewsState::buildScene()
     static const std::string url = "https%3A%2F%2Ffallahn.itch.io%2Fsuper-video-golf";
 
     auto fb = createButton({ 56.f, -4.f }, "facebook");
+    fb.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex);
     fb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
     {
@@ -849,6 +854,7 @@ void NewsState::buildScene()
                 }
     });
     auto twit = createButton({ 80.f, -4.f }, "twitter");
+    twit.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+1);
     twit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -859,6 +865,7 @@ void NewsState::buildScene()
                 }
             });
     auto tel = createButton({ 100.f, -4.f }, "telegram");
+    tel.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+2);
     tel.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -868,8 +875,8 @@ void NewsState::buildScene()
                     cro::Util::String::parseURL(dst);
                 }
             });
-
     auto red = createButton({ 122.f, -4.f }, "reddit");
+    red.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+3);
     red.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
             {
