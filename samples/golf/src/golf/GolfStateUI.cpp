@@ -1804,7 +1804,6 @@ void GolfState::buildUI()
             }
         }
 
-        //4 is the relative size of the sprite to the texture... need to update this if we make sprite scale dynamic
         const auto InverseScale = (1.f / mapEnt.getComponent<cro::Transform>().getScale().x);
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * InverseScale);
 

@@ -849,6 +849,9 @@ void App::handleEvents()
                     auto* j = SDL_GameControllerGetJoystick(ci.controller);
                     ci.joystickID = SDL_JoystickInstanceID(j);                    
                     ci.psLayout = Detail::isPSLayout(ci.controller);
+                    
+                    std::string n = SDL_GameControllerName(ci.controller);
+                    ci.printableName = cro::String::fromUtf8(n.begin(), n.end());
 
                     auto idx = SDL_GameControllerGetPlayerIndex(ci.controller);
                     if (idx != -1)
