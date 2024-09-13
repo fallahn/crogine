@@ -656,7 +656,7 @@ void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& shared
         std::int32_t baseCPUIndex = 0;
         std::int32_t stride = 1;
 
-        switch (Social::getClubLevel()/*sharedData.clubSet*/) //always scale to user level regardless of their chosen set
+        switch (/*Social::getClubLevel()*/sharedData.clubSet)
         {
         default: break;
         case 0:
@@ -687,7 +687,8 @@ void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& shared
 
                     auto cpuIndex = i * ConstVal::MaxPlayers + j;
                     m_cpuProfileIndices[cpuIndex] = baseCPUIndex;
-                    baseCPUIndex += stride;
+                    //baseCPUIndex += stride;
+                    baseCPUIndex = (baseCPUIndex + cro::Util::Random::value(0, 2)) % CPUStats.size();
                 }
             }
         }
