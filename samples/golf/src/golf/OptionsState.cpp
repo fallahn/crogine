@@ -567,6 +567,12 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         }
     }
 
+    else if (evt.type == SDL_CONTROLLERDEVICEADDED
+        || evt.type == SDL_CONTROLLERDEVICEREMOVED)
+        {
+            refreshControllerList();
+        }
+
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -3112,6 +3118,17 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
     parent.getComponent<cro::Transform>().addChild(infoEnt.getComponent<cro::Transform>());
 
+    //displays list of controllers if there's more than one connected
+    m_controllerInfoEnt = m_scene.createEntity();
+    m_controllerInfoEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, -14.f, TextOffset });
+    m_controllerInfoEnt.addComponent<cro::Drawable2D>();
+    m_controllerInfoEnt.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
+    m_controllerInfoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    //m_controllerInfoEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_controllerInfoEnt.addComponent<cro::Callback>().setUserData<const float>(parentBounds.width / 2.f);
+    parent.getComponent<cro::Transform>().addChild(m_controllerInfoEnt.getComponent<cro::Transform>());
+    refreshControllerList();
+
     //displays keybind info at top
     auto buttonChangeEnt = m_scene.createEntity();
     buttonChangeEnt.addComponent<cro::Transform>().setPosition(glm::vec3((parentBounds.width / 4.f) * 3.f, 130.f, TextOffset));
@@ -3258,7 +3275,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
 
     //switch between keyboard + cotroller view
-    //TODO default this to controller on deck
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(12.f, 138.f, TextOffset));
     entity.addComponent<cro::Drawable2D>();
@@ -4757,6 +4773,36 @@ void OptionsState::refreshDeviceLabel()
     }
     m_deviceLabel.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
     m_deviceLabel.getComponent<cro::Callback>().getUserData<TextScrollData>().maxWidth = bounds.width;
+}
+
+void OptionsState::refreshControllerList()
+{
+    //m_controllerInfoEnt.getComponent<cro::Text>().setString("1. Game Controller Number 1\n2. Also A Game Controller\n3. If You're Lucky This Is A PS Controller\n4. Otherwise You Might Have and XBone");
+
+    if (cro::GameController::getControllerCount() < 2)
+    {
+        m_controllerInfoEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
+    else
+    {
+        cro::String str;
+        for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
+        {
+            str += std::to_string(i + 1) + ". ";
+            str += cro::GameController::getPrintableName(i);
+            str += "\n";
+        }
+        m_controllerInfoEnt.getComponent<cro::Text>().setString(str);
+
+        auto bounds = cro::Text::getLocalBounds(m_controllerInfoEnt);
+        auto posX = m_controllerInfoEnt.getComponent<cro::Callback>().getUserData<const float>() - std::round(bounds.width / 2.f);
+        auto pos = m_controllerInfoEnt.getComponent<cro::Transform>().getPosition();
+        pos.x = posX;
+        m_controllerInfoEnt.getComponent<cro::Transform>().setPosition(pos);
+
+        m_controllerInfoEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    }
+    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
 }
 
 void OptionsState::quitState()
