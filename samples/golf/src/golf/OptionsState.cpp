@@ -310,7 +310,8 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_bindingIndex      (-1),
     m_currentTabFunction(0),
     m_activeToolTip     (-1),
-    m_viewScale         (2.f)
+    m_viewScale         (2.f),
+    m_refreshControllers(false)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -570,7 +571,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERDEVICEADDED
         || evt.type == SDL_CONTROLLERDEVICEREMOVED)
         {
-            refreshControllerList();
+            m_refreshControllers = true;
         }
 
     m_scene.forwardEvent(evt);
@@ -624,6 +625,25 @@ void OptionsState::handleMessage(const cro::Message& msg)
 bool OptionsState::simulate(float dt)
 {
     m_scene.simulate(dt);
+
+    if (m_refreshControllers)
+    {
+        //*sigh* the names aren't updated until AFTER the event
+        //so we have to delay a frame.
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+            {
+                refreshControllerList();
+
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+            };
+
+        m_refreshControllers = false;
+    }
+
     return true;
 }
 
@@ -833,6 +853,7 @@ void OptionsState::buildScene()
 
                 assertDeviceIndex();
                 refreshDeviceLabel();
+                refreshControllerList();
             }
             break;
         case RootCallbackData::FadeOut:
@@ -4777,8 +4798,6 @@ void OptionsState::refreshDeviceLabel()
 
 void OptionsState::refreshControllerList()
 {
-    //m_controllerInfoEnt.getComponent<cro::Text>().setString("1. Game Controller Number 1\n2. Also A Game Controller\n3. If You're Lucky This Is A PS Controller\n4. Otherwise You Might Have and XBone");
-
     if (cro::GameController::getControllerCount() < 2)
     {
         m_controllerInfoEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -4786,7 +4805,7 @@ void OptionsState::refreshControllerList()
     else
     {
         cro::String str;
-        for (auto i = 0; i < cro::GameController::getControllerCount(); ++i)
+        for (auto i = 0; i < std::max(4, cro::GameController::getControllerCount()); ++i)
         {
             str += std::to_string(i + 1) + ". ";
             str += cro::GameController::getPrintableName(i);

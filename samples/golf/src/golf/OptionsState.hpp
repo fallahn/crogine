@@ -147,6 +147,8 @@ private:
     void applyAudioDevice();
     void assertDeviceIndex();
     void refreshDeviceLabel();
+
+    bool m_refreshControllers;
     void refreshControllerList();
 
     void quitState();
