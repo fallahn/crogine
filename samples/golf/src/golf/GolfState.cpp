@@ -4011,13 +4011,6 @@ void GolfState::spawnBall(const ActorInfo& info)
         cro::Vertex2D(glm::vec2(2.f), miniBallColour),
         cro::Vertex2D(glm::vec2(2.f, -2.f), miniBallColour)
     };
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-        {
-            auto miniBounds = m_minimapEnt.getComponent<cro::Transform>().getWorldTransform() * m_minimapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-            e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
-        };
     entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniBall;
@@ -6027,6 +6020,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_idleTime = cro::seconds(90.f);
     m_skipState = {};
     m_ballTrail.setNext();
+    m_strokeDistanceEnt.getComponent<cro::Text>().setString(" ");
 
     //close any remaining icons
     cro::Command cmd;
@@ -6810,6 +6804,21 @@ void GolfState::updateActor(const ActorInfo& update)
             e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        const float travelDistance = glm::length(m_currentPlayer.position - update.position);
+        std::stringstream ss;
+        ss.precision(2);
+        //ss << "Travel: ";
+        if (m_sharedData.imperialMeasurements)
+        {
+            ss << std::fixed << (travelDistance * ToYards);
+            ss << "yd";
+        }
+        else
+        {
+            ss << std::fixed << travelDistance << "m";
+        }
+        m_strokeDistanceEnt.getComponent<cro::Callback>().getUserData<cro::String>() = ss.str();
 
         //set the skip state so we can tell if we're allowed to skip
         m_skipState.state = (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID) ? update.state : -1;

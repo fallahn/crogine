@@ -1669,6 +1669,30 @@ void GolfState::buildUI()
     m_minimapEnt = entity;
 
 
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -35.f, -65.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({1.f, -1.f});
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<cro::String>(" ");
+    entity.getComponent<cro::Callback>().function =
+        [mapEnt](cro::Entity e, float)
+        {
+            if (mapEnt.getComponent<cro::Callback>().active)
+            {
+                e.getComponent<cro::Text>().setString(" ");
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setString(e.getComponent<cro::Callback>().getUserData<cro::String>());
+            }
+        };
+    m_mapRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_strokeDistanceEnt = entity;
 
     //cro::SpriteSheet spriteSheet;
     //spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);

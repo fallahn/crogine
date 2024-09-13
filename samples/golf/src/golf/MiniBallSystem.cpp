@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -104,8 +104,8 @@ void MiniBallSystem::process(float dt)
 
                 //or if in bounds of the mini map
                 auto miniBounds = ball.minimap.getComponent<cro::Transform>().getWorldTransform() * ball.minimap.getComponent<cro::Drawable2D>().getLocalBounds();
-                auto renderBounds = glm::inverse(entity.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
-                entity.getComponent<cro::Drawable2D>().setCroppingArea(renderBounds);
+                //auto renderBounds = glm::inverse(entity.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+                entity.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
 
 
                 //fade out the ball if not the active player to make current player more prominent
