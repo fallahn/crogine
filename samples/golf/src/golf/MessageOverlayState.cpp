@@ -474,6 +474,95 @@ void MessageOverlayState::buildScene()
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
+    else if (m_sharedData.errorMessage == "Welcome to the Roster")
+    {
+        entity.getComponent<cro::Transform>().move({ 0.f, 4.f });
+
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, 2.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("To add an opponent click\nAdd Player or Create Profile");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        entity = createItem(glm::vec2(0.f, -16.f), "Got It!", menuEntity);
+        //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        quitState();
+                    }
+                });
+
+        //checkbox
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec2(-70.f, -32.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("Show This Next Time");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        //checkbox centre
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec2(-82.f, -39.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox");
+        bounds = entity.getComponent<cro::Sprite>().getTextureRect();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, bounds](cro::Entity e, float)
+            {
+                auto b = bounds;
+                if (m_sharedData.showRosterTip)
+                {
+                    b.bottom -= bounds.height;
+                }
+                e.getComponent<cro::Sprite>().setTextureRect(b);
+            };
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        //checkbox highlight
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec2(-83.f, -40.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox_highlight");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+            uiSystem.addCallback(
+                [](cro::Entity e)
+                {
+                    e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+            uiSystem.addCallback(
+                [](cro::Entity e)
+                {
+                    e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+                });
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback(
+                [&](cro::Entity e, const cro::ButtonEvent& evt)
+                {
+                    if (activated(evt))
+                    {
+                        m_sharedData.showRosterTip = !m_sharedData.showRosterTip;
+                    }
+                });
+
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
     else if (m_sharedData.errorMessage == "reset_profile")
     {
         entity.getComponent<cro::Text>().setString("Are You REALLY Sure?");
