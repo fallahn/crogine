@@ -99,7 +99,7 @@ void MiniBallSystem::process(float dt)
                 //set scale based on height
                 static constexpr float MaxHeight = 40.f;
                 float scale = 1.f + (position.y / MaxHeight);
-                entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale);
+                entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale * 2.f);
 
 
                 //or if in bounds of the mini map

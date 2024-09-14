@@ -1768,13 +1768,14 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin({ 0.5f, -0.5f });
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapFlag];
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag/*MapFlag*/];
+    entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, mapEnt](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].pin), 0.02f));
-        e.getComponent<cro::Transform>().setScale(((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f) * (glm::vec2(1.f) / MapSizeRatio));
+        e.getComponent<cro::Transform>().setScale(((m_minimapZoom.mapScale * 1.8f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f) * (glm::vec2(1.f) / MapSizeRatio));
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
         //auto flagBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
