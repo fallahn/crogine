@@ -890,7 +890,15 @@ void App::handleEvents()
                 }
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
-                m_controllers[controllerIndex] = {};
+                //m_controllers[controllerIndex] = {};
+
+                m_controllers[controllerIndex] = m_controllers[m_controllerCount];
+                m_controllers[m_controllerCount] = {};
+
+                if (m_controllers[controllerIndex].controller)
+                {
+                    SDL_GameControllerSetPlayerIndex(m_controllers[controllerIndex].controller, controllerIndex);
+                }
             }
 
             if (m_joysticks.count(id) > 0)
