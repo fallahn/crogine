@@ -248,7 +248,7 @@ inline const std::string CloudOverheadFragment = R"(
 
 
 #if defined(FEATHER_EDGE)
-        float amount = 1.0 - smoothstep(0.9, 1.0, (length(v_worldPosition.xz - u_worldCentre) / MaxDist));
+        float amount = 1.0 - smoothstep(0.8, 0.95, (length(v_worldPosition.xz - u_worldCentre) / MaxDist));
 
         vec2 xy = gl_FragCoord.xy;
         int x = int(mod(xy.x, MatrixSize));

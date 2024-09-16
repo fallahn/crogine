@@ -370,7 +370,7 @@ void GolfState::createClouds()
 
     if (!definitions.empty())
     {
-        std::string wobble = "#define MAX_RADIUS " + std::to_string(MapSizeFloat.y) + "\n";
+        std::string wobble = "#define MAX_RADIUS " + std::to_string(MapSizeFloat.x / 2.f) + "\n";
         if (m_sharedData.vertexSnap)
         {
             wobble = "#define WOBBLE\n";
@@ -394,7 +394,7 @@ void GolfState::createClouds()
         auto seed = static_cast<std::uint32_t>(std::time(nullptr));
         static constexpr std::array MinBounds = { 0.f, 0.f };
         static constexpr std::array MaxBounds = { MapSizeFloat.x, MapSizeFloat.x };
-        auto positions = pd::PoissonDiskSampling(80.f, MinBounds, MaxBounds, 30u, seed);
+        auto positions = pd::PoissonDiskSampling(120.f, MinBounds, MaxBounds, 30u, seed);
 
         std::size_t modelIndex = 0;
 
