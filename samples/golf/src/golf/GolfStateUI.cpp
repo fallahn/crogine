@@ -2986,10 +2986,15 @@ void GolfState::createScoreboard()
         str += " - " + ScoreTypes[m_sharedData.scoreType];
 #endif
 
+        if (m_sharedData.scoreType == ScoreType::Skins)
+        {
+            str += " - Pot: 1";
+        }
+
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::ScoreTitle;
         entity.addComponent<UIElement>().absolutePosition = { 200.f, 11.f };
         entity.getComponent<UIElement>().depth = 0.5f;
         entity.getComponent<UIElement>().resizeCallback = resizeCentre;

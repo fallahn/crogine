@@ -5003,6 +5003,18 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::GameEnd:
             showCountdown(evt.packet.as<std::uint8_t>());
             Progress::clear(m_sharedData.leagueRoundID);
+
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::UI::ScoreTitle;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        auto str = m_courseTitle + " - " + ScoreTypes[m_sharedData.scoreType];
+                        e.getComponent<cro::Text>().setString(str);
+                        centreText(e);
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
             break;
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Lobby)

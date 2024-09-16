@@ -2022,7 +2022,7 @@ void GolfState::updateLensFlare(cro::Entity e, float)
             glUniform2f(m_lensFlare.positionUniform, depthUV.x, depthUV.y);
 
             //use length of screenPos to calc brightness / set vert colour
-            const float Brightness = (cro::Util::Easing::easeOutCubic(1.f - std::min(1.f, glm::length(screenPos))) * 0.2f) + 0.1f;
+            const float Brightness = (cro::Util::Easing::easeOutCubic(1.f - std::min(1.f, glm::length(screenPos))) * 0.15f) + 0.05f;
             cro::Colour c = cro::Colour(Brightness * 0.2f, 1.f, 1.f, 1.f);
             std::int32_t i = 0;
 
