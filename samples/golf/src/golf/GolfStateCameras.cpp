@@ -778,6 +778,8 @@ void GolfState::toggleFreeCam()
     {
         m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
         m_defaultCam.getComponent<cro::Camera>().active = false;
+        m_defaultCam.getComponent<TargetInfo>().waterPlane = {};
+
         m_gameScene.setActiveListener(m_freeCam);
 
 
@@ -791,6 +793,9 @@ void GolfState::toggleFreeCam()
         m_freeCam.getComponent<cro::Camera>().active = true;
         m_freeCam.getComponent<cro::Camera>().resizeCallback(m_freeCam.getComponent<cro::Camera>());
         
+        m_freeCam.getComponent<TargetInfo>().waterPlane = m_waterEnt;
+        //TODO store the target of the water ent so we can restore it?
+
         //reduce fade distance
         m_resolutionUpdate.targetFade = 0.2f;
 
@@ -805,7 +810,7 @@ void GolfState::toggleFreeCam()
         m_gameScene.setSystemActive<FpsCameraSystem>(m_photoMode);
         m_gameScene.getSystem<FpsCameraSystem>()->process(0.f);
 
-        m_waterEnt.getComponent<cro::Callback>().active = false;
+        //m_waterEnt.getComponent<cro::Callback>().active = false;
         m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
         cro::App::getWindow().setMouseCaptured(true);
 
@@ -831,7 +836,10 @@ void GolfState::toggleFreeCam()
                 m_gameScene.setActiveListener(m_defaultCam);
 
                 m_defaultCam.getComponent<cro::Camera>().active = true;
+                m_defaultCam.getComponent<TargetInfo>().waterPlane = m_waterEnt;
+
                 m_freeCam.getComponent<cro::Camera>().active = false;
+                m_freeCam.getComponent<TargetInfo>().waterPlane = {};
 
                 //restore fade distance
                 m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;

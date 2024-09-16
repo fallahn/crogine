@@ -5707,7 +5707,8 @@ void GolfState::retargetMinimap(bool reset)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
 
-        const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
+        //const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
+        const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length(data.start.pan - data.end.pan) / 100.f, 0.f, 1.f)));
         data.progress = std::min(1.f, data.progress + (dt * speed));
 
         m_minimapZoom.pan = glm::mix(data.start.pan, data.end.pan, cro::Util::Easing::easeOutExpo(data.progress));

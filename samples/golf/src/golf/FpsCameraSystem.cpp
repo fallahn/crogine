@@ -31,6 +31,7 @@ source distribution.
 #include "CollisionMesh.hpp"
 #include "MessageIDs.hpp"
 #include "SharedStateData.hpp"
+#include "CameraFollowSystem.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Keyboard.hpp>
@@ -628,6 +629,15 @@ void FpsCameraSystem::process(float dt)
             pos.y = std::min(pos.y, 80.f);
             pos.z = std::clamp(pos.z, -static_cast<float>(MapSize.y), 0.f);
             tx.setPosition(pos);
+
+
+            glm::vec3 intersection(0.f);
+            if (entity.getComponent<TargetInfo>().waterPlane.isValid()
+                && planeIntersect(tx.getWorldTransform(), intersection))
+            {
+                intersection.y = WaterLevel;
+                entity.getComponent<TargetInfo>().waterPlane.getComponent<cro::Callback>().setUserData<glm::vec3>(intersection);
+            }
         }
     }
 }
