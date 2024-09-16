@@ -594,11 +594,30 @@ static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std:
 //    cfg.save(path);
 //}
 
-static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts()
+static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
 {
     auto endColour = TextGoldColour;
     endColour.setAlpha(0.f);
     const cro::Colour Grey(0.419f, 0.435f, 0.447f);
+
+    if (decimated)
+    {
+        return
+        {
+            //gold
+            cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
+            cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
+        };
+    }
 
     return
     {

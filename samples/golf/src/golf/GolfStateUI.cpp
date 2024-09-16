@@ -1791,7 +1791,7 @@ void GolfState::buildUI()
     //stroke indicator
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
-    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts();
+    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1851,7 +1851,7 @@ void GolfState::buildUI()
 
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_minimapIndicatorEnt = entity;
 
 
     //green close up view

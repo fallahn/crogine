@@ -1990,11 +1990,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.targetFlags = CommandID::UI::BarEnt;
                 cmd.action = [&](cro::Entity e, float)
                     {
-                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar 
+                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
                             ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                m_minimapIndicatorEnt.getComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
 
                 //updates the position of the entities based on bar size
                 auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
