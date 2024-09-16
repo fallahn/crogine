@@ -924,13 +924,13 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     const auto skinsPredicate = 
         [&](const PlayerStatus& a, const PlayerStatus& b)
     {
-            //return a.holeScore[m_currentHole] == b.holeScore[m_currentHole]
-            return a.totalScore == b.totalScore
+            return a.holeScore[m_currentHole] == b.holeScore[m_currentHole]
+            //return a.totalScore == b.totalScore
                 ? a.skins == b.skins ?
                 ((a.client * ConstVal::MaxClients) + a.player) > ((b.client * ConstVal::MaxClients) + b.player)
                 : a.skins < b.skins
-            //: a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
-            : a.totalScore < b.totalScore;
+            : a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
+            //: a.totalScore < b.totalScore;
     };
 
     hadTennisBounce = false;
