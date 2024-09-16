@@ -96,6 +96,8 @@ static constexpr glm::uvec2 MiniMapSize(320u, 200u);
 static constexpr std::uint32_t MapSizeMultiplier = 8u;// 4u; //increases the texture resolution by this much
 static constexpr glm::vec2 MapSizeRatio = glm::vec2(MiniMapSize) / MapSizeFloat;
 
+static constexpr float WaterRadius = 240.f;
+
 static constexpr float CameraStrokeHeight = 2.f;
 static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
 static constexpr float CameraTeeMultiplier = 0.65f; //height reduced by this when not putting from tee

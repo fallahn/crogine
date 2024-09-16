@@ -3123,7 +3123,7 @@ void GolfState::buildScene()
 
 
     //water plane. Updated by various camera callbacks
-    meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(240.f, 30));
+    meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(WaterRadius, 30));
     auto waterEnt = m_gameScene.createEntity();
     waterEnt.addComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
     waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });

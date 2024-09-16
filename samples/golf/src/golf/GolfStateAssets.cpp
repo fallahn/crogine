@@ -1437,7 +1437,6 @@ void GolfState::loadMap()
         m_mulliganCount = mulliganCount;
     }
 
-
     initAudio(theme.treesets.size() > 2);
 }
 
