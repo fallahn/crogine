@@ -2639,7 +2639,7 @@ void GolfState::addSystems()
     auto& mb = m_gameScene.getMessageBus();
 
     m_gameScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb);
-    m_gameScene.addSystem<CloudSystem>(mb);
+    m_gameScene.addSystem<CloudSystem>(mb, glm::vec3(MapSizeFloat.x / 2.f, 0.f, -MapSizeFloat.y / 2.f));
     m_gameScene.addSystem<AvatarRotationSystem>(mb);
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
