@@ -115,8 +115,8 @@ namespace
     cro::Colour skyTop = cro::Colour::CornflowerBlue;
 
     //MapSize * 0.375
-    //constexpr glm::uvec2 ThumbnailSize(120u, 75u);
-    constexpr glm::uvec2 ThumbnailSize(202u, 120u);
+    constexpr glm::uvec2 ThumbnailSize(120u, 75u);
+    //constexpr glm::uvec2 ThumbnailSize(202u, 120u);
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
