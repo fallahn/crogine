@@ -1190,7 +1190,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             //auto skip if fast CPU is on
             if (m_sharedData.fastCPU && isCPU)
             {
-                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                    && getClub() != ClubID::Putter)
                 {
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
                     m_skipState.wasSkipped = true;

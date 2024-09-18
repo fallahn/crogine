@@ -3713,6 +3713,20 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     }
                 }
                 break;
+            case ScoreType::Elimination:
+                if (s == 12)
+                {
+                    redScoreString += "X";
+                }
+                else
+                {
+                    if (s != 0)
+                    {
+                        scoreString += std::to_string(s);
+                    }
+                }
+                break;
+
             }
         }
 
@@ -3788,6 +3802,19 @@ void GolfState::updateScoreboard(bool updateParDiff)
                             if (s != 0)
                             {
                                 scoreString += "-";
+                            }
+                        }
+                        break;
+                    case ScoreType::Elimination:
+                        if (s == 12)
+                        {
+                            redScoreString += "X";
+                        }
+                        else
+                        {
+                            if (s != 0)
+                            {
+                                scoreString += std::to_string(s);
                             }
                         }
                         break;
@@ -3872,7 +3899,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             else
             {
                 const cro::String str = " (0)";
-                strLen = +str.size();
+                strLen = str.size();
                 totalString += str;
             }
 
