@@ -2544,6 +2544,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
         if (m_achievementTracker.leadingCareerRound
             && !m_resumedFromSave) //no cheese please
         {
+            auto active = Achievements::getActive();
+            Achievements::setActive(m_allowAchievements);
             switch (m_sharedData.clubSet)
             {
             default: break;
@@ -2557,6 +2559,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 Achievements::awardAchievement(AchievementStrings[AchievementID::ProShow]);
                 break;
             }
+            Achievements::setActive(active);
         }
     }
 
