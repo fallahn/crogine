@@ -53,8 +53,15 @@ void StackDump::dump(int type)
 
 //#ifdef _MSC_VER
     auto t = std::time(nullptr);
-    //auto* tm = std::localtime(&t);
-    auto str = std::to_string(t);
+    auto* tm = std::localtime(&t);
+
+    std::string str = std::to_string(tm->tm_year + 1900);
+    str += "-" + std::to_string(tm->tm_mon + 1);
+    str += "-" + std::to_string(tm->tm_mday);
+    str += "-" + std::to_string(tm->tm_hour + 1);
+    str += "-" + std::to_string(tm->tm_min);
+    str += "-" + std::to_string(tm->tm_sec);
+    //auto str = std::to_string(t);
 
     std::ofstream file("stack_dump_" + str + ".txt");
     switch (type)
