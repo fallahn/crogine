@@ -40,6 +40,8 @@ source distribution.
 
 namespace Progress
 {
+    static constexpr std::int32_t MulliganID = 255;
+    static constexpr std::int32_t MaxMulligans = 20;
 
     static inline std::string getFilePath(std::int32_t id)
     {
@@ -93,12 +95,16 @@ namespace Progress
             basePath += "round_06/";
             assertPath();
             break;
+        case MulliganID:
+            basePath += "career/";
+            assertPath();
+            return basePath + "hole.dat";
         }
 
         return basePath + "progr.ess";
     }
 
-    static inline void write(std::int32_t leagueID, std::size_t holeIndex, const std::vector<std::uint8_t>& holeScores)
+    static inline void write(std::int32_t leagueID, std::size_t holeIndex, const std::vector<std::uint8_t>& holeScores, std::int32_t mulliganCount)
     {
         auto path = getFilePath(leagueID);
         cro::RaiiRWops file;
@@ -121,9 +127,37 @@ namespace Progress
                 written += file.file->write(file.file, &packing, 1, 1);
             }
         }
+
+
+
+
+
+        //MaxMulligans here being the max number of leagues (or greater than)
+        //if the league count ever increases more than this, this will break...
+        std::array<std::int32_t, MaxMulligans> values = {};
+        std::fill(values.begin(), values.end(), 0);
+
+        path = getFilePath(MulliganID);
+        cro::RaiiRWops file2;
+        file2.file = SDL_RWFromFile(path.c_str(), "rb");
+
+        if (file2.file)
+        {
+            file2.file->read(file2.file, values.data(), sizeof(values), 1);
+            SDL_RWclose(file2.file);
+            file2.file = nullptr;
+        }
+
+        values[leagueID] = std::min(1, mulliganCount);
+        file2.file = SDL_RWFromFile(path.c_str(), "wb");
+
+        if (file2.file)
+        {
+            file2.file->write(file2.file, values.data(), sizeof(values), 1);
+        }
     }
 
-    static inline bool read(std::int32_t leagueID, std::uint64_t& holeIndex, std::vector<std::uint8_t>& holeScores)
+    static inline bool read(std::int32_t leagueID, std::uint64_t& holeIndex, std::vector<std::uint8_t>& holeScores, std::int32_t& mulliganCount)
     {
         CRO_ASSERT(!holeScores.empty(), "");
 
@@ -158,6 +192,23 @@ namespace Progress
                 auto holeSize = std::min(i, holeScores.size());
 
                 std::memcpy(holeScores.data(), &buffer[sizeof(holeIndex)], holeSize);
+
+
+                //read whether or not we have a mulligan remaining
+                std::array<std::int32_t, MaxMulligans> values = {};
+                std::fill(values.begin(), values.end(), 0);
+
+                path = getFilePath(MulliganID);
+                cro::RaiiRWops file2;
+                file2.file = SDL_RWFromFile(path.c_str(), "rb");
+
+                if (file2.file)
+                {
+                    file2.file->read(file2.file, values.data(), sizeof(values), 1);
+                    mulliganCount = std::min(1, values[leagueID]);
+                }
+
+
                 return true;
             }
         }

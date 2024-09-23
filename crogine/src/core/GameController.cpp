@@ -260,6 +260,19 @@ std::string GameController::getName(std::int32_t controllerIndex)
     return "Unknown Device";
 }
 
+const cro::String& GameController::getPrintableName(std::int32_t controllerIndex)
+{
+    CRO_ASSERT(App::m_instance, "No app running");
+    CRO_ASSERT(controllerIndex < MaxControllers, "");
+
+    if (App::m_instance->m_controllers[controllerIndex].controller)
+    {
+        return App::m_instance->m_controllers[controllerIndex].printableName;
+    }
+    static const cro::String fallback("No Controller");
+    return fallback;
+}
+
 std::int32_t GameController::getControllerCount()
 {
     CRO_ASSERT(App::m_instance, "No app running");

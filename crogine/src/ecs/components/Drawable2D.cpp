@@ -55,6 +55,7 @@ Drawable2D::Drawable2D()
     m_croppingArea          (std::numeric_limits<float>::lowest() / 2.f, std::numeric_limits<float>::lowest() / 2.f,
                                 std::numeric_limits<float>::max(), std::numeric_limits<float>::max()),
     m_cropped               (false),
+    m_absoluteCrop          (false),
     m_wasCulledLastFrame    (true),
     m_sortCriteria          (0)
 {
@@ -134,9 +135,10 @@ void Drawable2D::setBlendMode(Material::BlendMode mode)
     m_blendMode = mode;
 }
 
-void Drawable2D::setCroppingArea(FloatRect area)
+void Drawable2D::setCroppingArea(FloatRect area, bool absolute)
 {
     m_croppingArea = area;
+    m_absoluteCrop = absolute;
 }
 
 void Drawable2D::setVertexData(const std::vector<Vertex2D>& data)

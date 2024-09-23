@@ -550,6 +550,7 @@ void CareerState::buildScene()
     m_leagueDetails.highlight = entity;
 
     std::vector<std::uint8_t> temp(18);
+    std::int32_t temp2 = 0;
 
     for (auto i = 0u; i < Career::MaxLeagues; ++i)
     {
@@ -623,7 +624,7 @@ void CareerState::buildScene()
             buttons.push_back(button);
 
             //if there's a save file this will update the current hole
-            if (Progress::read(i + 1, m_progressPositions[i], temp))
+            if (Progress::read(i + 1, m_progressPositions[i], temp, temp2))
             {
                 m_progressPositions[i] += 1; //convert from index to hole number
             }

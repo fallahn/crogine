@@ -290,6 +290,7 @@ void GolfGame::handleMessage(const cro::Message& msg)
             default: break;
             case StateID::Options:
             case StateID::PlayerManagement:
+            case StateID::MessageOverlay:
                 saveSettings();
                 savePreferences();
                 break;
@@ -1467,6 +1468,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.decimateDistance = prop.getValue<bool>();
                     }
+                    else if (name == "show_roster")
+                    {
+                        m_sharedData.showRosterTip = prop.getValue<bool>();
+                        }
                     /*else if (name == "group_mode")
                     {
                         m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
@@ -1591,6 +1596,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
     cfg.addProperty("decimate_power").setValue(m_sharedData.decimatePowerBar);
     cfg.addProperty("decimate_distance").setValue(m_sharedData.decimateDistance);
+    cfg.addProperty("show_roster").setValue(m_sharedData.showRosterTip);
     cfg.addProperty("group_mode").setValue(m_sharedData.groupMode);
     cfg.save(path);
 

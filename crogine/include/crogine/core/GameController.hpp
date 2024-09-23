@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -337,6 +337,11 @@ namespace cro
         \brief Returns a string containing the identifier associated with the given controller ID
         */
         static std::string getName(std::int32_t controllerIndex);
+
+        /*!
+        \brief returns the printable (short) name of the controller at the given index
+        */
+        static const cro::String& getPrintableName(std::int32_t controllerIndex);
 
         /*!
         \brief Returns the number of currently connected GameControllers.

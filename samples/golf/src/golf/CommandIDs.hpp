@@ -88,7 +88,8 @@ struct CommandID final
             TerrainType          = 0x4000000,
             AFKWarn              = 0x8000000,
             PuttingLabel         = 0x10000000, //29
-            BarEnt               = 0x20000000
+            BarEnt               = 0x20000000,
+            ScoreTitle           = 0x40000000 //text at the bottom of the score board - used in skins games
         };
     };
 

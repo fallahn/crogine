@@ -152,7 +152,6 @@ namespace
     constexpr float MaxPuttRotation = 0.4f;// 0.24f;
 
     bool recordCam = false;
-    std::int32_t mulliganCount = 0;
 
     bool isFastCPU(const SharedStateData& sd, const ActivePlayer& activePlayer)
     {
@@ -187,6 +186,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_NTPDistance           (1.f), //don't init to 0 in case we get div0
     m_strokeTimer           (0.f),
     m_resumedFromSave       (false),
+    m_mulliganCount         (0),
     m_terrainBuilder        (sd, m_holeData),
     m_audioPath             ("assets/golf/sound/ambience.xas"),
     m_currentCamera         (CameraID::Player),
@@ -1190,7 +1190,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             //auto skip if fast CPU is on
             if (m_sharedData.fastCPU && isCPU)
             {
-                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                    && getClub() != ClubID::Putter)
                 {
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
                     m_skipState.wasSkipped = true;
@@ -1407,7 +1408,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
             {
-                Progress::write(m_sharedData.leagueRoundID, m_currentHole, m_sharedData.connectionData[0].playerData[0].holeScores);
+                Progress::write(m_sharedData.leagueRoundID, m_currentHole, m_sharedData.connectionData[0].playerData[0].holeScores, m_mulliganCount);
             }
 
             if (m_resumedFromSave)
@@ -1491,7 +1492,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::Mulligan,
                 m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-            mulliganCount = 0;
+            m_mulliganCount = 0;
             m_sharedData.hasMulligan = false;
 
             Achievements::awardAchievement(AchievementStrings[AchievementID::TryTryAgain]);
@@ -1990,11 +1991,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.targetFlags = CommandID::UI::BarEnt;
                 cmd.action = [&](cro::Entity e, float)
                     {
-                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar 
+                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
                             ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                m_minimapIndicatorEnt.getComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
 
                 //updates the position of the entities based on bar size
                 auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
@@ -2638,7 +2640,7 @@ void GolfState::addSystems()
     auto& mb = m_gameScene.getMessageBus();
 
     m_gameScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb);
-    m_gameScene.addSystem<CloudSystem>(mb);
+    m_gameScene.addSystem<CloudSystem>(mb, glm::vec3(MapSizeFloat.x / 2.f, 0.f, -MapSizeFloat.y / 2.f));
     m_gameScene.addSystem<AvatarRotationSystem>(mb);
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
     m_gameScene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
@@ -3122,7 +3124,7 @@ void GolfState::buildScene()
 
 
     //water plane. Updated by various camera callbacks
-    meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(240.f, 30));
+    meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(WaterRadius, 30));
     auto waterEnt = m_gameScene.createEntity();
     waterEnt.addComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
     waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });
@@ -4003,7 +4005,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //miniball for player
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.01f * depthOffset });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-2.f, 2.f), miniBallColour),
@@ -5003,6 +5005,18 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::GameEnd:
             showCountdown(evt.packet.as<std::uint8_t>());
             Progress::clear(m_sharedData.leagueRoundID);
+
+            {
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::UI::ScoreTitle;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        auto str = m_courseTitle + " - " + ScoreTypes[m_sharedData.scoreType];
+                        e.getComponent<cro::Text>().setString(str);
+                        centreText(e);
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
             break;
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Lobby)
@@ -5899,9 +5913,10 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions[m_sharedData.crowdDensity]);
 
 
-    if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+    if (m_sharedData.leagueRoundID != LeagueRoundID::Club
+        && (m_currentHole % 9) == 0)
     {
-        mulliganCount = 1;
+        m_mulliganCount = 1;
     }
 }
 
@@ -6019,6 +6034,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_idleTime = cro::seconds(90.f);
     m_skipState = {};
     m_ballTrail.setNext();
+    m_strokeDistanceEnt.getComponent<cro::Text>().setString(" ");
 
     //close any remaining icons
     cro::Command cmd;
@@ -6471,7 +6487,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //see where the player is and move the sky cam if possible
     //else set it to the default position
     static constexpr float MinPlayerDist = 40.f * 40.f; //TODO should this be the sky cam radius^2?
-    auto dir = m_holeData[m_currentHole].pin - player.position;
+    auto dir = /*m_holeData[m_currentHole].pin*/target - player.position;
     if (auto len2 = glm::length2(dir); len2 > MinPlayerDist)
     {
         static constexpr float MaxHeightMultiplier = static_cast<float>(MapSize.x) * 0.8f; //probably should be diagonal but meh
@@ -6511,7 +6527,13 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     else
     {
        // auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(160.f, SkyCamHeight, -100.f) : DefaultSkycamPosition;
-        setCamTarget(DefaultSkycamPosition);
+        
+        
+        //setCamTarget(DefaultSkycamPosition);
+
+        auto p = m_holeData[m_currentHole].target;
+        p.y = SkyCamHeight;
+        setCamTarget(p);
     }
 
     setGreenCamPosition();
@@ -6549,7 +6571,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     if (glm::length2(m_holeData[m_currentHole].tee - player.position) > 0.1f)
     {
         //crude way of telling if we're not at the tee
-        m_sharedData.hasMulligan = m_sharedData.leagueRoundID != LeagueRoundID::Club && mulliganCount != 0;
+        m_sharedData.hasMulligan = m_sharedData.leagueRoundID != LeagueRoundID::Club && m_mulliganCount != 0;
     }
     else
     {
@@ -6796,6 +6818,21 @@ void GolfState::updateActor(const ActorInfo& update)
             e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        const float travelDistance = glm::length(m_currentPlayer.position - update.position);
+        std::stringstream ss;
+        ss.precision(2);
+        //ss << "Travel: ";
+        if (m_sharedData.imperialMeasurements)
+        {
+            ss << std::fixed << (travelDistance * ToYards);
+            ss << "yd";
+        }
+        else
+        {
+            ss << std::fixed << travelDistance << "m";
+        }
+        m_strokeDistanceEnt.getComponent<cro::Callback>().getUserData<cro::String>() = ss.str();
 
         //set the skip state so we can tell if we're allowed to skip
         m_skipState.state = (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID) ? update.state : -1;

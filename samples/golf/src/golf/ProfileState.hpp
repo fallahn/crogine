@@ -208,6 +208,18 @@ private:
     std::int32_t m_headwearID;
     std::array<cro::FloatRect, HeadwearID::Count> m_headwearPreviewRects = {};
 
+    struct TransformBox final
+    {
+        cro::Entity entity;
+        float minVal = 0.1f;
+        float maxVal = 1.f;
+        float step = 0.1f;
+
+        std::uint32_t index = 0;
+        std::uint32_t offset = 0;
+    };
+    std::array<TransformBox, 9> m_transformBoxes;
+
     struct Gizmo final
     {
         cro::Entity entity;

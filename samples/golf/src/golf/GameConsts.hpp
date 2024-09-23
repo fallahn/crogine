@@ -78,7 +78,7 @@ static constexpr float GreenCamRadiusMedium = 10.f;
 static constexpr float GreenCamRadiusSmall = 5.7f;
 static constexpr float SkyCamRadius = 80.f;
 
-static constexpr float CameraFarPlane = 320.f;
+static constexpr float CameraFarPlane = 450.f;// 360.f;// 320.f;
 static constexpr float GreenCamZoomFast = 2.5f;
 static constexpr float GreenCamZoomSlow = 1.8f;
 static constexpr float SkyCamZoomSpeed = 1.1f;// 3.f;
@@ -95,6 +95,8 @@ static constexpr float MaxSubTarget = (MapSize.x * 2.f) * (MapSize.x * 2.f); //u
 static constexpr glm::uvec2 MiniMapSize(320u, 200u);
 static constexpr std::uint32_t MapSizeMultiplier = 8u;// 4u; //increases the texture resolution by this much
 static constexpr glm::vec2 MapSizeRatio = glm::vec2(MiniMapSize) / MapSizeFloat;
+
+static constexpr float WaterRadius = 240.f;
 
 static constexpr float CameraStrokeHeight = 2.f;
 static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
@@ -594,11 +596,30 @@ static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std:
 //    cfg.save(path);
 //}
 
-static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts()
+static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts(bool decimated)
 {
     auto endColour = TextGoldColour;
     endColour.setAlpha(0.f);
     const cro::Colour Grey(0.419f, 0.435f, 0.447f);
+
+    if (decimated)
+    {
+        return
+        {
+            //gold
+            cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.4575f, 0.5f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.4575f, -0.5f), TextGoldColour),
+
+            cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
+            cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
+        };
+    }
 
     return
     {

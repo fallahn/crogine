@@ -29,6 +29,7 @@ source distribution.
 
 #include "ChunkVisSystem.hpp"
 #include "TerrainBuilder.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/graphics/Spatial.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -37,7 +38,7 @@ source distribution.
 
 namespace
 {
-    constexpr float MaxDist = 280.f;
+    constexpr float MaxDist = CameraFarPlane * 0.875f;// 280.f;
     constexpr float CullDist = MaxDist * MaxDist;
 }
 

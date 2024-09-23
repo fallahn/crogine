@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -99,13 +99,13 @@ void MiniBallSystem::process(float dt)
                 //set scale based on height
                 static constexpr float MaxHeight = 40.f;
                 float scale = 1.f + (position.y / MaxHeight);
-                entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale);
+                entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale * 2.f);
 
 
                 //or if in bounds of the mini map
                 auto miniBounds = ball.minimap.getComponent<cro::Transform>().getWorldTransform() * ball.minimap.getComponent<cro::Drawable2D>().getLocalBounds();
-                auto renderBounds = glm::inverse(entity.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
-                entity.getComponent<cro::Drawable2D>().setCroppingArea(renderBounds);
+                //auto renderBounds = glm::inverse(entity.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+                entity.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
 
 
                 //fade out the ball if not the active player to make current player more prominent

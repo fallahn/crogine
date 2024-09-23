@@ -182,7 +182,8 @@ bool MyApp::initialise()
     m_stateStack.registerState<PseutheMenuState>(States::ScratchPad::PseutheMenu);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::PseutheBackground);
+    m_stateStack.pushState(States::ScratchPad::BatCat);
+    //m_stateStack.pushState(States::ScratchPad::PseutheBackground);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);

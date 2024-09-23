@@ -1425,6 +1425,18 @@ void GolfState::buildUI()
         mRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         auto tEnt = entity;
 
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f });
+        entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.getComponent<cro::Text>().setString("Options Menu");
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        mRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        auto oEnt = entity;
+
         struct MulliganData final
         {
             enum
@@ -1433,18 +1445,18 @@ void GolfState::buildUI()
                 Hold
             };
             std::int32_t state = 0;
+            std::int32_t idx = 0;
             float progress = 0.f;
             float currTime = 5.f;
-
         };
         static constexpr float SpinTime = 6.f; //Time between spins
 
         mRoot.addComponent<cro::Callback>().active = true;
         mRoot.getComponent<cro::Callback>().setUserData<MulliganData>();
         mRoot.getComponent<cro::Callback>().function =
-            [&, mEnt, tEnt](cro::Entity e, float dt) mutable
+            [&, mEnt, tEnt, oEnt](cro::Entity e, float dt) mutable
             {
-                auto& [state, progress, currTime] = e.getComponent<cro::Callback>().getUserData<MulliganData>();
+                auto& [state, idx, progress, currTime] = e.getComponent<cro::Callback>().getUserData<MulliganData>();
                 const float Speed = dt * 4.f;
 
                 switch (state)
@@ -1503,12 +1515,23 @@ void GolfState::buildUI()
                         if (mEnt.getComponent<cro::Drawable2D>().getFacing() == cro::Drawable2D::Facing::Front)
                         {
                             mEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-                            tEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                            
+                            if (idx == 0)
+                            {
+                                tEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                                idx = 1;
+                            }
+                            else
+                            {
+                                oEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                                idx = 0;
+                            }
                         }
                         else
                         {
                             mEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                             tEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                            oEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
                         }
                     }
                 }
@@ -1646,73 +1669,32 @@ void GolfState::buildUI()
     m_minimapEnt = entity;
 
 
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -35.f, -65.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({1.f, -1.f});
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<cro::String>(" ");
+    entity.getComponent<cro::Callback>().function =
+        [mapEnt](cro::Entity e, float)
+        {
+            if (mapEnt.getComponent<cro::Callback>().active)
+            {
+                e.getComponent<cro::Text>().setString(" ");
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setString(e.getComponent<cro::Callback>().getUserData<cro::String>());
+            }
+        };
+    m_mapRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_strokeDistanceEnt = entity;
 
-    //cro::SpriteSheet spriteSheet;
-    //spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
 
-    //std::vector<cro::Vertex2D> verts;
-    //std::vector<cro::Vertex2D> verts2;
-    //spriteSheet.getSprite("miniwind_outer").getVertexData(verts);
-    ////spriteSheet.getSprite("miniwind_inner").getVertexData(verts2);
-    //static constexpr glm::vec2 ArrowOrigin(7.5f); //ugh, such hackery.
-    //verts2 =
-    //{
-    //    cro::Vertex2D(glm::vec2(-5.5, 2.5f) + ArrowOrigin, glm::vec2(0.f)),
-    //    cro::Vertex2D(glm::vec2(-2.5f, 0.f) + ArrowOrigin, glm::vec2(0.f)),
-    //    cro::Vertex2D(glm::vec2(5.5f, 0.f) + ArrowOrigin, glm::vec2(0.f)),
-    //    cro::Vertex2D(glm::vec2(-5.5f, -2.5f) + ArrowOrigin, glm::vec2(0.f))
-    //};
-
-    //if (!verts.empty() && !verts.empty())
-    //{
-    //    verts.push_back(verts.back());
-    //    verts.push_back(verts2.front());
-    //    verts.push_back(verts2[0]);
-    //    verts.push_back(verts2[1]);
-    //    verts.push_back(verts2[2]);
-    //    verts.push_back(verts2[3]);
-    //}
-    //bounds = spriteSheet.getSprite("miniwind_inner").getTextureBounds();
-
-    ////just to stop iteration breaking in the callback
-    ////if the sprite fails to load for some reason
-    //if (verts.empty())
-    //{
-    //    verts.resize(4);
-    //}
-
-    ////mini wind icon
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ 300.f, 300.f, 0.02f });
-    //entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    //entity.getComponent<cro::Transform>().setScale(glm::vec2(20.f));
-    //entity.addComponent<cro::Drawable2D>() .setVertexData(verts);
-    //entity.getComponent<cro::Drawable2D>().setTexture(spriteSheet.getTexture());
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    //entity.getComponent<cro::Callback>().function =
-    //    [&,windEnt](cro::Entity e, float dt)
-    //    {
-    //        static constexpr float BaseScale = 20.f;
-    //        e.getComponent<cro::Transform>().setScale(windEnt.getComponent<cro::Transform>().getScale() * BaseScale);
-
-    //        auto c = windEnt.getComponent<cro::Text>().getFillColour();
-    //        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-
-    //        for (auto v = verts.rbegin(); v < verts.rbegin() + 4; ++v)
-    //        {
-    //            v->colour = c;
-    //        }
-
-    //        const float rotation = std::atan2(-m_windUpdate.windVector.z, m_windUpdate.windVector.x)
-    //            + m_minimapZoom.tilt;
-
-    //        float& currRotation = e.getComponent<float>();
-    //        currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * (dt * 4.f);
-    //        e.getComponent<cro::Transform>().setRotation(currRotation);
-    //    };
-    //entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    //mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //mini flag icon
@@ -1721,30 +1703,35 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin({ 0.5f, -0.5f });
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapFlag];
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag/*MapFlag*/];
+    entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, mapEnt](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].pin), 0.02f));
-        e.getComponent<cro::Transform>().setScale(((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f) * (glm::vec2(1.f) / MapSizeRatio));
+        e.getComponent<cro::Transform>().setScale(((m_minimapZoom.mapScale * 1.8f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f) * (glm::vec2(1.f) / MapSizeRatio));
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-        auto flagBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
-        e.getComponent<cro::Drawable2D>().setCroppingArea(flagBounds);
+        //auto flagBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+        e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     
+    /*auto dbEnt = m_uiScene.createEntity();
+    dbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    dbEnt.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);*/
+
     //stroke indicator
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
-    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts();
+    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, mapEnt](cro::Entity e, float dt)
+        [&, mapEnt/*, dbEnt*/](cro::Entity e, float dt) mutable
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.01f));
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
@@ -1777,15 +1764,29 @@ void GolfState::buildUI()
             }
         }
 
-        //4 is the relative size of the sprite to the texture... need to update this if we make sprite scale dynamic
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * (1.f / mapEnt.getComponent<cro::Transform>().getScale().x));
+        const auto InverseScale = (1.f / mapEnt.getComponent<cro::Transform>().getScale().x);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * InverseScale);
 
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-        auto targBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
-        e.getComponent<cro::Drawable2D>().setCroppingArea(targBounds);
+        e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
+
+        //when the drawable is cropped the area is transformed by the ent's world tx
+        //so we're doing this here purely to visualise
+        //miniBounds = miniBounds.transform(e.getComponent<cro::Transform>().getWorldTransform());
+
+        /*std::vector<cro::Vertex2D> verts =
+        {
+            cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(miniBounds.left + miniBounds.width, miniBounds.bottom), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(miniBounds.left + miniBounds.width, miniBounds.bottom + miniBounds.height), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom + miniBounds.height), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(miniBounds.left, miniBounds.bottom), cro::Colour::Magenta),
+        };
+        dbEnt.getComponent<cro::Drawable2D>().setVertexData(verts);*/
+
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_minimapIndicatorEnt = entity;
 
 
     //green close up view
@@ -1890,6 +1891,7 @@ void GolfState::buildUI()
         constexpr glm::uvec2 texSize = MapSize * MapSizeMultiplier;
 
         m_mapTextureMRT.create(texSize.x, texSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
+        m_mapTextureMRT.setBorderColour(cro::Colour::Transparent);
         m_sharedData.minimapData.mrt = &m_mapTextureMRT;
 
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTextureMRT.getTexture());
@@ -1904,6 +1906,7 @@ void GolfState::buildUI()
         miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 60.f);
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
+
 
     m_mapCam = m_gameScene.createEntity();
     m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 36.f, -static_cast<float>(MapSize.y) / 2.f});
@@ -2541,6 +2544,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
         if (m_achievementTracker.leadingCareerRound
             && !m_resumedFromSave) //no cheese please
         {
+            auto active = Achievements::getActive();
+            Achievements::setActive(m_allowAchievements);
             switch (m_sharedData.clubSet)
             {
             default: break;
@@ -2554,6 +2559,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 Achievements::awardAchievement(AchievementStrings[AchievementID::ProShow]);
                 break;
             }
+            Achievements::setActive(active);
         }
     }
 
@@ -2918,10 +2924,15 @@ void GolfState::createScoreboard()
         str += " - " + ScoreTypes[m_sharedData.scoreType];
 #endif
 
+        if (m_sharedData.scoreType == ScoreType::Skins)
+        {
+            str += " - Pot: 1";
+        }
+
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::ScoreTitle;
         entity.addComponent<UIElement>().absolutePosition = { 200.f, 11.f };
         entity.getComponent<UIElement>().depth = 0.5f;
         entity.getComponent<UIElement>().resizeCallback = resizeCentre;
@@ -3705,6 +3716,20 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     }
                 }
                 break;
+            case ScoreType::Elimination:
+                if (s == 12)
+                {
+                    redScoreString += "X";
+                }
+                else
+                {
+                    if (s != 0)
+                    {
+                        scoreString += std::to_string(s);
+                    }
+                }
+                break;
+
             }
         }
 
@@ -3780,6 +3805,19 @@ void GolfState::updateScoreboard(bool updateParDiff)
                             if (s != 0)
                             {
                                 scoreString += "-";
+                            }
+                        }
+                        break;
+                    case ScoreType::Elimination:
+                        if (s == 12)
+                        {
+                            redScoreString += "X";
+                        }
+                        else
+                        {
+                            if (s != 0)
+                            {
+                                scoreString += std::to_string(s);
                             }
                         }
                         break;
@@ -3864,7 +3902,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             else
             {
                 const cro::String str = " (0)";
-                strLen = +str.size();
+                strLen = str.size();
                 totalString += str;
             }
 
@@ -5556,6 +5594,9 @@ void GolfState::retargetMinimap(bool reset)
     target.start.tilt = m_minimapZoom.tilt;
     target.start.zoom = m_minimapZoom.zoom;
 
+    static constexpr float MinZoom = 0.5f;
+    static constexpr float MaxZoom = 32.f;
+
     if (reset)
     {
         //create a default view around the bounds of the hole model
@@ -5565,8 +5606,8 @@ void GolfState::retargetMinimap(bool reset)
         auto centre = bb.getCentre();
         target.end.pan = glm::vec2(centre.x, -centre.z) * m_minimapZoom.mapScale;
 
-        auto xZoom = std::clamp(static_cast<float>(MiniMapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), 0.9f, 32.f);
-        auto zZoom = std::clamp(static_cast<float>(MiniMapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), 0.9f, 32.f);
+        auto xZoom = std::clamp(static_cast<float>(MiniMapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), MinZoom, MaxZoom);
+        auto zZoom = std::clamp(static_cast<float>(MiniMapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), MinZoom, MaxZoom);
         target.end.zoom = xZoom > zZoom ? xZoom : zZoom;
     }
     else
@@ -5614,11 +5655,12 @@ void GolfState::retargetMinimap(bool reset)
         //(pan is in texture coords hum)
         target.end.pan *= m_minimapZoom.mapScale;
 
-        //get distance between flag and player and expand by 1.7 (about 3m around a putting hole)
-        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.5f; //remember this is world coords
+        //get distance between flag and player and expand by 1.4 (about 3m around a putting hole)
+        //TODO this should be fixed 3m - as a percentage it's HUGE on big maps when fully zoomed
+        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.4f; //remember this is world coords
 
         //scale zoom on long edge of map by box length and clamp to 32x
-        target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, 0.8f, 32.f);
+        target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, MinZoom, MaxZoom);
     }
 
     //create a temp ent to interp between start and end values
@@ -5630,7 +5672,8 @@ void GolfState::retargetMinimap(bool reset)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
 
-        const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
+        //const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
+        const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length(data.start.pan - data.end.pan) / 100.f, 0.f, 1.f)));
         data.progress = std::min(1.f, data.progress + (dt * speed));
 
         m_minimapZoom.pan = glm::mix(data.start.pan, data.end.pan, cro::Util::Easing::easeOutExpo(data.progress));
@@ -6465,7 +6508,7 @@ void GolfState::showEmote(std::uint32_t data)
         float rotation = cro::Util::Random::value(-1.f, 1.f);
     };
 
-    glm::vec3 pos(32.f, -16.f, 0.2f);
+    glm::vec3 pos(32.f, -16.f, 0.2f + (static_cast<float>(client) / 10.f));
     for (auto i = 0u; i < 5u; ++i)
     {
         auto ent = m_uiScene.createEntity();

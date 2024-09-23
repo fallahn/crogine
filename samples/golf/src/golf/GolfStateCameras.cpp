@@ -162,7 +162,7 @@ void GolfState::createCameras()
 
             //fetch this explicitly so the transition cam also gets the correct zoom
             float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;
-            cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, CameraFarPlane, m_shadowQuality.cascadeCount);
+            cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, CameraFarPlane /** 1.25f*/, m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
 
@@ -228,7 +228,7 @@ void GolfState::createCameras()
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.35f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane /** 1.25f*/,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
@@ -269,7 +269,7 @@ void GolfState::createCameras()
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower::ZoomData>().fov,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane /** 1.25f*/,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
@@ -307,7 +307,7 @@ void GolfState::createCameras()
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane/* * 1.25f*/,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
@@ -339,7 +339,7 @@ void GolfState::createCameras()
 
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 0.7f,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
@@ -387,7 +387,7 @@ void GolfState::createCameras()
 
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 0.7f,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
@@ -452,7 +452,7 @@ void GolfState::createCameras()
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective(m_sharedData.fov * camEnt.getComponent<FpsCamera>().fov * cro::Util::Const::degToRad,
-                vpSize.x / vpSize.y, 0.1f, CameraFarPlane * 1.25f,
+                vpSize.x / vpSize.y, 0.1f, CameraFarPlane /** 1.25f*/,
                 m_shadowQuality.cascadeCount);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
@@ -765,7 +765,8 @@ void GolfState::toggleFreeCam()
         //only switch if we're the active player and the input is active
         if (/*!m_groupIdle &&*/
             (!m_inputParser.getActive() || m_currentCamera != CameraID::Player
-            || m_emoteWheel.currentScale != 0))
+            || m_emoteWheel.currentScale != 0)
+            || m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
         {
             return;
         }
@@ -777,6 +778,8 @@ void GolfState::toggleFreeCam()
     {
         m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
         m_defaultCam.getComponent<cro::Camera>().active = false;
+        m_defaultCam.getComponent<TargetInfo>().waterPlane = {};
+
         m_gameScene.setActiveListener(m_freeCam);
 
 
@@ -790,6 +793,9 @@ void GolfState::toggleFreeCam()
         m_freeCam.getComponent<cro::Camera>().active = true;
         m_freeCam.getComponent<cro::Camera>().resizeCallback(m_freeCam.getComponent<cro::Camera>());
         
+        m_freeCam.getComponent<TargetInfo>().waterPlane = m_waterEnt;
+        //TODO store the target of the water ent so we can restore it?
+
         //reduce fade distance
         m_resolutionUpdate.targetFade = 0.2f;
 
@@ -804,7 +810,7 @@ void GolfState::toggleFreeCam()
         m_gameScene.setSystemActive<FpsCameraSystem>(m_photoMode);
         m_gameScene.getSystem<FpsCameraSystem>()->process(0.f);
 
-        m_waterEnt.getComponent<cro::Callback>().active = false;
+        //m_waterEnt.getComponent<cro::Callback>().active = false;
         m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
         cro::App::getWindow().setMouseCaptured(true);
 
@@ -830,7 +836,10 @@ void GolfState::toggleFreeCam()
                 m_gameScene.setActiveListener(m_defaultCam);
 
                 m_defaultCam.getComponent<cro::Camera>().active = true;
+                m_defaultCam.getComponent<TargetInfo>().waterPlane = m_waterEnt;
+
                 m_freeCam.getComponent<cro::Camera>().active = false;
+                m_freeCam.getComponent<TargetInfo>().waterPlane = {};
 
                 //restore fade distance
                 m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
@@ -2021,7 +2030,7 @@ void GolfState::updateLensFlare(cro::Entity e, float)
             glUniform2f(m_lensFlare.positionUniform, depthUV.x, depthUV.y);
 
             //use length of screenPos to calc brightness / set vert colour
-            const float Brightness = (cro::Util::Easing::easeOutCubic(1.f - std::min(1.f, glm::length(screenPos))) * 0.2f) + 0.1f;
+            const float Brightness = (cro::Util::Easing::easeOutCubic(1.f - std::min(1.f, glm::length(screenPos))) * 0.15f) + 0.05f;
             cro::Colour c = cro::Colour(Brightness * 0.2f, 1.f, 1.f, 1.f);
             std::int32_t i = 0;
 

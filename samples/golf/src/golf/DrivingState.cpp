@@ -895,6 +895,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                m_minimapIndicatorEnt.getComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
+
                 //updates the position of the entities based on bar size
                 auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
                 cam.resizeCallback(cam);
@@ -2835,7 +2837,7 @@ void DrivingState::createBall()
         auto state = ent.getComponent<Ball>().state;
         auto pos = ent.getComponent<cro::Transform>().getPosition();
         
-        if (state == Ball::State::Flight)
+        if (state != Ball::State::Idle)
         {
             //update pin distance on ui
             cro::Command cmd;

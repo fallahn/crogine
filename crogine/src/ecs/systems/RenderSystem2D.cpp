@@ -230,7 +230,9 @@ void RenderSystem2D::process(float)
 
         if (drawable.m_cropped)
         {
-            drawable.m_croppingWorldArea = drawable.m_croppingArea.transform(tx.getWorldTransform());
+            drawable.m_croppingWorldArea = drawable.m_absoluteCrop ? 
+                drawable.m_croppingArea:
+                drawable.m_croppingArea.transform(tx.getWorldTransform());
         }
     }
 

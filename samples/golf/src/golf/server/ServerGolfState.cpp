@@ -921,15 +921,16 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 {
     //each player is sequential (ideally with fewest skins, use connect ID to tie break)
-    //sigh this is duplicated in ServerGolfRules.cpp
     const auto skinsPredicate = 
         [&](const PlayerStatus& a, const PlayerStatus& b)
     {
             return a.holeScore[m_currentHole] == b.holeScore[m_currentHole]
+            //return a.totalScore == b.totalScore
                 ? a.skins == b.skins ?
                 ((a.client * ConstVal::MaxClients) + a.player) > ((b.client * ConstVal::MaxClients) + b.player)
                 : a.skins < b.skins
             : a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
+            //: a.totalScore < b.totalScore;
     };
 
     hadTennisBounce = false;
@@ -1842,7 +1843,9 @@ void GolfState::buildWorld()
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(m_holeData.size());
 
-        if (Progress::read(m_sharedData.leagueID, h, scores)
+        std::int32_t temp = 0;
+
+        if (Progress::read(m_sharedData.leagueID, h, scores, temp)
             && h != 0)
         {
             m_currentHole = std::min(std::size_t(h), m_holeData.size() - 1);

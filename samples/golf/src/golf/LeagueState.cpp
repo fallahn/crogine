@@ -1149,7 +1149,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString("Global League for " + MonthStrings[Social::getMonth()]);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -1170,7 +1170,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
     auto stripeEnt = entity;
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 219.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, 219.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString("P/Cm");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -1185,7 +1185,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     const auto& str = Social::getMonthlyLeague();
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 68.f, TextTop + 1.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 68.f, TextTop + 1.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(str[2]);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -1196,7 +1196,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
     //str = "Big\nJim\nBeef\nFrank\nSteve\nMelissa\nJean\nSavoury\nRegina Philange Banana Hammock";
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 114.f, TextTop + 1.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 114.f, TextTop + 1.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(str[0]);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -1206,7 +1206,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
     //str = "  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n  1 Point\n 20 Points\n120 Points\n123 Points";
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 437.f, TextTop + 1.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 437.f, TextTop + 1.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(str[1]);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -1217,7 +1217,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
     //auto statusString = "PLAYER SCORE HERE";
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ centre, 59.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ centre, 59.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString(str[3]);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -1231,7 +1231,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
     //how to play
     auto statusString = "To compete play through all 36 rounds in Free Play";
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ centre, 50.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ centre, 50.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(statusString);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
@@ -1244,7 +1244,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
     //text scroller
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 13.f, 0.25f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.25f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("-~-");// .setString("this is a test string. nothing to see here people, move along.");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);

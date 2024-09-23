@@ -189,9 +189,34 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     //    {
     //        if (ImGui::Begin("Flaps"))
     //        {
-    //            auto r = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().getRotation();
+    //            /*auto r = m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().getRotation();
     //            ImGui::Text("X: %3.2f Y: %3.2f W: %3.2f", r.x, r.y, r.w);
-    //            ImGui::Text("AV Rot: %3.2f", m_avatarRotation);
+    //            ImGui::Text("AV Rot: %3.2f", m_avatarRotation);*/
+
+    //            auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+    //            ImGui::Text("Mouse Pos: %3.2f, %3.2f", pos.x, pos.y);
+
+    //            bool contains = false;
+
+    //            for (const auto& box : m_transformBoxes)
+    //            {
+    //                const auto b = cro::Text::getLocalBounds(box.entity).transform(box.entity.getComponent<cro::Transform>().getWorldTransform());
+    //                ImGui::Text("Box: %3.3f, %3.3f, %3.3f, %3.3f", b.left, b.bottom, b.width, b.height);
+
+    //                if (b.contains(pos))
+    //                {
+    //                    contains = true;
+    //                }
+    //            }
+
+    //            if (contains)
+    //            {
+    //                ImGui::Text("Contains true");
+    //            }
+    //            else
+    //            {
+    //                ImGui::Text("Contains false");
+    //            }
     //        }
     //        ImGui::End();
     //    });
@@ -579,6 +604,30 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 nextPage(PaginationID::Hair);
             }
         }
+        else if (group == MenuID::HairEditor)
+        {
+            auto point = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.wheel.mouseX, evt.wheel.mouseY });
+            for (const auto& box : m_transformBoxes)
+            {
+                const auto worldBounds = cro::Text::getLocalBounds(box.entity).transform(box.entity.getComponent<cro::Transform>().getWorldTransform());
+
+                if (worldBounds.contains(point))
+                {
+                    auto idx = (PlayerData::HeadwearOffset::HairTx + box.index) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+
+                    float change = static_cast<float>(evt.wheel.y) * box.step;
+                    if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
+                    {
+                        change *= 10.f;
+                    }
+                    m_activeProfile.headwearOffsets[idx][box.offset] = 
+                        std::clamp(m_activeProfile.headwearOffsets[idx][box.offset] + change, box.minVal, box.maxVal);
+
+                    updateHeadwearTransform();
+                    break;
+                }
+            }
+        }        
         else
         {
             auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
@@ -3627,12 +3676,13 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     constexpr std::size_t buttonCount = 2; //buttons per item
     constexpr std::size_t rButtonCount = cCount * buttonCount; //buttons per row
 
-    constexpr std::array MinValues = { -0.1f, -1.f, 0.f };
-    constexpr std::array MaxValues = { 0.1f, 1.f, 1.4f };
+    constexpr std::array MinValues = { -0.1f, -1.f, 0.01f };
+    constexpr std::array MaxValues = { 0.1f, 1.f, 1.5f };
     constexpr std::array MinSteps = { 0.001f, 0.002f, 0.01f };
     constexpr std::array MaxSteps = { 0.001f, 0.002f, 0.01f };
 
     glm::vec3 pos(310.f, YStart, 0.1f);
+    std::int32_t k = 0;
 
     for (auto i = 0u; i < cCount; ++i) //cols pos, rot, scale
     {
@@ -3650,6 +3700,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                 [&, i, j](cro::Entity e, float)
                 {
                     auto idx = (PlayerData::HeadwearOffset::HairTx + i) + (PlayerData::HeadwearOffset::HatTx * m_headwearID);
+
                     float val = m_activeProfile.headwearOffsets[idx][j];
                     std::stringstream ss;
                     ss.precision(2);
@@ -3657,6 +3708,15 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
                     e.getComponent<cro::Text>().setString(ss.str());
                 };
             bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            //used to detect mouse scroll
+            m_transformBoxes[k].entity = entity;
+            m_transformBoxes[k].index = i;
+            m_transformBoxes[k].offset = j;
+            m_transformBoxes[k].minVal = MinValues[i];
+            m_transformBoxes[k].maxVal = MaxValues[i];
+            m_transformBoxes[k].step = MinSteps[i];
+            k++;
 
             ButtonHoldContext buttonContext;
             buttonContext.i = i;

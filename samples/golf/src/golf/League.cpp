@@ -541,6 +541,14 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
         }
     }
 
+    //make sure novice club sets rarely get better than a birdie
+    if (m_sharedData.clubSet == 0
+        && holeScore < (par - 1)
+        && cro::Util::Random::value(0, 2) != 0)
+    {
+        holeScore += cro::Util::Random::value(2, 4) / 2;
+    }
+
     //there's a flaw in my logic here which means the result occasionally
     //comes back as zero - rather than fix my logic I'm going to paste over the cracks.
     if (holeScore == 0)
@@ -574,7 +582,7 @@ void League::rollPlayers(bool resetScores)
         player.curve = std::round(dist * MaxCurve) + (player.skill % 2);
         player.curve = player.curve + cro::Util::Random::value(-1, 1);
         player.curve = std::clamp(player.curve, 0, MaxCurve);
-        player.outlier = cro::Util::Random::value(1, 10);
+        player.outlier = cro::Util::Random::value(2, 10);
         player.nameIndex = nameIndex++;
 
         //this starts small and increase as

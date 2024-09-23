@@ -310,7 +310,8 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_bindingIndex      (-1),
     m_currentTabFunction(0),
     m_activeToolTip     (-1),
-    m_viewScale         (2.f)
+    m_viewScale         (2.f),
+    m_refreshControllers(false)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -567,6 +568,12 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         }
     }
 
+    else if (evt.type == SDL_CONTROLLERDEVICEADDED
+        || evt.type == SDL_CONTROLLERDEVICEREMOVED)
+        {
+            m_refreshControllers = true;
+        }
+
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -618,6 +625,25 @@ void OptionsState::handleMessage(const cro::Message& msg)
 bool OptionsState::simulate(float dt)
 {
     m_scene.simulate(dt);
+
+    if (m_refreshControllers)
+    {
+        //*sigh* the names aren't updated until AFTER the event
+        //so we have to delay a frame.
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+            {
+                refreshControllerList();
+
+                e.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(e);
+            };
+
+        m_refreshControllers = false;
+    }
+
     return true;
 }
 
@@ -827,6 +853,7 @@ void OptionsState::buildScene()
 
                 assertDeviceIndex();
                 refreshDeviceLabel();
+                refreshControllerList();
             }
             break;
         case RootCallbackData::FadeOut:
@@ -3112,6 +3139,17 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
     parent.getComponent<cro::Transform>().addChild(infoEnt.getComponent<cro::Transform>());
 
+    //displays list of controllers if there's more than one connected
+    m_controllerInfoEnt = m_scene.createEntity();
+    m_controllerInfoEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, -14.f, TextOffset });
+    m_controllerInfoEnt.addComponent<cro::Drawable2D>();
+    m_controllerInfoEnt.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
+    m_controllerInfoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    //m_controllerInfoEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_controllerInfoEnt.addComponent<cro::Callback>().setUserData<const float>(parentBounds.width / 2.f);
+    parent.getComponent<cro::Transform>().addChild(m_controllerInfoEnt.getComponent<cro::Transform>());
+    refreshControllerList();
+
     //displays keybind info at top
     auto buttonChangeEnt = m_scene.createEntity();
     buttonChangeEnt.addComponent<cro::Transform>().setPosition(glm::vec3((parentBounds.width / 4.f) * 3.f, 130.f, TextOffset));
@@ -3143,6 +3181,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         {
             e.getComponent<cro::AudioEmitter>().play();
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
     auto highlightUnselectID = uiSystem.addCallback(
         [&](cro::Entity e) mutable
@@ -3256,7 +3296,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
 
     //switch between keyboard + cotroller view
-    //TODO default this to controller on deck
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(12.f, 138.f, TextOffset));
     entity.addComponent<cro::Drawable2D>();
@@ -3688,7 +3727,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
     //alt power input
     entity = createSquareHighlight(glm::vec2(97.f, 38.f));
-    entity.setLabel("When enabled press and hold Action to select stroke power\nelse use the default 2-tap method when disabled");
+    entity.setLabel("When enabled press and hold Action to select stroke power\nelse use the default 3-tap method when disabled");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlAltPower);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlSwg);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvY, CtrlVib);
@@ -4736,23 +4775,53 @@ void OptionsState::refreshDeviceLabel()
     m_deviceLabel.getComponent<cro::Text>().setString(str);
     auto bounds = cro::Text::getLocalBounds(m_deviceLabel);
 
+    static constexpr float VerticalPos = 242.f;
+
     if (bounds.width > LabelCrop.width)
     {
         m_deviceLabel.getComponent<cro::Callback>().active = true;
         m_deviceLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Left);
-        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 244.f, 242.f });
+        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 244.f, VerticalPos });
         m_deviceLabel.getComponent<cro::Drawable2D>().setCroppingArea(LabelCrop);
     }
     else
     {
         m_deviceLabel.getComponent<cro::Callback>().active = false;
         m_deviceLabel.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 308.f, 156.f });
+        m_deviceLabel.getComponent<cro::Transform>().setPosition({ 308.f, VerticalPos });
         bounds.left = -(bounds.width / 2.f);
         m_deviceLabel.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
     }
     m_deviceLabel.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
     m_deviceLabel.getComponent<cro::Callback>().getUserData<TextScrollData>().maxWidth = bounds.width;
+}
+
+void OptionsState::refreshControllerList()
+{
+    if (cro::GameController::getControllerCount() < 2)
+    {
+        m_controllerInfoEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
+    else
+    {
+        cro::String str;
+        for (auto i = 0; i < std::max(4, cro::GameController::getControllerCount()); ++i)
+        {
+            str += std::to_string(i + 1) + ". ";
+            str += cro::GameController::getPrintableName(i);
+            str += "\n";
+        }
+        m_controllerInfoEnt.getComponent<cro::Text>().setString(str);
+
+        auto bounds = cro::Text::getLocalBounds(m_controllerInfoEnt);
+        auto posX = m_controllerInfoEnt.getComponent<cro::Callback>().getUserData<const float>() - std::round(bounds.width / 2.f);
+        auto pos = m_controllerInfoEnt.getComponent<cro::Transform>().getPosition();
+        pos.x = posX;
+        m_controllerInfoEnt.getComponent<cro::Transform>().setPosition(pos);
+
+        m_controllerInfoEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    }
+    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
 }
 
 void OptionsState::quitState()

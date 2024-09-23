@@ -849,6 +849,9 @@ void App::handleEvents()
                     auto* j = SDL_GameControllerGetJoystick(ci.controller);
                     ci.joystickID = SDL_JoystickInstanceID(j);                    
                     ci.psLayout = Detail::isPSLayout(ci.controller);
+                    
+                    std::string n = SDL_GameControllerName(ci.controller);
+                    ci.printableName = cro::String::fromUtf8(n.begin(), n.end());
 
                     auto idx = SDL_GameControllerGetPlayerIndex(ci.controller);
                     if (idx != -1)
@@ -887,7 +890,15 @@ void App::handleEvents()
                 }
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
-                m_controllers[controllerIndex] = {};
+                //m_controllers[controllerIndex] = {};
+
+                m_controllers[controllerIndex] = m_controllers[m_controllerCount];
+                m_controllers[m_controllerCount] = {};
+
+                if (m_controllers[controllerIndex].controller)
+                {
+                    SDL_GameControllerSetPlayerIndex(m_controllers[controllerIndex].controller, controllerIndex);
+                }
             }
 
             if (m_joysticks.count(id) > 0)

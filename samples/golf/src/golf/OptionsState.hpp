@@ -127,6 +127,7 @@ private:
     std::int32_t m_activeToolTip;
 
     cro::Entity m_layoutEnt; //controller layouts
+    cro::Entity m_controllerInfoEnt; //displays controller names (when connected)
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
@@ -146,6 +147,9 @@ private:
     void applyAudioDevice();
     void assertDeviceIndex();
     void refreshDeviceLabel();
+
+    bool m_refreshControllers;
+    void refreshControllerList();
 
     void quitState();
 };

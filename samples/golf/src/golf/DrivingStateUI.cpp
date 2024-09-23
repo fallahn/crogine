@@ -966,7 +966,7 @@ void DrivingState::createUI()
     entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
     auto endColour = TextGoldColour;
     endColour.setAlpha(0.f);
-    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts();
+    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -995,7 +995,7 @@ void DrivingState::createUI()
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
     };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_minimapIndicatorEnt = entity;
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.

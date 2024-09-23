@@ -548,8 +548,7 @@ void GolfState::loadMap()
                         holeData.modelPath = modelPath;
 
                         holeData.modelEntity = m_gameScene.createEntity();
-                        holeData.modelEntity.addComponent<cro::Transform>().setPosition(OriginOffset);
-                        holeData.modelEntity.getComponent<cro::Transform>().setOrigin(OriginOffset);
+                        holeData.modelEntity.addComponent<cro::Transform>();
                         holeData.modelEntity.addComponent<cro::Callback>();
                         modelDef.createModel(holeData.modelEntity);
                         holeData.modelEntity.getComponent<cro::Model>().setHidden(true);
@@ -560,6 +559,13 @@ void GolfState::loadMap()
                             holeData.modelEntity.getComponent<cro::Model>().setMaterial(m, material);
                         }
                         propCount++;
+
+                        //allow the model to scale about its own centre, not world
+                        auto offset = holeData.modelEntity.getComponent<cro::Model>().getMeshData().boundingBox.getCentre();
+                        offset.y = 0.f;
+                        holeData.modelEntity.getComponent<cro::Transform>().setPosition(offset);
+                        holeData.modelEntity.getComponent<cro::Transform>().setOrigin(offset);
+
 
                         prevHoleString = modelPath;
                         prevHoleEntity = holeData.modelEntity;
@@ -1374,7 +1380,8 @@ void GolfState::loadMap()
 
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(scoreSize);
-        if (Progress::read(m_sharedData.leagueRoundID, h, scores))
+        std::int32_t mulliganCount = 0;
+        if (Progress::read(m_sharedData.leagueRoundID, h, scores, mulliganCount))
         {
             if (h != 0)
             {
@@ -1411,6 +1418,10 @@ void GolfState::loadMap()
                 }
 
                 m_resumedFromSave = true;
+                if (m_currentHole == 0)
+                {
+                    mulliganCount = 1;
+                }
 
                 //this might be an upgrade from the old league system
                 //so we need to fill in the in-progress scores
@@ -1422,8 +1433,9 @@ void GolfState::loadMap()
                 }
             }
         }
-    }
 
+        m_mulliganCount = mulliganCount;
+    }
 
     initAudio(theme.treesets.size() > 2);
 }
@@ -1435,6 +1447,8 @@ void GolfState::loadMaterials()
     {
         wobble = "#define WOBBLE\n";
     }
+    const std::string FadeDistance = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane) + "\n";
+    const std::string FadeDistanceHQ = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane *0.8f) + "\n"; //fade closer for HQ trees beforethey are culled
 
     //load materials
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
@@ -1541,7 +1555,7 @@ void GolfState::loadMaterials()
     m_materialIDs[MaterialID::ShadowMap] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]).setProperty("u_noiseTexture", noiseTex);
 
-    m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define DITHERED\n#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
+    m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define DITHERED\n#define SHADOW_MAPPING\n#define ALPHA_CLIP\n" + FadeDistance);
     shader = &m_resources.shaders.get(ShaderID::BillboardShadow);
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1652,11 +1666,11 @@ void GolfState::loadMaterials()
 
     if (m_sharedData.nightTime)
     {
-        m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, "#define USE_MRT\n");;
+        m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, "#define USE_MRT\n" + FadeDistance);
     }
     else
     {
-        m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+        m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, FadeDistance);
     }
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_scaleBuffer.addShader(*shader);
@@ -1702,20 +1716,20 @@ void GolfState::loadMaterials()
         mrt = "#define USE_MRT\n";
     }
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble + mrt);
+    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble + mrt + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble + mrt);
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble + mrt + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
     m_windBuffer.addShader(*shader);
 
@@ -1724,7 +1738,7 @@ void GolfState::loadMaterials()
     {
         alphaClip = "#define ALPHA_CLIP\n";
     }
-    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble + FadeDistanceHQ);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
     m_windBuffer.addShader(*shader);
 

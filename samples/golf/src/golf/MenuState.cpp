@@ -1314,6 +1314,14 @@ void MenuState::handleMessage(const cro::Message& msg)
                     };
                 }
             }
+            else if (data.data == MenuID::Avatar)
+            {
+                if (m_sharedData.showRosterTip)
+                {
+                    m_sharedData.errorMessage = "Welcome to the Roster";
+                    requestStackPush(StateID::MessageOverlay);
+                }
+            }
             /*else
             {
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = false;

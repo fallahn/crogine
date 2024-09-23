@@ -80,7 +80,7 @@ namespace
 
     static constexpr std::uint32_t QuadsPerMetre = 1;
 
-    static constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
+    static constexpr float MaxShrubOffset = MaxTerrainHeight + 18.f;
     static constexpr std::int32_t SlopeGridSize = 20;
     static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
     

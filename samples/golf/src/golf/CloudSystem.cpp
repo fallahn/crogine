@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "CloudSystem.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/detail/glm/gtx/norm.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -36,7 +37,7 @@ source distribution.
 
 namespace
 {
-    constexpr float MaxRadius = 380.f;
+    constexpr float MaxRadius = MapSizeFloat.x / 2.f;// 380.f;
     constexpr float MaxDistance = MaxRadius * MaxRadius;
     constexpr float ResetDistance = (MaxRadius * 2.f);
 }
@@ -82,8 +83,8 @@ void CloudSystem::process(float dt)
             tx.move(-movement);
         }
 
-        auto facing = glm::vec2(camPos.x, camPos.z) - cloudPos;
-        tx.setRotation(cro::Transform::Y_AXIS, std::atan2(-facing.y, facing.x) - (cro::Util::Const::degToRad * 90.f));
+        auto facing = camPos - tx.getPosition();// glm::vec2(camPos.x, camPos.z) - cloudPos;
+        tx.setRotation(cro::Transform::Y_AXIS, std::atan2(-facing.z, facing.x) - (cro::Util::Const::degToRad * 90.f));
     }
 }
 

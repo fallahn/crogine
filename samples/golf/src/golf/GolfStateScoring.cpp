@@ -77,6 +77,16 @@ void GolfState::updateHoleScore(std::uint16_t data)
             if (m_sharedData.scoreType == ScoreType::Skins)
             {
                 showNotification("Skins pot increased to " + std::to_string(player));
+
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::UI::ScoreTitle;
+                cmd.action = [&, player](cro::Entity e, float)
+                    {
+                        auto str = m_courseTitle + " - Skins - Pot: " + std::to_string(player);
+                        e.getComponent<cro::Text>().setString(str);
+                        centreText(e);
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
             else
             {

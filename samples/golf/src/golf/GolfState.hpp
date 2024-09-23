@@ -244,6 +244,7 @@ private:
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
     bool m_resumedFromSave;
+    std::int32_t m_mulliganCount;
 
     TerrainBuilder m_terrainBuilder;
 
@@ -517,7 +518,9 @@ private:
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
     cro::Entity m_minimapEnt;
+    cro::Entity m_minimapIndicatorEnt;
     cro::Entity m_miniGreenEnt;
+    cro::Entity m_strokeDistanceEnt;
     cro::Entity m_miniGreenIndicatorEnt;
     cro::Entity m_scoreboardEnt;
     cro::Entity m_nemesisEnt;

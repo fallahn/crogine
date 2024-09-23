@@ -114,7 +114,9 @@ namespace
     cro::Colour skyMid = cro::Colour::White;
     cro::Colour skyTop = cro::Colour::CornflowerBlue;
 
+    //MapSize * 0.375
     constexpr glm::uvec2 ThumbnailSize(120u, 75u);
+    //constexpr glm::uvec2 ThumbnailSize(202u, 120u);
 }
 
 BushState::BushState(cro::StateStack& stack, cro::State::Context context, const SharedStateData& sd)
@@ -488,7 +490,7 @@ void BushState::createScene()
     m_thumbnailCamera = m_gameScene.createEntity();
     m_thumbnailCamera.addComponent<cro::Transform>().setPosition({ 0.f, 40.f, 0.f });
     m_thumbnailCamera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 50.f);
+    m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, MapSizeFloat.x, 0.f, MapSizeFloat.y, -0.1f, 50.f);
     m_thumbnailCamera.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
     m_thumbnailCamera.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlagsThumbnail);
 }
@@ -1148,6 +1150,8 @@ void BushState::createThumbnails()
     auto matID = m_resources.materials.add(m_resources.shaders.get(unlitShader));
     auto material = m_resources.materials.get(matID);
 
+    static constexpr glm::vec3 MapCentre(MapSizeFloat.x / 2.f, 0.f, -MapSizeFloat.y / 2.f);
+
     cro::ModelDefinition md(m_resources);
     auto oldCam = m_gameScene.setActiveCamera(m_thumbnailCamera);
     for(auto i = 0u; i < inPaths.size(); ++i)
@@ -1179,9 +1183,9 @@ void BushState::createThumbnails()
 
                     if (md.loadFromFile(modelPath))
                     {
+                        
                         auto entity = m_gameScene.createEntity();
-                        entity.addComponent<cro::Transform>().setOrigin({160.f, 0.f, -100.f});
-                        entity.getComponent<cro::Transform>().setPosition({160.f, 0.f, -100.f});
+                        entity.addComponent<cro::Transform>().setPosition(MapCentre);
                         md.createModel(entity);
                         entity.getComponent<cro::Model>().setRenderFlags(RenderFlagsThumbnail);
 
@@ -1195,18 +1199,18 @@ void BushState::createThumbnails()
                         }
 
 
-
                         const auto& bounds = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+                        auto o = bounds.getCentre();
+                        o.y = 0.f;
+                        entity.getComponent<cro::Transform>().setOrigin(o);
+
                         auto size = bounds[1] - bounds[0];
-                        float scale = 1.f;
-                        if (size.x > size.z)
-                        {
-                            scale = std::max(1.f, std::floor(320.f / size.x));
-                        }
-                        else
-                        {
-                            scale = std::max(1.f, std::floor(200.f / size.z));
-                        }
+                        size.z *= -1.f;
+
+                        const float scaleX = std::max(1.f, std::floor(MapSizeFloat.x / size.x));
+                        const float scaleY = std::max(1.f, std::floor(MapSizeFloat.y / size.z));
+
+                        const float scale = std::min(scaleX, scaleY);
                         entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
 
@@ -1216,11 +1220,11 @@ void BushState::createThumbnails()
                         {
                             flagPos = flag->getValue<glm::vec3>();
 
-                            flagPos -= glm::vec3(160.f, 0.f, -100.f);
                             flagPos *= scale;
-                            flagPos += glm::vec3(160.f, 0.f, -100.f);
+                            flagPos -= o * scale;
+                            flagPos += MapCentre;
 
-                            flagQuad.setPosition({ flagPos.x / (320.f / ThumbnailSize.x), -flagPos.z / (200.f / ThumbnailSize.y)});
+                            flagQuad.setPosition({ flagPos.x / (MapSizeFloat.x / ThumbnailSize.x), -flagPos.z / (MapSizeFloat.y / ThumbnailSize.y)});
                         }
 
 

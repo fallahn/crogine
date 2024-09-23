@@ -4520,11 +4520,13 @@ void MenuState::updateUnlockedItems()
                 m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::MonthlyComplete;
             }
         }
+#ifdef USE_GNS
         else if (progress.valid) //we might be trying to read this before results download
         {
             //make sure to unflag from any previous month
             genericFlags &= ~flag;
         }
+#endif
 
         Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);
     }
