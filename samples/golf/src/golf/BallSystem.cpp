@@ -394,7 +394,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             const auto height = std::clamp(-t.penetration, 0.f, 60.f);
 
             //add wind
-            auto multiplier = getWindMultiplier(/*tx.getPosition().y - ball.startPoint.y*/height, glm::length(m_holeData->pin - tx.getPosition()));
+            const auto multiplier = getWindMultiplier(/*tx.getPosition().y - ball.startPoint.y*/height, glm::length(m_holeData->pin - tx.getPosition())) * 1.36f;
             ball.velocity += m_windDirection * m_windStrength * multiplier * dt;
             ball.windEffect = m_windStrength * multiplier;
 
