@@ -4630,14 +4630,30 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             if (score <= ScoreID::Par
                 && m_sharedData.showBeacon)
             {
-                //display ring animation
-                cro::Command cmd;
-                cmd.targetFlags = CommandID::HoleRing;
-                cmd.action = [](cro::Entity e, float)
-                {
-                    e.getComponent<cro::Callback>().active = true;
-                };
-                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(0.25f);
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
+                    {
+                        auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                        ct -= dt;
+
+                        if (ct < 0)
+                        {
+                            //display ring animation
+                            cro::Command cmd;
+                            cmd.targetFlags = CommandID::HoleRing;
+                            cmd.action = [](cro::Entity e2, float)
+                                {
+                                    e2.getComponent<cro::Callback>().active = true;
+                                };
+                            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                            e.getComponent<cro::Callback>().active = false;
+                            m_gameScene.destroyEntity(e);
+                        }
+                    };
             }
         }
 
