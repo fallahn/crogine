@@ -2063,6 +2063,18 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_achievementTracker.nearMissChallenge = true;
             Social::awardXP(2, XPStringID::NearMiss);
         }
+        //else if (data.type == CollisionEvent::End
+        //    && data.terrain == TerrainID::Hole)
+        //{
+        //    //display ring animation
+        //    cro::Command cmd;
+        //    cmd.targetFlags = CommandID::HoleRing;
+        //    cmd.action = [](cro::Entity e2, float)
+        //        {
+        //            e2.getComponent<cro::Callback>().active = true;
+        //        };
+        //    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        //}
     }
         break;
     }

@@ -1397,7 +1397,7 @@ void GolfState::buildUI()
         mRoot.addComponent<cro::Transform>();
         mRoot.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
         mRoot.addComponent<UIElement>();// .relativePosition = { 0.01f, 0.01f };
-        mRoot.getComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x + 4.f, (WindIndicatorPosition.y / 2.f) - 6.f };
+        mRoot.getComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x + 3.f, (WindIndicatorPosition.y / 2.f) - 6.f };
         mRoot.getComponent<UIElement>().depth = 1.f;
         infoEnt.getComponent<cro::Transform>().addChild(mRoot.getComponent<cro::Transform>());
 
@@ -4632,7 +4632,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
                 auto entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().setUserData<float>(0.25f);
+                entity.getComponent<cro::Callback>().setUserData<float>(0.4f);
                 entity.getComponent<cro::Callback>().function =
                     [&](cro::Entity e, float dt)
                     {
