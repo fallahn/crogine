@@ -1397,7 +1397,7 @@ void GolfState::buildUI()
         mRoot.addComponent<cro::Transform>();
         mRoot.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
         mRoot.addComponent<UIElement>();// .relativePosition = { 0.01f, 0.01f };
-        mRoot.getComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x + 4.f, (WindIndicatorPosition.y / 2.f) - 6.f };
+        mRoot.getComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x + 3.f, (WindIndicatorPosition.y / 2.f) - 6.f };
         mRoot.getComponent<UIElement>().depth = 1.f;
         infoEnt.getComponent<cro::Transform>().addChild(mRoot.getComponent<cro::Transform>());
 
@@ -4630,14 +4630,30 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             if (score <= ScoreID::Par
                 && m_sharedData.showBeacon)
             {
-                //display ring animation
-                cro::Command cmd;
-                cmd.targetFlags = CommandID::HoleRing;
-                cmd.action = [](cro::Entity e, float)
-                {
-                    e.getComponent<cro::Callback>().active = true;
-                };
-                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(0.4f);
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
+                    {
+                        auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                        ct -= dt;
+
+                        if (ct < 0)
+                        {
+                            //display ring animation
+                            cro::Command cmd;
+                            cmd.targetFlags = CommandID::HoleRing;
+                            cmd.action = [](cro::Entity e2, float)
+                                {
+                                    e2.getComponent<cro::Callback>().active = true;
+                                };
+                            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                            e.getComponent<cro::Callback>().active = false;
+                            m_gameScene.destroyEntity(e);
+                        }
+                    };
             }
         }
 

@@ -885,13 +885,20 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
 float InputParser::getEstimatedDistance() const
 {
+    float ret = m_estimatedDistance;
+
+    if (m_sharedData.decimatePowerBar)
+    {
+        ret = Clubs[m_currentClub].getTargetAtLevel(Club::getClubLevel());// *1.08f;
+    }
+
     switch (m_terrain)
     {
-    default: return m_estimatedDistance;
-    case TerrainID::Bunker: return m_estimatedDistance * (1.f - m_bunkerWavetable[m_bunkerTableIndex]);
-    case TerrainID::Rough: return m_estimatedDistance * (1.f - m_roughWavetable[m_roughTableIndex]);
+    default: return ret;
+    case TerrainID::Bunker: return ret * (1.f - (m_bunkerWavetable[m_bunkerTableIndex] * 0.5f));
+    case TerrainID::Rough: return ret * (1.f - (m_roughWavetable[m_roughTableIndex] * 0.5f));
     }
-    return m_estimatedDistance; 
+    return ret; 
 }
 
 void InputParser::doFastStroke(float accuracy, float power)
