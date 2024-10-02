@@ -1717,7 +1717,6 @@ void GolfState::buildUI()
         e.getComponent<cro::Drawable2D>().setCroppingArea(miniBounds, true);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
     
     /*auto dbEnt = m_uiScene.createEntity();
     dbEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
@@ -5646,21 +5645,21 @@ void GolfState::retargetMinimap(bool reset)
         //if we have a tight dogleg, such as on the mini putt
         //check if the primary target is in between and shift
         //towards it to better centre the hole
-        auto targ = findTargetPos(player);
+        const auto targ = findTargetPos(player);
         glm::vec2 targDir(targ.x - player.x, -targ.z + player.z);
-        const auto d = glm::dot(glm::normalize(dir), glm::normalize(targDir));
+        const auto dirNorm = glm::normalize(dir);
+        const auto d = glm::dot(dirNorm, glm::normalize(targDir));
         const auto l2 = glm::length2(targDir);
         if (!isMultiTarget &&
             (d > 0 && d < 0.8f && l2 > 2.25f && l2 < glm::length2(dir)))
         {
-            //project the target onto the current dir
-            //then move half way between projection and
-            //primary target
-            //auto p = dir * d * (1.f / glm::length2(dir));
-
-            //actually just moving towards the target seems to work better
             auto p = dir / 2.f;
-            p += (targDir - p) / 2.f;
+            
+            //find the distance to the target point and offset by perpendicular amount
+            const glm::vec2 perpNormal(dirNorm.y, -dirNorm.x);
+            const glm::vec2 targPos(targ.x, -targ.z);
+            const float offset = /*std::abs*/((targPos.x - target.end.pan.x) * dirNorm.y - (targPos.y - target.end.pan.y) * dirNorm.x) / 2.f;
+            p += perpNormal * offset;
             target.end.pan += p;
         }
         else
@@ -5673,7 +5672,7 @@ void GolfState::retargetMinimap(bool reset)
 
         //get distance between flag and player and expand by 1.4 (about 3m around a putting hole)
         //TODO this should be fixed 3m - as a percentage it's HUGE on big maps when fully zoomed
-        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.4f; //remember this is world coords
+        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.45f; //remember this is world coords
 
         //scale zoom on long edge of map by box length and clamp to 32x
         target.end.zoom = std::clamp(static_cast<float>(MiniMapSize.x) / viewLength, MinZoom, MaxZoom);
