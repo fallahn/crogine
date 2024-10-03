@@ -1201,6 +1201,9 @@ void GolfGame::convertPreferences() const
 
 void GolfGame::loadPreferences()
 {
+    //hack around preference files getting corrupted for some reason
+    bool restoreDefaults = false;
+
     auto path = getPreferencePath() + "prefs.cfg";
     if (cro::FileSystem::fileExists(path))
     {
@@ -1349,6 +1352,11 @@ void GolfGame::loadPreferences()
                 }
             }
         }
+
+        else
+        {
+            restoreDefaults = true;
+        }
     }
 
 
@@ -1478,6 +1486,11 @@ void GolfGame::loadPreferences()
                     }*/
                 }
             }
+
+            else
+            {
+                restoreDefaults = true;
+            }
         }
 
         path = Social::getBaseContentPath() + "league_names.txt";
@@ -1543,6 +1556,10 @@ void GolfGame::loadPreferences()
         cro::FileSystem::createDirectory(Social::getBaseContentPath() + u8"music");
     }
     loadMusic();
+
+
+    //do this last so were saving any settings which were loaded successfully too
+    savePreferences();
 }
 
 void GolfGame::savePreferences()
