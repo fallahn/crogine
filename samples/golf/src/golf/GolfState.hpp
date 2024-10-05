@@ -335,6 +335,7 @@ private:
     void createWeather(std::int32_t);
     void setFog(float density);
     void createClouds();
+    void createFireworks();
     void buildBow();
     void handleWeatherChange(std::uint8_t);
 

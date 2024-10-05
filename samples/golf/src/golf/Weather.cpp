@@ -33,6 +33,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "CloudSystem.hpp"
 #include "WeatherAnimationSystem.hpp"
+#include "FireworksSystem.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <crogine/audio/AudioScape.hpp>
@@ -42,8 +43,11 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 
+#include <crogine/ecs/systems/ModelRenderer.hpp>
+
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/CircleMeshBuilder.hpp>
+#include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/util/Random.hpp>
@@ -52,117 +56,8 @@ namespace
 {
 #include "shaders/WireframeShader.inl"
 #include "shaders/CloudShader.inl"
+#include "shaders/Weather.inl"
 
-    const std::string WeatherVertex = R"(
-    ATTRIBUTE vec4 a_position;
-    ATTRIBUTE vec4 a_colour;
-
-    uniform mat4 u_worldMatrix;
-    uniform mat4 u_worldViewMatrix;
-    uniform mat4 u_projectionMatrix;
-    uniform vec4 u_clipPlane;
-
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
-
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
-
-#if defined (CULLED)
-    uniform HIGH vec3 u_cameraWorldPosition;
-#endif
-
-    VARYING_OUT LOW vec4 v_colour;
-
-    const float SystemHeight = 80.0;
-
-#if defined(EASE_SNOW)
-    const float PI = 3.1412;
-    float ease(float i)
-    {
-        return sin((i * PI) / 2.0);
-    }
-
-    const float FallSpeed = 1.0;
-    const float WindEffect = 40.0;
-#else
-    float ease(float i)
-    {
-        //return sqrt(1.0 - pow(i - 1.0, 2.0));
-        return i;
-    }
-    const float FallSpeed = 32.0;//16.0;
-    const float WindEffect = 10.0;
-#endif
-
-    void main()
-    {
-        mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
-        vec4 position = a_position;
-
-        float p = position.y - (u_windData.w * FallSpeed);
-        p = mod(p, SystemHeight);
-        //p = ease(0.2 + ((p / SystemHeight) * 0.8));
-        p = ease((p / SystemHeight));
-
-        position.y  = p * SystemHeight;
-
-        position.x -= p * u_windData.x * u_windData.y * WindEffect;
-        position.z -= p * u_windData.z * u_windData.y * WindEffect;
-
-
-        gl_Position = wvp * position;
-        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0 * u_pixelScale * (FallSpeed);
-
-        vec4 worldPos = u_worldMatrix * position;
-        v_colour = a_colour;
-
-#if defined (CULLED)
-        vec3 distance = worldPos.xyz - u_cameraWorldPosition;
-        v_colour.a *= smoothstep(12.25, 16.0, dot(distance, distance));
-#endif
-
-        gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
-    }
-)";
-
-    static const std::string RainFragment = R"(
-    #define USE_MRT
-    #include OUTPUT_LOCATION
-
-    uniform vec4 u_colour = vec4(1.0);
-
-    VARYING_IN vec4 v_colour;
-
-    float ease(float i)
-    {
-        //return sqrt(pow(i, 2.0));
-        return pow(i, 5.0);
-    }
-
-    void main()
-    {
-        vec4 colour = v_colour * u_colour;
-        
-        //if alpha blended
-        //colour.rgb += (1.0 - colour.a) * colour.rgb;
-        colour.a *= 0.5 + (0.5 * ease(gl_PointCoord.y));
-
-        float crop = step(0.495, gl_PointCoord.x);
-        crop *= 1.0 - step(0.505, gl_PointCoord.x);
-
-        //if(crop < 0.05) discard;
-
-        colour.a *= u_colour.a * crop;
-        FRAG_OUT = colour;
-
-        LIGHT_OUT = vec4(vec3(0.0), colour.a);
-    }
-)";
 
     constexpr std::int32_t GridX = 3;
     constexpr std::int32_t GridY = 3;
@@ -419,6 +314,82 @@ void GolfState::createClouds()
     }
 
     //createSun();
+}
+
+void GolfState::createFireworks()
+{
+    auto mon = cro::SysTime::now().months();
+    auto day = cro::SysTime::now().days();
+    switch (mon)
+    {
+    default: return;
+    case 1:
+        if (day != 1)
+        {
+            return;
+        }
+        break;
+    case 2:
+        switch (day)
+        {
+        default: return;
+        case 2:
+        case 23:
+            break;
+        }
+        break;
+    case 10:
+        switch (day)
+        {
+        default: return;
+        //case 5:
+        case 14:
+        case 31:
+            break;
+        }
+        break;
+    case 11:
+        switch (day)
+        {
+        default: return;
+        case 25:
+            break;
+        }
+        break;
+    }
+
+    cro::SphereBuilder builder(1.f);
+    const auto meshID = m_resources.meshes.loadMesh(builder);
+    auto& meshData = m_resources.meshes.getMesh(meshID);
+    meshData.primitiveType = GL_POINTS;
+    meshData.indexData[0].primitiveType = GL_POINTS;
+
+    
+    m_resources.shaders.loadFromString(ShaderID::Firework, FireworkVert, FireworkFragment);
+    auto& shader = m_resources.shaders.get(ShaderID::Firework);
+    m_scaleBuffer.addShader(shader);
+    auto materialID = m_resources.materials.add(shader);
+    
+    auto material = m_resources.materials.get(materialID);
+    material.blendMode = cro::Material::BlendMode::Additive;
+    auto* fireworkSystem = m_skyScene.addSystem<FireworksSystem>(cro::App::getInstance().getMessageBus(), meshData, material);
+
+    static constexpr float MinRadius = 5.f;
+    static constexpr float MaxRadius = 9.f;
+
+    static constexpr std::array<float, 3U> MinBounds = { -MaxRadius, 2.f, -MaxRadius };
+    static constexpr std::array<float, 3U> MaxBounds = { MaxRadius, MaxRadius, MaxRadius };
+
+    const auto positions = pd::PoissonDiskSampling(1.75f, MinBounds, MaxBounds);
+    for (const auto& p : positions)
+    {
+        glm::vec3 worldPos(p[0], p[1], p[2]);
+        const auto l = glm::length(worldPos);
+        if (l < MaxRadius && l > MinRadius)
+        {
+            fireworkSystem->addPosition(worldPos);
+        }
+    }
 }
 
 void GolfState::buildBow()

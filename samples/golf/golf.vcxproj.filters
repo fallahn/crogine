@@ -465,6 +465,9 @@
     <ClCompile Include="src\golf\ButtonHoldSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\FireworksSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -959,6 +962,9 @@
     <ClInclude Include="src\golf\AvatarRotationSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\FireworksSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">
@@ -1037,6 +1043,9 @@
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\shaders\LensFlare.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\Weather.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>

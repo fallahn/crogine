@@ -316,7 +316,7 @@ struct ShaderID final
         Glass,
         LensFlare,
         PointFlare,
-
+        Firework,
     };
 };
 

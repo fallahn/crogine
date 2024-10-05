@@ -400,6 +400,11 @@ void GolfState::loadMap()
         auto colours = m_skyScene.getSkyboxColours();
         colours.bottom = skyDark;
         m_skyScene.setSkyboxColours(colours);
+
+        if (m_sharedData.weatherType == WeatherType::Clear)
+        {
+            createFireworks();
+        }
     }
 
 #ifdef CRO_DEBUG_
