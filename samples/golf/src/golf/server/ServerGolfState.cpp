@@ -69,6 +69,7 @@ namespace
     const cro::Time WarnTime = cro::seconds(10.f);
 
     bool hadTennisBounce = false;
+    bool hadWallBounce = false;
 
     //glm::vec3 randomOffset3()
     //{
@@ -344,6 +345,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                     //send tennis achievement
                     sendAchievement(AchievementID::CauseARacket, playerInfo[0].client, playerInfo[0].player);
                 }
+
+                if (hadWallBounce && (data.terrain == TerrainID::Rough || data.terrain == TerrainID::Green || data.terrain == TerrainID::Fairway))
+                {
+                    LogI << "send achievment here" << std::endl;
+                }
             }
             else if (data.type == GolfBallEvent::Gimme)
             {
@@ -376,6 +382,10 @@ void GolfState::handleMessage(const cro::Message& msg)
         case TriggerID::TennisCourt:
             LogI << "Deuce!" << std::endl;
             hadTennisBounce = true;
+            break;
+        case TriggerID::BackWall:
+            LogI << "FORE" << std::endl;
+            hadWallBounce = true;
             break;
         }
     }
@@ -934,6 +944,7 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     };
 
     hadTennisBounce = false;
+    hadWallBounce = false;
 
     auto& playerInfo = m_playerInfo[groupID].playerInfo;
 
