@@ -293,6 +293,7 @@ struct ShaderID final
         TutorialSlope,
         Wireframe,
         WireframeCulled,
+        WireframeCulledPoint,
         Weather,
         Transition,
         Trophy,

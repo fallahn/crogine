@@ -342,8 +342,9 @@ void GolfState::createFireworks()
         switch (day)
         {
         default: return;
-        //case 5:
+        //case 6:
         case 14:
+        case 24:
         case 31:
             break;
         }
@@ -380,7 +381,8 @@ void GolfState::createFireworks()
     static constexpr std::array<float, 3U> MinBounds = { -MaxRadius, 2.f, -MaxRadius };
     static constexpr std::array<float, 3U> MaxBounds = { MaxRadius, MaxRadius, MaxRadius };
 
-    const auto positions = pd::PoissonDiskSampling(1.75f, MinBounds, MaxBounds);
+    auto positions = pd::PoissonDiskSampling(1.75f, MinBounds, MaxBounds);
+    std::shuffle(positions.begin(), positions.end(), cro::Util::Random::rndEngine);
     for (const auto& p : positions)
     {
         glm::vec3 worldPos(p[0], p[1], p[2]);

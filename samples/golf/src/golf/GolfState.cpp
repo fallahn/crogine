@@ -3650,6 +3650,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //ball shadow
     auto ballEnt = entity;
+    //material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]);
     material.setProperty("u_colour", cro::Colour::White);
     //material.blendMode = cro::Material::BlendMode::Multiply; //causes shadow to actually get darker as alpha reaches zero.. duh
 

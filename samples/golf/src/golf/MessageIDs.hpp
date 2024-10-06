@@ -47,6 +47,7 @@ namespace cl::MessageID
         BilliardsMessage,
         BilliardsCameraMessage,
         AIMessage,
+        EnviroMessage,
 
         Count
     };
@@ -215,4 +216,10 @@ struct AIEvent final
         Predict
     }type = BeginThink;
     float power = 0.f;
+};
+
+struct EnviroEvent final
+{
+    glm::vec3 position = glm::vec3(0.f);
+    float size = 0.f;
 };

@@ -121,6 +121,7 @@ static inline const std::string WireframeFragment = R"(
     VARYING_IN vec2 v_texCoord;
 
     const float TAU = 6.28;
+    const float stepPos = (0.499 * 0.499);
 
     void main()
     {
@@ -137,6 +138,12 @@ static inline const std::string WireframeFragment = R"(
 #if defined (USE_MRT)
         NORM_OUT = vec4(0.0);
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
+#endif
+
+#if defined(POINT_RADIUS)
+    vec2 coord = gl_PointCoord - vec2(0.5);
+    float pos = dot(coord, coord);
+    FRAG_OUT.a *= 1.0 - step(stepPos, pos);
 #endif
     }
 )";

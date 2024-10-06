@@ -254,6 +254,7 @@ private:
         {
             WireFrame,
             WireFrameCulled,
+            WireFrameCulledPoint,
             Water,
             Horizon,
             HorizonSun,

@@ -224,14 +224,14 @@ void DrivingState::createUI()
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     entity.addComponent<cro::Callback>().function =
         [](cro::Entity e, float)
-    {
-        //this is activated once to make sure the
-        //sprite is up to date with any texture buffer resize
-        glm::vec2 texSize = e.getComponent<cro::Sprite>().getTexture()->getSize();
-        e.getComponent<cro::Sprite>().setTextureRect({ glm::vec2(0.f), texSize });
-        e.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
-        e.getComponent<cro::Callback>().active = false;
-    };
+        {
+            //this is activated once to make sure the
+            //sprite is up to date with any texture buffer resize
+            glm::vec2 texSize = e.getComponent<cro::Sprite>().getTexture()->getSize();
+            e.getComponent<cro::Sprite>().setTextureRect({ glm::vec2(0.f), texSize });
+            e.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
+            e.getComponent<cro::Callback>().active = false;
+        };
     auto courseEnt = entity;
     m_courseEntity = entity;
     createPlayer();
@@ -239,7 +239,7 @@ void DrivingState::createUI()
 
     //info panel background - vertices are set in resize callback
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, 0.2f));
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
 

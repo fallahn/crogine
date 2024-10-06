@@ -1198,6 +1198,10 @@ void DrivingState::loadAssets()
     m_materialIDs[MaterialID::WireframeCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
     m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]).blendMode = cro::Material::BlendMode::Alpha;
 
+    m_resources.shaders.loadFromString(ShaderID::WireframeCulledPoint, WireframeVertex, WireframeFragment, "#define CULLED\n#define POINT_RADIUS\n");
+    m_materialIDs[MaterialID::WireframeCulledPoint] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulledPoint));
+    m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulledPoint]).blendMode = cro::Material::BlendMode::Alpha;
+
     m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n");
     m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
 
@@ -2750,7 +2754,7 @@ void DrivingState::createBall()
     //at a distance, and as a model when closer
     //glCheck(glPointSize(BallPointSize)); - this is set in resize callback based on the buffer resolution/pixel scale
 
-    auto ballMaterialID = m_materialIDs[MaterialID::WireframeCulled];
+    auto ballMaterialID = m_materialIDs[MaterialID::WireframeCulledPoint];
     auto ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
     auto shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
 
@@ -2912,6 +2916,7 @@ void DrivingState::createBall()
 
     //ball shadow
     auto ballEnt = entity;
+    material = m_resources.materials.get(m_materialIDs[MaterialID::WireframeCulled]);
     material.setProperty("u_colour", cro::Colour::White);
     material.blendMode = cro::Material::BlendMode::Multiply;
 

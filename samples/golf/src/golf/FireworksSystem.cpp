@@ -28,6 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "FireworksSystem.hpp"
+#include "MessageIDs.hpp"
+#include "GameConsts.hpp"
 #include "../Colordome-32.hpp"
 
 #include <crogine/ecs/Scene.hpp>
@@ -37,13 +39,14 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Easings.hpp>
 
+using namespace cl;
 namespace
 {
     static constexpr std::size_t MinSpawnCount = 6;
     static constexpr std::size_t MaxSpawnCount = 15;
 
     static constexpr std::int32_t MinSpawnTime = 1;
-    static constexpr std::int32_t MaxSpawnTime = 5;
+    static constexpr std::int32_t MaxSpawnTime = 3;
 
     static constexpr std::int32_t MinSize = 1; //actually a tenth of this - see randomiser
     static constexpr std::int32_t MaxSize = 9;
@@ -83,6 +86,7 @@ void FireworksSystem::process(float dt)
         auto& fw = entity.getComponent<Firework>();
         auto& tx = entity.getComponent<cro::Transform>();
 
+        fw.prevProgress = fw.progress;
         fw.progress = std::min(1.f, fw.progress + dt);
 
         const float materialProgress = std::max(0.f, fw.progress);
@@ -100,6 +104,15 @@ void FireworksSystem::process(float dt)
         {
             getScene()->destroyEntity(entity);
         }
+
+        //used by audio director
+        if (fw.progress >= 0
+            && fw.prevProgress < 0)
+        {
+            auto* msg = postMessage<EnviroEvent>(MessageID::EnviroMessage);
+            msg->position = (tx.getPosition() * 60.f) + glm::vec3(MapSizeFloat.x / 2.f, 0.f, -MapSizeFloat.y / 2.f);
+            msg->size = 0.7f + (0.3f - (fw.maxRadius / 3.f)); //controls the pitch
+        }
     }
 
     //check time to spawn
@@ -113,9 +126,14 @@ void FireworksSystem::process(float dt)
             auto entity = getScene()->createEntity();
             entity.addComponent<cro::Transform>().setPosition(m_positions[m_spawnIndex]);
             entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            //nice idea but we need to fix gravity in the shader if we do this
+            /*entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI));
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI));
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI));*/
             entity.addComponent<cro::Model>(m_meshData, m_materialData);
             entity.addComponent<Firework>().maxRadius = size;
-            entity.getComponent<Firework>().progress = -static_cast<float>(i) / 10.f;
+            entity.getComponent<Firework>().progress = -static_cast<float>(i) / 7.f;
+            entity.getComponent<Firework>().progress -= cro::Util::Random::value(0.05f, 0.18f);
 
             //stash the material property so we can update it without having to do repeated lookups
             auto& materialProperties = entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, 0).properties;

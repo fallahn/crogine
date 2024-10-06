@@ -155,8 +155,8 @@ layout (std140) uniform PixelScale
     float u_pixelScale;
 };
 
-const float Gravity = 0.05;
-const float PointSize = 20.0;
+const float Gravity = 0.06;
+const float PointSize = 15.0;
 
 void main()
 {
@@ -176,7 +176,12 @@ uniform vec4 u_colour = vec4(1.0);
 
 OUTPUT
 
+const float stepPos = (0.499 * 0.499);
+
 void main()
 {
-    FRAG_OUT = vec4(u_colour.rgb * pow(2.0, -8.0 * u_progress), 1.0);
+    vec2 coord = gl_PointCoord - vec2(0.5);
+    float len2 = dot(coord, coord);
+
+    FRAG_OUT = vec4(u_colour.rgb * pow(2.0, -8.0 * u_progress) * (1.0 - step(stepPos, len2)), 1.0);
 })";

@@ -40,6 +40,7 @@ source distribution.
 struct Firework final
 {
     float progress = 0.f;
+    float prevProgress = -1.f;
     float maxRadius = 1.f;
 
     cro::Material::Property* progressProperty = nullptr;
