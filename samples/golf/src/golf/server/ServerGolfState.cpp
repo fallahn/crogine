@@ -348,7 +348,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                 if (hadWallBounce && (data.terrain == TerrainID::Rough || data.terrain == TerrainID::Green || data.terrain == TerrainID::Fairway))
                 {
-                    LogI << "send achievment here" << std::endl;
+                    sendAchievement(AchievementID::OffTheWall, playerInfo[0].client, playerInfo[0].player);
                 }
             }
             else if (data.type == GolfBallEvent::Gimme)

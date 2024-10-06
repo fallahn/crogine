@@ -158,7 +158,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "punch_it",
     "top_flop",
     "fringe_benefit",
-    "mulligan"
+    "mulligan",
+    "off_the_wall"
 };
 
 //appears on the notification
@@ -275,7 +276,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Punch It Chewie!",
     "Top Of The Flops",
     "Fringe Benefit",
-    "Try, Try Again"
+    "Try, Try Again",
+    "Off The Wall"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -393,6 +395,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Hole out with a Flop shot", false),
     std::make_pair("Sink a hole from the fringe using a putter", false),
     std::make_pair("Use at least one Mulligan in Career Mode", false),
+    std::make_pair("Use the far wall on hole 15, course 12 to stop the ball going out of bounds", false),
 };
 
 //assuming trophies load correctly they are:
@@ -545,6 +548,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*110*/TrophyID::GoldFigure,
     /*111*/TrophyID::SilverCup,
     /*112*/TrophyID::BronzeCup,
+    /*113*/TrophyID::Platinum,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
