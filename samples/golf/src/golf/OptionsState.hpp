@@ -103,7 +103,20 @@ private:
             Count
         };
     };
+
+    struct ScrollPress final
+    {
+        bool pressed = false;
+        float pressedTimer = 0.f;
+        static constexpr float PressTime = 0.5f;
+
+        bool active = false;
+        float scrollTimer = 0.f;
+        static constexpr float ScrollTime = 0.05f;
+    };
+
     std::array<std::function<void(cro::Entity, cro::ButtonEvent)>, ScrollID::Count> m_scrollFunctions = {};
+    std::array<ScrollPress, ScrollID::Count> m_scrollPresses = {};
 
     cro::RenderTexture m_achievementBuffer;
     cro::RenderTexture m_statsBuffer;

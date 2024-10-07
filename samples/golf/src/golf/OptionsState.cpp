@@ -624,6 +624,40 @@ void OptionsState::handleMessage(const cro::Message& msg)
 
 bool OptionsState::simulate(float dt)
 {
+    for (auto i = 0u; i < m_scrollPresses.size(); ++i)
+    {
+        auto& press = m_scrollPresses[i];
+        if (press.pressed)
+        {
+            press.pressedTimer += dt;
+            if (press.pressedTimer > ScrollPress::PressTime)
+            {
+                press.active = true;
+            }
+        }
+
+
+        if (press.active)
+        {
+            press.scrollTimer += dt;
+            if (press.scrollTimer > ScrollPress::ScrollTime)
+            {
+                press.scrollTimer -= ScrollPress::ScrollTime;
+                
+                //this is important we use the correct type of
+                //event here because only controller presses (not
+                //mouse presses) should latch the active state
+                cro::ButtonEvent fakeEvent;
+                /*fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
+                fakeEvent.cbutton.button = cro::GameController::ButtonA;*/
+                fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                fakeEvent.button.button = SDL_BUTTON_LEFT;
+                m_scrollFunctions[i](cro::Entity(), fakeEvent);
+            }
+        }
+    }
+
+
     m_scene.simulate(dt);
 
     if (m_refreshControllers)
@@ -4070,6 +4104,11 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
+
+            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            {
+                m_scrollPresses[ScrollID::AchUp].pressed = true;
+            }
         }
     };
 
@@ -4084,6 +4123,11 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                 target -= VerticalSpacing;
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+
+            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            {
+                m_scrollPresses[ScrollID::AchDown].pressed = true;
             }
         }
     };
@@ -4143,12 +4187,32 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     upHighlight.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollDown);
     upHighlight.getComponent<cro::UIInput>().setPrevIndex(TabStats, TabStats);
     upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::AchUp]);
+    upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                //if (deactivated(evt))
+                {
+                    m_scrollPresses[ScrollID::AchUp].pressed = false;
+                    m_scrollPresses[ScrollID::AchUp].pressedTimer = 0.f;
+                    m_scrollPresses[ScrollID::AchUp].active = false;
+                }
+            });
 
     auto downHighlight = createHighlight({ cropping.width - 19.f, 7.f });
     downHighlight.getComponent<cro::UIInput>().setSelectionIndex(ScrollDown);
     downHighlight.getComponent<cro::UIInput>().setNextIndex(WindowAdvanced, WindowClose);
     downHighlight.getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, ScrollUp);
     downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::AchDown]);
+    downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                //if (deactivated(evt))
+                {
+                    m_scrollPresses[ScrollID::AchDown].pressed = false;
+                    m_scrollPresses[ScrollID::AchDown].pressedTimer = 0.f;
+                    m_scrollPresses[ScrollID::AchDown].active = false;
+                }
+            });
 }
 
 void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -4284,6 +4348,11 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
+
+            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            {
+                m_scrollPresses[ScrollID::StatUp].pressed = true;
+            }
         }
     };
 
@@ -4298,6 +4367,11 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
                 target -= VerticalSpacing;
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+
+            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            {
+                m_scrollPresses[ScrollID::StatDown].pressed = true;
             }
         }
     };
@@ -4357,12 +4431,34 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
     upHighlight.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollDown);
     upHighlight.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, TabAchievements);
     upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatUp]);
+    upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                //if (deactivated(evt))
+                {
+                    m_scrollPresses[ScrollID::StatUp].pressed = false;
+                    m_scrollPresses[ScrollID::StatUp].pressedTimer = 0.f;
+                    m_scrollPresses[ScrollID::StatUp].active = false;
+                }
+            });
+
 
     auto downHighlight = createHighlight({ cropping.width - 19.f, 7.f }, "square_highlight");
     downHighlight.getComponent<cro::UIInput>().setSelectionIndex(ScrollDown);
     downHighlight.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowClose);
     downHighlight.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, ScrollUp);
     downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatDown]);
+    downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                //if (deactivated(evt))
+                {
+                    m_scrollPresses[ScrollID::StatDown].pressed = false;
+                    m_scrollPresses[ScrollID::StatDown].pressedTimer = 0.f;
+                    m_scrollPresses[ScrollID::StatDown].active = false;
+                }
+            });
+
 
     //reset career button
     entity = m_scene.createEntity();
