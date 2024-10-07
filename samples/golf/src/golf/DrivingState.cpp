@@ -2034,6 +2034,7 @@ void DrivingState::createScene()
     };
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(50.f);
     camEnt.addComponent<cro::AudioListener>();
