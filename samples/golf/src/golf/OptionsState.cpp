@@ -1056,7 +1056,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ach_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 52.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 51.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
     achButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideAchievements = [achEnt]() mutable
@@ -1094,7 +1094,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stat_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 52.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 51.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
     statsButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideStats = [statsEnt]() mutable
@@ -1265,28 +1265,28 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowClose);
 
     entity = createTab(achButtonEnt, 0, MenuID::Achievements, TabAV);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 1.f, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowAdvanced);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowAdvanced);
     entity = createTab(achButtonEnt, 1, MenuID::Achievements, TabController);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 1.f, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabStats, WindowCredits);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowCredits);
     entity = createTab(achButtonEnt, 3, MenuID::Achievements, TabStats);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 1.f, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollUp);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowClose);
 
     entity = createTab(statsButtonEnt, 0, MenuID::Stats, TabAV);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 1.f, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowCredits);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowCredits);
     entity = createTab(statsButtonEnt, 1, MenuID::Stats, TabController);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 1.f, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, ResetStats);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowAdvanced);
     entity = createTab(statsButtonEnt, 2, MenuID::Stats, TabAchievements);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 1.f, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ResetCareer);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);
 
