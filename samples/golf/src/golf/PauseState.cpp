@@ -575,8 +575,7 @@ void PauseState::buildScene()
 
 
     if (m_sharedData.hosting
-        && m_sharedData.gameMode != GameMode::Tutorial
-        /*&& m_sharedData.gameMode != GameMode::Career*/)
+        && m_sharedData.gameMode != GameMode::Tutorial)
     {
         auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
         entity = m_scene.createEntity();
@@ -586,7 +585,7 @@ void PauseState::buildScene()
         if (m_sharedData.gameMode == GameMode::Career)
         {
             entity.getComponent<cro::Transform>().move({ 0.f, 10.f });
-            entity.getComponent<cro::Text>().setString("Your Progress\nWill Be Saved.");
+            entity.getComponent<cro::Text>().setString("Your Progress Up To The\nCurrent Hole Will Be Saved.");
             entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         }
         else
