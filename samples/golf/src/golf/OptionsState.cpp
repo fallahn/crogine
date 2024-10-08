@@ -91,6 +91,15 @@ using namespace cl;
 
 namespace
 {
+    struct LastInput final
+    {
+        enum
+        {
+            XBox, PS,Keyboard
+        };
+    };
+    std::int32_t lastInput = LastInput::Keyboard;
+
     constexpr float CameraDepth = 3.f;
 
     constexpr float BackgroundDepth = -0.5f;
@@ -359,6 +368,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
                 hasPSLayout(controllerID) ? LayoutID::PS : LayoutID::XBox;
             m_layoutEnt.getComponent<cro::SpriteAnimation>().play(i);
         }
+
+        lastInput = hasPSLayout(controllerID) ? LastInput::PS : LastInput::XBox;
         m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces refresh
     };
 
@@ -431,6 +442,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        lastInput = LastInput::Keyboard;
+
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -440,6 +453,21 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         case SDLK_RIGHT:
             cro::App::getWindow().setMouseCaptured(true);
             break;
+        }
+
+        if (!m_updatingKeybind)
+        {
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+            {
+                m_currentTabFunction = (m_currentTabFunction + (m_tabFunctions.size() - 1)) % m_tabFunctions.size();
+                m_tabFunctions[m_currentTabFunction]();
+            }
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+            {
+                m_currentTabFunction = (m_currentTabFunction + 1) % m_tabFunctions.size();
+                m_tabFunctions[m_currentTabFunction]();
+            }
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces refresh
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -496,22 +524,12 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
 
             cro::App::getWindow().setMouseCaptured(true);
-
-            if (evt.caxis.axis == cro::GameController::AxisRightY)
-            {
-                /*if (evt.caxis.value > 0)
-                {
-                    scrollMenu(1);
-                }
-                else
-                {
-                    scrollMenu(0);
-                }*/
-            }
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
+        lastInput = LastInput::Keyboard;
+
         if (evt.button.button == SDL_BUTTON_LEFT
             && !m_updatingKeybind)
         {
@@ -551,11 +569,15 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
+        lastInput = LastInput::Keyboard;
+
         updateSlider();
         cro::App::getWindow().setMouseCaptured(false);
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
+        lastInput = LastInput::Keyboard;
+
         if (evt.wheel.y > 0)
         {
             //up
@@ -954,6 +976,103 @@ void OptionsState::buildScene()
 
     auto bgEnt = entity;
     auto bgSize = glm::vec2(bounds.width, bounds.height);
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    //icons for paging tabs
+    static constexpr float IconOffset = 30.f;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ IconOffset, 338.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (lastInput == LastInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bgSize.x - IconOffset, 338.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + ">");
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (lastInput == LastInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + ">");
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ IconOffset, 338.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("lb");
+    entity.addComponent<cro::SpriteAnimation>().play(1);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            if (lastInput != LastInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::SpriteAnimation>().play(lastInput);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bgSize.x - IconOffset, 338.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rb");
+    entity.addComponent<cro::SpriteAnimation>().play(1);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            if (lastInput != LastInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::SpriteAnimation>().play(lastInput);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
     auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); e.getComponent<cro::AudioEmitter>().play(); });
@@ -966,6 +1085,7 @@ void OptionsState::buildScene()
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
     spriteSheet.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
+
 
     //video options
     entity = m_scene.createEntity();
@@ -1124,11 +1244,19 @@ void OptionsState::buildScene()
     {
         auto ent = m_scene.createEntity();
         ent.addComponent<cro::Callback>().active = true;
+        ent.getComponent<cro::Callback>().setUserData<float>(0.1f);
         ent.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float)
+            [&](cro::Entity e, float dt)
         {
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
-            m_scene.destroyEntity(e);
+            
+            //sometimes 1 frame isn't enough...
+            auto& t = e.getComponent<cro::Callback>().getUserData<float>();
+            t -= dt;
+            if (t < 0)
+            {
+                m_scene.destroyEntity(e);
+            }
         };
     };
 
@@ -1343,7 +1471,7 @@ void OptionsState::buildScene()
 
 
     //tool tips for options
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto createToolTip = [&](const cro::String& tip)
     {
         auto entity = m_scene.createEntity();
