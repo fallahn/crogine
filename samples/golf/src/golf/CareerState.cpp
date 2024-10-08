@@ -1934,7 +1934,7 @@ void CareerState::selectLeague(std::size_t idx)
 
     if (league.getCurrentScore() == 0)
     {
-        str += "\n";
+        str += "\nProgress is automatically saved.";
     }
     else
     {
