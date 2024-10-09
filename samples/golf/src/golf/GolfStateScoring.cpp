@@ -109,6 +109,17 @@ void GolfState::updateHoleScore(std::uint16_t data)
             else
             {
                 txt += " has won the pot!";
+                
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::UI::ScoreTitle;
+                cmd.action = [&, player](cro::Entity e, float)
+                    {
+                        auto str = m_courseTitle + " - Skins - Pot: 1";
+                        e.getComponent<cro::Text>().setString(str);
+                        centreText(e);
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
             }
             showNotification(txt);
 
