@@ -322,6 +322,11 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_viewScale         (2.f),
     m_refreshControllers(false)
 {
+    if (Social::isSteamdeck())
+    {
+        lastInput = LastInput::XBox;
+    }
+    
     ctx.mainWindow.setMouseCaptured(false);
 
     m_videoSettings.fullScreen = ctx.mainWindow.isFullscreen();
