@@ -60,7 +60,7 @@ namespace States
             PseutheBackground,
             PseutheGame,
             PseutheMenu,
-
+            Scrub,
 
             Count
         };

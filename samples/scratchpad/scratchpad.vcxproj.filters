@@ -151,6 +151,12 @@
     <Filter Include="Header Files\pseuthe">
       <UniqueIdentifier>{cca9977b-2ad1-4924-ba3b-6945697aa7b3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\scrub">
+      <UniqueIdentifier>{0c92e9ee-5630-4ce8-8079-f2dd1131de45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\scrub">
+      <UniqueIdentifier>{88225a70-4652-4330-b001-b97461a71ab9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -305,6 +311,9 @@
     </ClCompile>
     <ClCompile Include="src\pseuthe\PseuthePlayerSystem.cpp">
       <Filter>Source Files\pseuthe</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubGameState.cpp">
+      <Filter>Source Files\scrub</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -511,6 +520,9 @@
     </ClInclude>
     <ClInclude Include="src\pseuthe\PseuthePlayerSystem.hpp">
       <Filter>Header Files\pseuthe</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubGameState.hpp">
+      <Filter>Header Files\scrub</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
