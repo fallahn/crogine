@@ -9,6 +9,8 @@
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
+#include <array>
+
 class ScrubGameState final : public cro::State, public cro::GuiClient
 {
 public:
@@ -26,6 +28,47 @@ private:
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+
+    struct Handle final
+    {
+        bool hasBall = false; //don't score if moving when empty
+        bool locked = false; //don't move if ball is being inserted (probably fine if being removed)
+
+        static constexpr float Down = 1.f;
+        static constexpr float Up = -1.f;
+        float direction = Down;
+
+        float progress = 0.f;
+        float speed = 0.f;
+
+        static constexpr float MaxSpeed = 6.f;
+
+        float stroke = 0.f;
+        float strokeStart = 0.f;
+
+        void switchDirection(float);
+        void calcStroke();
+
+        cro::Entity entity;
+    }m_handle;
+
+    struct Ball final
+    {
+        float filth = 100.f;
+
+        struct State final
+        {
+            enum
+            {
+                Idle, Insert,
+                Clean, Extract
+            };
+        };
+        std::int32_t state = State::Idle;
+
+        cro::Entity entity;
+    }m_ball;
+
 
     void addSystems();
     void loadAssets();
