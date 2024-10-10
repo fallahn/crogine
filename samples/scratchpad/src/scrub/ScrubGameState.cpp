@@ -25,6 +25,8 @@ namespace
     constexpr float StrokeDistance = 0.16f - BallRadius;
     constexpr float BallOffsetPos = 0.2f;
 
+    constexpr std::int32_t MaxSoapBars = 5; //don't add if counter is this much
+
     /*
     Handle default position is 0 on y
     and -StrokeDistance when fully inserted
@@ -35,10 +37,11 @@ namespace
     {
         enum
         {
-            NextClub, PrevClub, Left, Right,
+            PrevClub, NextClub, Left, Right,
+            Action,
             Count
         };
-        std::array<std::int32_t, Count> keys = { SDLK_q, SDLK_e, SDLK_a, SDLK_d };
+        std::array<std::int32_t, Count> keys = { SDLK_q, SDLK_e, SDLK_a, SDLK_d, SDLK_SPACE };
     };
     struct SharedData
     {
@@ -49,7 +52,8 @@ namespace
 ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus())
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_soapCount     (3)
 {
     //this is a pre-cached state
     //context.mainWindow.loadResources([this]() {
@@ -79,13 +83,47 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             break;
         }
 
+        //TODO these should all be moved to funcs so we can also use controller input
         if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
         {
-            m_handle.switchDirection(Handle::Down);
+            m_ball.filth = std::max(0.f, m_ball.filth - m_handle.switchDirection(Handle::Down));
         }
         else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
         {
-            m_handle.switchDirection(Handle::Up);
+            m_ball.filth = std::max(0.f, m_ball.filth - m_handle.switchDirection(Handle::Up));
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        {
+            //insert ball
+            if (m_handle.progress == 0
+                && m_handle.speed == 0
+                && !m_handle.hasBall)
+            {
+                m_handle.locked = true;
+                
+                m_ball.state = Ball::State::Insert;
+            }
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        {
+            if (m_handle.progress == 0
+                && m_handle.speed == 0
+                && m_handle.hasBall)
+            {
+                m_handle.hasBall = false;
+                m_ball.state = Ball::State::Extract;
+
+                //this *should* works because the models *should* all be at 0,0,0
+                m_handle.entity.getComponent<cro::Transform>().removeChild(m_ball.entity.getComponent<cro::Transform>());
+            }
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        {
+            if (m_soapCount)
+            {
+                m_soapCount--;
+                m_handle.soap = Handle::MaxSoap;
+            }
         }
     }
 
@@ -141,19 +179,19 @@ void ScrubGameState::createScene()
 
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity entity, float dt)
+            [&](cro::Entity e, float dt)
             {
                 m_handle.progress = std::clamp(m_handle.progress + (m_handle.speed * -m_handle.direction * dt), 0.f, 1.f);
                 
-                auto pos = entity.getComponent<cro::Transform>().getPosition();
+                auto pos = e.getComponent<cro::Transform>().getPosition();
                 pos.y = cro::Util::Easing::easeOutSine(m_handle.progress) * -StrokeDistance;
-                entity.getComponent<cro::Transform>().setPosition(pos);
+                e.getComponent<cro::Transform>().setPosition(pos);
 
                 if (m_handle.progress == 0 || m_handle.progress == 1)
                 {
                     if (m_handle.speed != 0)
                     {
-                        m_handle.calcStroke();
+                        m_ball.filth = std::max(0.f, m_ball.filth - m_handle.calcStroke());
                     }
                     m_handle.speed = 0.f;
                 }
@@ -167,6 +205,52 @@ void ScrubGameState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ -BallOffsetPos, 0.f, 0.f });
         md.createModel(entity);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                switch (m_ball.state)
+                {
+                default:
+                case Ball::State::Idle:
+                    break;
+                case Ball::State::Insert:
+                {
+                    auto pos = m_ball.entity.getComponent<cro::Transform>().getPosition();
+                    pos.x = std::min(0.f, pos.x + Ball::Speed * dt);
+                    m_ball.entity.getComponent<cro::Transform>().setPosition(pos);
+
+                    if (pos.x == 0)
+                    {
+                        m_handle.entity.getComponent<cro::Transform>().addChild(m_ball.entity.getComponent<cro::Transform>());
+                        m_handle.locked = false;
+                        m_handle.hasBall = true;
+                        m_ball.state = Ball::State::Clean;
+                    }
+                }
+                    break;
+                case Ball::State::Clean:
+                    //update the anim or sth
+                    break;
+                case Ball::State::Extract:
+                {
+                    auto pos = m_ball.entity.getComponent<cro::Transform>().getPosition();
+                    pos.x += Ball::Speed * dt;
+
+                    if (pos.x > BallOffsetPos)
+                    {
+                        //TODO raise message to calc score
+                        
+                        m_ball.state = Ball::State::Idle;
+                        m_ball.filth = 100.f;
+                        pos.x = -BallOffsetPos;
+                    }
+                    m_ball.entity.getComponent<cro::Transform>().setPosition(pos);
+                }
+                    break;
+                }
+            };
 
         m_ball.entity = entity;
     }
@@ -198,12 +282,17 @@ void ScrubGameState::createUI()
             ImGui::Text("Handle Speed: %3.2f", m_handle.speed);
             ImGui::Text("Handle Direction: %3.2f", m_handle.direction);
 
-            //TODO make this steeper as we progress in the game (idk, water is getting dirtier or something
+            //TODO make this steeper as we progress in the game (idk, water is getting dirtier or something)
             ImGui::Text("Handle Stroke: %3.2f", cro::Util::Easing::easeInQuad(m_handle.stroke));
             ImGui::Text("Handle Progress: %3.2f", m_handle.progress);
 
             /*const auto pos = m_handle.entity.getComponent<cro::Transform>().getPosition().y;
             ImGui::Text("Handle Position: %3.3f", pos);*/
+
+            ImGui::Separator();
+            ImGui::Text("Ball Filth: %3.2f", m_ball.filth);
+            ImGui::Text("Soap Level: %3.2f", m_handle.soap);
+            ImGui::Text("Soap Bars: %d", m_soapCount);
 
             ImGui::End();
         });
@@ -225,23 +314,38 @@ void ScrubGameState::createUI()
 
 
 //handle funcs
-void ScrubGameState::Handle::switchDirection(float d)
+float ScrubGameState::Handle::switchDirection(float d)
 {
     CRO_ASSERT(d == Down || d == Up, "");
 
-    if (d != direction)
+    float ret = 0.f;
+    if (d != direction
+        && !locked)
     {
         //do this first as it uses the current direction
-        calcStroke();
+        ret = calcStroke();
 
         direction = d;
         speed = MaxSpeed;
+
+        if (hasBall)
+        {
+            soap = std::max(1.f, soap * 0.95f);
+        }
     }
+    return ret;
 }
 
-void ScrubGameState::Handle::calcStroke()
+float ScrubGameState::Handle::calcStroke()
 {
     const float currPos = entity.getComponent<cro::Transform>().getPosition().y;
     stroke = ((currPos - strokeStart) / StrokeDistance) * direction;
     strokeStart = currPos;
+
+    if (hasBall)
+    {
+        //raise msg or sth here to update the ball
+        return stroke * soap;
+    }
+    return 0.f;
 }

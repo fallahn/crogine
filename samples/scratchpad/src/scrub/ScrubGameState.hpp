@@ -46,8 +46,13 @@ private:
         float stroke = 0.f;
         float strokeStart = 0.f;
 
-        void switchDirection(float);
-        void calcStroke();
+        static constexpr float MaxSoap = 10.f;
+        static constexpr float MinSoap = 1.f;
+        float soap = MaxSoap;
+
+        //these both return the calc'd stroke
+        float switchDirection(float);
+        float calcStroke();
 
         cro::Entity entity;
     }m_handle;
@@ -66,13 +71,15 @@ private:
         };
         std::int32_t state = State::Idle;
 
+        static constexpr float Speed = 1.f;
+
         cro::Entity entity;
     }m_ball;
 
+    std::int32_t m_soapCount;
 
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
-
 };
