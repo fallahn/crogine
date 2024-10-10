@@ -201,13 +201,24 @@ bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
 
         //remove any opening comments
         std::string data;
+        char* temp = nullptr;
         std::int64_t readTotal = 0;
-        static const std::int32_t DEST_SIZE = 256;
+        static constexpr std::int32_t DEST_SIZE = 1024;// 256;
         char dest[DEST_SIZE];
         while (data.empty() && readTotal < fileSize)
         {
-            data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
-            removeComment(data);       
+            temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
+
+            if (temp)
+            {
+                data = std::string(temp);
+                removeComment(data);
+            }
+            else
+            {
+                LogE << path << ": unexpected EOF" << std::endl;
+                return false;
+            }
         }
         //check config is not opened with a property
         if (isProperty(data))
@@ -218,8 +229,18 @@ bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
         
         //make sure next line is a brace to ensure we have an object
         std::string lastLine = data;
-        data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
-        removeComment(data);
+
+        temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
+        if (temp)
+        {
+            data = std::string(temp);
+            removeComment(data);
+        }
+        else
+        {
+            LogE << path << ": unexpected EOF" << std::endl;
+            return false;
+        }
 
         //tracks brace balance
         std::vector<ConfigObject*> objStack;
@@ -242,8 +263,18 @@ bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
 
         while (readTotal < fileSize)
         {
-            data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
-            removeComment(data);
+            temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
+            if (temp)
+            {
+                data = std::string(temp);
+                removeComment(data);
+            }
+            else
+            {
+                LogE << path << ": unexpected EOF" << std::endl;
+                return false;
+            }
+
             if (!data.empty())
             {
                 if (data[0] == '}')
@@ -274,8 +305,19 @@ bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
                 {
                     //add a new object and make it current
                     std::string prevLine = data;
-                    data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
-                    removeComment(data);
+
+                    temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
+                    if (temp)
+                    {
+                        data = std::string(temp);
+                        removeComment(data);
+                    }
+                    else
+                    {
+                        LogE << path << ": unexpected EOF" << std::endl;
+                        return false;
+                    }
+
                     if (data[0] == '{')
                     {
                         //TODO we have to allow mutliple objects with the same name in this instance

@@ -91,6 +91,15 @@ using namespace cl;
 
 namespace
 {
+    struct LastInput final
+    {
+        enum
+        {
+            XBox, PS,Keyboard
+        };
+    };
+    std::int32_t lastInput = LastInput::Keyboard;
+
     constexpr float CameraDepth = 3.f;
 
     constexpr float BackgroundDepth = -0.5f;
@@ -313,6 +322,11 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_viewScale         (2.f),
     m_refreshControllers(false)
 {
+    if (Social::isSteamdeck())
+    {
+        lastInput = LastInput::XBox;
+    }
+    
     ctx.mainWindow.setMouseCaptured(false);
 
     m_videoSettings.fullScreen = ctx.mainWindow.isFullscreen();
@@ -359,6 +373,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
                 hasPSLayout(controllerID) ? LayoutID::PS : LayoutID::XBox;
             m_layoutEnt.getComponent<cro::SpriteAnimation>().play(i);
         }
+
+        lastInput = hasPSLayout(controllerID) ? LastInput::PS : LastInput::XBox;
         m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces refresh
     };
 
@@ -431,6 +447,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        lastInput = LastInput::Keyboard;
+
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -440,6 +458,21 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         case SDLK_RIGHT:
             cro::App::getWindow().setMouseCaptured(true);
             break;
+        }
+
+        if (!m_updatingKeybind)
+        {
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+            {
+                m_currentTabFunction = (m_currentTabFunction + (m_tabFunctions.size() - 1)) % m_tabFunctions.size();
+                m_tabFunctions[m_currentTabFunction]();
+            }
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+            {
+                m_currentTabFunction = (m_currentTabFunction + 1) % m_tabFunctions.size();
+                m_tabFunctions[m_currentTabFunction]();
+            }
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces refresh
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -496,22 +529,12 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
 
             cro::App::getWindow().setMouseCaptured(true);
-
-            if (evt.caxis.axis == cro::GameController::AxisRightY)
-            {
-                /*if (evt.caxis.value > 0)
-                {
-                    scrollMenu(1);
-                }
-                else
-                {
-                    scrollMenu(0);
-                }*/
-            }
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
+        lastInput = LastInput::Keyboard;
+
         if (evt.button.button == SDL_BUTTON_LEFT
             && !m_updatingKeybind)
         {
@@ -551,11 +574,15 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
+        lastInput = LastInput::Keyboard;
+
         updateSlider();
         cro::App::getWindow().setMouseCaptured(false);
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
+        lastInput = LastInput::Keyboard;
+
         if (evt.wheel.y > 0)
         {
             //up
@@ -624,6 +651,40 @@ void OptionsState::handleMessage(const cro::Message& msg)
 
 bool OptionsState::simulate(float dt)
 {
+    for (auto i = 0u; i < m_scrollPresses.size(); ++i)
+    {
+        auto& press = m_scrollPresses[i];
+        if (press.pressed)
+        {
+            press.pressedTimer += dt;
+            if (press.pressedTimer > ScrollPress::PressTime)
+            {
+                press.active = true;
+            }
+        }
+
+
+        if (press.active)
+        {
+            press.scrollTimer += dt;
+            if (press.scrollTimer > ScrollPress::ScrollTime)
+            {
+                press.scrollTimer -= ScrollPress::ScrollTime;
+                
+                //this is important we use the correct type of
+                //event here because only controller presses (not
+                //mouse presses) should latch the active state
+                cro::ButtonEvent fakeEvent;
+                /*fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
+                fakeEvent.cbutton.button = cro::GameController::ButtonA;*/
+                fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+                fakeEvent.button.button = SDL_BUTTON_LEFT;
+                m_scrollFunctions[i](cro::Entity(), fakeEvent);
+            }
+        }
+    }
+
+
     m_scene.simulate(dt);
 
     if (m_refreshControllers)
@@ -920,6 +981,103 @@ void OptionsState::buildScene()
 
     auto bgEnt = entity;
     auto bgSize = glm::vec2(bounds.width, bounds.height);
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    //icons for paging tabs
+    static constexpr float IconOffset = 30.f;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ IconOffset, 338.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (lastInput == LastInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Text>().setString("<" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bgSize.x - IconOffset, 338.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + ">");
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (lastInput == LastInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub]) + ">");
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ IconOffset, 338.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("lb");
+    entity.addComponent<cro::SpriteAnimation>().play(1);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            if (lastInput != LastInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::SpriteAnimation>().play(lastInput);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bgSize.x - IconOffset, 338.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rb");
+    entity.addComponent<cro::SpriteAnimation>().play(1);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            if (lastInput != LastInput::Keyboard)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                e.getComponent<cro::SpriteAnimation>().play(lastInput);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
     auto selectedID = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::White); e.getComponent<cro::AudioEmitter>().play(); });
@@ -932,6 +1090,7 @@ void OptionsState::buildScene()
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
     spriteSheet.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
+
 
     //video options
     entity = m_scene.createEntity();
@@ -1022,7 +1181,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ach_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 53.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 51.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
     achButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideAchievements = [achEnt]() mutable
@@ -1060,7 +1219,7 @@ void OptionsState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stat_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 53.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 51.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
     statsButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideStats = [statsEnt]() mutable
@@ -1090,11 +1249,19 @@ void OptionsState::buildScene()
     {
         auto ent = m_scene.createEntity();
         ent.addComponent<cro::Callback>().active = true;
+        ent.getComponent<cro::Callback>().setUserData<float>(0.1f);
         ent.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float)
+            [&](cro::Entity e, float dt)
         {
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
-            m_scene.destroyEntity(e);
+            
+            //sometimes 1 frame isn't enough...
+            auto& t = e.getComponent<cro::Callback>().getUserData<float>();
+            t -= dt;
+            if (t < 0)
+            {
+                m_scene.destroyEntity(e);
+            }
         };
     };
 
@@ -1231,28 +1398,28 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowClose);
 
     entity = createTab(achButtonEnt, 0, MenuID::Achievements, TabAV);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowAdvanced);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowAdvanced);
     entity = createTab(achButtonEnt, 1, MenuID::Achievements, TabController);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabStats, WindowCredits);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowCredits);
     entity = createTab(achButtonEnt, 3, MenuID::Achievements, TabStats);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollUp);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowClose);
 
     entity = createTab(statsButtonEnt, 0, MenuID::Stats, TabAV);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowCredits);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowCredits);
     entity = createTab(statsButtonEnt, 1, MenuID::Stats, TabController);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, ResetStats);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowAdvanced);
     entity = createTab(statsButtonEnt, 2, MenuID::Stats, TabAchievements);
-    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset, VerticalOffset, 0.f));
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ResetCareer);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);
 
@@ -1309,7 +1476,7 @@ void OptionsState::buildScene()
 
 
     //tool tips for options
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto createToolTip = [&](const cro::String& tip)
     {
         auto entity = m_scene.createEntity();
@@ -4070,6 +4237,11 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
+
+            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            {
+                m_scrollPresses[ScrollID::AchUp].pressed = true;
+            }
         }
     };
 
@@ -4084,6 +4256,11 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
                 target -= VerticalSpacing;
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+
+            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            {
+                m_scrollPresses[ScrollID::AchDown].pressed = true;
             }
         }
     };
@@ -4143,12 +4320,32 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     upHighlight.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollDown);
     upHighlight.getComponent<cro::UIInput>().setPrevIndex(TabStats, TabStats);
     upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::AchUp]);
+    upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                //if (deactivated(evt))
+                {
+                    m_scrollPresses[ScrollID::AchUp].pressed = false;
+                    m_scrollPresses[ScrollID::AchUp].pressedTimer = 0.f;
+                    m_scrollPresses[ScrollID::AchUp].active = false;
+                }
+            });
 
     auto downHighlight = createHighlight({ cropping.width - 19.f, 7.f });
     downHighlight.getComponent<cro::UIInput>().setSelectionIndex(ScrollDown);
     downHighlight.getComponent<cro::UIInput>().setNextIndex(WindowAdvanced, WindowClose);
     downHighlight.getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, ScrollUp);
     downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::AchDown]);
+    downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                //if (deactivated(evt))
+                {
+                    m_scrollPresses[ScrollID::AchDown].pressed = false;
+                    m_scrollPresses[ScrollID::AchDown].pressedTimer = 0.f;
+                    m_scrollPresses[ScrollID::AchDown].active = false;
+                }
+            });
 }
 
 void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -4284,6 +4481,11 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
+
+            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            {
+                m_scrollPresses[ScrollID::StatUp].pressed = true;
+            }
         }
     };
 
@@ -4298,6 +4500,11 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
                 target -= VerticalSpacing;
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+
+            if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+            {
+                m_scrollPresses[ScrollID::StatDown].pressed = true;
             }
         }
     };
@@ -4357,12 +4564,34 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
     upHighlight.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollDown);
     upHighlight.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, TabAchievements);
     upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatUp]);
+    upHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                //if (deactivated(evt))
+                {
+                    m_scrollPresses[ScrollID::StatUp].pressed = false;
+                    m_scrollPresses[ScrollID::StatUp].pressedTimer = 0.f;
+                    m_scrollPresses[ScrollID::StatUp].active = false;
+                }
+            });
+
 
     auto downHighlight = createHighlight({ cropping.width - 19.f, 7.f }, "square_highlight");
     downHighlight.getComponent<cro::UIInput>().setSelectionIndex(ScrollDown);
     downHighlight.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowClose);
     downHighlight.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, ScrollUp);
     downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(m_scrollFunctions[ScrollID::StatDown]);
+    downHighlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                //if (deactivated(evt))
+                {
+                    m_scrollPresses[ScrollID::StatDown].pressed = false;
+                    m_scrollPresses[ScrollID::StatDown].pressedTimer = 0.f;
+                    m_scrollPresses[ScrollID::StatDown].active = false;
+                }
+            });
+
 
     //reset career button
     entity = m_scene.createEntity();

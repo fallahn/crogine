@@ -400,6 +400,11 @@ void GolfState::loadMap()
         auto colours = m_skyScene.getSkyboxColours();
         colours.bottom = skyDark;
         m_skyScene.setSkyboxColours(colours);
+
+        if (m_sharedData.weatherType == WeatherType::Clear)
+        {
+            createFireworks();
+        }
     }
 
 #ifdef CRO_DEBUG_
@@ -1797,8 +1802,12 @@ void GolfState::loadMaterials()
     m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n#define USE_MRT\n");
     m_materialIDs[MaterialID::WireFrameCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]).blendMode = cro::Material::BlendMode::Alpha;
-    //shader = &m_resources.shaders.get(ShaderID::WireframeCulled);
-    //m_resolutionBuffer.addShader(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::WireframeCulledPoint, WireframeVertex, WireframeFragment, "#define CULLED\n#define USE_MRT\n#define POINT_RADIUS\n");
+    m_materialIDs[MaterialID::WireFrameCulledPoint] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulledPoint));
+    m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulledPoint]).blendMode = cro::Material::BlendMode::Alpha;
+    
+
 
     m_resources.shaders.loadFromString(ShaderID::BallTrail, WireframeVertex, WireframeFragment, "#define HUE\n#define USE_MRT\n");
     m_materialIDs[MaterialID::BallTrail] = m_resources.materials.add(m_resources.shaders.get(ShaderID::BallTrail));
@@ -2282,7 +2291,7 @@ void GolfState::loadModels()
     //ball resources - ball is rendered as a single point
     //at a distance, and as a model when closer
     //glCheck(glPointSize(BallPointSize)); - this is set in resize callback based on the buffer resolution/pixel scale
-    m_ballResources.materialID = m_materialIDs[MaterialID::WireFrameCulled];
+    m_ballResources.materialID = m_materialIDs[MaterialID::WireFrameCulledPoint];
     m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
     m_ballResources.shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
 

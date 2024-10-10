@@ -84,6 +84,7 @@ struct TriggerID final
         Volcano = 13,
         Boat,
         TennisCourt,
+        BackWall, //hole 12-15
 
         Count
     };

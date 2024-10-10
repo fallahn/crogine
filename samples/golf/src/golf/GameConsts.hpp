@@ -293,6 +293,7 @@ struct ShaderID final
         TutorialSlope,
         Wireframe,
         WireframeCulled,
+        WireframeCulledPoint,
         Weather,
         Transition,
         Trophy,
@@ -316,7 +317,7 @@ struct ShaderID final
         Glass,
         LensFlare,
         PointFlare,
-
+        Firework,
     };
 };
 

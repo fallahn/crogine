@@ -2643,7 +2643,7 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
             });
 
     //league
-    entity = createButton("Club League");
+    entity = createButton("League Browser");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {

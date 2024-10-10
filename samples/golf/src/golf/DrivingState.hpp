@@ -141,6 +141,7 @@ private:
             HairReflect,
             Wireframe,
             WireframeCulled,
+            WireframeCulledPoint,
             Beacon,
             Horizon,
             Trophy,

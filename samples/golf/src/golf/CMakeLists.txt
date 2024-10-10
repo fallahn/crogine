@@ -28,6 +28,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/DrivingState.cpp
   ${PROJECT_DIR}/golf/DrivingStateUI.cpp
   ${PROJECT_DIR}/golf/ErrorState.cpp
+  ${PROJECT_DIR}/golf/FireworksSystem.cpp
   ${PROJECT_DIR}/golf/FloatingTextSystem.cpp
   ${PROJECT_DIR}/golf/FpsCameraSystem.cpp
   ${PROJECT_DIR}/golf/FreePlayState.cpp

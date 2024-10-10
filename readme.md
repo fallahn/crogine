@@ -33,7 +33,7 @@ Portions of this software are copyright (c) 2019 SFML (www.sfml-dev.org). All ri
 
 -----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023  
+Matt Marchant 2017 - 2024  
 http://trederia.blogspot.com  
 
 crogine - Zlib license.  

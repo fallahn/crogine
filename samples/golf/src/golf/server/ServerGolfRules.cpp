@@ -176,7 +176,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                 //skins and match play are always in a single group
                 //so we don't consider other players here
                 const auto& currPlayer = playerInfo[0];
-                for (auto i = 1; i < playerInfo.size(); ++i)
+                for (auto i = 1u; i < playerInfo.size(); ++i)
                 {
                     playerInfo[i].distanceToHole = 0.f;
                     playerInfo[i].holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
@@ -194,9 +194,9 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
             else
             {
                 //eliminate anyone who can't beat this score
-                //again - assume all players exist in the dame group
+                //again - assume all players exist in the same group
                 const auto& currPlayer = playerInfo[0];
-                for (auto i = 1; i < playerInfo.size(); ++i)
+                for (auto i = 1u; i < playerInfo.size(); ++i)
                 {
                     if (playerInfo[i].holeScore[m_currentHole] >= currPlayer.holeScore[m_currentHole])
                     {
@@ -230,7 +230,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
                 //force a draw by eliminating anyone who can't beat it
                 if (currPlayer.holeScore[m_currentHole] == m_currentBest)
                 {
-                    for (auto i = 1; i < playerInfo.size(); ++i)
+                    for (auto i = 1u; i < playerInfo.size(); ++i)
                     {
                         if (playerInfo[i].holeScore[m_currentHole] + 1 >= m_currentBest)
                         {
@@ -312,7 +312,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
             {
                 //skins / match play should always be in the same group
                 const auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
-                for (auto i = 1; i < playerInfo.size(); ++i)
+                for (auto i = 1u; i < playerInfo.size(); ++i)
                 {
                     playerInfo[i].distanceToHole = 0.f;
                     playerInfo[i].holeScore[m_currentHole] = currPlayer.holeScore[m_currentHole] + 1;
@@ -332,7 +332,7 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
             {
                 //check if our score is even with anyone holed already and forfeit
                 auto& currPlayer = m_playerInfo[groupID].playerInfo[0];
-                for (auto i = 1; i < playerInfo.size(); ++i)
+                for (auto i = 1u; i < playerInfo.size(); ++i)
                 {
                     if (playerInfo[i].distanceToHole == 0
                         && playerInfo[i].holeScore[m_currentHole] < currPlayer.holeScore[m_currentHole])

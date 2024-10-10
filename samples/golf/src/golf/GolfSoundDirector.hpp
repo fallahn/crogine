@@ -173,6 +173,10 @@ public:
             NTP01,
             NTP02,
 
+            Fw01,
+            Fw02,
+            Fw03,
+
             Count
         };
     };

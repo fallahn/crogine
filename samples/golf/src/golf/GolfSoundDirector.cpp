@@ -196,6 +196,9 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/kudos/ntp01.wav",
         "assets/golf/sound/kudos/ntp02.wav",
 
+        "assets/golf/sound/ambience/fw01.wav",
+        "assets/golf/sound/ambience/fw02.wav",
+        "assets/golf/sound/ambience/fw03.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -230,6 +233,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case MessageID::EnviroMessage:
+        {
+            const auto& data = msg.getData<EnviroEvent>();
+            auto ent = playSound(AudioID::Fw01 + cro::Util::Random::value(0, 2), data.position, 0.4f);
+            ent.getComponent<cro::AudioEmitter>().setPitch(data.size);
+            ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Environment);
+            ent.getComponent<cro::AudioEmitter>().setRolloff(0.f);
+        }
+            break;
         case cro::Message::SystemMessage:
         {
             const auto& data = msg.getData<cro::Message::SystemEvent>();

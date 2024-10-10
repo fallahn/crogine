@@ -510,7 +510,7 @@ void PauseState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-
+    auto noText = entity;
 
     entity = createItem(glm::vec2(20.f, -12.f), "Yes", confirmEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
@@ -552,6 +552,7 @@ void PauseState::buildScene()
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
+    auto yesText = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 12.f));
@@ -561,7 +562,7 @@ void PauseState::buildScene()
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
     confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    auto sureText = entity;
 
     resetConfirmation = [&, menuEntity, confirmEntity]() mutable
     {
@@ -574,18 +575,30 @@ void PauseState::buildScene()
 
 
     if (m_sharedData.hosting
-        && m_sharedData.gameMode != GameMode::Tutorial
-        && m_sharedData.gameMode != GameMode::Career)
+        && m_sharedData.gameMode != GameMode::Tutorial)
     {
         auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 2.f));
+        entity.addComponent<cro::Transform>();// .setPosition(glm::vec2(0.f, 2.f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setString("This Will Kick All Players");
+        if (m_sharedData.gameMode == GameMode::Career)
+        {
+            entity.getComponent<cro::Transform>().move({ 0.f, 10.f });
+            entity.getComponent<cro::Text>().setString("Your Progress Up To The\nCurrent Hole Will Be Saved.");
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        }
+        else
+        {
+            entity.getComponent<cro::Text>().setString("This Will Kick All Players");
+            centreText(entity);
+        }
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        centreText(entity);
         confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        sureText.getComponent<cro::Transform>().move({ 0.f, 14.f });
+        noText.getComponent<cro::Transform>().move({ 0.f, -14.f });
+        yesText.getComponent<cro::Transform>().move({ 0.f, -14.f });
     }
 
 
