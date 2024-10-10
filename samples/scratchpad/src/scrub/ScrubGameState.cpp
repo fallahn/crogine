@@ -255,6 +255,13 @@ void ScrubGameState::createScene()
         m_ball.entity = entity;
     }
 
+    if (md.loadFromFile("assets/arcade/scrub/models/body.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+    }
+
     auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
@@ -270,8 +277,8 @@ void ScrubGameState::createScene()
     camera.getComponent<cro::Transform>().setPosition({ 0.f, 0.05f, 0.25f });
     camera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.1f);
 
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.02f);
-    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.02f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.2f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.6f);
 }
 
 void ScrubGameState::createUI()
@@ -330,7 +337,7 @@ float ScrubGameState::Handle::switchDirection(float d)
 
         if (hasBall)
         {
-            soap = std::max(1.f, soap * 0.95f);
+            soap = std::max(1.f, soap * 0.975f);
         }
     }
     return ret;
