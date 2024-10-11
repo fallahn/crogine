@@ -18,7 +18,7 @@ class ScrubGameState final : public cro::State, public cro::GuiClient
 {
 public:
     ScrubGameState(cro::StateStack&, cro::State::Context);
-    ~ScrubGameState(); //TODO remove this
+
     cro::StateID getStateID() const override { return States::ScratchPad::Scrub; }
 
     bool handleEvent(const cro::Event&) override;
@@ -45,7 +45,7 @@ private:
         float progress = 0.f;
         float speed = 0.f;
 
-        static constexpr float MaxSpeed = 6.f;
+        static constexpr float MaxSpeed = 8.f;
 
         float stroke = 0.f;
         float strokeStart = 0.f;
@@ -61,13 +61,15 @@ private:
         struct Soap final
         {
             static constexpr float MaxSoap = 10.f;
-            static constexpr float MinSoap = 1.f;
-            static constexpr float Reduction = 0.5f;
+            static constexpr float MinSoap = 3.f;
+            static constexpr float Reduction = 0.7f;
             float amount = MaxSoap;
 
             //the older the soap is the more quickly it diminishes
             float lifeTime = 0.f;
             static constexpr float MaxLifetime = 12.f;
+
+            std::int32_t count = 1;
 
             float getReduction() const
             {
@@ -82,14 +84,12 @@ private:
         }soap;
 
     }m_handle;
-    std::int32_t m_soapCount;
-
-    cro::Clock soapTimer; //TODO remove this
 
 
     struct Ball final
     {
-        float filth = 100.f;
+        static constexpr float MaxFilth = 100.f;
+        float filth = MaxFilth;
 
         struct State final
         {
@@ -105,10 +105,23 @@ private:
         std::size_t colourIndex = 0;
 
         cro::Entity entity;
+
+        void scrub(float amt)
+        {
+            //make the ball harder to clean the nearer it is to
+            //actually being clean... TODO we could reduce this 
+            //over time to make the game increase in difficulty
+            const auto multiplier = 0.35f + (0.65f * (filth / MaxFilth));
+            amt *= multiplier;
+
+            filth = std::max(0.f, filth - amt);
+        }
     }m_ball;
 
     struct Score final
     {
+        float threshold = 80.f; //ball must be cleaner than this to score
+
         float remainingTime = 30.f;
         std::int32_t ballsWashed = 0;
         float avgCleanliness = 0.f;
@@ -118,12 +131,16 @@ private:
 
         bool gameRunning = false;
 
+        //how many balls were 100% in a row
+        std::int32_t bonusRun = 0;
 
-        //this is the amount of time added multiplied
+        float totalRunTime = 0.f;
+        std::int32_t totalScore = 0;
+
+
+        //this is the amount of time awarded multiplied
         //by how clean the ball is when it's removed.
-        //currently calc'd by the avg time it takes to
-        //scrub a ball clean with 50% soap available.
-        static constexpr float TimeBonus = 6.f;
+        static constexpr float TimeBonus = 3.f;
     }m_score;
 
     void addSystems();

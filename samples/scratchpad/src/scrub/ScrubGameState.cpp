@@ -86,8 +86,6 @@ namespace
     }
 #endif
 
-    std::vector<float> scrubTimes;
-
     /*
     Handle default position is 0 on y
     and -StrokeDistance when fully inserted
@@ -123,8 +121,7 @@ namespace
 ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus()),
-    m_soapCount     (3)
+    m_uiScene       (context.appInstance.getMessageBus())
 {
     //this is a pre-cached state
     //context.mainWindow.loadResources([this]() {
@@ -133,18 +130,6 @@ ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context conte
         createScene();
         createUI();
     //});
-}
-
-ScrubGameState::~ScrubGameState()
-{
-    LogI << "Remove me" << std::endl;
-    float total = 0.f;
-    for (auto t : scrubTimes)
-    {
-        total += t;
-    }
-    total /= scrubTimes.size();
-    LogI << "Avg time: " << total << std::endl;
 }
 
 //public
@@ -171,18 +156,19 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             //TODO these should all be moved to funcs so we can also use controller input
             if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
             {
-                m_ball.filth = std::max(0.f, m_ball.filth - m_handle.switchDirection(Handle::Down));
+                m_ball.scrub(m_handle.switchDirection(Handle::Down));
             }
             else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
             {
-                m_ball.filth = std::max(0.f, m_ball.filth - m_handle.switchDirection(Handle::Up));
+                m_ball.scrub(m_handle.switchDirection(Handle::Up));
             }
             else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
             {
                 //insert ball
                 if (m_handle.progress == 0
                     && m_handle.speed == 0
-                    && !m_handle.hasBall)
+                    && !m_handle.hasBall
+                    && m_ball.state == Ball::State::Idle)
                 {
                     m_handle.locked = true;
 
@@ -204,9 +190,9 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             }
             else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
             {
-                if (m_soapCount)
+                if (m_handle.soap.count)
                 {
-                    m_soapCount--;
+                    m_handle.soap.count--;
                     m_handle.soap.refresh();
                 }
             }
@@ -228,9 +214,14 @@ bool ScrubGameState::simulate(float dt)
 {
     if (m_score.gameRunning)
     {
+        m_score.totalRunTime += dt;
         m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
         if (m_score.remainingTime == 0)
         {
+            m_score.gameRunning = false;
+            m_score.totalScore += static_cast<std::int32_t>(std::floor(m_score.avgCleanliness));
+            m_score.totalScore += static_cast<std::int32_t>(std::floor(m_score.totalRunTime));
+
             //game over, show scores.
             const auto& font = m_resources.fonts.get(FontID::UI);
 
@@ -238,11 +229,9 @@ bool ScrubGameState::simulate(float dt)
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y / 2.f });
             entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(font).setString("Game Over");
+            entity.addComponent<cro::Text>(font).setString("Game Over\nTotal Score: " + std::to_string(m_score.totalScore));
             entity.getComponent<cro::Text>().setCharacterSize(8 * 4);
             entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-
-            m_score.gameRunning = false;
         }
     }
 
@@ -328,8 +317,10 @@ void ScrubGameState::createScene()
     cam.resizeCallback = resize;
     resize(cam);
 
-    camera.getComponent<cro::Transform>().setPosition({ 0.f, 0.05f, 0.25f });
-    camera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.1f);
+    //camera.getComponent<cro::Transform>().setPosition({ 0.f, 0.05f, 0.25f });
+    //camera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.1f);
+    
+    camera.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(glm::vec3(-0.04f, 0.15f, 0.28f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)));
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.2f);
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.6f);
@@ -352,8 +343,7 @@ void ScrubGameState::createUI()
             ImGui::Text("Handle Speed: %3.2f", m_handle.speed);
             ImGui::Text("Handle Direction: %3.2f", m_handle.direction);
 
-            //TODO make this steeper as we progress in the game (idk, water is getting dirtier or something)
-            ImGui::Text("Handle Stroke: %3.2f", cro::Util::Easing::easeInQuad(m_handle.stroke));
+            ImGui::Text("Handle Stroke: %3.2f", m_handle.stroke);
             ImGui::Text("Handle Progress: %3.2f", m_handle.progress);
 
             ImGui::NewLine();
@@ -361,18 +351,14 @@ void ScrubGameState::createUI()
             ImGui::NewLine();
 
             ImGui::Text("Ball Filth: %3.2f", m_ball.filth);
+            ImVec4 c = (Ball::MaxFilth - m_ball.filth) > m_score.threshold ? ImVec4(0.f, 1.f, 0.f, 1.f) : ImVec4(1.f, 0.f, 0.f, 1.f);
+            ImGui::SameLine();
+            ImGui::ColorButton("##buns", c, 0, { 12.f, 12.f });
+
             ImGui::Text("Soap Level: %3.2f", m_handle.soap.amount);
-            ImGui::Text("Soap Bars: %d", m_soapCount);
+            ImGui::Text("Soap Bars: %d", m_handle.soap.count);
             ImGui::Text("Soap LifeTime %3.3f", m_handle.soap.lifeTime);
             ImGui::Text("Soap Reduction %3.3f", m_handle.soap.getReduction());
-
-
-            static float oldFilth = 100.f;
-            if (m_ball.filth == 0 && oldFilth != 0)
-            {
-                scrubTimes.push_back(soapTimer.elapsed().asSeconds());
-            }
-            oldFilth = m_ball.filth;
 
             ImGui::End();
         });
@@ -451,7 +437,7 @@ void ScrubGameState::handleCallback(cro::Entity e, float dt)
     {
         if (m_handle.speed != 0)
         {
-            m_ball.filth = std::max(0.f, m_ball.filth - m_handle.calcStroke());
+            m_ball.scrub(m_handle.calcStroke());
         }
         m_handle.speed = 0.f;
     }
@@ -476,8 +462,6 @@ void ScrubGameState::ballCallback(cro::Entity e, float dt)
             m_handle.locked = false;
             m_handle.hasBall = true;
             m_ball.state = Ball::State::Clean;
-
-            soapTimer.restart();
         }
     }
     break;
@@ -494,7 +478,7 @@ void ScrubGameState::ballCallback(cro::Entity e, float dt)
             updateScore();
 
             m_ball.state = Ball::State::Idle;
-            m_ball.filth = 100.f;
+            m_ball.filth = Ball::MaxFilth;
             pos.x = -BallOffsetPos;
 
             m_ball.colourIndex += cro::Util::Random::value(1, 3);
@@ -509,25 +493,87 @@ void ScrubGameState::ballCallback(cro::Entity e, float dt)
 
 void ScrubGameState::updateScore()
 {
-    const float cleanliness = 100.f - m_ball.filth;
+    const float cleanliness = Ball::MaxFilth - m_ball.filth;
+
+    if (cleanliness < m_score.threshold)
+    {
+        //TODO display notification
+        return;
+    }
 
     m_score.ballsWashed++;
     m_score.cleanlinessSum += cleanliness;
     m_score.avgCleanliness = m_score.cleanlinessSum / m_score.ballsWashed;
 
-    //TODO penalise time for very grubby balls?
-    m_score.remainingTime += Score::TimeBonus * (cleanliness / 100.f);
+    m_score.totalScore += static_cast<std::int32_t>(std::floor(cleanliness));
+
+    //this might happen just as the time runs out - we want to
+    //keep the score but not add time in this case
+    if (m_score.gameRunning)
+    {
+        m_score.remainingTime += Score::TimeBonus * (cleanliness / 100.f);
+    }
 
 
+    //track bonus runs of 3x 100%, 5x 100% and 10x 100%
+    if (cleanliness == 100.f)
+    {
+        m_score.bonusRun++;
+        switch (m_score.bonusRun)
+        {
+            //this should never be 0, but just in case...
+        case 0: break;
+        default: 
+            //every 10 after
+            if (m_score.bonusRun % 10 == 0)
+            {
+                m_score.totalScore += 10000;
+                m_score.remainingTime + 10.f;
+            }
+            break;
+        case 3:
+            m_score.totalScore += 3000;
+            m_score.remainingTime += 0.5f;
+            break;
+        case 5:
+            m_score.totalScore += 5000;
+            m_score.remainingTime + 2.f;
+            break;
+        }
 
-    //TODO track bonus runs of 3x 100%, 5x 100% and 10x 100%
+        //TODO display notification
+    }
+    else
+    {
+        m_score.bonusRun = 0;
+    }
 
-    //TODO develop some actual scoring system and calc the score
 
-    //TODO every X balls is a new soap, or every X points?
+    if (m_score.ballsWashed % 5 == 0)
+    {
+        //new soap in 3.. 2.. 1..
+        auto ent = m_gameScene.createEntity();
+        ent.addComponent<cro::Callback>().active = true;
+        ent.getComponent<cro::Callback>().setUserData<float>(3.f);
+        ent.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
 
+                if (currTime < 0)
+                {
+                    m_score.totalScore += 500;
 
-    //TODO increase the scub curve - I've forgotten what I meant by this...
+                    m_handle.soap.count = std::min(MaxSoapBars, m_handle.soap.count + 1);
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
+                }
+            };
+
+        m_score.threshold = std::min(Ball::MaxFilth, m_score.threshold + 4.f);
+        m_score.remainingTime += 0.5f;
+    }
 }
 
 //handle funcs
@@ -547,7 +593,7 @@ float ScrubGameState::Handle::switchDirection(float d)
 
         if (hasBall)
         {
-            soap.amount = std::max(1.f, soap.amount - soap.getReduction());
+            soap.amount = std::max(Soap::MinSoap, soap.amount - soap.getReduction());
         }
     }
     return ret;
@@ -561,7 +607,7 @@ float ScrubGameState::Handle::calcStroke()
 
     if (hasBall)
     {
-        return stroke * soap.amount;
+        return cro::Util::Easing::easeInQuad(stroke) * soap.amount;
     }
     return 0.f;
 }
