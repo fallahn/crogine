@@ -33,6 +33,8 @@ private:
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
 
+    std::int16_t m_axisPosition;
+
     struct Handle final
     {
         bool hasBall = false; //don't score if moving when empty
@@ -105,6 +107,7 @@ private:
         std::size_t colourIndex = 0;
 
         cro::Entity entity;
+        cro::Entity animatedEntity;
 
         void scrub(float amt)
         {

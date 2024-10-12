@@ -28,8 +28,16 @@ namespace
     constexpr float BallRadius = 0.021f;
     constexpr float StrokeDistance = 0.16f - BallRadius;
     constexpr float BallOffsetPos = 0.2f;
+    constexpr float BallExitPos = 0.01f;
 
     constexpr std::int32_t MaxSoapBars = 5; //don't add if counter is this much
+
+    struct BallAnimationData final
+    {
+        glm::vec3 velocity = glm::vec3(1.8f, 0.8f, 0.f);
+        std::int32_t state = 0;
+    };
+
 
 #ifdef USE_GNS
     static_assert(false, "Include the colour file");
@@ -121,7 +129,8 @@ namespace
 ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus())
+    m_uiScene       (context.appInstance.getMessageBus()),
+    m_axisPosition  (0)
 {
     //this is a pre-cached state
     //context.mainWindow.loadResources([this]() {
@@ -140,31 +149,27 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYDOWN)
-    {
-        switch (evt.key.keysym.sym)
+    static const auto pumpDown = 
+        [&]()
         {
-        default: break;
-        case SDLK_BACKSPACE:
-        case SDLK_ESCAPE:
-            //requestStackPush(StateID::ScrubPauseState);
-            break;
-        }
-
-        if (m_score.gameRunning)
-        {
-            //TODO these should all be moved to funcs so we can also use controller input
-            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+            if (m_score.gameRunning)
             {
                 m_ball.scrub(m_handle.switchDirection(Handle::Down));
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+        };
+    static const auto pumpUp = 
+        [&]()
+        {
+            if (m_score.gameRunning)
             {
                 m_ball.scrub(m_handle.switchDirection(Handle::Up));
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        };
+    static const auto insertBall =
+        [&]()
+        {
+            if (m_score.gameRunning)
             {
-                //insert ball
                 if (m_handle.progress == 0
                     && m_handle.speed == 0
                     && !m_handle.hasBall
@@ -175,7 +180,11 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
                     m_ball.state = Ball::State::Insert;
                 }
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        };
+    static const auto removeBall = 
+        [&]()
+        {
+            if (m_score.gameRunning)
             {
                 if (m_handle.progress == 0
                     && m_handle.speed == 0
@@ -188,7 +197,11 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
                     m_handle.entity.getComponent<cro::Transform>().removeChild(m_ball.entity.getComponent<cro::Transform>());
                 }
             }
-            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        };
+    static const auto addSoap = 
+        [&]()
+        {
+            if (m_score.gameRunning)
             {
                 if (m_handle.soap.count)
                 {
@@ -196,7 +209,99 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
                     m_handle.soap.refresh();
                 }
             }
+        };
+
+    static const auto pause = [&]() 
+        {
+            //requestStackPush(StateID::ScrubPauseState);
+        };
+
+    if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_BACKSPACE:
+        case SDLK_ESCAPE:
+            pause();
+            break;
         }
+
+
+        if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Left])
+        {
+            pumpDown();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Right])
+        {
+            pumpUp();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+        {
+            insertBall();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        {
+            removeBall();
+        }
+        else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::Action])
+        {
+            addSoap();
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    {
+        //TODO do we want to prevent other controller input
+        //and lock to only the controller used to start this game?
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case cro::GameController::ButtonLeftShoulder:
+            insertBall();
+            break;
+        case cro::GameController::ButtonRightShoulder:
+            removeBall();
+            break;
+        case cro::GameController::DPadLeft:
+            pumpDown();
+            break;
+        case cro::GameController::DPadRight:
+            pumpUp();
+            break;
+        case cro::GameController::ButtonA:
+            addSoap();
+            break;
+        case cro::GameController::ButtonStart:
+            pause();
+            break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        //TODO again do we want to lock the controller ID?
+        //will having two controllers somehow be an advantage?
+        if (evt.caxis.axis == cro::GameController::AxisRightX)
+        {
+            static constexpr std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;
+            const auto v = evt.caxis.value;
+
+            if (m_axisPosition < Threshold
+                && v > Threshold)
+            {
+                pumpDown();
+            }
+            else if (m_axisPosition > -Threshold
+                && v < -Threshold)
+            {
+                pumpUp();
+            }
+
+            m_axisPosition = v;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        pause();
     }
 
     m_gameScene.forwardEvent(evt);
@@ -264,6 +369,7 @@ void ScrubGameState::addSystems()
 void ScrubGameState::loadAssets()
 {
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
+    m_gameScene.setCubemap(m_environmentMap);
 
     //TODO remove this for shared font
     m_resources.fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
@@ -287,15 +393,46 @@ void ScrubGameState::createScene()
 
     if (md.loadFromFile("assets/arcade/scrub/models/ball.cmt"))
     {
+        m_ball.colourIndex = cro::Util::Random::value(0u, CD32::Colours.size() - 1);
+
+
+        //player ball
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ -BallOffsetPos, 0.f, 0.f });
         md.createModel(entity);
 
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CD32::Colours[m_ball.colourIndex]);
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
             std::bind(&ScrubGameState::ballCallback, this, std::placeholders::_1, std::placeholders::_2);
 
         m_ball.entity = entity;
+
+
+        //animated ball
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -BallOffsetPos, 0.f, 0.f });
+        md.createModel(entity);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<BallAnimationData>();
+        entity.getComponent<cro::Callback>().function = 
+            [](cro::Entity e, float dt)
+            {
+                auto& data = e.getComponent<cro::Callback>().getUserData<BallAnimationData>();
+                if (data.state == 0)
+                {
+                    static constexpr glm::vec3 Gravity = glm::vec3(0.f, -8.f, 0.f);
+                    data.velocity += Gravity * dt;
+                    e.getComponent<cro::Transform>().move(data.velocity * dt);
+
+                    if (e.getComponent<cro::Transform>().getPosition().y < -2.f)
+                    {
+                        data.state = 1;
+                    }
+                }
+            };
+        m_ball.animatedEntity = entity;
     }
 
     if (md.loadFromFile("assets/arcade/scrub/models/body.cmt"))
@@ -320,7 +457,11 @@ void ScrubGameState::createScene()
     //camera.getComponent<cro::Transform>().setPosition({ 0.f, 0.05f, 0.25f });
     //camera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.1f);
     
-    camera.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(glm::vec3(-0.04f, 0.15f, 0.28f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)));
+    
+    //TODO create a path of points, convert them with look-at and the animate the camera along them
+    //maybe don't do the READY GO until animation is finished
+    camera.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(glm::vec3(-0.04f, 0.12f, 0.36f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)));
+    camera.getComponent<cro::Transform>().move({ 0.f, -0.05f, 0.f });
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.2f);
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.6f);
@@ -473,13 +614,17 @@ void ScrubGameState::ballCallback(cro::Entity e, float dt)
         auto pos = m_ball.entity.getComponent<cro::Transform>().getPosition();
         pos.x += Ball::Speed * dt;
 
-        if (pos.x > BallOffsetPos)
+        if (pos.x > BallExitPos)
         {
             updateScore();
 
             m_ball.state = Ball::State::Idle;
             m_ball.filth = Ball::MaxFilth;
             pos.x = -BallOffsetPos;
+
+            m_ball.animatedEntity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CD32::Colours[m_ball.colourIndex]);
+            m_ball.animatedEntity.getComponent<cro::Transform>().setPosition({ BallExitPos, 0.f, 0.f });
+            m_ball.animatedEntity.getComponent<cro::Callback>().setUserData<BallAnimationData>(); //resets the animation
 
             m_ball.colourIndex += cro::Util::Random::value(1, 3);
             m_ball.colourIndex %= CD32::Colours.size();
@@ -528,7 +673,7 @@ void ScrubGameState::updateScore()
             if (m_score.bonusRun % 10 == 0)
             {
                 m_score.totalScore += 10000;
-                m_score.remainingTime + 10.f;
+                m_score.remainingTime += 10.f;
             }
             break;
         case 3:
@@ -537,7 +682,7 @@ void ScrubGameState::updateScore()
             break;
         case 5:
             m_score.totalScore += 5000;
-            m_score.remainingTime + 2.f;
+            m_score.remainingTime += 2.f;
             break;
         }
 
