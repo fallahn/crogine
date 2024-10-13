@@ -3908,7 +3908,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             if (m_sharedData.scoreType == ScoreType::Elimination)
             {
                 cro::String str;
-                for (auto i = 0; i < 10 - strLen; ++i)
+                for (auto i = 0u; i < 10 - strLen; ++i)
                 {
                     str += " ";
                 }
@@ -4053,7 +4053,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 if (m_sharedData.scoreType == ScoreType::Elimination)
                 {
                     cro::String str;
-                    for (auto i = 0; i < 8 - strLen; ++i)
+                    for (auto i = 0u; i < 8 - strLen; ++i)
                     {
                         str += " ";
                     }
