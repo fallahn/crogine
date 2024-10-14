@@ -4,6 +4,7 @@
 
 #include <crogine/gui/Gui.hpp>
 
+#include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -11,17 +12,21 @@
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
 
+#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 
 #include <crogine/graphics/Font.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
+
+#include <sstream>
 
 namespace
 {
@@ -123,6 +128,19 @@ namespace
 
             Count
         };
+    };
+
+    //hacky placeholder for UIElements
+    namespace CommandID::UI
+    {
+        static constexpr auto UIElement = 0x4;
+    }
+
+    struct UIElement final
+    {
+        glm::vec2 absolutePosition = glm::vec2(0.f); //absolute in units offset from relative position
+        glm::vec2 relativePosition = glm::vec2(0.f); //normalised relative to screen size
+        float depth = 0.f; //z depth
     };
 }
 
@@ -333,10 +351,14 @@ bool ScrubGameState::simulate(float dt)
             glm::vec2 size(cro::App::getWindow().getSize());
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y / 2.f });
+            entity.getComponent<cro::Transform>().move({ 0.f, 24.f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setString("Game Over\nTotal Score: " + std::to_string(m_score.totalScore));
             entity.getComponent<cro::Text>().setCharacterSize(8 * 4);
             entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+            entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+            entity.getComponent<UIElement>().absolutePosition = { 0.f, 24.f };
         }
     }
 
@@ -357,8 +379,10 @@ void ScrubGameState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
@@ -454,6 +478,10 @@ void ScrubGameState::createScene()
     cam.resizeCallback = resize;
     resize(cam);
 
+    cam.shadowMapBuffer.create(2048, 2048);
+    cam.setMaxShadowDistance(2.f);
+    cam.setShadowExpansion(0.5f);
+
     //camera.getComponent<cro::Transform>().setPosition({ 0.f, 0.05f, 0.25f });
     //camera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.1f);
     
@@ -471,36 +499,38 @@ void ScrubGameState::createUI()
 {
     registerWindow([&]() 
         {
-            ImGui::Begin("Buns");
+            if (ImGui::Begin("Buns"))
+            {
+                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 200.f ,200.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
-            ImGui::Text("Remaining Time: %3.2f", m_score.remainingTime);
-            ImGui::Text("Balls Washed: %d", m_score.ballsWashed);
-            ImGui::Text("Avg Cleanliness %3.2f", m_score.avgCleanliness);
+                ImGui::Text("Remaining Time: %3.2f", m_score.remainingTime);
+                ImGui::Text("Balls Washed: %d", m_score.ballsWashed);
+                ImGui::Text("Avg Cleanliness %3.2f", m_score.avgCleanliness);
 
-            ImGui::NewLine();
-            ImGui::Separator();
-            ImGui::NewLine();
+                ImGui::NewLine();
+                ImGui::Separator();
+                ImGui::NewLine();
 
-            ImGui::Text("Handle Speed: %3.2f", m_handle.speed);
-            ImGui::Text("Handle Direction: %3.2f", m_handle.direction);
+                ImGui::Text("Handle Speed: %3.2f", m_handle.speed);
+                ImGui::Text("Handle Direction: %3.2f", m_handle.direction);
 
-            ImGui::Text("Handle Stroke: %3.2f", m_handle.stroke);
-            ImGui::Text("Handle Progress: %3.2f", m_handle.progress);
+                ImGui::Text("Handle Stroke: %3.2f", m_handle.stroke);
+                ImGui::Text("Handle Progress: %3.2f", m_handle.progress);
 
-            ImGui::NewLine();
-            ImGui::Separator();
-            ImGui::NewLine();
+                ImGui::NewLine();
+                ImGui::Separator();
+                ImGui::NewLine();
 
-            ImGui::Text("Ball Filth: %3.2f", m_ball.filth);
-            ImVec4 c = (Ball::MaxFilth - m_ball.filth) > m_score.threshold ? ImVec4(0.f, 1.f, 0.f, 1.f) : ImVec4(1.f, 0.f, 0.f, 1.f);
-            ImGui::SameLine();
-            ImGui::ColorButton("##buns", c, 0, { 12.f, 12.f });
+                ImGui::Text("Ball Filth: %3.2f", m_ball.filth);
+                ImVec4 c = (Ball::MaxFilth - m_ball.filth) > m_score.threshold ? ImVec4(0.f, 1.f, 0.f, 1.f) : ImVec4(1.f, 0.f, 0.f, 1.f);
+                ImGui::SameLine();
+                ImGui::ColorButton("##buns", c, 0, { 12.f, 12.f });
 
-            ImGui::Text("Soap Level: %3.2f", m_handle.soap.amount);
-            ImGui::Text("Soap Bars: %d", m_handle.soap.count);
-            ImGui::Text("Soap LifeTime %3.3f", m_handle.soap.lifeTime);
-            ImGui::Text("Soap Reduction %3.3f", m_handle.soap.getReduction());
-
+                ImGui::Text("Soap Level: %3.2f", m_handle.soap.amount);
+                ImGui::Text("Soap Bars: %d", m_handle.soap.count);
+                ImGui::Text("Soap LifeTime %3.3f", m_handle.soap.lifeTime);
+                ImGui::Text("Soap Reduction %3.3f", m_handle.soap.getReduction());
+            }
             ImGui::End();
         });
 
@@ -510,11 +540,13 @@ void ScrubGameState::createUI()
 
     glm::vec2 size(cro::App::getWindow().getSize());
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y / 2.f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("READY");
     entity.getComponent<cro::Text>().setCharacterSize(8 * 4);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
 
     struct MessageData final
     {
@@ -552,13 +584,214 @@ void ScrubGameState::createUI()
         };
 
 
-    auto resize = [](cro::Camera& cam)
+
+    //remaining time
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 1.f);
+    entity.getComponent<UIElement>().absolutePosition = { 12.f, -12.f };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            std::stringstream ss;
+            ss.setf(std::ios::fixed);
+            ss.precision(2);
+            ss << "Remaining: " << m_score.remainingTime << "s";
+            e.getComponent<cro::Text>().setString(ss.str());
+        };
+
+
+    //ball count
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 1.f);
+    entity.getComponent<UIElement>().absolutePosition = { 12.f, -22.f };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            std::stringstream ss;
+            ss.setf(std::ios::fixed);
+            ss.precision(2);
+            ss << "Balls Cleaned: " << m_score.ballsWashed;
+            e.getComponent<cro::Text>().setString(ss.str());
+        };
+
+
+    //avg cleanliness
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 0.f);
+    entity.getComponent<UIElement>().absolutePosition = { 12.f, 12.f };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            std::stringstream ss;
+            ss.setf(std::ios::fixed);
+            ss.precision(2);
+            ss << "Avg Cleanliness: " << m_score.avgCleanliness << "%";
+            e.getComponent<cro::Text>().setString(ss.str());
+        };
+    
+
+
+    //score
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(16);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -12.f };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            std::stringstream ss;
+            ss << m_score.totalScore;
+            e.getComponent<cro::Text>().setString(ss.str());
+        };
+
+
+    //soap count
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 1.f);
+    entity.getComponent<UIElement>().absolutePosition = { -112.f, -12.f };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            std::stringstream ss;
+            ss << "Soap Bars: " << m_handle.soap.count;
+            e.getComponent<cro::Text>().setString(ss.str());
+        };
+
+
+
+    //100% streak
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -32.f };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            std::stringstream ss;
+            ss << "Streak: " << m_score.bonusRun << " Balls";
+            e.getComponent<cro::Text>().setString(ss.str());
+        };
+
+
+    static constexpr float BarHeight = 200.f;
+    static constexpr float BarWidth = 20.f;
+
+    //soap level
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, BarHeight), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(BarWidth, 0.f), cro::Colour::Blue)
+        }
+    );
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
+    entity.getComponent<UIElement>().absolutePosition = { -(BarWidth + 12.f), 12.f};
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            const float speed = dt;
+            auto& currPos = e.getComponent<cro::Callback>().getUserData<float>();
+            const auto target = std::clamp((m_handle.soap.amount - Handle::Soap::MinSoap) / (Handle::Soap::MaxSoap - Handle::Soap::MinSoap), 0.f, 1.f);
+
+            if (currPos > target)
+            {
+                currPos = std::max(target, currPos - speed);
+            }
+            else
+            {
+                currPos = std::min(target, currPos + speed);
+            }
+            e.getComponent<cro::Transform>().setScale({ 1.f, currPos });
+        };
+
+
+
+    //current ball cleanliness
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, BarHeight), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(BarWidth, 0.f), cro::Colour::Blue)
+        }
+    );
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
+    entity.getComponent<UIElement>().absolutePosition = { -((BarWidth + 12.f) * 2.f), 12.f };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            float cleanliness = (Ball::MaxFilth - m_ball.filth);
+            const auto c = cleanliness > m_score.threshold ? cro::Colour::Green : cro::Colour::Red;
+
+            cleanliness /= Ball::MaxFilth;
+            e.getComponent<cro::Transform>().setScale({ 1.f, cleanliness });
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour = c;
+            }
+        };
+
+
+    auto resize = [&](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = {0.f, 0.f, 1.f, 1.f};
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 10.f);
 
-        //TODO send messge to UI elements to reposition them
+        //send messge to UI elements to reposition them
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::UIElement;
+        cmd.action = 
+            [size](cro::Entity e, float)
+            {
+                const auto& ui = e.getComponent<UIElement>();
+                float x = std::floor(size.x * ui.relativePosition.x);
+                float y = std::floor(size.y * ui.relativePosition.y);
+                e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2(ui.absolutePosition + glm::vec2(x,y)), ui.depth));
+
+                //TODO probably want to rescale downwards too?
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
@@ -642,7 +875,42 @@ void ScrubGameState::updateScore()
 
     if (cleanliness < m_score.threshold)
     {
-        //TODO display notification
+        //display notification
+        const auto& font = m_resources.fonts.get(FontID::UI);
+        const auto size = glm::vec2(cro::App::getWindow().getSize());
+
+        auto ent = m_uiScene.createEntity();
+        ent.addComponent<cro::Transform>().setPosition({ size.x / 2.f, 40.f });
+        ent.addComponent<cro::Drawable2D>();
+        ent.addComponent<cro::Text>(font).setCharacterSize(8 * 3);
+        ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        ent.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+        ent.getComponent<cro::Text>().setString("Premature Ejection!");
+
+        ent.addComponent<cro::Callback>().active = true;
+        ent.getComponent<cro::Callback>().setUserData<float>(3.f);
+        ent.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
+
+                std::int32_t flash = static_cast<std::int32_t>(std::ceil(currTime * 2.f)) % 2;
+                if (flash)
+                {
+                    e.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+                }
+                else
+                {
+                    e.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+                }
+
+                if (currTime < 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
         return;
     }
 
@@ -697,7 +965,17 @@ void ScrubGameState::updateScore()
     if (m_score.ballsWashed % 5 == 0)
     {
         //new soap in 3.. 2.. 1..
-        auto ent = m_gameScene.createEntity();
+        const auto& font = m_resources.fonts.get(FontID::UI);
+        const auto size = glm::vec2(cro::App::getWindow().getSize());
+
+        auto ent = m_uiScene.createEntity();
+        ent.addComponent<cro::Transform>().setPosition(size / 2.f);
+        ent.addComponent<cro::Drawable2D>();
+        ent.addComponent<cro::Text>(font).setCharacterSize(8 * 3);
+        ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        ent.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+        ent.getComponent<cro::Text>().setString("New Soap In\n3...");
+
         ent.addComponent<cro::Callback>().active = true;
         ent.getComponent<cro::Callback>().setUserData<float>(3.f);
         ent.getComponent<cro::Callback>().function =
@@ -706,13 +984,18 @@ void ScrubGameState::updateScore()
                 auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
                 currTime -= dt;
 
+                const float count = std::ceil(currTime);
+                std::stringstream ss;
+                ss << "New Soap In\n" << (int)count << "...";
+                e.getComponent<cro::Text>().setString(ss.str());
+
                 if (currTime < 0)
                 {
                     m_score.totalScore += 500;
 
                     m_handle.soap.count = std::min(MaxSoapBars, m_handle.soap.count + 1);
                     e.getComponent<cro::Callback>().active = false;
-                    m_gameScene.destroyEntity(e);
+                    m_uiScene.destroyEntity(e);
                 }
             };
 
