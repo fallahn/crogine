@@ -61,6 +61,9 @@ namespace States
             PseutheGame,
             PseutheMenu,
             Scrub,
+            ScrubBackground,
+            ScrubAttract,
+            ScrubPause,
 
             Count
         };

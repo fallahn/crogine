@@ -335,7 +335,10 @@
     <ClCompile Include="src\retro\RetroState.cpp" />
     <ClCompile Include="src\rolling\RollingState.cpp" />
     <ClCompile Include="src\rolling\RollingSystem.cpp" />
+    <ClCompile Include="src\scrub\ScrubAttractState.cpp" />
+    <ClCompile Include="src\scrub\ScrubBackgroundState.cpp" />
     <ClCompile Include="src\scrub\ScrubGameState.cpp" />
+    <ClCompile Include="src\scrub\ScrubPauseState.cpp" />
     <ClCompile Include="src\ssao\LightVolumeSystem.cpp" />
     <ClCompile Include="src\ssao\SSAOState.cpp" />
     <ClCompile Include="src\swingput\Swingput.cpp" />
@@ -406,7 +409,10 @@
     <ClInclude Include="src\rolling\RollingState.hpp" />
     <ClInclude Include="src\rolling\RollingSystem.hpp" />
     <ClInclude Include="src\rolling\Utility.hpp" />
+    <ClInclude Include="src\scrub\ScrubAttractState.hpp" />
+    <ClInclude Include="src\scrub\ScrubBackgroundState.hpp" />
     <ClInclude Include="src\scrub\ScrubGameState.hpp" />
+    <ClInclude Include="src\scrub\ScrubPauseState.hpp" />
     <ClInclude Include="src\ssao\LightVolumeSystem.hpp" />
     <ClInclude Include="src\ssao\SSAOState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />

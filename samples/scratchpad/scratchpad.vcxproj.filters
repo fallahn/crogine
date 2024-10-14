@@ -315,6 +315,15 @@
     <ClCompile Include="src\scrub\ScrubGameState.cpp">
       <Filter>Source Files\scrub</Filter>
     </ClCompile>
+    <ClCompile Include="src\scrub\ScrubBackgroundState.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubAttractState.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubPauseState.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -522,6 +531,15 @@
       <Filter>Header Files\pseuthe</Filter>
     </ClInclude>
     <ClInclude Include="src\scrub\ScrubGameState.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubBackgroundState.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubAttractState.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubPauseState.hpp">
       <Filter>Header Files\scrub</Filter>
     </ClInclude>
   </ItemGroup>

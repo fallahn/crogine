@@ -53,7 +53,11 @@ source distribution.
 #include "pseuthe/PseutheBackgroundState.hpp"
 #include "pseuthe/PseutheGameState.hpp"
 #include "pseuthe/PseutheMenuState.hpp"
+
+#include "scrub/ScrubBackgroundState.hpp"
+#include "scrub/ScrubAttractState.hpp"
 #include "scrub/ScrubGameState.hpp"
+#include "scrub/ScrubPauseState.hpp"
 
 #include <crogine/core/Clock.hpp>
 
@@ -177,7 +181,11 @@ bool MyApp::initialise()
     m_stateStack.registerState<InteriorMappingState>(States::ScratchPad::InteriorMapping);
     m_stateStack.registerState<EndlessDrivingState>(States::ScratchPad::EndlessDriving);
     m_stateStack.registerState<TrackOverlayState>(States::ScratchPad::TrackOverlay);
+    
     m_stateStack.registerState<ScrubGameState>(States::ScratchPad::Scrub);
+    m_stateStack.registerState<ScrubAttractState>(States::ScratchPad::ScrubAttract);
+    m_stateStack.registerState<ScrubBackgroundState>(States::ScratchPad::ScrubBackground);
+    m_stateStack.registerState<ScrubPauseState>(States::ScratchPad::ScrubPause);
 
     m_stateStack.registerState<PseutheBackgroundState>(States::ScratchPad::PseutheBackground);
     m_stateStack.registerState<PseutheGameState>(States::ScratchPad::PseutheGame);
@@ -185,7 +193,7 @@ bool MyApp::initialise()
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
-    m_stateStack.pushState(States::ScratchPad::Scrub);
+    m_stateStack.pushState(States::ScratchPad::ScrubBackground);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);

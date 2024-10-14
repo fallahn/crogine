@@ -151,12 +151,10 @@ ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context conte
     m_axisPosition  (0)
 {
     //this is a pre-cached state
-    //context.mainWindow.loadResources([this]() {
-        addSystems();
-        loadAssets();
-        createScene();
-        createUI();
-    //});
+    addSystems();
+    loadAssets();
+    createScene();
+    createUI();
 }
 
 //public
@@ -231,7 +229,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
 
     static const auto pause = [&]() 
         {
-            //requestStackPush(StateID::ScrubPauseState);
+            requestStackPush(States::ScratchPad::ScrubPause);
         };
 
     if (evt.type == SDL_KEYDOWN)
@@ -1009,22 +1007,36 @@ void ScrubGameState::updateScore()
             {
                 m_score.totalScore += 10000;
                 m_score.remainingTime += 10.f;
+
+                //TODO add a delay to this func
+                showMessage("10x STREAK!");
+                
+                //showMessage("+10000");
             }
             break;
         case 3:
             m_score.totalScore += 3000;
             m_score.remainingTime += 0.5f;
+
+            showMessage("3x STREAK!");
             break;
         case 5:
             m_score.totalScore += 5000;
             m_score.remainingTime += 2.f;
+
+            showMessage("5x STREAK!");
             break;
         }
 
-        //TODO display notification
+        //display notification
+        showMessage("PERFECT");
     }
     else
     {
+        if (m_score.bonusRun != 0)
+        {
+            showMessage("STREAK BROKEN");
+        }
         m_score.bonusRun = 0;
     }
 
@@ -1036,12 +1048,13 @@ void ScrubGameState::updateScore()
         const auto size = glm::vec2(cro::App::getWindow().getSize());
 
         auto ent = m_uiScene.createEntity();
-        ent.addComponent<cro::Transform>().setPosition({ size.x / 2.f, 40.f });
+        ent.addComponent<cro::Transform>().setPosition({ size.x / 2.f, 60.f });
         ent.addComponent<cro::Drawable2D>();
         ent.addComponent<cro::Text>(font).setCharacterSize(8 * 3);
         ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         ent.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
         ent.getComponent<cro::Text>().setString("New Soap Bar In\n3");
+        ent.getComponent<cro::Text>().setVerticalSpacing(4.f);
 
         ent.addComponent<cro::Callback>().active = true;
         ent.getComponent<cro::Callback>().setUserData<float>(3.f);
@@ -1058,6 +1071,8 @@ void ScrubGameState::updateScore()
 
                 if (currTime < 0)
                 {
+                    //TODO animate into soap bar counter
+
                     m_score.totalScore += 500;
 
                     m_handle.soap.count = std::min(MaxSoapBars, m_handle.soap.count + 1);
@@ -1069,6 +1084,49 @@ void ScrubGameState::updateScore()
         m_score.threshold = std::min(Ball::MaxFilth, m_score.threshold + 4.f);
         m_score.remainingTime += 0.5f;
     }
+}
+
+void ScrubGameState::showMessage(const std::string& str)
+{
+    const auto size = glm::vec2(cro::App::getWindow().getSize());
+    const auto& font = m_resources.fonts.get(FontID::UI);
+
+    static constexpr float MessageTime = 0.5f;
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(size / 2.f);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(str);
+    entity.getComponent<cro::Text>().setCharacterSize(16);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Yellow);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(MessageTime);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::max(0.f, currTime - dt);
+
+            const auto invTime = cro::Util::Easing::easeOutCirc(std::clamp(1.f - (currTime / MessageTime), 0.f, 1.f));
+            const float scale = 1.f + invTime;
+
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+            auto colour = cro::Colour::Yellow;
+            colour.setAlpha(1.f - invTime);
+
+            e.getComponent<cro::Text>().setFillColour(colour);
+
+            if (currTime == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+        };
+
+
+    //TODO some sort of audio
 }
 
 //handle funcs

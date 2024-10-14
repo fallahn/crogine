@@ -155,4 +155,6 @@ private:
     void handleCallback(cro::Entity, float);
     void ballCallback(cro::Entity, float);
     void updateScore();
+
+    void showMessage(const std::string&);
 };
