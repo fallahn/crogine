@@ -401,6 +401,27 @@ void ScrubGameState::loadAssets()
 
 void ScrubGameState::createScene()
 {
+    cro::Entity rootNode = m_gameScene.createEntity();
+    rootNode.addComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
+    rootNode.addComponent<cro::Callback>().active = true;
+    rootNode.getComponent<cro::Callback>().setUserData<float>(3.f);
+    rootNode.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::max(0.f, currTime - dt);
+            const float rotation = cro::Util::Const::TAU * currTime * 4.f;
+            const float scale = std::clamp(1.f - (currTime / 3.f), 0.f, 1.f);
+
+            e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+
+            if (currTime == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+
     cro::ModelDefinition md(m_resources, &m_environmentMap);
     if (md.loadFromFile("assets/arcade/scrub/models/handle.cmt"))
     {
@@ -413,6 +434,7 @@ void ScrubGameState::createScene()
             std::bind(&ScrubGameState::handleCallback, this, std::placeholders::_1, std::placeholders::_2);
 
         m_handle.entity = entity;
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
     if (md.loadFromFile("assets/arcade/scrub/models/ball.cmt"))
@@ -435,7 +457,7 @@ void ScrubGameState::createScene()
 
         //animated ball
         entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -BallOffsetPos, 0.f, 0.f });
+        entity.addComponent<cro::Transform>().setPosition({ -BallOffsetPos, 0.f, -10.f });
         md.createModel(entity);
 
         entity.addComponent<cro::Callback>().active = true;
@@ -464,6 +486,8 @@ void ScrubGameState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
+
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
     auto resize = [](cro::Camera& cam)
@@ -482,14 +506,54 @@ void ScrubGameState::createScene()
     cam.setMaxShadowDistance(2.f);
     cam.setShadowExpansion(0.5f);
 
-    //camera.getComponent<cro::Transform>().setPosition({ 0.f, 0.05f, 0.25f });
-    //camera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.1f);
-    
-    
-    //TODO create a path of points, convert them with look-at and the animate the camera along them
-    //maybe don't do the READY GO until animation is finished
-    camera.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(glm::vec3(-0.04f, 0.12f, 0.36f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)));
-    camera.getComponent<cro::Transform>().move({ 0.f, -0.05f, 0.f });
+    //create a path of points, convert them with look-at and the animate the camera along them
+    static std::array path =
+    {
+        //glm::inverse(glm::lookAt(glm::vec3(0.14f, 0.02f, 0.f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)),
+        glm::inverse(glm::lookAt(glm::vec3(0.f, 0.12f, 0.06f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)),
+        glm::inverse(glm::lookAt(glm::vec3(-0.04f, 0.07f, 0.36f), glm::vec3(0.f, -0.04f, 0.f), cro::Transform::Y_AXIS))
+    };
+
+    static const auto interpolate =
+        [](glm::mat4& mat1, glm::mat4& mat2, float t)
+        {
+            const glm::quat rot0 = glm::quat_cast(mat1);
+            const glm::quat rot1 = glm::quat_cast(mat2);
+
+            const glm::quat finalRot = glm::slerp(rot0, rot1, t);
+
+            glm::mat4 finalMat = glm::mat4_cast(finalRot);
+            finalMat[3] = mat1[3] * (1.f - t) + mat2[3] * t;
+
+            return finalMat;
+        };
+
+
+    camera.getComponent<cro::Transform>().setLocalTransform(path[0]);
+    camera.addComponent<cro::Callback>().active = true;
+    camera.getComponent<cro::Callback>().setUserData<float>(0.f);
+    camera.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime += dt;
+
+            auto idx = static_cast<std::int32_t>(std::floor(currTime));
+            float t = currTime - idx;
+
+            if (idx < path.size() - 1)
+            {
+                glm::mat4 tx = interpolate(path[idx], path[idx + 1], t);
+                e.getComponent<cro::Transform>().setLocalTransform(tx);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setLocalTransform(path.back());
+                e.getComponent<cro::Callback>().active = false;
+
+                createCountIn();
+            }
+        };
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.2f);
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.6f);
@@ -497,96 +561,49 @@ void ScrubGameState::createScene()
 
 void ScrubGameState::createUI()
 {
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Buns"))
-            {
-                //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 200.f ,200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Buns"))
+    //        {
+    //            //ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 200.f ,200.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
-                ImGui::Text("Remaining Time: %3.2f", m_score.remainingTime);
-                ImGui::Text("Balls Washed: %d", m_score.ballsWashed);
-                ImGui::Text("Avg Cleanliness %3.2f", m_score.avgCleanliness);
+    //            ImGui::Text("Remaining Time: %3.2f", m_score.remainingTime);
+    //            ImGui::Text("Balls Washed: %d", m_score.ballsWashed);
+    //            ImGui::Text("Avg Cleanliness %3.2f", m_score.avgCleanliness);
 
-                ImGui::NewLine();
-                ImGui::Separator();
-                ImGui::NewLine();
+    //            ImGui::NewLine();
+    //            ImGui::Separator();
+    //            ImGui::NewLine();
 
-                ImGui::Text("Handle Speed: %3.2f", m_handle.speed);
-                ImGui::Text("Handle Direction: %3.2f", m_handle.direction);
+    //            ImGui::Text("Handle Speed: %3.2f", m_handle.speed);
+    //            ImGui::Text("Handle Direction: %3.2f", m_handle.direction);
 
-                ImGui::Text("Handle Stroke: %3.2f", m_handle.stroke);
-                ImGui::Text("Handle Progress: %3.2f", m_handle.progress);
+    //            ImGui::Text("Handle Stroke: %3.2f", m_handle.stroke);
+    //            ImGui::Text("Handle Progress: %3.2f", m_handle.progress);
 
-                ImGui::NewLine();
-                ImGui::Separator();
-                ImGui::NewLine();
+    //            ImGui::NewLine();
+    //            ImGui::Separator();
+    //            ImGui::NewLine();
 
-                ImGui::Text("Ball Filth: %3.2f", m_ball.filth);
-                ImVec4 c = (Ball::MaxFilth - m_ball.filth) > m_score.threshold ? ImVec4(0.f, 1.f, 0.f, 1.f) : ImVec4(1.f, 0.f, 0.f, 1.f);
-                ImGui::SameLine();
-                ImGui::ColorButton("##buns", c, 0, { 12.f, 12.f });
+    //            ImGui::Text("Ball Filth: %3.2f", m_ball.filth);
+    //            ImVec4 c = (Ball::MaxFilth - m_ball.filth) > m_score.threshold ? ImVec4(0.f, 1.f, 0.f, 1.f) : ImVec4(1.f, 0.f, 0.f, 1.f);
+    //            ImGui::SameLine();
+    //            ImGui::ColorButton("##buns", c, 0, { 12.f, 12.f });
 
-                ImGui::Text("Soap Level: %3.2f", m_handle.soap.amount);
-                ImGui::Text("Soap Bars: %d", m_handle.soap.count);
-                ImGui::Text("Soap LifeTime %3.3f", m_handle.soap.lifeTime);
-                ImGui::Text("Soap Reduction %3.3f", m_handle.soap.getReduction());
-            }
-            ImGui::End();
-        });
+    //            ImGui::Text("Soap Level: %3.2f", m_handle.soap.amount);
+    //            ImGui::Text("Soap Bars: %d", m_handle.soap.count);
+    //            ImGui::Text("Soap LifeTime %3.3f", m_handle.soap.lifeTime);
+    //            ImGui::Text("Soap Reduction %3.3f", m_handle.soap.getReduction());
+    //        }
+    //        ImGui::End();
+    //    });
 
 
     //placeholder count-in
     const auto& font = m_resources.fonts.get(FontID::UI);
 
-    glm::vec2 size(cro::App::getWindow().getSize());
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("READY");
-    entity.getComponent<cro::Text>().setCharacterSize(8 * 4);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-
-    struct MessageData final
-    {
-        float t = 2.f;
-        std::int32_t state = 0;
-    };
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<MessageData>();
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            auto& [t, state] = e.getComponent<cro::Callback>().getUserData<MessageData>();
-            t -= dt;
-            if (state == 0)
-            {
-                //ready
-                if (t < 0)
-                {
-                    t += 2.f;
-                    state = 1;
-                    e.getComponent<cro::Text>().setString("GO!");
-
-                    m_score.gameRunning = true;
-                }
-            }
-            else
-            {
-                //go
-                if (t < 0)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                    m_uiScene.destroyEntity(e);
-                }
-            }
-        };
-
-
-
     //remaining time
-    entity = m_uiScene.createEntity();
+    auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(8);
@@ -669,10 +686,10 @@ void ScrubGameState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::Text>(font).setCharacterSize(16);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { -112.f, -12.f };
+    entity.getComponent<UIElement>().absolutePosition = { -212.f, -12.f };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -797,6 +814,56 @@ void ScrubGameState::createUI()
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
+}
+
+void ScrubGameState::createCountIn()
+{
+    const auto& font = m_resources.fonts.get(FontID::UI);
+
+    glm::vec2 size(cro::App::getWindow().getSize());
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(size / 2.f);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("READY");
+    entity.getComponent<cro::Text>().setCharacterSize(8 * 4);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+
+    struct MessageData final
+    {
+        float t = 2.f;
+        std::int32_t state = 0;
+    };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<MessageData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& [t, state] = e.getComponent<cro::Callback>().getUserData<MessageData>();
+            t -= dt;
+            if (state == 0)
+            {
+                //ready
+                if (t < 0)
+                {
+                    t += 2.f;
+                    state = 1;
+                    e.getComponent<cro::Text>().setString("GO!");
+
+                    m_score.gameRunning = true;
+                }
+            }
+            else
+            {
+                //go
+                if (t < 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            }
+        };
 }
 
 void ScrubGameState::handleCallback(cro::Entity e, float dt)
@@ -969,12 +1036,12 @@ void ScrubGameState::updateScore()
         const auto size = glm::vec2(cro::App::getWindow().getSize());
 
         auto ent = m_uiScene.createEntity();
-        ent.addComponent<cro::Transform>().setPosition(size / 2.f);
+        ent.addComponent<cro::Transform>().setPosition({ size.x / 2.f, 40.f });
         ent.addComponent<cro::Drawable2D>();
         ent.addComponent<cro::Text>(font).setCharacterSize(8 * 3);
         ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         ent.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
-        ent.getComponent<cro::Text>().setString("New Soap In\n3...");
+        ent.getComponent<cro::Text>().setString("New Soap Bar In\n3");
 
         ent.addComponent<cro::Callback>().active = true;
         ent.getComponent<cro::Callback>().setUserData<float>(3.f);
@@ -986,7 +1053,7 @@ void ScrubGameState::updateScore()
 
                 const float count = std::ceil(currTime);
                 std::stringstream ss;
-                ss << "New Soap In\n" << (int)count << "...";
+                ss << "New Soap Bar In\n" << (int)count;
                 e.getComponent<cro::Text>().setString(ss.str());
 
                 if (currTime < 0)

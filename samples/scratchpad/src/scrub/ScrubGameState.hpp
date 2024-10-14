@@ -150,6 +150,7 @@ private:
     void loadAssets();
     void createScene();
     void createUI();
+    void createCountIn();
 
     void handleCallback(cro::Entity, float);
     void ballCallback(cro::Entity, float);
