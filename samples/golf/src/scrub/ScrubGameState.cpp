@@ -28,6 +28,9 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ScrubGameState.hpp"
+#include "../golf/GameConsts.hpp"
+#include "../golf/InputBinding.hpp"
+#include "../golf/SharedStateData.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -125,54 +128,11 @@ namespace
         };
     }
 #endif
-
-    /*
-    Handle default position is 0 on y
-    and -StrokeDistance when fully inserted
-    */
-
-    //hacky placeholder for future input
-    struct InputBinding
-    {
-        enum
-        {
-            PrevClub, NextClub, Left, Right,
-            Action,
-            Count
-        };
-        std::array<std::int32_t, Count> keys = { SDLK_q, SDLK_e, SDLK_a, SDLK_d, SDLK_SPACE };
-    };
-    struct SharedData
-    {
-        InputBinding inputBinding;
-    }m_sharedData;
-
-    struct FontID final
-    {
-        enum
-        {
-            UI, Info,
-
-            Count
-        };
-    };
-
-    //hacky placeholder for UIElements
-    namespace CommandID::UI
-    {
-        static constexpr auto UIElement = 0x4;
-    }
-
-    struct UIElement final
-    {
-        glm::vec2 absolutePosition = glm::vec2(0.f); //absolute in units offset from relative position
-        glm::vec2 relativePosition = glm::vec2(0.f); //normalised relative to screen size
-        float depth = 0.f; //z depth
-    };
 }
 
-ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context)
+ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
+    m_sharedData    (sd),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
     m_axisPosition  (0)
@@ -383,7 +343,7 @@ bool ScrubGameState::simulate(float dt)
             m_score.totalScore += static_cast<std::int32_t>(std::floor(m_score.totalRunTime));
 
             //game over, show scores.
-            const auto& font = m_resources.fonts.get(FontID::UI);
+            const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
             glm::vec2 size(cro::App::getWindow().getSize());
             auto entity = m_uiScene.createEntity();
@@ -432,8 +392,7 @@ void ScrubGameState::loadAssets()
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
     m_gameScene.setCubemap(m_environmentMap);
 
-    //TODO remove this for shared font
-    m_resources.fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
+
 }
 
 void ScrubGameState::createScene()
@@ -637,7 +596,7 @@ void ScrubGameState::createUI()
 
 
     //placeholder count-in
-    const auto& font = m_resources.fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //remaining time
     auto entity = m_uiScene.createEntity();
@@ -876,7 +835,7 @@ void ScrubGameState::createUI()
 
 void ScrubGameState::createCountIn()
 {
-    const auto& font = m_resources.fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     glm::vec2 size(cro::App::getWindow().getSize());
     auto entity = m_uiScene.createEntity();
@@ -1001,7 +960,7 @@ void ScrubGameState::updateScore()
     if (cleanliness < m_score.threshold)
     {
         //display notification
-        const auto& font = m_resources.fonts.get(FontID::UI);
+        const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
         const auto size = glm::vec2(cro::App::getWindow().getSize());
 
         auto ent = m_uiScene.createEntity();
@@ -1141,7 +1100,7 @@ void ScrubGameState::updateScore()
     if (m_score.ballsWashed % 5 == 0)
     {
         //new soap in 3.. 2.. 1..
-        const auto& font = m_resources.fonts.get(FontID::UI);
+        const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
         const auto size = glm::vec2(cro::App::getWindow().getSize());
 
         auto ent = m_uiScene.createEntity();
@@ -1186,7 +1145,7 @@ void ScrubGameState::updateScore()
 void ScrubGameState::showMessage(const std::string& str)
 {
     const auto size = glm::vec2(cro::App::getWindow().getSize());
-    const auto& font = m_resources.fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     static constexpr float MessageTime = 0.5f;
 

@@ -28,6 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ScrubPauseState.hpp"
+#include "../golf/SharedStateData.hpp"
+#include "../golf/GameConsts.hpp"
 
 #include <crogine/core/App.hpp>
 
@@ -42,9 +44,10 @@ source distribution.
 
 #include <crogine/graphics/Font.hpp>
 
-ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx)
-    :cro::State (ss, ctx),
-    m_uiScene   (ctx.appInstance.getMessageBus())
+ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
+    : cro::State    (ss, ctx),
+    m_sharedData    (sd),
+    m_uiScene       (ctx.appInstance.getMessageBus())
 {
     addSystems();
     buildScene();
@@ -121,11 +124,8 @@ Press ESCAPE or Start to Continue.
 Press Q or Controller B to Quit.
 )";
 
-    //TODO use shared resources
-    const std::int32_t fontID = 1;
-    m_resources.fonts.load(fontID, "assets/golf/fonts/IBM_CGA.ttf");
 
-    const auto& font = m_resources.fonts.get(fontID);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto size = glm::vec2(cro::App::getWindow().getSize());
     auto entity = m_uiScene.createEntity();

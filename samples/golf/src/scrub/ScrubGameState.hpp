@@ -41,10 +41,11 @@ source distribution.
 
 #include <array>
 
+struct SharedStateData;
 class ScrubGameState final : public cro::State, public cro::GuiClient
 {
 public:
-    ScrubGameState(cro::StateStack&, cro::State::Context);
+    ScrubGameState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     cro::StateID getStateID() const override { return StateID::ScrubGame; }
 
@@ -54,6 +55,7 @@ public:
     void render() override;
 
 private:
+    SharedStateData& m_sharedData;
 
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
