@@ -28,9 +28,11 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ScrubGameState.hpp"
+#include "ScrubSoundDirector.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/InputBinding.hpp"
 #include "../golf/SharedStateData.hpp"
+#include "../Colordome-32.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -42,6 +44,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
 
+#include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -73,66 +76,26 @@ namespace
         std::int32_t state = 0;
     };
 
-
-#ifdef USE_GNS
-    static_assert(false, "Include the colour file");
-#else
-    namespace CD32
+    struct AudioID final
     {
-        static inline constexpr std::array<cro::Colour, 32u> Colours =
-        {
-            cro::Colour(0xd0b0dff),
-            cro::Colour(0xfff8e1ff),
-            cro::Colour(0xc8b89fff),
-            cro::Colour(0x987a68ff),
-            cro::Colour(0x674949ff),
-            cro::Colour(0x3a3941ff),
-            cro::Colour(0x6b6f72ff),
-            cro::Colour(0xadb9b8ff),
-            cro::Colour(0xadd9b7ff),
-            cro::Colour(0x6eb39dff),
-            cro::Colour(0x30555bff),
-            cro::Colour(0x1a1e2dff),
-            cro::Colour(0x284e43ff),
-            cro::Colour(0x467e3eff),
-            cro::Colour(0x93ab52ff),
-            cro::Colour(0xf2cf5cff),
-            cro::Colour(0xec773dff),
-            cro::Colour(0xb83530ff),
-            cro::Colour(0x722030ff),
-            cro::Colour(0x281721ff),
-            cro::Colour(0x6d2944ff),
-            cro::Colour(0xc85257ff),
-            cro::Colour(0xec9983ff),
-            cro::Colour(0xdbaf77ff),
-            cro::Colour(0xb77854ff),
-            cro::Colour(0x833e35ff),
-            cro::Colour(0x50282fff),
-            cro::Colour(0x65432fff),
-            cro::Colour(0x7e6d37ff),
-            cro::Colour(0x6ebe70ff),
-            cro::Colour(0xb75834ff),
-            cro::Colour(0xd55c4dff),
-        };
-
         enum
         {
-            Black, BeigeLight, BeigeMid, BeigeDark, BeigeDarkest,
-            GreyDark, GreyMid, GreyLight, BlueLight, BlueMid, BlueDark,
-            BlueDarkest, GreenDark, GreenMid, GreenLight, Yellow, Orange,
-            Red, RedDark, MauveDark, Mauve, Pink, PinkLight, TanLight,
-            TanMid, TanDark, TanDarkest, Brown, Olive, Cyan, OrangeDirt,
-            PinkDirt,
+            FillSoap,
+            NoSoap,
+
+            ThreeX, FiveX, TenX,
+            Go, NewSoap, Ready,
+            RoundEnd,
 
             Count
         };
-    }
-#endif
+    };
 }
 
 ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State    (stack, context),
     m_sharedData    (sd),
+    m_soundDirector (nullptr),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
     m_axisPosition  (0)
@@ -210,6 +173,11 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
                 {
                     m_handle.soap.count--;
                     m_handle.soap.refresh();
+                    m_soundDirector->playSound(AudioID::FillSoap, MixerChannel::Menu);
+                }
+                else
+                {
+                    m_soundDirector->playSound(AudioID::NoSoap, MixerChannel::Menu);
                 }
             }
         };
@@ -356,6 +324,8 @@ bool ScrubGameState::simulate(float dt)
             entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
             entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
             entity.getComponent<UIElement>().absolutePosition = { 0.f, 24.f };
+
+            m_soundDirector->playSound(AudioID::RoundEnd, MixerChannel::Voice);
         }
     }
 
@@ -378,6 +348,9 @@ void ScrubGameState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::AudioSystem>(mb);
+
+    m_soundDirector = m_gameScene.addDirector<ScrubSoundDirector>();
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -393,6 +366,21 @@ void ScrubGameState::loadAssets()
     m_gameScene.setCubemap(m_environmentMap);
 
 
+    std::vector<std::string> paths =
+    {
+        "assets/arcade/scrub/sound/fx/fill_soap.wav",
+        "assets/arcade/scrub/sound/fx/no_soap.wav",
+
+        "assets/arcade/scrub/sound/vo/3x.wav",
+        "assets/arcade/scrub/sound/vo/5x.wav",
+        "assets/arcade/scrub/sound/vo/10x.wav",
+        "assets/arcade/scrub/sound/vo/go.wav",
+        "assets/arcade/scrub/sound/vo/new_soap.wav",
+        "assets/arcade/scrub/sound/vo/ready.wav",
+        "assets/arcade/scrub/sound/vo/round_end.wav",
+    };
+
+    m_soundDirector->loadSounds(paths, m_resources.audio);
 }
 
 void ScrubGameState::createScene()
@@ -867,7 +855,7 @@ void ScrubGameState::createCountIn()
                     t += 2.f;
                     state = 1;
                     e.getComponent<cro::Text>().setString("GO!");
-
+                    m_soundDirector->playSound(AudioID::Go, MixerChannel::Voice);
                     m_score.gameRunning = true;
                 }
             }
@@ -881,6 +869,8 @@ void ScrubGameState::createCountIn()
                 }
             }
         };
+
+    m_soundDirector->playSound(AudioID::Ready, MixerChannel::Voice);
 }
 
 void ScrubGameState::handleCallback(cro::Entity e, float dt)
@@ -1033,6 +1023,8 @@ void ScrubGameState::updateScore()
                 showMessage("10x STREAK!");
                 showMessage("+10000");
                 showMessage("+10s");
+
+                m_soundDirector->playSound(AudioID::TenX, MixerChannel::Voice);
             }
             else
             {
@@ -1045,6 +1037,8 @@ void ScrubGameState::updateScore()
 
             showMessage("3x STREAK!");
             showMessage("+3000");
+
+            m_soundDirector->playSound(AudioID::ThreeX, MixerChannel::Voice);
             break;
         case 5:
             m_score.totalScore += 5000;
@@ -1053,6 +1047,8 @@ void ScrubGameState::updateScore()
             showMessage("5x STREAK!");
             showMessage("+5000");
             showMessage("+2s");
+
+            m_soundDirector->playSound(AudioID::FiveX, MixerChannel::Voice);
             break;
         }
     }
@@ -1139,6 +1135,9 @@ void ScrubGameState::updateScore()
 
         m_score.threshold = std::min(Ball::MaxFilth, m_score.threshold + 4.f);
         m_score.remainingTime += 0.5f;
+
+        showMessage("+0.5s");
+        m_soundDirector->playSound(AudioID::NewSoap, MixerChannel::Voice);
     }
 }
 

@@ -42,6 +42,7 @@ source distribution.
 #include <array>
 
 struct SharedStateData;
+class ScrubSoundDirector;
 class ScrubGameState final : public cro::State, public cro::GuiClient
 {
 public:
@@ -56,7 +57,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
-
+    ScrubSoundDirector* m_soundDirector;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;

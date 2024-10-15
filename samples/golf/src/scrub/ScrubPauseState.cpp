@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
+#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
@@ -110,6 +111,7 @@ void ScrubPauseState::render()
 void ScrubPauseState::addSystems()
 {
     auto& mb = cro::App::getInstance().getMessageBus();
+    m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
@@ -144,19 +146,19 @@ Press Q or Controller B to Quit.
             cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 10.f);
 
             //send messge to UI elements to reposition them
-            //cro::Command cmd;
-            //cmd.targetFlags = CommandID::UI::UIElement;
-            //cmd.action =
-            //    [size](cro::Entity e, float)
-            //    {
-            //        const auto& ui = e.getComponent<UIElement>();
-            //        float x = std::floor(size.x * ui.relativePosition.x);
-            //        float y = std::floor(size.y * ui.relativePosition.y);
-            //        e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2(ui.absolutePosition + glm::vec2(x, y)), ui.depth));
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::UIElement;
+            cmd.action =
+                [size](cro::Entity e, float)
+                {
+                    const auto& ui = e.getComponent<UIElement>();
+                    float x = std::floor(size.x * ui.relativePosition.x);
+                    float y = std::floor(size.y * ui.relativePosition.y);
+                    e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2(ui.absolutePosition + glm::vec2(x, y)), ui.depth));
 
-            //        //TODO probably want to rescale downwards too?
-            //    };
-            //m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    //TODO probably want to rescale downwards too?
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         };
 
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();

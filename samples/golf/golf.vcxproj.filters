@@ -486,6 +486,9 @@
     <ClCompile Include="src\scrub\ScrubPauseState.cpp">
       <Filter>Source Files\scrub</Filter>
     </ClCompile>
+    <ClCompile Include="src\scrub\ScrubSoundDirector.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -993,6 +996,9 @@
       <Filter>Header Files\scrub</Filter>
     </ClInclude>
     <ClInclude Include="src\scrub\ScrubPauseState.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubSoundDirector.hpp">
       <Filter>Header Files\scrub</Filter>
     </ClInclude>
   </ItemGroup>

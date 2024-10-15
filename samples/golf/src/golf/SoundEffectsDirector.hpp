@@ -58,7 +58,7 @@ if(msg.id == PlayerMessage)
         emitter.getComponent<cro::AudioEmitter>().setSource(m_audioResource.get(AudioID::Explosion));
         break;
     case PlayerEvent::Respawned:
-        emitter.getComponent<cro::AudioEmitter>()..setSource(m_audioResource.get(AudioID::Sparkles));
+        emitter.getComponent<cro::AudioEmitter>().setSource(m_audioResource.get(AudioID::Sparkles));
         break;
     }
     emitter.getComponent<cro::AudioEmitter>().play();
