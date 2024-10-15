@@ -28,6 +28,13 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfGame.hpp"
+#include "LoadingScreen.hpp"
+#include "SplashScreenState.hpp"
+#include "icon.hpp"
+#include "Achievements.hpp"
+#include "ImTheme.hpp"
+#include "M3UPlaylist.hpp"
+
 #include "golf/MenuState.hpp"
 #include "golf/GolfState.hpp"
 #include "golf/BilliardsState.hpp"
@@ -60,22 +67,21 @@ source distribution.
 #include "golf/MessageIDs.hpp"
 #include "golf/PacketIDs.hpp"
 #include "golf/UnlockItems.hpp"
+#include "golf/Clubs.hpp"
+#include "golf/XPAwardStrings.hpp"
+
 #include "editor/BushState.hpp"
 #include "sqlite/SqliteState.hpp"
 #include "runner/EndlessAttractState.hpp"
 #include "runner/EndlessDrivingState.hpp"
 #include "runner/EndlessPauseState.hpp"
 #include "runner/EndlessShared.hpp"
-#include "LoadingScreen.hpp"
-#include "SplashScreenState.hpp"
-#include "ErrorCheck.hpp"
-#include "icon.hpp"
-#include "Achievements.hpp"
-#include "golf/Clubs.hpp"
-#include "golf/XPAwardStrings.hpp"
+#include "scrub/ScrubAttractState.hpp"
+#include "scrub/ScrubBackgroundState.hpp"
+#include "scrub/ScrubGameState.hpp"
+#include "scrub/ScrubPauseState.hpp"
 
-#include "ImTheme.hpp"
-#include "M3UPlaylist.hpp"
+#include "ErrorCheck.hpp"
 
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
@@ -218,6 +224,11 @@ GolfGame::GolfGame()
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
+
+    m_stateStack.registerState<ScrubAttractState>(StateID::ScrubAttract);
+    m_stateStack.registerState<ScrubBackgroundState>(StateID::ScrubBackground);
+    m_stateStack.registerState<ScrubGameState>(StateID::ScrubGame);
+    m_stateStack.registerState<ScrubPauseState>(StateID::ScrubPause);
 
     m_sharedData.courseIndex = courseOfTheMonth();
 
@@ -952,11 +963,11 @@ bool GolfGame::initialise()
     m_activeIndex = m_sharedData.postProcessIndex;
 
 #ifdef CRO_DEBUG_
-    //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
+    m_stateStack.pushState(StateID::ScrubBackground);
     //m_stateStack.pushState(StateID::Bush);
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
-    m_stateStack.pushState(StateID::Menu);
+    //m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::EndlessRunner);
     //m_stateStack.pushState(StateID::EndlessAttract);
     //m_stateStack.pushState(StateID::Workshop);

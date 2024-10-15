@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -27,52 +27,43 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "ScrubBackgroundState.hpp"
 
-struct StateID final
+ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Context ctx)
+    :cro::State(ss, ctx)
 {
-    enum
-    {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        Career,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards,
-        Trophy,
-        News,
-        Bush,
-        Playlist,
-        MessageOverlay,
-        Credits,
-        FreePlay,
-        EventOverlay, //consumes events if the overlay is open
-        Unlock,
-        Profile, 
-        Leaderboard,
-        Stats,
-        MapOverview,
-        GC,
-        League,
-        PlayerManagement,
-        EndlessAttract,
-        EndlessRunner,
-        EndlessPause,
+    ctx.mainWindow.loadResources([this]() 
+        {
+            //addSystems();
+            //loadAssets();
+            //createScene();
+            //createUI();
 
-        ScrubBackground,
-        ScrubGame,
-        ScrubAttract,
-        ScrubPause,
+            cacheState(StateID::ScrubGame);
+            cacheState(StateID::ScrubAttract);
+            cacheState(StateID::ScrubPause);
+        });
 
-        SQLite, //used for testing SQLite features
-        Workshop = 1100
-    };
-};
+    requestStackPush(StateID::ScrubAttract);
+}
+
+//public
+bool ScrubBackgroundState::handleEvent(const cro::Event&)
+{
+    return false;
+}
+
+void ScrubBackgroundState::handleMessage(const cro::Message&)
+{
+
+}
+
+bool ScrubBackgroundState::simulate(float)
+{
+    return false;
+}
+
+void ScrubBackgroundState::render()
+{
+
+}

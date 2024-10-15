@@ -720,6 +720,10 @@
     <ClCompile Include="src\runner\EndlessPauseState.cpp" />
     <ClCompile Include="src\runner\EndlessSoundDirector.cpp" />
     <ClCompile Include="src\runner\Track.cpp" />
+    <ClCompile Include="src\scrub\ScrubAttractState.cpp" />
+    <ClCompile Include="src\scrub\ScrubBackgroundState.cpp" />
+    <ClCompile Include="src\scrub\ScrubGameState.cpp" />
+    <ClCompile Include="src\scrub\ScrubPauseState.cpp" />
     <ClCompile Include="src\SplashScreenState.cpp" />
     <ClCompile Include="src\sqlite\ProfileDB.cpp" />
     <ClCompile Include="src\sqlite\SqliteState.cpp" />
@@ -885,6 +889,10 @@
     <ClInclude Include="src\runner\TrackCamera.hpp" />
     <ClInclude Include="src\runner\TrackSegment.hpp" />
     <ClInclude Include="src\runner\TrackSprite.hpp" />
+    <ClInclude Include="src\scrub\ScrubAttractState.hpp" />
+    <ClInclude Include="src\scrub\ScrubBackgroundState.hpp" />
+    <ClInclude Include="src\scrub\ScrubGameState.hpp" />
+    <ClInclude Include="src\scrub\ScrubPauseState.hpp" />
     <ClInclude Include="src\SplashScreenState.hpp" />
     <ClInclude Include="src\sqlite\ProfileDB.hpp" />
     <ClInclude Include="src\sqlite\SqliteState.hpp" />
