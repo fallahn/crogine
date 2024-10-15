@@ -156,5 +156,6 @@ private:
     void ballCallback(cro::Entity, float);
     void updateScore();
 
+    std::vector<cro::Entity> m_messageQueue;
     void showMessage(const std::string&);
 };

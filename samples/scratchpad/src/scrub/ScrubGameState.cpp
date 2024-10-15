@@ -335,6 +335,18 @@ bool ScrubGameState::simulate(float dt)
 {
     if (m_score.gameRunning)
     {
+        //if there are messages waiting set the first one active
+        m_messageQueue.erase(
+            std::remove_if(m_messageQueue.begin(), m_messageQueue.end(),
+                [](const cro::Entity& e) {return !e.isValid(); }),
+            m_messageQueue.end());
+
+        if (!m_messageQueue.empty())
+        {
+            m_messageQueue[0].getComponent<cro::Callback>().active = true;
+        }
+
+
         m_score.totalRunTime += dt;
         m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
         if (m_score.remainingTime == 0)
@@ -669,7 +681,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, -12.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -36.f };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -698,28 +710,49 @@ void ScrubGameState::createUI()
         };
 
 
+    static constexpr float BarHeight = 200.f;
+    static constexpr float BarWidth = 20.f;
 
     //100% streak
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, BarWidth), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(0.f, 0.f), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(BarHeight, BarWidth), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(BarHeight, 0.f), cro::Colour::Red)
+        });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, -32.f };
+    entity.getComponent<UIElement>().absolutePosition = { -BarHeight / 2.f, -32.f };
     entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
+        [&](cro::Entity e, float dt)
         {
-            std::stringstream ss;
-            ss << "Streak: " << m_score.bonusRun << " Balls";
-            e.getComponent<cro::Text>().setString(ss.str());
+            auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+            const float target = static_cast<float>(std::min(10, m_score.bonusRun)) / 10.f;
+
+            const float Speed = dt * 2.f;
+            if (progress < target)
+            {
+                progress = std::min(target, progress + Speed);
+            }
+            else if (progress > target)
+            {
+                progress = std::max(target, progress - Speed);
+            }
+            e.getComponent<cro::Transform>().setScale({ progress, 1.f });
+
+            auto colour = cro::Colour::Red;
+            colour.setGreen(progress);
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour = colour;
+            }
         };
 
-
-    static constexpr float BarHeight = 200.f;
-    static constexpr float BarWidth = 20.f;
 
     //soap level
     entity = m_uiScene.createEntity();
@@ -976,6 +1009,14 @@ void ScrubGameState::updateScore()
                     m_uiScene.destroyEntity(e);
                 }
             };
+        
+        //don't forget to reset the streak
+        if (m_score.bonusRun != 0)
+        {
+            showMessage("STREAK BROKEN");
+        }
+        m_score.bonusRun = 0;
+        
         return;
     }
 
@@ -983,14 +1024,9 @@ void ScrubGameState::updateScore()
     m_score.cleanlinessSum += cleanliness;
     m_score.avgCleanliness = m_score.cleanlinessSum / m_score.ballsWashed;
 
-    m_score.totalScore += static_cast<std::int32_t>(std::floor(cleanliness));
-
-    //this might happen just as the time runs out - we want to
-    //keep the score but not add time in this case
-    if (m_score.gameRunning)
-    {
-        m_score.remainingTime += Score::TimeBonus * (cleanliness / 100.f);
-    }
+    const auto ballScore = static_cast<std::int32_t>(std::floor(cleanliness));
+    m_score.totalScore += ballScore;
+    showMessage("+" + std::to_string(ballScore));
 
 
     //track bonus runs of 3x 100%, 5x 100% and 10x 100%
@@ -1008,10 +1044,13 @@ void ScrubGameState::updateScore()
                 m_score.totalScore += 10000;
                 m_score.remainingTime += 10.f;
 
-                //TODO add a delay to this func
                 showMessage("10x STREAK!");
-                
-                //showMessage("+10000");
+                showMessage("+10000");
+                showMessage("+10s");
+            }
+            else
+            {
+                showMessage("PERFECT");
             }
             break;
         case 3:
@@ -1019,17 +1058,17 @@ void ScrubGameState::updateScore()
             m_score.remainingTime += 0.5f;
 
             showMessage("3x STREAK!");
+            showMessage("+3000");
             break;
         case 5:
             m_score.totalScore += 5000;
             m_score.remainingTime += 2.f;
 
             showMessage("5x STREAK!");
+            showMessage("+5000");
+            showMessage("+2s");
             break;
         }
-
-        //display notification
-        showMessage("PERFECT");
     }
     else
     {
@@ -1039,6 +1078,37 @@ void ScrubGameState::updateScore()
         }
         m_score.bonusRun = 0;
     }
+
+    //this might happen just as the time runs out - we want to
+    //keep the score but not add time in this case
+    if (m_score.gameRunning)
+    {
+        float bonus = Score::TimeBonus * (cleanliness / 100.f);
+        m_score.remainingTime += bonus;
+        
+        if (bonus != 0)
+        {
+            std::stringstream ss;
+            ss.precision(2);
+            ss.setf(std::ios::fixed);
+            ss << "+" << bonus << "s";
+
+            showMessage(ss.str());
+        }
+        const float bonusProgress = static_cast<float>(m_score.bonusRun) / 10.f;
+        m_score.remainingTime += Score::TimeBonus * bonusProgress;
+
+        if (bonusProgress != 0)
+        {
+            std::stringstream ss;
+            ss.precision(2);
+            ss.setf(std::ios::fixed);
+            ss << "+" << bonusProgress * Score::TimeBonus << "s";
+
+            showMessage(ss.str());
+        }
+    }
+
 
 
     if (m_score.ballsWashed % 5 == 0)
@@ -1095,13 +1165,13 @@ void ScrubGameState::showMessage(const std::string& str)
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(size / 2.f);
+    entity.getComponent<cro::Transform>().move({ 0.f, -40.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(str);
     entity.getComponent<cro::Text>().setCharacterSize(16);
-    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Yellow);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(MessageTime);
+    entity.addComponent<cro::Callback>().setUserData<float>(MessageTime);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
@@ -1124,9 +1194,7 @@ void ScrubGameState::showMessage(const std::string& str)
                 m_uiScene.destroyEntity(e);
             }
         };
-
-
-    //TODO some sort of audio
+    m_messageQueue.push_back(entity);
 }
 
 //handle funcs
