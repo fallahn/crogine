@@ -95,19 +95,25 @@ void SpectatorSystem::process(float dt)
                 {
                     if (e != entity)
                     {
-                        static constexpr float Rad = 1.15f;
+                        static constexpr float Rad = 4.25f;
                         static constexpr float MinRadius = Rad * Rad;
                         auto diff = e.getComponent<cro::Transform>().getPosition() - currPos;
                         if (auto len2 = glm::length2(diff); len2 < MinRadius)
                         {
-                            spectator.velocity -= diff * dt;
+                            len2 = std::max(0.001f, len2); //prevent div0
 
-                            //makes 2 spectators disappear :S
-                            /*auto len = std::sqrt(len2);
-                            diff /= len;
-                            len = Rad - len;
-                            entity.getComponent<cro::Transform>().move(-diff * (len / 2.f));
-                            e.getComponent<cro::Transform>().move(diff * (len / 2.f));*/
+                            auto l = std::sqrt(len2);
+                            glm::vec3 n = diff / l;
+                            n *= Rad - l;
+
+                            if (glm::dot(diff, entity.getComponent<cro::Transform>().getForwardVector()) > 0)
+                            {
+                                spectator.velocity -= (n * dt) * 10.f;
+                            }
+                            else
+                            {
+                                spectator.velocity += (n * dt) * 5.f;
+                            }
                         }
 
                         static constexpr float TargetRad = 2.5f;

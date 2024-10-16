@@ -93,7 +93,7 @@ void ScrubAttractState::handleMessage(const cro::Message& msg)
 bool ScrubAttractState::simulate(float dt)
 {
     m_uiScene.simulate(dt);
-    return false;
+    return true;
 }
 
 void ScrubAttractState::render()

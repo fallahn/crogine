@@ -30,10 +30,17 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "../golf/Path.hpp"
+#include"../golf/CollisionMesh.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/gui/GuiClient.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
-class ScrubBackgroundState final : public cro::State
+class ScrubBackgroundState final : public cro::State, public cro::GuiClient
 {
 public:
     ScrubBackgroundState(cro::StateStack&, cro::State::Context);
@@ -46,5 +53,19 @@ public:
     void render() override;
 
 private:
+    cro::Scene m_scene;
+    cro::ResourceCollection m_resources;
 
+    cro::RenderTexture m_renderTexture;
+    cro::SimpleQuad m_renderQuad;
+
+    std::vector<cro::Entity> m_spectatorModels;
+    std::vector<Path> m_paths;
+
+    CollisionMesh m_collisionMesh;
+
+    void addSystems();
+    void loadAssets();
+    void createScene();
+    void loadSpectators();
 };

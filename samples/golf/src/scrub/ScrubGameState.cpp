@@ -363,7 +363,7 @@ void ScrubGameState::addSystems()
 void ScrubGameState::loadAssets()
 {
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
-    m_gameScene.setCubemap(m_environmentMap);
+    //m_gameScene.setCubemap(m_environmentMap);
 
 
     std::vector<std::string> paths =
