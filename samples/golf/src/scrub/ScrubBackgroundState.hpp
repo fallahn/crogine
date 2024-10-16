@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "../golf/Path.hpp"
 #include"../golf/CollisionMesh.hpp"
+#include "../golf/Billboard.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -39,6 +40,9 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/Shader.hpp>
+
+#include <array>
 
 class ScrubBackgroundState final : public cro::State, public cro::GuiClient
 {
@@ -58,14 +62,26 @@ private:
 
     cro::RenderTexture m_renderTexture;
     cro::SimpleQuad m_renderQuad;
+    cro::RenderTexture m_blurTexture;
+    cro::SimpleQuad m_blurQuad;
+
+    struct BlurShader final
+    {
+        cro::Shader shader;
+        std::uint32_t id = 0;
+        std::int32_t uniform = -1;
+    }m_blurShader;
 
     std::vector<cro::Entity> m_spectatorModels;
     std::vector<Path> m_paths;
 
     CollisionMesh m_collisionMesh;
 
+    std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
+
     void addSystems();
     void loadAssets();
     void createScene();
     void loadSpectators();
+    void loadClouds();
 };

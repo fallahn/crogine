@@ -28,22 +28,32 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ScrubBackgroundState.hpp"
+#include "../golf/PoissonDisk.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/SpectatorSystem.hpp"
+#include "../golf/CloudSystem.hpp"
 
+#include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 
+#include <crogine/ecs/systems/BillboardSystem.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
+#include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/gui/Gui.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+
 namespace
 {
+#include "../golf/shaders/Blur.inl"
+
     static constexpr std::array Path01 = { glm::vec3(-30.f, 0.f, 6.4f),glm::vec3(-10.f, 0.f, 6.4f),  glm::vec3(10.f, 0.f, 6.4f),  glm::vec3(30.f, 0.f, 6.4f) };
     static constexpr std::array Path02 = { glm::vec3(-30.f, 0.f, 8.4f),glm::vec3(-10.f, 0.f, 8.4f),  glm::vec3(10.f, 0.f, 8.4f),  glm::vec3(30.f, 0.f, 8.4f) };
     static constexpr std::array Path03 = { glm::vec3(-7.f, 0.f, 30.f),glm::vec3(-7.f, 0.f, 21.f), glm::vec3(-7.f, 0.f, 11.5f), glm::vec3(-7.f, 0.f, 6.5f) };
@@ -120,7 +130,16 @@ void ScrubBackgroundState::render()
     m_scene.render();
     m_renderTexture.display();
 
-    m_renderQuad.draw();
+    glUseProgram(m_blurShader.id);
+    glUniform2f(m_blurShader.uniform, 1.f / m_renderTexture.getSize().x, 0.f);
+
+    m_blurTexture.clear();
+    m_renderQuad.draw(); //first pass blur
+    m_blurTexture.display();
+
+    glUseProgram(m_blurShader.id);
+    glUniform2f(m_blurShader.uniform, 0.f, 1.f / m_blurTexture.getSize().y);
+    m_blurQuad.draw(); //second pass blur
 }
 
 //private
@@ -128,15 +147,35 @@ void ScrubBackgroundState::addSystems()
 {
     auto& mb = cro::App::getInstance().getMessageBus();
 
+    m_scene.addSystem<CloudSystem>(mb);
+    m_scene.addSystem<cro::BillboardSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
     m_scene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
     m_scene.addSystem<cro::CameraSystem>(mb);
+    m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void ScrubBackgroundState::loadAssets()
 {
+    if (m_blurShader.shader.loadFromString(cro::SimpleDrawable::getDefaultVertexShader(), GaussianFrag, "#define TEXTURED\n"))
+    {
+        m_blurShader.id = m_blurShader.shader.getGLHandle();
+        m_blurShader.uniform = m_blurShader.shader.getUniformID("u_offset");
+    }
 
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shrubbery.spt", m_resources.textures);
+
+    m_billboardTemplates[BillboardID::Grass01] = spriteToBillboard(spriteSheet.getSprite("grass01"));
+    m_billboardTemplates[BillboardID::Grass02] = spriteToBillboard(spriteSheet.getSprite("grass02"));
+    m_billboardTemplates[BillboardID::Flowers01] = spriteToBillboard(spriteSheet.getSprite("flowers01"));
+    m_billboardTemplates[BillboardID::Flowers02] = spriteToBillboard(spriteSheet.getSprite("flowers02"));
+    m_billboardTemplates[BillboardID::Flowers03] = spriteToBillboard(spriteSheet.getSprite("flowers03"));
+    m_billboardTemplates[BillboardID::Tree01] = spriteToBillboard(spriteSheet.getSprite("tree01"));
+    m_billboardTemplates[BillboardID::Tree02] = spriteToBillboard(spriteSheet.getSprite("tree02"));
+    m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
+    m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
     loadSpectators();
 }
@@ -174,7 +213,7 @@ void ScrubBackgroundState::createScene()
     if (md.loadFromFile("assets/golf/models/garden_bench.cmt"))
     {
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
+        entity.addComponent<cro::Transform>().setPosition({ 10.2f, 0.f, 13.6f });
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
     }
@@ -182,7 +221,7 @@ void ScrubBackgroundState::createScene()
     if (md.loadFromFile("assets/golf/models/spectators/sitting/02.cmt"))
     {
         auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
+        entity.addComponent<cro::Transform>().setPosition({ 10.2f, 0.f, 13.6f });
         md.createModel(entity);
 
         entity.getComponent<cro::Skeleton>().play(1);
@@ -214,28 +253,80 @@ void ScrubBackgroundState::createScene()
         }
     }
 
+    //trees
+    if (md.loadFromFile("assets/golf/models/shrubbery.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
 
+        if (entity.hasComponent<cro::BillboardCollection>())
+        {
+            std::vector<std::array<float, 2u>> bounds =
+            {
+                { 30.f, 0.f },
+                { 80.f, 10.f },
 
+                { 12.f, -23.f },
+                { 42.f, -13.f },
 
+                { -60.f, 0.f },
+                { -30.f, 40.f },
+            };
+
+            auto& collection = entity.getComponent<cro::BillboardCollection>();
+
+            for (auto i = 0u; i < bounds.size(); i += 2)
+            {
+                const auto& minBounds = bounds[i];
+                const auto& maxBounds = bounds[i + 1];
+                auto trees = pd::PoissonDiskSampling(2.8f, minBounds, maxBounds);
+                for (auto [x, y] : trees)
+                {
+                    float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+
+                    auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
+                    bb.position = { x, 0.f, -y };
+                    bb.size *= scale;
+                    collection.addBillboard(bb);
+                }
+            }
+        }
+    }
+
+    loadClouds();
 
     auto resize = [&](cro::Camera& cam)
         {
             auto winSize = cro::App::getWindow().getSize();
             m_renderTexture.create(winSize.x, winSize.y);
             m_renderQuad.setTexture(m_renderTexture.getTexture());
+            m_renderQuad.setShader(m_blurShader.shader);
 
+            m_blurTexture.create(winSize.x, winSize.y);
+            m_blurQuad.setTexture(m_blurTexture.getTexture());
+            m_blurQuad.setShader(m_blurShader.shader);
 
             auto size = glm::vec2(winSize);
-            cam.setPerspective(50.f * cro::Util::Const::degToRad, size.x / size.y, 0.01f, 100.f);
+            cam.setPerspective(40.f * cro::Util::Const::degToRad, size.x / size.y, 0.01f, 100.f);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         };
     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     resize(cam);
     cam.resizeCallback = resize;
 
+    cam.shadowMapBuffer.create(2048, 2048);
+
     auto& camTx = m_scene.getActiveCamera().getComponent<cro::Transform>();
-    camTx.setPosition({ 0.f, 5.88f, 39.f });
+    camTx.setPosition({ 0.f, 7.88f, 39.f });
     camTx.setRotation(cro::Transform::X_AXIS, -0.13f);
+
+
+    auto sunEnt = m_scene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -40.56f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -39.f * cro::Util::Const::degToRad);
+
+
 
     //registerWindow([&]()
     //    {
@@ -354,4 +445,55 @@ void ScrubBackgroundState::loadSpectators()
 
     m_scene.simulate(0.f);
     m_scene.getSystem<SpectatorSystem>()->updateSpectatorGroups();
+}
+
+void ScrubBackgroundState::loadClouds()
+{
+    const std::array Paths =
+    {
+        std::string("assets/golf/models/skybox/clouds/cloud01.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud02.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud03.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud04.cmt")
+    };
+
+    cro::ModelDefinition md(m_resources);
+    std::vector<cro::ModelDefinition> definitions;
+
+    for (const auto& path : Paths)
+    {
+        if (md.loadFromFile(path))
+        {
+            definitions.push_back(md);
+        }
+    }
+
+    if (!definitions.empty())
+    {
+        auto seed = static_cast<std::uint32_t>(std::time(nullptr));
+        static constexpr std::array MinBounds = { 0.f, 0.f };
+        static constexpr std::array MaxBounds = { 280.f, 280.f };
+        auto positions = pd::PoissonDiskSampling(40.f, MinBounds, MaxBounds, 30u, seed);
+
+        auto Offset = 140.f;
+        std::size_t modelIndex = 0;
+
+        for (const auto& position : positions)
+        {
+            float height = static_cast<float>(cro::Util::Random::value(20, 40));
+            glm::vec3 cloudPos(position[0] - Offset, height, -position[1] + Offset);
+
+
+            auto entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(cloudPos);
+            entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
+            definitions[modelIndex].createModel(entity);
+            //entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            float scale = static_cast<float>(cro::Util::Random::value(5, 10));
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+            modelIndex = (modelIndex + 1) % definitions.size();
+        }
+    }
 }
