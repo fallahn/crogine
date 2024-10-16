@@ -135,6 +135,9 @@ Press SPACE or Controller A to begin.
     entity.addComponent<cro::Text>(font).setString(str);
     entity.getComponent<cro::Text>().setCharacterSize(16);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 2.f, -2.f });
 
     auto resize = [&](cro::Camera& cam)
         {

@@ -71,17 +71,20 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
 {
     ctx.mainWindow.loadResources([this]() 
         {
+#ifndef CRO_DEBUG_
             addSystems();
             loadAssets();
             createScene();
-            //createUI();
-
+#endif
             cacheState(StateID::ScrubGame);
             cacheState(StateID::ScrubAttract);
             cacheState(StateID::ScrubPause);
         });
-
+#ifdef CRO_DEBUG_
+    requestStackPush(StateID::ScrubGame);
+#else
     requestStackPush(StateID::ScrubAttract);
+#endif
 }
 
 //public
@@ -126,6 +129,9 @@ bool ScrubBackgroundState::simulate(float dt)
 
 void ScrubBackgroundState::render()
 {
+#ifdef CRO_DEBUG_
+    return;
+#endif
     m_renderTexture.clear(cro::Colour::Magenta);
     m_scene.render();
     m_renderTexture.display();

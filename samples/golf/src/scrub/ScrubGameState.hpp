@@ -63,6 +63,10 @@ private:
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
 
+    //used for resizing the UI
+    cro::Entity m_textRoot;
+    cro::Entity m_spriteRoot;
+
     std::int16_t m_axisPosition;
 
     struct Handle final
@@ -116,7 +120,6 @@ private:
         }soap;
 
     }m_handle;
-
 
     struct Ball final
     {
@@ -188,4 +191,7 @@ private:
 
     std::vector<cro::Entity> m_messageQueue;
     void showMessage(const std::string&);
+
+    void attachText(cro::Entity); //calcs coords from screen space when spawning text items
+    void attachSprite(cro::Entity); //calcs coords from screen space when spawning sprite items
 };

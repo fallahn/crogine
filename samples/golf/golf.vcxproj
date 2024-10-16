@@ -892,6 +892,7 @@
     <ClInclude Include="src\runner\TrackSprite.hpp" />
     <ClInclude Include="src\scrub\ScrubAttractState.hpp" />
     <ClInclude Include="src\scrub\ScrubBackgroundState.hpp" />
+    <ClInclude Include="src\scrub\ScrubConsts.hpp" />
     <ClInclude Include="src\scrub\ScrubGameState.hpp" />
     <ClInclude Include="src\scrub\ScrubPauseState.hpp" />
     <ClInclude Include="src\scrub\ScrubSoundDirector.hpp" />
@@ -929,6 +930,7 @@
     <None Include="src\golf\shaders\WaterShader.inl" />
     <None Include="src\golf\shaders\Weather.inl" />
     <None Include="src\golf\shaders\WireframeShader.inl" />
+    <None Include="src\scrub\Shaders.inl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="golf.rc" />

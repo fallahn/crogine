@@ -1001,6 +1001,9 @@
     <ClInclude Include="src\scrub\ScrubSoundDirector.hpp">
       <Filter>Header Files\scrub</Filter>
     </ClInclude>
+    <ClInclude Include="src\scrub\ScrubConsts.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">
@@ -1083,6 +1086,9 @@
     </None>
     <None Include="src\golf\shaders\Weather.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\scrub\Shaders.inl">
+      <Filter>Header Files\scrub</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
