@@ -29,7 +29,6 @@ source distribution.
 
 #include "ScrubGameState.hpp"
 #include "ScrubSoundDirector.hpp"
-#include "ScrubConsts.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/InputBinding.hpp"
 #include "../golf/SharedStateData.hpp"
@@ -344,6 +343,10 @@ bool ScrubGameState::simulate(float dt)
 
 void ScrubGameState::render()
 {
+#ifdef HIDE_BACKGROUND
+    m_tempBground.draw();
+#endif
+
     m_gameScene.render();
     m_uiScene.render();
 }
@@ -370,10 +373,17 @@ void ScrubGameState::addSystems()
 
 void ScrubGameState::loadAssets()
 {
+#ifdef HIDE_BACKGROUND
+    //temp
+    auto& tempTex = m_resources.textures.get("assets/images/achievements.png");
+    tempTex.setRepeated(true);
+    m_tempBground.setTexture(tempTex);
+#endif
+
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
 
     //shaders
-    m_resources.shaders.loadFromString(sc::ShaderID::SoapLevel, cro::RenderSystem2D::getDefaultVertexShader(), SoapLevelFragment, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(sc::ShaderID::LevelMeter, cro::RenderSystem2D::getDefaultVertexShader(), LevelMeterFragment, "#define TEXTURED\n");
 
 
     //load audio
@@ -484,6 +494,52 @@ void ScrubGameState::createScene()
 
         rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
+
+    //represents how clean the current ball is
+    if (md.loadFromFile("assets/arcade/scrub/models/gauge_inner.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.05335f, -0.2475f, 0.07269f });
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CD32::Colours[CD32::Red]);
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                float cleanliness = (Ball::MaxFilth - m_ball.filth);
+                const auto c = cleanliness > m_score.threshold ? CD32::Colours[CD32::GreenLight] : CD32::Colours[CD32::Red];
+
+                e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
+
+                cleanliness /= Ball::MaxFilth;
+
+                const float Speed = dt * 3.f;
+                auto& pos = e.getComponent<cro::Callback>().getUserData<float>();
+                if (pos < cleanliness)
+                {
+                    pos = std::min(cleanliness, pos + Speed);
+                }
+                else
+                {
+                    pos = std::max(cleanliness, pos - Speed);
+                }
+
+                e.getComponent<cro::Transform>().setScale({ 1.f, pos });
+            };
+    }
+
+    if (md.loadFromFile("assets/arcade/scrub/models/gauge_outer.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
 
     auto resize = [](cro::Camera& cam)
     {
@@ -703,8 +759,14 @@ void ScrubGameState::createUI()
     m_textRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     static constexpr float BarHeight = 800.f;
-    static constexpr float BarWidth = 100.f;
+    static constexpr float BarWidth = 180.f;
 
+    //TODO replace this with proper bg
+#ifdef HIDE_BACKGROUND
+    auto& bgTex = m_resources.textures.get("assets/images/achievements.png");
+#else
+    auto& bgTex = m_resources.textures.get("assets/images/startup.png");
+#endif
     //100% streak
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -715,9 +777,12 @@ void ScrubGameState::createUI()
             cro::Vertex2D(glm::vec2(BarHeight, BarWidth), cro::Colour::Red),
             cro::Vertex2D(glm::vec2(BarHeight, 0.f), cro::Colour::Red)
         });
+    /*entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::LevelMeter));
+    entity.getComponent<cro::Drawable2D>().setTexture(&bgTex);*/
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { -BarHeight / 2.f, -(BarWidth + 12.f) };
+    //entity.getComponent<UIElement>().resizeCallback = std::bind(&ScrubGameState::levelMeterCallback, this, std::placeholders::_1);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
@@ -735,7 +800,9 @@ void ScrubGameState::createUI()
             {
                 progress = std::max(target, progress - Speed);
             }
-            e.getComponent<cro::Transform>().setScale({ progress, 1.f });
+            
+            cro::FloatRect cropping = { 0.f, 0.f, BarHeight * progress, BarWidth };
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
 
             auto colour = cro::Colour::Red;
             colour.setGreen(progress);
@@ -746,52 +813,24 @@ void ScrubGameState::createUI()
         };
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
     //soap level
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(0.f, BarHeight), cro::Colour::Blue),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Blue),
-            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), cro::Colour::Blue),
-            cro::Vertex2D(glm::vec2(BarWidth, 0.f), cro::Colour::Blue)
+            cro::Vertex2D(glm::vec2(0.f, BarHeight), SoapMeterColour),
+            cro::Vertex2D(glm::vec2(0.f), SoapMeterColour),
+            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), SoapMeterColour),
+            cro::Vertex2D(glm::vec2(BarWidth, 0.f), SoapMeterColour)
         }
     );
-    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::SoapLevel));
-    entity.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("assets/images/achievements.png"));
+    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::LevelMeter));
+    entity.getComponent<cro::Drawable2D>().setTexture(&bgTex);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
     entity.getComponent<UIElement>().absolutePosition = { -(BarWidth + 12.f), 12.f};
-    entity.getComponent<UIElement>().resizeCallback =
-        [&](cro::Entity e)
-        {
-            //recalc the UV coords for the background texture
-            const cro::FloatRect localBounds(0.f, 0.f, BarWidth, BarHeight);
-            const auto globalBounds = localBounds.transform(e.getComponent<cro::Transform>().getWorldTransform());
-
-            //TODO this should be the size of the texture we're setting
-            //in the shader (we're just assuming it's window sized)
-            const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
-            cro::FloatRect uvRect(globalBounds.left / windowSize.x,
-                                globalBounds.bottom / windowSize.y,
-                                globalBounds.width / windowSize.x,
-                                globalBounds.height / windowSize.x);
-
-            //set the coords on the verts
-            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-            verts[0].UV = { uvRect.left, uvRect.bottom + uvRect.height };
-            verts[1].UV = { uvRect.left, uvRect.bottom };
-            verts[2].UV = { uvRect.left + uvRect.width, uvRect.bottom + uvRect.height };
-            verts[3].UV = { uvRect.left + uvRect.width, uvRect.bottom };
-
-            //set u_coordStart to rect left/bottom
-            const auto* shader = e.getComponent<cro::Drawable2D>().getShader();
-            glUseProgram(shader->getGLHandle());
-            glUniform4f(shader->getUniformID("u_coordStart"), uvRect.left, uvRect.bottom, uvRect.width, uvRect.height);
-
-            //TODO set the texture on the drawable
-        };
-
+    entity.getComponent<UIElement>().resizeCallback = std::bind(&ScrubGameState::levelMeterCallback, this, std::placeholders::_1);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Callback>().function =
@@ -809,20 +848,24 @@ void ScrubGameState::createUI()
             {
                 currPos = std::min(target, currPos + speed);
             }
-            //we can scale this as it messes with UVs
-            //however we probably want to be setting this as a 
-            //shader uniform anyway.
             
-            cro::Colour c(0.f, 0.f, currPos);
+            //TODO it might be nice to do this as part of the shader but I cleverly didn't
+            //include an effecient way to set uniforms per-drawable.
+            cro::Colour c = glm::mix(glm::vec4(1.f), SoapMeterColour.getVec4(), currPos);
             for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
             {
                 v.colour = c;
             }
+
+            //so let's crop the drawable instead
+            cro::FloatRect cropping = { 0.f, 0.f, BarWidth, BarHeight * currPos };
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
         };
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //current ball cleanliness - TODO move this to a texture on the model
+    //current ball cleanliness - TODO make this a generic level meter so we can
+    //recycle it with other levels on screen (and use the glass tube effect)
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(
@@ -833,18 +876,24 @@ void ScrubGameState::createUI()
             cro::Vertex2D(glm::vec2(BarWidth, 0.f), cro::Colour::Blue)
         }
     );
+    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::LevelMeter));
+    entity.getComponent<cro::Drawable2D>().setTexture(&bgTex);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
     entity.getComponent<UIElement>().absolutePosition = { -((BarWidth + 12.f) * 2.f), 12.f };
+    entity.getComponent<UIElement>().resizeCallback = std::bind(&ScrubGameState::levelMeterCallback, this, std::placeholders::_1);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
             float cleanliness = (Ball::MaxFilth - m_ball.filth);
-            const auto c = cleanliness > m_score.threshold ? cro::Colour::Green : cro::Colour::Red;
+            const auto c = cleanliness > m_score.threshold ? CD32::Colours[CD32::GreenLight] : CD32::Colours[CD32::Red];
 
             cleanliness /= Ball::MaxFilth;
-            e.getComponent<cro::Transform>().setScale({ 1.f, cleanliness });
+            
+            cro::FloatRect cropping = { 0.f, 0.f, BarWidth, BarHeight * cleanliness };
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+
             for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
             {
                 v.colour = c;
@@ -857,6 +906,13 @@ void ScrubGameState::createUI()
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = {0.f, 0.f, 1.f, 1.f};
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 10.f);
+
+#ifdef HIDE_BACKGROUND
+        glm::vec2 bgSize(m_resources.textures.get("assets/images/achievements.png").getSize());
+        auto bgScale = size / bgSize;
+        m_tempBground.setScale(bgScale);
+#endif
+
 
         //text scales up, sprites scale down...
         const auto Scale = getViewScale();
@@ -1280,6 +1336,32 @@ void ScrubGameState::attachSprite(cro::Entity entity)
     CRO_ASSERT(Scale != 0, "");
     entity.getComponent<cro::Transform>().setPosition({ std::floor(screenCoords.x / Scale), std::floor(screenCoords.y / Scale) });
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+void ScrubGameState::levelMeterCallback(cro::Entity e)
+{
+    //recalc the UV coords for the background texture
+    const auto globalBounds = e.getComponent<cro::Drawable2D>().getLocalBounds().transform(e.getComponent<cro::Transform>().getWorldTransform());
+
+    //TODO this should be the size of the texture we're setting
+    //in the shader (we're just assuming it's window sized)
+    const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+    cro::FloatRect uvRect(globalBounds.left / windowSize.x,
+        globalBounds.bottom / windowSize.y,
+        globalBounds.width / windowSize.x,
+        globalBounds.height / windowSize.y);
+
+    //set the coords on the verts
+    auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+    verts[0].UV = { uvRect.left, uvRect.bottom + uvRect.height };
+    verts[1].UV = { uvRect.left, uvRect.bottom };
+    verts[2].UV = { uvRect.left + uvRect.width, uvRect.bottom + uvRect.height };
+    verts[3].UV = { uvRect.left + uvRect.width, uvRect.bottom };
+
+    //set u_uvRect to rect left/bottom
+    e.getComponent<cro::Drawable2D>().bindUniform("u_uvRect", glm::vec4(uvRect.left, uvRect.bottom, uvRect.width, uvRect.height));
+
+    //TODO set the texture on the drawable
 }
 
 //handle funcs

@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ScrubBackgroundState.hpp"
+#include "ScrubConsts.hpp"
 #include "../golf/PoissonDisk.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/SpectatorSystem.hpp"
@@ -71,7 +72,7 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
 {
     ctx.mainWindow.loadResources([this]() 
         {
-#ifndef CRO_DEBUG_
+#ifndef HIDE_BACKGROUND
             addSystems();
             loadAssets();
             createScene();
@@ -129,7 +130,7 @@ bool ScrubBackgroundState::simulate(float dt)
 
 void ScrubBackgroundState::render()
 {
-#ifdef CRO_DEBUG_
+#ifdef HIDE_BACKGROUND
     return;
 #endif
     m_renderTexture.clear(cro::Colour::Magenta);

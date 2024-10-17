@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const inline std::string SoapLevelFragment =
+static const inline std::string LevelMeterFragment =
 R"(
 uniform sampler2D u_texture;
 uniform vec4 u_uvRect;
@@ -41,17 +41,22 @@ VARYING_IN vec4 v_colour;
 
 OUTPUT
 
+const float DistortionAmount = 0.06;
+const float HighlightAmount = 0.4;
+
 void main()
 {
     vec2 coord = v_texCoord;
 
     //add distortion offset - using the colour accessors here because I can't find
     //a definitive answer whether the order is wxyz or xyzw
-    float width = u_uvRect.b;
-    float height = u_uvRect.a;
+    float u = ((coord.x - u_uvRect.r) / u_uvRect.b);
+    
+    float highlight = smoothstep(0.55, 0.75, u);
+    highlight *= 1.0 - step(0.78, u);
 
-    float u = ((coord.x - u_uvRect.r) / width) * width;
-    float v = ((coord.y - u_uvRect.g) / height) * height;
+    u = pow(((u * 2.0) - 1.0), 3.0);
+    coord.x += u * DistortionAmount;
 
-    FRAG_OUT = TEXTURE(u_texture, coord ) * v_colour;
+    FRAG_OUT = (TEXTURE(u_texture, coord) * v_colour) + vec4(highlight * HighlightAmount);
 })";

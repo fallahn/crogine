@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "ScrubConsts.hpp"
 #include "../StateIDs.hpp"
 
 #include <crogine/core/State.hpp>
@@ -36,6 +37,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 #include <crogine/util/Easings.hpp>
 
@@ -62,6 +64,11 @@ private:
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
+
+#ifdef HIDE_BACKGROUND
+    //temp background placeholder
+    cro::SimpleQuad m_tempBground;
+#endif
 
     //used for resizing the UI
     cro::Entity m_textRoot;
@@ -194,4 +201,6 @@ private:
 
     void attachText(cro::Entity); //calcs coords from screen space when spawning text items
     void attachSprite(cro::Entity); //calcs coords from screen space when spawning sprite items
+
+    void levelMeterCallback(cro::Entity); //resize callbacks for level meters
 };
