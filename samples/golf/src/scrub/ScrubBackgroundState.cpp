@@ -29,6 +29,7 @@ source distribution.
 
 #include "ScrubBackgroundState.hpp"
 #include "ScrubConsts.hpp"
+#include "ScrubSharedData.hpp"
 #include "../golf/PoissonDisk.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/SpectatorSystem.hpp"
@@ -66,9 +67,10 @@ namespace
     }
 }
 
-ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Context ctx)
-    : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus())
+ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Context ctx, SharedScrubData& sd)
+    : cro::State        (ss, ctx),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_sharedScrubData   (sd)
 {
     ctx.mainWindow.loadResources([this]() 
         {
@@ -185,6 +187,8 @@ void ScrubBackgroundState::loadAssets()
     m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
     loadSpectators();
+
+    m_sharedScrubData.backgroundTexture = &m_blurTexture;
 }
 
 void ScrubBackgroundState::createScene()

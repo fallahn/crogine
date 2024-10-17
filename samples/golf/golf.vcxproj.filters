@@ -1004,6 +1004,9 @@
     <ClInclude Include="src\scrub\ScrubConsts.hpp">
       <Filter>Header Files\scrub</Filter>
     </ClInclude>
+    <ClInclude Include="src\scrub\ScrubSharedData.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

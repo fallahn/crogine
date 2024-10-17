@@ -29,6 +29,7 @@ source distribution.
 
 #include "ScrubGameState.hpp"
 #include "ScrubSoundDirector.hpp"
+#include "ScrubSharedData.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/InputBinding.hpp"
 #include "../golf/SharedStateData.hpp"
@@ -96,13 +97,14 @@ namespace
     };
 }
 
-ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
-    : cro::State    (stack, context),
-    m_sharedData    (sd),
-    m_soundDirector (nullptr),
-    m_gameScene     (context.appInstance.getMessageBus()),
-    m_uiScene       (context.appInstance.getMessageBus()),
-    m_axisPosition  (0)
+ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedScrubData& sc)
+    : cro::State        (stack, context),
+    m_sharedData        (sd),
+    m_sharedScrubData   (sc),
+    m_soundDirector     (nullptr),
+    m_gameScene         (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus()),
+    m_axisPosition      (0)
 {
     //this is a pre-cached state
     addSystems();
@@ -765,7 +767,8 @@ void ScrubGameState::createUI()
 #ifdef HIDE_BACKGROUND
     auto& bgTex = m_resources.textures.get("assets/images/achievements.png");
 #else
-    auto& bgTex = m_resources.textures.get("assets/images/startup.png");
+    auto& bgTex = m_sharedScrubData.backgroundTexture->getTexture();
+    //auto& bgTex = m_resources.textures.get("assets/images/startup.png");
 #endif
     //100% streak
     entity = m_uiScene.createEntity();

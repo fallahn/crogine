@@ -38,6 +38,8 @@ source distribution.
 #include "golf/SharedProfileData.hpp"
 #include "golf/ProgressIcon.hpp"
 
+#include "scrub/ScrubSharedData.hpp"
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/core/StateStack.hpp>
@@ -63,6 +65,7 @@ private:
     
     SharedStateData m_sharedData;
     SharedProfileData m_profileData;
+    SharedScrubData m_scrubData;
     cro::StateStack m_stateStack;
 
     std::vector<std::string> m_hostAddresses;

@@ -895,6 +895,7 @@
     <ClInclude Include="src\scrub\ScrubConsts.hpp" />
     <ClInclude Include="src\scrub\ScrubGameState.hpp" />
     <ClInclude Include="src\scrub\ScrubPauseState.hpp" />
+    <ClInclude Include="src\scrub\ScrubSharedData.hpp" />
     <ClInclude Include="src\scrub\ScrubSoundDirector.hpp" />
     <ClInclude Include="src\SplashScreenState.hpp" />
     <ClInclude Include="src\sqlite\ProfileDB.hpp" />

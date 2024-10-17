@@ -29,34 +29,12 @@ source distribution.
 
 #pragma once
 
-#include <string>
-
-static const inline std::string LevelMeterFragment =
-R"(
-uniform sampler2D u_texture;
-uniform vec4 u_uvRect;
-
-VARYING_IN vec2 v_texCoord;
-VARYING_IN vec4 v_colour;
-
-OUTPUT
-
-const float DistortionAmount = 0.04;
-const float HighlightAmount = 0.4;
-
-void main()
+namespace cro
 {
-    vec2 coord = v_texCoord;
+    class RenderTexture;
+}
 
-    //add distortion offset - using the colour accessors here because I can't find
-    //a definitive answer whether the order is wxyz or xyzw
-    float u = ((coord.x - u_uvRect.r) / u_uvRect.b);
-    
-    float highlight = smoothstep(0.55, 0.75, u);
-    highlight *= 1.0 - step(0.78, u);
-
-    u = pow(((u * 2.0) - 1.0), 3.0);
-    coord.x += u * DistortionAmount;
-
-    FRAG_OUT = (TEXTURE(u_texture, coord) * v_colour) + vec4(highlight * HighlightAmount);
-})";
+struct SharedScrubData final
+{
+    cro::RenderTexture* backgroundTexture = nullptr;
+};

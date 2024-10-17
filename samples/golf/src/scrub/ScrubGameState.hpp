@@ -37,18 +37,21 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#ifdef HIDE_BACKGROUND
 #include <crogine/graphics/SimpleQuad.hpp>
+#endif
 
 #include <crogine/util/Easings.hpp>
 
 #include <array>
 
 struct SharedStateData;
+struct SharedScrubData;
 class ScrubSoundDirector;
 class ScrubGameState final : public cro::State, public cro::GuiClient
 {
 public:
-    ScrubGameState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ScrubGameState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedScrubData&);
 
     cro::StateID getStateID() const override { return StateID::ScrubGame; }
 
@@ -59,6 +62,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
+    SharedScrubData& m_sharedScrubData;
     ScrubSoundDirector* m_soundDirector;
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;

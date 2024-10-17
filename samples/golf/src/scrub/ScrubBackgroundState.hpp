@@ -44,10 +44,11 @@ source distribution.
 
 #include <array>
 
+struct SharedScrubData;
 class ScrubBackgroundState final : public cro::State, public cro::GuiClient
 {
 public:
-    ScrubBackgroundState(cro::StateStack&, cro::State::Context);
+    ScrubBackgroundState(cro::StateStack&, cro::State::Context, SharedScrubData&);
 
     cro::StateID getStateID() const override { return StateID::ScrubBackground; }
 
@@ -59,6 +60,7 @@ public:
 private:
     cro::Scene m_scene;
     cro::ResourceCollection m_resources;
+    SharedScrubData& m_sharedScrubData;
 
     cro::RenderTexture m_renderTexture;
     cro::SimpleQuad m_renderQuad;
