@@ -68,6 +68,8 @@ namespace
 {
 #include "Shaders.inl"
 
+    const std::string tempBackground = "assets/arcade/scrub/images/body_mask.png";
+
     constexpr float BallRadius = 0.021f;
     constexpr float StrokeDistance = 0.16f - BallRadius;
     constexpr float BallOffsetPos = 0.2f;
@@ -378,7 +380,7 @@ void ScrubGameState::loadAssets()
 {
 #ifdef HIDE_BACKGROUND
     //temp
-    auto& tempTex = m_resources.textures.get("assets/images/startup.png");
+    auto& tempTex = m_resources.textures.get(tempBackground);
     tempTex.setRepeated(true);
     m_tempBground.setTexture(tempTex);
 #endif
@@ -658,17 +660,21 @@ void ScrubGameState::createUI()
     m_spriteRoot = m_uiScene.createEntity();
     m_spriteRoot.addComponent<cro::Transform>();
 
-    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& largeFont = m_sharedScrubData.fonts->get(sc::FontID::Title);
+    const auto& smallFont = m_sharedScrubData.fonts->get(sc::FontID::Body);
 
     //remaining time
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(sc::SmallTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { 12.f, -12.f };
-    entity.getComponent<UIElement>().characterSize = 8;
+    entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -684,11 +690,14 @@ void ScrubGameState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(sc::SmallTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { 12.f, -22.f };
-    entity.getComponent<UIElement>().characterSize = 8;
+    entity.getComponent<UIElement>().absolutePosition = { 12.f, -26.f };
+    entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -704,11 +713,14 @@ void ScrubGameState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(8);
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(sc::SmallTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 0.f);
-    entity.getComponent<UIElement>().absolutePosition = { 12.f, 12.f };
-    entity.getComponent<UIElement>().characterSize = 8;
+    entity.getComponent<UIElement>().absolutePosition = { 12.f, 16.f };
+    entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -725,12 +737,15 @@ void ScrubGameState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(16);
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(sc::MediumTextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -36.f };
-    entity.getComponent<UIElement>().characterSize = 16;
+    entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -744,11 +759,14 @@ void ScrubGameState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(16);
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(sc::MediumTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { -212.f, -12.f };
-    entity.getComponent<UIElement>().characterSize = 16;
+    entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -763,7 +781,7 @@ void ScrubGameState::createUI()
 
     //TODO replace this with proper bg
 #ifdef HIDE_BACKGROUND
-    auto& bgTex = m_resources.textures.get("assets/images/startup.png");
+    auto& bgTex = m_resources.textures.get(tempBackground);
 #else
     auto& bgTex = m_sharedScrubData.backgroundTexture->getTexture();
     //auto& bgTex = m_resources.textures.get("assets/images/startup.png");
@@ -909,7 +927,7 @@ void ScrubGameState::createUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 10.f);
 
 #ifdef HIDE_BACKGROUND
-        glm::vec2 bgSize(m_resources.textures.get("assets/images/startup.png").getSize());
+        glm::vec2 bgSize(m_resources.textures.get(tempBackground).getSize());
         auto bgScale = size / bgSize;
         m_tempBground.setScale(bgScale);
 #endif
@@ -941,6 +959,8 @@ void ScrubGameState::createUI()
                     ui.resizeCallback(e);
                 }
 
+                //TODO this should be an enum so we can use
+                //small/med/large charsize AND shadow offsets
                 if (ui.characterSize)
                 {
                     e.getComponent<cro::Text>().setCharacterSize(ui.characterSize * Scale);
@@ -961,18 +981,21 @@ void ScrubGameState::createUI()
 
 void ScrubGameState::createCountIn()
 {
-    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-
+    const auto& largeFont = m_sharedScrubData.fonts->get(sc::FontID::Title);
+    
     glm::vec2 size(cro::App::getWindow().getSize());
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(size / 2.f);
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("READY");
-    entity.getComponent<cro::Text>().setCharacterSize(32);
+    entity.addComponent<cro::Text>(largeFont).setString("READY");
+    entity.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().characterSize = 32;
+    entity.getComponent<UIElement>().characterSize = sc::LargeTextSize;
 
     struct MessageData final
     {
@@ -1284,7 +1307,7 @@ void ScrubGameState::updateScore()
 void ScrubGameState::showMessage(const std::string& str)
 {
     const auto size = glm::vec2(cro::App::getWindow().getSize());
-    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& smallFont = m_sharedScrubData.fonts->get(sc::FontID::Body);
 
     static constexpr float MessageTime = 0.5f;
 
@@ -1294,11 +1317,11 @@ void ScrubGameState::showMessage(const std::string& str)
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString(str);
-    entity.getComponent<cro::Text>().setCharacterSize(16);
+    entity.addComponent<cro::Text>(smallFont).setString(str);
+    entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.addComponent<UIElement>().characterSize = 16;
+    entity.addComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.addComponent<cro::Callback>().setUserData<float>(MessageTime);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
@@ -1311,7 +1334,7 @@ void ScrubGameState::showMessage(const std::string& str)
 
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 
-            auto colour = cro::Colour::Yellow;
+            auto colour = CD32::Colours[CD32::Yellow];
             colour.setAlpha(1.f - invTime);
 
             e.getComponent<cro::Text>().setFillColour(colour);

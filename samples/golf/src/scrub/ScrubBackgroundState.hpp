@@ -49,6 +49,13 @@ class ScrubBackgroundState final : public cro::State, public cro::GuiClient
 {
 public:
     ScrubBackgroundState(cro::StateStack&, cro::State::Context, SharedScrubData&);
+    ~ScrubBackgroundState();
+
+    ScrubBackgroundState(const ScrubBackgroundState&) = delete;
+    ScrubBackgroundState(ScrubBackgroundState&&) = delete;
+
+    ScrubBackgroundState& operator = (const ScrubBackgroundState&) = delete;
+    ScrubBackgroundState& operator = (ScrubBackgroundState&&) = delete;
 
     cro::StateID getStateID() const override { return StateID::ScrubBackground; }
 

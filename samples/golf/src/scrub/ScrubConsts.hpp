@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/detail/glm/vec2.hpp>
 
 #include <cstdint>
 
@@ -49,4 +50,23 @@ namespace sc
             Count
         };
     };
+
+    struct FontID final
+    {
+        enum
+        {
+            Title, Body,
+
+            Count
+        };
+    };
+
+    static inline constexpr std::uint32_t SmallTextSize = 12;
+    static inline constexpr std::uint32_t MediumTextSize = 24;
+    static inline constexpr std::uint32_t LargeTextSize = 48;
+
+    //hmm we need to make sure to set these with the scene scale too...
+    static inline constexpr glm::vec2 SmallTextOffset = glm::vec2(1.f);
+    static inline constexpr glm::vec2 MediumTextOffset = glm::vec2(2.f);
+    static inline constexpr glm::vec2 LargeTextOffset = glm::vec2(4.f);
 }

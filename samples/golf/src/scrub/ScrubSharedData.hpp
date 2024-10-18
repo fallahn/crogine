@@ -29,6 +29,10 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/FontResource.hpp>
+
+#include <memory>
+
 namespace cro
 {
     class RenderTexture;
@@ -37,4 +41,5 @@ namespace cro
 struct SharedScrubData final
 {
     cro::RenderTexture* backgroundTexture = nullptr;
+    std::unique_ptr<cro::FontResource> fonts;
 };

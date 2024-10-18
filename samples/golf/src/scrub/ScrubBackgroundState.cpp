@@ -72,13 +72,17 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedScrubData   (sd)
 {
-    ctx.mainWindow.loadResources([this]() 
+    ctx.mainWindow.loadResources([&]() 
         {
 #ifndef HIDE_BACKGROUND
             addSystems();
             loadAssets();
             createScene();
 #endif
+            sd.fonts = std::make_unique<cro::FontResource>();
+            sd.fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
+            sd.fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
+
             cacheState(StateID::ScrubGame);
             cacheState(StateID::ScrubAttract);
             cacheState(StateID::ScrubPause);
@@ -88,6 +92,11 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
 #else
     requestStackPush(StateID::ScrubAttract);
 #endif
+}
+
+ScrubBackgroundState::~ScrubBackgroundState()
+{
+    m_sharedScrubData.fonts.reset();
 }
 
 //public
