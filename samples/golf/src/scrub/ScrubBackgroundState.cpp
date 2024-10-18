@@ -90,7 +90,8 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
             cacheState(StateID::ScrubPause);
         });
 #ifdef CRO_DEBUG_
-    requestStackPush(StateID::ScrubGame);
+    //requestStackPush(StateID::ScrubGame);
+    requestStackPush(StateID::ScrubAttract);
 #else
     requestStackPush(StateID::ScrubAttract);
 #endif

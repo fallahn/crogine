@@ -28,27 +28,34 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ScrubAttractState.hpp"
+#include "ScrubSharedData.hpp"
+#include "ScrubConsts.hpp"
 #include "../golf/SharedStateData.hpp"
 #include "../golf/GameConsts.hpp"
 
 #include <crogine/core/App.hpp>
 
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/graphics/Font.hpp>
 
-ScrubAttractState::ScrubAttractState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State(ss, ctx),
-    m_sharedData(sd),
-    m_uiScene   (ctx.appInstance.getMessageBus())
+ScrubAttractState::ScrubAttractState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedScrubData& sc)
+    : cro::State        (ss, ctx),
+    m_sharedData        (sd),
+    m_sharedScrubData   (sc),
+    m_uiScene           (ctx.appInstance.getMessageBus())
 {
     addSystems();
     buildScene();
@@ -105,16 +112,37 @@ void ScrubAttractState::render()
 void ScrubAttractState::addSystems()
 {
     auto& mb = cro::App::getInstance().getMessageBus();
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::AudioSystem>(mb);
+}
+
+void ScrubAttractState::loadAssets()
+{
+    //TODO load menu music
 }
 
 void ScrubAttractState::buildScene()
 {
-    const std::string str = 
-R"(
+    //title tab - image of ball washer in centre,
+    //text SCRUB spins in the middle of it
+
+    //TODO these tabs could have a callback to restart
+    //any animation a tab might have when the tab is shown
+    //TODO the tabs need a child node for scaling the sprites
+    m_tabs[TabID::Title] = m_uiScene.createEntity();
+    m_tabs[TabID::Title].addComponent<cro::Transform>();
+
+
+    //how to play tab
+    m_tabs[TabID::HowTo] = m_uiScene.createEntity();
+    m_tabs[TabID::HowTo].addComponent<cro::Transform>();
+
+    const std::string str =
+        R"(
 Use A/D to scrub or right thumb stick
 Use Q to insert and E to remove a ball (or LB and RB on the controller)
 Press SPACE or Controller A to add more soap
@@ -125,25 +153,42 @@ Press ESCAPE or Start to Pause the game.
 Press SPACE or Controller A to begin.
 )";
 
-    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
 
     auto size = glm::vec2(cro::App::getWindow().getSize());
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(size / 2.f);
-    entity.getComponent<cro::Transform>().move({ 0.f, 60.f });
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
+    entity.getComponent<cro::Transform>().move({ 0.f, 60.f * getViewScale() });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(str);
-    entity.getComponent<cro::Text>().setCharacterSize(16);
+    entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize * getViewScale());
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 2.f, -2.f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 60.f };
+    entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
 
+    m_tabs[TabID::HowTo].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //high scores tab (or personal best in non-steam)
+    m_tabs[TabID::Scores] = m_uiScene.createEntity();
+    m_tabs[TabID::Scores].addComponent<cro::Transform>();
+
+
+
+
+    //TODO we want to scale the sprites down a la game state
+    //tho this will be per-tab rather than globally
     auto resize = [&](cro::Camera& cam)
         {
             glm::vec2 size(cro::App::getWindow().getSize());
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-            cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 10.f);
+            cam.setOrthographic(0.f, size.x, 0.f, size.y, -10.f, 10.f);
 
             //send messge to UI elements to reposition them
             cro::Command cmd;
@@ -154,9 +199,16 @@ Press SPACE or Controller A to begin.
                     const auto& ui = e.getComponent<UIElement>();
                     float x = std::floor(size.x * ui.relativePosition.x);
                     float y = std::floor(size.y * ui.relativePosition.y);
-                    e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2(ui.absolutePosition + glm::vec2(x, y)), ui.depth));
-
-                    //TODO probably want to rescale downwards too?
+                    
+                    if (ui.characterSize)
+                    {
+                        e.getComponent<cro::Text>().setCharacterSize(ui.characterSize * getViewScale());
+                        e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2((ui.absolutePosition * getViewScale()) + glm::vec2(x, y)), ui.depth));
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2((ui.absolutePosition) + glm::vec2(x, y)), ui.depth));
+                    }
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         };
