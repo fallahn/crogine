@@ -81,7 +81,9 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
 #endif
             sd.fonts = std::make_unique<cro::FontResource>();
             sd.fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
+            sd.fonts->get(sc::FontID::Title).setSmooth(true);
             sd.fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
+            sd.fonts->get(sc::FontID::Body).setSmooth(true);
 
             cacheState(StateID::ScrubGame);
             cacheState(StateID::ScrubAttract);

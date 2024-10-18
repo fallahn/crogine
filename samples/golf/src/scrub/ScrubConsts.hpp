@@ -63,10 +63,12 @@ namespace sc
 
     static inline constexpr std::uint32_t SmallTextSize = 12;
     static inline constexpr std::uint32_t MediumTextSize = 24;
-    static inline constexpr std::uint32_t LargeTextSize = 48;
+    static inline constexpr std::uint32_t LargeTextSize = 72;
+
+    static inline const float TextDepth = 1.f;
 
     //hmm we need to make sure to set these with the scene scale too...
     static inline constexpr glm::vec2 SmallTextOffset = glm::vec2(1.f);
     static inline constexpr glm::vec2 MediumTextOffset = glm::vec2(2.f);
-    static inline constexpr glm::vec2 LargeTextOffset = glm::vec2(4.f);
+    static inline constexpr glm::vec2 LargeTextOffset = glm::vec2(6.f);
 }
