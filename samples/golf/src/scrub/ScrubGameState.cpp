@@ -192,7 +192,18 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
 
     static const auto pause = [&]() 
         {
+            //TODO pause music
             requestStackPush(StateID::ScrubPause);
+        };
+
+    static const auto quit = [&]() 
+        {
+            if (!m_score.gameRunning
+                && m_score.quitTimeout > 2.f)
+            {
+                requestStackClear();
+                requestStackPush(StateID::ScrubBackground);
+            }
         };
 
     if (evt.type == SDL_KEYDOWN)
@@ -283,6 +294,20 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         pause();
     }
 
+    else if (evt.type == SDL_KEYUP
+        || evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        quit();
+
+#ifdef CRO_DEBUG_
+        if (evt.type == SDL_KEYUP
+            && evt.key.keysym.sym == SDLK_l)
+        {
+            m_score.remainingTime = 0;
+        }
+#endif
+    }
+
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     return false;
@@ -290,6 +315,16 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
 
 void ScrubGameState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped
+            && data.id == StateID::ScrubPause)
+        {
+            //resume music
+        }
+    }
+
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -314,6 +349,7 @@ bool ScrubGameState::simulate(float dt)
 #ifndef CRO_DEBUG_
         m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #endif
+        m_score.quitTimeout = 0.f;
         if (m_score.remainingTime == 0)
         {
             m_score.gameRunning = false;
@@ -364,7 +400,7 @@ bool ScrubGameState::simulate(float dt)
             entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y / 2.f, sc::TextDepth });
             entity.getComponent<cro::Transform>().move({ 0.f, -14.f * getViewScale() });
             entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(font2).setString("Total Score: " + std::to_string(m_score.totalScore));
+            entity.addComponent<cro::Text>(font2).setString("Total Score: " + std::to_string(m_score.totalScore) + "\n\nPress Any Button");
             entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize);
             entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
             entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -382,6 +418,7 @@ bool ScrubGameState::simulate(float dt)
 
             attachText(entity);
 
+            
             //background
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -1.f });
@@ -402,6 +439,10 @@ bool ScrubGameState::simulate(float dt)
 
             m_soundDirector->playSound(AudioID::RoundEnd, MixerChannel::Voice);
         }
+    }
+    else
+    {
+        m_score.quitTimeout += dt;
     }
 
     m_gameScene.simulate(dt);
@@ -470,6 +511,7 @@ void ScrubGameState::loadAssets()
     };
 
     m_soundDirector->loadSounds(paths, m_resources.audio);
+    //TODO load music
 }
 
 void ScrubGameState::createScene()
@@ -1383,7 +1425,7 @@ void ScrubGameState::updateScore()
 
 
                 //animate out
-                const float scale = cro::Util::Easing::easeInElastic(std::max(0.f, std::min(1.f, currTime / AnimateTime)));
+                const float scale = cro::Util::Easing::easeInElastic(std::max(0.f, std::min(1.f, currTime / (AnimateTime*2.f))));
                 const float oProgress = 1.f - scale;
 
                 const auto oTarget = (winSize - glm::vec2(20.f)) - basePos;

@@ -37,10 +37,11 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 
 struct SharedStateData;
+struct SharedScrubData;
 class ScrubPauseState final : public cro::State
 {
 public:
-    ScrubPauseState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ScrubPauseState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedScrubData&);
 
     cro::StateID getStateID() const override { return StateID::ScrubPause; }
 
@@ -51,6 +52,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
+    SharedScrubData& m_sharedScrubData;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 

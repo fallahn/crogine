@@ -28,16 +28,20 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "ScrubPauseState.hpp"
+#include "ScrubConsts.hpp"
+#include "ScrubSharedData.hpp"
 #include "../golf/SharedStateData.hpp"
 #include "../golf/GameConsts.hpp"
 
 #include <crogine/core/App.hpp>
 
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -45,10 +49,11 @@ source distribution.
 
 #include <crogine/graphics/Font.hpp>
 
-ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State    (ss, ctx),
-    m_sharedData    (sd),
-    m_uiScene       (ctx.appInstance.getMessageBus())
+ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedScrubData& sc)
+    : cro::State        (ss, ctx),
+    m_sharedData        (sd),
+    m_sharedScrubData   (sc),
+    m_uiScene           (ctx.appInstance.getMessageBus())
 {
     addSystems();
     buildScene();
@@ -57,14 +62,23 @@ ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, S
 //public
 bool ScrubPauseState::handleEvent(const cro::Event& evt)
 {
+    const auto quit = [&]()
+        {
+            requestStackClear();
+            requestStackPush(StateID::ScrubBackground);
+
+            /*requestStackPop();
+            requestStackPop();
+            requestStackPush(StateID::ScrubAttract);*/
+        };
+
     if (evt.type == SDL_KEYDOWN)
     {
         switch (evt.key.keysym.sym)
         {
         default: break;
         case SDLK_q:
-            requestStackClear();
-            requestStackPush(StateID::ScrubBackground);
+            quit();
             break;
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
@@ -78,8 +92,7 @@ bool ScrubPauseState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case cro::GameController::ButtonB:
-            requestStackClear();
-            requestStackPush(StateID::ScrubBackground);
+            quit();
             break;
         case cro::GameController::ButtonStart:
             requestStackPop();
@@ -111,6 +124,7 @@ void ScrubPauseState::render()
 void ScrubPauseState::addSystems()
 {
     auto& mb = cro::App::getInstance().getMessageBus();
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
@@ -127,23 +141,66 @@ Press Q or Controller B to Quit.
 )";
 
 
-    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-
     auto size = glm::vec2(cro::App::getWindow().getSize());
+    const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Title);
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(size / 2.f);
-    entity.getComponent<cro::Transform>().move({ 0.f, 60.f });
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
+    entity.getComponent<cro::Transform>().move({ 0.f, 60.f * getViewScale() });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString(str);
-    entity.getComponent<cro::Text>().setCharacterSize(16);
+    entity.addComponent<cro::Text>(font).setString("PAUSED");
+    entity.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize * getViewScale());
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 60.f };
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
+    entity.getComponent<UIElement>().characterSize = sc::LargeTextSize;
 
+    const auto& font2 = m_sharedScrubData.fonts->get(sc::FontID::Body);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
+    //entity.getComponent<cro::Transform>().move({ 0.f, 40.f * getViewScale()});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font2).setString(str);
+    entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize * getViewScale());
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    //entity.getComponent<UIElement>().absolutePosition = { 0.f, 40.f };
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
+    entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
+
+
+    //background
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 1.f), cro::Colour(0.f,0.f,0.f,BackgroundAlpha)),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour(0.f,0.f,0.f,BackgroundAlpha)),
+            cro::Vertex2D(glm::vec2(1.f), cro::Colour(0.f,0.f,0.f,BackgroundAlpha)),
+            cro::Vertex2D(glm::vec2(1.f, 0.f), cro::Colour(0.f,0.f,0.f,BackgroundAlpha))
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            auto size = glm::vec2(cro::App::getWindow().getSize());
+            e.getComponent<cro::Transform>().setScale(size);
+        };
 
     auto resize = [&](cro::Camera& cam)
         {
             glm::vec2 size(cro::App::getWindow().getSize());
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-            cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 10.f);
+            cam.setOrthographic(0.f, size.x, 0.f, size.y, -10.f, 10.f);
 
             //send messge to UI elements to reposition them
             cro::Command cmd;
@@ -154,9 +211,16 @@ Press Q or Controller B to Quit.
                     const auto& ui = e.getComponent<UIElement>();
                     float x = std::floor(size.x * ui.relativePosition.x);
                     float y = std::floor(size.y * ui.relativePosition.y);
-                    e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2(ui.absolutePosition + glm::vec2(x, y)), ui.depth));
 
-                    //TODO probably want to rescale downwards too?
+                    if (ui.characterSize)
+                    {
+                        e.getComponent<cro::Text>().setCharacterSize(ui.characterSize * getViewScale());
+                        e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2((ui.absolutePosition * getViewScale()) + glm::vec2(x, y)), ui.depth));
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2((ui.absolutePosition) + glm::vec2(x, y)), ui.depth));
+                    }
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         };

@@ -182,7 +182,7 @@ private:
 
         float totalRunTime = 0.f;
         std::int32_t totalScore = 0;
-
+        float quitTimeout = 0.f;
 
         //this is the amount of time awarded multiplied
         //by how clean the ball is when it's removed.

@@ -85,8 +85,8 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
             sd.fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
             sd.fonts->get(sc::FontID::Body).setSmooth(true);
 
-            cacheState(StateID::ScrubGame);
             cacheState(StateID::ScrubAttract);
+            cacheState(StateID::ScrubGame);
             cacheState(StateID::ScrubPause);
         });
 #ifdef CRO_DEBUG_
