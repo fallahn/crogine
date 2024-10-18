@@ -327,11 +327,12 @@ bool ScrubGameState::simulate(float dt)
             entity.getComponent<cro::Transform>().move({ 0.f, 24.f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setString("Game Over\nTotal Score: " + std::to_string(m_score.totalScore));
-            entity.getComponent<cro::Text>().setCharacterSize(8 * 4);
+            entity.getComponent<cro::Text>().setCharacterSize(32);
             entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
             entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
             entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
             entity.getComponent<UIElement>().absolutePosition = { 0.f, 24.f };
+            entity.getComponent<UIElement>().characterSize = 32;
 
             attachText(entity);
             m_soundDirector->playSound(AudioID::RoundEnd, MixerChannel::Voice);
@@ -377,7 +378,7 @@ void ScrubGameState::loadAssets()
 {
 #ifdef HIDE_BACKGROUND
     //temp
-    auto& tempTex = m_resources.textures.get("assets/images/achievements.png");
+    auto& tempTex = m_resources.textures.get("assets/images/startup.png");
     tempTex.setRepeated(true);
     m_tempBground.setTexture(tempTex);
 #endif
@@ -501,7 +502,7 @@ void ScrubGameState::createScene()
     if (md.loadFromFile("assets/arcade/scrub/models/gauge_inner.cmt"))
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.05335f, -0.2475f, 0.07269f });
+        entity.addComponent<cro::Transform>().setPosition({ -0.10836f, -0.24753f, 0.008162f });
         md.createModel(entity);
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CD32::Colours[CD32::Red]);
         rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -652,11 +653,8 @@ void ScrubGameState::createUI()
     //    });
 
 
-    //use this to scale up all text items
-    m_textRoot = m_uiScene.createEntity();
-    m_textRoot.addComponent<cro::Transform>();
 
-    //and scale down sprites
+    //scales down sprites to lower resolutions
     m_spriteRoot = m_uiScene.createEntity();
     m_spriteRoot.addComponent<cro::Transform>();
 
@@ -670,6 +668,7 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { 12.f, -12.f };
+    entity.getComponent<UIElement>().characterSize = 8;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -680,7 +679,6 @@ void ScrubGameState::createUI()
             ss << "Remaining: " << m_score.remainingTime << "s";
             e.getComponent<cro::Text>().setString(ss.str());
         };
-    m_textRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball count
     entity = m_uiScene.createEntity();
@@ -690,6 +688,7 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { 12.f, -22.f };
+    entity.getComponent<UIElement>().characterSize = 8;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -700,7 +699,6 @@ void ScrubGameState::createUI()
             ss << "Balls Cleaned: " << m_score.ballsWashed;
             e.getComponent<cro::Text>().setString(ss.str());
         };
-    m_textRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //avg cleanliness
     entity = m_uiScene.createEntity();
@@ -710,6 +708,7 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 0.f);
     entity.getComponent<UIElement>().absolutePosition = { 12.f, 12.f };
+    entity.getComponent<UIElement>().characterSize = 8;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -720,7 +719,6 @@ void ScrubGameState::createUI()
             ss << "Avg Cleanliness: " << m_score.avgCleanliness << "%";
             e.getComponent<cro::Text>().setString(ss.str());
         };
-    m_textRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //score
@@ -732,6 +730,7 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -36.f };
+    entity.getComponent<UIElement>().characterSize = 16;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -740,7 +739,6 @@ void ScrubGameState::createUI()
             ss << m_score.totalScore;
             e.getComponent<cro::Text>().setString(ss.str());
         };
-    m_textRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //soap count
     entity = m_uiScene.createEntity();
@@ -750,6 +748,7 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { -212.f, -12.f };
+    entity.getComponent<UIElement>().characterSize = 16;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -758,14 +757,13 @@ void ScrubGameState::createUI()
             ss << "Soap Bars: " << m_handle.soap.count;
             e.getComponent<cro::Text>().setString(ss.str());
         };
-    m_textRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     static constexpr float BarHeight = 800.f;
     static constexpr float BarWidth = 180.f;
 
     //TODO replace this with proper bg
 #ifdef HIDE_BACKGROUND
-    auto& bgTex = m_resources.textures.get("assets/images/achievements.png");
+    auto& bgTex = m_resources.textures.get("assets/images/startup.png");
 #else
     auto& bgTex = m_sharedScrubData.backgroundTexture->getTexture();
     //auto& bgTex = m_resources.textures.get("assets/images/startup.png");
@@ -911,16 +909,15 @@ void ScrubGameState::createUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 10.f);
 
 #ifdef HIDE_BACKGROUND
-        glm::vec2 bgSize(m_resources.textures.get("assets/images/achievements.png").getSize());
+        glm::vec2 bgSize(m_resources.textures.get("assets/images/startup.png").getSize());
         auto bgScale = size / bgSize;
         m_tempBground.setScale(bgScale);
 #endif
 
 
-        //text scales up, sprites scale down...
+        //text resizes font, sprites scale down...
         const auto Scale = getViewScale();
         const auto SpriteScale = Scale / MaxSpriteScale;
-        m_textRoot.getComponent<cro::Transform>().setScale(glm::vec2(Scale));
         m_spriteRoot.getComponent<cro::Transform>().setScale(glm::vec2(SpriteScale)); //sprites are 1:1 when the scene scale is 4 
 
         //send messge to UI elements to reposition them
@@ -930,11 +927,7 @@ void ScrubGameState::createUI()
             [size, Scale, SpriteScale](cro::Entity e, float)
             {
                 auto s = size;
-                if (e.hasComponent<cro::Text>())
-                {
-                    s /= Scale;
-                }
-                else
+                if (!e.hasComponent<cro::Text>())
                 {
                     s /= SpriteScale;
                 }
@@ -942,11 +935,20 @@ void ScrubGameState::createUI()
                 const auto& ui = e.getComponent<UIElement>();
                 float x = std::floor(s.x * ui.relativePosition.x);
                 float y = std::floor(s.y * ui.relativePosition.y);
-                e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2(ui.absolutePosition + glm::vec2(x,y)), ui.depth));
                 
                 if (ui.resizeCallback)
                 {
                     ui.resizeCallback(e);
+                }
+
+                if (ui.characterSize)
+                {
+                    e.getComponent<cro::Text>().setCharacterSize(ui.characterSize * Scale);
+                    e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2((ui.absolutePosition * Scale) + glm::vec2(x,y)), ui.depth));
+                }
+                else
+                {
+                    e.getComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2((ui.absolutePosition) + glm::vec2(x, y)), ui.depth));
                 }
             };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -966,10 +968,11 @@ void ScrubGameState::createCountIn()
     entity.addComponent<cro::Transform>().setPosition(size / 2.f);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("READY");
-    entity.getComponent<cro::Text>().setCharacterSize(8 * 4);
+    entity.getComponent<cro::Text>().setCharacterSize(32);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+    entity.getComponent<UIElement>().characterSize = 32;
 
     struct MessageData final
     {
@@ -1295,6 +1298,7 @@ void ScrubGameState::showMessage(const std::string& str)
     entity.getComponent<cro::Text>().setCharacterSize(16);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<UIElement>().characterSize = 16;
     entity.addComponent<cro::Callback>().setUserData<float>(MessageTime);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
@@ -1325,11 +1329,10 @@ void ScrubGameState::showMessage(const std::string& str)
 
 void ScrubGameState::attachText(cro::Entity entity)
 {
-    const auto screenCoords = entity.getComponent<cro::Transform>().getPosition();
-    const auto Scale = m_textRoot.getComponent<cro::Transform>().getScale().x;
+    const auto Scale = getViewScale();
     CRO_ASSERT(Scale != 0, "");
-    entity.getComponent<cro::Transform>().setPosition({ std::floor(screenCoords.x / Scale), std::floor(screenCoords.y / Scale) });
-    m_textRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    const auto& ui = entity.getComponent<UIElement>();
+    entity.getComponent<cro::Text>().setCharacterSize(ui.characterSize * Scale);
 }
 
 void ScrubGameState::attachSprite(cro::Entity entity)

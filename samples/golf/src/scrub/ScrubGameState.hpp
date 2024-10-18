@@ -75,7 +75,6 @@ private:
 #endif
 
     //used for resizing the UI
-    cro::Entity m_textRoot;
     cro::Entity m_spriteRoot;
 
     std::int16_t m_axisPosition;
