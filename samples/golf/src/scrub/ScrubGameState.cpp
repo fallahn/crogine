@@ -87,12 +87,17 @@ namespace
     {
         enum
         {
-            FillSoap,
-            NoSoap,
+            FXThreeX, FXFiveX, FXTenX,
+            FXEjectBall, FXInsertBall,
+            FXFillSoap, FXNoSoap,
+            FXScrubDown, FXScrubUp,
+            FXSoapAdded, FXStreakBroken,
 
-            ThreeX, FiveX, TenX,
-            Go, NewSoap, Ready,
-            RoundEnd,
+            FXMessage,
+
+            VOThreeX, VOFiveX, VOTenX,
+            VOGo, VONewSoap, VOReady,
+            VORoundEnd,
 
             Count
         };
@@ -129,6 +134,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             if (m_score.gameRunning)
             {
                 m_ball.scrub(m_handle.switchDirection(Handle::Down));
+                m_soundDirector->playSound(AudioID::FXScrubDown, MixerChannel::Effects, 0.4f).getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.2f));
             }
         };
     static const auto pumpUp = 
@@ -137,6 +143,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             if (m_score.gameRunning)
             {
                 m_ball.scrub(m_handle.switchDirection(Handle::Up));
+                m_soundDirector->playSound(AudioID::FXScrubUp, MixerChannel::Effects, 0.4f).getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.2f));
             }
         };
     static const auto insertBall =
@@ -152,6 +159,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
                     m_handle.locked = true;
 
                     m_ball.state = Ball::State::Insert;
+                    m_soundDirector->playSound(AudioID::FXInsertBall, MixerChannel::Effects);
                 }
             }
         };
@@ -169,6 +177,8 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
 
                     //this *should* work because the models *should* all be at 0,0,0
                     m_handle.entity.getComponent<cro::Transform>().removeChild(m_ball.entity.getComponent<cro::Transform>());
+
+                    m_soundDirector->playSound(AudioID::FXEjectBall, MixerChannel::Effects);
                 }
             }
         };
@@ -181,11 +191,11 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
                 {
                     m_handle.soap.count--;
                     m_handle.soap.refresh();
-                    m_soundDirector->playSound(AudioID::FillSoap, MixerChannel::Menu);
+                    m_soundDirector->playSound(AudioID::FXFillSoap, MixerChannel::Menu);
                 }
                 else
                 {
-                    m_soundDirector->playSound(AudioID::NoSoap, MixerChannel::Menu);
+                    m_soundDirector->playSound(AudioID::FXNoSoap, MixerChannel::Menu);
                 }
             }
         };
@@ -341,6 +351,10 @@ bool ScrubGameState::simulate(float dt)
 
         if (!m_messageQueue.empty())
         {
+            if(!m_messageQueue[0].getComponent<cro::Callback>().active)
+            {
+                m_soundDirector->playSound(AudioID::FXMessage, MixerChannel::Effects);
+            }
             m_messageQueue[0].getComponent<cro::Callback>().active = true;
         }
 
@@ -437,7 +451,7 @@ bool ScrubGameState::simulate(float dt)
                     e.getComponent<cro::Transform>().setScale(size);
                 };
 
-            m_soundDirector->playSound(AudioID::RoundEnd, MixerChannel::Voice);
+            m_soundDirector->playSound(AudioID::VORoundEnd, MixerChannel::Voice);
         }
     }
     else
@@ -498,8 +512,19 @@ void ScrubGameState::loadAssets()
     //load audio
     std::vector<std::string> paths =
     {
+        "assets/arcade/scrub/sound/fx/3x.wav",
+        "assets/arcade/scrub/sound/fx/5x.wav",
+        "assets/arcade/scrub/sound/fx/10x.wav",
+        "assets/arcade/scrub/sound/fx/eject_ball.wav",
+        "assets/arcade/scrub/sound/fx/insert_ball.wav",
         "assets/arcade/scrub/sound/fx/fill_soap.wav",
         "assets/arcade/scrub/sound/fx/no_soap.wav",
+        "assets/arcade/scrub/sound/fx/scrub_down.wav",
+        "assets/arcade/scrub/sound/fx/scrub_up.wav",
+        "assets/arcade/scrub/sound/fx/soap_added.wav",
+        "assets/arcade/scrub/sound/fx/streak_broken.wav",
+
+        "assets/arcade/scrub/sound/fx/message.wav",
 
         "assets/arcade/scrub/sound/vo/3x.wav",
         "assets/arcade/scrub/sound/vo/5x.wav",
@@ -852,7 +877,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, -36.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -16.f };
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.addComponent<cro::Callback>().active = true;
@@ -1129,7 +1154,7 @@ void ScrubGameState::createCountIn()
                     t += GoTime;
                     state = 1;
                     e.getComponent<cro::Text>().setString("GO!");
-                    m_soundDirector->playSound(AudioID::Go, MixerChannel::Voice);
+                    m_soundDirector->playSound(AudioID::VOGo, MixerChannel::Voice);
                     m_score.gameRunning = true;
                 }
             }
@@ -1157,7 +1182,7 @@ void ScrubGameState::createCountIn()
         };
 
     attachText(entity);
-    m_soundDirector->playSound(AudioID::Ready, MixerChannel::Voice);
+    m_soundDirector->playSound(AudioID::VOReady, MixerChannel::Voice);
 }
 
 void ScrubGameState::handleCallback(cro::Entity e, float dt)
@@ -1277,6 +1302,7 @@ void ScrubGameState::updateScore()
         if (m_score.bonusRun != 0)
         {
             showMessage("STREAK BROKEN");
+            m_soundDirector->playSound(AudioID::FXStreakBroken, MixerChannel::Effects);
         }
         m_score.bonusRun = 0;
         
@@ -1311,7 +1337,8 @@ void ScrubGameState::updateScore()
                 showMessage("+10000");
                 showMessage("+10s");
 
-                m_soundDirector->playSound(AudioID::TenX, MixerChannel::Voice);
+                m_soundDirector->playSound(AudioID::VOTenX, MixerChannel::Voice);
+                m_soundDirector->playSound(AudioID::FXTenX, MixerChannel::Effects, 0.6f);
             }
             else
             {
@@ -1325,7 +1352,8 @@ void ScrubGameState::updateScore()
             showMessage("3x STREAK!");
             showMessage("+3000");
 
-            m_soundDirector->playSound(AudioID::ThreeX, MixerChannel::Voice);
+            m_soundDirector->playSound(AudioID::VOThreeX, MixerChannel::Voice);
+            m_soundDirector->playSound(AudioID::FXThreeX, MixerChannel::Effects, 0.6f);
             break;
         case 5:
             m_score.totalScore += 5000;
@@ -1335,7 +1363,8 @@ void ScrubGameState::updateScore()
             showMessage("+5000");
             showMessage("+2s");
 
-            m_soundDirector->playSound(AudioID::FiveX, MixerChannel::Voice);
+            m_soundDirector->playSound(AudioID::VOFiveX, MixerChannel::Voice);
+            m_soundDirector->playSound(AudioID::FXFiveX, MixerChannel::Effects, 0.6f);
             break;
         }
     }
@@ -1344,6 +1373,7 @@ void ScrubGameState::updateScore()
         if (m_score.bonusRun != 0)
         {
             showMessage("STREAK BROKEN");
+            m_soundDirector->playSound(AudioID::FXStreakBroken, MixerChannel::Effects);
         }
         m_score.bonusRun = 0;
     }
@@ -1380,7 +1410,7 @@ void ScrubGameState::updateScore()
 
 
 
-    if (m_score.ballsWashed % 5 == 0)
+    if (m_score.ballsWashed % (m_score.bonusRun > 4 ? 3 : 5) == 0)
     {
         //new soap in 3.. 2.. 1..
         const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
@@ -1437,6 +1467,7 @@ void ScrubGameState::updateScore()
                 if (currTime < 0)
                 {
                     m_score.totalScore += 500;
+                    m_soundDirector->playSound(AudioID::FXSoapAdded, MixerChannel::Effects);
 
                     m_handle.soap.count = std::min(MaxSoapBars, m_handle.soap.count + 1);
                     e.getComponent<cro::Callback>().active = false;
@@ -1448,7 +1479,7 @@ void ScrubGameState::updateScore()
         m_score.remainingTime += 0.5f;
 
         showMessage("+0.5s");
-        m_soundDirector->playSound(AudioID::NewSoap, MixerChannel::Voice);
+        m_soundDirector->playSound(AudioID::VONewSoap, MixerChannel::Voice);
     }
 }
 

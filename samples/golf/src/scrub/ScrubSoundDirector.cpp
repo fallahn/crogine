@@ -57,7 +57,7 @@ void ScrubSoundDirector::loadSounds(const std::vector<std::string>& paths, cro::
     }
 }
 
-void ScrubSoundDirector::playSound(std::int32_t idx, std::uint8_t channel, float vol)
+cro::Entity ScrubSoundDirector::playSound(std::int32_t idx, std::uint8_t channel, float vol)
 {
     //channel 2 = menu sounds
     //channel 3 = voice over
@@ -67,8 +67,11 @@ void ScrubSoundDirector::playSound(std::int32_t idx, std::uint8_t channel, float
     auto emitter = getNextEntity();
     emitter.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[idx]);
     emitter.getComponent<cro::AudioEmitter>().setVolume(vol);
-    emitter.getComponent<cro::AudioEmitter>().setMixerChannel(channel); //TODO which channel are we using?
+    emitter.getComponent<cro::AudioEmitter>().setPitch(1.f);
+    emitter.getComponent<cro::AudioEmitter>().setMixerChannel(channel);
     emitter.getComponent<cro::AudioEmitter>().play();
+
+    return emitter;
 }
 
 //private

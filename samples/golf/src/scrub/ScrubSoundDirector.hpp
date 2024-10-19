@@ -48,7 +48,7 @@ public:
 
     void loadSounds(const std::vector<std::string>&, cro::AudioResource&);
 
-    void playSound(std::int32_t, std::uint8_t, float = 1.f);
+    cro::Entity playSound(std::int32_t, std::uint8_t, float = 1.f);
 
 private:
     std::vector<const cro::AudioSource*> m_audioSources;
