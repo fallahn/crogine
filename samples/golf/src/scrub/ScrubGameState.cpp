@@ -93,7 +93,7 @@ namespace
             FXScrubDown, FXScrubUp,
             FXSoapAdded, FXStreakBroken,
 
-            FXMessage,
+            FXMessage, FXPremature,
 
             VOThreeX, VOFiveX, VOTenX,
             VOGo, VONewSoap, VOReady,
@@ -525,6 +525,7 @@ void ScrubGameState::loadAssets()
         "assets/arcade/scrub/sound/fx/streak_broken.wav",
 
         "assets/arcade/scrub/sound/fx/message.wav",
+        "assets/arcade/scrub/sound/fx/premature.wav",
 
         "assets/arcade/scrub/sound/vo/3x.wav",
         "assets/arcade/scrub/sound/vo/5x.wav",
@@ -1298,11 +1299,18 @@ void ScrubGameState::updateScore()
                 }
             };
         
+        m_score.remainingTime -= 0.5f;
+        showMessage("-0.5s");
+
         //don't forget to reset the streak
         if (m_score.bonusRun != 0)
         {
             showMessage("STREAK BROKEN");
             m_soundDirector->playSound(AudioID::FXStreakBroken, MixerChannel::Effects);
+        }
+        else
+        {
+            m_soundDirector->playSound(AudioID::FXPremature, MixerChannel::Effects);
         }
         m_score.bonusRun = 0;
         
@@ -1410,7 +1418,7 @@ void ScrubGameState::updateScore()
 
 
 
-    if (m_score.ballsWashed % (m_score.bonusRun > 4 ? 3 : 5) == 0)
+    if (m_score.ballsWashed % /*(m_score.bonusRun > 4 ? 3 : 5)*/4 == 0) //TODO we need to fix this so we can't get gaps if we break a streak
     {
         //new soap in 3.. 2.. 1..
         const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
