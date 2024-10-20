@@ -77,7 +77,9 @@ private:
     //used for resizing the UI
     cro::Entity m_spriteRoot;
 
-    std::int16_t m_axisPosition;
+    cro::Entity m_scrubberRoot; //use for intro animation
+
+    std::int16_t m_axisPosition; //game controlelr axis
 
     struct Handle final
     {
@@ -129,6 +131,18 @@ private:
             }
         }soap;
 
+        void reset()
+        {
+            hasBall = false;
+            locked = false;
+            direction = Down;
+            progress = 0.f;
+            speed = 0.f;
+            stroke = 0.f;
+            strokeStart = 0.f;
+            soap = {};
+        }
+
     }m_handle;
 
     struct Ball final
@@ -162,6 +176,12 @@ private:
 
             filth = std::max(0.f, filth - amt);
         }
+
+        void reset()
+        {
+            filth = MaxFilth;
+            state = State::Idle;
+        }
     }m_ball;
 
     struct Score final
@@ -189,6 +209,8 @@ private:
         static constexpr float TimeBonus = 3.f;
     }m_score;
 
+    void onCachedPush() override;
+
     void addSystems();
     void loadAssets();
     void createScene();
@@ -201,6 +223,8 @@ private:
 
     std::vector<cro::Entity> m_messageQueue;
     void showMessage(const std::string&);
+
+    void resetCamera();
 
     void attachText(cro::Entity); //calcs coords from screen space when spawning text items
     void attachSprite(cro::Entity); //calcs coords from screen space when spawning sprite items

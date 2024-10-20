@@ -64,12 +64,9 @@ bool ScrubPauseState::handleEvent(const cro::Event& evt)
 {
     const auto quit = [&]()
         {
-            requestStackClear();
-            requestStackPush(StateID::ScrubBackground);
-
-            /*requestStackPop();
             requestStackPop();
-            requestStackPush(StateID::ScrubAttract);*/
+            requestStackPop();
+            //requestStackPush(StateID::ScrubAttract);
         };
 
     if (evt.type == SDL_KEYDOWN)

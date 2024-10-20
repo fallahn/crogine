@@ -211,8 +211,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             if (!m_score.gameRunning
                 && m_score.quitTimeout > 2.f)
             {
-                requestStackClear();
-                requestStackPush(StateID::ScrubBackground);
+                requestStackPop();
             }
         };
 
@@ -475,6 +474,34 @@ void ScrubGameState::render()
 }
 
 //private
+void ScrubGameState::onCachedPush()
+{
+    //check ball state and detach if parented to handle
+    //if (m_ball.entity.getComponent<cro::Transform>().getDepth() == 1)
+    {
+        m_handle.entity.getComponent<cro::Transform>().removeChild(m_ball.entity.getComponent<cro::Transform>());
+        m_ball.entity.getComponent<cro::Transform>().setPosition({ -BallOffsetPos, 0.f, 0.f });
+    }
+
+    m_ball.reset();
+    m_handle.reset();
+    m_score = {};
+
+
+    //makes sure to update the UI layout/textures
+    auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
+    cam.resizeCallback(cam);
+
+
+    //calls createCountIn()
+    resetCamera();
+    
+    //spin-in animation
+    m_scrubberRoot.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    m_scrubberRoot.getComponent<cro::Callback>().setUserData<float>(3.f);
+    m_scrubberRoot.getComponent<cro::Callback>().active = true;
+}
+
 void ScrubGameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
@@ -544,9 +571,7 @@ void ScrubGameState::createScene()
 {
     cro::Entity rootNode = m_gameScene.createEntity();
     rootNode.addComponent<cro::Transform>().setScale({ 0.f, 0.f, 0.f });
-    rootNode.addComponent<cro::Callback>().active = true;
-    rootNode.getComponent<cro::Callback>().setUserData<float>(3.f);
-    rootNode.getComponent<cro::Callback>().function =
+    rootNode.addComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
         {
             auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
@@ -562,6 +587,7 @@ void ScrubGameState::createScene()
                 e.getComponent<cro::Callback>().active = false;
             }
         };
+    m_scrubberRoot = rootNode;
 
     cro::ModelDefinition md(m_resources, &m_environmentMap);
     if (md.loadFromFile("assets/arcade/scrub/models/handle.cmt"))
@@ -693,54 +719,8 @@ void ScrubGameState::createScene()
     cam.setMaxShadowDistance(2.f);
     cam.setShadowExpansion(0.5f);
 
-    //create a path of points, convert them with look-at and the animate the camera along them
-    static std::array path =
-    {
-        //glm::inverse(glm::lookAt(glm::vec3(0.14f, 0.02f, 0.f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)),
-        glm::inverse(glm::lookAt(glm::vec3(0.f, 0.12f, 0.06f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)),
-        glm::inverse(glm::lookAt(glm::vec3(-0.04f, 0.07f, 0.36f), glm::vec3(0.f, -0.04f, 0.f), cro::Transform::Y_AXIS))
-    };
-
-    static const auto interpolate =
-        [](glm::mat4& mat1, glm::mat4& mat2, float t)
-        {
-            const glm::quat rot0 = glm::quat_cast(mat1);
-            const glm::quat rot1 = glm::quat_cast(mat2);
-
-            const glm::quat finalRot = glm::slerp(rot0, rot1, t);
-
-            glm::mat4 finalMat = glm::mat4_cast(finalRot);
-            finalMat[3] = mat1[3] * (1.f - t) + mat2[3] * t;
-
-            return finalMat;
-        };
-
-
-    camera.getComponent<cro::Transform>().setLocalTransform(path[0]);
-    camera.addComponent<cro::Callback>().active = true;
-    camera.getComponent<cro::Callback>().setUserData<float>(0.f);
-    camera.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-            currTime += dt;
-
-            auto idx = static_cast<std::int32_t>(std::floor(currTime));
-            float t = currTime - idx;
-
-            if (idx < path.size() - 1)
-            {
-                glm::mat4 tx = interpolate(path[idx], path[idx + 1], t);
-                e.getComponent<cro::Transform>().setLocalTransform(tx);
-            }
-            else
-            {
-                e.getComponent<cro::Transform>().setLocalTransform(path.back());
-                e.getComponent<cro::Callback>().active = false;
-
-                createCountIn();
-            }
-        };
+    //callback is  set up in resetCamera();
+    camera.addComponent<cro::Callback>();
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.2f);
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.6f);
@@ -1505,7 +1485,7 @@ void ScrubGameState::showMessage(const std::string& str)
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, sc::TextDepth));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(str);
-    entity.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize);
+    entity.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize * getViewScale());
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<UIElement>().characterSize = sc::LargeTextSize;
@@ -1535,6 +1515,59 @@ void ScrubGameState::showMessage(const std::string& str)
     m_messageQueue.push_back(entity);
 
     attachText(entity);
+}
+
+void ScrubGameState::resetCamera()
+{
+    //create a path of points, convert them with look-at and the animate the camera along them
+    static std::array path =
+    {
+        //glm::inverse(glm::lookAt(glm::vec3(0.14f, 0.02f, 0.f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)),
+        glm::inverse(glm::lookAt(glm::vec3(0.f, 0.12f, 0.06f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)),
+        glm::inverse(glm::lookAt(glm::vec3(-0.04f, 0.07f, 0.36f), glm::vec3(0.f, -0.04f, 0.f), cro::Transform::Y_AXIS))
+    };
+
+    static const auto interpolate =
+        [](glm::mat4& mat1, glm::mat4& mat2, float t)
+        {
+            const glm::quat rot0 = glm::quat_cast(mat1);
+            const glm::quat rot1 = glm::quat_cast(mat2);
+
+            const glm::quat finalRot = glm::slerp(rot0, rot1, t);
+
+            glm::mat4 finalMat = glm::mat4_cast(finalRot);
+            finalMat[3] = mat1[3] * (1.f - t) + mat2[3] * t;
+
+            return finalMat;
+        };
+
+    auto camera = m_gameScene.getActiveCamera();
+    camera.getComponent<cro::Transform>().setLocalTransform(path[0]);
+
+    camera.getComponent<cro::Callback>().active = true;
+    camera.getComponent<cro::Callback>().setUserData<float>(0.f);
+    camera.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime += dt;
+
+            auto idx = static_cast<std::int32_t>(std::floor(currTime));
+            float t = currTime - idx;
+
+            if (idx < path.size() - 1)
+            {
+                glm::mat4 tx = interpolate(path[idx], path[idx + 1], t);
+                e.getComponent<cro::Transform>().setLocalTransform(tx);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setLocalTransform(path.back());
+                e.getComponent<cro::Callback>().active = false;
+
+                createCountIn();
+            }
+        };
 }
 
 void ScrubGameState::attachText(cro::Entity entity)
@@ -1577,7 +1610,8 @@ void ScrubGameState::levelMeterCallback(cro::Entity e)
     //set u_uvRect to rect left/bottom
     e.getComponent<cro::Drawable2D>().bindUniform("u_uvRect", glm::vec4(uvRect.left, uvRect.bottom, uvRect.width, uvRect.height));
 
-    //TODO set the texture on the drawable
+    //reset the texture on the drawable
+    e.getComponent<cro::Drawable2D>().setTexture(&m_sharedScrubData.backgroundTexture->getTexture());
 }
 
 //handle funcs

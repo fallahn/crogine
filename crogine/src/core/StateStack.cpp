@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -196,6 +196,7 @@ void StateStack::applyPendingChanges()
             {
                 m_stack.push_back(m_stateCache.at(change.id));
                 m_stack.back()->m_inUse = true;
+                m_stack.back()->onCachedPush();
             }
             else
             {
@@ -210,6 +211,11 @@ void StateStack::applyPendingChanges()
             auto* msg = m_messageBus.post<Message::StateEvent>(Message::StateMessage);
             msg->action = Message::StateEvent::Popped;
             msg->id = id;
+
+            if (m_stack.back()->isCached())
+            {
+                m_stack.back()->onCachedPop();
+            }
 
             m_stack.back()->m_inUse = false;
             m_stack.pop_back();

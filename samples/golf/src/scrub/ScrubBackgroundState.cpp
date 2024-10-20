@@ -79,11 +79,14 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
             loadAssets();
             createScene();
 #endif
-            sd.fonts = std::make_unique<cro::FontResource>();
-            sd.fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
-            sd.fonts->get(sc::FontID::Title).setSmooth(true);
-            sd.fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
-            sd.fonts->get(sc::FontID::Body).setSmooth(true);
+            if (!sd.fonts)
+            {
+                sd.fonts = std::make_unique<cro::FontResource>();
+                sd.fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
+                sd.fonts->get(sc::FontID::Title).setSmooth(true);
+                sd.fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
+                sd.fonts->get(sc::FontID::Body).setSmooth(true);
+            }
 
             cacheState(StateID::ScrubAttract);
             cacheState(StateID::ScrubGame);
@@ -99,8 +102,9 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
 
 ScrubBackgroundState::~ScrubBackgroundState()
 {
-    m_sharedScrubData.fonts.reset();
+    m_sharedScrubData.backgroundTexture = nullptr;
 }
+
 
 //public
 bool ScrubBackgroundState::handleEvent(const cro::Event& evt)
@@ -111,6 +115,16 @@ bool ScrubBackgroundState::handleEvent(const cro::Event& evt)
 
 void ScrubBackgroundState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped
+            && data.id == StateID::ScrubGame)
+        {
+            requestStackPush(StateID::ScrubAttract);
+        }
+    }
+
     m_scene.forwardMessage(msg);
 }
 

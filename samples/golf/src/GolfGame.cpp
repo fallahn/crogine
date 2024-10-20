@@ -1007,6 +1007,11 @@ void GolfGame::finalise()
 
     Achievements::shutdown();
 
+    if (m_scrubData.fonts)
+    {
+        m_scrubData.fonts.reset();
+    }
+
     m_sharedData.sharedResources.reset();
     m_postQuad.reset();
     m_postShader.reset();

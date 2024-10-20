@@ -53,10 +53,10 @@ void main()
     float u = ((coord.x - u_uvRect.r) / u_uvRect.b);
     
     float highlight = smoothstep(0.55, 0.75, u);
-    highlight *= 1.0 - step(0.78, u);
+    highlight *= 1.0 - smoothstep(0.78, 0.80, u);
 
     u = pow(((u * 2.0) - 1.0), 3.0);
     coord.x += u * DistortionAmount;
 
-    FRAG_OUT = (TEXTURE(u_texture, coord) * v_colour) + vec4(highlight * HighlightAmount);
+    FRAG_OUT = mix(TEXTURE(u_texture, coord), v_colour, 0.5 + (abs(u) * 0.3)) + vec4(highlight * HighlightAmount);
 })";
