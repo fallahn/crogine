@@ -199,6 +199,8 @@ private:
 
         //how many balls were 100% in a row
         std::int32_t bonusRun = 0;
+        static constexpr std::int32_t bonusRunThreshold = 4; //after this we only need 3 balls to get more soap
+        std::int32_t countAtThreshold = 0; //number of balls when threshold met to correct for count offset
 
         float totalRunTime = 0.f;
         std::int32_t totalScore = 0;

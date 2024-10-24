@@ -1243,15 +1243,17 @@ void ScrubGameState::updateScore()
     if (cleanliness < m_score.threshold)
     {
         //display notification
-        const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+        const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
         const auto size = glm::vec2(cro::App::getWindow().getSize());
 
         auto ent = m_uiScene.createEntity();
-        ent.addComponent<cro::Transform>().setPosition({ size.x / 2.f, 40.f });
+        ent.addComponent<cro::Transform>().setPosition({ size.x / 2.f, 80.f * getViewScale(), sc::TextDepth});
         ent.addComponent<cro::Drawable2D>();
-        ent.addComponent<cro::Text>(font).setCharacterSize(8 * 3);
+        ent.addComponent<cro::Text>(font).setCharacterSize(sc::MediumTextSize * getViewScale());
         ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-        ent.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+        ent.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
+        ent.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        ent.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
         ent.getComponent<cro::Text>().setString("Premature Ejection!");
 
         ent.addComponent<cro::Callback>().active = true;
@@ -1265,11 +1267,13 @@ void ScrubGameState::updateScore()
                 std::int32_t flash = static_cast<std::int32_t>(std::ceil(currTime * 2.f)) % 2;
                 if (flash)
                 {
-                    e.getComponent<cro::Text>().setFillColour(cro::Colour::Red);
+                    e.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
+                    e.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
                 }
                 else
                 {
                     e.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+                    e.getComponent<cro::Text>().setShadowColour(cro::Colour::Transparent);
                 }
 
                 if (currTime < 0)
@@ -1285,6 +1289,11 @@ void ScrubGameState::updateScore()
         //don't forget to reset the streak
         if (m_score.bonusRun != 0)
         {
+            if (m_score.bonusRun >= Score::bonusRunThreshold)
+            {
+                showMessage("Soap Multiplier Decreased");
+            }
+
             showMessage("STREAK BROKEN");
             m_soundDirector->playSound(AudioID::FXStreakBroken, MixerChannel::Effects);
         }
@@ -1319,7 +1328,7 @@ void ScrubGameState::updateScore()
             if (m_score.bonusRun % 10 == 0)
             {
                 m_score.totalScore += 10000;
-                m_score.remainingTime += 10.f;
+                m_score.remainingTime += 3.f;
 
                 showMessage("10x STREAK!");
                 showMessage("+10000");
@@ -1343,9 +1352,13 @@ void ScrubGameState::updateScore()
             m_soundDirector->playSound(AudioID::VOThreeX, MixerChannel::Voice);
             m_soundDirector->playSound(AudioID::FXThreeX, MixerChannel::Effects, 0.6f);
             break;
+        case Score::bonusRunThreshold:
+            m_score.countAtThreshold = m_score.ballsWashed;
+            showMessage("Soap Multiplier Increased");
+            break;
         case 5:
             m_score.totalScore += 5000;
-            m_score.remainingTime += 2.f;
+            m_score.remainingTime += 1.f;
 
             showMessage("5x STREAK!");
             showMessage("+5000");
@@ -1360,6 +1373,11 @@ void ScrubGameState::updateScore()
     {
         if (m_score.bonusRun != 0)
         {
+            if (m_score.bonusRun >= Score::bonusRunThreshold)
+            {
+                showMessage("Soap Multiplier Decreased");
+            }
+
             showMessage("STREAK BROKEN");
             m_soundDirector->playSound(AudioID::FXStreakBroken, MixerChannel::Effects);
         }
@@ -1371,6 +1389,7 @@ void ScrubGameState::updateScore()
     if (m_score.gameRunning)
     {
         float bonus = Score::TimeBonus * (cleanliness / 100.f);
+        bonus -= std::min(bonus / 2.f, 0.05f * (m_score.ballsWashed / 10));
         m_score.remainingTime += bonus;
         
         if (bonus != 0)
@@ -1398,7 +1417,7 @@ void ScrubGameState::updateScore()
 
 
 
-    if (m_score.ballsWashed % /*(m_score.bonusRun > 4 ? 3 : 5)*/4 == 0) //TODO we need to fix this so we can't get gaps if we break a streak
+    if ((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 3 : 5))
     {
         //new soap in 3.. 2.. 1..
         const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
@@ -1443,14 +1462,14 @@ void ScrubGameState::updateScore()
 
 
                 //animate out
-                const float scale = cro::Util::Easing::easeInElastic(std::max(0.f, std::min(1.f, currTime / (AnimateTime*2.f))));
+                const float scale = /*cro::Util::Easing::easeOutCirc*/(std::max(0.f, std::min(1.f, currTime / (AnimateTime/2.f))));
                 const float oProgress = 1.f - scale;
 
                 const auto oTarget = (winSize - glm::vec2(20.f)) - basePos;
                 pos += (oTarget * oProgress);
                 e.getComponent<cro::Transform>().setPosition(pos);
 
-                e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.1f + (0.9f * scale)));
 
                 if (currTime < 0)
                 {
@@ -1463,7 +1482,7 @@ void ScrubGameState::updateScore()
                 }
             };
 
-        m_score.threshold = std::min(Ball::MaxFilth, m_score.threshold + 4.f);
+        m_score.threshold = std::min(Ball::MaxFilth - 0.5f, m_score.threshold + 4.f);
         m_score.remainingTime += 0.5f;
 
         showMessage("+0.5s");
