@@ -46,6 +46,7 @@ namespace sc
         enum
         {
             LevelMeter,
+            Fire,
 
             Count
         };

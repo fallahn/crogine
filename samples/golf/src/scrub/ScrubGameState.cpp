@@ -539,6 +539,7 @@ void ScrubGameState::loadAssets()
 
     //shaders
     m_resources.shaders.loadFromString(sc::ShaderID::LevelMeter, cro::RenderSystem2D::getDefaultVertexShader(), LevelMeterFragment, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(sc::ShaderID::Fire, cro::RenderSystem2D::getDefaultVertexShader(), FireFragment, "#define TEXTURED\n");
 
 
     //load audio
@@ -981,17 +982,18 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(0.f, BarWidth), cro::Colour::Red),
-            cro::Vertex2D(glm::vec2(0.f, 0.f), cro::Colour::Red),
-            cro::Vertex2D(glm::vec2(BarHeight, BarWidth), cro::Colour::Red),
-            cro::Vertex2D(glm::vec2(BarHeight, 0.f), cro::Colour::Red)
+            cro::Vertex2D(glm::vec2(0.f, BarWidth), glm::vec2(0.f, 2.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f, 0.2f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(BarHeight, BarWidth), glm::vec2(1.f, 2.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(BarHeight, 0.f), glm::vec2(1.f, 0.2f), cro::Colour::White)
         });
-    /*entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::LevelMeter));
-    entity.getComponent<cro::Drawable2D>().setTexture(&bgTex);*/
+    m_resources.textures.setFallbackColour(cro::Colour::White);
+    entity.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("fallback"));
+    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::Fire));
+    entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
     entity.getComponent<UIElement>().absolutePosition = { -BarHeight / 2.f, -(BarWidth + 12.f) };
-    //entity.getComponent<UIElement>().resizeCallback = std::bind(&ScrubGameState::levelMeterCallback, this, std::placeholders::_1);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
@@ -1013,12 +1015,9 @@ void ScrubGameState::createUI()
             cro::FloatRect cropping = { 0.f, 0.f, BarHeight * progress, BarWidth };
             e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
 
-            auto colour = cro::Colour::Red;
-            colour.setGreen(progress);
-            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
-            {
-                v.colour = colour;
-            }
+            static float t = 0.f;
+            t += dt;
+            e.getComponent<cro::Drawable2D>().bindUniform("u_time", t); //TODO - this, properly.
         };
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
