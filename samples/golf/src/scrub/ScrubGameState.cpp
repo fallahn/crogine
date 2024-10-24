@@ -900,7 +900,37 @@ void ScrubGameState::createUI()
     static constexpr float BarHeight = 800.f;
     static constexpr float BarWidth = 180.f;
 
-    //TODO replace this with proper bg
+    //streak count
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(sc::MediumTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
+    entity.getComponent<UIElement>().absolutePosition = { -106.f, -16.f};
+    entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_score.bonusRun)
+            {
+                std::stringstream ss;
+                ss << m_score.bonusRun << "x";
+                e.getComponent<cro::Text>().setString(ss.str());
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setString(" ");
+            }
+        };
+
+
 #ifdef HIDE_BACKGROUND
     auto& bgTex = m_resources.textures.get(tempBackground);
 #else
@@ -931,7 +961,7 @@ void ScrubGameState::createUI()
         [](cro::Entity e, float dt)
         {
             const auto Speed = 250.f * dt;
-            static constexpr float MaxOffset = -20.f;
+            static constexpr float MaxOffset = -30.f;
 
             auto o = e.getComponent<cro::Transform>().getOrigin();
             o.y = std::min(MaxOffset, o.y + Speed);
