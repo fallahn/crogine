@@ -34,7 +34,7 @@ source distribution.
 
 #include <cstdint>
 
-//#define HIDE_BACKGROUND
+#define HIDE_BACKGROUND
 
 static constexpr inline float MaxSpriteScale = 4.f; //when view scale returns this (~2kHD) sprites on the HUD are 1:1
 static constexpr cro::Colour SoapMeterColour = cro::Colour(0xadd9b7ff);
@@ -66,6 +66,7 @@ namespace sc
     static inline constexpr std::uint32_t LargeTextSize = 72;
 
     static inline const float TextDepth = 1.f;
+    static inline const float UIBackgroundDepth = -1.f;
 
     //hmm we need to make sure to set these with the scene scale too...
     static inline constexpr glm::vec2 SmallTextOffset = glm::vec2(1.f);

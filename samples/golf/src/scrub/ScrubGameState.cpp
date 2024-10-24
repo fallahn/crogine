@@ -497,9 +497,14 @@ void ScrubGameState::onCachedPush()
     resetCamera();
     
     //spin-in animation
-    m_scrubberRoot.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-    m_scrubberRoot.getComponent<cro::Callback>().setUserData<float>(3.f);
-    m_scrubberRoot.getComponent<cro::Callback>().active = true;
+    m_animatedEntities[AnimatedEntity::ScrubberRoot].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    m_animatedEntities[AnimatedEntity::ScrubberRoot].getComponent<cro::Callback>().setUserData<float>(3.f);
+    m_animatedEntities[AnimatedEntity::ScrubberRoot].getComponent<cro::Callback>().active = true;
+
+    //ui animations
+    const auto height = m_animatedEntities[AnimatedEntity::UITop].getComponent<cro::Sprite>().getTextureBounds().height;
+    m_animatedEntities[AnimatedEntity::UITop].getComponent<cro::Transform>().setOrigin({ 0.f, -height });
+    m_animatedEntities[AnimatedEntity::UITop].getComponent<cro::Callback>().active = true;
 }
 
 void ScrubGameState::addSystems()
@@ -587,7 +592,7 @@ void ScrubGameState::createScene()
                 e.getComponent<cro::Callback>().active = false;
             }
         };
-    m_scrubberRoot = rootNode;
+    m_animatedEntities[AnimatedEntity::ScrubberRoot] = rootNode;
 
     cro::ModelDefinition md(m_resources, &m_environmentMap);
     if (md.loadFromFile("assets/arcade/scrub/models/handle.cmt"))
@@ -902,6 +907,45 @@ void ScrubGameState::createUI()
     auto& bgTex = m_sharedScrubData.backgroundTexture->getTexture();
     //auto& bgTex = m_resources.textures.get("assets/images/startup.png");
 #endif
+
+    //wooden bar at top
+    auto& barTexture = m_resources.textures.get("assets/arcade/scrub/images/ui_top.png");
+    barTexture.setRepeated(true);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(barTexture);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -entity.getComponent<cro::Sprite>().getTextureBounds().height };
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
+        {
+            auto bounds = e.getComponent<cro::Sprite>().getTextureRect();
+            bounds.width = static_cast<float>(cro::App::getWindow().getSize().x) * (MaxSpriteScale / getViewScale());
+            e.getComponent<cro::Sprite>().setTextureRect(bounds);
+        };
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, -entity.getComponent<cro::Sprite>().getTextureBounds().height });
+    entity.addComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            const auto Speed = 250.f * dt;
+            static constexpr float MaxOffset = -20.f;
+
+            auto o = e.getComponent<cro::Transform>().getOrigin();
+            o.y = std::min(MaxOffset, o.y + Speed);
+            e.getComponent<cro::Transform>().setOrigin(o);
+
+            if (o.y == MaxOffset)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+    m_animatedEntities[AnimatedEntity::UITop] = entity;
+    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    
+    
     //100% streak
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1417,7 +1461,7 @@ void ScrubGameState::updateScore()
 
 
 
-    if ((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 3 : 5))
+    if (((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 3 : 5)) == 0)
     {
         //new soap in 3.. 2.. 1..
         const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
@@ -1629,8 +1673,10 @@ void ScrubGameState::levelMeterCallback(cro::Entity e)
     //set u_uvRect to rect left/bottom
     e.getComponent<cro::Drawable2D>().bindUniform("u_uvRect", glm::vec4(uvRect.left, uvRect.bottom, uvRect.width, uvRect.height));
 
+#ifndef HIDE_BACKGROUND
     //reset the texture on the drawable
     e.getComponent<cro::Drawable2D>().setTexture(&m_sharedScrubData.backgroundTexture->getTexture());
+#endif
 }
 
 //handle funcs

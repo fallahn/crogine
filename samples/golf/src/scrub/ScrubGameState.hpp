@@ -77,7 +77,18 @@ private:
     //used for resizing the UI
     cro::Entity m_spriteRoot;
 
-    cro::Entity m_scrubberRoot; //use for intro animation
+    struct AnimatedEntity final
+    {
+        enum
+        {
+            ScrubberRoot,
+            UITop,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, AnimatedEntity::Count> m_animatedEntities = {};
+    
 
     std::int16_t m_axisPosition; //game controlelr axis
 
