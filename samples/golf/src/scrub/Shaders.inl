@@ -124,7 +124,11 @@ void main()
     float gradient = 1.0 - uv.y;
     float gradientStep = 0.2;
     
-    vec2 pos = vec2(uv.x, uv.x * 0.225) * 0.5; //TODO this is the raio of the drawable
+//TODO this is the ratio of the drawable
+//tho we may as well just use one of the existing noise textures
+//(as the drawable in this instance is textured with a dummy anyway)
+//then just sample that instead of creating a noise value with a function
+    vec2 pos = vec2(uv.x, uv.x * 0.225) * 0.5; 
     pos.y -= u_time * 0.3125;
     
     vec4 brighterColour = vec4(1.0, 0.65, 0.1, 0.25);

@@ -67,8 +67,14 @@ private:
         };
     };
     std::array<cro::Entity, TabID::Count> m_tabs = {};
+    std::size_t m_currentTab;
 
     void addSystems();
     void loadAssets();
     void buildScene();
+
+    void nextTab();
+    void prevTab();
+
+    void onCachedPush() override;
 };

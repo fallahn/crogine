@@ -92,6 +92,7 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
             cacheState(StateID::ScrubGame);
             cacheState(StateID::ScrubPause);
         });
+    cro::App::getInstance().resetFrameTime();
 #ifdef CRO_DEBUG_
     //requestStackPush(StateID::ScrubGame);
     requestStackPush(StateID::ScrubAttract);
