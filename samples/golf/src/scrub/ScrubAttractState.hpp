@@ -35,6 +35,8 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 #include <array>
 
@@ -56,7 +58,11 @@ private:
     SharedStateData& m_sharedData;
     SharedScrubData& m_sharedScrubData;
     cro::Scene m_uiScene;
+    cro::Scene m_gameScene;
     cro::ResourceCollection m_resources;
+
+    cro::EnvironmentMap m_environmentMap;
+    cro::RenderTexture m_scrubTexture;
 
     struct TabID final
     {
@@ -72,6 +78,7 @@ private:
     void addSystems();
     void loadAssets();
     void buildScene();
+    void buildScrubScene();
 
     void nextTab();
     void prevTab();

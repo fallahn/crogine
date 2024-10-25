@@ -40,21 +40,28 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/graphics/Font.hpp>
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 namespace
 {
+    float tabScrollTime = 0.f;
+    constexpr float TabDisplayTime = 6.f;
+
     struct TabData final
     {
         enum
@@ -155,9 +162,11 @@ ScrubAttractState::ScrubAttractState(cro::StateStack& ss, cro::State::Context ct
     m_sharedData        (sd),
     m_sharedScrubData   (sc),
     m_uiScene           (ctx.appInstance.getMessageBus()),
+    m_gameScene         (ctx.appInstance.getMessageBus()),
     m_currentTab        (0)
 {
     addSystems();
+    loadAssets();
     buildScene();
 }
 
@@ -200,25 +209,38 @@ bool ScrubAttractState::handleEvent(const cro::Event& evt)
     }
 
 
+    m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     return false;
 }
 
 void ScrubAttractState::handleMessage(const cro::Message& msg)
 {
+    m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
 
 bool ScrubAttractState::simulate(float dt)
 {
-    //TODO automatically scroll through tabs
+    //automatically scroll through tabs
+    tabScrollTime += dt;
+    if (tabScrollTime > TabDisplayTime)
+    {
+        tabScrollTime -= TabDisplayTime;
+        nextTab();
+    }
 
+    m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
 }
 
 void ScrubAttractState::render()
 {
+    m_scrubTexture.clear(cro::Colour::Transparent);
+    m_gameScene.render();
+    m_scrubTexture.display();
+
     m_uiScene.render();
 }
 
@@ -226,9 +248,15 @@ void ScrubAttractState::render()
 void ScrubAttractState::addSystems()
 {
     auto& mb = cro::App::getInstance().getMessageBus();
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ModelRenderer>(mb);
+
+
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
+    m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioSystem>(mb);
@@ -236,11 +264,16 @@ void ScrubAttractState::addSystems()
 
 void ScrubAttractState::loadAssets()
 {
+    m_environmentMap.loadFromFile("assets/images/hills.hdr");
+    m_scrubTexture.create(1500, 1500);
+
     //TODO load menu music
 }
 
 void ScrubAttractState::buildScene()
 {
+    buildScrubScene(); //loads the 3D model
+
     const auto& largeFont = m_sharedScrubData.fonts->get(sc::FontID::Title);
     const auto& smallFont = m_sharedScrubData.fonts->get(sc::FontID::Body);
 
@@ -277,7 +310,7 @@ void ScrubAttractState::buildScene()
     entity.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 60.f };
+    entity.getComponent<UIElement>().absolutePosition = { -60.f, 160.f };
     entity.getComponent<UIElement>().characterSize = sc::LargeTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
 
@@ -346,8 +379,41 @@ void ScrubAttractState::buildScene()
     auto bgEnt = entity;
     titleData.spriteNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 0.f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_scrubTexture.getTexture());
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+    entity.getComponent<UIElement>().depth = 0.f;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+            progress = std::min(1.f, progress + dt);
+
+            const auto scale = cro::Util::Easing::easeInCubic(progress);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+            if (progress == 1)
+            {
+                progress = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+
+    auto scrubEnt = entity;
+    titleData.spriteNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     titleData.onStartIn = 
-        [textEnt, bgEnt](cro::Entity) mutable
+        [textEnt, bgEnt, scrubEnt](cro::Entity) mutable
         {
             textEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             textEnt.getComponent<cro::Transform>().setRotation(0.f);
@@ -355,12 +421,16 @@ void ScrubAttractState::buildScene()
 
             bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             bgEnt.getComponent<cro::Callback>().getUserData<float>() = 0.f;
+
+            scrubEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            scrubEnt.getComponent<cro::Callback>().getUserData<float>() = 0.f;
         };
     titleData.onEndIn = 
-        [textEnt, bgEnt](cro::Entity) mutable //to play anim
+        [textEnt, bgEnt, scrubEnt](cro::Entity) mutable //to play anim
         {
             textEnt.getComponent<cro::Callback>().active = true;
             bgEnt.getComponent<cro::Callback>().active = true;
+            scrubEnt.getComponent<cro::Callback>().active = true;
         }; 
     //TODO titleData.onStartOut //to play exit anim
 
@@ -377,34 +447,56 @@ void ScrubAttractState::buildScene()
     howToData.spriteNode.addComponent<cro::Transform>();
     m_tabs[TabID::HowTo].getComponent<cro::Transform>().addChild(howToData.spriteNode.getComponent<cro::Transform>());
 
-    const std::string str =
+    static const std::string controllerStr =
         R"(
-Use A/D to scrub or right thumb stick
-Use Q to insert and E to remove a ball
-Press SPACE or Controller A to add more soap
+Use right thumb stick to scrub
+Use LB to insert and RB to remove a ball
+Press A to add more soap
 
-Press ESCAPE or Start to Pause the game.
-
-
-Press SPACE or Controller A to begin.
+Press Start to Pause the game.
 )";
 
+    static const std::string keyboardStr =
+        R"(
+Use A/D to scrub
+Use Q to insert and E to remove a ball
+Press SPACE to add more soap
+
+Press ESCAPE to Pause the game.
+)";
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString(str);
-    entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize * getViewScale());
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(sc::MediumTextSize * getViewScale());
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
-    auto bounds = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::Text>().setString(controllerStr); //set this once so we can approximate the local bounsd
+    bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) + 40.f };
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            if (cro::GameController::getControllerCount()
+                || Social::isSteamdeck())
+            {
+                //TODO use controller appropriate icons
+                e.getComponent<cro::Text>().setString(controllerStr);
+            }
+            else
+            {
+                //TODO read keybinds and update string as necessary
+                e.getComponent<cro::Text>().setString(keyboardStr);
+            }
+        };
 
     m_tabs[TabID::HowTo].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -423,9 +515,8 @@ Press SPACE or Controller A to begin.
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
-    entity.getComponent<cro::Transform>().move({ 0.f, 60.f * getViewScale() });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("flaps");
+        entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("High Scores");
     entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize * getViewScale());
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -443,8 +534,51 @@ Press SPACE or Controller A to begin.
 
 
 
+    //start message
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Press Space To Start");
+    entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize* getViewScale());
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 0.f);
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 50.f };
+    entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& t = e.getComponent<cro::Callback>().getUserData<float>();
+            t += dt;
 
+            auto f = static_cast<std::int32_t>(std::floor(t));
+            if (f % 2 == 0)
+            {
+                e.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+                e.getComponent<cro::Text>().setShadowColour(cro::Colour::Transparent);
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                e.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+            }
 
+            if (cro::GameController::getControllerCount()
+                || Social::isSteamdeck())
+            {
+                e.getComponent<cro::Text>().setString("Press A To Start");
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setString("Press SPACE To Start");
+            }
+        };
 
 
 
@@ -496,6 +630,55 @@ Press SPACE or Controller A to begin.
     resize(cam);
 }
 
+void ScrubAttractState::buildScrubScene()
+{
+    cro::ModelDefinition md(m_resources, &m_environmentMap);
+    if (md.loadFromFile("assets/arcade/scrub/models/body.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.08f, 0.f });
+        md.createModel(entity);
+
+        if (md.loadFromFile("assets/arcade/scrub/models/handle.cmt"))
+        {
+            auto handleEnt = m_gameScene.createEntity();
+            handleEnt.addComponent<cro::Transform>().setPosition({ 0.f, -0.1f, 0.f });
+            md.createModel(handleEnt);
+            entity.getComponent<cro::Transform>().addChild(handleEnt.getComponent<cro::Transform>());
+        }
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float)
+            {
+                static const auto wavetable = cro::Util::Wavetable::sine(0.3f);
+                static std::size_t idx = 0;
+                static constexpr float Rotation = cro::Util::Const::PI / 8.f;
+
+                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, Rotation * wavetable[idx]);
+
+                idx = (idx + 1) % wavetable.size();
+            };
+    }
+
+    auto resize = [](cro::Camera& cam)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+            cam.setPerspective(65.f * cro::Util::Const::degToRad, 1.f, 0.1f, 10.f);
+        };
+
+    auto camera = m_gameScene.getActiveCamera();
+    auto& cam = camera.getComponent<cro::Camera>();
+    cam.resizeCallback = resize;
+    resize(cam);
+
+    camera.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(glm::vec3(-0.04f, 0.07f, 0.36f), glm::vec3(0.f, -0.04f, 0.f), cro::Transform::Y_AXIS)));
+
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.2f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.6f);
+}
+
 void ScrubAttractState::prevTab()
 {
     m_tabs[m_currentTab].getComponent<cro::Callback>().getUserData<TabData>().hide(m_tabs[m_currentTab]);
@@ -512,6 +695,11 @@ void ScrubAttractState::nextTab()
 
 void ScrubAttractState::onCachedPush()
 {
-    //TODO reset to default tab
-    //TODO reset tab change timer
+    //reset to default tab
+    prevTab(); //this just tidies up existing tab before forcing the index below
+    m_currentTab = m_tabs.size() - 1;
+    nextTab();
+
+    //reset tab change timer
+    tabScrollTime = 0.f;
 }

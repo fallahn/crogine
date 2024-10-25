@@ -713,7 +713,7 @@ void ScrubGameState::createScene()
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 10.f);
+        cam.setPerspective(74.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 10.f);
     };
 
     auto camera = m_gameScene.getActiveCamera();
@@ -993,7 +993,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { -BarHeight / 2.f, -(BarWidth + 12.f) };
+    entity.getComponent<UIElement>().absolutePosition = { -BarHeight / 2.f, -((BarWidth / 2.f) + 52.f) };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
@@ -1490,7 +1490,7 @@ void ScrubGameState::updateScore()
 
 
 
-    if (((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 3 : 5)) == 0)
+    if (((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 4 : 5)) == 0)
     {
         //new soap in 3.. 2.. 1..
         const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
