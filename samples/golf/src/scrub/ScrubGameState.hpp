@@ -69,6 +69,8 @@ private:
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
 
+    cro::Entity m_music;
+
 #ifdef HIDE_BACKGROUND
     //temp background placeholder
     cro::SimpleQuad m_tempBground;
@@ -121,7 +123,7 @@ private:
         {
             static constexpr float MaxSoap = 10.f;
             static constexpr float MinSoap = 3.f;
-            static constexpr float Reduction = 0.7f;
+            static constexpr float Reduction = 0.6f;
             float amount = MaxSoap;
 
             //the older the soap is the more quickly it diminishes
@@ -219,10 +221,11 @@ private:
 
         //this is the amount of time awarded multiplied
         //by how clean the ball is when it's removed.
-        static constexpr float TimeBonus = 3.f;
+        static constexpr float TimeBonus = 2.5f;
     }m_score;
 
     void onCachedPush() override;
+    void onCachedPop() override;
 
     void addSystems();
     void loadAssets();

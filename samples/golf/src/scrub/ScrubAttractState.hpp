@@ -64,6 +64,8 @@ private:
     cro::EnvironmentMap m_environmentMap;
     cro::RenderTexture m_scrubTexture;
 
+    cro::Entity m_music;
+
     struct TabID final
     {
         enum
@@ -84,4 +86,5 @@ private:
     void prevTab();
 
     void onCachedPush() override;
+    void onCachedPop() override;
 };

@@ -200,9 +200,11 @@ bool ScrubAttractState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::ScrubGame);
             break;
         case cro::GameController::ButtonLeftShoulder:
+        case cro::GameController::DPadLeft:
             prevTab();
             break;
         case cro::GameController::ButtonRightShoulder:
+        case cro::GameController::DPadRight:
             nextTab();
             break;
         }
@@ -267,7 +269,15 @@ void ScrubAttractState::loadAssets()
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
     m_scrubTexture.create(1500, 1500);
 
-    //TODO load menu music
+    //load menu music
+    auto id = m_resources.audio.load("assets/arcade/scrub/sound/music/menu.ogg", true);
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>().setSource(m_resources.audio.get(id));
+    entity.getComponent<cro::AudioEmitter>().setLooped(true);
+    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Music);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
+    m_music = entity;
 }
 
 void ScrubAttractState::buildScene()
@@ -702,4 +712,32 @@ void ScrubAttractState::onCachedPush()
 
     //reset tab change timer
     tabScrollTime = 0.f;
+
+    //reset the music volume
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct = std::min(1.f, ct + dt);
+
+            cro::AudioMixer::setPrefadeVolume(ct, MixerChannel::Music);
+
+            if (ct == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+        };
+
+    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
+    m_music.getComponent<cro::AudioEmitter>().play();
+}
+
+void ScrubAttractState::onCachedPop()
+{
+    m_music.getComponent<cro::AudioEmitter>().stop();
+    m_uiScene.simulate(0.f);
 }

@@ -110,7 +110,7 @@ ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context conte
     m_sharedScrubData   (sc),
     m_soundDirector     (nullptr),
     m_gameScene         (context.appInstance.getMessageBus()),
-    m_uiScene           (context.appInstance.getMessageBus()),
+    m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_axisPosition      (0)
 {
     //this is a pre-cached state
@@ -505,6 +505,36 @@ void ScrubGameState::onCachedPush()
     const auto height = m_animatedEntities[AnimatedEntity::UITop].getComponent<cro::Sprite>().getTextureBounds().height;
     m_animatedEntities[AnimatedEntity::UITop].getComponent<cro::Transform>().setOrigin({ 0.f, -height });
     m_animatedEntities[AnimatedEntity::UITop].getComponent<cro::Callback>().active = true;
+
+
+
+    //reset the music volume
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+            ct = std::min(1.f, ct + dt);
+
+            cro::AudioMixer::setPrefadeVolume(ct, MixerChannel::Music);
+
+            if (ct == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+        };
+
+    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
+    m_music.getComponent<cro::AudioEmitter>().play();
+}
+
+void ScrubGameState::onCachedPop()
+{
+    m_music.getComponent<cro::AudioEmitter>().stop();
+    m_gameScene.simulate(0.f);
 }
 
 void ScrubGameState::addSystems()
@@ -514,7 +544,7 @@ void ScrubGameState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
-    m_gameScene.addSystem<cro::AudioSystem>(mb);
+    m_gameScene.addSystem<cro::AudioSystem>(mb); //hm we should probably move this to ui scene for consistency with other states?
 
     m_soundDirector = m_gameScene.addDirector<ScrubSoundDirector>();
 
@@ -570,7 +600,16 @@ void ScrubGameState::loadAssets()
     };
 
     m_soundDirector->loadSounds(paths, m_resources.audio);
-    //TODO load music
+    
+    //load menu music
+    auto id = m_resources.audio.load("assets/arcade/scrub/sound/music/game.ogg", true);
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>().setSource(m_resources.audio.get(id));
+    entity.getComponent<cro::AudioEmitter>().setLooped(true);
+    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Music);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.35f);
+    m_music = entity;
 }
 
 void ScrubGameState::createScene()
@@ -1401,14 +1440,14 @@ void ScrubGameState::updateScore()
             if (m_score.bonusRun % 10 == 0)
             {
                 m_score.totalScore += 10000;
-                m_score.remainingTime += 3.f;
+                m_score.remainingTime += 1.5f;
 
                 showMessage("10x STREAK!");
                 showMessage("+10000");
-                showMessage("+10s");
+                showMessage("+1.5s");
 
                 m_soundDirector->playSound(AudioID::VOTenX, MixerChannel::Voice);
-                m_soundDirector->playSound(AudioID::FXTenX, MixerChannel::Effects, 0.6f);
+                m_soundDirector->playSound(AudioID::FXTenX, MixerChannel::Effects, 0.3f);
             }
             else
             {
@@ -1417,10 +1456,11 @@ void ScrubGameState::updateScore()
             break;
         case 3:
             m_score.totalScore += 3000;
-            m_score.remainingTime += 0.5f;
+            m_score.remainingTime += 0.25f;
 
             showMessage("3x STREAK!");
             showMessage("+3000");
+            showMessage("+0.25s");
 
             m_soundDirector->playSound(AudioID::VOThreeX, MixerChannel::Voice);
             m_soundDirector->playSound(AudioID::FXThreeX, MixerChannel::Effects, 0.6f);
@@ -1431,11 +1471,11 @@ void ScrubGameState::updateScore()
             break;
         case 5:
             m_score.totalScore += 5000;
-            m_score.remainingTime += 1.f;
+            m_score.remainingTime += 0.5f;
 
             showMessage("5x STREAK!");
             showMessage("+5000");
-            showMessage("+2s");
+            showMessage("+0.5s");
 
             m_soundDirector->playSound(AudioID::VOFiveX, MixerChannel::Voice);
             m_soundDirector->playSound(AudioID::FXFiveX, MixerChannel::Effects, 0.6f);
@@ -1453,6 +1493,8 @@ void ScrubGameState::updateScore()
 
             showMessage("STREAK BROKEN");
             m_soundDirector->playSound(AudioID::FXStreakBroken, MixerChannel::Effects);
+
+            m_score.remainingTime -= std::max(1.f, m_score.remainingTime / 2.f);
         }
         m_score.bonusRun = 0;
     }
@@ -1490,7 +1532,7 @@ void ScrubGameState::updateScore()
 
 
 
-    if (((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 4 : 5)) == 0)
+    if (((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 5 : 6)) == 0)
     {
         //new soap in 3.. 2.. 1..
         const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
@@ -1556,9 +1598,9 @@ void ScrubGameState::updateScore()
             };
 
         m_score.threshold = std::min(Ball::MaxFilth - 0.5f, m_score.threshold + 4.f);
-        m_score.remainingTime += 0.5f;
+        m_score.remainingTime += 0.1f;
 
-        showMessage("+0.5s");
+        showMessage("+0.1s");
         m_soundDirector->playSound(AudioID::VONewSoap, MixerChannel::Voice);
     }
 }
@@ -1737,9 +1779,11 @@ float ScrubGameState::Handle::calcStroke()
     stroke = ((currPos - strokeStart) / StrokeDistance) * direction;
     strokeStart = currPos;
 
+    const float difficulty = 0.85f; //TODO make this variable - lower the harder it is to clean
+
     if (hasBall)
     {
-        return cro::Util::Easing::easeInQuad(stroke) * soap.amount;
+        return cro::Util::Easing::easeInQuad(stroke) * soap.amount * difficulty;
     }
     return 0.f;
 }
