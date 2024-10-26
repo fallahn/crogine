@@ -228,7 +228,7 @@ bool ScrubAttractState::simulate(float dt)
     tabScrollTime += dt;
     if (tabScrollTime > TabDisplayTime)
     {
-        tabScrollTime -= TabDisplayTime;
+        //tabScrollTime -= TabDisplayTime;
         nextTab();
     }
 
@@ -478,7 +478,7 @@ Press ESCAPE to Pause the game.
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setCharacterSize(sc::MediumTextSize * getViewScale());
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(sc::MediumTextSize/* * getViewScale()*/);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -487,7 +487,7 @@ Press ESCAPE to Pause the game.
     bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) + 40.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) + 40.f }; //hm this doesn't account for the fact that the bounds will be bigger with a bigger text size. We need to constify this
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
 
@@ -694,6 +694,8 @@ void ScrubAttractState::prevTab()
     m_tabs[m_currentTab].getComponent<cro::Callback>().getUserData<TabData>().hide(m_tabs[m_currentTab]);
     m_currentTab = (m_currentTab + (m_tabs.size() - 1)) % m_tabs.size();
     m_tabs[m_currentTab].getComponent<cro::Callback>().getUserData<TabData>().show(m_tabs[m_currentTab]);
+
+    tabScrollTime = std::max(0.f, tabScrollTime - TabDisplayTime);
 }
 
 void ScrubAttractState::nextTab()
@@ -701,6 +703,8 @@ void ScrubAttractState::nextTab()
     m_tabs[m_currentTab].getComponent<cro::Callback>().getUserData<TabData>().hide(m_tabs[m_currentTab]);
     m_currentTab = (m_currentTab + 1) % m_tabs.size();
     m_tabs[m_currentTab].getComponent<cro::Callback>().getUserData<TabData>().show(m_tabs[m_currentTab]);
+
+    tabScrollTime = std::max(0.f, tabScrollTime - TabDisplayTime);
 }
 
 void ScrubAttractState::onCachedPush()

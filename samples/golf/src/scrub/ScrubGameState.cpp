@@ -133,7 +133,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         {
             if (m_score.gameRunning)
             {
-                m_ball.scrub(m_handle.switchDirection(Handle::Down));
+                m_ball.scrub(m_handle.switchDirection(Handle::Down, m_score.ballsWashed));
                 m_soundDirector->playSound(AudioID::FXScrubDown, MixerChannel::Effects, 0.4f).getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.2f));
             }
         };
@@ -142,7 +142,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         {
             if (m_score.gameRunning)
             {
-                m_ball.scrub(m_handle.switchDirection(Handle::Up));
+                m_ball.scrub(m_handle.switchDirection(Handle::Up, m_score.ballsWashed));
                 m_soundDirector->playSound(AudioID::FXScrubUp, MixerChannel::Effects, 0.4f).getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.2f));
             }
         };
@@ -359,8 +359,8 @@ bool ScrubGameState::simulate(float dt)
 
 
         m_score.totalRunTime += dt;
-#ifndef CRO_DEBUG_
         m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
+#ifndef CRO_DEBUG_
 #endif
         m_score.quitTimeout = 0.f;
         if (m_score.remainingTime == 0)
@@ -903,7 +903,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, -16.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -14.f };
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.addComponent<cro::Callback>().active = true;
@@ -925,7 +925,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { -212.f, -12.f };
+    entity.getComponent<UIElement>().absolutePosition = { -212.f, -14.f };
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.addComponent<cro::Callback>().active = true;
@@ -937,8 +937,8 @@ void ScrubGameState::createUI()
             e.getComponent<cro::Text>().setString(ss.str());
         };
 
-    static constexpr float BarHeight = 800.f;
-    static constexpr float BarWidth = 180.f;
+    static constexpr float BarHeight = 400.f;
+    static constexpr float BarWidth = 80.f;
 
     //streak count
     entity = m_uiScene.createEntity();
@@ -1001,7 +1001,7 @@ void ScrubGameState::createUI()
         [](cro::Entity e, float dt)
         {
             const auto Speed = 250.f * dt;
-            static constexpr float MaxOffset = -30.f;
+            static constexpr float MaxOffset = 30.f;
 
             auto o = e.getComponent<cro::Transform>().getOrigin();
             o.y = std::min(MaxOffset, o.y + Speed);
@@ -1017,14 +1017,17 @@ void ScrubGameState::createUI()
     
     
     //100% streak
+    static constexpr float ProgBarHeight = 180.f;
+    static constexpr float ProgBarWidth = 800.f;
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(0.f, BarWidth), glm::vec2(0.f, 2.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(0.f, ProgBarHeight), glm::vec2(0.f, 2.f), cro::Colour::White),
             cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f, 0.2f), cro::Colour::White),
-            cro::Vertex2D(glm::vec2(BarHeight, BarWidth), glm::vec2(1.f, 2.f), cro::Colour::White),
-            cro::Vertex2D(glm::vec2(BarHeight, 0.f), glm::vec2(1.f, 0.2f), cro::Colour::White)
+            cro::Vertex2D(glm::vec2(ProgBarWidth, ProgBarHeight), glm::vec2(1.f, 2.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(ProgBarWidth, 0.f), glm::vec2(1.f, 0.2f), cro::Colour::White)
         });
     m_resources.textures.setFallbackColour(cro::Colour::White);
     entity.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("fallback"));
@@ -1032,7 +1035,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { -BarHeight / 2.f, -((BarWidth / 2.f) + 52.f) };
+    entity.getComponent<UIElement>().absolutePosition = { -ProgBarWidth / 2.f, -((ProgBarHeight / 2.f) + 52.f) };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
@@ -1041,7 +1044,7 @@ void ScrubGameState::createUI()
             auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
             const float target = static_cast<float>(std::min(10, m_score.bonusRun)) / 10.f;
 
-            const float Speed = dt * 2.f;
+            const float Speed = dt / 2.f;
             if (progress < target)
             {
                 progress = std::min(target, progress + Speed);
@@ -1051,7 +1054,7 @@ void ScrubGameState::createUI()
                 progress = std::max(target, progress - Speed);
             }
             
-            cro::FloatRect cropping = { 0.f, 0.f, BarHeight * progress, BarWidth };
+            cro::FloatRect cropping = { 0.f, 0.f, ProgBarWidth * progress, ProgBarHeight };
             e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
 
             static float t = 0.f;
@@ -1290,7 +1293,7 @@ void ScrubGameState::handleCallback(cro::Entity e, float dt)
     {
         if (m_handle.speed != 0)
         {
-            m_ball.scrub(m_handle.calcStroke());
+            m_ball.scrub(m_handle.calcStroke(m_score.ballsWashed));
         }
         m_handle.speed = 0.f;
     }
@@ -1532,7 +1535,7 @@ void ScrubGameState::updateScore()
 
 
 
-    if (((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 5 : 6)) == 0)
+    if (((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 4 : 5)) == 0)
     {
         //new soap in 3.. 2.. 1..
         const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
@@ -1598,9 +1601,9 @@ void ScrubGameState::updateScore()
             };
 
         m_score.threshold = std::min(Ball::MaxFilth - 0.5f, m_score.threshold + 4.f);
-        m_score.remainingTime += 0.1f;
+        //m_score.remainingTime += 0.1f;
 
-        showMessage("+0.1s");
+        //showMessage("+0.1s");
         m_soundDirector->playSound(AudioID::VONewSoap, MixerChannel::Voice);
     }
 }
@@ -1751,7 +1754,7 @@ void ScrubGameState::levelMeterCallback(cro::Entity e)
 }
 
 //handle funcs
-float ScrubGameState::Handle::switchDirection(float d)
+float ScrubGameState::Handle::switchDirection(float d, std::int32_t ballsWashed)
 {
     CRO_ASSERT(d == Down || d == Up, "");
 
@@ -1760,7 +1763,7 @@ float ScrubGameState::Handle::switchDirection(float d)
         && !locked)
     {
         //do this first as it uses the current direction
-        ret = calcStroke();
+        ret = calcStroke(ballsWashed);
 
         direction = d;
         speed = MaxSpeed;
@@ -1773,13 +1776,13 @@ float ScrubGameState::Handle::switchDirection(float d)
     return ret;
 }
 
-float ScrubGameState::Handle::calcStroke()
+float ScrubGameState::Handle::calcStroke(std::int32_t ballsWashed)
 {
     const float currPos = entity.getComponent<cro::Transform>().getPosition().y;
     stroke = ((currPos - strokeStart) / StrokeDistance) * direction;
     strokeStart = currPos;
 
-    const float difficulty = 0.85f; //TODO make this variable - lower the harder it is to clean
+    const float difficulty = std::max(0.6f, 1.f - (0.1f * (ballsWashed / 8))); //lower the harder it is to clean
 
     if (hasBall)
     {

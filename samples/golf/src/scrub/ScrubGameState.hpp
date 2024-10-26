@@ -112,8 +112,8 @@ private:
         float strokeStart = 0.f;
 
         //these both return the calc'd stroke
-        float switchDirection(float);
-        float calcStroke();
+        float switchDirection(float, std::int32_t ballsWashed);
+        float calcStroke(std::int32_t ballsWashed);
 
         cro::Entity entity;
 
@@ -123,7 +123,7 @@ private:
         {
             static constexpr float MaxSoap = 10.f;
             static constexpr float MinSoap = 3.f;
-            static constexpr float Reduction = 0.6f;
+            static constexpr float Reduction = 0.65f;
             float amount = MaxSoap;
 
             //the older the soap is the more quickly it diminishes
@@ -212,7 +212,7 @@ private:
 
         //how many balls were 100% in a row
         std::int32_t bonusRun = 0;
-        static constexpr std::int32_t bonusRunThreshold = 4; //after this we only need 3 balls to get more soap
+        static constexpr std::int32_t bonusRunThreshold = 8; //after this we only need 4 balls to get more soap
         std::int32_t countAtThreshold = 0; //number of balls when threshold met to correct for count offset
 
         float totalRunTime = 0.f;
