@@ -199,7 +199,7 @@ private:
 
     struct Score final
     {
-        float threshold = 80.f; //ball must be cleaner than this to score
+        float threshold = 40.f; //ball must be cleaner than this to score
 
         float remainingTime = 30.f;
         std::int32_t ballsWashed = 0;

@@ -698,7 +698,7 @@ void ScrubGameState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
-
+        //entity.getComponent<cro::Model>().setHidden(true);
         rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
@@ -1288,6 +1288,9 @@ void ScrubGameState::handleCallback(cro::Entity e, float dt)
     auto pos = e.getComponent<cro::Transform>().getPosition();
     pos.y = cro::Util::Easing::easeOutSine(m_handle.progress) * -StrokeDistance;
     e.getComponent<cro::Transform>().setPosition(pos);
+
+    const float rotation = m_handle.progress * cro::Util::Const::PI;
+    e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
 
     if (m_handle.progress == 0 || m_handle.progress == 1)
     {
