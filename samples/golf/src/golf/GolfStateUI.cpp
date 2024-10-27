@@ -359,6 +359,26 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
     
+    //registerWindow([&, infoEnt]() 
+    //    {
+    //        ImGui::Begin("UI Innit");
+
+    //        float depth = m_courseEnt.getComponent<cro::Transform>().getPosition().z;
+    //        float origin = m_courseEnt.getComponent<cro::Transform>().getOrigin().z;
+    //        ImGui::Text("Scene depth: %3.2f, Scene offset: %3.2f", depth, origin);
+
+    //        depth = infoEnt.getComponent<cro::Transform>().getPosition().z;
+    //        origin = infoEnt.getComponent<cro::Transform>().getOrigin().z;
+    //        ImGui::Text("UI depth: %3.2f, UI offset: %3.2f", depth, origin);
+
+    //        auto np = m_uiScene.getActiveCamera().getComponent<cro::Camera>().getNearPlane();
+    //        ImGui::Text("Near Plane: %3.2f", np);
+
+    //        ImGui::End();
+    //    });
+
+
+
     entity = m_uiScene.createEntity();
     createSwingputMeter(entity, m_inputParser);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3908,7 +3928,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             if (m_sharedData.scoreType == ScoreType::Elimination)
             {
                 cro::String str;
-                for (auto i = 0; i < 10 - strLen; ++i)
+                for (auto i = 0u; i < 10 - strLen; ++i)
                 {
                     str += " ";
                 }
@@ -4053,7 +4073,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 if (m_sharedData.scoreType == ScoreType::Elimination)
                 {
                     cro::String str;
-                    for (auto i = 0; i < 8 - strLen; ++i)
+                    for (auto i = 0u; i < 8 - strLen; ++i)
                     {
                         str += " ";
                     }

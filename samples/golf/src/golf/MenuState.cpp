@@ -1797,6 +1797,54 @@ void MenuState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
     }
 
+    if (md.loadFromFile("assets/golf/models/woof.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 9.2f, 0.f, 14.2f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.7f);
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.65f));
+        md.createModel(entity);
+
+        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        entity.getComponent<cro::Skeleton>().play(0, 2.f);
+
+        struct WoofData final
+        {
+            std::int32_t anim = 0;
+            float currentTime = 6.f;
+        };
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<WoofData>();
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+            {
+                auto& [anim, currTime] = e.getComponent<cro::Callback>().getUserData<WoofData>();
+                currTime -= dt;
+                switch (anim)
+                {
+                default:
+                    if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Stopped)
+                    {
+                        anim = 0;
+                        e.getComponent<cro::Skeleton>().play(anim, 2.f, 0.1f);
+                        currTime = static_cast<float>(cro::Util::Random::value(10, 16));
+                    }
+                    break;
+                case 0:
+                    if (currTime < 0.f)
+                    {
+                        anim = cro::Util::Random::value(0, 4) == 0 ? 2 : 1;
+                        e.getComponent<cro::Skeleton>().play(anim, 1.f, 0.1f);
+                    }
+                    break;
+                }
+            };
+    }
+
+
     if (md.loadFromFile("assets/golf/models/garden_bench.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();

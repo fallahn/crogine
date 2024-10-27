@@ -3226,7 +3226,7 @@ void GolfState::buildScene()
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(Positions[i]);
             entity.getComponent<cro::Transform>().setScale(glm::vec3(LightRadius));
-            md.createModel(entity);
+            m_lightVolumeDefinition.createModel(entity);
             entity.getComponent<cro::Model>().setHidden(true);
             entity.addComponent<cro::LightVolume>().radius = LightRadius;
             entity.getComponent<cro::LightVolume>().colour = cro::Colour(1.f, 0.55f, 0.1f);

@@ -52,6 +52,7 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/menu/snapshot.wav",
         "assets/golf/sound/menu/lobby.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
+        "assets/golf/sound/woof.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -78,6 +79,17 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cro::Message::SkeletalAnimationMessage:
+        {
+            const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
+            if (data.userType == 10)
+            {
+                auto e = playSound(AudioID::Woof, 0.5f);
+                e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                e.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.9f, 1.1f));
+            }
+        }
+        break;
         case cro::Message::SystemMessage:
         {
             const auto& data = msg.getData<cro::Message::SystemEvent>();
@@ -154,11 +166,12 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
 }
 
 //private
-void MenuSoundDirector::playSound(std::int32_t id, float vol)
+cro::Entity MenuSoundDirector::playSound(std::int32_t id, float vol)
 {
     auto ent = getNextEntity();
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
     ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
     ent.getComponent<cro::AudioEmitter>().setVolume(vol);
     ent.getComponent<cro::AudioEmitter>().play();
+    return ent;
 }
