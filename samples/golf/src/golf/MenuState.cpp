@@ -2017,7 +2017,15 @@ void MenuState::createScene()
 
     //music
     auto entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("music");
+    if (cro::SysTime::now().months() == 10
+        && cro::SysTime::now().days() > 22)
+    {
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("spooky_music");
+    }
+    else
+    {
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("music");
+    }
     entity.getComponent<cro::AudioEmitter>().play();
     entity.getComponent<cro::AudioEmitter>().setLooped(true);
 
