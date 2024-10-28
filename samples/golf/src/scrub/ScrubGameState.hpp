@@ -70,6 +70,8 @@ private:
     cro::EnvironmentMap m_environmentMap;
 
     cro::Entity m_music;
+    cro::Entity m_body0;
+    cro::Entity m_body1;
 
 #ifdef HIDE_BACKGROUND
     //temp background placeholder

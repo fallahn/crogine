@@ -203,7 +203,8 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
 
     static const auto pause = [&]() 
         {
-            //TODO pause music
+            m_music.getComponent<cro::AudioEmitter>().pause();
+            m_gameScene.simulate(0.f);
             requestStackPush(StateID::ScrubPause);
         };
 
@@ -345,6 +346,7 @@ void ScrubGameState::handleMessage(const cro::Message& msg)
             && data.id == StateID::ScrubPause)
         {
             //resume music
+            m_music.getComponent<cro::AudioEmitter>().play();
         }
     }
 
@@ -549,6 +551,19 @@ void ScrubGameState::onCachedPush()
 
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
     m_music.getComponent<cro::AudioEmitter>().play();
+
+
+    //choose a model at random
+    if (cro::Util::Random::value(0, 1) == 0)
+    {
+        m_body0.getComponent<cro::Model>().setHidden(true);
+        m_body1.getComponent<cro::Model>().setHidden(false);
+    }
+    else
+    {
+        m_body0.getComponent<cro::Model>().setHidden(false);
+        m_body1.getComponent<cro::Model>().setHidden(true);
+    }
 }
 
 void ScrubGameState::onCachedPop()
@@ -723,7 +738,20 @@ void ScrubGameState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
-        //entity.getComponent<cro::Model>().setHidden(true);
+        
+        m_body0 = entity;
+
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
+    if (md.loadFromFile("assets/arcade/scrub/models/body_v2.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+        
+        m_body1 = entity;
+        
         rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 

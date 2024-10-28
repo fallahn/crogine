@@ -65,6 +65,8 @@ private:
     cro::RenderTexture m_scrubTexture;
 
     cro::Entity m_music;
+    cro::Entity m_body0;
+    cro::Entity m_body1;
 
     struct TabID final
     {

@@ -698,52 +698,66 @@ void ScrubAttractState::buildScene()
 
 void ScrubAttractState::buildScrubScene()
 {
+    cro::Entity rootEnt = m_gameScene.createEntity();
+    rootEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.08f, 0.f });
+    rootEnt.addComponent<cro::Callback>().active = true;
+    rootEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            static const auto wavetable = cro::Util::Wavetable::sine(0.3f);
+            static std::size_t idx = 0;
+            static constexpr float Rotation = cro::Util::Const::PI / 8.f;
+
+            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, Rotation * wavetable[idx]);
+
+            idx = (idx + 1) % wavetable.size();
+        };
+
+
     cro::ModelDefinition md(m_resources, &m_environmentMap);
     if (md.loadFromFile("assets/arcade/scrub/models/body.cmt"))
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.08f, 0.f });
+        entity.addComponent<cro::Transform>();
         md.createModel(entity);
-
-        if (md.loadFromFile("assets/arcade/scrub/models/handle.cmt"))
-        {
-            auto handleEnt = m_gameScene.createEntity();
-            handleEnt.addComponent<cro::Transform>().setPosition({ 0.f, -0.1f, 0.f });
-            md.createModel(handleEnt);
-            entity.getComponent<cro::Transform>().addChild(handleEnt.getComponent<cro::Transform>());
-        }
-
-        if (md.loadFromFile("assets/arcade/scrub/models/gauge_inner.cmt"))
-        {
-            auto gaugeEnt = m_gameScene.createEntity();
-            gaugeEnt.addComponent<cro::Transform>().setPosition({ -0.10836f, -0.24753f, 0.008162f });
-            md.createModel(gaugeEnt);
-            gaugeEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CD32::Colours[CD32::GreenLight]);
-            entity.getComponent<cro::Transform>().addChild(gaugeEnt.getComponent<cro::Transform>());
-        }
-
-        if (md.loadFromFile("assets/arcade/scrub/models/gauge_outer.cmt"))
-        {
-            auto gaugeEnt = m_gameScene.createEntity();
-            gaugeEnt.addComponent<cro::Transform>();
-            md.createModel(gaugeEnt);
-
-            entity.getComponent<cro::Transform>().addChild(gaugeEnt.getComponent<cro::Transform>());
-        }
-
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [](cro::Entity e, float)
-            {
-                static const auto wavetable = cro::Util::Wavetable::sine(0.3f);
-                static std::size_t idx = 0;
-                static constexpr float Rotation = cro::Util::Const::PI / 8.f;
-
-                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, Rotation * wavetable[idx]);
-
-                idx = (idx + 1) % wavetable.size();
-            };
+        rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_body0 = entity;
     }
+
+    if (md.loadFromFile("assets/arcade/scrub/models/body_v2.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+        rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_body1 = entity;
+    }
+
+    if (md.loadFromFile("assets/arcade/scrub/models/handle.cmt"))
+    {
+        auto handleEnt = m_gameScene.createEntity();
+        handleEnt.addComponent<cro::Transform>().setPosition({ 0.f, -0.1f, 0.f });
+        md.createModel(handleEnt);
+        rootEnt.getComponent<cro::Transform>().addChild(handleEnt.getComponent<cro::Transform>());
+    }
+
+    if (md.loadFromFile("assets/arcade/scrub/models/gauge_inner.cmt"))
+    {
+        auto gaugeEnt = m_gameScene.createEntity();
+        gaugeEnt.addComponent<cro::Transform>().setPosition({ -0.10836f, -0.24753f, 0.008162f });
+        md.createModel(gaugeEnt);
+        gaugeEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CD32::Colours[CD32::GreenLight]);
+        rootEnt.getComponent<cro::Transform>().addChild(gaugeEnt.getComponent<cro::Transform>());
+    }
+
+    if (md.loadFromFile("assets/arcade/scrub/models/gauge_outer.cmt"))
+    {
+        auto gaugeEnt = m_gameScene.createEntity();
+        gaugeEnt.addComponent<cro::Transform>();
+        md.createModel(gaugeEnt);
+
+        rootEnt.getComponent<cro::Transform>().addChild(gaugeEnt.getComponent<cro::Transform>());
+    }    
 
     auto resize = [](cro::Camera& cam)
         {
@@ -822,6 +836,18 @@ void ScrubAttractState::onCachedPush()
         + " to insert and " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub])
         + " to remove a ball\nPress " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) 
         + " to add more soap\n\n\nPress ESCAPE to Pause the game";
+
+    //choose a model at random
+    if (cro::Util::Random::value(0, 1) == 0)
+    {
+        m_body0.getComponent<cro::Model>().setHidden(true);
+        m_body1.getComponent<cro::Model>().setHidden(false);
+    }
+    else
+    {
+        m_body0.getComponent<cro::Model>().setHidden(false);
+        m_body1.getComponent<cro::Model>().setHidden(true);
+    }
 }
 
 void ScrubAttractState::onCachedPop()
