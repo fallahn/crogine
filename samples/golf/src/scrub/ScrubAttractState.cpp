@@ -174,6 +174,12 @@ ScrubAttractState::ScrubAttractState(cro::StateStack& ss, cro::State::Context ct
 //public
 bool ScrubAttractState::handleEvent(const cro::Event& evt)
 {
+    const auto quit = [&]() 
+        {
+            requestStackClear();
+            requestStackPush(StateID::Clubhouse);
+        };
+
     if (evt.type == SDL_KEYDOWN)
     {
         switch (evt.key.keysym.sym)
@@ -189,6 +195,12 @@ bool ScrubAttractState::handleEvent(const cro::Event& evt)
         case SDLK_RIGHT:
             nextTab();
             break;
+        case SDLK_BACKSPACE:
+#ifndef CRO_DEBUG_
+        case SDLK_ESCAPE:
+#endif
+            quit();
+            break;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
@@ -196,6 +208,9 @@ bool ScrubAttractState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
+        case cro::GameController::ButtonB:
+            quit();
+            break;
         case cro::GameController::ButtonA:
             requestStackPop();
             requestStackPush(StateID::ScrubGame);
@@ -609,19 +624,28 @@ void ScrubAttractState::buildScene()
             {
                 if (cro::GameController::hasPSLayout(m_controllerIndex))
                 {
-                    e.getComponent<cro::Text>().setString("Press " + cro::String(ButtonCross) + " To Start");
+                    e.getComponent<cro::Text>().setString("Press " + cro::String(ButtonCross) + " To Start, " + cro::String(ButtonCircle) + " To Quit");
                 }
                 else
                 {
-                    e.getComponent<cro::Text>().setString("Press " + cro::String(ButtonA) + " To Start");
+                    e.getComponent<cro::Text>().setString("Press " + cro::String(ButtonA) + " To Start, " + cro::String(ButtonB) + " To Quit");
                 }
             }
             else
             {
-                e.getComponent<cro::Text>().setString("Press SPACE To Start");
+                e.getComponent<cro::Text>().setString("Press SPACE To Start, ESCAPE To Quit");
             }
         };
 
+
+
+
+    const auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 6.f, 14.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(infoFont).setString("Music by David KBD");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
 
 
     auto resize = [&](cro::Camera& cam)

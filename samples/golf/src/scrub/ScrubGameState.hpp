@@ -225,6 +225,8 @@ private:
         static constexpr float TimeBonus = 2.5f;
     }m_score;
 
+    std::int32_t m_controllerIndex;
+
     void onCachedPush() override;
     void onCachedPop() override;
 

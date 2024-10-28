@@ -111,7 +111,8 @@ ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context conte
     m_soundDirector     (nullptr),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
-    m_axisPosition      (0)
+    m_axisPosition      (0),
+    m_controllerIndex   (0)
 {
     //this is a pre-cached state
     addSystems();
@@ -224,6 +225,12 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
             pause();
             break;
+#ifdef CRO_DEBUG_
+        case SDLK_l:
+            m_score.remainingTime = 0.f;
+            break;
+#endif
+
         }
 
 
@@ -274,6 +281,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             pause();
             break;
         }
+        m_controllerIndex = cro::GameController::controllerID(evt.cbutton.which);
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
@@ -296,6 +304,12 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             }
 
             m_axisPosition = v;
+        }
+
+        if (evt.caxis.value < -cro::GameController::LeftThumbDeadZone
+            || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        {
+            m_controllerIndex = cro::GameController::controllerID(evt.caxis.which);
         }
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
@@ -408,12 +422,18 @@ bool ScrubGameState::simulate(float dt)
 
             attachText(entity);
 
+            auto mins = std::int32_t(m_score.totalRunTime) / 60;
+            auto secs = m_score.totalRunTime - (mins * 60);
+            std::stringstream ss;
+            ss.precision(2);
+            ss << "\nTotal Time: " << mins << "m" << secs << "s";
+
             const auto& font2 = m_sharedScrubData.fonts->get(sc::FontID::Body);
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y / 2.f, sc::TextDepth });
             entity.getComponent<cro::Transform>().move({ 0.f, -14.f * getViewScale() });
             entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(font2).setString("Total Score: " + std::to_string(m_score.totalScore) + "\n\nPress Any Button");
+            entity.addComponent<cro::Text>(font2).setString("Total Score: " + std::to_string(m_score.totalScore) + ss.str() + "\n\nPress Any Button");
             entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize);
             entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
             entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
