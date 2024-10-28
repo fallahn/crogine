@@ -449,7 +449,7 @@ void MenuState::createUI()
         auto windowSize = GolfGame::getActiveTarget()->getSize();
         glm::vec2 size(windowSize);
 
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -12.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         m_viewScale = glm::vec2(getViewScale());
@@ -1691,7 +1691,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
-    entity.getComponent<UIElement>().depth = 1.6f;
+    entity.getComponent<UIElement>().depth = 1.4f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
