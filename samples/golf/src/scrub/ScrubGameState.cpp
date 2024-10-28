@@ -786,10 +786,10 @@ void ScrubGameState::createScene()
     resize(cam);
 
     cam.shadowMapBuffer.create(2048, 2048);
-    cam.setMaxShadowDistance(2.f);
+    cam.setMaxShadowDistance(0.4f);
     cam.setShadowExpansion(0.5f);
 
-    //callback is  set up in resetCamera();
+    //callback is set up in resetCamera();
     camera.addComponent<cro::Callback>();
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.2f);
@@ -1071,6 +1071,9 @@ void ScrubGameState::createUI()
     static constexpr float ProgBarHeight = 180.f;
     static constexpr float ProgBarWidth = 800.f;
 
+    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+    noiseTex.setRepeated(true);
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(
@@ -1081,7 +1084,7 @@ void ScrubGameState::createUI()
             cro::Vertex2D(glm::vec2(ProgBarWidth, 0.f), glm::vec2(1.f, 0.2f), cro::Colour::White)
         });
     m_resources.textures.setFallbackColour(cro::Colour::White);
-    entity.getComponent<cro::Drawable2D>().setTexture(&m_resources.textures.get("fallback"));
+    entity.getComponent<cro::Drawable2D>().setTexture(&noiseTex);
     entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::Fire));
     entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -1115,23 +1118,34 @@ void ScrubGameState::createUI()
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //soap level
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setVertexData(
+    const auto createLevelMeter = 
+        [&](cro::Colour c)
         {
-            cro::Vertex2D(glm::vec2(0.f, BarHeight), SoapMeterColour),
-            cro::Vertex2D(glm::vec2(0.f), SoapMeterColour),
-            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), SoapMeterColour),
-            cro::Vertex2D(glm::vec2(BarWidth, 0.f), SoapMeterColour)
-        }
-    );
-    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::LevelMeter));
-    entity.getComponent<cro::Drawable2D>().setTexture(&bgTex);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
-    entity.getComponent<UIElement>().absolutePosition = { -(BarWidth + 12.f), 12.f};
-    entity.getComponent<UIElement>().resizeCallback = std::bind(&ScrubGameState::levelMeterCallback, this, std::placeholders::_1);
+            auto ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Transform>();
+            ent.addComponent<cro::Drawable2D>().setVertexData(
+                {
+                    cro::Vertex2D(glm::vec2(0.f, BarHeight), c),
+                    cro::Vertex2D(glm::vec2(0.f), c),
+                    cro::Vertex2D(glm::vec2(BarWidth, BarHeight), c),
+                    cro::Vertex2D(glm::vec2(BarWidth, 0.f), c)
+                }
+            );
+            ent.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::LevelMeter));
+            ent.getComponent<cro::Drawable2D>().setTexture(&bgTex);
+            ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+            ent.addComponent<UIElement>().depth = -2.f;
+            ent.getComponent<UIElement>().resizeCallback = std::bind(&ScrubGameState::levelMeterCallback, this, std::placeholders::_1);
+            m_spriteRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+            return ent;
+        };
+
+
+    //soap level
+    entity = createLevelMeter(SoapMeterColour);
+    entity.getComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
+    entity.getComponent<UIElement>().absolutePosition = { -(BarWidth + 12.f), 12.f };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Callback>().function =
@@ -1162,27 +1176,15 @@ void ScrubGameState::createUI()
             cro::FloatRect cropping = { 0.f, 0.f, BarWidth, BarHeight * currPos };
             e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
         };
-    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    
+    auto tubeEnt = createLevelMeter(cro::Colour::White);
+    tubeEnt.getComponent<UIElement>().depth = -0.1f;
+    entity.getComponent<cro::Transform>().addChild(tubeEnt.getComponent<cro::Transform>());
 
-
-    //current ball cleanliness - TODO make this a generic level meter so we can
-    //recycle it with other levels on screen (and use the glass tube effect)
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f, BarHeight), cro::Colour::Blue),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Blue),
-            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), cro::Colour::Blue),
-            cro::Vertex2D(glm::vec2(BarWidth, 0.f), cro::Colour::Blue)
-        }
-    );
-    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::LevelMeter));
-    entity.getComponent<cro::Drawable2D>().setTexture(&bgTex);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
+    //current ball cleanliness
+    entity = createLevelMeter(cro::Colour::Blue);
+    entity.getComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
     entity.getComponent<UIElement>().absolutePosition = { -((BarWidth + 12.f) * 2.f), 12.f };
-    entity.getComponent<UIElement>().resizeCallback = std::bind(&ScrubGameState::levelMeterCallback, this, std::placeholders::_1);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
@@ -1200,7 +1202,10 @@ void ScrubGameState::createUI()
                 v.colour = c;
             }
         };
-    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    
+    tubeEnt = createLevelMeter(cro::Colour::White);
+    tubeEnt.getComponent<UIElement>().depth = -0.1f;
+    entity.getComponent<cro::Transform>().addChild(tubeEnt.getComponent<cro::Transform>());
 
     auto resize = [&](cro::Camera& cam) mutable
     {

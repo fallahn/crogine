@@ -58,7 +58,7 @@ void main()
     u = pow(((u * 2.0) - 1.0), 3.0);
     coord.x += u * DistortionAmount;
 
-    FRAG_OUT = mix(TEXTURE(u_texture, coord), v_colour, 0.5 + (abs(u) * 0.3)) + vec4(highlight * HighlightAmount);
+    FRAG_OUT = mix(TEXTURE(u_texture, coord), v_colour, 0.25 + (abs(u) * 0.3)) + vec4(highlight * HighlightAmount);
 })";
 
 /*
@@ -74,79 +74,36 @@ VARYING_IN vec4 v_colour;
 
 OUTPUT
 
+const vec4 brighterColour = vec4(0.316, 0.766, 1.0, 0.25);
+const vec4 darkerColour = vec4(0.1, 0.309, 0.687, 0.0625);
 
-float rand(vec2 co)
-{
-    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-}
-
-float hermite(float t)
-{
-  return t * t * (3.0 - 2.0 * t);
-}
-
-float noise(vec2 co, float frequency)
-{
-  vec2 v = vec2(co.x * frequency, co.y * frequency);
-
-  float ix1 = floor(v.x);
-  float iy1 = floor(v.y);
-  float ix2 = floor(v.x + 1.0);
-  float iy2 = floor(v.y + 1.0);
-
-  float fx = hermite(fract(v.x));
-  float fy = hermite(fract(v.y));
-
-  float fade1 = mix(rand(vec2(ix1, iy1)), rand(vec2(ix2, iy1)), fx);
-  float fade2 = mix(rand(vec2(ix1, iy2)), rand(vec2(ix2, iy2)), fx);
-
-  return mix(fade1, fade2, fy);
-}
-
-float pnoise(vec2 co, float freq, int steps, float persistence)
-{
-  float value = 0.0;
-  float ampl = 1.0;
-  float sum = 0.0;
-  for(int i=0 ; i<steps ; i++)
-  {
-    sum += ampl;
-    value += noise(co, freq) * ampl;
-    freq *= 2.0;
-    ampl *= persistence;
-  }
-  return value / sum;
-}
+//const vec4 brighterColour = vec4(1.0, 0.65, 0.1, 0.25);
+//const vec4 darkerColour = vec4(1.0, 0.0, 0.15, 0.0625);
 
 void main()
 {
 	vec2 uv = v_texCoord;
     float gradient = 1.0 - uv.y;
     float gradientStep = 0.2;
+
+    vec2 pos = v_texCoord * 0.5;
+    pos.y -= u_time * 0.03125;
     
-//TODO this is the ratio of the drawable
-//tho we may as well just use one of the existing noise textures
-//(as the drawable in this instance is textured with a dummy anyway)
-//then just sample that instead of creating a noise value with a function
-    vec2 pos = vec2(uv.x, uv.x * 0.225) * 0.5; 
-    pos.y -= u_time * 0.3125;
-    
-    vec4 brighterColour = vec4(1.0, 0.65, 0.1, 0.25);
-    vec4 darkerColour = vec4(1.0, 0.0, 0.15, 0.0625);
     vec4 middleColour = mix(brighterColour, darkerColour, 0.5);
 
-    float noiseTexel = pnoise(pos, 10.0, 5, 0.5);
+    float noiseTexel = TEXTURE(u_texture, pos).r;
     
     float firstStep = smoothstep(0.0, noiseTexel, gradient);
     float darkerColourStep = smoothstep(0.0, noiseTexel, gradient - gradientStep);
     float darkerColourPath = firstStep - darkerColourStep;
-    vec4 colour = mix(brighterColour, darkerColour, darkerColourPath);
+    vec4 colour = mix(darkerColour, brighterColour, darkerColourPath);
 
     float middleColourStep = smoothstep(0.0, noiseTexel, gradient - 0.2 * 2.0);
     
     colour = mix(colour, middleColour, darkerColourStep - middleColourStep);
-    colour = mix(vec4(0.0), colour, firstStep);
+    colour = mix(vec4(0.0), colour, firstStep) * 0.75;
 //colour.rgb *= colour.a;
-colour.a = 1.0;
-	FRAG_OUT = colour * v_colour * TEXTURE(u_texture, v_texCoord);
+    colour.a = 1.0;
+
+	FRAG_OUT = colour * v_colour;// * TEXTURE(u_texture, v_texCoord);
 })";
