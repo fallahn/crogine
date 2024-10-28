@@ -93,4 +93,5 @@ private:
     void createScene();
     void loadSpectators();
     void loadClouds();
+    void initFonts();
 };

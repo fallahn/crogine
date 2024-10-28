@@ -76,6 +76,8 @@ private:
     };
     std::array<cro::Entity, TabID::Count> m_tabs = {};
     std::size_t m_currentTab;
+    cro::String m_keyboardHelpString;
+    std::int32_t m_controllerIndex;
 
     void addSystems();
     void loadAssets();

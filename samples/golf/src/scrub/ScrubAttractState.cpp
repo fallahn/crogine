@@ -163,7 +163,8 @@ ScrubAttractState::ScrubAttractState(cro::StateStack& ss, cro::State::Context ct
     m_sharedScrubData   (sc),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_gameScene         (ctx.appInstance.getMessageBus()),
-    m_currentTab        (0)
+    m_currentTab        (0),
+    m_controllerIndex   (0)
 {
     addSystems();
     loadAssets();
@@ -207,6 +208,15 @@ bool ScrubAttractState::handleEvent(const cro::Event& evt)
         case cro::GameController::DPadRight:
             nextTab();
             break;
+        }
+        m_controllerIndex = cro::GameController::controllerID(evt.cbutton.which);
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value < -cro::GameController::LeftThumbDeadZone
+            || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        {
+            m_controllerIndex = cro::GameController::controllerID(evt.caxis.which);
         }
     }
 
@@ -348,23 +358,15 @@ void ScrubAttractState::buildScene()
     m_tabs[TabID::Title].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    static constexpr float Radius = 680.f;
-    static constexpr std::int32_t PointCount = 48;
-    static constexpr float ArcSize = cro::Util::Const::TAU / PointCount;
-    std::vector<cro::Vertex2D> verts;
-    verts.emplace_back(glm::vec2(0.f), CD32::Colours[CD32::Brown]);
-    for (auto i = 0; i < PointCount; ++i)
-    {
-        glm::vec2 p = glm::vec2(std::cos(i * ArcSize), std::sin(i * ArcSize)) * Radius;
-        verts.emplace_back(p, CD32::Colours[CD32::Brown]);
-    }
-    verts.push_back(verts[1]);
-
+    //title background - remember sprites are added to the spriteNode of the current tab for correct scaling...
+    auto& bgTex = m_resources.textures.get("assets/arcade/scrub/images/attract_bg.png");
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    entity.addComponent<cro::Drawable2D>().setVertexData(verts);
-    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_FAN);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(bgTex);
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
     entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
@@ -389,13 +391,13 @@ void ScrubAttractState::buildScene()
     auto bgEnt = entity;
     titleData.spriteNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+    //scrubber tex
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 0.f));
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_scrubTexture.getTexture());
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
@@ -457,54 +459,61 @@ void ScrubAttractState::buildScene()
     howToData.spriteNode.addComponent<cro::Transform>();
     m_tabs[TabID::HowTo].getComponent<cro::Transform>().addChild(howToData.spriteNode.getComponent<cro::Transform>());
 
-    static const std::string controllerStr =
-        R"(
-Use right thumb stick to scrub
-Use LB to insert and RB to remove a ball
-Press A to add more soap
 
-Press Start to Pause the game.
-)";
+    //help background
+    auto& helpTex = m_resources.textures.get("assets/arcade/scrub/images/rules_bg.png");
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(helpTex);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 40.f };
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    howToData.spriteNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    static const std::string keyboardStr =
-        R"(
-Use A/D to scrub
-Use Q to insert and E to remove a ball
-Press SPACE to add more soap
+    static const cro::String StringXbox = 
+        "Use Right Stick to scrub\nUse " + cro::String(ButtonLB) 
+        + " to insert and " + cro::String(ButtonRB) 
+        + " to remove a ball\n Press " + cro::String(ButtonA) + " to add more soap\n\n\nPress Start to Pause the game";
 
-Press ESCAPE to Pause the game.
-)";
+    static const cro::String StringPS =
+        "Use Right Stick to scrub\nUse " + cro::String(ButtonL1)
+        + " to insert and " + cro::String(ButtonR1)
+        + " to remove a ball\n Press " + cro::String(ButtonCross) + " to add more soap\n\n\nPress Start to Pause the game";
 
+    //help text
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setCharacterSize(sc::MediumTextSize/* * getViewScale()*/);
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(sc::MediumTextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
-    entity.getComponent<cro::Text>().setString(controllerStr); //set this once so we can approximate the local bounsd
+    entity.getComponent<cro::Text>().setString(StringXbox); //set this once so we can approximate the local bounsd
     bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) + 40.f }; //hm this doesn't account for the fact that the bounds will be bigger with a bigger text size. We need to constify this
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) + 20.f };
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
 
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float)
+        [&](cro::Entity e, float)
         {
             if (cro::GameController::getControllerCount()
                 || Social::isSteamdeck())
             {
-                //TODO use controller appropriate icons
-                e.getComponent<cro::Text>().setString(controllerStr);
+                e.getComponent<cro::Text>().setString(cro::GameController::hasPSLayout(m_controllerIndex) ? StringPS : StringXbox);
             }
             else
             {
                 //TODO read keybinds and update string as necessary
-                e.getComponent<cro::Text>().setString(keyboardStr);
+                e.getComponent<cro::Text>().setString(m_keyboardHelpString);
             }
         };
 
@@ -523,6 +532,22 @@ Press ESCAPE to Pause the game.
     scoreData.spriteNode.addComponent<cro::Transform>();
     m_tabs[TabID::Scores].getComponent<cro::Transform>().addChild(scoreData.spriteNode.getComponent<cro::Transform>());
 
+
+    //score background
+    auto& scoreTex = m_resources.textures.get("assets/arcade/scrub/images/highscore_bg.png");
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(scoreTex);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 40.f };
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    scoreData.spriteNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //score text
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
         entity.addComponent<cro::Drawable2D>();
@@ -534,7 +559,7 @@ Press ESCAPE to Pause the game.
     entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 60.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 150.f };
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
 
@@ -562,7 +587,7 @@ Press ESCAPE to Pause the game.
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
         {
             auto& t = e.getComponent<cro::Callback>().getUserData<float>();
             t += dt;
@@ -582,7 +607,14 @@ Press ESCAPE to Pause the game.
             if (cro::GameController::getControllerCount()
                 || Social::isSteamdeck())
             {
-                e.getComponent<cro::Text>().setString("Press A To Start");
+                if (cro::GameController::hasPSLayout(m_controllerIndex))
+                {
+                    e.getComponent<cro::Text>().setString("Press " + cro::String(ButtonCross) + " To Start");
+                }
+                else
+                {
+                    e.getComponent<cro::Text>().setString("Press " + cro::String(ButtonA) + " To Start");
+                }
             }
             else
             {
@@ -657,6 +689,24 @@ void ScrubAttractState::buildScrubScene()
             entity.getComponent<cro::Transform>().addChild(handleEnt.getComponent<cro::Transform>());
         }
 
+        if (md.loadFromFile("assets/arcade/scrub/models/gauge_inner.cmt"))
+        {
+            auto gaugeEnt = m_gameScene.createEntity();
+            gaugeEnt.addComponent<cro::Transform>().setPosition({ -0.10836f, -0.24753f, 0.008162f });
+            md.createModel(gaugeEnt);
+            gaugeEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", CD32::Colours[CD32::GreenLight]);
+            entity.getComponent<cro::Transform>().addChild(gaugeEnt.getComponent<cro::Transform>());
+        }
+
+        if (md.loadFromFile("assets/arcade/scrub/models/gauge_outer.cmt"))
+        {
+            auto gaugeEnt = m_gameScene.createEntity();
+            gaugeEnt.addComponent<cro::Transform>();
+            md.createModel(gaugeEnt);
+
+            entity.getComponent<cro::Transform>().addChild(gaugeEnt.getComponent<cro::Transform>());
+        }
+
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
             [](cro::Entity e, float)
@@ -711,6 +761,8 @@ void ScrubAttractState::onCachedPush()
 {
     //reset to default tab
     prevTab(); //this just tidies up existing tab before forcing the index below
+    m_tabs[TabID::HowTo].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_tabs[TabID::Scores].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_currentTab = m_tabs.size() - 1;
     nextTab();
 
@@ -738,6 +790,14 @@ void ScrubAttractState::onCachedPush()
 
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
     m_music.getComponent<cro::AudioEmitter>().play();
+
+    //update the keyboard help string with current key binds
+    m_keyboardHelpString = "Use " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]) 
+        + "/" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right])
+        + " to scrub\nUse " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]) 
+        + " to insert and " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub])
+        + " to remove a ball\nPress " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) 
+        + " to add more soap\n\n\nPress ESCAPE to Pause the game";
 }
 
 void ScrubAttractState::onCachedPop()

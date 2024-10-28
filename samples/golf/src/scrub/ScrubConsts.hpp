@@ -39,6 +39,23 @@ source distribution.
 static constexpr inline float MaxSpriteScale = 4.f; //when view scale returns this (~2kHD) sprites on the HUD are 1:1
 static constexpr cro::Colour SoapMeterColour = cro::Colour(0xadd9b7ff);
 
+//xbox
+static constexpr std::uint32_t ButtonLB = 0x2198;
+static constexpr std::uint32_t ButtonRB = 0x2199;
+static constexpr std::uint32_t ButtonX = 0x21D0;
+static constexpr std::uint32_t ButtonY = 0x21D1;
+static constexpr std::uint32_t ButtonB = 0x21D2;
+static constexpr std::uint32_t ButtonA = 0x21D3;
+
+
+//ps
+static constexpr std::uint32_t ButtonL1 = 0x21B0;
+static constexpr std::uint32_t ButtonR1 = 0x21B1;
+static constexpr std::uint32_t ButtonSquare   = 0x21E0;
+static constexpr std::uint32_t ButtonTriangle = 0x21E1;
+static constexpr std::uint32_t ButtonCircle   = 0x21E2;
+static constexpr std::uint32_t ButtonCross    = 0x21E3;
+
 namespace sc
 {
     struct ShaderID final

@@ -1255,7 +1255,7 @@ void ScrubGameState::createCountIn()
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::GarbageCollect;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
     entity.getComponent<UIElement>().characterSize = sc::LargeTextSize;
 

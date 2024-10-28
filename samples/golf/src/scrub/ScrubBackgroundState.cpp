@@ -79,14 +79,7 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
             loadAssets();
             createScene();
 #endif
-            if (!sd.fonts)
-            {
-                sd.fonts = std::make_unique<cro::FontResource>();
-                sd.fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
-                sd.fonts->get(sc::FontID::Title).setSmooth(true);
-                sd.fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
-                sd.fonts->get(sc::FontID::Body).setSmooth(true);
-            }
+            initFonts();
 
             cacheState(StateID::ScrubAttract);
             cacheState(StateID::ScrubGame);
@@ -532,6 +525,65 @@ void ScrubBackgroundState::loadClouds()
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             modelIndex = (modelIndex + 1) % definitions.size();
+        }
+    }
+}
+
+void ScrubBackgroundState::initFonts()
+{
+    if (!m_sharedScrubData.fonts)
+    {
+        m_sharedScrubData.fonts = std::make_unique<cro::FontResource>();
+        m_sharedScrubData.fonts->load(sc::FontID::Title, "assets/arcade/scrub/fonts/BowlbyOne-Regular.ttf");
+        auto& titleFont = m_sharedScrubData.fonts->get(sc::FontID::Title);
+        titleFont.setSmooth(true);
+
+        m_sharedScrubData.fonts->load(sc::FontID::Body, "assets/arcade/scrub/fonts/Candal-Regular.ttf");
+        auto& bodyFont = m_sharedScrubData.fonts->get(sc::FontID::Body);
+        bodyFont.setSmooth(true);
+
+
+        //appeand icon font
+        cro::FontAppendmentContext ctx;
+        ctx.allowBold = false;
+        ctx.allowOutline = false;
+
+        ctx.codepointRange = { 0x2196, 0xE011 };
+
+        titleFont.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+        bodyFont.appendFromFile("assets/arcade/scrub/fonts/promptfont.ttf", ctx);
+
+        //and emoji fonts
+        static constexpr std::array Ranges =
+        {
+            cro::CodePointRange::EmojiLower,
+            cro::CodePointRange::EmojiMid,
+            cro::CodePointRange::EmojiUpper,
+        };
+
+        ctx.allowFillColour = false;
+#ifdef _WIN32
+        const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+        if (cro::FileSystem::fileExists(winPath))
+        {
+            for (const auto& r : Ranges)
+            {
+                ctx.codepointRange = r;
+                titleFont.appendFromFile(winPath, ctx);
+                bodyFont.appendFromFile(winPath, ctx);
+            }
+        }
+        else
+#endif
+        {
+            const std::string path = "assets/golf/fonts/TwemojiCOLRv0.ttf";
+
+            for (const auto& r : Ranges)
+            {
+                ctx.codepointRange = r;
+                titleFont.appendFromFile(path, ctx);
+                bodyFont.appendFromFile(path, ctx);
+            }
         }
     }
 }
