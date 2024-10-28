@@ -55,6 +55,7 @@ private:
     SharedScrubData& m_sharedScrubData;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+    std::int32_t m_controllerIndex;
 
     void addSystems();
     void buildScene();

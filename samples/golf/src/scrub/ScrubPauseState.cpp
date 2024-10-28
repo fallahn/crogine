@@ -53,7 +53,8 @@ ScrubPauseState::ScrubPauseState(cro::StateStack& ss, cro::State::Context ctx, S
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
     m_sharedScrubData   (sc),
-    m_uiScene           (ctx.appInstance.getMessageBus())
+    m_uiScene           (ctx.appInstance.getMessageBus()),
+    m_controllerIndex   (0)
 {
     addSystems();
     buildScene();
@@ -66,7 +67,6 @@ bool ScrubPauseState::handleEvent(const cro::Event& evt)
         {
             requestStackPop();
             requestStackPop();
-            //requestStackPush(StateID::ScrubAttract);
         };
 
     if (evt.type == SDL_KEYDOWN)
@@ -94,6 +94,15 @@ bool ScrubPauseState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonStart:
             requestStackPop();
             break;
+        }
+        m_controllerIndex = cro::GameController::controllerID(evt.cbutton.which);
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value < -cro::GameController::LeftThumbDeadZone
+            || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
+        {
+            m_controllerIndex = cro::GameController::controllerID(evt.caxis.which);
         }
     }
 
@@ -130,13 +139,9 @@ void ScrubPauseState::addSystems()
 
 void ScrubPauseState::buildScene()
 {
-    const std::string str =
-        R"(
-Press ESCAPE or Start to Continue.
-
-Press Q or Controller B to Quit.
-)";
-
+    static const cro::String StringPS = "Press Start to continue\n\nPress " + cro::String(ButtonCircle) + " to Quit";
+    static const cro::String StringXB = "Press Start to continue\n\nPress " + cro::String(ButtonB) + " to Quit";
+    static const cro::String StringKB = "Press ESCAPE to continue\n\nPress Q to Quit";
 
     auto size = glm::vec2(cro::App::getWindow().getSize());
     const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Title);
@@ -160,9 +165,8 @@ Press Q or Controller B to Quit.
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
-    //entity.getComponent<cro::Transform>().move({ 0.f, 40.f * getViewScale()});
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font2).setString(str);
+    entity.addComponent<cro::Text>(font2);
     entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize * getViewScale());
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -173,6 +177,27 @@ Press Q or Controller B to Quit.
     //entity.getComponent<UIElement>().absolutePosition = { 0.f, 40.f };
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (cro::GameController::getControllerCount()
+                || Social::isSteamdeck())
+            {
+                if (cro::GameController::hasPSLayout(m_controllerIndex))
+                {
+                    e.getComponent<cro::Text>().setString(StringPS);
+                }
+                else
+                {
+                    e.getComponent<cro::Text>().setString(StringXB);
+                }
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setString(StringKB);
+            }
+        };
 
 
     //background
