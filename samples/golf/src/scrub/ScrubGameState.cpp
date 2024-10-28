@@ -930,7 +930,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { -212.f, -14.f };
+    entity.getComponent<UIElement>().absolutePosition = { -212.f, -20.f };
     entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.addComponent<cro::Callback>().active = true;
@@ -941,6 +941,32 @@ void ScrubGameState::createUI()
             ss << "Soap Bars: " << m_handle.soap.count;
             e.getComponent<cro::Text>().setString(ss.str());
         };
+
+    //balls until next soap
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(sc::SmallTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(1.f, 1.f);
+    entity.getComponent<UIElement>().absolutePosition = { -212.f, -8.f };
+    entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            const auto nextSoap = m_score.awardLevel - ((m_score.ballsWashed - m_score.countAtThreshold) % m_score.awardLevel);
+            
+            std::stringstream ss;
+            ss << "Next Soap in: " << nextSoap;
+            e.getComponent<cro::Text>().setString(ss.str());
+        };
+
+
 
     static constexpr float BarHeight = 400.f;
     static constexpr float BarWidth = 80.f;
@@ -1508,7 +1534,10 @@ void ScrubGameState::updateScore()
             m_score.remainingTime -= std::max(1.f, m_score.remainingTime / 2.f);
         }
         m_score.bonusRun = 0;
+        //m_score.countAtThreshold = 0;
     }
+
+    m_score.awardLevel = (m_score.bonusRun > Score::bonusRunThreshold) ? 4 : 5;
 
     //this might happen just as the time runs out - we want to
     //keep the score but not add time in this case
@@ -1542,8 +1571,7 @@ void ScrubGameState::updateScore()
     }
 
 
-
-    if (((m_score.ballsWashed - m_score.countAtThreshold) % (m_score.bonusRun > Score::bonusRunThreshold ? 4 : 5)) == 0)
+    if (((m_score.ballsWashed - m_score.countAtThreshold) % m_score.awardLevel) == 0)
     {
         //new soap in 3.. 2.. 1..
         const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Body);
