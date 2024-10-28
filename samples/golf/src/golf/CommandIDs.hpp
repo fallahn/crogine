@@ -89,7 +89,9 @@ struct CommandID final
             AFKWarn              = 0x8000000,
             PuttingLabel         = 0x10000000, //29
             BarEnt               = 0x20000000,
-            ScoreTitle           = 0x40000000 //text at the bottom of the score board - used in skins games
+            ScoreTitle           = 0x40000000, //text at the bottom of the score board - used in skins games
+
+            GarbageCollect       = 0x1 //this is the same as the first entry! we're just renaming it for use in the Scrub game
         };
     };
 

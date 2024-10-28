@@ -359,8 +359,8 @@ bool ScrubGameState::simulate(float dt)
 
 
         m_score.totalRunTime += dt;
-        m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #ifndef CRO_DEBUG_
+        m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #endif
         m_score.quitTimeout = 0.f;
         if (m_score.remainingTime == 0)
@@ -396,7 +396,7 @@ bool ScrubGameState::simulate(float dt)
             entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
             entity.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset);
             entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-            entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::GarbageCollect;
             entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
             entity.getComponent<UIElement>().absolutePosition = { 0.f, 64.f };
             entity.getComponent<UIElement>().characterSize = sc::LargeTextSize;
@@ -419,7 +419,7 @@ bool ScrubGameState::simulate(float dt)
             entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
             entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
             entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-            entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::GarbageCollect;
             entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
             entity.getComponent<UIElement>().absolutePosition = { 0.f, -14.f };
             entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
@@ -449,7 +449,7 @@ bool ScrubGameState::simulate(float dt)
                     auto size = glm::vec2(cro::App::getWindow().getSize());
                     e.getComponent<cro::Transform>().setScale(size);
                 };
-
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::GarbageCollect;
             m_soundDirector->playSound(AudioID::VORoundEnd, MixerChannel::Voice);
         }
     }
@@ -533,6 +533,11 @@ void ScrubGameState::onCachedPush()
 
 void ScrubGameState::onCachedPop()
 {
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::GarbageCollect;
+    cmd.action = [&](cro::Entity e, float) {m_uiScene.destroyEntity(e); };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     m_music.getComponent<cro::AudioEmitter>().stop();
     m_gameScene.simulate(0.f);
 }
@@ -1556,6 +1561,7 @@ void ScrubGameState::updateScore()
         ent.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
         ent.getComponent<cro::Text>().setString("New Soap Bar In\n3");
         ent.getComponent<cro::Text>().setVerticalSpacing(4.f);
+        ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::GarbageCollect; //we want to make sure this is removed on a game reset
 
         static constexpr float TotalTime = 3.f;
         ent.addComponent<cro::Callback>().active = true;
