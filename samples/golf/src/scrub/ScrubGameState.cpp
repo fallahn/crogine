@@ -493,6 +493,10 @@ void ScrubGameState::render()
     m_bucketTexture.clear(cro::Colour::Magenta);
     m_gameScene.render();
     m_bucketTexture.display();
+#ifdef CRO_DEBUG_
+    m_gameScene.getSystem<ScrubPhysicsSystem>()->renderDebug(m_bucketCamera.getComponent<cro::Camera>().getActivePass().viewProjectionMatrix, m_bucketTexture.getSize());
+#endif
+
 
     //m_soapTexture.clear(cro::Colour::Green);
     //m_soapTexture.display();
@@ -500,6 +504,9 @@ void ScrubGameState::render()
     m_gameScene.setActiveCamera(oldCam);
     m_gameScene.render();
     m_uiScene.render();
+
+
+    
 }
 
 //private

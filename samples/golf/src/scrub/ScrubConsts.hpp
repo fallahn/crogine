@@ -83,6 +83,16 @@ namespace sc
         };
     };
 
+    struct CollisionID final
+    {
+        enum
+        {
+            Ball, Bucket,
+
+            Count
+        };
+    };
+
     static inline constexpr std::uint32_t SmallTextSize = 12;
     static inline constexpr std::uint32_t MediumTextSize = 24;
     static inline constexpr std::uint32_t LargeTextSize = 72;

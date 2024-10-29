@@ -29,6 +29,10 @@ source distribution.
 
 #pragma once
 
+#ifdef CRO_DEBUG_
+#include "../golf/DebugDraw.hpp"
+#endif
+
 #include <crogine/ecs/System.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
@@ -69,6 +73,9 @@ public:
 
     void clearBalls();
 
+
+    void renderDebug(const glm::mat4& mat, glm::uvec2 targetSize);
+
 private:
     std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;
     std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
@@ -94,6 +101,10 @@ private:
 
     //model data for visual representation
     std::unique_ptr<cro::ModelDefinition> m_ballDefinition;
+
+#ifdef CRO_DEBUG_
+    BulletDebug m_debugDraw;
+#endif
 
     void onEntityRemoved(cro::Entity) override;
 };

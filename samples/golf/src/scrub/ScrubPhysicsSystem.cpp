@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 
 #include <crogine/gui/Gui.hpp>
+#include <crogine/detail/ModelBinary.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 namespace
@@ -65,7 +66,7 @@ ScrubPhysicsSystem::ScrubPhysicsSystem(cro::MessageBus& mb)
         m_broadphaseInterface.get(),
         m_constraintSolver.get(),
         m_collisionConfiguration.get());
-    m_collisionWorld->setGravity({ 0.f, -90.f, 0.f });
+    m_collisionWorld->setGravity({ 0.f, -9.f, 0.f });
 
 
     registerWindow([&]() 
@@ -73,6 +74,13 @@ ScrubPhysicsSystem::ScrubPhysicsSystem(cro::MessageBus& mb)
             ImGui::Begin("Phys");
             auto bodyCount = m_collisionWorld->getNumCollisionObjects();
             ImGui::Text("Body Count: %d", bodyCount);
+
+            for (const auto& o : m_bucketObjects)
+            {
+                const auto p = o->getWorldTransform().getOrigin();
+                ImGui::Text("Bucket Pos: %3.2f, %3.2f, %3.2f", p.getX(), p.getY(), p.getZ());
+            }
+
             ImGui::End();
         });
 }
@@ -125,7 +133,47 @@ void ScrubPhysicsSystem::process(float dt)
 
 void ScrubPhysicsSystem::loadMeshData()
 {
+    auto meshData = cro::Detail::ModelBinary::read("assets/arcade/scrub/models/bucket_collision.cmb", m_vertexData, m_indexData);
 
+    if (m_vertexData.empty() || m_indexData.empty())
+    {
+        LogE << "No collision mesh was loaded" << std::endl;
+        return;
+    }
+
+    //TODO we should only ever have one sub-mesh here so this is a
+    //little overkill... but more flexible (just in case).
+    btTransform transform;
+    transform.setOrigin(btVector3(BucketOffset, 0.f, 0.f));
+    //transform.setRotation()
+
+    /*for (auto i = 0u; i < m_indexData.size(); ++i)
+    {
+        btIndexedMesh bucketMesh;
+        bucketMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
+        bucketMesh.m_numVertices = static_cast<std::int32_t>(meshData.vertexCount);
+        bucketMesh.m_vertexStride = static_cast<std::int32_t>(meshData.vertexSize);
+
+        bucketMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
+        bucketMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
+        bucketMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
+
+
+        m_bucketVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(bucketMesh);
+        m_bucketShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_bucketVertices.back().get(), false));
+
+        btRigidBody::btRigidBodyConstructionInfo info(0.f, nullptr, m_bucketShapes.back().get(), btVector3(0.f, 0.f, 0.f));
+        info.m_startWorldTransform = transform;
+
+        auto& body = m_bucketObjects.emplace_back(std::make_unique<btRigidBody>(info));
+        body->setWorldTransform(transform);
+        m_collisionWorld->addRigidBody(body.get(), (1 << sc::CollisionID::Bucket), (1 << sc::CollisionID::Ball));
+    }*/
+
+#ifdef CRO_DEBUG_
+    m_debugDraw.setDebugMode(BulletDebug::DebugFlags);
+    m_collisionWorld->setDebugDrawer(&m_debugDraw);
+#endif
 }
 
 void ScrubPhysicsSystem::spawnBall()
@@ -153,7 +201,7 @@ void ScrubPhysicsSystem::spawnBall()
     transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);
     phys.physicsBody->setWorldTransform(transform);
 
-    m_collisionWorld->addRigidBody(phys.physicsBody.get());
+    m_collisionWorld->addRigidBody(phys.physicsBody.get(), (1 << sc::CollisionID::Ball), (1 << sc::CollisionID::Bucket) | (1 << sc::CollisionID::Ball));
 
     //count the existing balls and pop the front if needed
     if (getEntities().size() > MaxBalls)
@@ -179,6 +227,14 @@ void ScrubPhysicsSystem::clearBalls()
         getScene()->destroyEntity(e);
     }
 }
+
+#ifdef CRO_DEBUG_
+void ScrubPhysicsSystem::renderDebug(const glm::mat4& mat, glm::uvec2 targetSize)
+{
+    m_collisionWorld->debugDrawWorld();
+    m_debugDraw.render(mat, targetSize);
+}
+#endif
 
 //private
 void ScrubPhysicsSystem::onEntityRemoved(cro::Entity e)
