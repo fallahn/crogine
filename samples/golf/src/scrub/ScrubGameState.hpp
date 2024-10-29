@@ -218,6 +218,7 @@ private:
         float cleanlinessSum = 0.f;
 
         bool gameRunning = false;
+        bool gameFinished = false;
 
         //how many balls were 100% in a row
         std::int32_t bonusRun = 0;

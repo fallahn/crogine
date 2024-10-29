@@ -325,9 +325,10 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_KEYUP
         || evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        //TODO this isn't right - we need to make sure the game
-        //has actually ended otherwise this can cause spurious quits
-        //quit();
+        if (m_score.gameFinished)
+        {
+            quit();
+        }
     }
 
     m_gameScene.forwardEvent(evt);
@@ -380,6 +381,7 @@ bool ScrubGameState::simulate(float dt)
         if (m_score.remainingTime == 0)
         {
             m_score.gameRunning = false;
+            m_score.gameFinished = true;
             m_score.totalScore += static_cast<std::int32_t>(std::floor(m_score.avgCleanliness));
             m_score.totalScore += static_cast<std::int32_t>(std::floor(m_score.totalRunTime));
 
