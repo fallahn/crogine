@@ -30,6 +30,7 @@ source distribution.
 #include "ScrubGameState.hpp"
 #include "ScrubSoundDirector.hpp"
 #include "ScrubSharedData.hpp"
+#include "ScrubPhysicsSystem.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/InputBinding.hpp"
 #include "../golf/SharedStateData.hpp"
@@ -230,6 +231,9 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         case SDLK_l:
             m_score.remainingTime = 0.f;
             break;
+        case SDLK_p:
+            m_gameScene.getSystem<ScrubPhysicsSystem>()->spawnBall();
+            break;
 #endif
 
         }
@@ -321,15 +325,9 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_KEYUP
         || evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        quit();
-
-#ifdef CRO_DEBUG_
-        if (evt.type == SDL_KEYUP
-            && evt.key.keysym.sym == SDLK_l)
-        {
-            m_score.remainingTime = 0;
-        }
-#endif
+        //TODO this isn't right - we need to make sure the game
+        //has actually ended otherwise this can cause spurious quits
+        //quit();
     }
 
     m_gameScene.forwardEvent(evt);
@@ -491,6 +489,15 @@ void ScrubGameState::render()
     m_tempBground.draw();
 #endif
 
+    auto oldCam = m_gameScene.setActiveCamera(m_bucketCamera);
+    m_bucketTexture.clear(cro::Colour::Magenta);
+    m_gameScene.render();
+    m_bucketTexture.display();
+
+    //m_soapTexture.clear(cro::Colour::Green);
+    //m_soapTexture.display();
+
+    m_gameScene.setActiveCamera(oldCam);
     m_gameScene.render();
     m_uiScene.render();
 }
@@ -574,12 +581,16 @@ void ScrubGameState::onCachedPop()
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     m_music.getComponent<cro::AudioEmitter>().stop();
+
+    m_gameScene.getSystem<ScrubPhysicsSystem>()->clearBalls();
+
     m_gameScene.simulate(0.f);
 }
 
 void ScrubGameState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_gameScene.addSystem<ScrubPhysicsSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
@@ -610,6 +621,16 @@ void ScrubGameState::loadAssets()
     //shaders
     m_resources.shaders.loadFromString(sc::ShaderID::LevelMeter, cro::RenderSystem2D::getDefaultVertexShader(), LevelMeterFragment, "#define TEXTURED\n");
     m_resources.shaders.loadFromString(sc::ShaderID::Fire, cro::RenderSystem2D::getDefaultVertexShader(), FireFragment, "#define TEXTURED\n");
+
+
+    //render textures
+    m_bucketTexture.create(468, 1280);
+    m_bucketTexture.setSmooth(true);
+    //m_soapTexture.create(300.f, 1440.f, false);
+
+
+    //bucket physics
+    m_gameScene.getSystem<ScrubPhysicsSystem>()->loadMeshData();
 
 
     //load audio
@@ -689,8 +710,12 @@ void ScrubGameState::createScene()
         rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
-    if (md.loadFromFile("assets/arcade/scrub/models/ball.cmt"))
+    const std::string ballPath = "assets/arcade/scrub/models/ball.cmt";
+    if (md.loadFromFile(ballPath))
     {
+        m_gameScene.getSystem<ScrubPhysicsSystem>()->loadBallData(m_resources, &m_environmentMap, ballPath);
+
+
         m_ball.colourIndex = cro::Util::Random::value(0u, CD32::Colours.size() - 1);
 
 
@@ -822,6 +847,60 @@ void ScrubGameState::createScene()
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -1.2f);
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.6f);
+
+
+
+    //bucket scene rendered with a second camera
+    if (md.loadFromFile("assets/arcade/scrub/models/bucket.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ BucketOffset, 0.f, 0.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.3f);
+        md.createModel(entity);
+    }
+
+
+    auto resize2 = [&](cro::Camera& cam)
+        {
+            glm::vec2 targetSize(m_bucketTexture.getSize());
+            cam.setPerspective(48.f * cro::Util::Const::degToRad, targetSize.x / targetSize.y, 0.1f, 10.f);
+            cam.viewport = { 0.f, 0.f, 1.f ,1.f };
+        };
+    camera = m_gameScene.createEntity();
+    camera.addComponent<cro::Transform>().setPosition({ BucketOffset, 1.9f, 5.f });
+    camera.addComponent<cro::Camera>().resizeCallback = resize2;
+    resize2(camera.getComponent<cro::Camera>());
+    m_bucketCamera = camera;
+
+    /*registerWindow([&]() 
+        {
+            static float fov = 48.f;
+            static float y = 0.f;
+
+            auto updateCam = [&]()
+                {
+                    glm::vec2 targetSize(m_bucketTexture.getSize());
+                    
+                    auto& c = m_bucketCamera.getComponent<cro::Camera>();
+                    c.setPerspective(fov * cro::Util::Const::degToRad, targetSize.x / targetSize.y, 0.1f, 10.f);
+
+                    auto pos = m_bucketCamera.getComponent<cro::Transform>().getPosition();
+                    pos.y = y;
+                    m_bucketCamera.getComponent<cro::Transform>().setPosition(pos);
+                };
+
+            ImGui::Begin("Cam");
+            if (ImGui::SliderFloat("FOV", &fov, 10.f, 90.f))
+            {
+                updateCam();
+            }
+
+            if (ImGui::SliderFloat("VPos", &y, 0.f, 5.f))
+            {
+                updateCam();
+            }
+            ImGui::End();
+        });*/
 }
 
 void ScrubGameState::createUI()
@@ -905,8 +984,8 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 1.f);
-    entity.getComponent<UIElement>().absolutePosition = { 12.f, -26.f };
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 0.f);
+    entity.getComponent<UIElement>().absolutePosition = { 12.f, 16.f };
     entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.addComponent<cro::Callback>().active = true;
@@ -929,8 +1008,8 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 0.f);
-    entity.getComponent<UIElement>().absolutePosition = { 12.f, 16.f };
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 1.f);
+    entity.getComponent<UIElement>().absolutePosition = { 12.f, -26.f };
     entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.addComponent<cro::Callback>().active = true;
@@ -1234,6 +1313,32 @@ void ScrubGameState::createUI()
     tubeEnt = createLevelMeter(cro::Colour::White);
     tubeEnt.getComponent<UIElement>().depth = -0.1f;
     entity.getComponent<cro::Transform>().addChild(tubeEnt.getComponent<cro::Transform>());
+
+
+
+    //bucket animation quad - TODO add this to m_animatedEntities and have it slide in on start?
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_bucketTexture.getTexture());
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { 40.f, 60.f };
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //soap animation quad
+    /*entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_soapTexture.getTexture());
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -320.f, 10.f };
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
+
+
 
     auto resize = [&](cro::Camera& cam) mutable
     {

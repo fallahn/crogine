@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 #ifdef HIDE_BACKGROUND
 #include <crogine/graphics/SimpleQuad.hpp>
 #endif
@@ -69,6 +70,11 @@ private:
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
 
+    cro::RenderTexture m_bucketTexture;
+    //cro::RenderTexture m_soapTexture;
+
+    cro::Entity m_bucketCamera;
+
     cro::Entity m_music;
     cro::Entity m_body0;
     cro::Entity m_body1;
@@ -94,7 +100,8 @@ private:
     std::array<cro::Entity, AnimatedEntity::Count> m_animatedEntities = {};
     
 
-    std::int16_t m_axisPosition; //game controlelr axis
+    std::int16_t m_axisPosition; //game controller axis
+    std::int32_t m_controllerIndex; //last operated controller
 
     struct Handle final
     {
@@ -227,7 +234,6 @@ private:
         static constexpr float TimeBonus = 2.5f;
     }m_score;
 
-    std::int32_t m_controllerIndex;
 
     void onCachedPush() override;
     void onCachedPop() override;
