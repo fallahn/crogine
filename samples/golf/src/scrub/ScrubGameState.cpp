@@ -232,7 +232,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             m_score.remainingTime = 0.f;
             break;
         case SDLK_p:
-            m_gameScene.getSystem<ScrubPhysicsSystem>()->spawnBall();
+            m_gameScene.getSystem<ScrubPhysicsSystem>()->spawnBall(cro::Colour::Magenta);
             break;
 #endif
 
@@ -490,12 +490,12 @@ void ScrubGameState::render()
 #endif
 
     auto oldCam = m_gameScene.setActiveCamera(m_bucketCamera);
-    m_bucketTexture.clear(cro::Colour::Magenta);
+    m_bucketTexture.clear(cro::Colour::Transparent);
     m_gameScene.render();
-    m_bucketTexture.display();
 #ifdef CRO_DEBUG_
-    m_gameScene.getSystem<ScrubPhysicsSystem>()->renderDebug(m_bucketCamera.getComponent<cro::Camera>().getActivePass().viewProjectionMatrix, m_bucketTexture.getSize());
+    //m_gameScene.getSystem<ScrubPhysicsSystem>()->renderDebug(m_bucketCamera.getComponent<cro::Camera>().getActivePass().viewProjectionMatrix, m_bucketTexture.getSize());
 #endif
+    m_bucketTexture.display();
 
 
     //m_soapTexture.clear(cro::Colour::Green);
@@ -870,13 +870,18 @@ void ScrubGameState::createScene()
     auto resize2 = [&](cro::Camera& cam)
         {
             glm::vec2 targetSize(m_bucketTexture.getSize());
-            cam.setPerspective(48.f * cro::Util::Const::degToRad, targetSize.x / targetSize.y, 0.1f, 10.f);
+            cam.setPerspective(48.f * cro::Util::Const::degToRad, targetSize.x / targetSize.y, 3.f, 7.f);
             cam.viewport = { 0.f, 0.f, 1.f ,1.f };
         };
     camera = m_gameScene.createEntity();
     camera.addComponent<cro::Transform>().setPosition({ BucketOffset, 1.9f, 5.f });
-    camera.addComponent<cro::Camera>().resizeCallback = resize2;
-    resize2(camera.getComponent<cro::Camera>());
+    auto& cam2 = camera.addComponent<cro::Camera>();
+    cam2.resizeCallback = resize2;
+    cam2.shadowMapBuffer.create(2048, 2048);
+    cam2.setMaxShadowDistance(7.f);
+    cam2.setShadowExpansion(1.f);
+
+    resize2(cam2);
     m_bucketCamera = camera;
 
     /*registerWindow([&]() 
@@ -1530,7 +1535,10 @@ void ScrubGameState::ballCallback(cro::Entity e, float dt)
 
         if (pos.x > BallExitPos)
         {
-            updateScore();
+            if (updateScore())
+            {
+                m_gameScene.getSystem<ScrubPhysicsSystem>()->spawnBall(CD32::Colours[m_ball.colourIndex]);
+            }
 
             m_ball.state = Ball::State::Idle;
             m_ball.filth = Ball::MaxFilth;
@@ -1550,7 +1558,7 @@ void ScrubGameState::ballCallback(cro::Entity e, float dt)
     }
 }
 
-void ScrubGameState::updateScore()
+bool ScrubGameState::updateScore()
 {
     const float cleanliness = Ball::MaxFilth - m_ball.filth;
 
@@ -1617,7 +1625,7 @@ void ScrubGameState::updateScore()
         }
         m_score.bonusRun = 0;
         
-        return;
+        return false;
     }
 
     m_score.ballsWashed++;
@@ -1808,6 +1816,8 @@ void ScrubGameState::updateScore()
         //showMessage("+0.1s");
         m_soundDirector->playSound(AudioID::VONewSoap, MixerChannel::Voice);
     }
+
+    return true;
 }
 
 void ScrubGameState::showMessage(const std::string& str)

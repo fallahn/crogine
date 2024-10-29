@@ -38,7 +38,7 @@ source distribution.
 #define HIDE_BACKGROUND
 
 static constexpr inline float BucketOffset = 10.f;
-static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 5.f, 0.f);
+static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 7.f, 0.f);
 
 static constexpr inline float MaxSpriteScale = 4.f; //when view scale returns this (~2kHD) sprites on the HUD are 1:1
 static constexpr cro::Colour SoapMeterColour = cro::Colour(0x0207ffff);// cro::Colour(0xadd9b7ff);

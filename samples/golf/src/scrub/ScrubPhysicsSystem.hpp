@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 #include <btBulletDynamicsCommon.h>
 #include <btBulletCollisionCommon.h>
@@ -69,7 +70,7 @@ public:
 
     void loadMeshData();
     void loadBallData(cro::ResourceCollection&, cro::EnvironmentMap*, const std::string&);
-    void spawnBall();
+    void spawnBall(cro::Colour);
 
     void clearBalls();
 
@@ -94,9 +95,8 @@ private:
     std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_bucketShapes;
 
 
-    //tracks ball objects
-    //std::vector<std::unique_ptr<btRigidBody>> m_ballObjects;
-    std::unique_ptr<btSphereShape> m_ballShape; //balls can all share this.
+    //balls can all share this.
+    std::unique_ptr<btSphereShape> m_ballShape; 
 
 
     //model data for visual representation

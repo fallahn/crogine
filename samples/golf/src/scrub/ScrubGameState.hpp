@@ -246,7 +246,7 @@ private:
 
     void handleCallback(cro::Entity, float);
     void ballCallback(cro::Entity, float);
-    void updateScore();
+    bool updateScore(); //returns false if ball wasn't clean enough
 
     std::vector<cro::Entity> m_messageQueue;
     void showMessage(const std::string&);
