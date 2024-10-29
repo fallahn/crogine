@@ -101,6 +101,8 @@ private:
     
 
     std::int16_t m_axisPosition; //game controller axis
+    std::int16_t m_leftTriggerPosition; //game controller axis
+    std::int16_t m_rightTriggerPosition; //game controller axis
     std::int32_t m_controllerIndex; //last operated controller
 
     struct Handle final

@@ -41,10 +41,11 @@ source distribution.
 
 namespace
 {
-    constexpr float BallRad = 0.21f;
+    constexpr float BallRad = 0.021f;
+    constexpr float RadMultiplier = 7.f;
     constexpr float BallMass = 0.46f;
 
-    constexpr std::size_t MaxBalls = 20;
+    constexpr std::size_t MaxBalls = 30;
 }
 
 ScrubPhysicsSystem::ScrubPhysicsSystem(cro::MessageBus& mb)
@@ -53,7 +54,7 @@ ScrubPhysicsSystem::ScrubPhysicsSystem(cro::MessageBus& mb)
     requireComponent<cro::Transform>();
     requireComponent<ScrubPhysicsObject>();
 
-    m_ballShape = std::make_unique<btSphereShape>(BallRad);
+    m_ballShape = std::make_unique<btSphereShape>(BallRad * RadMultiplier);
 
     //note these have to be created in the right order so that destruction
     //is properly done in reverse...
@@ -66,7 +67,7 @@ ScrubPhysicsSystem::ScrubPhysicsSystem(cro::MessageBus& mb)
         m_broadphaseInterface.get(),
         m_constraintSolver.get(),
         m_collisionConfiguration.get());
-    m_collisionWorld->setGravity({ 0.f, -20.f, 0.f });
+    m_collisionWorld->setGravity({ 0.f, -10.f, 0.f });
 
 
     //registerWindow([&]() 
@@ -97,7 +98,7 @@ ScrubPhysicsSystem::~ScrubPhysicsSystem()
 void ScrubPhysicsSystem::process(float dt)
 {
     //step physics
-    m_collisionWorld->stepSimulation(dt);
+    m_collisionWorld->stepSimulation(dt,2,1.f/120.f);
 
     //used to hold temp matrix before applying to entities
     static std::array<float, 16> matrixBuffer = {};
@@ -158,6 +159,10 @@ void ScrubPhysicsSystem::loadMeshData()
         m_bucketShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_bucketVertices.back().get(), false));
 
         btRigidBody::btRigidBodyConstructionInfo info(0.f, nullptr, m_bucketShapes.back().get(), btVector3(0.f, 0.f, 0.f));
+        info.m_friction = 0.8f;
+        info.m_rollingFriction = 0.2f;
+        info.m_spinningFriction = 0.2f;
+        info.m_restitution = 0.2f;
 
         auto& body = m_bucketObjects.emplace_back(std::make_unique<btRigidBody>(info));
         //body->setWorldTransform(transform); //HMMM setting a transform on this is a Bad Thing.
@@ -174,9 +179,9 @@ void ScrubPhysicsSystem::spawnBall(cro::Colour c)
 {
     auto entity = getScene()->createEntity();
 
-    const float offset = cro::Util::Random::value(-0.01f, 0.01f);
+    const float offset = cro::Util::Random::value(-0.02f, 0.03f);
     entity.addComponent<cro::Transform>().setPosition(BucketSpawnPosition + glm::vec3(offset));
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(10.f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(RadMultiplier));
 
     CRO_ASSERT(m_ballDefinition->isLoaded(), "");
     m_ballDefinition->createModel(entity);
@@ -189,7 +194,7 @@ void ScrubPhysicsSystem::spawnBall(cro::Colour c)
 
     btRigidBody::btRigidBodyConstructionInfo info(BallMass, nullptr, m_ballShape.get(), inertia);
     info.m_restitution = 0.5f;
-    info.m_friction = 0.01f;
+    info.m_friction = 0.8f;
     info.m_rollingFriction = 0.001f;
     info.m_spinningFriction = 0.01f;
 
@@ -199,7 +204,7 @@ void ScrubPhysicsSystem::spawnBall(cro::Colour c)
     btTransform transform;
     transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);
     phys.physicsBody->setWorldTransform(transform);
-    //phys.physicsBody->applyTorqueImpulse(); //TODO experiment with this
+    phys.physicsBody->applyTorqueImpulse({ 0.01f, offset / 2.f, 0.01f * cro::Util::Random::value(0,1) });
 
     m_collisionWorld->addRigidBody(phys.physicsBody.get(), (1 << sc::CollisionID::Ball), (1 << sc::CollisionID::Bucket) | (1 << sc::CollisionID::Ball));
 

@@ -106,14 +106,16 @@ namespace
 }
 
 ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedScrubData& sc)
-    : cro::State        (stack, context),
-    m_sharedData        (sd),
-    m_sharedScrubData   (sc),
-    m_soundDirector     (nullptr),
-    m_gameScene         (context.appInstance.getMessageBus()),
-    m_uiScene           (context.appInstance.getMessageBus(), 512),
-    m_axisPosition      (0),
-    m_controllerIndex   (0)
+    : cro::State            (stack, context),
+    m_sharedData            (sd),
+    m_sharedScrubData       (sc),
+    m_soundDirector         (nullptr),
+    m_gameScene             (context.appInstance.getMessageBus()),
+    m_uiScene               (context.appInstance.getMessageBus(), 512),
+    m_axisPosition          (0),
+    m_leftTriggerPosition   (0),
+    m_rightTriggerPosition  (0),
+    m_controllerIndex       (0)
 {
     //this is a pre-cached state
     addSystems();
@@ -292,11 +294,11 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
     {
         //TODO again do we want to lock the controller ID?
         //will having two controllers somehow be an advantage?
+        static constexpr std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;
+        const auto v = evt.caxis.value;
+        
         if (evt.caxis.axis == cro::GameController::AxisRightX)
         {
-            static constexpr std::int16_t Threshold = std::numeric_limits<std::int16_t>::max() / 2;
-            const auto v = evt.caxis.value;
-
             if (m_axisPosition < Threshold
                 && v > Threshold)
             {
@@ -310,6 +312,26 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
 
             m_axisPosition = v;
         }
+        else if (evt.caxis.axis == cro::GameController::TriggerLeft)
+        {
+            if (m_leftTriggerPosition < Threshold
+                && v > Threshold)
+            {
+                pumpDown();
+            }
+            m_leftTriggerPosition = v;
+        }
+        else if (evt.caxis.axis == cro::GameController::TriggerRight)
+        {
+            if (m_rightTriggerPosition < Threshold
+                && v > Threshold)
+            {
+                pumpUp();
+            }
+            m_rightTriggerPosition = v;
+        }
+
+
 
         if (evt.caxis.value < -cro::GameController::LeftThumbDeadZone
             || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
@@ -633,7 +655,7 @@ void ScrubGameState::loadAssets()
 
 
     //render textures
-    m_bucketTexture.create(468, 1280);
+    m_bucketTexture.create(468, 1280, true, false, 2); //hmm really we should be folling the user setting for MSAA
     m_bucketTexture.setSmooth(true);
     //m_soapTexture.create(300.f, 1440.f, false);
 
@@ -848,8 +870,8 @@ void ScrubGameState::createScene()
     resize(cam);
 
     cam.shadowMapBuffer.create(2048, 2048);
-    cam.setMaxShadowDistance(0.4f);
-    cam.setShadowExpansion(0.5f);
+    cam.setMaxShadowDistance(1.f);
+    cam.setShadowExpansion(6.f);
 
     //callback is set up in resetCamera();
     camera.addComponent<cro::Callback>();
@@ -880,41 +902,56 @@ void ScrubGameState::createScene()
     auto& cam2 = camera.addComponent<cro::Camera>();
     cam2.resizeCallback = resize2;
     cam2.shadowMapBuffer.create(2048, 2048);
-    cam2.setMaxShadowDistance(7.f);
-    cam2.setShadowExpansion(1.f);
+    cam2.setMaxShadowDistance(8.f);
+    cam2.setShadowExpansion(12.f);
 
     resize2(cam2);
     m_bucketCamera = camera;
 
-    /*registerWindow([&]() 
-        {
-            static float fov = 48.f;
-            static float y = 0.f;
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("Cam");
 
-            auto updateCam = [&]()
-                {
-                    glm::vec2 targetSize(m_bucketTexture.getSize());
-                    
-                    auto& c = m_bucketCamera.getComponent<cro::Camera>();
-                    c.setPerspective(fov * cro::Util::Const::degToRad, targetSize.x / targetSize.y, 0.1f, 10.f);
+    //        /*static float fov = 48.f;
+    //        static float y = 0.f;
 
-                    auto pos = m_bucketCamera.getComponent<cro::Transform>().getPosition();
-                    pos.y = y;
-                    m_bucketCamera.getComponent<cro::Transform>().setPosition(pos);
-                };
+    //        auto updateCam = [&]()
+    //            {
+    //                glm::vec2 targetSize(m_bucketTexture.getSize());
+    //                
+    //                auto& c = m_bucketCamera.getComponent<cro::Camera>();
+    //                c.setPerspective(fov * cro::Util::Const::degToRad, targetSize.x / targetSize.y, 0.1f, 10.f);
 
-            ImGui::Begin("Cam");
-            if (ImGui::SliderFloat("FOV", &fov, 10.f, 90.f))
-            {
-                updateCam();
-            }
+    //                auto pos = m_bucketCamera.getComponent<cro::Transform>().getPosition();
+    //                pos.y = y;
+    //                m_bucketCamera.getComponent<cro::Transform>().setPosition(pos);
+    //            };
 
-            if (ImGui::SliderFloat("VPos", &y, 0.f, 5.f))
-            {
-                updateCam();
-            }
-            ImGui::End();
-        });*/
+    //        if (ImGui::SliderFloat("FOV", &fov, 10.f, 90.f))
+    //        {
+    //            updateCam();
+    //        }
+
+    //        if (ImGui::SliderFloat("VPos", &y, 0.f, 5.f))
+    //        {
+    //            updateCam();
+    //        }*/
+
+    //        /*static float shadowDist = 8.f;
+    //        static float shadowEspand = 12.f;
+
+    //        if (ImGui::SliderFloat("Dist: %3.3f", &shadowDist, 1.f, 12.f))
+    //        {
+    //            m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(shadowDist);
+    //        }
+
+    //        if (ImGui::SliderFloat("Exp: %3.3f", &shadowEspand, 0.2f, 15.f))
+    //        {
+    //            m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(shadowEspand);
+    //        }*/
+
+    //        ImGui::End();
+    //    });
 }
 
 void ScrubGameState::createUI()
