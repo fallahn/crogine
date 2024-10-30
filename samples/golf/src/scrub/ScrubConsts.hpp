@@ -41,31 +41,34 @@ static constexpr inline float BucketOffset = 10.f;
 static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 7.f, 0.f);
 
 static constexpr inline float MaxSpriteScale = 4.f; //when view scale returns this (~2kHD) sprites on the HUD are 1:1
-static constexpr cro::Colour SoapMeterColour = cro::Colour(0x0207ffff);// cro::Colour(0xadd9b7ff);
+static constexpr inline cro::Colour SoapMeterColour = cro::Colour(0x0207ffff);// cro::Colour(0xadd9b7ff);
 
 //xbox
-static constexpr std::uint32_t ButtonLT = 0x2196;
-static constexpr std::uint32_t ButtonRT = 0x2197;
-static constexpr std::uint32_t ButtonLB = 0x2198;
-static constexpr std::uint32_t ButtonRB = 0x2199;
-static constexpr std::uint32_t ButtonX  = 0x21D0;
-static constexpr std::uint32_t ButtonY  = 0x21D1;
-static constexpr std::uint32_t ButtonB  = 0x21D2;
-static constexpr std::uint32_t ButtonA  = 0x21D3;
+static constexpr inline std::uint32_t ButtonLT = 0x2196;
+static constexpr inline std::uint32_t ButtonRT = 0x2197;
+static constexpr inline std::uint32_t ButtonLB = 0x2198;
+static constexpr inline std::uint32_t ButtonRB = 0x2199;
+static constexpr inline std::uint32_t ButtonX  = 0x21D0;
+static constexpr inline std::uint32_t ButtonY  = 0x21D1;
+static constexpr inline std::uint32_t ButtonB  = 0x21D2;
+static constexpr inline std::uint32_t ButtonA  = 0x21D3;
 
 
 //ps
-static constexpr std::uint32_t ButtonL1       = 0x21B0;
-static constexpr std::uint32_t ButtonR1       = 0x21B1;
-static constexpr std::uint32_t ButtonL2       = 0x21B2;
-static constexpr std::uint32_t ButtonR2       = 0x21B3;
-static constexpr std::uint32_t ButtonSquare   = 0x21E0;
-static constexpr std::uint32_t ButtonTriangle = 0x21E1;
-static constexpr std::uint32_t ButtonCircle   = 0x21E2;
-static constexpr std::uint32_t ButtonCross    = 0x21E3;
+static constexpr inline std::uint32_t ButtonL1       = 0x21B0;
+static constexpr inline std::uint32_t ButtonR1       = 0x21B1;
+static constexpr inline std::uint32_t ButtonL2       = 0x21B2;
+static constexpr inline std::uint32_t ButtonR2       = 0x21B3;
+static constexpr inline std::uint32_t ButtonSquare   = 0x21E0;
+static constexpr inline std::uint32_t ButtonTriangle = 0x21E1;
+static constexpr inline std::uint32_t ButtonCircle   = 0x21E2;
+static constexpr inline std::uint32_t ButtonCross    = 0x21E3;
 
 
-static constexpr std::uint32_t RightStick     = 0x21C6;
+static constexpr inline std::uint32_t RightStick     = 0x21C6;
+
+static constexpr inline glm::uvec2 BucketTextureSize = glm::uvec2(468, 1280);
+static constexpr inline glm::uvec2 SoapTextureSize = glm::uvec2(100, 1440);
 
 namespace sc
 {
@@ -106,6 +109,7 @@ namespace sc
 
     static inline const float TextDepth = 1.f;
     static inline const float UIBackgroundDepth = -1.f;
+    static inline const float UIMeterDepth = -2.f;
 
     //hmm we need to make sure to set these with the scene scale too...
     static inline constexpr glm::vec2 SmallTextOffset = glm::vec2(1.f);

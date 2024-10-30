@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 #ifdef HIDE_BACKGROUND
 #include <crogine/graphics/SimpleQuad.hpp>
 #endif
@@ -71,13 +72,16 @@ private:
     cro::EnvironmentMap m_environmentMap;
 
     cro::RenderTexture m_bucketTexture;
-    //cro::RenderTexture m_soapTexture;
+    cro::RenderTexture m_soapTexture;
 
     cro::Entity m_bucketCamera;
 
     cro::Entity m_music;
     cro::Entity m_body0;
     cro::Entity m_body1;
+
+    std::vector<cro::Vertex2D> m_soapVertexData;
+    cro::SimpleVertexArray m_soapVertices;
 
 #ifdef HIDE_BACKGROUND
     //temp background placeholder
@@ -253,6 +257,7 @@ private:
 
     std::vector<cro::Entity> m_messageQueue;
     void showMessage(const std::string&);
+    void showSoapEffect();
 
     void resetCamera();
 
@@ -260,4 +265,5 @@ private:
     void attachSprite(cro::Entity); //calcs coords from screen space when spawning sprite items
 
     void levelMeterCallback(cro::Entity); //resize callbacks for level meters
+
 };

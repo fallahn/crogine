@@ -69,7 +69,7 @@ namespace
 {
 #include "Shaders.inl"
 
-    const std::string tempBackground = "assets/arcade/scrub/images/body_mask.png";
+    const std::string tempBackground = "assets/arcade/scrub/images/noise.png";
 
     constexpr float BallRadius = 0.021f;
     constexpr float StrokeDistance = 0.16f - BallRadius;
@@ -232,6 +232,9 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
 #ifdef CRO_DEBUG_
         case SDLK_l:
             m_score.remainingTime = 0.f;
+            break;
+        case SDLK_o:
+            showSoapEffect();
             break;
         case SDLK_p:
             m_gameScene.getSystem<ScrubPhysicsSystem>()->spawnBall(cro::Colour::Magenta);
@@ -529,8 +532,9 @@ void ScrubGameState::render()
     m_bucketTexture.display();
 
 
-    //m_soapTexture.clear(cro::Colour::Green);
-    //m_soapTexture.display();
+    m_soapTexture.clear(cro::Colour::Black);
+    m_soapVertices.draw();
+    m_soapTexture.display();
 
     m_gameScene.setActiveCamera(oldCam);
     m_gameScene.render();
@@ -633,6 +637,9 @@ void ScrubGameState::onCachedPop()
     m_gameScene.getSystem<ScrubPhysicsSystem>()->clearBalls();
 
     m_gameScene.simulate(0.f);
+
+    m_soapVertexData.clear();
+    m_soapVertices.setVertexData(m_soapVertexData);
 }
 
 void ScrubGameState::addSystems()
@@ -672,10 +679,14 @@ void ScrubGameState::loadAssets()
 
 
     //render textures
-    m_bucketTexture.create(468, 1280, true, false, 2); //hmm really we should be folling the user setting for MSAA
+    m_bucketTexture.create(BucketTextureSize.x, BucketTextureSize.y, true, false, 2); //hmm really we should be following the user setting for MSAA
     m_bucketTexture.setSmooth(true);
-    //m_soapTexture.create(300.f, 1440.f, false);
+    m_soapTexture.create(SoapTextureSize.x, SoapTextureSize.y, false);
+    m_soapTexture.setSmooth(true);
 
+    m_soapVertices.setBlendMode(cro::Material::BlendMode::Additive);
+    m_soapVertices.setTexture(m_resources.textures.get("assets/arcade/scrub/images/droplet.png"));
+    m_soapVertices.setPrimitiveType(GL_TRIANGLES);
 
     //bucket physics
     m_gameScene.getSystem<ScrubPhysicsSystem>()->loadMeshData();
@@ -1053,7 +1064,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.f, 0.f);
-    entity.getComponent<UIElement>().absolutePosition = { 12.f, 16.f };
+    entity.getComponent<UIElement>().absolutePosition = { 16.f, 16.f };
     entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.addComponent<cro::Callback>().active = true;
@@ -1309,7 +1320,7 @@ void ScrubGameState::createUI()
             ent.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(sc::ShaderID::LevelMeter));
             ent.getComponent<cro::Drawable2D>().setTexture(&bgTex);
             ent.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-            ent.addComponent<UIElement>().depth = -2.f;
+            ent.addComponent<UIElement>().depth = sc::UIMeterDepth;
             ent.getComponent<UIElement>().resizeCallback = std::bind(&ScrubGameState::levelMeterCallback, this, std::placeholders::_1);
             m_spriteRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
@@ -1320,7 +1331,7 @@ void ScrubGameState::createUI()
     //soap level
     entity = createLevelMeter(SoapMeterColour);
     entity.getComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
-    entity.getComponent<UIElement>().absolutePosition = { -(BarWidth + 12.f), 12.f };
+    entity.getComponent<UIElement>().absolutePosition = { -(BarWidth + 42.f), 12.f };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Callback>().function =
@@ -1359,7 +1370,7 @@ void ScrubGameState::createUI()
     //current ball cleanliness
     entity = createLevelMeter(cro::Colour::Blue);
     entity.getComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
-    entity.getComponent<UIElement>().absolutePosition = { -((BarWidth + 12.f) * 2.f), 12.f };
+    entity.getComponent<UIElement>().absolutePosition = { -((BarWidth + 42.f) * 2.f), 12.f };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
@@ -1382,6 +1393,18 @@ void ScrubGameState::createUI()
     tubeEnt.getComponent<UIElement>().depth = -0.1f;
     entity.getComponent<cro::Transform>().addChild(tubeEnt.getComponent<cro::Transform>());
 
+    //soap animation quad
+    const auto soapQuadSize = glm::vec2(SoapTextureSize);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_soapTexture.getTexture());
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 1.f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { -(soapQuadSize.x + 42.f), -soapQuadSize.y };
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth + sc::UIMeterDepth;
+    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
 
     //bucket animation quad - TODO add this to m_animatedEntities and have it slide in on start?
@@ -1391,20 +1414,9 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::Sprite>(m_bucketTexture.getTexture());
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { 40.f, 60.f };
-    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    entity.getComponent<UIElement>().absolutePosition = { 42.f, 60.f };
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth ;
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //soap animation quad
-    /*entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_soapTexture.getTexture());
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = { 1.f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { -320.f, 10.f };
-    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
-    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
 
 
 
@@ -1920,6 +1932,108 @@ void ScrubGameState::showMessage(const std::string& str)
     m_messageQueue.push_back(entity);
 
     attachText(entity);
+}
+
+void ScrubGameState::showSoapEffect()
+{
+    //TODO this should never be called while already
+    //active, but we should probably add some mechanism
+    //to stop that happening just in case.
+
+    static constexpr glm::vec2 BubbleSize = glm::vec2(100.f, 100.f);
+    struct SoapBubble final
+    {
+        glm::vec2 position = glm::vec2(0.f);
+        glm::vec2 velocity = glm::vec2(0.f);
+        float scale = 1.f;
+
+        void createVerts(std::vector<cro::Vertex2D>& dest)
+        {
+            const auto offset = (BubbleSize / 2.f) * scale;
+            dest.emplace_back(position + glm::vec2(-offset.x, offset.y), glm::vec2(0.f, 1.f));
+            dest.emplace_back(position - offset, glm::vec2(0.f));
+            dest.emplace_back(position + offset, glm::vec2(1.f));
+
+            dest.emplace_back(position + offset, glm::vec2(1.f));
+            dest.emplace_back(position - offset, glm::vec2(0.f));
+            dest.emplace_back(position + glm::vec2(offset.x, -offset.y), glm::vec2(1.f, 0.f));
+        }
+    };
+
+    struct SoapCallbackData final
+    {
+        std::vector<SoapBubble> bubbles;
+        float emitTime = 1.5f;
+        float emitRate = 0.08f;
+
+        float timeToEmission = 1.f; //give this some value so we spawn at least one immediately
+    };
+
+    //create an entity which updates the SimpleVertexArray
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::GarbageCollect;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<SoapCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& data = e.getComponent<cro::Callback>().getUserData<SoapCallbackData>();
+            data.emitTime -= dt;
+            data.timeToEmission += dt;
+
+            if (data.emitTime > 0)
+            {
+                //check emit time
+                if (data.timeToEmission > data.emitRate)
+                {
+                    data.timeToEmission -= data.emitRate;
+                    data.emitRate *= 1.03f;
+
+                    auto& bubble = data.bubbles.emplace_back();
+                    bubble.position = { SoapTextureSize.x / 2, SoapTextureSize.y + 20 };
+                    bubble.scale = 0.25f;
+                    bubble.velocity.y = -600.f;
+
+                    //add some randomness
+                    std::int32_t MaxOffset = static_cast<std::int32_t>(SoapTextureSize.x) / 4;
+                    bubble.position.x += cro::Util::Random::value(-MaxOffset, MaxOffset);
+                    bubble.scale += cro::Util::Random::value(0.01f, 0.04f);
+                }                
+            }
+
+            m_soapVertexData.clear();
+
+            //check array, if empty delete entity
+            if (data.bubbles.empty())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+
+                LogI << "soap ended." << std::endl;
+            }
+            else //else update vertices
+            {
+                //remove bubbles which have gone off the bottom
+                data.bubbles.erase(std::remove_if(data.bubbles.begin(), data.bubbles.end(), [](const SoapBubble& b)
+                    {
+                        return b.position.y < -20.f;
+                    }), data.bubbles.end());
+
+                static constexpr glm::vec2 Gravity(0.f, -890.f);
+
+                for (auto& b : data.bubbles)
+                {
+                    b.velocity += Gravity * dt;
+                    b.position += b.velocity * dt;
+                    b.scale *= 1.01f;
+                    b.createVerts(m_soapVertexData);
+                }
+            }
+            m_soapVertices.setVertexData(m_soapVertexData);
+        };
+
+    //TODO either create an entity or use an existing
+    //entity with bubble particles and start emitting
 }
 
 void ScrubGameState::resetCamera()

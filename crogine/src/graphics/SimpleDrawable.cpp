@@ -318,6 +318,12 @@ void SimpleDrawable::setVertexData(const std::vector<Vertex2D>& vertexData)
 
 void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
 {
+    if (m_vertexCount == 0)
+    {
+        //nothing to do.
+        return;
+    }
+
     //set projection
     const auto& projectionMatrix = RenderTarget::getActiveTarget()->getProjectionMatrix();    
        
