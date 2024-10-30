@@ -35,6 +35,7 @@ source distribution.
 #include "../Colordome-32.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/audio/AudioScape.hpp>
 
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -191,9 +192,11 @@ bool ScrubAttractState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_LEFT:
             prevTab();
+            m_tabs[m_currentTab].getComponent<cro::AudioEmitter>().play();
             break;
         case SDLK_RIGHT:
             nextTab();
+            m_tabs[m_currentTab].getComponent<cro::AudioEmitter>().play();
             break;
         case SDLK_BACKSPACE:
 #ifndef CRO_DEBUG_
@@ -218,10 +221,12 @@ bool ScrubAttractState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonLeftShoulder:
         case cro::GameController::DPadLeft:
             prevTab();
+            m_tabs[m_currentTab].getComponent<cro::AudioEmitter>().play();
             break;
         case cro::GameController::ButtonRightShoulder:
         case cro::GameController::DPadRight:
             nextTab();
+            m_tabs[m_currentTab].getComponent<cro::AudioEmitter>().play();
             break;
         }
         m_controllerIndex = cro::GameController::controllerID(evt.cbutton.which);
@@ -314,10 +319,13 @@ void ScrubAttractState::buildScene()
 
     auto size = glm::vec2(cro::App::getWindow().getSize());
 
+    cro::AudioScape as;
+    as.loadFromFile("assets/arcade/scrub/sound/menu.xas", m_resources.audio);
 
     //title tab
     m_tabs[TabID::Title] = m_uiScene.createEntity();
     m_tabs[TabID::Title].addComponent<cro::Transform>();
+    m_tabs[TabID::Title].addComponent<cro::AudioEmitter>() = as.getEmitter("next");
     m_tabs[TabID::Title].addComponent<cro::Callback>().active = true;
     m_tabs[TabID::Title].getComponent<cro::Callback>().setUserData<TabData>();
     m_tabs[TabID::Title].getComponent<cro::Callback>().function = std::bind(&processTab, std::placeholders::_1, std::placeholders::_2);
@@ -336,6 +344,7 @@ void ScrubAttractState::buildScene()
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("menu_boink");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString("Scrub!");
     entity.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize * getViewScale());
@@ -366,6 +375,7 @@ void ScrubAttractState::buildScene()
             if (data.rotation == data.TargetRotation)
             {
                 e.getComponent<cro::Callback>().active = false;
+                e.getComponent<cro::AudioEmitter>().play();
             }
         };
 
@@ -376,6 +386,7 @@ void ScrubAttractState::buildScene()
     //title background - remember sprites are added to the spriteNode of the current tab for correct scaling...
     auto& bgTex = m_resources.textures.get("assets/arcade/scrub/images/attract_bg.png");
     entity = m_uiScene.createEntity();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("menu_show");
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
@@ -410,6 +421,7 @@ void ScrubAttractState::buildScene()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, 0.f));
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("menu_text");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_scrubTexture.getTexture());
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -458,6 +470,9 @@ void ScrubAttractState::buildScene()
             textEnt.getComponent<cro::Callback>().active = true;
             bgEnt.getComponent<cro::Callback>().active = true;
             scrubEnt.getComponent<cro::Callback>().active = true;
+
+            scrubEnt.getComponent<cro::AudioEmitter>().play();
+            bgEnt.getComponent<cro::AudioEmitter>().play();
         }; 
     //TODO titleData.onStartOut //to play exit anim
 
@@ -465,6 +480,7 @@ void ScrubAttractState::buildScene()
     //how to play tab
     m_tabs[TabID::HowTo] = m_uiScene.createEntity();
     m_tabs[TabID::HowTo].addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_tabs[TabID::HowTo].addComponent<cro::AudioEmitter>() = as.getEmitter("next");
     m_tabs[TabID::HowTo].addComponent<cro::Callback>().active = true;
     m_tabs[TabID::HowTo].getComponent<cro::Callback>().setUserData<TabData>();
     m_tabs[TabID::HowTo].getComponent<cro::Callback>().function = std::bind(&processTab, std::placeholders::_1, std::placeholders::_2);
@@ -555,6 +571,7 @@ void ScrubAttractState::buildScene()
     //high scores tab (or personal best in non-steam)
     m_tabs[TabID::Scores] = m_uiScene.createEntity();
     m_tabs[TabID::Scores].addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_tabs[TabID::Scores].addComponent<cro::AudioEmitter>() = as.getEmitter("next");
     m_tabs[TabID::Scores].addComponent<cro::Callback>().active = true;
     m_tabs[TabID::Scores].getComponent<cro::Callback>().setUserData<TabData>();
     m_tabs[TabID::Scores].getComponent<cro::Callback>().function = std::bind(&processTab, std::placeholders::_1, std::placeholders::_2);

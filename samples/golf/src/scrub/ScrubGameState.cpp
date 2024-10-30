@@ -408,12 +408,15 @@ bool ScrubGameState::simulate(float dt)
 
 
         m_score.totalRunTime += dt;
-#ifndef CRO_DEBUG_
         m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
+#ifndef CRO_DEBUG_
 #endif
         m_score.quitTimeout = 0.f;
         if (m_score.remainingTime == 0)
         {
+            m_music.getComponent<cro::AudioEmitter>().pause();
+            m_soundDirector->playSound(AudioID::FXStreakBroken, MixerChannel::Effects);
+            
             m_score.gameRunning = false;
             m_score.gameFinished = true;
             m_score.totalScore += static_cast<std::int32_t>(std::floor(m_score.avgCleanliness));
@@ -1733,31 +1736,12 @@ bool ScrubGameState::updateScore()
         {
             //this should never be 0, but just in case...
         case 0: break;
-        default: 
-            //every 10 after
-            if (m_score.bonusRun % 10 == 0)
-            {
-                m_score.totalScore += 10000;
-                m_score.remainingTime += 1.5f;
-
-                showMessage("10x STREAK!");
-                showMessage("+10000");
-                showMessage("+1.5s");
-
-                m_soundDirector->playSound(AudioID::VOTenX, MixerChannel::Voice);
-                m_soundDirector->playSound(AudioID::FXTenX, MixerChannel::Effects, 0.3f);
-            }
-            else
-            {
-                showMessage("PERFECT");
-            }
-            break;
         case 3:
-            m_score.totalScore += 3000;
+            m_score.totalScore += 300;
             m_score.remainingTime += 0.25f;
 
             showMessage("3x STREAK!");
-            showMessage("+3000");
+            showMessage("+350");
             showMessage("+0.25s");
 
             m_soundDirector->playSound(AudioID::VOThreeX, MixerChannel::Voice);
@@ -1768,15 +1752,34 @@ bool ScrubGameState::updateScore()
             showMessage("Soap Multiplier Increased");
             break;
         case 5:
-            m_score.totalScore += 5000;
-            m_score.remainingTime += 0.5f;
+            m_score.totalScore += 500;
+            m_score.remainingTime += 0.35f;
 
             showMessage("5x STREAK!");
-            showMessage("+5000");
-            showMessage("+0.5s");
+            showMessage("+550");
+            showMessage("+0.35s");
 
             m_soundDirector->playSound(AudioID::VOFiveX, MixerChannel::Voice);
             m_soundDirector->playSound(AudioID::FXFiveX, MixerChannel::Effects, 0.6f);
+            break;
+        default: 
+            //every 10 after
+            if (m_score.bonusRun % 10 == 0)
+            {
+                m_score.totalScore += 1000;
+                m_score.remainingTime += 0.75f;
+
+                showMessage("10x STREAK!");
+                showMessage("+1500");
+                showMessage("+0.75s");
+
+                m_soundDirector->playSound(AudioID::VOTenX, MixerChannel::Voice);
+                m_soundDirector->playSound(AudioID::FXTenX, MixerChannel::Effects, 0.3f);
+            }
+            else
+            {
+                showMessage("PERFECT");
+            }
             break;
         }
     }
@@ -1804,7 +1807,7 @@ bool ScrubGameState::updateScore()
     //keep the score but not add time in this case
     if (m_score.gameRunning)
     {
-        float bonus = Score::TimeBonus * (cleanliness / 100.f);
+        float bonus = Score::TimeBonus * cro::Util::Easing::easeOutQuad(cleanliness / 100.f);
         bonus -= std::min(bonus / 2.f, 0.05f * (m_score.ballsWashed / 10));
         m_score.remainingTime += bonus;
         
@@ -1817,7 +1820,7 @@ bool ScrubGameState::updateScore()
 
             showMessage(ss.str());
         }
-        const float bonusProgress = static_cast<float>(m_score.bonusRun) / 10.f;
+        const float bonusProgress = static_cast<float>(m_score.bonusRun) / 100.f;
         m_score.remainingTime += Score::TimeBonus * bonusProgress;
 
         if (bonusProgress != 0)
@@ -1993,6 +1996,8 @@ void ScrubGameState::showSoapEffect()
 
         float previousPosition = 0.f; //tracks the height of the first particle so we know when to trigger soap filling
         float triggerPosition = 0.f;
+
+        bool soapRemoved = false;
     };
 
     SoapCallbackData d;
@@ -2047,8 +2052,10 @@ void ScrubGameState::showSoapEffect()
                 auto p = data.bubbles[0].position.y;
                 if (p < data.triggerPosition
                     && data.previousPosition > data.triggerPosition
-                    && m_handle.soap.amount != Handle::Soap::MaxSoap)
+                    && !data.soapRemoved)
                 {
+                    data.soapRemoved = true;
+
                     m_handle.soap.count--;
                     m_handle.soap.refresh();
                     m_soundDirector->playSound(AudioID::FXFillSoap, MixerChannel::Menu);
