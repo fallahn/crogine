@@ -82,6 +82,7 @@ private:
 
     std::vector<cro::Vertex2D> m_soapVertexData;
     cro::SimpleVertexArray m_soapVertices;
+    bool m_soapAnimationActive;
 
 #ifdef HIDE_BACKGROUND
     //temp background placeholder
@@ -265,5 +266,4 @@ private:
     void attachSprite(cro::Entity); //calcs coords from screen space when spawning sprite items
 
     void levelMeterCallback(cro::Entity); //resize callbacks for level meters
-
 };

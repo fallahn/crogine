@@ -97,7 +97,7 @@ void main()
     vec4 soapColour = mix(TEXTURE(u_texture, bgCoord + soapOffset), v_colour, 0.25) + vec4(specularColour, 0.0);
 
     FRAG_OUT = mix(bgColour, soapColour, soapMix);
-    FRAG_OUT.a = soapMix;
+    FRAG_OUT.a = soapMix; //hm if we do *this* then we don't really need to be sampling the non-offset texture?
 })";
 
 /*

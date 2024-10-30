@@ -112,6 +112,7 @@ ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context conte
     m_soundDirector         (nullptr),
     m_gameScene             (context.appInstance.getMessageBus()),
     m_uiScene               (context.appInstance.getMessageBus(), 512),
+    m_soapAnimationActive   (false),
     m_axisPosition          (0),
     m_leftTriggerPosition   (0),
     m_rightTriggerPosition  (0),
@@ -193,10 +194,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             {
                 if (m_handle.soap.count)
                 {
-                    m_handle.soap.count--;
-                    m_handle.soap.refresh();
-                    m_soundDirector->playSound(AudioID::FXFillSoap, MixerChannel::Menu);
-
+                    //this also does the resetting of the soap values
                     showSoapEffect();
                 }
                 else
@@ -642,6 +640,7 @@ void ScrubGameState::onCachedPop()
 
     m_soapVertexData.clear();
     m_soapVertices.setVertexData(m_soapVertexData);
+    m_soapAnimationActive = false;
 }
 
 void ScrubGameState::addSystems()
@@ -1176,10 +1175,6 @@ void ScrubGameState::createUI()
         };
 
 
-
-    static constexpr float BarHeight = 400.f;
-    static constexpr float BarWidth = 80.f;
-
     //streak count
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1340,9 +1335,10 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
-            const float speed = dt;
             auto& currPos = e.getComponent<cro::Callback>().getUserData<float>();
             const auto target = std::clamp((m_handle.soap.amount - Handle::Soap::MinSoap) / (Handle::Soap::MaxSoap - Handle::Soap::MinSoap), 0.f, 1.f);
+
+            const float speed = dt;// *(0.1f + (0.9f * currPos));
 
             if (currPos > target)
             {
@@ -1355,11 +1351,11 @@ void ScrubGameState::createUI()
             
             //TODO it might be nice to do this as part of the shader but I cleverly didn't
             //include an effecient way to set uniforms per-drawable.
-            cro::Colour c = glm::mix(glm::vec4(1.f), SoapMeterColour.getVec4(), currPos);
+            /*cro::Colour c = glm::mix(glm::vec4(1.f), SoapMeterColour.getVec4(), currPos);
             for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
             {
                 v.colour = c;
-            }
+            }*/
 
             //so let's crop the drawable instead
             cro::FloatRect cropping = { 0.f, 0.f, BarWidth, BarHeight * currPos };
@@ -1414,6 +1410,7 @@ void ScrubGameState::createUI()
     entity.getComponent<cro::Drawable2D>().setTexture(&bgTex);
     entity.getComponent<cro::Drawable2D>().bindUniform("u_bubbleTexture", cro::TextureID(m_soapTexture.getTexture()));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = -0.3f;
     entity.getComponent<UIElement>().resizeCallback = std::bind(&ScrubGameState::levelMeterCallback, this, std::placeholders::_1);
     entity.getComponent<UIElement>().absolutePosition = { -((soapQuadSize.x - BarWidth) / 2.f), 0.f };
     soapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1949,9 +1946,10 @@ void ScrubGameState::showMessage(const std::string& str)
 
 void ScrubGameState::showSoapEffect()
 {
-    //TODO this should never be called while already
-    //active, but we should probably add some mechanism
-    //to stop that happening just in case.
+    if (m_soapAnimationActive)
+    {
+        return;
+    }
 
     static constexpr glm::vec2 BubbleSize = glm::vec2(100.f, 100.f);
     struct SoapBubble final
@@ -1978,17 +1976,24 @@ void ScrubGameState::showSoapEffect()
     struct SoapCallbackData final
     {
         std::vector<SoapBubble> bubbles;
-        float emitTime = 1.5f;
+        float emitTime = 2.f;// 1.5f;
         float emitRate = 0.08f;
 
         float timeToEmission = 1.f; //give this some value so we spawn at least one immediately
+
+        float previousPosition = 0.f; //tracks the height of the first particle so we know when to trigger soap filling
+        float triggerPosition = 0.f;
     };
+
+    SoapCallbackData d;
+    d.emitTime *= (1.f - (m_handle.soap.amount / Handle::Soap::MaxSoap)); //so we shorten the anim if soap is partially full
+    d.triggerPosition = BarHeight * (m_handle.soap.amount / Handle::Soap::MaxSoap);
 
     //create an entity which updates the SimpleVertexArray
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::GarbageCollect;
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<SoapCallbackData>();
+    entity.getComponent<cro::Callback>().setUserData<SoapCallbackData>(d);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
@@ -2023,9 +2028,23 @@ void ScrubGameState::showSoapEffect()
             {
                 e.getComponent<cro::Callback>().active = false;
                 m_uiScene.destroyEntity(e);
+
+                m_soapAnimationActive = false;
             }
             else //else update vertices
             {
+                //check to see if the first one has hit the soap level
+                auto p = data.bubbles[0].position.y;
+                if (p < data.triggerPosition
+                    && data.previousPosition > data.triggerPosition
+                    && m_handle.soap.amount != Handle::Soap::MaxSoap)
+                {
+                    m_handle.soap.count--;
+                    m_handle.soap.refresh();
+                    m_soundDirector->playSound(AudioID::FXFillSoap, MixerChannel::Menu);
+                }
+                data.previousPosition = p;
+
                 //remove bubbles which have gone off the bottom
                 data.bubbles.erase(std::remove_if(data.bubbles.begin(), data.bubbles.end(), [](const SoapBubble& b)
                     {
@@ -2044,6 +2063,8 @@ void ScrubGameState::showSoapEffect()
             }
             m_soapVertices.setVertexData(m_soapVertexData);
         };
+
+    m_soapAnimationActive = true;
 
     //TODO either create an entity or use an existing
     //entity with bubble particles and start emitting

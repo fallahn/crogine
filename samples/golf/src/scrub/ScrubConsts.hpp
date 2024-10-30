@@ -68,7 +68,11 @@ static constexpr inline std::uint32_t ButtonCross    = 0x21E3;
 static constexpr inline std::uint32_t RightStick     = 0x21C6;
 
 static constexpr inline glm::uvec2 BucketTextureSize = glm::uvec2(468, 1280);
-static constexpr inline glm::uvec2 SoapTextureSize = glm::uvec2(100, 1440);
+static constexpr inline glm::uvec2 SoapTextureSize = glm::uvec2(80, 1440);
+
+//size of the level meters/bars
+static constexpr inline float BarHeight = 400.f;
+static constexpr inline float BarWidth = 80.f;
 
 namespace sc
 {
