@@ -97,6 +97,12 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
 ScrubBackgroundState::~ScrubBackgroundState()
 {
     m_sharedScrubData.backgroundTexture = nullptr;
+
+    //reset any controllers here in case we're just quitting the game
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
+    }
 }
 
 

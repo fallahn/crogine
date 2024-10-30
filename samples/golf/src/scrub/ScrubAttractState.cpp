@@ -300,8 +300,8 @@ void ScrubAttractState::loadAssets()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>().setSource(m_resources.audio.get(id));
     entity.getComponent<cro::AudioEmitter>().setLooped(true);
-    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Music);
-    entity.getComponent<cro::AudioEmitter>().setVolume(0.5f);
+    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
     m_music = entity;
 }
 
@@ -490,14 +490,14 @@ void ScrubAttractState::buildScene()
     howToData.spriteNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     static const cro::String StringXbox = 
-        "Use Right Stick to scrub\nUse " + cro::String(ButtonLB) 
-        + " to insert and " + cro::String(ButtonRB) 
-        + " to remove a ball\n Press " + cro::String(ButtonA) + " to add more soap\n\n\nPress Start to Pause the game";
+        "Use " + cro::String(ButtonLB) + " to insert and " + cro::String(ButtonRB) 
+        + " to remove a ball\nUse " + cro::String(ButtonLT) + "/" + cro::String(ButtonRT) + " or " + cro::String(RightStick)
+        + " to scrub the ball\nPress " + cro::String(ButtonA) + " to add more soap\n\n\nPress Start to Pause the game";
 
     static const cro::String StringPS =
-        "Use Right Stick to scrub\nUse " + cro::String(ButtonL1)
-        + " to insert and " + cro::String(ButtonR1)
-        + " to remove a ball\n Press " + cro::String(ButtonCross) + " to add more soap\n\n\nPress Start to Pause the game";
+        "Use " + cro::String(ButtonL1) + " to insert and " + cro::String(ButtonR1)
+        + " to remove a ball\nUse " + cro::String(ButtonL2) + "/" + cro::String(ButtonR2) + " or " + cro::String(RightStick)
+        + " to scrub the ball\nPress " + cro::String(ButtonCross) + " to add more soap\n\n\nPress Start to Pause the game";
 
     //help text
     entity = m_uiScene.createEntity();
@@ -532,6 +532,23 @@ void ScrubAttractState::buildScene()
             }
         };
 
+    m_tabs[TabID::HowTo].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setCharacterSize(sc::SmallTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
+    entity.getComponent<cro::Text>().setString("Hint: Longer strokes lead to cleaner balls!");
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -80.f };
+    entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
     m_tabs[TabID::HowTo].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -830,12 +847,13 @@ void ScrubAttractState::onCachedPush()
     m_music.getComponent<cro::AudioEmitter>().play();
 
     //update the keyboard help string with current key binds
-    m_keyboardHelpString = "Use " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]) 
-        + "/" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right])
-        + " to scrub\nUse " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]) 
+    m_keyboardHelpString = "Use " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::PrevClub]) 
         + " to insert and " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::NextClub])
-        + " to remove a ball\nPress " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) 
+        + " to remove a ball\nUse " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left])
+        + "/" + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right])
+        + "to scrub the ball\nPress " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) 
         + " to add more soap\n\n\nPress ESCAPE to Pause the game";
+
 
     //choose a model at random
     if (cro::Util::Random::value(0, 1) == 0)

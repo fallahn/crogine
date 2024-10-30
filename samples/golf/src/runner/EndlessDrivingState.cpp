@@ -653,15 +653,15 @@ void EndlessDrivingState::loadAssets()
     m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>() = m_audioscape.getEmitter("music");
     m_gameScene.getActiveCamera().getComponent<cro::AudioEmitter>().play();
 
-    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
+    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::UserMusic);
     auto fadeEnt = m_gameScene.createEntity();
     fadeEnt.addComponent<cro::Callback>().active = true;
     fadeEnt.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
-            float v = cro::AudioMixer::getPrefadeVolume(MixerChannel::Music);
+            float v = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
             v = std::min(1.f, v + dt);
-            cro::AudioMixer::setPrefadeVolume(v, MixerChannel::Music);
+            cro::AudioMixer::setPrefadeVolume(v, MixerChannel::UserMusic);
 
             if (v == 1)
             {

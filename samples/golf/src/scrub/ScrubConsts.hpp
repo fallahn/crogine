@@ -35,7 +35,7 @@ source distribution.
 
 #include <cstdint>
 
-//#define HIDE_BACKGROUND
+#define HIDE_BACKGROUND
 
 static constexpr inline float BucketOffset = 10.f;
 static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 7.f, 0.f);
@@ -44,6 +44,8 @@ static constexpr inline float MaxSpriteScale = 4.f; //when view scale returns th
 static constexpr cro::Colour SoapMeterColour = cro::Colour(0x0207ffff);// cro::Colour(0xadd9b7ff);
 
 //xbox
+static constexpr std::uint32_t ButtonLT = 0x2196;
+static constexpr std::uint32_t ButtonRT = 0x2197;
 static constexpr std::uint32_t ButtonLB = 0x2198;
 static constexpr std::uint32_t ButtonRB = 0x2199;
 static constexpr std::uint32_t ButtonX  = 0x21D0;
@@ -55,10 +57,15 @@ static constexpr std::uint32_t ButtonA  = 0x21D3;
 //ps
 static constexpr std::uint32_t ButtonL1       = 0x21B0;
 static constexpr std::uint32_t ButtonR1       = 0x21B1;
+static constexpr std::uint32_t ButtonL2       = 0x21B2;
+static constexpr std::uint32_t ButtonR2       = 0x21B3;
 static constexpr std::uint32_t ButtonSquare   = 0x21E0;
 static constexpr std::uint32_t ButtonTriangle = 0x21E1;
 static constexpr std::uint32_t ButtonCircle   = 0x21E2;
 static constexpr std::uint32_t ButtonCross    = 0x21E3;
+
+
+static constexpr std::uint32_t RightStick     = 0x21C6;
 
 namespace sc
 {

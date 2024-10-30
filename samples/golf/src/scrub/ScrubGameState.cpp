@@ -343,6 +343,13 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
     {
         pause();
     }
+    else if (evt.type == SDL_CONTROLLERDEVICEADDED)
+    {
+        for (auto i = 0; i < 4; ++i)
+        {
+            cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createFeedback(0, 1));
+        }
+    }
 
     else if (evt.type == SDL_KEYUP
         || evt.type == SDL_CONTROLLERBUTTONUP)
@@ -536,6 +543,11 @@ void ScrubGameState::render()
 //private
 void ScrubGameState::onCachedPush()
 {
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createFeedback(0, 1));
+    }
+
     //check ball state and detach if parented to handle
     //if (m_ball.entity.getComponent<cro::Transform>().getDepth() == 1)
     {
@@ -606,6 +618,11 @@ void ScrubGameState::onCachedPush()
 
 void ScrubGameState::onCachedPop()
 {
+    for (auto i = 0; i < 4; ++i)
+    {
+        cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
+    }
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::GarbageCollect;
     cmd.action = [&](cro::Entity e, float) {m_uiScene.destroyEntity(e); };
@@ -699,8 +716,8 @@ void ScrubGameState::loadAssets()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>().setSource(m_resources.audio.get(id));
     entity.getComponent<cro::AudioEmitter>().setLooped(true);
-    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Music);
-    entity.getComponent<cro::AudioEmitter>().setVolume(0.35f);
+    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
+    entity.getComponent<cro::AudioEmitter>().setVolume(0.45f);
     m_music = entity;
 }
 
