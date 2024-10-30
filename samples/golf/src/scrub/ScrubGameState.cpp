@@ -45,12 +45,14 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
@@ -661,6 +663,7 @@ void ScrubGameState::addSystems()
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::ParticleSystem>(mb);
 }
 
 void ScrubGameState::loadAssets()
@@ -1415,6 +1418,13 @@ void ScrubGameState::createUI()
     entity.getComponent<UIElement>().absolutePosition = { -((soapQuadSize.x - BarWidth) / 2.f), 0.f };
     soapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //soap particles
+    entity = m_uiScene.createEntity();;
+    entity.addComponent<cro::Transform>().setPosition({ 100.f, 100.f });
+    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/arcade/scrub/particles/soap.cps", m_resources.textures);
+    entity.getComponent<cro::ParticleEmitter>().start();
+    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //bucket animation quad - TODO add this to m_animatedEntities and have it slide in on start?
