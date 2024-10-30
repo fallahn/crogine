@@ -78,6 +78,7 @@ namespace sc
         {
             LevelMeter,
             Fire,
+            Soap,
 
             Count
         };

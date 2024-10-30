@@ -61,6 +61,45 @@ void main()
     FRAG_OUT = mix(TEXTURE(u_texture, coord), v_colour, 0.25 + (abs(u) * 0.3)) + vec4(highlight * HighlightAmount);
 })";
 
+static const inline std::string SoapFragment =
+R"(
+uniform sampler2D u_texture; //background texture
+uniform sampler2D u_bubbleTexture; //metaballs.
+uniform vec4 u_uvRect;
+
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+
+OUTPUT
+
+//crummy fake specular
+const vec3 LightDir = vec3(0.5);
+
+void main()
+{
+    vec2 bgCoord = v_texCoord;
+    vec2 soapCoord = vec2((v_texCoord.x - u_uvRect.r) / u_uvRect.b, (v_texCoord.y - u_uvRect.g) / u_uvRect.a);
+
+    vec3 soapMask = TEXTURE(u_bubbleTexture, soapCoord).rgb;
+    
+    float soapMix = soapMask.b;
+    soapMix = smoothstep(0.3, 0.39, soapMix);
+
+    vec2 soapOffset = normalize(soapMask.rg * 2.0 - 1.0);
+
+    vec3 reallyFakeNormal = normalize(vec3(soapOffset, 1.0 - length(soapOffset)));
+    float specularAngle = clamp(dot(reallyFakeNormal, normalize(LightDir)), 0.0, 1.0);
+    vec3 specularColour = vec3(pow(specularAngle, 64.0)) * 2.0;
+
+    soapOffset *= 0.025;
+
+    vec4 bgColour = TEXTURE(u_texture, bgCoord);
+    vec4 soapColour = mix(TEXTURE(u_texture, bgCoord + soapOffset), v_colour, 0.25) + vec4(specularColour, 0.0);
+
+    FRAG_OUT = mix(bgColour, soapColour, soapMix);
+    FRAG_OUT.a = soapMix;
+})";
+
 /*
 https://blog.febucci.com/2019/05/fire-shader/
 */
