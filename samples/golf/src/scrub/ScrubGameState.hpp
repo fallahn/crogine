@@ -76,6 +76,7 @@ private:
 
     cro::Entity m_bucketCamera;
 
+    std::int32_t m_pitchStage;
     cro::Entity m_music;
     cro::Entity m_body0;
     cro::Entity m_body1;
@@ -215,7 +216,7 @@ private:
 
     struct Score final
     {
-        float threshold = 40.f; //ball must be cleaner than this to score
+        float threshold = 50.f; //ball must be cleaner than this to score
 
         float remainingTime = 30.f;
         std::int32_t ballsWashed = 0;

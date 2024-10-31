@@ -114,6 +114,7 @@ ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context conte
     m_soundDirector         (nullptr),
     m_gameScene             (context.appInstance.getMessageBus()),
     m_uiScene               (context.appInstance.getMessageBus(), 512),
+    m_pitchStage            (0),
     m_soapAnimationActive   (false),
     m_axisPosition          (0),
     m_leftTriggerPosition   (0),
@@ -406,11 +407,36 @@ bool ScrubGameState::simulate(float dt)
             m_messageQueue[0].getComponent<cro::Callback>().active = true;
         }
 
+        auto oldTime = m_score.remainingTime;
 
         m_score.totalRunTime += dt;
         m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #ifndef CRO_DEBUG_
 #endif
+        switch (m_pitchStage)
+        {
+        default:
+        case 0:
+            if (oldTime > 5
+                && m_score.remainingTime <= 5)
+            {
+                m_pitchStage = 1;
+                m_music.getComponent<cro::AudioEmitter>().setPitch(PitchChangeA);
+            }
+            break;
+        case 1:
+            if (oldTime > 3
+                && m_score.remainingTime <= 3)
+            {
+                m_pitchStage = 2;
+                m_music.getComponent<cro::AudioEmitter>().setPitch(PitchChangeB);
+            }
+            break;
+        case 2: 
+            //do nothing but also consume this state as we don't want default behaviour
+            break;
+        }
+
         m_score.quitTimeout = 0.f;
         if (m_score.remainingTime == 0)
         {
@@ -637,6 +663,8 @@ void ScrubGameState::onCachedPop()
     cmd.action = [&](cro::Entity e, float) {m_uiScene.destroyEntity(e); };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    m_pitchStage = 0;
+    m_music.getComponent<cro::AudioEmitter>().setPitch(1.f);
     m_music.getComponent<cro::AudioEmitter>().stop();
 
     m_gameScene.getSystem<ScrubPhysicsSystem>()->clearBalls();
@@ -1106,7 +1134,7 @@ void ScrubGameState::createUI()
             std::stringstream ss;
             ss.setf(std::ios::fixed);
             ss.precision(2);
-            ss << "Avg Cleanliness: " << m_score.avgCleanliness << "%";
+            ss << "Average: " << m_score.avgCleanliness << "%";
             e.getComponent<cro::Text>().setString(ss.str());
         };
 

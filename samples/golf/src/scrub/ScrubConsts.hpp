@@ -35,7 +35,7 @@ source distribution.
 
 #include <cstdint>
 
-//#define HIDE_BACKGROUND
+#define HIDE_BACKGROUND
 
 static constexpr inline float BucketOffset = 10.f;
 static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 7.f, 0.f);
@@ -73,6 +73,10 @@ static constexpr inline glm::uvec2 SoapTextureSize = glm::uvec2(80, 1440);
 //size of the level meters/bars
 static constexpr inline float BarHeight = 400.f;
 static constexpr inline float BarWidth = 80.f;
+
+//how much to shift the pitch by when time is low
+static inline constexpr float PitchChangeA = 1.12f;
+static inline constexpr float PitchChangeB = 1.19f;
 
 namespace sc
 {
