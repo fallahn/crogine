@@ -68,6 +68,8 @@ private:
     cro::Entity m_body0;
     cro::Entity m_body1;
 
+    cro::Entity m_highScoreText;
+
     struct TabID final
     {
         enum

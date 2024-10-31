@@ -82,6 +82,9 @@ namespace
     };
 
     StoredValue snapperFlags("snp");
+    StoredValue scrubScore("scb");
+
+    cro::String scrubString;
 
     std::vector<Social::Award> awards;
     const std::array<std::string, 12u> MonthStrings =
@@ -689,6 +692,39 @@ MonthlyChallenge& Social::getMonthlyChallenge()
 std::int32_t Social::getMonth()
 {
     return cro::SysTime::now().months() - 1; //we're using this as an index
+}
+
+void Social::setScrubScore(std::int32_t score)
+{
+    scrubScore.read();
+    if (score > scrubScore.value)
+    {
+        scrubScore.value = score;
+        scrubScore.write();
+
+        refreshScrubScore();
+    }
+}
+
+void Social::refreshScrubScore()
+{
+    scrubScore.read();
+    if (scrubScore.value != 0)
+    {
+        scrubString = "Personal Best: " + std::to_string(scrubScore.value);
+    }
+    else
+    {
+        scrubString = "No Score Yet.";
+    }
+
+    //lets the game know to refresh UI
+    cro::App::postMessage<Social::StatEvent>(Social::MessageID::StatsMessage)->type = Social::StatEvent::ScrubScoresReceived;
+}
+
+const cro::String& Social::getScrubScores()
+{
+    return scrubString;
 }
 
 void Social::takeScreenshot(const cro::String&, std::size_t courseIndex)

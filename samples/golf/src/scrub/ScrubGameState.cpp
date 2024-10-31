@@ -603,6 +603,8 @@ void ScrubGameState::onCachedPop()
     m_soapVertexData.clear();
     m_soapVertices.setVertexData(m_soapVertexData);
     m_soapAnimationActive = false;
+
+    Social::refreshScrubScore();
 }
 
 void ScrubGameState::addSystems()
@@ -1884,15 +1886,21 @@ void ScrubGameState::endRound()
     m_score.totalScore = 3900;*/
 
     
-    m_score.avgCleanliness = 64.f;
+    /*m_score.avgCleanliness = 64.f;
     m_score.totalRunTime = 71.f;
     m_score.ballsWashed = 24;
-    m_score.totalScore = 5600;
+    m_score.totalScore = 5600;*/
     
 #endif
     m_score.summary.runtimeBonus = static_cast<std::int32_t>(std::floor(m_score.totalRunTime * 10.f));
     m_score.summary.ballCountBonus = m_score.ballsWashed * 10;
     m_score.summary.cleanAvgBonus = static_cast<std::int32_t>(std::floor(m_score.avgCleanliness * 10.f));
+
+
+    Social::setScrubScore(m_score.totalScore 
+                        + m_score.summary.runtimeBonus 
+                        + m_score.summary.ballCountBonus 
+                        + m_score.summary.cleanAvgBonus);
 
 
     //game over, show scores.

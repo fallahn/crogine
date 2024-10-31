@@ -99,7 +99,8 @@ public:
             HOFReceived,
             AwardsReceived,
             RequestRestart,
-            LeagueReceived
+            LeagueReceived,
+            ScrubScoresReceived
         }type = StatsReceived;
         std::int32_t index = -1;
         std::int32_t page = -1;
@@ -238,6 +239,10 @@ public:
 
     static MonthlyChallenge& getMonthlyChallenge();
     static std::int32_t getMonth();
+
+    static void setScrubScore(std::int32_t);
+    static void refreshScrubScore();
+    static const cro::String& getScrubScores();
 
     static void showWebPage(const std::string&) {}
     static void readAllStats();

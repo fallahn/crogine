@@ -92,6 +92,8 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
 #else
     requestStackPush(StateID::ScrubAttract);
 #endif
+
+    Social::refreshScrubScore();
 }
 
 ScrubBackgroundState::~ScrubBackgroundState()

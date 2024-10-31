@@ -248,6 +248,15 @@ bool ScrubAttractState::handleEvent(const cro::Event& evt)
 
 void ScrubAttractState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == Social::MessageID::StatsMessage)
+    {
+        const auto& data = msg.getData<Social::StatEvent>();
+        if (data.type == Social::StatEvent::ScrubScoresReceived)
+        {
+            m_highScoreText.getComponent<cro::Text>().setString(Social::getScrubScores());
+        }
+    }
+
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -614,8 +623,23 @@ void ScrubAttractState::buildScene()
 
     m_tabs[TabID::Scores].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
-
+    //score list
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("No Scores Yet");
+    entity.getComponent<cro::Text>().setCharacterSize(sc::SmallTextSize * getViewScale());
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 100.f };
+    entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
+    m_highScoreText = entity;
+    m_tabs[TabID::Scores].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //start message
@@ -623,7 +647,7 @@ void ScrubAttractState::buildScene()
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Press Space To Start");
-    entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize* getViewScale());
+    entity.getComponent<cro::Text>().setCharacterSize(sc::MediumTextSize * getViewScale());
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -680,6 +704,11 @@ void ScrubAttractState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(infoFont).setString("Music by David KBD");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<UIElement>().absolutePosition = { 6.f, 14.f };
+    entity.getComponent<UIElement>().characterSize = InfoTextSize;
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
 
 
     auto resize = [&](cro::Camera& cam)
@@ -831,6 +860,8 @@ void ScrubAttractState::nextTab()
 
 void ScrubAttractState::onCachedPush()
 {
+    Social::refreshScrubScore();
+    
     //reset to default tab
     prevTab(); //this just tidies up existing tab before forcing the index below
     m_tabs[TabID::HowTo].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
