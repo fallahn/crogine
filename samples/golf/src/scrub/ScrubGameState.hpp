@@ -241,6 +241,22 @@ private:
         //this is the amount of time awarded multiplied
         //by how clean the ball is when it's removed.
         static constexpr float TimeBonus = 2.5f;
+
+        //used when summarising scores
+        struct Summary final
+        {
+            std::int32_t runtimeBonus = 0;
+            std::int32_t ballCountBonus = 0;
+            std::int32_t cleanAvgBonus = 0;
+
+            enum
+            {
+                Time, BallCount, Avg, Done
+            };
+            std::int32_t status = Time;
+            std::int32_t counter = 0; //used when counting the animation
+            bool active = false; //don't allow input until this is true
+        }summary;
     }m_score;
 
 
@@ -256,6 +272,7 @@ private:
     void handleCallback(cro::Entity, float);
     void ballCallback(cro::Entity, float);
     bool updateScore(); //returns false if ball wasn't clean enough
+    void endRound(); //displays the summary screen
 
     std::vector<cro::Entity> m_messageQueue;
     void showMessage(const std::string&);
