@@ -269,6 +269,7 @@ bool ScrubAttractState::simulate(float dt)
     {
         //tabScrollTime -= TabDisplayTime;
         nextTab();
+        m_tabs[m_currentTab].getComponent<cro::AudioEmitter>().play();
     }
 
     m_gameScene.simulate(dt);
@@ -882,7 +883,7 @@ void ScrubAttractState::onCachedPush()
             auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
             ct = std::min(1.f, ct + dt);
 
-            cro::AudioMixer::setPrefadeVolume(ct, MixerChannel::Music);
+            cro::AudioMixer::setPrefadeVolume(ct, MixerChannel::UserMusic);
 
             if (ct == 1)
             {
@@ -891,7 +892,7 @@ void ScrubAttractState::onCachedPush()
             }
         };
 
-    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
+    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::UserMusic);
     m_music.getComponent<cro::AudioEmitter>().play();
 
     //update the keyboard help string with current key binds
