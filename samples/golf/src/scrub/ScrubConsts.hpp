@@ -35,7 +35,7 @@ source distribution.
 
 #include <cstdint>
 
-//#define HIDE_BACKGROUND
+#define HIDE_BACKGROUND
 
 static constexpr inline float BucketOffset = 10.f;
 static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 7.f, 0.f);
@@ -66,6 +66,8 @@ static constexpr inline std::uint32_t ButtonCross    = 0x21E3;
 
 
 static constexpr inline std::uint32_t RightStick     = 0x21C6;
+static constexpr inline std::uint32_t Warning        = 0x26A0;
+static constexpr inline std::uint32_t EmojiTerminate = 0xFE0F;
 
 static constexpr inline glm::uvec2 BucketTextureSize = glm::uvec2(468, 1280);
 static constexpr inline glm::uvec2 SoapTextureSize = glm::uvec2(80, 1440);

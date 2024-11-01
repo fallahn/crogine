@@ -445,8 +445,8 @@ bool ScrubGameState::simulate(float dt)
         auto oldTime = m_score.remainingTime;
 
         m_score.totalRunTime += dt;
-        m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #ifndef CRO_DEBUG_
+        m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #endif
         switch (m_pitchStage)
         {
@@ -1110,6 +1110,40 @@ void ScrubGameState::createUI()
             e.getComponent<cro::Text>().setString(ss.str());
         };
 
+    //low soap warning
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setCharacterSize(sc::MediumTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setShadowColour(TextHighlightColour);
+    entity.getComponent<cro::Text>().setShadowOffset(sc::MediumTextOffset);
+    entity.getComponent<cro::Text>().setString(cro::String(Warning) + cro::String(EmojiTerminate) + "LOW SOAP" + cro::String(Warning) + cro::String(EmojiTerminate));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f, 1.f);
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -64.f };
+    entity.getComponent<UIElement>().characterSize = sc::MediumTextSize;
+    entity.getComponent<UIElement>().depth = sc::TextDepth;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            if (m_handle.soap.amount < 5)
+            {
+                static float timer = 0.f;
+                timer += dt * 2.f;
+
+                const auto scale = static_cast<std::int32_t>(timer) % 2;
+                e.getComponent<cro::Transform>().setScale(glm::ivec2(scale));
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+
+
     //soap count
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1128,7 +1162,7 @@ void ScrubGameState::createUI()
         [&](cro::Entity e, float)
         {
             std::stringstream ss;
-            ss << "Soap Bars: " << m_handle.soap.count;
+            ss << "Soap: " << m_handle.soap.count;
             e.getComponent<cro::Text>().setString(ss.str());
         };
 
@@ -1867,7 +1901,7 @@ bool ScrubGameState::updateScore()
 
                 const float count = std::ceil(currTime);
                 std::stringstream ss;
-                ss << "New Soap Bar In\n" << (int)count;
+                ss << "More Soap In\n" << (int)count;
                 e.getComponent<cro::Text>().setString(ss.str());
 
                 const float AnimateTime = 0.5f;
