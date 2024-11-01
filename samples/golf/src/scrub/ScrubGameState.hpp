@@ -109,6 +109,17 @@ private:
     std::array<cro::Entity, AnimatedEntity::Count> m_animatedEntities = {};
     
 
+    struct ParticleEntity final
+    {
+        enum
+        {
+            LevelBubbles,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, ParticleEntity::Count> m_particleEntities = {};
+
     std::int16_t m_axisPosition; //game controller axis
     std::int16_t m_leftTriggerPosition; //game controller axis
     std::int16_t m_rightTriggerPosition; //game controller axis

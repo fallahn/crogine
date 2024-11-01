@@ -510,7 +510,7 @@ void ParticleSystem::process(float dt)
 
                         //spawn particle in world position
                         //auto basePosition = worldPos + interpolation;// tx.getWorldPosition();
-                        p.position = basePosition + (settings.initialVelocity * cro::Util::Random::value(0.001f, 0.007f));
+                        p.position = basePosition + (settings.initialVelocity * cro::Util::Random::value(0.001f, 0.007f) * EmitterScale);
 
                         //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
                         p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon) * EmitterScale;

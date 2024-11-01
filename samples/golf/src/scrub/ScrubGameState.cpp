@@ -1409,7 +1409,7 @@ void ScrubGameState::createUI()
     tubeEnt.getComponent<UIElement>().depth = -0.1f;
     entity.getComponent<cro::Transform>().addChild(tubeEnt.getComponent<cro::Transform>());
 
-    //soap animation quad - hmm should we just parent this to the soap meter?
+    //soap animation quad
     const auto soapQuadSize = glm::vec2(SoapTextureSize);
     static constexpr cro::Colour SoapColour = SoapMeterColour;
     entity = m_uiScene.createEntity();
@@ -1434,13 +1434,26 @@ void ScrubGameState::createUI()
 
     //soap particles
     entity = m_uiScene.createEntity();;
-    entity.addComponent<cro::Transform>().setPosition({ 100.f, 100.f, -6.f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/arcade/scrub/particles/soap.cps", m_resources.textures);
-    entity.getComponent<cro::ParticleEmitter>().start();
+    //entity.getComponent<cro::ParticleEmitter>().start();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().depth = -6.f;
-    entity.getComponent<UIElement>().absolutePosition = { 100.f, 100.f };
-    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.getComponent<UIElement>().absolutePosition = { BarWidth / 2.f, 0.f };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&,soapEnt](cro::Entity e, float)
+        {
+            const auto BarPos = soapEnt.getComponent<cro::Drawable2D>().getCroppingArea().height;
+            e.getComponent<cro::Transform>().setPosition({ BarWidth / 2.f, BarPos });
+
+            if (BarPos > BarHeight * 0.99f)
+            {
+                e.getComponent<cro::ParticleEmitter>().stop();
+            }
+        };
+    soapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_particleEntities[ParticleEntity::LevelBubbles] = entity;
 
 
     //bucket animation quad - TODO add this to m_animatedEntities and have it slide in on start?
@@ -2331,7 +2344,7 @@ void ScrubGameState::showSoapEffect()
 
     SoapCallbackData d;
     d.emitTime *= (1.f - (m_handle.soap.amount / Handle::Soap::MaxSoap)); //so we shorten the anim if soap is partially full
-    d.triggerPosition = BarHeight * (m_handle.soap.amount / Handle::Soap::MaxSoap);
+    d.triggerPosition = BarHeight * ((m_handle.soap.amount - Handle::Soap::MinSoap) / (Handle::Soap::MaxSoap - Handle::Soap::MinSoap));
 
     //create an entity which updates the SimpleVertexArray
     auto entity = m_uiScene.createEntity();
@@ -2388,6 +2401,8 @@ void ScrubGameState::showSoapEffect()
                     m_handle.soap.count--;
                     m_handle.soap.refresh();
                     m_soundDirector->playSound(AudioID::FXFillSoap, MixerChannel::Menu);
+
+                    m_particleEntities[ParticleEntity::LevelBubbles].getComponent<cro::ParticleEmitter>().start();
                 }
                 data.previousPosition = p;
 
