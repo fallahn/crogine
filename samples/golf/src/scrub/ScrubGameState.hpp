@@ -50,7 +50,10 @@ source distribution.
 struct SharedStateData;
 struct SharedScrubData;
 class ScrubSoundDirector;
-class ScrubGameState final : public cro::State, public cro::GuiClient
+class ScrubGameState final : public cro::State
+#ifdef CRO_DEBUG_
+    , public cro::GuiClient
+#endif
 {
 public:
     ScrubGameState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedScrubData&);

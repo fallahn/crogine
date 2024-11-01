@@ -303,6 +303,25 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     cro::Image img;
     img.create(2, 2, cro::Colour::White);
     m_fallbackTexture.loadFromImage(img);
+
+#ifdef CRO_DEBUG_
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Particle System"))
+    //        {
+    //            auto emitterCount = getEntities().size();
+    //            ImGui::Text("%lu active Emitters", emitterCount);
+
+    //            for (auto e : getEntities())
+    //            {
+    //                const auto& emitter = e.getComponent<cro::ParticleEmitter>();
+    //                ImGui::Text("%lu active particles", emitter.getParticleCount());
+    //                ImGui::Text("Culled last frame: %s", emitter.wasCulledLastFrame() ? "true" : "false");
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+#endif
 }
 
 ParticleSystem::~ParticleSystem()
@@ -355,12 +374,17 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 #endif
         {
             auto& emitter = entity.getComponent<ParticleEmitter>();
+            //emitter.m_culledLastFrame = false;
+
             const auto emitterDirection = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
 
             for (auto i = 0; i < passCount; ++i)
             {
                 if ((emitter.m_renderFlags & cam.getPass(i).renderFlags) == 0)
                 {
+#ifdef CRO_DEBUG_
+                    emitter.m_culledLastFrame = true;
+#endif
                     continue;
                 }
 
@@ -379,7 +403,16 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
                         std::scoped_lock l(mutex);
 #endif
                         drawlist[i].push_back(entity);
+#ifdef CRO_DEBUG_
+                        emitter.m_culledLastFrame = false;
                     }
+                    else
+                    {
+                        emitter.m_culledLastFrame = true;
+                    }
+#else
+                    }
+#endif
                 }
             }
         }
@@ -416,9 +449,11 @@ void ParticleSystem::process(float dt)
         if (/*emitter.m_pendingUpdate &&*/
             emitter.m_running)
         {
-            auto& tx = e.getComponent<Transform>();
-            glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
-            auto worldPos = tx.getWorldPosition();
+            const auto& tx = e.getComponent<Transform>();
+            const glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
+            const auto worldPos = tx.getWorldPosition();
+            const auto worldScale = tx.getWorldScale();
+            const auto EmitterScale = std::abs((worldScale.x + worldScale.y) / 2.f);
 
             emitter.m_emissionTime += dt;
 
@@ -464,11 +499,10 @@ void ParticleSystem::process(float dt)
                         auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);
                         randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
 
-                        auto worldScale = tx.getWorldScale();
 
                         p.velocity = randRot * settings.initialVelocity;
                         p.rotation = (settings.randomInitialRotation) ? Util::Random::value(-Util::Const::PI, Util::Const::PI) : 0.f;
-                        p.scale = std::abs((worldScale.x + worldScale.y) / 2.f);// 1.f;
+                        p.scale = EmitterScale;
                         p.acceleration = settings.acceleration;
                         p.frameID = (settings.useRandomFrame && settings.frameCount > 1) ? cro::Util::Random::value(0, static_cast<std::int32_t>(settings.frameCount) - 1) : 0;
                         p.frameTime = 0.f;
@@ -479,9 +513,9 @@ void ParticleSystem::process(float dt)
                         p.position = basePosition + (settings.initialVelocity * cro::Util::Random::value(0.001f, 0.007f));
 
                         //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
-                        p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-                        p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
-                        p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
+                        p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon) * EmitterScale;
+                        p.position.y += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon) * EmitterScale;
+                        p.position.z += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon) * EmitterScale;
 
                         if (emitter.settings.inheritRotation)
                         {
@@ -494,7 +528,6 @@ void ParticleSystem::process(float dt)
                         auto offset = settings.spawnOffset;
                         offset *= worldScale;
                         p.position += offset;
-
 
                         emitter.m_nextFreeParticle++;
                         if (emitter.m_releaseCount > 0)
@@ -646,7 +679,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
         auto vp = applyViewport(cam.viewport, rt);
 
         //bind shader
-        const auto bindShader = [&](std::int32_t index, const ParticleEmitter& emitter)
+        const auto bindShader = [&](std::int32_t index, const ParticleEmitter& emitter, float scale)
         {
             auto& handle = m_shaderHandles[index];
             glCheck(glUseProgram(handle.id));
@@ -664,7 +697,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
                 //handle.boundThisFrame = true;
             }
 
-            glCheck(glUniform1f(handle.uniformIDs[UniformID::ParticleSize], emitter.settings.size));
+            glCheck(glUniform1f(handle.uniformIDs[UniformID::ParticleSize], emitter.settings.size * scale));
             glCheck(glUniform1f(handle.uniformIDs[UniformID::FrameCount], static_cast<float>(emitter.settings.frameCount)));
             glCheck(glUniform2f(handle.uniformIDs[UniformID::TextureSize], emitter.settings.textureSize.x, emitter.settings.textureSize.y));
         };
@@ -683,6 +716,8 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
             }
 
             const auto& emitter = entity.getComponent<ParticleEmitter>();
+            const auto wScale = entity.getComponent<cro::Transform>().getWorldScale();
+            const auto sizeScale = (wScale.x + wScale.y) / 2.f;
 
             //apply blend mode - this also binds the appropriate shader for current mode
             switch (emitter.settings.blendmode)
@@ -690,16 +725,16 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
             default: break;
             case EmitterSettings::Alpha:
                 glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-                bindShader(ShaderID::Alpha, emitter);
+                bindShader(ShaderID::Alpha, emitter, sizeScale);
                 glCheck(glUniform4f(m_shaderHandles[ShaderID::Alpha].uniformIDs[UniformID::LightColour], sunlightColour.getRed(), sunlightColour.getGreen(), sunlightColour.getBlue(), 1.f));
                 break;
             case EmitterSettings::Multiply:
                 glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
-                bindShader(ShaderID::Multiply, emitter);
+                bindShader(ShaderID::Multiply, emitter, sizeScale);
                 break;
             case EmitterSettings::Add:
                 glCheck(glBlendFunc(GL_ONE, GL_ONE));
-                bindShader(ShaderID::Add, emitter);
+                bindShader(ShaderID::Add, emitter, sizeScale);
                 break;
             }
 

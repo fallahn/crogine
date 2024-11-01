@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -53,6 +54,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/graphics/Font.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -301,6 +303,7 @@ void ScrubAttractState::addSystems()
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.addSystem<cro::ParticleSystem>(mb);
     m_uiScene.addSystem<cro::AudioSystem>(mb);
 }
 
@@ -710,6 +713,7 @@ void ScrubAttractState::buildScene()
     entity.getComponent<UIElement>().characterSize = InfoTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+
 
 
     auto resize = [&](cro::Camera& cam)

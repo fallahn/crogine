@@ -37,12 +37,16 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <array>
 
 struct SharedStateData;
 struct SharedScrubData;
 class ScrubAttractState final : public cro::State
+#ifdef CRO_DEBUG_
+    , public cro::GuiClient
+#endif
 {
 public:
     ScrubAttractState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedScrubData&);

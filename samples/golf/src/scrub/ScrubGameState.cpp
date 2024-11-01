@@ -1434,9 +1434,12 @@ void ScrubGameState::createUI()
 
     //soap particles
     entity = m_uiScene.createEntity();;
-    entity.addComponent<cro::Transform>().setPosition({ 100.f, 100.f });
+    entity.addComponent<cro::Transform>().setPosition({ 100.f, 100.f, -6.f });
     entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/arcade/scrub/particles/soap.cps", m_resources.textures);
     entity.getComponent<cro::ParticleEmitter>().start();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = -6.f;
+    entity.getComponent<UIElement>().absolutePosition = { 100.f, 100.f };
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -1979,7 +1982,7 @@ void ScrubGameState::endRound()
 
     auto isPersonalBest = total > Social::getScrubPB();
     Social::setScrubScore(total);
-
+    
 
     //game over, show scores.
     const auto& font = m_sharedScrubData.fonts->get(sc::FontID::Title);

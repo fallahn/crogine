@@ -39,6 +39,7 @@ ParticleEmitter::ParticleEmitter()
     m_vao                   (0),
     m_particles             (MaxParticles),
     m_nextFreeParticle      (0),
+    m_culledLastFrame       (false),
     m_running               (false),
     m_emissionTime          (0.f),
     m_previousPosition      (0.f),
