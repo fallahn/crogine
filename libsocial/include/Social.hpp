@@ -243,6 +243,7 @@ public:
     static void setScrubScore(std::int32_t);
     static void refreshScrubScore();
     static const cro::String& getScrubScores();
+    static std::int32_t getScrubPB();
 
     static void showWebPage(const std::string&) {}
     static void readAllStats();

@@ -1972,11 +1972,13 @@ void ScrubGameState::endRound()
     m_score.summary.ballCountBonus = m_score.ballsWashed * 100;
     m_score.summary.cleanAvgBonus = static_cast<std::int32_t>(std::floor(m_score.avgCleanliness * 100.f));
 
+    const auto total = m_score.totalScore
+        + m_score.summary.runtimeBonus
+        + m_score.summary.ballCountBonus
+        + m_score.summary.cleanAvgBonus;
 
-    Social::setScrubScore(m_score.totalScore 
-                        + m_score.summary.runtimeBonus 
-                        + m_score.summary.ballCountBonus 
-                        + m_score.summary.cleanAvgBonus);
+    auto isPersonalBest = total > Social::getScrubPB();
+    Social::setScrubScore(total);
 
 
     //game over, show scores.
@@ -2000,7 +2002,7 @@ void ScrubGameState::endRound()
     glm::vec2 size(cro::App::getWindow().getSize());
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y / 2.f, sc::TextDepth });
-    entity.getComponent<cro::Transform>().move({ 0.f, 72.f * getViewScale() });
+    entity.getComponent<cro::Transform>().move({ 0.f, 112.f * getViewScale() });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Game Over");
     entity.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize);
@@ -2010,7 +2012,7 @@ void ScrubGameState::endRound()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::GarbageCollect;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 72.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 112.f };
     entity.getComponent<UIElement>().characterSize = sc::LargeTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
 
@@ -2018,6 +2020,30 @@ void ScrubGameState::endRound()
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function = animIn;
     attachText(entity);
+
+    //personal best
+    if (isPersonalBest)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y / 2.f, sc::TextDepth });
+        entity.getComponent<cro::Transform>().move({ 0.f, 36.f * getViewScale() });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Personal Best!");
+        entity.getComponent<cro::Text>().setCharacterSize(sc::LargeTextSize / 2);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::Text>().setShadowColour(TextHighlightColour);
+        entity.getComponent<cro::Text>().setShadowOffset(sc::LargeTextOffset / 2);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::GarbageCollect;
+        entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+        entity.getComponent<UIElement>().absolutePosition = { 0.f, 36.f };
+        entity.getComponent<UIElement>().characterSize = sc::LargeTextSize / 2;
+        entity.getComponent<UIElement>().depth = sc::TextDepth;
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(-3.f);
+        entity.getComponent<cro::Callback>().function = animIn;
+        attachText(entity);
+    }
 
 
     //score text
@@ -2103,9 +2129,17 @@ void ScrubGameState::endRound()
                         bonusString = "Time Bonus: " + std::to_string(m_score.summary.runtimeBonus)
                             + "\nBall Count Bonus: " + std::to_string(m_score.summary.ballCountBonus)
                             + "\nAverage Clean Bonus: " + std::to_string(m_score.summary.cleanAvgBonus);
+                        //e.getComponent<cro::AudioEmitter>().stop();
                     }
                     break;
                 case Score::Summary::Time:
+                    
+                    if (m_score.summary.counter == m_score.summary.runtimeBonus)
+                    {
+                        m_score.summary.counter = 0;
+                        m_score.summary.status++;
+                        break;
+                    }
                     m_score.summary.counter++;
                     m_score.totalScore++;
 
@@ -2117,14 +2151,16 @@ void ScrubGameState::endRound()
                         float pitch = static_cast<float>(m_score.summary.counter) / m_score.summary.runtimeBonus;
                         e.getComponent<cro::AudioEmitter>().setPitch(1.f + (pitch * 0.2f));
                     }
-
-                    if (m_score.summary.counter == m_score.summary.runtimeBonus)
+                    break;
+                case Score::Summary::BallCount:
+                    if (m_score.summary.counter == m_score.summary.ballCountBonus)
                     {
                         m_score.summary.counter = 0;
                         m_score.summary.status++;
-                    }
-                    break;
-                case Score::Summary::BallCount:
+
+                        break;
+                    }                    
+                    
                     m_score.summary.counter++;
                     m_score.totalScore++;
 
@@ -2136,14 +2172,18 @@ void ScrubGameState::endRound()
                         float pitch = static_cast<float>(m_score.summary.counter) / m_score.summary.ballCountBonus;
                         e.getComponent<cro::AudioEmitter>().setPitch(1.f + (pitch * 0.2f));
                     }
-
-                    if (m_score.summary.counter == m_score.summary.ballCountBonus)
+                    break;
+                case Score::Summary::Avg:
+                    if (m_score.summary.counter == m_score.summary.cleanAvgBonus)
                     {
                         m_score.summary.counter = 0;
                         m_score.summary.status++;
+
+                        e.getComponent<cro::AudioEmitter>().stop();
+                        m_soundDirector->playSound(AudioID::FxBell, MixerChannel::Effects, 1.f);
+                        break;
                     }
-                    break;
-                case Score::Summary::Avg:
+                    
                     m_score.summary.counter++;
                     m_score.totalScore++;
 
@@ -2155,15 +2195,6 @@ void ScrubGameState::endRound()
 
                         float pitch = static_cast<float>(m_score.summary.counter) / m_score.summary.cleanAvgBonus;
                         e.getComponent<cro::AudioEmitter>().setPitch(1.f + (pitch * 0.2f));
-                    }
-
-                    if (m_score.summary.counter == m_score.summary.cleanAvgBonus)
-                    {
-                        m_score.summary.counter = 0;
-                        m_score.summary.status++;
-
-                        e.getComponent<cro::AudioEmitter>().stop();
-                        m_soundDirector->playSound(AudioID::FxBell, MixerChannel::Effects, 1.f);
                     }
                     break;
                 }

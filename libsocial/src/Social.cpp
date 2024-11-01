@@ -727,6 +727,11 @@ const cro::String& Social::getScrubScores()
     return scrubString;
 }
 
+std::int32_t Social::getScrubPB()
+{
+    return scrubScore.value;
+}
+
 void Social::takeScreenshot(const cro::String&, std::size_t courseIndex)
 {
     cro::App::getInstance().saveScreenshot();
