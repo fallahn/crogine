@@ -605,7 +605,7 @@ void ScrubAttractState::buildScene()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 40.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 76.f };
     entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
     scoreData.spriteNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -627,6 +627,23 @@ void ScrubAttractState::buildScene()
 
     m_tabs[TabID::Scores].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+//    std::string temp =
+//R"(
+//Buns                 123248974
+//Buns                 123248974
+//Buns                 123248974
+//Buns                 123248974
+//Buns                 123248974
+//Buns                 123248974
+//Buns                 123248974
+//Buns                 123248974
+//Buns                 123248974
+//Buns                 123248974
+//
+//
+//Personal Best: 34590723
+//)";
+
     //score list
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::TextDepth));
@@ -639,7 +656,7 @@ void ScrubAttractState::buildScene()
     entity.getComponent<cro::Text>().setShadowOffset(sc::SmallTextOffset);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = glm::vec2(0.5f);
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, 100.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 120.f };
     entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     m_highScoreText = entity;

@@ -35,7 +35,7 @@ source distribution.
 
 #include <cstdint>
 
-#define HIDE_BACKGROUND
+//#define HIDE_BACKGROUND
 
 static constexpr inline float BucketOffset = 10.f;
 static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 7.f, 0.f);
