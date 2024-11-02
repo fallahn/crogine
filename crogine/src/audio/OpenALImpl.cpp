@@ -889,7 +889,7 @@ void OpenALImpl::refreshDeviceList()
     auto enumAvailable = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
     if (enumAvailable)
     {
-        const auto* deviceList = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
+        const auto* deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
         if (deviceList)
         {
             auto* next = deviceList + 1;
