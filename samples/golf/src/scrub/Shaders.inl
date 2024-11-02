@@ -51,14 +51,21 @@ void main()
     //add distortion offset - using the colour accessors here because I can't find
     //a definitive answer whether the order is wxyz or xyzw
     float u = ((coord.x - u_uvRect.r) / u_uvRect.b);
+    float v = ((coord.y - u_uvRect.g) / u_uvRect.a);
     
     float highlight = smoothstep(0.55, 0.75, u);
     highlight *= 1.0 - smoothstep(0.78, 0.80, u);
 
+    float curve = sin(u * 3.141) * 0.01;
+    float shadow = mix(1.0, 0.75, smoothstep(0.948 + curve, 0.958 + curve, v));
+
+
     u = pow(((u * 2.0) - 1.0), 3.0);
     coord.x += u * DistortionAmount;
 
-    FRAG_OUT = mix(TEXTURE(u_texture, coord), v_colour, 0.25 + (abs(u) * 0.3)) + vec4(highlight * HighlightAmount);
+
+    FRAG_OUT = (mix(TEXTURE(u_texture, coord), v_colour, 0.25 + (abs(u) * 0.3)) * shadow) + vec4(highlight * HighlightAmount);
+    FRAG_OUT.a = 1.0;
 })";
 
 static const inline std::string SoapFragment =

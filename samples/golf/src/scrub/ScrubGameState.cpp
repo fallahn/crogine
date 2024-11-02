@@ -446,8 +446,8 @@ bool ScrubGameState::simulate(float dt)
         auto oldTime = m_score.remainingTime;
 
         m_score.totalRunTime += dt;
-        m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #ifndef CRO_DEBUG_
+        m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #endif
         switch (m_pitchStage)
         {
@@ -555,28 +555,6 @@ void ScrubGameState::onCachedPush()
     m_animatedEntities[AnimatedEntity::UITop].getComponent<cro::Callback>().active = true;
 
     m_soundDirector->playSound(AudioID::FXTextIntro, MixerChannel::Effects, 0.8f).getComponent<cro::AudioEmitter>().setPitch(0.5f);
-
-    ////reset the music volume
-    //auto entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    //entity.getComponent<cro::Callback>().function =
-    //    [&](cro::Entity e, float dt)
-    //    {
-    //        auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
-    //        ct = std::min(1.f, ct + dt);
-
-    //        cro::AudioMixer::setPrefadeVolume(ct, MixerChannel::Music);
-
-    //        if (ct == 1)
-    //        {
-    //            e.getComponent<cro::Callback>().active = false;
-    //            m_uiScene.destroyEntity(e);
-    //        }
-    //    };
-
-    //cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
-    //m_music.getComponent<cro::AudioEmitter>().play();
 
 
     //choose a model at random
@@ -1322,6 +1300,20 @@ void ScrubGameState::createUI()
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+
+    //level bar background
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_resources.textures.get("assets/arcade/scrub/images/ui_tubes.png"));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -340.f, 12.f };
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
     const auto createLevelMeter = 
         [&](cro::Colour c)
         {
@@ -1349,7 +1341,7 @@ void ScrubGameState::createUI()
     //soap level
     entity = createLevelMeter(SoapMeterColour);
     entity.getComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
-    entity.getComponent<UIElement>().absolutePosition = { -(BarWidth + 42.f), 12.f };
+    entity.getComponent<UIElement>().absolutePosition = { -(BarWidth + 49.f), 38.f };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(1.f);
     entity.getComponent<cro::Callback>().function =
@@ -1390,7 +1382,7 @@ void ScrubGameState::createUI()
     //current ball cleanliness
     entity = createLevelMeter(cro::Colour::Blue);
     entity.getComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
-    entity.getComponent<UIElement>().absolutePosition = { -((BarWidth + 42.f) * 2.f), 12.f };
+    entity.getComponent<UIElement>().absolutePosition = { -((BarWidth + 46.f) * 2.f), 38.f };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)

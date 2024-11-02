@@ -73,7 +73,7 @@ static constexpr inline glm::uvec2 BucketTextureSize = glm::uvec2(468, 1280);
 static constexpr inline glm::uvec2 SoapTextureSize = glm::uvec2(80, 1440);
 
 //size of the level meters/bars
-static constexpr inline float BarHeight = 400.f;
+static constexpr inline float BarHeight = 406.f;
 static constexpr inline float BarWidth = 80.f;
 
 //how much to shift the pitch by when time is low
