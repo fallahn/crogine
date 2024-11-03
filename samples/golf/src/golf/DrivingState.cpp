@@ -720,14 +720,18 @@ void DrivingState::handleMessage(const cro::Message& msg)
             || data.type == GolfBallEvent::Holed)
         {
             //display a message with score
-            showMessage(glm::length(PlayerPosition - data.position));
+            const auto dist = glm::length(PlayerPosition - data.position);
+            showMessage(dist);
+            
+            const auto pin = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
 
             //does fireworks at pin
-            if (data.type == GolfBallEvent::Holed)
+            if (data.type == GolfBallEvent::Holed
+                || glm::length2(pin - data.position) < (HoleRadius * HoleRadius))
             {
                 auto* msg2 = postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg2->type = GolfEvent::HoleInOne;
-                msg2->position = data.position;
+                msg2->position = pin;
 
                 Achievements::awardAchievement(AchievementStrings[AchievementID::DriveItHome]);
             }
