@@ -907,7 +907,11 @@ void OpenALImpl::refreshDeviceList()
                 next += (len + 2);
             }
         }
-        m_devices.push_back("Default");
+
+        if (m_devices.empty())
+        {
+            m_devices.push_back("Default");
+        }
     }
     else
     {

@@ -103,7 +103,12 @@ bool ScrubPauseState::handleEvent(const cro::Event& evt)
             || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             m_controllerIndex = cro::GameController::controllerID(evt.caxis.which);
+            cro::App::getWindow().setMouseCaptured(true);
         }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
     }
 
     m_uiScene.forwardEvent(evt);

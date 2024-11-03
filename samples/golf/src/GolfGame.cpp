@@ -831,6 +831,13 @@ bool GolfGame::initialise()
             }        
         });
 
+    registerCommand("scrub", 
+        [&](const std::string&)
+        {
+            m_stateStack.clearStates();
+            m_stateStack.pushState(StateID::ScrubBackground);
+        });
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
@@ -973,6 +980,7 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::Workshop);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
+    //m_stateStack.pushState(StateID::ScrubBackground);
 #endif
 
     applyImGuiStyle(m_sharedData);

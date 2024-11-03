@@ -239,9 +239,13 @@ bool ScrubAttractState::handleEvent(const cro::Event& evt)
             || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             m_controllerIndex = cro::GameController::controllerID(evt.caxis.which);
+            cro::App::getWindow().setMouseCaptured(true);
         }
     }
-
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
 
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
@@ -398,6 +402,7 @@ void ScrubAttractState::buildScene()
 
     //title background - remember sprites are added to the spriteNode of the current tab for correct scaling...
     auto& bgTex = m_resources.textures.get("assets/arcade/scrub/images/attract_bg.png");
+    bgTex.setSmooth(true);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::AudioEmitter>() = as.getEmitter("menu_show");
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
@@ -506,6 +511,7 @@ void ScrubAttractState::buildScene()
 
     //help background
     auto& helpTex = m_resources.textures.get("assets/arcade/scrub/images/rules_bg.png");
+    helpTex.setSmooth(true);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
     entity.addComponent<cro::Drawable2D>();
@@ -597,6 +603,7 @@ void ScrubAttractState::buildScene()
 
     //score background
     auto& scoreTex = m_resources.textures.get("assets/arcade/scrub/images/highscore_bg.png");
+    scoreTex.setSmooth(true);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, sc::UIBackgroundDepth));
     entity.addComponent<cro::Drawable2D>();

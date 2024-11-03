@@ -116,7 +116,7 @@ ScrubGameState::ScrubGameState(cro::StateStack& stack, cro::State::Context conte
     m_sharedData            (sd),
     m_sharedScrubData       (sc),
     m_soundDirector         (nullptr),
-    m_gameScene             (context.appInstance.getMessageBus()),
+    m_gameScene             (context.appInstance.getMessageBus(), 854),
     m_uiScene               (context.appInstance.getMessageBus(), 512),
     m_pitchStage            (0),
     m_soapAnimationActive   (false),
@@ -358,6 +358,7 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
             || evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             m_controllerIndex = cro::GameController::controllerID(evt.caxis.which);
+            cro::App::getWindow().setMouseCaptured(true);
         }
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
@@ -370,6 +371,10 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         {
             cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0, 1, 2));
         }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
     }
 
     else if (evt.type == SDL_KEYUP
@@ -446,8 +451,8 @@ bool ScrubGameState::simulate(float dt)
         auto oldTime = m_score.remainingTime;
 
         m_score.totalRunTime += dt;
-#ifndef CRO_DEBUG_
         m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
+#ifndef CRO_DEBUG_
 #endif
         switch (m_pitchStage)
         {
@@ -1583,7 +1588,7 @@ void ScrubGameState::createCountIn()
                             if (ct == 1)
                             {
                                 g.getComponent<cro::Callback>().active = false;
-                                m_uiScene.destroyEntity(e);
+                                m_uiScene.destroyEntity(g);
                             }
                         };
 
@@ -1596,12 +1601,6 @@ void ScrubGameState::createCountIn()
             else
             {
                 //go
-                if (t < 0)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                    m_uiScene.destroyEntity(e);
-                }
-
                 const glm::vec2 winSize(cro::App::getWindow().getSize());
 
                 const auto progress = 1.f - std::max(0.f, std::min(1.f, t / (GoTime / 2.f)));
@@ -1613,6 +1612,12 @@ void ScrubGameState::createCountIn()
 
                 static constexpr float Stretch = 1.52f;
                 e.getComponent<cro::Transform>().setScale({ 1.f + (progress * Stretch), 1.f - (progress * Stretch) });
+
+                if (t < 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
             }
         };
 
