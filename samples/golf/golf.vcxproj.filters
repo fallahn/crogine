@@ -492,6 +492,9 @@
     <ClCompile Include="src\scrub\ScrubPhysicsSystem.cpp">
       <Filter>Source Files\scrub</Filter>
     </ClCompile>
+    <ClCompile Include="src\scrub\ScrubParticleDirector.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1011,6 +1014,9 @@
       <Filter>Header Files\scrub</Filter>
     </ClInclude>
     <ClInclude Include="src\scrub\ScrubPhysicsSystem.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubParticleDirector.hpp">
       <Filter>Header Files\scrub</Filter>
     </ClInclude>
   </ItemGroup>

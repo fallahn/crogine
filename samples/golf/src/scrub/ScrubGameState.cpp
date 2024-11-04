@@ -31,6 +31,7 @@ source distribution.
 #include "ScrubSoundDirector.hpp"
 #include "ScrubSharedData.hpp"
 #include "ScrubPhysicsSystem.hpp"
+#include "ScrubParticleDirector.hpp"
 #include "../golf/GameConsts.hpp"
 #include "../golf/InputBinding.hpp"
 #include "../golf/SharedStateData.hpp"
@@ -451,8 +452,8 @@ bool ScrubGameState::simulate(float dt)
         auto oldTime = m_score.remainingTime;
 
         m_score.totalRunTime += dt;
-        m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #ifndef CRO_DEBUG_
+        m_score.remainingTime = std::max(m_score.remainingTime - dt, 0.f);
 #endif
         switch (m_pitchStage)
         {
@@ -561,6 +562,8 @@ void ScrubGameState::onCachedPush()
 
     m_soundDirector->playSound(AudioID::FXTextIntro, MixerChannel::Effects, 0.8f).getComponent<cro::AudioEmitter>().setPitch(0.5f);
 
+    //prime the particle director
+    postMessage<sc::ParticleEvent>(sc::MessageID::ParticleMessage);
 
     //choose a model at random
     if (cro::Util::Random::value(0, 1) == 0)
@@ -611,8 +614,10 @@ void ScrubGameState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb); //hm we should probably move this to ui scene for consistency with other states?
 
+    m_gameScene.addDirector<ScrubParticleDirector>(m_resources.textures);
     m_soundDirector = m_gameScene.addDirector<ScrubSoundDirector>();
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
@@ -1389,6 +1394,7 @@ void ScrubGameState::createUI()
     entity.getComponent<UIElement>().relativePosition = glm::vec2(1.f, 0.f);
     entity.getComponent<UIElement>().absolutePosition = { -((BarWidth + 46.f) * 2.f), 38.f };
     entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
@@ -1397,7 +1403,18 @@ void ScrubGameState::createUI()
 
             cleanliness /= Ball::MaxFilth;
             
-            cro::FloatRect cropping = { 0.f, 0.f, BarWidth, BarHeight * cleanliness };
+            auto& currPos = e.getComponent<cro::Callback>().getUserData<float>();
+            if (currPos > cleanliness)
+            {
+                currPos = std::max(cleanliness, currPos - (dt * 2.f));
+            }
+            else
+            {
+                currPos = std::min(cleanliness, currPos + dt);
+            }
+
+
+            cro::FloatRect cropping = { 0.f, 0.f, BarWidth, BarHeight * currPos };
             e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
 
             for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
@@ -1464,7 +1481,7 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.f, 0.f };
     entity.getComponent<UIElement>().absolutePosition = { 42.f, 60.f };
-    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth ;
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth - 0.2f ;
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -1627,6 +1644,7 @@ void ScrubGameState::createCountIn()
 
 void ScrubGameState::handleCallback(cro::Entity e, float dt)
 {
+    const auto oldProgress = m_handle.progress;
     m_handle.progress = std::clamp(m_handle.progress + (m_handle.speed * -m_handle.direction * dt), 0.f, 1.f);
 
     auto pos = e.getComponent<cro::Transform>().getPosition();
@@ -1643,6 +1661,13 @@ void ScrubGameState::handleCallback(cro::Entity e, float dt)
             m_ball.scrub(m_handle.calcStroke(m_score.ballsWashed));
         }
         m_handle.speed = 0.f;
+
+        if (m_handle.progress != oldProgress)
+        {
+            auto* msg = postMessage<sc::ParticleEvent>(sc::MessageID::ParticleMessage);
+            msg->particleID = static_cast<std::int32_t>(m_handle.progress);
+            msg->soapLevel = std::clamp((m_handle.soap.amount - Handle::Soap::MinSoap) / (Handle::Soap::MaxSoap - Handle::Soap::MinSoap), 0.f, 1.f);
+        }
     }
 }
 

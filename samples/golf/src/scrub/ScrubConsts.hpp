@@ -29,13 +29,15 @@ source distribution.
 
 #pragma once
 
+#include "../golf/MessageIDs.hpp"
+
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <cstdint>
 
-//#define HIDE_BACKGROUND
+#define HIDE_BACKGROUND
 
 static constexpr inline float BucketOffset = 10.f;
 static constexpr inline glm::vec3 BucketSpawnPosition = glm::vec3(BucketOffset, 7.f, 0.f);
@@ -112,6 +114,31 @@ namespace sc
 
             Count
         };
+    };
+
+    struct ParticleID final
+    {
+        enum
+        {
+            Bubbles, Splash,
+
+            Count
+        };
+    };
+
+    struct MessageID final
+    {
+        enum
+        {
+            ParticleMessage = cl::MessageID::Count * 200
+        };
+    };
+
+    struct ParticleEvent final
+    {
+        std::int32_t particleID = 0;
+        float soapLevel = 0.f;
+        glm::vec3 position = glm::vec3(0.f);
     };
 
     static inline constexpr std::uint32_t SmallTextSize = 12;

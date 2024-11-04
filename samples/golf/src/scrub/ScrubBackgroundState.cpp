@@ -94,6 +94,7 @@ ScrubBackgroundState::ScrubBackgroundState(cro::StateStack& ss, cro::State::Cont
 #endif
 
     Social::refreshScrubScore();
+    Social::setStatus(Social::InfoID::Menu, { "Playing Scrub!" });
 }
 
 ScrubBackgroundState::~ScrubBackgroundState()

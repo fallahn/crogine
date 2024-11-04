@@ -1683,7 +1683,7 @@ void EndlessDrivingState::updatePlayer(float dt)
                     default:break;
                     case TrackSprite::Flag:
                     {
-                        if (m_gameRules.flagstickMultiplier == 4)
+                        if (m_gameRules.flagstickMultiplier == 3)
                         {
                             m_gameRules.totalTime += 1.f;
                             m_gameRules.remainingTime = 30.f;

@@ -723,6 +723,7 @@
     <ClCompile Include="src\scrub\ScrubAttractState.cpp" />
     <ClCompile Include="src\scrub\ScrubBackgroundState.cpp" />
     <ClCompile Include="src\scrub\ScrubGameState.cpp" />
+    <ClCompile Include="src\scrub\ScrubParticleDirector.cpp" />
     <ClCompile Include="src\scrub\ScrubPauseState.cpp" />
     <ClCompile Include="src\scrub\ScrubPhysicsSystem.cpp" />
     <ClCompile Include="src\scrub\ScrubSoundDirector.cpp" />
@@ -895,6 +896,7 @@
     <ClInclude Include="src\scrub\ScrubBackgroundState.hpp" />
     <ClInclude Include="src\scrub\ScrubConsts.hpp" />
     <ClInclude Include="src\scrub\ScrubGameState.hpp" />
+    <ClInclude Include="src\scrub\ScrubParticleDirector.hpp" />
     <ClInclude Include="src\scrub\ScrubPauseState.hpp" />
     <ClInclude Include="src\scrub\ScrubPhysicsSystem.hpp" />
     <ClInclude Include="src\scrub\ScrubSharedData.hpp" />

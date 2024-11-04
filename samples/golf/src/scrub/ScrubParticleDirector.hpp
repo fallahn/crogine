@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,10 +29,10 @@ source distribution.
 
 #pragma once
 
-#include "ParticleDirector.hpp"
+#include "ScrubConsts.hpp"
+#include "../golf/ParticleDirector.hpp"
 
 #include <crogine/ecs/components/ParticleEmitter.hpp>
-#include <crogine/ecs/components/Sprite.hpp>
 
 #include <array>
 
@@ -42,35 +42,13 @@ namespace cro
 }
 
 struct SharedStateData;
-class GolfParticleDirector final : public ParticleDirector
+class ScrubParticleDirector final : public ParticleDirector
 {
 public:
-    GolfParticleDirector(cro::TextureResource&, const SharedStateData&);
+    ScrubParticleDirector(cro::TextureResource&);
 
     void handleMessage(const cro::Message&) override;
 private:
 
-    const SharedStateData& m_sharedData;
-
-    struct ParticleID final
-    {
-        enum
-        {
-            Grass, GrassDark, Water, Sand,
-            Sparkle, HIO, Bird,
-            Drone, Explode, Blades, PowerShot,
-            Puff, Star, Trail, Firework,
-
-            Count
-        };
-    };
-
-    std::array<cro::EmitterSettings, ParticleID::Count> m_emitterSettings = {};
-
-    //TODO recycle these - or do we use so few it doesn't matter?
-    cro::Sprite m_ringSprite;
-    void spawnRings(glm::vec3);
-
-    std::vector<glm::vec3> m_fireworkPositions;
-    void launchFireworks();
+    std::array<cro::EmitterSettings, sc::ParticleID::Count> m_emitterSettings = {};
 };
