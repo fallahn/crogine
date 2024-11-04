@@ -304,6 +304,14 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     img.create(2, 2, cro::Colour::White);
     m_fallbackTexture.loadFromImage(img);
 
+    //allocate some buffers up front to we don't stall
+    //the first time we load a particle emitter
+    for (auto i = 0u; i < MinParticleSystems; ++i)
+    {
+        allocateBuffer();
+    }
+
+
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
     //    {

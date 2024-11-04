@@ -34,11 +34,13 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
+#include <crogine/util/Wavetable.hpp>
 #ifdef HIDE_BACKGROUND
 #include <crogine/graphics/SimpleQuad.hpp>
 #endif
@@ -114,6 +116,7 @@ private:
         enum
         {
             LevelBubbles,
+            NewSoapBubbles,
 
             Count
         };
@@ -234,6 +237,7 @@ private:
 
         float remainingTime = 30.f;
         std::int32_t ballsWashed = 0;
+        std::int32_t perfectBalls = 0;
         float avgCleanliness = 0.f;
 
         //divide this by total count to get above
@@ -262,16 +266,60 @@ private:
             std::int32_t runtimeBonus = 0;
             std::int32_t ballCountBonus = 0;
             std::int32_t cleanAvgBonus = 0;
+            std::int32_t perfectBonus = 0;
 
             enum
             {
-                Time, BallCount, Avg, Done
+                Time, BallCount, Avg, Perfect, Done
             };
             std::int32_t status = Time;
             std::int32_t counter = 0; //used when counting the animation
             bool active = false; //don't allow input until this is true
         }summary;
     }m_score;
+
+    struct CameraShake final
+    {
+        cro::Entity camera;
+        glm::vec3 basePos = glm::vec3(0.f);
+
+        const std::vector<float> wavetable;
+        std::size_t tableIndex = 0;
+        float duration = 0.f;
+        static constexpr float MaxDuration = 0.5f;
+        static constexpr float Strength = 0.005f;
+        bool active = false;
+
+        CameraShake()
+            : wavetable(cro::Util::Wavetable::sine(15.f))
+        {
+
+        }
+
+        void update(float dt)
+        {
+            if (active)
+            {
+                tableIndex = (tableIndex + 1) % wavetable.size();
+                const auto amount = wavetable[tableIndex] * ((duration / MaxDuration) * Strength);
+
+                camera.getComponent<cro::Transform>().setPosition(basePos + glm::vec3(amount, 0.f, 0.f));
+
+                duration = std::max(0.f, duration - dt);
+                if (duration == 0.f)
+                {
+                    active = false;
+                    camera.getComponent<cro::Transform>().setPosition(basePos);
+                }
+            }
+        }
+
+        void start()
+        {
+            active = true;
+            duration = MaxDuration;
+        }
+    }m_cameraShake;
 
 
     void onCachedPush() override;

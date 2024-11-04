@@ -41,7 +41,6 @@ source distribution.
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
-#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -258,6 +257,9 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             m_gameScene.getSystem<ScrubPhysicsSystem>()->spawnBall(cro::Colour::Magenta);
             break;
+        case SDLK_i:
+            m_cameraShake.start();
+            break;
 #endif
 
         }
@@ -397,6 +399,10 @@ bool ScrubGameState::handleEvent(const cro::Event& evt)
                 break;
             case Score::Summary::Avg:
                 m_score.totalScore += m_score.summary.cleanAvgBonus - m_score.summary.counter;
+                m_score.summary.status = Score::Summary::Perfect;
+                break;
+            case Score::Summary::Perfect:
+                m_score.totalScore += m_score.summary.perfectBonus - m_score.summary.counter;
                 m_score.summary.status = Score::Summary::Done;
                 m_soundDirector->playSound(AudioID::FxBell, MixerChannel::Effects, 1.f);
                 break;
@@ -432,6 +438,8 @@ void ScrubGameState::handleMessage(const cro::Message& msg)
 
 bool ScrubGameState::simulate(float dt)
 {
+    m_cameraShake.update(dt);
+
     if (m_score.gameRunning)
     {
         //if there are messages waiting set the first one active
@@ -562,8 +570,6 @@ void ScrubGameState::onCachedPush()
 
     m_soundDirector->playSound(AudioID::FXTextIntro, MixerChannel::Effects, 0.8f).getComponent<cro::AudioEmitter>().setPitch(0.5f);
 
-    //prime the particle director
-    postMessage<sc::ParticleEvent>(sc::MessageID::ParticleMessage);
 
     //choose a model at random
     if (cro::Util::Random::value(0, 1) == 0)
@@ -1773,7 +1779,7 @@ bool ScrubGameState::updateScore()
                 }
             };
         
-        m_score.remainingTime -= 0.5f;
+        m_score.remainingTime -= std::max(0.5f, m_score.remainingTime / 2.f);
         showMessage("-0.5s");
 
         //don't forget to reset the streak
@@ -1786,6 +1792,7 @@ bool ScrubGameState::updateScore()
 
             showMessage("STREAK BROKEN");
             m_soundDirector->playSound(AudioID::FXStreakBroken, MixerChannel::Effects);
+            m_cameraShake.start();
         }
         else
         {
@@ -1808,6 +1815,7 @@ bool ScrubGameState::updateScore()
     //track bonus runs of 3x 100%, 5x 100% and 10x 100%
     if (cleanliness == 100.f)
     {
+        m_score.perfectBalls++;
         m_score.bonusRun++;
         switch (m_score.bonusRun)
         {
@@ -1852,6 +1860,8 @@ bool ScrubGameState::updateScore()
 
                 m_soundDirector->playSound(AudioID::VOTenX, MixerChannel::Voice);
                 m_soundDirector->playSound(AudioID::FXTenX, MixerChannel::Effects, 0.3f);
+
+                m_cameraShake.start();
             }
             else
             {
@@ -1880,7 +1890,9 @@ bool ScrubGameState::updateScore()
             showMessage("STREAK BROKEN");
             m_soundDirector->playSound(AudioID::FXStreakBroken, MixerChannel::Effects);
 
-            m_score.remainingTime -= std::max(1.f, m_score.remainingTime / 2.f);
+            m_score.remainingTime -= std::max(0.5f, m_score.remainingTime / 2.f);
+            showMessage("-0.5s");
+            m_cameraShake.start();
         }
         m_score.bonusRun = 0;
         //m_score.countAtThreshold = 0;
@@ -2021,11 +2033,13 @@ void ScrubGameState::endRound()
     m_score.summary.runtimeBonus = static_cast<std::int32_t>(std::floor(m_score.totalRunTime * 100.f));
     m_score.summary.ballCountBonus = m_score.ballsWashed * 100;
     m_score.summary.cleanAvgBonus = static_cast<std::int32_t>(std::floor(m_score.avgCleanliness * 100.f));
+    m_score.summary.perfectBonus = m_score.perfectBalls * 120;
 
     const auto total = m_score.totalScore
         + m_score.summary.runtimeBonus
         + m_score.summary.ballCountBonus
-        + m_score.summary.cleanAvgBonus;
+        + m_score.summary.cleanAvgBonus
+        + m_score.summary.perfectBonus;
 
     auto isPersonalBest = total > Social::getScrubPB();
     Social::setScrubScore(total);
@@ -2122,9 +2136,9 @@ void ScrubGameState::endRound()
     //animated text
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ size.x / 2.f, size.y / 2.f, sc::TextDepth });
-    entity.getComponent<cro::Transform>().move({ 0.f, -44.f * getViewScale() });
+    entity.getComponent<cro::Transform>().move({ 0.f, -38.f * getViewScale() });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font2).setString("Time Bonus: 0\nBall Count Bonus: 0\nAverage Clean Bonus: 0");
+    entity.addComponent<cro::Text>(font2).setString("Time Bonus: 0\nBall Count Bonus: 0\nAverage Clean Bonus: 0\nPerfect Bonus: 0");
     entity.getComponent<cro::Text>().setCharacterSize(sc::SmallTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -2132,7 +2146,7 @@ void ScrubGameState::endRound()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::GarbageCollect;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, -44.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -38.f };
     entity.getComponent<UIElement>().characterSize = sc::SmallTextSize;
     entity.getComponent<UIElement>().depth = sc::TextDepth;
     entity.addComponent<cro::Callback>().active = true;
@@ -2178,7 +2192,8 @@ void ScrubGameState::endRound()
                     {
                         bonusString = "Time Bonus: " + std::to_string(m_score.summary.runtimeBonus)
                             + "\nBall Count Bonus: " + std::to_string(m_score.summary.ballCountBonus)
-                            + "\nAverage Clean Bonus: " + std::to_string(m_score.summary.cleanAvgBonus);
+                            + "\nAverage Clean Bonus: " + std::to_string(m_score.summary.cleanAvgBonus)
+                            + "\nPerfect Bonus: " + std::to_string(m_score.summary.perfectBonus);
 
                         e.getComponent<cro::AudioEmitter>().stop();
                     }
@@ -2197,7 +2212,7 @@ void ScrubGameState::endRound()
                     if (i == UpdatesPerFrame - 1)
                     {
                         bonusString = "Time Bonus: " + std::to_string(m_score.summary.counter)
-                            + "\nBall Count Bonus: 0\nAverage Clean Bonus: 0";
+                            + "\nBall Count Bonus: 0\nAverage Clean Bonus: 0\nPerfect Bonus: 0";
 
                         float pitch = static_cast<float>(m_score.summary.counter) / m_score.summary.runtimeBonus;
                         e.getComponent<cro::AudioEmitter>().setPitch(1.f + (pitch * 0.2f));
@@ -2218,7 +2233,8 @@ void ScrubGameState::endRound()
                     if (i == UpdatesPerFrame - 1)
                     {
                         bonusString = "Time Bonus: " + std::to_string(m_score.summary.runtimeBonus)
-                            + "\nBall Count Bonus: " + std::to_string(m_score.summary.counter) + "\nAverage Clean Bonus: 0";
+                            + "\nBall Count Bonus: " + std::to_string(m_score.summary.counter) 
+                            + "\nAverage Clean Bonus: 0\nPerfect Bonus: 0";
 
                         float pitch = static_cast<float>(m_score.summary.counter) / m_score.summary.ballCountBonus;
                         e.getComponent<cro::AudioEmitter>().setPitch(1.f + (pitch * 0.2f));
@@ -2230,8 +2246,6 @@ void ScrubGameState::endRound()
                         m_score.summary.counter = 0;
                         m_score.summary.status++;
 
-                        e.getComponent<cro::AudioEmitter>().stop();
-                        m_soundDirector->playSound(AudioID::FxBell, MixerChannel::Effects, 1.f);
                         break;
                     }
                     
@@ -2242,9 +2256,35 @@ void ScrubGameState::endRound()
                     {
                         bonusString = "Time Bonus: " + std::to_string(m_score.summary.runtimeBonus)
                             + "\nBall Count Bonus: " + std::to_string(m_score.summary.ballCountBonus)
-                            + "\nAverage Clean Bonus: " + std::to_string(m_score.summary.counter);
+                            + "\nAverage Clean Bonus: " + std::to_string(m_score.summary.counter)
+                            + "\nPerfect Bonus: 0";
 
                         float pitch = static_cast<float>(m_score.summary.counter) / m_score.summary.cleanAvgBonus;
+                        e.getComponent<cro::AudioEmitter>().setPitch(1.f + (pitch * 0.2f));
+                    }
+                    break;
+                case Score::Summary::Perfect:
+                    if (m_score.summary.counter == m_score.summary.perfectBonus)
+                    {
+                        m_score.summary.counter = 0;
+                        m_score.summary.status++;
+
+                        e.getComponent<cro::AudioEmitter>().stop();
+                        m_soundDirector->playSound(AudioID::FxBell, MixerChannel::Effects, 1.f);
+                        break;
+                    }
+
+                    m_score.summary.counter++;
+                    m_score.totalScore++;
+
+                    if (i == UpdatesPerFrame - 1)
+                    {
+                        bonusString = "Time Bonus: " + std::to_string(m_score.summary.runtimeBonus)
+                            + "\nBall Count Bonus: " + std::to_string(m_score.summary.ballCountBonus)
+                            + "\nAverage Clean Bonus: " + std::to_string(m_score.summary.cleanAvgBonus)
+                            + "\nPerfect Bonus: " + std::to_string(m_score.summary.counter);
+
+                        float pitch = static_cast<float>(m_score.summary.counter) / m_score.summary.perfectBonus;
                         e.getComponent<cro::AudioEmitter>().setPitch(1.f + (pitch * 0.2f));
                     }
                     break;
@@ -2468,12 +2508,14 @@ void ScrubGameState::showSoapEffect()
 
 void ScrubGameState::resetCamera()
 {
+    static constexpr glm::vec3 FinalPosition = glm::vec3(-0.04f, 0.07f, 0.36f);
+
     //create a path of points, convert them with look-at and the animate the camera along them
     static std::array path =
     {
         //glm::inverse(glm::lookAt(glm::vec3(0.14f, 0.02f, 0.f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)),
         glm::inverse(glm::lookAt(glm::vec3(0.f, 0.12f, 0.06f), glm::vec3(0.f, 0.01f, 0.f), cro::Transform::Y_AXIS)),
-        glm::inverse(glm::lookAt(glm::vec3(-0.04f, 0.07f, 0.36f), glm::vec3(0.f, -0.04f, 0.f), cro::Transform::Y_AXIS))
+        glm::inverse(glm::lookAt(FinalPosition, glm::vec3(0.f, -0.04f, 0.f), cro::Transform::Y_AXIS))
     };
 
     static const auto interpolate =
@@ -2517,6 +2559,9 @@ void ScrubGameState::resetCamera()
                 createCountIn();
             }
         };
+
+    m_cameraShake.camera = camera;
+    m_cameraShake.basePos = FinalPosition;
 }
 
 void ScrubGameState::attachText(cro::Entity entity)
