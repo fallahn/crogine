@@ -314,7 +314,8 @@ void ScrubAttractState::addSystems()
 void ScrubAttractState::loadAssets()
 {
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
-    m_scrubTexture.create(1500, 1500);
+    m_scrubTexture.create(1500, 1500, true, false, 2);
+    m_scrubTexture.setSmooth(true);
 
     //load menu music
     auto id = m_resources.audio.load("assets/arcade/scrub/sound/music/menu.ogg", true);
