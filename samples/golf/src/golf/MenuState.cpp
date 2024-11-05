@@ -1853,18 +1853,6 @@ void MenuState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
     }
 
-    if (md.loadFromFile("assets/golf/models/spectators/sitting/02.cmt"))
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
-        md.createModel(entity);
-
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-        applyMaterialData(md, texturedMat);
-        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-        entity.getComponent<cro::Skeleton>().play(1);
-    }
-
     if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
@@ -1898,14 +1886,122 @@ void MenuState::createScene()
             entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
         }
     }
-    /*cro::EmitterSettings sprinkler;
-    if (sprinkler.loadFromFile("assets/golf/particles/sprinkler.cps", m_resources.textures))
+
+
+    //this might be loaded from the prop, if not we use this
+    glm::vec3 sunPos(-0.505335f, 0.62932f, 0.590418f);
+    cro::Colour sunColour = cro::Colour::White;
+
+    //load random / seasonal props
+    std::string propFilePath = "01.bgd"; //TODO select this based on some event/season or just at random
+    cro::ConfigFile propFile;
+    if (propFile.loadFromFile("assets/golf/menu/" + propFilePath))
     {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -11.f, 0.f, 13.8f });
-        entity.addComponent<cro::ParticleEmitter>().settings = sprinkler;
-        entity.getComponent<cro::ParticleEmitter>().start();
-    }*/
+        cro::Colour skyTop = cro::Colour::Green;
+        cro::Colour skyBottom = cro::Colour::Green;
+
+        bool hasStars = true;
+
+        const auto& objs = propFile.getObjects();
+        for (const auto& obj : objs)
+        {
+            const auto& objName = obj.getName();
+            if (objName == "sky")
+            {
+                const auto& skyProps = obj.getProperties();
+                for (const auto& prop : skyProps)
+                {
+                    const auto& propName = prop.getName();
+                    if (propName == "top")
+                    {
+                        skyTop = prop.getValue<cro::Colour>();
+                    }
+                    else if (propName == "bottom")
+                    {
+                        skyBottom = prop.getValue<cro::Colour>();
+                    }
+                    else if (propName == "stars")
+                    {
+                        hasStars = prop.getValue<bool>();
+                    }
+                    else if (propName == "sun_position")
+                    {
+                        sunPos = prop.getValue<glm::vec3>();
+                    }
+                    else if (propName == "sun_colour")
+                    {
+                        sunColour = prop.getValue<cro::Colour>();
+                    }
+                }
+            }
+            else if (objName == "prop")
+            {
+                glm::vec3 position(0.f);
+                float rotation = 0.f;
+                glm::vec3 scale(1.f);
+                std::string propModelPath;
+                std::size_t animation = 0;
+
+                const auto& modelProps = obj.getProperties();
+                for (const auto& prop : modelProps)
+                {
+                    const auto& propName = prop.getName();
+                    if (propName == "model")
+                    {
+                        propModelPath = prop.getValue<std::string>();
+                    }
+                    else if (propName == "position")
+                    {
+                        position = prop.getValue<glm::vec3>();
+                    }
+                    else if (propName == "rotation")
+                    {
+                        rotation = prop.getValue<float>() * cro::Util::Const::degToRad;
+                    }
+                    else if (propName == "scale")
+                    {
+                        scale = prop.getValue<glm::vec3>();
+                    }
+                    else if (propName == "animation")
+                    {
+                        animation = prop.getValue<std::uint32_t>();
+                    }
+                }
+
+                if (!propModelPath.empty()
+                    && md.loadFromFile(propModelPath))
+                {
+                    auto entity = m_backgroundScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition(position);
+                    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+                    entity.getComponent<cro::Transform>().setScale(scale);
+                    md.createModel(entity);
+
+                    if (md.hasSkeleton())
+                    {
+                        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                        applyMaterialData(md, texturedMat);
+                        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+                        entity.getComponent<cro::Skeleton>().play(animation);
+                    }
+                    else
+                    {
+                        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                        applyMaterialData(md, texturedMat);
+                        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+                    }
+                }
+            }
+        }
+
+        //TODO apply sky settings
+        //TODO load one of the horizon models and scale up (perhaps make part of the config?)
+        //TODO don't load skybox map
+    }
+    auto sunEnt = m_backgroundScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(sunPos, glm::vec3(0.f), cro::Transform::Y_AXIS)));
+    sunEnt.getComponent<cro::Sunlight>().setColour(sunColour);
+
 
     //billboards
     auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
@@ -2057,6 +2153,7 @@ void MenuState::createScene()
         }
     }
 
+
     createClouds();
 
     //music
@@ -2146,10 +2243,6 @@ void MenuState::createScene()
     //add the ambience to the cam cos why not
     camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
     camEnt.getComponent<cro::AudioEmitter>().play();
-
-    auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -40.56f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -39.f * cro::Util::Const::degToRad);
 
     //set up cam / models for ball preview
     createBallScene();    
