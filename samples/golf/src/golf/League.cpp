@@ -479,10 +479,10 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     }
 
     //calc aim accuracy
-    float aim = 1.f - AimSkill[SkillCentre + skillOffset];
+    const float aim = 1.f - AimSkill[SkillCentre + skillOffset];
 
     //calc power accuracy
-    float power = 1.f - PowerSkill[SkillCentre + skillOffset];
+    const float power = 1.f - PowerSkill[SkillCentre + skillOffset];
 
     float quality = aim * power;
 
@@ -520,7 +520,7 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
     score -= 2.f; //average out to birdie
 
     //then use the player skill chance to decide if we got an eagle
-    if (cro::Util::Random::value(1, 10) > skill)
+    if (cro::Util::Random::value(0, 10) > skill)
     {
         score -= 1.f;
     }
@@ -539,15 +539,54 @@ void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::i
         {
             holeScore += std::max(1, (par - 2));
         }
+        else
+        {
+            //check the previous hole and increase it anyway if it
+            //was a HIO just so we don't get consecutive HIOs
+            if (hole > 0)
+            {
+                if (m_holeScores[player.nameIndex][hole - 1] == 1)
+                {
+                    holeScore += cro::Util::Random::value(0, 4) == 0 ? 1 : 2;
+                }
+            }
+        }
     }
 
     //make sure novice club sets rarely get better than a birdie
-    if (m_sharedData.clubSet == 0
+    //and reduce the overall chance of eagles on higher clubs
+    if (holeScore < (par - 1))
+    {
+        switch (m_sharedData.clubSet)
+        {
+        default:
+        case 0: //novice
+            if (cro::Util::Random::value(0, 2) != 0)
+            {
+                holeScore += cro::Util::Random::value(2, 4) / 2;
+            }
+            break;
+        case 1: //expert
+            if (cro::Util::Random::value(0, 1) != 0)
+            {
+                holeScore += cro::Util::Random::value(2, 4) / 2;
+            }
+            break;
+        case 2: //pro
+            if (cro::Util::Random::value(0, 1) != 0)
+            {
+                holeScore += cro::Util::Random::value(0, 4) / 2;
+            }
+            break;
+        }
+    }
+    /*if (m_sharedData.clubSet == 0
         && holeScore < (par - 1)
         && cro::Util::Random::value(0, 2) != 0)
     {
         holeScore += cro::Util::Random::value(2, 4) / 2;
-    }
+    }*/
+
 
     //there's a flaw in my logic here which means the result occasionally
     //comes back as zero - rather than fix my logic I'm going to paste over the cracks.
