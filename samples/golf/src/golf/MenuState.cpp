@@ -1578,8 +1578,8 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
-    m_backgroundScene.setSkyboxColours(cro::Colour(0.2f, 0.31f, 0.612f, 1.f), cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
+    //m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
+    //m_backgroundScene.setSkyboxColours(cro::Colour(0.2f, 0.31f, 0.612f, 1.f), cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
     if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm"))
     {
         m_reflectionMap.generateMipMaps();
@@ -1887,21 +1887,29 @@ void MenuState::createScene()
         }
     }
 
+    if (md.loadFromFile("assets/golf/models/skybox/horizon01.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(15.5f));
+        md.createModel(entity);
+    }
+
 
     //this might be loaded from the prop, if not we use this
     glm::vec3 sunPos(-0.505335f, 0.62932f, 0.590418f);
     cro::Colour sunColour = cro::Colour::White;
+
+    cro::Colour skyTop = cro::Colour(0.723f, 0.847f, 0.792f, 1.f);
+    cro::Colour skyBottom = TextNormalColour;
+    float stars = 0.f;
+
+    m_backgroundScene.enableSkybox();
 
     //load random / seasonal props
     std::string propFilePath = "01.bgd"; //TODO select this based on some event/season or just at random
     cro::ConfigFile propFile;
     if (propFile.loadFromFile("assets/golf/menu/" + propFilePath))
     {
-        cro::Colour skyTop = cro::Colour::Green;
-        cro::Colour skyBottom = cro::Colour::Green;
-
-        bool hasStars = true;
-
         const auto& objs = propFile.getObjects();
         for (const auto& obj : objs)
         {
@@ -1922,7 +1930,7 @@ void MenuState::createScene()
                     }
                     else if (propName == "stars")
                     {
-                        hasStars = prop.getValue<bool>();
+                        stars = std::clamp(prop.getValue<float>(), 0.f, 1.f);
                     }
                     else if (propName == "sun_position")
                     {
@@ -1993,11 +2001,11 @@ void MenuState::createScene()
                 }
             }
         }
-
-        //TODO apply sky settings
-        //TODO load one of the horizon models and scale up (perhaps make part of the config?)
-        //TODO don't load skybox map
     }
+
+    m_backgroundScene.setStarsAmount(stars);
+    m_backgroundScene.setSkyboxColours(SkyBottom, skyBottom, skyTop);
+
     auto sunEnt = m_backgroundScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(sunPos, glm::vec3(0.f), cro::Transform::Y_AXIS)));
     sunEnt.getComponent<cro::Sunlight>().setColour(sunColour);
