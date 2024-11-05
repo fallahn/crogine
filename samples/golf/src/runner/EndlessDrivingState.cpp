@@ -1390,16 +1390,27 @@ void EndlessDrivingState::createUI()
     m_gameEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //cabinet overlay
+    /*entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_resources.textures.get("assets/arcade/endless/images/overlay.png"));
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });*/
+
     auto resize = 
-        [&](cro::Camera& cam)
+        [&, entity](cro::Camera& cam) mutable
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = {0.f, 0.f, 1.f, 1.f};
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -1.f, 10.f);
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -10.f, 10.f);
 
         const float scale = getViewScale(size);
         m_gameEntity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         m_gameEntity.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.1f));
+
+        /*entity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        entity.getComponent<cro::Transform>().setPosition(glm::vec3(size / 2.f, -0.2f));*/
     };
 
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();

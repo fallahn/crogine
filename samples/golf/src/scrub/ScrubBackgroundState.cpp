@@ -250,6 +250,16 @@ void ScrubBackgroundState::createScene()
         md.createModel(entity);
     }
 
+    if (md.loadFromFile("assets/golf/models/woof.cmt"))
+    {
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 9.2f, 0.f, 14.2f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.7f);
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.65f));
+        md.createModel(entity);
+        entity.getComponent<cro::Skeleton>().play(0, 2.f);
+    }
+
     if (md.loadFromFile("assets/golf/models/garden_bench.cmt"))
     {
         auto entity = m_scene.createEntity();

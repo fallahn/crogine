@@ -1639,6 +1639,7 @@ void DrivingState::createScene()
             std::string path;
             glm::vec3 position(0.f);
             float rotation = 0.f;
+            glm::vec3 scale(1.f);
 
             std::vector<glm::vec3> targets;
 
@@ -1657,6 +1658,10 @@ void DrivingState::createScene()
                 else if (propName == "rotation")
                 {
                     rotation = p.getValue<float>();
+                }
+                else if (propName == "scale")
+                {
+                    scale = p.getValue<glm::vec3>();
                 }
             }
 
@@ -1684,6 +1689,7 @@ void DrivingState::createScene()
                 auto entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition(position);
                 entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
+                entity.getComponent<cro::Transform>().setScale(scale);
                 md.createModel(entity);
 
                 //not sure we need to set all submeshes - for one thing it breaks the cart shadow

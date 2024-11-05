@@ -4766,7 +4766,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
 
     //advanced
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(131.f, 1.f) + offset);
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(glm::vec2(131.f, 1.f) + offset, 0.2f));
     entity.addComponent<cro::Drawable2D>();
     pageButtons.buttons[ButtonID::Advanced] = entity;
     
@@ -4774,11 +4774,10 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     {
         entity.getComponent<cro::Drawable2D>().setVertexData(
             {
-            cro::Vertex2D(glm::vec2(0.f, 18.f), CD32::Colours[CD32::Brown]),
-            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
-            cro::Vertex2D(glm::vec2(75.f, 18.f), CD32::Colours[CD32::Brown]),
-            cro::Vertex2D(glm::vec2(75.f, 0.f), CD32::Colours[CD32::Brown]),
-            
+                cro::Vertex2D(glm::vec2(0.f, 18.f), CD32::Colours[CD32::Brown]),
+                cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Brown]),
+                cro::Vertex2D(glm::vec2(75.f, 18.f), CD32::Colours[CD32::Brown]),
+                cro::Vertex2D(glm::vec2(75.f, 0.f), CD32::Colours[CD32::Brown])
             });
     }
     else
