@@ -2010,6 +2010,62 @@ void MenuState::createScene()
     sunEnt.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(sunPos, glm::vec3(0.f), cro::Transform::Y_AXIS)));
     sunEnt.getComponent<cro::Sunlight>().setColour(sunColour);
 
+#ifdef BUNS
+    registerWindow([&]() 
+        {
+            ImGui::Begin("Sky");
+
+            auto cols = m_backgroundScene.getSkyboxColours();
+            ImVec4 top = cols.top;
+            ImVec4 bottom = cols.middle;
+
+            if (ImGui::ColorEdit3("Sky Top", &top.x))
+            {
+                cols.top = top;
+                m_backgroundScene.setSkyboxColours(cols);
+            }
+            if (ImGui::ColorEdit3("Sky Bottom", &bottom.x))
+            {
+                cols.middle = bottom;
+                m_backgroundScene.setSkyboxColours(cols);
+            }
+
+            ImVec4 sun = m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().getColour();
+            if (ImGui::ColorEdit3("Sun", &sun.x))
+            {
+                m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(sun));
+            }
+
+            glm::vec3 sunP = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getPosition();
+            if (ImGui::SliderFloat("Sun Height", &sunP.y, 0.1f, 50.f))
+            {
+                m_backgroundScene.getSunlight().getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(sunP, glm::vec3(0.f), cro::Transform::Y_AXIS)));
+            }
+
+            float starsAmount = m_backgroundScene.getStarsAmount();
+            if (ImGui::SliderFloat("Stars", &starsAmount, 0.f, 1.f))
+            {
+                m_backgroundScene.setStarsAmount(starsAmount);
+            }
+
+            if (ImGui::Button("Save"))
+            {
+                if (auto path = cro::FileSystem::saveFileDialogue("", "cfg"); !path.empty())
+                {
+                    cro::ConfigFile cfg;
+                    auto* skyObj = cfg.addObject("sky");
+                    skyObj->addProperty("top").setValue(top);
+                    skyObj->addProperty("bottom").setValue(bottom);
+                    skyObj->addProperty("stars").setValue(starsAmount);
+                    skyObj->addProperty("sun_position").setValue(sunP);
+                    skyObj->addProperty("sun_colour").setValue(sun);
+                    cfg.save(path);
+                }
+            }
+            ImGui::End();        
+        });
+#endif
+
 
     //billboards
     auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
