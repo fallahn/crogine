@@ -3367,6 +3367,9 @@ void DrivingState::hitBall()
         e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //drop a marker on the steam timeline
+    Timeline::addEvent(Timeline::Event::NewHole, m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentStroke() + 1);
 }
 
 void DrivingState::setHole(std::int32_t index)
