@@ -1372,6 +1372,11 @@ void MenuState::handleMessage(const cro::Message& msg)
                 }
             }
         }
+        else if (data.type == SystemEvent::ShadowQualityChanged)
+        {
+            auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
+            cam.resizeCallback(cam);
+        }
     }
 #ifdef USE_GNS
     else if (msg.id == Social::MessageID::UGCMessage)
@@ -1578,8 +1583,6 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    //m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
-    //m_backgroundScene.setSkyboxColours(cro::Colour(0.2f, 0.31f, 0.612f, 1.f), cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
     if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm"))
     {
         m_reflectionMap.generateMipMaps();
@@ -1600,8 +1603,8 @@ void MenuState::loadAssets()
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
     //m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
@@ -1775,7 +1778,7 @@ void MenuState::createScene()
     cro::ModelDefinition md(m_resources);
 
     //this might be loaded from the prop, if not we use this
-    glm::vec3 sunPos(-0.505335f, 0.62932f, 0.590418f);
+    glm::vec3 sunPos = glm::vec3(-0.505335f, 0.62932f, 0.590418f);
     cro::Colour sunColour = cro::Colour::White;
 
     cro::Colour skyTop = cro::Colour(0.723f, 0.847f, 0.792f, 1.f);
@@ -1785,7 +1788,56 @@ void MenuState::createScene()
     m_backgroundScene.enableSkybox();
 
     //load random / seasonal props
-    std::string propFilePath = "01.bgd"; //TODO select this based on some event/season or just at random
+    std::string propFilePath;
+
+    const bool spooky = cro::SysTime::now().months() == 10
+        && cro::SysTime::now().days() > 22;
+
+    if (spooky)
+    {
+        propFilePath = "spooky.bgd";
+    }
+    else
+    {
+        const auto hour = cro::SysTime::now().hours();
+        switch (hour)
+        {
+        default:
+        case 21:
+        case 22:
+        case 23:
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            propFilePath = "00.bgd";
+            break;
+        case 5:
+            propFilePath = "01.bgd";
+            break;
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+        case 17:
+        case 18:
+        case 19:
+            propFilePath = "02.bgd";
+            break;
+        case 20:
+            propFilePath = "03.bgd";
+            break;
+        }
+    }
+
     cro::ConfigFile propFile;
     if (propFile.loadFromFile("assets/golf/menu/" + propFilePath))
     {
@@ -1888,7 +1940,11 @@ void MenuState::createScene()
     auto sunEnt = m_backgroundScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(sunPos, glm::vec3(0.f), cro::Transform::Y_AXIS)));
     sunEnt.getComponent<cro::Sunlight>().setColour(sunColour);
+    m_sharedData.sunColour = sunColour;
+    m_sharedData.skyColourTop = skyTop;
+    m_sharedData.skyColourBottom = skyBottom;
 
+//#define BUNS
 #ifdef BUNS
     registerWindow([&]() 
         {
@@ -2247,8 +2303,7 @@ void MenuState::createScene()
 
     //music
     auto entity = m_backgroundScene.createEntity();
-    if (cro::SysTime::now().months() == 10
-        && cro::SysTime::now().days() > 22)
+    if (spooky)
     {
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("spooky_music");
     }
@@ -2284,6 +2339,9 @@ void MenuState::createScene()
             m_backgroundTexture.create(ctx) 
             && m_sharedData.multisamples != 0
             && !m_sharedData.pixelScale;
+
+        const auto res = m_sharedData.hqShadows ? 4096 : 2048;
+        cam.shadowMapBuffer.create(res, res);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 600.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

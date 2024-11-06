@@ -800,11 +800,12 @@ void ClubhouseState::loadResources()
     static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define BALL_COLOUR\n#define TEXTURED\n#define RX_SHADOWS\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Cel]).setProperty("u_ballColour", cro::Colour::White);
 
     m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define TEXTURED\n#define RX_SHADOWS\n");
     shader = &m_resources.shaders.get(ShaderID::Leaderboard);
@@ -822,17 +823,18 @@ void ClubhouseState::loadResources()
         m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
     }
 
-    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, "#define SKY_COLOUR\n");
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n");
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define BALL_COLOUR\n#define SUBRECT\n#define TEXTURED\n#define SKINNED\n");
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]).setProperty("u_ballColour", cro::Colour::White);
 
     //ball material in table preview
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define TEXTURED\n#define SUBRECT\n");
@@ -959,8 +961,9 @@ void ClubhouseState::validateTables()
 
 void ClubhouseState::buildScene()
 {
-    m_backgroundScene.setCubemap("assets/golf/images/skybox/mountain_spring/sky.ccm");
-
+    //m_backgroundScene.setCubemap("assets/golf/images/skybox/mountain_spring/sky.ccm");
+    m_backgroundScene.enableSkybox();
+    m_backgroundScene.setSkyboxColours(SkyBottom, m_sharedData.skyColourBottom, m_sharedData.skyColourTop);
 
     cro::ModelDefinition md(m_resources);
 
@@ -987,6 +990,7 @@ void ClubhouseState::buildScene()
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.sunColour);
     }
 
     if (md.loadFromFile("assets/golf/models/phone_box.cmt"))
@@ -997,6 +1001,7 @@ void ClubhouseState::buildScene()
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.sunColour);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/cabinet.cmt"))
@@ -1283,6 +1288,7 @@ void ClubhouseState::buildScene()
         billboardMat.setProperty("u_noiseTexture", noiseTex);
 
         entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_skyColour", m_sharedData.sunColour);
 
         if (entity.hasComponent<cro::BillboardCollection>())
         {
@@ -1342,6 +1348,7 @@ void ClubhouseState::buildScene()
                 }
                 applyMaterialData(passengerDef, material);
                 passengers[i].getComponent<cro::Model>().setMaterial(0, material);
+                passengers[i].getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.sunColour);
             }
         }
 
@@ -1354,6 +1361,7 @@ void ClubhouseState::buildScene()
             entity.addComponent<GolfCart>();
             md.createModel(entity);
             applyMaterial(entity, MaterialID::Cel);
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.sunColour);
 
             entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("cart");
             entity.getComponent<cro::AudioEmitter>().play();

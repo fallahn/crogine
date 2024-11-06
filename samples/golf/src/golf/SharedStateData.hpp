@@ -87,6 +87,11 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
+    //used to set background colour in main menu and clubhouse
+    cro::Colour sunColour = cro::Colour::White;
+    cro::Colour skyColourTop = cro::Colour::White;
+    cro::Colour skyColourBottom = cro::Colour::White;
+
     cro::Playlist playlist;
 
     bool showCredits = false;
