@@ -963,7 +963,8 @@ void ClubhouseState::buildScene()
 {
     //m_backgroundScene.setCubemap("assets/golf/images/skybox/mountain_spring/sky.ccm");
     m_backgroundScene.enableSkybox();
-    m_backgroundScene.setSkyboxColours(SkyBottom, m_sharedData.skyColourBottom, m_sharedData.skyColourTop);
+    m_backgroundScene.setSkyboxColours(SkyBottom, m_sharedData.menuSky.skyBottom, m_sharedData.menuSky.skyTop);
+    m_backgroundScene.setStarsAmount(m_sharedData.menuSky.stars);
 
     cro::ModelDefinition md(m_resources);
 
@@ -990,7 +991,7 @@ void ClubhouseState::buildScene()
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.sunColour);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.menuSky.sunColour);
     }
 
     if (md.loadFromFile("assets/golf/models/phone_box.cmt"))
@@ -1001,7 +1002,7 @@ void ClubhouseState::buildScene()
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.sunColour);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.menuSky.sunColour);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/cabinet.cmt"))
@@ -1288,7 +1289,7 @@ void ClubhouseState::buildScene()
         billboardMat.setProperty("u_noiseTexture", noiseTex);
 
         entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_skyColour", m_sharedData.sunColour);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_skyColour", m_sharedData.menuSky.sunColour);
 
         if (entity.hasComponent<cro::BillboardCollection>())
         {
@@ -1309,6 +1310,13 @@ void ClubhouseState::buildScene()
             }
         }
     }
+
+    cro::ModelDefinition lightsDef(m_resources);
+    if (m_sharedData.menuSky.stars > 0.5f)
+    {
+        lightsDef.loadFromFile("assets/golf/models/menu/headlights.cmt");
+    }
+
 
     //golf carts
     if (md.loadFromFile("assets/golf/models/menu/cart.cmt"))
@@ -1348,10 +1356,9 @@ void ClubhouseState::buildScene()
                 }
                 applyMaterialData(passengerDef, material);
                 passengers[i].getComponent<cro::Model>().setMaterial(0, material);
-                passengers[i].getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.sunColour);
+                passengers[i].getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.menuSky.sunColour);
             }
         }
-
 
 
         for (auto i = 0u; i < 2u; ++i)
@@ -1361,7 +1368,7 @@ void ClubhouseState::buildScene()
             entity.addComponent<GolfCart>();
             md.createModel(entity);
             applyMaterial(entity, MaterialID::Cel);
-            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.sunColour);
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", m_sharedData.menuSky.sunColour);
 
             entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("cart");
             entity.getComponent<cro::AudioEmitter>().play();
@@ -1373,6 +1380,15 @@ void ClubhouseState::buildScene()
                 {
                     entity.getComponent<cro::Transform>().addChild(passengers[index].getComponent<cro::Transform>());
                 }
+            }
+
+            if (lightsDef.isLoaded())
+            {
+                auto lightsEnt = m_backgroundScene.createEntity();
+                lightsEnt.addComponent<cro::Transform>();
+                lightsDef.createModel(lightsEnt);
+
+                entity.getComponent<cro::Transform>().addChild(lightsEnt.getComponent<cro::Transform>());
             }
         }
     }

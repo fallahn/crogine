@@ -1778,12 +1778,12 @@ void MenuState::createScene()
     cro::ModelDefinition md(m_resources);
 
     //this might be loaded from the prop, if not we use this
-    glm::vec3 sunPos = glm::vec3(-0.505335f, 0.62932f, 0.590418f);
+    /*glm::vec3 sunPos = glm::vec3(-0.505335f, 0.62932f, 0.590418f);
     cro::Colour sunColour = cro::Colour::White;
 
     cro::Colour skyTop = cro::Colour(0.723f, 0.847f, 0.792f, 1.f);
     cro::Colour skyBottom = TextNormalColour;
-    float stars = 0.f;
+    float stars = 0.f;*/
 
     m_backgroundScene.enableSkybox();
 
@@ -1853,23 +1853,23 @@ void MenuState::createScene()
                     const auto& propName = prop.getName();
                     if (propName == "top")
                     {
-                        skyTop = prop.getValue<cro::Colour>();
+                        m_sharedData.menuSky.skyTop = prop.getValue<cro::Colour>();
                     }
                     else if (propName == "bottom")
                     {
-                        skyBottom = prop.getValue<cro::Colour>();
+                        m_sharedData.menuSky.skyBottom = prop.getValue<cro::Colour>();
                     }
                     else if (propName == "stars")
                     {
-                        stars = std::clamp(prop.getValue<float>(), 0.f, 1.f);
+                        m_sharedData.menuSky.stars = std::clamp(prop.getValue<float>(), 0.f, 1.f);
                     }
                     else if (propName == "sun_position")
                     {
-                        sunPos = prop.getValue<glm::vec3>();
+                        m_sharedData.menuSky.sunPos = prop.getValue<glm::vec3>();
                     }
                     else if (propName == "sun_colour")
                     {
-                        sunColour = prop.getValue<cro::Colour>();
+                        m_sharedData.menuSky.sunColour = prop.getValue<cro::Colour>();
                     }
                 }
             }
@@ -1934,15 +1934,13 @@ void MenuState::createScene()
         }
     }
 
-    m_backgroundScene.setStarsAmount(stars);
-    m_backgroundScene.setSkyboxColours(SkyBottom, skyBottom, skyTop);
+    m_backgroundScene.setStarsAmount(m_sharedData.menuSky.stars);
+    m_backgroundScene.setSkyboxColours(SkyBottom, m_sharedData.menuSky.skyBottom, m_sharedData.menuSky.skyTop);
 
     auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(sunPos, glm::vec3(0.f), cro::Transform::Y_AXIS)));
-    sunEnt.getComponent<cro::Sunlight>().setColour(sunColour);
-    m_sharedData.sunColour = sunColour;
-    m_sharedData.skyColourTop = skyTop;
-    m_sharedData.skyColourBottom = skyBottom;
+    sunEnt.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(m_sharedData.menuSky.sunPos, glm::vec3(0.f), cro::Transform::Y_AXIS)));
+    sunEnt.getComponent<cro::Sunlight>().setColour(m_sharedData.menuSky.sunColour);
+
 
 //#define BUNS
 #ifdef BUNS
@@ -2006,13 +2004,15 @@ void MenuState::createScene()
     std::string pavilionPath = "assets/golf/models/menu_pavilion.cmt";
     std::string bollardPath = "assets/golf/models/bollard_day.cmt";
     std::string phoneBoxPath = "assets/golf/models/phone_box.cmt";
+    std::string cartPath = "assets/golf/models/menu/cart.cmt";
 
-    if (stars > 0.5f)
+    if (m_sharedData.menuSky.stars > 0.5f)
     {
         texID = MaterialID::CelTexturedMasked;
         pavilionPath = "assets/golf/models/menu_pavilion_night.cmt";
         bollardPath = "assets/golf/models/bollard_night.cmt";
         phoneBoxPath = "assets/golf/models/phone_box_night.cmt";
+        cartPath = "assets/golf/models/menu/cart_night.cmt";
     }
 
     if (md.loadFromFile(pavilionPath))
@@ -2223,8 +2223,14 @@ void MenuState::createScene()
     }
 
 
+    cro::ModelDefinition lightsDef(m_resources);
+    if (m_sharedData.menuSky.stars > 0.5f)
+    {
+        lightsDef.loadFromFile("assets/golf/models/menu/headlights.cmt");
+    }
+
     //golf carts
-    if (md.loadFromFile("assets/golf/models/menu/cart.cmt"))
+    if (md.loadFromFile(cartPath))
     {
         const std::array<std::string, 6u> passengerStrings =
         {
@@ -2271,7 +2277,7 @@ void MenuState::createScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 87.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[/*MaterialID::Ground*/texID]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
@@ -2294,6 +2300,15 @@ void MenuState::createScene()
                 {
                     entity.getComponent<cro::Transform>().addChild(passengers[index].getComponent<cro::Transform>());
                 }
+            }
+
+            if (lightsDef.isLoaded())
+            {
+                auto lightsEnt = m_backgroundScene.createEntity();
+                lightsEnt.addComponent<cro::Transform>();
+                lightsDef.createModel(lightsEnt);
+
+                entity.getComponent<cro::Transform>().addChild(lightsEnt.getComponent<cro::Transform>());
             }
         }
     }
@@ -2388,7 +2403,7 @@ void MenuState::createScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     //add the ambience to the cam cos why not
-    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter(stars < 0.5f ? "01" : "02");
+    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter(m_sharedData.menuSky.stars < 0.5f ? "01" : "02");
     camEnt.getComponent<cro::AudioEmitter>().play();
 
     //set up cam / models for ball preview

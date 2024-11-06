@@ -54,6 +54,16 @@ namespace cro
     class MultiRenderTexture;
 }
 
+struct MenuSky final
+{
+    glm::vec3 sunPos = glm::vec3(-0.505335f, 0.62932f, 0.590418f);
+    cro::Colour sunColour = cro::Colour::White;
+
+    cro::Colour skyTop = cro::Colour(0.723f, 0.847f, 0.792f, 1.f);
+    cro::Colour skyBottom = 0xfff8e1ff;
+    float stars = 0.f;
+};
+
 struct ChatFonts final
 {
     ImFont* buttonLarge = nullptr;
@@ -88,9 +98,7 @@ struct SharedCourseData;
 struct SharedStateData final
 {
     //used to set background colour in main menu and clubhouse
-    cro::Colour sunColour = cro::Colour::White;
-    cro::Colour skyColourTop = cro::Colour::White;
-    cro::Colour skyColourBottom = cro::Colour::White;
+    MenuSky menuSky;
 
     cro::Playlist playlist;
 
