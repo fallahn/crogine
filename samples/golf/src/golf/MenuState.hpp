@@ -148,6 +148,7 @@ private:
             Ball,
             Cel,
             CelTextured,
+            CelTexturedMasked,
             CelTexturedSkinned,
             Hair,
             HairReflect,

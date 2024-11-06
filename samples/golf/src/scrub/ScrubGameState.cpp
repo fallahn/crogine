@@ -1238,7 +1238,7 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.f, 1.f };
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -entity.getComponent<cro::Sprite>().getTextureBounds().height };
-    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth - 0.2f;
     entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
         {
             auto bounds = e.getComponent<cro::Sprite>().getTextureRect();
@@ -1325,7 +1325,7 @@ void ScrubGameState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 1.f, 0.f };
     entity.getComponent<UIElement>().absolutePosition = { -340.f, 12.f };
-    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth;
+    entity.getComponent<UIElement>().depth = sc::UIBackgroundDepth - 0.2f;
     m_spriteRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 

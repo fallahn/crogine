@@ -1601,8 +1601,10 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define MASK_MAP\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
+    //m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n");
     m_resources.shaders.loadFromString(ShaderID::HairReflect, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define REFLECTIONS\n");
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
@@ -1626,6 +1628,13 @@ void MenuState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedMasked);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTexturedMasked] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+
 
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
@@ -1761,139 +1770,9 @@ void MenuState::createScene()
         }
     };
 
-    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+   
 
     cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/golf/models/menu_pavilion.cmt"))
-    {
-        applyMaterialData(md, texturedMat);
-
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        md.createModel(entity);
-        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-    }
-
-    if (md.loadFromFile("assets/golf/models/menu_ground.cmt"))
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        md.createModel(entity);
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
-        applyMaterialData(md, texturedMat);
-        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-        entity.getComponent<cro::Model>().setRenderFlags(~BallRenderFlags);
-    }
-
-    if (md.loadFromFile("assets/golf/models/phone_box.cmt"))
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.2f });
-        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.7f));
-        md.createModel(entity);
-
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-        applyMaterialData(md, texturedMat);
-        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-    }
-
-    if (md.loadFromFile("assets/golf/models/woof.cmt"))
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 9.2f, 0.f, 14.2f });
-        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.7f);
-        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.65f));
-        md.createModel(entity);
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-        applyMaterialData(md, texturedMat);
-        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-        entity.getComponent<cro::Skeleton>().play(0, 2.f);
-        struct WoofData final
-        {
-            std::int32_t anim = 0;
-            float currentTime = 6.f;
-        };
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<WoofData>();
-        entity.getComponent<cro::Callback>().function =
-            [](cro::Entity e, float dt)
-            {
-                auto& [anim, currTime] = e.getComponent<cro::Callback>().getUserData<WoofData>();
-                currTime -= dt;
-                switch (anim)
-                {
-                default:
-                    if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Stopped)
-                    {
-                        anim = 0;
-                        e.getComponent<cro::Skeleton>().play(anim, 2.f, 0.1f);
-                        currTime = static_cast<float>(cro::Util::Random::value(10, 16));
-                    }
-                    break;
-                case 0:
-                    if (currTime < 0.f)
-                    {
-                        anim = cro::Util::Random::value(0, 4) == 0 ? 2 : 1;
-                        e.getComponent<cro::Skeleton>().play(anim, 1.f, 0.1f);
-                    }
-                    break;
-                }
-            };
-    }
-
-    if (md.loadFromFile("assets/golf/models/garden_bench.cmt"))
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
-        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
-        md.createModel(entity);
-
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-        applyMaterialData(md, texturedMat);
-        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-    }
-
-    if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -10.f, 0.f, 12.f });
-        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -150.f * cro::Util::Const::degToRad);
-        md.createModel(entity);
-
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-        applyMaterialData(md, texturedMat);
-        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-    }
-
-    if (md.loadFromFile("assets/golf/models/bollard_day.cmt"))
-    {
-        constexpr std::array positions =
-        {
-            glm::vec3(7.2f, 0.f, 12.f),
-            glm::vec3(7.2f, 0.f, 3.5f),
-            //glm::vec3(-10.5f, 0.f, 12.5f),
-            glm::vec3(-8.2f, 0.f, 3.5f)
-        };
-
-        for (auto pos : positions)
-        {
-            auto entity = m_backgroundScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(pos);
-            md.createModel(entity);
-
-            texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-            applyMaterialData(md, texturedMat);
-            entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-        }
-    }
-
-    if (md.loadFromFile("assets/golf/models/skybox/horizon01.cmt"))
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(glm::vec3(15.5f));
-        md.createModel(entity);
-    }
-
 
     //this might be loaded from the prop, if not we use this
     glm::vec3 sunPos(-0.505335f, 0.62932f, 0.590418f);
@@ -1987,16 +1866,16 @@ void MenuState::createScene()
 
                     if (md.hasSkeleton())
                     {
-                        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-                        applyMaterialData(md, texturedMat);
-                        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+                        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                        applyMaterialData(md, mat);
+                        entity.getComponent<cro::Model>().setMaterial(0, mat);
                         entity.getComponent<cro::Skeleton>().play(animation);
                     }
                     else
                     {
-                        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                        applyMaterialData(md, texturedMat);
-                        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+                        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                        applyMaterialData(md, mat);
+                        entity.getComponent<cro::Model>().setMaterial(0, mat);
                     }
                 }
             }
@@ -2065,6 +1944,152 @@ void MenuState::createScene()
             ImGui::End();        
         });
 #endif
+
+    auto texID = MaterialID::CelTextured;
+
+    std::string pavilionPath = "assets/golf/models/menu_pavilion.cmt";
+    std::string bollardPath = "assets/golf/models/bollard_day.cmt";
+    std::string phoneBoxPath = "assets/golf/models/phone_box.cmt";
+
+    if (stars > 0.5f)
+    {
+        texID = MaterialID::CelTexturedMasked;
+        pavilionPath = "assets/golf/models/menu_pavilion_night.cmt";
+        bollardPath = "assets/golf/models/bollard_night.cmt";
+        phoneBoxPath = "assets/golf/models/phone_box_night.cmt";
+    }
+
+    if (md.loadFromFile(pavilionPath))
+    {
+        auto mat = m_resources.materials.get(m_materialIDs[texID]);
+
+        applyMaterialData(md, mat);
+
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setMaterial(0, mat);
+    }
+
+    if (md.loadFromFile(bollardPath))
+    {
+        constexpr std::array positions =
+        {
+            glm::vec3(7.2f, 0.f, 12.f),
+            glm::vec3(7.2f, 0.f, 3.5f),
+            //glm::vec3(-10.5f, 0.f, 12.5f),
+            glm::vec3(-8.2f, 0.f, 3.5f)
+        };
+
+        for (auto pos : positions)
+        {
+            auto entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            md.createModel(entity);
+
+            auto mat = m_resources.materials.get(m_materialIDs[texID]);
+            applyMaterialData(md, mat);
+            entity.getComponent<cro::Model>().setMaterial(0, mat);
+        }
+    }
+
+    if (md.loadFromFile("assets/golf/models/menu_ground.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        entity.getComponent<cro::Model>().setRenderFlags(~BallRenderFlags);
+    }
+
+    if (md.loadFromFile(phoneBoxPath))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.2f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.7f));
+        md.createModel(entity);
+
+        auto texturedMat = m_resources.materials.get(m_materialIDs[texID]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
+    if (md.loadFromFile("assets/golf/models/woof.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 9.2f, 0.f, 14.2f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.7f);
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.65f));
+        md.createModel(entity);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        entity.getComponent<cro::Skeleton>().play(0, 2.f);
+        struct WoofData final
+        {
+            std::int32_t anim = 0;
+            float currentTime = 6.f;
+        };
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<WoofData>();
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+            {
+                auto& [anim, currTime] = e.getComponent<cro::Callback>().getUserData<WoofData>();
+                currTime -= dt;
+                switch (anim)
+                {
+                default:
+                    if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Stopped)
+                    {
+                        anim = 0;
+                        e.getComponent<cro::Skeleton>().play(anim, 2.f, 0.1f);
+                        currTime = static_cast<float>(cro::Util::Random::value(10, 16));
+                    }
+                    break;
+                case 0:
+                    if (currTime < 0.f)
+                    {
+                        anim = cro::Util::Random::value(0, 4) == 0 ? 2 : 1;
+                        e.getComponent<cro::Skeleton>().play(anim, 1.f, 0.1f);
+                    }
+                    break;
+                }
+            };
+    }
+
+    if (md.loadFromFile("assets/golf/models/garden_bench.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
+    if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -10.f, 0.f, 12.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -150.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
+    if (md.loadFromFile("assets/golf/models/skybox/horizon01.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(15.5f));
+        md.createModel(entity);
+    }
 
 
     //billboards
@@ -2190,7 +2215,7 @@ void MenuState::createScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 87.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
@@ -2305,7 +2330,7 @@ void MenuState::createScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     //add the ambience to the cam cos why not
-    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
+    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter(stars < 0.5f ? "01" : "02");
     camEnt.getComponent<cro::AudioEmitter>().play();
 
     //set up cam / models for ball preview
