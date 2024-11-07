@@ -797,16 +797,10 @@ void GolfState::loadMap()
                                         //add path if it exists
                                         if (curve.size() > 3)
                                         {
-                                            Path propPath;
-                                            for (auto p : curve)
-                                            {
-                                                propPath.addPoint(p);
-                                            }
-
-                                            ent.addComponent<PropFollower>().path = propPath;
+                                            ent.addComponent<PropFollower>().path = curve;
                                             ent.getComponent<PropFollower>().loop = loopCurve;
                                             ent.getComponent<PropFollower>().idleTime = loopDelay;
-                                            ent.getComponent<PropFollower>().speed = loopSpeed;
+                                            ent.getComponent<PropFollower>().moveSpeed = loopSpeed;
                                             ent.getComponent<cro::Transform>().setPosition(curve[0]);
                                         }
 
@@ -854,7 +848,7 @@ void GolfState::loadMap()
                                                         prevPos = pos;
                                                         e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
 
-                                                        const float speed = ent.getComponent<PropFollower>().speed + 0.001f; //prevent div0
+                                                        const float speed = ent.getComponent<PropFollower>().moveSpeed + 0.001f; //prevent div0
                                                         float pitch = std::min(1.f, glm::length2(velocity) / (speed * speed));
                                                         e.getComponent<cro::AudioEmitter>().setPitch(pitch);
 

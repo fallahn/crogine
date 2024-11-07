@@ -31,24 +31,24 @@ source distribution.
 
 #include "Path.hpp"
 #include <crogine/ecs/System.hpp>
-
+#include <crogine/ecs/components/Transform.hpp>
 
 struct PropFollower final
 {
-    Path path;
-    
-    struct Point final
-    {
-        glm::vec3 position = glm::vec3(0.f);
-        glm::vec3 velocity = glm::vec3(0.f);
-        std::int32_t target = 1;
-    };
-    std::array<Point, 2> axis = {};
-    void initAxis(cro::Entity);
+    std::vector<glm::vec3> path;
+    float moveSpeed = 1.f;
 
-    float rotation = 0.f;
-    float targetRotation = 0.f;
-    float speed = 6.f;
+    //forward vector when we started slerp
+    glm::quat startRotation = cro::Transform::QUAT_IDENTITY;
+    glm::quat targetRotation = cro::Transform::QUAT_IDENTITY;
+
+    float currentTurn = 1.f; //we slerp out rotation from start to target over turnSpeed
+    float turnSpeed = 2.f; //TODO we need to make this proportional to move speed so we don't end up orbiting path points
+
+    float minRadius = 3.5f; //look for next point when within this radius of current target
+
+    std::size_t target = 1;
+
     bool loop = true;
 
     enum State
