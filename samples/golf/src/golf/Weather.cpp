@@ -338,6 +338,18 @@ void GolfState::createFireworks()
             break;
         }
         break;
+    case 4:
+        if (day != 22)
+        {
+            return;
+        }
+        break;
+    case 5:
+        if (day != 4)
+        {
+            return;
+        }
+        break;
     case 10:
         switch (day)
         {

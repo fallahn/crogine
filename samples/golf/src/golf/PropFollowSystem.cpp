@@ -195,5 +195,8 @@ void PropFollowSystem::onEntityAdded(cro::Entity entity)
     entity.getComponent<cro::Transform>().setPosition(follower.path[0]);
 
     follower.targetRotation = getTargetRotation(follower.path[1] - follower.path[0]);
-    follower.currentTurn = 0.f;
+    follower.startRotation = follower.targetRotation;
+    follower.currentTurn = 1.f;
+
+    entity.getComponent<cro::Transform>().setRotation(follower.startRotation);
 }

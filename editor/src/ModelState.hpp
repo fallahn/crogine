@@ -92,6 +92,7 @@ private:
     MaskEditor m_maskEditor;
     bool m_showMaskEditor;
     bool m_showImageCombiner;
+    bool m_showTransformModifier;
 
     float m_viewportRatio;
 
@@ -164,12 +165,14 @@ private:
     bool m_exportAnimation;
     std::size_t m_skeletonMeshID;
 
+    bool m_transformUpdated;
+
     void importModel();
     void importIQM(const std::string&);
     void updateImportNode(CMFHeader, std::vector<float>& verts, std::vector<std::vector<std::uint32_t>>& indices);
     void buildSkeleton();
     void exportModel(bool = false, bool = true);
-    void applyImportTransform();
+    void applyImportTransform(std::vector<float>& vertexData);
     void flipNormals();
     void readBackVertexData(cro::Mesh::Data, std::vector<float>&, std::vector<std::vector<std::uint32_t>>&);
     //-------------------------------------------//
@@ -242,6 +245,7 @@ private:
     void drawInfo() const;
     void drawGizmo();
     void drawImageCombiner();
+    void drawTransformControls();
     void updateLayout(std::int32_t, std::int32_t);
     //---------------------------------//
 

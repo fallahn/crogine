@@ -43,7 +43,7 @@ struct PropFollower final
     glm::quat targetRotation = cro::Transform::QUAT_IDENTITY;
 
     float currentTurn = 1.f; //we slerp out rotation from start to target over turnSpeed
-    float turnSpeed = 2.f; //TODO we need to make this proportional to move speed so we don't end up orbiting path points
+    float turnSpeed = 2.f;
 
     float minRadius = 3.5f; //look for next point when within this radius of current target
 

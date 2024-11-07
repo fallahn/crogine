@@ -797,10 +797,15 @@ void GolfState::loadMap()
                                         //add path if it exists
                                         if (curve.size() > 3)
                                         {
+                                            //TODO we need to slow the rotation of big models such as the blimp
+                                            const float turnSpeed = 6.f / (ent.getComponent<cro::Model>().getBoundingSphere().radius + 0.001f);
+                                            //LogI << cro::FileSystem::getFileName(path) << " needs model updating" << std::endl;
+                                            
                                             ent.addComponent<PropFollower>().path = curve;
                                             ent.getComponent<PropFollower>().loop = loopCurve;
                                             ent.getComponent<PropFollower>().idleTime = loopDelay;
                                             ent.getComponent<PropFollower>().moveSpeed = loopSpeed;
+                                            ent.getComponent<PropFollower>().turnSpeed = turnSpeed;
                                             ent.getComponent<cro::Transform>().setPosition(curve[0]);
                                         }
 
