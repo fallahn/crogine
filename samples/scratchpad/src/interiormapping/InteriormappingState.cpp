@@ -1,6 +1,7 @@
 //Auto-generated source file for Scratchpad Stub 28/11/2023, 13:22:27
 
 #include "InteriorMappingState.hpp"
+#include "../pathfollow/PathFollowSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -73,10 +74,13 @@ InteriorMappingState::InteriorMappingState(cro::StateStack& stack, cro::State::C
 
         loadCullingAssets();
         createCullingScene();
+
+        createPathScene();
+
         createUI();
     });
 
-    registerWindow([]()
+    /*registerWindow([]()
         {
             if (ImGui::Begin("Controller"))
             {
@@ -187,7 +191,7 @@ InteriorMappingState::InteriorMappingState(cro::StateStack& stack, cro::State::C
                 }
             }
             ImGui::End();
-        });
+        });*/
 }
 
 //public
@@ -365,6 +369,7 @@ void InteriorMappingState::render()
 void InteriorMappingState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_gameScene.addSystem<PathFollowSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<ChunkVisSystem>(mb, glm::vec2(320.f, 200.f));
@@ -653,12 +658,12 @@ void InteriorMappingState::createCullingScene()
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/models/map_plane.cmt"))
     {
-        auto entity = m_gameScene.createEntity();
+        /*auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
-        md.createModel(entity);
+        md.createModel(entity);*/
 
         m_cullingDebugTexture.create(320, 200, false);
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_cullingDebugTexture.getTexture()));
+        //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_cullingDebugTexture.getTexture()));
     }
 
     std::vector<glm::mat4> positions;
@@ -732,6 +737,49 @@ void InteriorMappingState::createCullingScene()
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.5f);
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.4f);
+}
+
+void InteriorMappingState::createPathScene()
+{
+    static constexpr std::array path =
+    {
+        glm::vec3(0.f, 10.f, 0.f),
+        glm::vec3(100.f, 10.f, 0.f),
+        glm::vec3(220.f, 6.f, -100.f),
+        glm::vec3(180.f, 15.f, -230.f),
+        glm::vec3(1.f, 9.f, -1.f),
+    };
+
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/models/path_marker.cmt"))
+    {
+        //set a path from a series of points
+        //set a radius from each point to serach for next in the path
+
+        //TODO store these somewhere so we can read follower's current target
+        //and set the model colour to match
+        for (const auto& p : path)
+        {
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(p);
+            md.createModel(entity);
+
+            //LogI << entity.getComponent<cro::Transform>().getForwardVector() << std::endl;;
+        }
+    }
+
+    if (md.loadFromFile("assets/batcat/models/arrow.cmt"))
+    {
+        //default forward vec is 0,0,-1
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        auto& follower = entity.addComponent<PathFollower>();
+        follower.path = { path.begin(), path.end() };
+        follower.moveSpeed = 80.f;
+        follower.turnSpeed = 10.f;
+    }
 }
 
 void InteriorMappingState::createUI()

@@ -167,7 +167,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<BushState>(States::ScratchPad::Bush);
     m_stateStack.registerState<BspState>(States::ScratchPad::BSP);
     m_stateStack.registerState<CollisionState>(States::ScratchPad::MeshCollision);
-    m_stateStack.registerState<ArcState>(States::ScratchPad::Arc);
+    m_stateStack.registerState<ArcState>(States::ScratchPad::Arc); //club stroke arcs
     m_stateStack.registerState<VatsState>(States::ScratchPad::VATs);
     m_stateStack.registerState<RetroState>(States::ScratchPad::Retro);
     m_stateStack.registerState<FrustumState>(States::ScratchPad::Frustum);
@@ -178,7 +178,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<LogState>(States::ScratchPad::Log);
     m_stateStack.registerState<GCState>(States::ScratchPad::GC);
     m_stateStack.registerState<BounceState>(States::ScratchPad::Bounce);
-    m_stateStack.registerState<InteriorMappingState>(States::ScratchPad::InteriorMapping);
+    m_stateStack.registerState<InteriorMappingState>(States::ScratchPad::InteriorMapping); //instance culling
     m_stateStack.registerState<EndlessDrivingState>(States::ScratchPad::EndlessDriving);
     m_stateStack.registerState<TrackOverlayState>(States::ScratchPad::TrackOverlay);
     
@@ -192,8 +192,8 @@ bool MyApp::initialise()
     m_stateStack.registerState<PseutheMenuState>(States::ScratchPad::PseutheMenu);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::TrackOverlay);
-    //m_stateStack.pushState(States::ScratchPad::ScrubBackground);
+    //m_stateStack.pushState(States::ScratchPad::TrackOverlay);
+    m_stateStack.pushState(States::ScratchPad::InteriorMapping);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     //m_stateStack.pushState(States::ScratchPad::MainMenu);

@@ -66,4 +66,6 @@ private:
 
     void loadCullingAssets();
     void createCullingScene();
+
+    void createPathScene();
 };

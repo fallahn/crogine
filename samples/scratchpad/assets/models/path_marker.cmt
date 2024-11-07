@@ -1,0 +1,39 @@
+model path_marker
+{
+    mesh = path_marker.cmb
+    cast_shadows = false
+
+    material VertexLit
+    {
+        mask_colour = 1.000000,1.000000,0.000000,1.000000
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 0.185841,0.181802,0.094565,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = add
+
+    }
+}

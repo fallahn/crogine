@@ -327,6 +327,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
+    <ClCompile Include="src\pathfollow\PathFollowSystem.cpp" />
     <ClCompile Include="src\pseuthe\PseutheBackgroundState.cpp" />
     <ClCompile Include="src\pseuthe\PseutheBallSystem.cpp" />
     <ClCompile Include="src\pseuthe\PseutheGameState.cpp" />
@@ -398,6 +399,7 @@
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />
+    <ClInclude Include="src\pathfollow\PathFollowSystem.hpp" />
     <ClInclude Include="src\pseuthe\PseutheBackgroundState.hpp" />
     <ClInclude Include="src\pseuthe\PseutheBallSystem.hpp" />
     <ClInclude Include="src\pseuthe\PseutheConsts.hpp" />
