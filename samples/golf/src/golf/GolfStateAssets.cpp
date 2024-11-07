@@ -854,7 +854,7 @@ void GolfState::loadMap()
                                                         e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
 
                                                         const float speed = ent.getComponent<PropFollower>().moveSpeed + 0.001f; //prevent div0
-                                                        float pitch = std::min(1.f, glm::length2(velocity) / (speed * speed));
+                                                        float pitch = smoothstep(0.005f, 0.6f, std::min(1.f, glm::length2(velocity) / (speed * speed)));
                                                         e.getComponent<cro::AudioEmitter>().setPitch(pitch);
 
                                                         //fades in when callback first started

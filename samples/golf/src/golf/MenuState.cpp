@@ -1745,6 +1745,8 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    m_backgroundScene.enableSkybox();
+
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Effects);
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Environment);
@@ -1774,18 +1776,8 @@ void MenuState::createScene()
     };
 
    
-
     cro::ModelDefinition md(m_resources);
 
-    //this might be loaded from the prop, if not we use this
-    /*glm::vec3 sunPos = glm::vec3(-0.505335f, 0.62932f, 0.590418f);
-    cro::Colour sunColour = cro::Colour::White;
-
-    cro::Colour skyTop = cro::Colour(0.723f, 0.847f, 0.792f, 1.f);
-    cro::Colour skyBottom = TextNormalColour;
-    float stars = 0.f;*/
-
-    m_backgroundScene.enableSkybox();
 
     //load random / seasonal props
     std::string propFilePath;

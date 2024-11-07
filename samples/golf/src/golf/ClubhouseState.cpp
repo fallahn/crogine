@@ -1251,6 +1251,13 @@ void ClubhouseState::buildScene()
         }
     }
 
+    if (md.loadFromFile("assets/golf/models/skybox/horizon01.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(15.5f));
+        md.createModel(entity);
+    }
+
     m_pictureTexture.create(TVPictureSize.x, TVPictureSize.y, false);
     if (md.loadFromFile("assets/golf/models/picture_frame.cmt"))
     {
