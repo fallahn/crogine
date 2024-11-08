@@ -797,8 +797,8 @@ void GolfState::loadMap()
                                         //add path if it exists
                                         if (curve.size() > 3)
                                         {
-                                            //TODO we need to slow the rotation of big models such as the blimp
-                                            const float turnSpeed = 6.f / (ent.getComponent<cro::Model>().getBoundingSphere().radius + 0.001f);
+                                            //we need to slow the rotation of big models such as the blimp
+                                            const float turnSpeed = std::min(6.f / (ent.getComponent<cro::Model>().getBoundingSphere().radius + 0.001f), 2.f);
                                             //LogI << cro::FileSystem::getFileName(path) << " needs model updating" << std::endl;
                                             
                                             ent.addComponent<PropFollower>().path = curve;
@@ -883,6 +883,30 @@ void GolfState::loadMap()
                                             }
                                             ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
                                             holeData.audioEntities.push_back(audioEnt);
+                                        }
+
+                                        //add headlights to carts
+                                        if (m_sharedData.nightTime
+                                            && path.find("cart0") != std::string::npos)
+                                        {
+                                            cro::ModelDefinition headlights(m_resources);
+                                            if (headlights.loadFromFile("assets/golf/models/menu/headlights.cmt"))
+                                            {
+                                                auto lampEnt = m_gameScene.createEntity();
+                                                lampEnt.addComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+                                                headlights.createModel(lampEnt);
+                                                lampEnt.addComponent<cro::Callback>().active = true;
+                                                lampEnt.getComponent<cro::Callback>().function =
+                                                    [&,ent](cro::Entity e, float)
+                                                    {
+                                                        e.getComponent<cro::Model>().setHidden(ent.getComponent<cro::Model>().isHidden());
+                                                        if (ent.destroyed())
+                                                        {
+                                                            m_gameScene.destroyEntity(e);
+                                                        }
+                                                    };
+                                                ent.getComponent<cro::Transform>().addChild(lampEnt.getComponent<cro::Transform>());
+                                            }
                                         }
                                     }
                                 }

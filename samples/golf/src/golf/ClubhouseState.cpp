@@ -961,7 +961,6 @@ void ClubhouseState::validateTables()
 
 void ClubhouseState::buildScene()
 {
-    //m_backgroundScene.setCubemap("assets/golf/images/skybox/mountain_spring/sky.ccm");
     m_backgroundScene.enableSkybox();
     m_backgroundScene.setSkyboxColours(SkyBottom, m_sharedData.menuSky.skyBottom, m_sharedData.menuSky.skyTop);
     m_backgroundScene.setStarsAmount(m_sharedData.menuSky.stars);
@@ -1256,6 +1255,17 @@ void ClubhouseState::buildScene()
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(15.5f));
         md.createModel(entity);
+
+        //registerWindow([entity]() mutable 
+        //    {
+        //        ImGui::Begin("sdf");
+        //        static float scale = 1.f;
+        //        if (ImGui::SliderFloat("Scale", &scale, 1.f, 20.f))
+        //        {
+        //            entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+        //        }
+        //        ImGui::End();
+        //    });
     }
 
     m_pictureTexture.create(TVPictureSize.x, TVPictureSize.y, false);
@@ -1486,7 +1496,7 @@ void ClubhouseState::buildScene()
         auto pictureScale = glm::vec2(m_pictureTexture.getSize()) / glm::vec2(m_backgroundTexture.getSize());
         m_pictureQuad.setScale(pictureScale);
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 85.f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 185.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -1495,7 +1505,7 @@ void ClubhouseState::buildScene()
     camEnt.getComponent<cro::Transform>().setPosition({ 18.9f, 1.54f, -4.58f });
     camEnt.getComponent<cro::Transform>().setRotation(glm::quat(-0.31f, 0.004f, -0.95f, 0.0057f));
 
-    auto shadowRes = m_sharedData.hqShadows ? 4096 : 2048;
+    const auto shadowRes = m_sharedData.hqShadows ? 4096 : 2048;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(shadowRes, shadowRes);
