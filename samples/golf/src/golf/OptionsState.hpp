@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 struct SharedStateData;
 
@@ -44,7 +45,7 @@ namespace cro
     class SpriteSheet;
 }
 
-class OptionsState final : public cro::State
+class OptionsState final : public cro::State, public cro::GuiClient
 {
 public:
     OptionsState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -82,11 +83,18 @@ private:
     }m_videoSettings;
 
     bool m_updatingKeybind;
-    float m_lastMousePos;
+    glm::vec2 m_lastMousePos;
     std::vector<cro::Entity> m_sliders;
     cro::Entity m_activeSlider;
-    void pickSlider();
+    bool pickSlider();
     void updateSlider();
+
+    //*sigh* this is basically the same as above, but vertical
+    std::vector<cro::Entity> m_scrollBars;
+    cro::Entity m_activeScrollBar;
+    void pickScrollBar();
+    void updateScrollBar();
+
 
     std::int32_t m_bindingIndex;
     void updateKeybind(SDL_Keycode);
