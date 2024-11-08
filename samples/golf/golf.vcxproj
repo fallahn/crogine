@@ -730,6 +730,7 @@
     <ClCompile Include="src\SplashScreenState.cpp" />
     <ClCompile Include="src\sqlite\ProfileDB.cpp" />
     <ClCompile Include="src\sqlite\SqliteState.cpp" />
+    <ClCompile Include="src\Sunclock.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -905,6 +906,7 @@
     <ClInclude Include="src\sqlite\ProfileDB.hpp" />
     <ClInclude Include="src\sqlite\SqliteState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\Sunclock.hpp" />
     <ClInclude Include="VersionNumber.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -495,6 +495,9 @@
     <ClCompile Include="src\scrub\ScrubParticleDirector.cpp">
       <Filter>Source Files\scrub</Filter>
     </ClCompile>
+    <ClCompile Include="src\Sunclock.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1018,6 +1021,9 @@
     </ClInclude>
     <ClInclude Include="src\scrub\ScrubParticleDirector.hpp">
       <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sunclock.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
