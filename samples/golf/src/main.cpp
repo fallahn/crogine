@@ -43,7 +43,7 @@ int main(int argc, char** argsv)
         safeMode = (str == "safe_mode");
     }
     game.setSafeModeEnabled(safeMode);
-    game.run();
+    game.run(safeMode);
 
     return 0;
 }

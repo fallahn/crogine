@@ -81,7 +81,7 @@ namespace cro
         App& operator = (const App&) = delete;
         App& operator = (const App&&) = delete;
 
-        void run();
+        void run(bool resetSettings = false);
 
         void setClearColour(Colour);
         const Colour& getClearColour() const;

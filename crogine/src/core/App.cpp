@@ -345,7 +345,7 @@ App::~App()
 }
 
 //public
-void App::run()
+void App::run(bool resetSettings)
 {
     SDL_version v;
     SDL_VERSION(&v);
@@ -355,7 +355,7 @@ void App::run()
     //hmm we have to *copy* this ?? (it also has to live as long as the app runs)
     std::vector<std::uint8_t> fontBuff(std::begin(FA_Regular400), std::end(FA_Regular400));
 
-    auto settings = loadSettings();
+    auto settings = resetSettings ? WindowSettings() : loadSettings();
     glm::uvec2 size = settings.fullscreen ? glm::uvec2(settings.windowedSize) : glm::uvec2(settings.width, settings.height);
 
     if (m_window.create(size.x, size.y, "crogine game", m_windowStyleFlags))
