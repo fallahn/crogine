@@ -232,6 +232,7 @@ namespace StatID
         PlaysInFog,
 
         DroneHits,
+        SundaysPlayed,
 
         Count
     };

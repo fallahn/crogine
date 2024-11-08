@@ -331,7 +331,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Use the drone camera to view the course", false),
     std::make_pair("Play once a day for 7 days", false),
     std::make_pair("Play once a day for 4 weeks", false),
-    std::make_pair("Play once a day for 30 weeks", false),
+    std::make_pair("Play at least once on a Sunday 30 different times", false),
     std::make_pair("Get the ball in the hole using back spin", false),
     std::make_pair("Play a full 18 holes on Westington Links", false),
     std::make_pair("Play a full 18 holes on Grove Bank", false),
@@ -598,7 +598,8 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "rounds_rain",
     "rounds_showers",
     "rounds_fog",
-    "drone_hits"
+    "drone_hits",
+    "sundays_played"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -647,7 +648,8 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number Of Rounds Played In Rain",
     "Number Of Rounds Played In Showers",
     "Number Of Rounds Played In Mist",
-    "Number Of Times The Drone Was Hit"
+    "Number Of Times The Drone Was Hit",
+    "Number Of Times A Round Was Played On A Sunday"
 };
 
 struct StatType final
@@ -705,6 +707,7 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
 
+    StatType::Integer,
     StatType::Integer,
 };
 

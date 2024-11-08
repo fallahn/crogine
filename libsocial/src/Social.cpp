@@ -233,7 +233,7 @@ std::uint32_t Social::updateStreak()
     StoredValues[ValueID::LastLog].read();
     std::int32_t buff = StoredValues[ValueID::LastLog].value;
 
-    std::uint32_t ts = static_cast<std::uint32_t>( cro::SysTime::epoch());
+    std::uint32_t ts = static_cast<std::uint32_t>(cro::SysTime::epoch());
 
     if (buff == 0)
     {
@@ -254,6 +254,8 @@ std::uint32_t Social::updateStreak()
     static constexpr std::uint32_t Day = 24 * 60 * 60;
     auto dayCount = diff / Day;
 
+    bool sunday = false;
+
     if (dayCount == 0)
     {
         //do a calendar check to see if it's the next day
@@ -269,6 +271,7 @@ std::uint32_t Social::updateStreak()
             || (currTm.tm_yday - prevTm.tm_yday) == 1)
         {
             dayCount = 1;
+            sunday = currTm.tm_wday == 0;
         }
         else
         {
@@ -320,9 +323,31 @@ std::uint32_t Social::updateStreak()
     case 28:
         Achievements::awardAchievement(AchievementStrings[AchievementID::ResidentGolfer]);
         break;
-    case 210:
-        Achievements::awardAchievement(AchievementStrings[AchievementID::MonthOfSundays]);
-        break;
+    //case 210: //now actually awarded for playing 30 different sundays
+    //    Achievements::awardAchievement(AchievementStrings[AchievementID::MonthOfSundays]);
+    //    break;
+    }
+
+    //as we retroactively changed the MoS achievement, count any Sundays
+    //which may be in the current run and add them to the stat if it's 0
+    if (Achievements::getStat(StatStrings[StatID::SundaysPlayed])->value == 0)
+    {
+        auto sundayStreak = streak;
+        if (sunday)
+        {
+            //we're going to count today below
+            sundayStreak--;
+        }
+
+        auto sundayCount = static_cast<std::int32_t>(sundayStreak) / 7;
+        Achievements::incrementStat(StatStrings[StatID::SundaysPlayed], sundayCount);
+    }
+
+    //and increment stat if today is Sunday (we should have already exited this func
+    //if this isn't the first time today we checked the streak, above)
+    if (sunday)
+    {
+        Achievements::incrementStat(StatStrings[StatID::SundaysPlayed]);
     }
 
     return ret;

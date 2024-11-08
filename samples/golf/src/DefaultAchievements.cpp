@@ -128,6 +128,10 @@ bool DefaultAchievements::init()
     trigger->achID = AchievementID::Vandal;
     trigger->threshold = 10;
 
+    trigger = &StatTriggers[StatID::SundaysPlayed].emplace_back();
+    trigger->achID = AchievementID::MonthOfSundays;
+    trigger->threshold = 30;
+
 #ifndef USE_GNS
     Social::readAllStats();
 #endif
