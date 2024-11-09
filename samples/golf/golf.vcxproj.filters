@@ -94,6 +94,12 @@
     <Filter Include="Source Files\scrub">
       <UniqueIdentifier>{4ba8aac9-a5e8-479b-b1da-bce7d195fb06}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\golf\client\time of day">
+      <UniqueIdentifier>{53f50006-c51f-4812-b3b9-fa5904be7d82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\time of day">
+      <UniqueIdentifier>{be9dd921-53a3-46e0-a093-6cb68606eb52}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -496,7 +502,10 @@
       <Filter>Source Files\scrub</Filter>
     </ClCompile>
     <ClCompile Include="src\Sunclock.cpp">
-      <Filter>Source Files\golf\client</Filter>
+      <Filter>Source Files\golf\client\time of day</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TimeOfDay.cpp">
+      <Filter>Source Files\golf\client\time of day</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1023,10 +1032,13 @@
       <Filter>Header Files\scrub</Filter>
     </ClInclude>
     <ClInclude Include="src\Sunclock.hpp">
-      <Filter>Header Files\golf\client</Filter>
+      <Filter>Header Files\golf\client\time of day</Filter>
     </ClInclude>
     <ClInclude Include="src\LatLong.hpp">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\golf\client\time of day</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TimeOfDay.hpp">
+      <Filter>Header Files\golf\client\time of day</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

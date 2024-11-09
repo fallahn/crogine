@@ -45,6 +45,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "HoleData.hpp"
 #include "League.hpp"
+#include "TimeOfDay.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -1791,40 +1792,22 @@ void MenuState::createScene()
     }
     else
     {
-        const auto hour = cro::SysTime::now().hours();
-        switch (hour)
+        TimeOfDay tod;
+        auto td = tod.getTimeOfDay();
+
+        switch (td)
         {
         default:
-        case 21:
-        case 22:
-        case 23:
-        case 0:
-        case 1:
-        case 2:
-        case 3:
-        case 4:
+        case TimeOfDay::Night:
             propFilePath = "00.bgd";
             break;
-        case 5:
+        case TimeOfDay::Morning:
             propFilePath = "01.bgd";
             break;
-        case 6:
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
-        case 15:
-        case 16:
-        case 17:
-        case 18:
-        case 19:
+        case TimeOfDay::Day:
             propFilePath = "02.bgd";
             break;
-        case 20:
+        case TimeOfDay::Evening:
             propFilePath = "03.bgd";
             break;
         }

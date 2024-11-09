@@ -247,4 +247,6 @@ public:
 
     static void showWebPage(const std::string&) {}
     static void readAllStats();
+
+    static bool getLatLon() { return false; }
 };
