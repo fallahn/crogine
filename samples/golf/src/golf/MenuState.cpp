@@ -45,7 +45,6 @@ source distribution.
 #include "Clubs.hpp"
 #include "HoleData.hpp"
 #include "League.hpp"
-#include "TimeOfDay.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -1278,6 +1277,13 @@ void MenuState::handleMessage(const cro::Message& msg)
             break;
         }
     }
+    else if (msg.id == Social::MessageID::LocationMessage)
+    {
+        const auto& data = msg.getData<Social::LocationEvent>();
+        m_tod.setLatLon(data.latlon);
+
+        //TODO we could refresh the background, but is there much point?
+    }
     else if (msg.id == MessageID::SystemMessage)
     {
         const auto& data = msg.getData<SystemEvent>();
@@ -1792,8 +1798,7 @@ void MenuState::createScene()
     }
     else
     {
-        TimeOfDay tod;
-        auto td = tod.getTimeOfDay();
+        auto td = m_tod.getTimeOfDay();
 
         switch (td)
         {

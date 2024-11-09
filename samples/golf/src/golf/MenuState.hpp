@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "TimeOfDay.hpp"
 #include "SharedCourseData.hpp"
 #include "CommonConsts.hpp"
 #include "GameConsts.hpp"
@@ -120,6 +121,8 @@ private:
     VoiceChat m_voiceChat;
     MatchMaking m_matchMaking;
     cro::ResourceCollection m_resources;
+
+    TimeOfDay m_tod;
 
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;

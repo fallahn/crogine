@@ -44,7 +44,7 @@ source distribution.
 namespace
 {
     constexpr float MinLat = -90.f;
-    constexpr float MaxLat = -90.f;
+    constexpr float MaxLat = 90.f;
 
     constexpr float MinLon = -180.f;
     constexpr float MaxLon = 180.f;
@@ -86,8 +86,7 @@ TimeOfDay::TimeOfDay()
             }
 
             auto tsNow = std::time(nullptr);
-            if (ts == 0
-                || ts > tsNow
+            if (ts > tsNow
                 || (tsNow - ts) > FourWeeks)
             {
                 updateLatLon();
@@ -103,7 +102,7 @@ TimeOfDay::TimeOfDay()
 //public
 std::int32_t TimeOfDay::getTimeOfDay() const
 {
-    if (/*glm::length2(m_latlon) == 0*/false)
+    if (glm::length2(m_latlon) == 0)
     {
         //take a best guess based on the system time
         //I mean technically 0, 0 is valid but it's unlikely
@@ -150,12 +149,12 @@ std::int32_t TimeOfDay::getTimeOfDay() const
         //sunrise / sunset is +/- 30 mins of calc'd time
         //else return day or night.
         auto ts = std::time(nullptr);
-        std::tm* gmtm = std::gmtime(&ts);
-        std::tm* localtm = std::localtime(&ts);
+        std::tm gmtm = *std::gmtime(&ts);
+        std::tm localtm = *std::localtime(&ts);
 
-        auto hourDiff = localtm->tm_hour - gmtm->tm_hour;
-        auto dayDiff = localtm->tm_yday - gmtm->tm_yday;
-        auto yearDiff = localtm->tm_year - gmtm->tm_year;
+        auto hourDiff = localtm.tm_hour - gmtm.tm_hour;
+        auto dayDiff = localtm.tm_yday - gmtm.tm_yday;
+        auto yearDiff = localtm.tm_year - gmtm.tm_year;
         
         dayDiff -= (365 * yearDiff); //so this will be wrong on Jan 1st every 4 years... meh.
         hourDiff -= (24 * dayDiff);
@@ -164,27 +163,27 @@ std::int32_t TimeOfDay::getTimeOfDay() const
         Sunclock sunclock(m_latlon.x, m_latlon.y, static_cast<double>(hourDiff));
 
         auto sunrise = sunclock.sunrise();
-        auto* risetm = std::localtime(&sunrise);
+        auto risetm = *std::localtime(&sunrise);
 
-        if (risetm->tm_hour == localtm->tm_hour)
+        if (risetm.tm_hour == localtm.tm_hour)
         {
             return Morning;
         }
 
-        //LogI << "Sun rise is " << risetm->tm_hour << ":" << risetm->tm_min << std::endl;
+        //LogI << "Sunrise is " << risetm.tm_hour << ":" << risetm.tm_min << std::endl;
 
         auto sunset = sunclock.sunset();
-        auto* settm = std::localtime(&sunset);
+        auto settm = *std::localtime(&sunset);
 
-        if (settm->tm_hour == localtm->tm_hour)
+        if (settm.tm_hour == localtm.tm_hour)
         {
             return Evening;
         }
 
-        //LogI << "Sun set is " << settm->tm_hour << ":" << settm->tm_min << std::endl;
+        //LogI << "Sunset is " << settm.tm_hour << ":" << settm.tm_min << std::endl;
 
-        if (localtm->tm_hour > risetm->tm_hour
-            && localtm->tm_hour < settm->tm_hour)
+        if (localtm.tm_hour > risetm.tm_hour
+            && localtm.tm_hour < settm.tm_hour)
         {
             return Day;
         }
@@ -208,16 +207,22 @@ void TimeOfDay::updateLatLon()
 {
     m_latlon = { 0.f, 0.f };
 
-    //query web latlon - async so if we return true wait for the result message
-    if (!Social::getLatLon()) //webAPI for open sauce, else use steam
-    {
-        //if we failed try querying the OS
-        auto countryCode = getCountryCode();
+    //query web latlon - this async so if we get a callback we update
+    //the data then, else for now we try to find a country code and
+    //use that to approximate our location
+    Social::getLatLon();
 
-        //look up in table
-        if (LatLong.count(countryCode))
+    auto countryCode = getCountryCode();
+
+    //kinda negates the point of unordered_map but for
+    //some reason getCountryCode() isn't returning a string
+    //which exactly matches the key values using count() :/
+    for (const auto& [name, val] : LatLong)
+    {
+        if (countryCode.find(name) != std::string::npos)
         {
-            m_latlon = LatLong.at(countryCode);
+            m_latlon = val;
+            break;
         }
     }
 
@@ -244,6 +249,8 @@ std::string TimeOfDay::getCountryCode()
         }
         else
         {
+            //hm for some reason this isn't creating a precise match
+            //which messes up the LatLong lookup (above)
             cro::String temp = cro::String::fromUtf16(std::begin(buffer), std::begin(buffer) + charCount);
             retVal = temp.toAnsiString();
         }
@@ -262,5 +269,5 @@ void TimeOfDay::writeDataFile() const
     cro::ConfigFile cfg;
     cfg.addProperty("lat_lon").setValue(m_latlon);
     cfg.addProperty("timestamp").setValue(static_cast<std::uint32_t>(std::time(nullptr)));
-    //cfg.save(path); //TODO enable this once we're done testing!
+    cfg.save(path); //TODO enable this once we're done testing!
 }

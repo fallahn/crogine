@@ -87,7 +87,8 @@ public:
         enum
         {
             SocialMessage = 10000,
-            StatsMessage
+            StatsMessage,
+            LocationMesage
         };
     };
 
@@ -128,6 +129,11 @@ public:
             std::uint64_t playerID = 0;
             std::int32_t challengeID; //id of monthly challenge
         };
+    };
+
+    struct LocationEvent final
+    {
+        glm::vec2 latlon = glm::vec2(0.f);
     };
 
     struct ProgressData final
@@ -248,5 +254,5 @@ public:
     static void showWebPage(const std::string&) {}
     static void readAllStats();
 
-    static bool getLatLon() { return false; }
+    static bool getLatLon() { return false; } //triggers a LocationEvent if lat/lon was found
 };
