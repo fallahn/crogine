@@ -1025,6 +1025,9 @@
     <ClInclude Include="src\Sunclock.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
+    <ClInclude Include="src\LatLong.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">
