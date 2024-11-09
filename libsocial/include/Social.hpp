@@ -88,7 +88,7 @@ public:
         {
             SocialMessage = 10000,
             StatsMessage,
-            LocationMesage
+            LocationMessage
         };
     };
 

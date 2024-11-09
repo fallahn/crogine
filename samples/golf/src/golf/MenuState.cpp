@@ -106,7 +106,13 @@ namespace
 #include "shaders/ShaderIncludes.inl"
 #include "shaders/ShadowMapping.inl"
 
-    //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
+    constexpr std::array<MenuSky, TimeOfDay::Count> Skies =
+    {
+        MenuSky(glm::vec3(-0.2505335f, 0.62932f, 0.590418f), cro::Colour(0.396f, 0.404f, 0.698f, 1.f),       cro::Colour(0.004f, 0.035f, 0.105f,1.f),        cro::Colour(0.176f,0.239f,0.321f,1.f),          1.f),
+        MenuSky(glm::vec3(-0.505335f,0.600000f,0.590418f),   cro::Colour(0.565738f,0.498943f,0.877451f,1.f), cro::Colour(0.817771f,0.716792f,0.931373f,1.f), cro::Colour(0.882353f,0.612660f,0.423875f,1.f), 0.252f),
+        MenuSky(glm::vec3(-0.2505335f, 1.62932f, 0.590418f), cro::Colour(1.f,1.f,1.f,1.f),                   cro::Colour(0.723f, 0.847f, 0.792f, 1.f),       cro::Colour(1.f, 0.973f, 0.882f, 1.f),          0.f),
+        MenuSky(glm::vec3(0.505335f,0.629320f,0.590418f),    cro::Colour(0.473237f,0.403427f,0.799020f,1.f), cro::Colour(0.710784f,0.546615f,0.400687f,1.f), cro::Colour(0.877451f,0.742618f,0.288182f,1.f), 0.252f)
+    };
 
     bool checkCommandLine = true;
 
@@ -1795,11 +1801,11 @@ void MenuState::createScene()
     if (spooky)
     {
         propFilePath = "spooky.bgd";
+        m_sharedData.menuSky = Skies[TimeOfDay::Night];
     }
     else
     {
         auto td = m_tod.getTimeOfDay();
-
         switch (td)
         {
         default:
@@ -1816,7 +1822,9 @@ void MenuState::createScene()
             propFilePath = "03.bgd";
             break;
         }
+        m_sharedData.menuSky = Skies[td];
     }
+
 
     cro::ConfigFile propFile;
     if (propFile.loadFromFile("assets/golf/menu/" + propFilePath))
@@ -1825,35 +1833,7 @@ void MenuState::createScene()
         for (const auto& obj : objs)
         {
             const auto& objName = obj.getName();
-            if (objName == "sky")
-            {
-                const auto& skyProps = obj.getProperties();
-                for (const auto& prop : skyProps)
-                {
-                    const auto& propName = prop.getName();
-                    if (propName == "top")
-                    {
-                        m_sharedData.menuSky.skyTop = prop.getValue<cro::Colour>();
-                    }
-                    else if (propName == "bottom")
-                    {
-                        m_sharedData.menuSky.skyBottom = prop.getValue<cro::Colour>();
-                    }
-                    else if (propName == "stars")
-                    {
-                        m_sharedData.menuSky.stars = std::clamp(prop.getValue<float>(), 0.f, 1.f);
-                    }
-                    else if (propName == "sun_position")
-                    {
-                        m_sharedData.menuSky.sunPos = prop.getValue<glm::vec3>();
-                    }
-                    else if (propName == "sun_colour")
-                    {
-                        m_sharedData.menuSky.sunColour = prop.getValue<cro::Colour>();
-                    }
-                }
-            }
-            else if (objName == "prop")
+            if (objName == "prop")
             {
                 glm::vec3 position(0.f);
                 float rotation = 0.f;

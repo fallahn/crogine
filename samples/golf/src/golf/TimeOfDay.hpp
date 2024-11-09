@@ -42,7 +42,9 @@ public:
     enum
     {
         Night, Morning,
-        Day, Evening
+        Day, Evening,
+
+        Count
     };
 
     std::int32_t getTimeOfDay() const;

@@ -62,6 +62,11 @@ struct MenuSky final
     cro::Colour skyTop = cro::Colour(0.723f, 0.847f, 0.792f, 1.f);
     cro::Colour skyBottom = 0xfff8e1ff;
     float stars = 0.f;
+
+    MenuSky() = default;
+
+    constexpr MenuSky(glm::vec3 sPos, cro::Colour sCol, cro::Colour top, cro::Colour bottom, float s)
+        : sunPos(sPos), sunColour(sCol), skyTop(top), skyBottom(bottom), stars(s) {}
 };
 
 struct ChatFonts final
