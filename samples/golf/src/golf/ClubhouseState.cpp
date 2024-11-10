@@ -1335,10 +1335,13 @@ void ClubhouseState::buildScene()
     }
 
 
+    const bool spooky = cro::SysTime::now().months() == 10
+        && cro::SysTime::now().days() > 22;
+
     //golf carts
     if (md.loadFromFile("assets/golf/models/menu/cart.cmt"))
     {
-        const std::array<std::string, 6u> passengerStrings =
+        std::array<std::string, 6u> passengerStrings =
         {
             "assets/golf/models/menu/driver01.cmt",
             "assets/golf/models/menu/passenger01.cmt",
@@ -1347,6 +1350,12 @@ void ClubhouseState::buildScene()
             "assets/golf/models/menu/passenger03.cmt",
             "assets/golf/models/menu/passenger04.cmt"
         };
+
+        if (spooky)
+        {
+            passengerStrings[1] = "assets/golf/models/menu/spooky.cmt";
+            passengerStrings[4] = "assets/golf/models/menu/spooky.cmt";
+        }
 
         std::array<cro::Entity, 6u> passengers = {};
 
@@ -1358,6 +1367,12 @@ void ClubhouseState::buildScene()
                 passengers[i] = m_backgroundScene.createEntity();
                 passengers[i].addComponent<cro::Transform>();
                 passengerDef.createModel(passengers[i]);
+
+                if (spooky && (i == 1 || i == 4))
+                {
+                    passengers[i].getComponent<cro::Transform>().setPosition({ -0.754f, 0.275f, -0.2f });
+                    passengers[i].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+                }
 
                 cro::Material::Data material;
                 if (passengers[i].hasComponent<cro::Skeleton>())
