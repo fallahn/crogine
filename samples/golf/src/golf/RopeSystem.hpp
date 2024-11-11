@@ -57,7 +57,7 @@ struct RopeNode final
 class Rope final
 {
 public:
-    Rope(glm::vec3 start, glm::vec3 end, float slack, cro::Scene&);
+    Rope(glm::vec3 start, glm::vec3 end, float slack, cro::Scene&, std::size_t id);
     
     void addNode(cro::Entity);
 
@@ -70,6 +70,9 @@ public:
 
 private:
     
+    glm::vec3 m_startPoint;
+    glm::vec3 m_endPoint;
+
     //we iterate over these in he simaultion rather than the system's entity list
     std::vector<cro::Entity> m_nodes;
     float m_nodeSpacing;

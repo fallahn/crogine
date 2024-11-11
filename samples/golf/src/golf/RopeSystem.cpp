@@ -58,7 +58,7 @@ void RopeSystem::process(float dt)
 std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
 {
     auto ret = m_ropes.size();
-    m_ropes.emplace_back(start, end, slack, *getScene());
+    m_ropes.emplace_back(start, end, slack, *getScene(), ret);
 
     registerWindow([&]()
         {
@@ -100,24 +100,22 @@ void RopeSystem::onEntityRemoved(cro::Entity e)
 
 
 //-------rope class-------//
-Rope::Rope(glm::vec3 start, glm::vec3 end, float /*slack*/, cro::Scene& scene)
-    : m_nodeSpacing(0.f)
+Rope::Rope(glm::vec3 start, glm::vec3 end, float /*slack*/, cro::Scene& scene, std::size_t id)
+    : m_startPoint  (start),
+    m_endPoint      (end),
+    m_nodeSpacing   (0.f)
 {
     auto ent = scene.createEntity();
     ent.addComponent<cro::Transform>();
     ent.addComponent<RopeNode>().position = start;
     ent.getComponent<RopeNode>().prevPosition = start;
-    m_nodes.push_back(ent);
+    ent.getComponent<RopeNode>().ropeID = id;
 
     ent = scene.createEntity();
     ent.addComponent<cro::Transform>();
     ent.addComponent<RopeNode>().position = end;
     ent.getComponent<RopeNode>().prevPosition = end;
-    m_nodes.push_back(ent);
-
-    //this always pins the first and last point
-    //as it's possible that the entities may get removed
-    recalculate();
+    ent.getComponent<RopeNode>().ropeID = id;
 }
 
 //public
@@ -153,8 +151,8 @@ void Rope::recalculate()
     {
         if (m_nodes.size() > 1)
         {
-            auto position = m_nodes.front().getComponent<RopeNode>().position;
-            auto stride = m_nodes.back().getComponent<RopeNode>().position - position;
+            auto position = m_startPoint;
+            auto stride = m_endPoint - position;
 
             if (glm::length2(stride) != 0)
             {
@@ -174,6 +172,8 @@ void Rope::recalculate()
                 n.prevPosition = position;
                 n.force = glm::vec3(0.f);
                 n.fixed = false;
+
+                position += stride;
             }
         }
 
@@ -194,7 +194,7 @@ void Rope::integrate(float dt)
         if (!n.fixed)
         {
             auto old = n.position;
-            n.position = 2.f * n.position - n.prevPosition + ((n.force + Gravity) * dt * dt);
+            n.position = 2.f * n.position - n.prevPosition + (n.force + Gravity) * dt * dt;
             n.prevPosition = old;
         }
     }
@@ -202,7 +202,7 @@ void Rope::integrate(float dt)
 
 void Rope::constrain()
 {
-    static constexpr std::size_t MaxIterations = 30;
+    static constexpr std::size_t MaxIterations = 50;
     for (auto i = 0u; i < MaxIterations; ++i)
     {
         for (auto j = 1u; j < m_nodes.size(); ++j)
