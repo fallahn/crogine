@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 namespace
 {
     constexpr glm::vec3 Gravity(0.f, -9.f, 0.f);
@@ -58,6 +60,18 @@ std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
     auto ret = m_ropes.size();
     m_ropes.emplace_back(start, end, slack, *getScene());
 
+    registerWindow([&]()
+        {
+            ImGui::Begin("sdfsd");
+            for (auto n : m_ropes.back().m_nodes)
+            {
+                const auto& node = n.getComponent<RopeNode>();
+                ImGui::Text("Pos: %3.2f, %3.2f, %3.2f", node.position.x, node.position.y, node.position.z);
+                ImGui::Text("Fixed: %s", node.fixed ? "true" : "false");
+            }
+            ImGui::End();
+        });
+
     return ret;
 }
 
@@ -79,7 +93,7 @@ void RopeSystem::onEntityAdded(cro::Entity e)
 void RopeSystem::onEntityRemoved(cro::Entity e)
 {
     const auto& node = e.getComponent<RopeNode>();
-    CRO_ASSERT(node.ropeID < m_ropes.size());
+    CRO_ASSERT(node.ropeID < m_ropes.size(), "");
 
     m_ropes[node.ropeID].removeNode(e);
 }
@@ -189,4 +203,36 @@ void Rope::integrate(float dt)
 void Rope::constrain()
 {
     static constexpr std::size_t MaxIterations = 30;
+    for (auto i = 0u; i < MaxIterations; ++i)
+    {
+        for (auto j = 1u; j < m_nodes.size(); ++j)
+        {
+            auto& n1 = m_nodes[j - 1].getComponent<RopeNode>();
+            auto& n2 = m_nodes[j].getComponent<RopeNode>();
+
+            auto dir = n2.position - n1.position;
+            const float dist = glm::length(dir);
+            const float error = dist - m_nodeSpacing;
+
+            dir /= dist;
+            dir *= error;
+
+            if (n1.fixed && !n2.fixed)
+            {
+                n2.position -= dir;
+            }
+            else if (n2.fixed && !n1.fixed)
+            {
+                n1.position += dir;
+            }
+            else
+            {
+                //we should never have 2 next to each other fixed as
+                //we don't call this with fewer than 3 nodes
+                dir *= 0.5f;
+                n2.position -= dir;
+                n1.position += dir;
+            }
+        }
+    }
 }

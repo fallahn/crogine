@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 //component on an entity, used to
 //update the entity final position
@@ -60,7 +61,7 @@ public:
     
     void addNode(cro::Entity);
 
-    //TODO it's possible to destroy entities outside
+    //it's possible to destroy entities outside
     //of this system - this func just tidies up loose
     //references - I have no idea how it'll behave though...
     void removeNode(cro::Entity);
@@ -76,9 +77,11 @@ private:
 
     void integrate(float dt);
     void constrain();
+
+    friend class RopeSystem; //TODO remove this when done debugging
 };
 
-class RopeSystem final : public cro::System
+class RopeSystem final : public cro::System, public cro::GuiClient
 {
 public:
     explicit RopeSystem(cro::MessageBus&);

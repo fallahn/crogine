@@ -45,6 +45,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "HoleData.hpp"
 #include "League.hpp"
+#include "RopeSystem.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -1558,6 +1559,7 @@ void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
+    m_backgroundScene.addSystem<RopeSystem>(mb);
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<CloudSystem>(mb)->setWindVector(glm::vec3(0.25f));
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
@@ -1758,6 +1760,15 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(glm::vec3(-7.f, 3.f, 10.f), glm::vec3(7.f, 3.f, 10.f));
+    for (auto i = 0; i < 4; ++i)
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<RopeNode>().ropeID = rope;
+    }
+
+
     m_backgroundScene.enableSkybox();
 
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
