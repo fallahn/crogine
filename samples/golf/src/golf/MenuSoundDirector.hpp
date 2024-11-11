@@ -31,6 +31,8 @@ source distribution.
 
 #include "SoundEffectsDirector.hpp"
 
+#include <crogine/core/Clock.hpp>
+
 namespace cro
 {
     class AudioResource;
@@ -62,6 +64,7 @@ private:
         };
     };
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
+    std::array<cro::Clock, AudioID::Count> m_audioTimers = {};
 
     cro::Entity playSound(std::int32_t, float = 1.f);
 };

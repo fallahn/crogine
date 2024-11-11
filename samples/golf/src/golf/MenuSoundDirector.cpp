@@ -41,6 +41,11 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 
+namespace
+{
+    const cro::Time MinAudioTime = cro::seconds(0.5f);
+}
+
 MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& currentMenu)
     : m_currentMenu(currentMenu)
 {
@@ -172,7 +177,14 @@ cro::Entity MenuSoundDirector::playSound(std::int32_t id, float vol)
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
     ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
     ent.getComponent<cro::AudioEmitter>().setVolume(vol);
-    ent.getComponent<cro::AudioEmitter>().play();
+
+    //only play if the min time since the last occurance of
+    //the sound has been met. Ent is automatically recycled otherwise
+    if (m_audioTimers[id].elapsed() > MinAudioTime)
+    {
+        ent.getComponent<cro::AudioEmitter>().play();
+        m_audioTimers[id].restart();
+    }
 
     return ent;
 }

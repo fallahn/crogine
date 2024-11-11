@@ -39,6 +39,8 @@ source distribution.
 
 #ifdef _WIN32
 #include <winnls.h>
+#else
+#include <locale>
 #endif
 
 namespace
@@ -255,9 +257,16 @@ std::string TimeOfDay::getCountryCode()
             retVal = temp.toAnsiString();
         }
 #else
-        //TODO figure out linux.
-        //mac... well probably toughS
         retVal = "US";
+        
+        //POSIX systems ought to return XPG format locales wo we'll take
+        //a wild swing at using that - eg en_US.UTF-8
+        auto lc = std::locale("").name();
+        if (lc.size() > 4
+            && lc[2] == '_')
+        {
+            retVal = lc.sub_str(3, 2);
+        }
 #endif
     }
     return retVal;

@@ -1794,18 +1794,20 @@ void MenuState::createScene()
 
     //load random / seasonal props
     std::string propFilePath;
+    std::int32_t timeOfDay = TimeOfDay::Day;
 
     const bool spooky = cro::SysTime::now().months() == 10
         && cro::SysTime::now().days() > 22;
     if (spooky)
     {
         propFilePath = "spooky.bgd";
+        timeOfDay = TimeOfDay::Night;
         m_sharedData.menuSky = Skies[TimeOfDay::Night];
     }
     else
     {
-        auto td = m_tod.getTimeOfDay();
-        switch (td)
+        timeOfDay = m_tod.getTimeOfDay();
+        switch (timeOfDay)
         {
         default:
         case TimeOfDay::Night:
@@ -1821,7 +1823,7 @@ void MenuState::createScene()
             propFilePath = "03.bgd";
             break;
         }
-        m_sharedData.menuSky = Skies[td];
+        m_sharedData.menuSky = Skies[timeOfDay];
     }
 
 
@@ -1965,7 +1967,7 @@ void MenuState::createScene()
     std::string phoneBoxPath = "assets/golf/models/phone_box.cmt";
     std::string cartPath = "assets/golf/models/menu/cart.cmt";
 
-    if (m_sharedData.menuSky.stars > 0.5f)
+    if (timeOfDay == TimeOfDay::Night)
     {
         texID = MaterialID::CelTexturedMasked;
         pavilionPath = "assets/golf/models/menu_pavilion_night.cmt";
@@ -2183,7 +2185,7 @@ void MenuState::createScene()
 
 
     cro::ModelDefinition lightsDef(m_resources);
-    if (m_sharedData.menuSky.stars > 0.5f)
+    if (timeOfDay == TimeOfDay::Night)
     {
         lightsDef.loadFromFile("assets/golf/models/menu/headlights.cmt");
     }
@@ -2374,7 +2376,7 @@ void MenuState::createScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     //add the ambience to the cam cos why not
-    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter(m_sharedData.menuSky.stars < 0.5f ? "01" : "02");
+    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter(timeOfDay == TimeOfDay::Night ? "02" : "01");
     camEnt.getComponent<cro::AudioEmitter>().play();
 
     //set up cam / models for ball preview
