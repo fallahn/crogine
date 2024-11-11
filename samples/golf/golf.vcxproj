@@ -676,6 +676,7 @@
     <ClCompile Include="src\golf\ProgressIcon.cpp" />
     <ClCompile Include="src\golf\PropFollowSystem.cpp" />
     <ClCompile Include="src\golf\RayResultCallback.cpp" />
+    <ClCompile Include="src\golf\RopeSystem.cpp" />
     <ClCompile Include="src\golf\server\EightballDirector.cpp" />
     <ClCompile Include="src\golf\server\NineballDirector.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
@@ -826,6 +827,7 @@
     <ClInclude Include="src\golf\PuttingState.hpp" />
     <ClInclude Include="src\golf\RandNames.hpp" />
     <ClInclude Include="src\golf\RayResultCallback.hpp" />
+    <ClInclude Include="src\golf\RopeSystem.hpp" />
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
     <ClInclude Include="src\golf\ScoreType.hpp" />
     <ClInclude Include="src\golf\server\BilliardsDirector.hpp" />
