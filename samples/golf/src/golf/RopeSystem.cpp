@@ -60,17 +60,17 @@ std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
     auto ret = m_ropes.size();
     m_ropes.emplace_back(start, end, slack, *getScene(), ret);
 
-    registerWindow([&]()
-        {
-            ImGui::Begin("sdfsd");
-            for (auto n : m_ropes.back().m_nodes)
-            {
-                const auto& node = n.getComponent<RopeNode>();
-                ImGui::Text("Pos: %3.2f, %3.2f, %3.2f", node.position.x, node.position.y, node.position.z);
-                ImGui::Text("Fixed: %s", node.fixed ? "true" : "false");
-            }
-            ImGui::End();
-        });
+    //registerWindow([&]()
+    //    {
+    //        ImGui::Begin("sdfsd");
+    //        for (auto n : m_ropes.back().m_nodes)
+    //        {
+    //            const auto& node = n.getComponent<RopeNode>();
+    //            ImGui::Text("Pos: %3.2f, %3.2f, %3.2f", node.position.x, node.position.y, node.position.z);
+    //            ImGui::Text("Fixed: %s", node.fixed ? "true" : "false");
+    //        }
+    //        ImGui::End();
+    //    });
 
     return ret;
 }
@@ -100,9 +100,10 @@ void RopeSystem::onEntityRemoved(cro::Entity e)
 
 
 //-------rope class-------//
-Rope::Rope(glm::vec3 start, glm::vec3 end, float /*slack*/, cro::Scene& scene, std::size_t id)
+Rope::Rope(glm::vec3 start, glm::vec3 end, float slack, cro::Scene& scene, std::size_t id)
     : m_startPoint  (start),
     m_endPoint      (end),
+    m_slack         (slack),
     m_nodeSpacing   (0.f)
 {
     auto ent = scene.createEntity();
@@ -121,7 +122,19 @@ Rope::Rope(glm::vec3 start, glm::vec3 end, float /*slack*/, cro::Scene& scene, s
 //public
 void Rope::addNode(cro::Entity e)
 {
-    m_nodes.push_back(e);
+    //make sure the back node is
+    //always at thet back
+    if (m_nodes.size() > 1)
+    {
+        auto back = m_nodes.back();
+        m_nodes.back() = e;
+        m_nodes.push_back(back);
+    }
+    else
+    {
+        m_nodes.push_back(e);
+    }
+
     recalculate();
 }
 
@@ -156,13 +169,14 @@ void Rope::recalculate()
 
             if (glm::length2(stride) != 0)
             {
-                float len = glm::length(stride) + 0.001f;
+                float len = glm::length(stride);
+                len /= (m_nodes.size() - 1);
 
-                //TODO add any slack we want to stride
-                //which should be a RATIO not a fixed length
+                len += (len * m_slack);
+
                 m_nodeSpacing = len;
 
-                stride = glm::normalize(stride) * (len / (m_nodes.size() - 1));
+                stride = glm::normalize(stride) * len;
             }
 
             for (auto node : m_nodes)
@@ -194,7 +208,7 @@ void Rope::integrate(float dt)
         if (!n.fixed)
         {
             auto old = n.position;
-            n.position = 2.f * n.position - n.prevPosition + (n.force + Gravity) * dt * dt;
+            n.position = 2.f * n.position - n.prevPosition + ((n.force + Gravity) * (dt * dt));
             n.prevPosition = old;
         }
     }

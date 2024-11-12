@@ -1760,12 +1760,15 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
-    auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(glm::vec3(-7.f, 3.f, 10.f), glm::vec3(7.f, 3.f, 10.f));
-    for (auto i = 0; i < 4; ++i)
+    cro::ModelDefinition temp(m_resources);
+    temp.loadFromFile("assets/models/sphere.cmt");
+    auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(glm::vec3(-7.f, 3.f, 10.f), glm::vec3(7.f, 3.f, 10.f), 0.5f);
+    for (auto i = 0; i < 6; ++i)
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<RopeNode>().ropeID = rope;
+        temp.createModel(entity);
     }
 
 

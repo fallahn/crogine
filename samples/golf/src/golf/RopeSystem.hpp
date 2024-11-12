@@ -57,13 +57,17 @@ struct RopeNode final
 class Rope final
 {
 public:
+    /*
+    start and end are fixed points. Slack is a multiplier which
+    increases the length of the rope between the start and end point
+    EG slack of 0 between two points 2m apart creates a 2m rope,
+    and a slack of 1 adds 1x 2m to create a 4m rope. 0.5 adds 0.5 x 2m
+    to create a 3m rope and so on.
+    */
     Rope(glm::vec3 start, glm::vec3 end, float slack, cro::Scene&, std::size_t id);
     
     void addNode(cro::Entity);
 
-    //it's possible to destroy entities outside
-    //of this system - this func just tidies up loose
-    //references - I have no idea how it'll behave though...
     void removeNode(cro::Entity);
 
     void simulate(float);
@@ -72,6 +76,7 @@ private:
     
     glm::vec3 m_startPoint;
     glm::vec3 m_endPoint;
+    float m_slack;
 
     //we iterate over these in he simaultion rather than the system's entity list
     std::vector<cro::Entity> m_nodes;
