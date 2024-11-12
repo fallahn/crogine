@@ -46,6 +46,7 @@ source distribution.
 #include "HoleData.hpp"
 #include "League.hpp"
 #include "RopeSystem.hpp"
+#include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -1559,7 +1560,10 @@ void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_backgroundScene.addSystem<RopeSystem>(mb);
+    //TODO this isn't strictly necessary to add if we're not adding any ropes
+    m_backgroundScene.addSystem<RopeSystem>(mb)->setNoiseTexture("assets/golf/images/wind.png", 10.f);
+    m_backgroundScene.getSystem<RopeSystem>()->setWind(glm::vec3(0.15f, 0.02f, -0.15f));
+
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<CloudSystem>(mb)->setWindVector(glm::vec3(0.25f));
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
@@ -1760,8 +1764,6 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
-    createRopes();
-
     m_backgroundScene.enableSkybox();
 
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
@@ -2290,7 +2292,7 @@ void MenuState::createScene()
         }
     }
 
-
+    createRopes(timeOfDay);
     createClouds();
 
     //music
@@ -2505,37 +2507,94 @@ void MenuState::createClouds()
     }
 }
 
-void MenuState::createRopes()
+void MenuState::createRopes(std::int32_t timeOfDay)
 {
+    static constexpr std::int32_t NodeCount = 6;
+    static constexpr auto BasePos = glm::vec3(-10.f, 2.8f, 12.f);
+
+    //TODO day/night models. Shadow cast by day, self-illum at night
+    //TODO could have a version with flags on instead of lanterns?
     cro::ModelDefinition temp(m_resources);
     temp.loadFromFile("assets/models/sphere.cmt");
 
-    auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(glm::vec3(-7.f, 3.f, 10.f), glm::vec3(7.f, 3.f, 10.f), 0.5f);
-    for (auto i = 0; i < 6; ++i)
+    auto rope1 = m_backgroundScene.getSystem<RopeSystem>()->addRope(BasePos, glm::vec3(10.f, 2.8f, 12.f), 0.001f);
+    for (auto i = 0; i < NodeCount; ++i)
     {
         auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<RopeNode>().ropeID = rope;
+        entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.25f, 0.f });
+        entity.addComponent<RopeNode>().ropeID = rope1;
+
+        temp.createModel(entity);
+    }
+    
+    auto rope2 = m_backgroundScene.getSystem<RopeSystem>()->addRope(BasePos, glm::vec3(-10.f, 3.f, -2.f), 0.001f);
+    for (auto i = 0; i < NodeCount; ++i)
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.25f, 0.f });
+        entity.addComponent<RopeNode>().ropeID = rope2;
+
         temp.createModel(entity);
     }
 
-    m_backgroundScene.getSystem<RopeSystem>()->setNoiseTexture("assets/golf/images/wind.png", 10.f);
-    m_backgroundScene.getSystem<RopeSystem>()->setWind(glm::vec3(0.15f, 0.02f, -0.15f));
+    
+    const std::string frag =
+    R"(
+uniform vec4 u_colour = vec4(0.6784, 0.7255, 0.7216, 1.0);
+OUTPUT
 
+void main(){FRAG_OUT = u_colour;}
+    )";
 
-    //TODO create a line strip mesh for the rope
-    //and use the vertex ID to index these values
-    //as a uniform array.
-    registerWindow([&, rope]()
+    m_resources.shaders.loadFromString(ShaderID::Rope, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), frag);
+    auto matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
+    auto material = m_resources.materials.get(matID);
+    material.setProperty("u_colour", CD32::Colours[CD32::GreyLight] * m_sharedData.menuSky.sunColour);
+    
+    const auto createRopeMesh = [&](glm::vec3 pos, std::size_t ropeID)
         {
-            const auto& pos = m_backgroundScene.getSystem<RopeSystem>()->getNodePositions(rope);
-            ImGui::Begin("sdfsd");
-            for (auto p : pos)
+            //position only, triangle strip
+            auto entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
+            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
+
+            //indices are fixed at nodecount + 2 for anchors
+            std::vector<std::uint32_t> indices;
+            for (auto i = 0; i < NodeCount + 2; ++i)
             {
-                ImGui::Text("Pos: %3.2f, %3.2f, %3.2f", p.x, p.y, p.z);
+                indices.push_back(i);
             }
-            ImGui::End();
-        });
+            auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+            auto* submesh = &meshData->indexData[0];
+            submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+            //wildly inaccurate but passes the frustum culling...
+            meshData->boundingBox = { glm::vec3(0.1f, 0.f, 0.005f), glm::vec3(5.f, 1.f, -0.005f) };
+            meshData->boundingSphere = meshData->boundingBox;
+
+
+            //verts are updated via callback - we could have a static mesh and set positions
+            //via a uniform BUT we're still sending the same amount of data every time and
+            //that would actually require a more expensive shader...
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::vector<glm::vec3>>();
+            entity.getComponent<cro::Callback>().function =
+                [&, ropeID, meshData](cro::Entity e, float)
+                {
+                    const auto& verts = m_backgroundScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
+
+                    meshData->vertexCount = verts.size();
+                    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+                    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
+                    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+                };
+        };
+    createRopeMesh(BasePos, rope1);
+    createRopeMesh(BasePos, rope2);
 }
 
 void MenuState::setVoiceCallbacks()

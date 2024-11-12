@@ -211,9 +211,9 @@ void Rope::recalculate()
                 float len = glm::length(stride);
                 len /= (m_nodes.size() - 1);
 
-                len += (len * m_slack);
+                //len += (len * m_slack);
 
-                m_nodeSpacing = len;
+                m_nodeSpacing = len + (len * m_slack);
 
                 stride = glm::normalize(stride) * len;
             }
@@ -225,7 +225,7 @@ void Rope::recalculate()
                 n.prevPosition = position;
                 n.samplePosition = position;
                 n.force = glm::vec3(0.f);
-                n.fixed = false;
+                //n.fixed = false;
 
                 position += stride;
             }
@@ -246,6 +246,7 @@ void Rope::integrate(float dt, glm::vec3 windOffset)
         //this means we're delayed one frame, but it has to happen
         //after we apply the constraints from the previous integration
         node.getComponent<cro::Transform>().setPosition(n.position);
+        node.getComponent<cro::Transform>().setRotation(glm::quat(n.force * 0.01f)); //not at all realistic, but it adds some depth
         m_nodePositions.push_back(n.position - m_startPoint);
 
         if (!n.fixed)
@@ -260,20 +261,24 @@ void Rope::integrate(float dt, glm::vec3 windOffset)
                 //hmmm how do we do this without the conditional?
                 if (texturePos.x < 0)
                 {
-                    texturePos.x += mapSize.x;
+                    texturePos.x += (mapSize.x - 1.f);
                 }
                 if (texturePos.y < 0)
                 {
-                    texturePos.y += mapSize.y;
+                    texturePos.y += (mapSize.y - 1.f);
                 }
+
+                //ugh we should do this *right* not this hack
+                texturePos.x = std::clamp(texturePos.x, 0.f, mapSize.x - 1.f);
+                texturePos.y = std::clamp(texturePos.y, 0.f, mapSize.y - 1.f);
 
                 auto index = static_cast<std::int32_t>(std::floor(texturePos.y) * m_noiseMap->getDimensions().x + std::floor(texturePos.x));
                 index *= stride;
-
+                //LogI << index << ", " << texturePos << std::endl;
                 const float x = *(m_noiseMap->begin() + index);
                 const float y = *(m_noiseMap->begin() + index + 1);
                 const float z = *(m_noiseMap->begin() + index + 2);
-
+                
                 n.force = { x,y/4.f,z };
                 n.force *= 5.f; //hmm we want to make this a variable somewhere?
             }

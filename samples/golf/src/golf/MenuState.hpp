@@ -255,7 +255,7 @@ private:
     void loadAssets();
     void createScene();
     void createClouds();
-    void createRopes();
+    void createRopes(std::int32_t);
     void setVoiceCallbacks();
     std::array<cro::Entity, ConstVal::MaxClients> m_voiceEntities;
 
