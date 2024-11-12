@@ -40,7 +40,10 @@ namespace
 }
 
 RopeSystem::RopeSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(RopeSystem))
+    : cro::System   (mb, typeid(RopeSystem)),
+    m_imageScale    (1.f),
+    m_windDirection (0.f),
+    m_windOffset    (0.f)
 {
     requireComponent<cro::Transform>();
     requireComponent<RopeNode>();
@@ -49,30 +52,49 @@ RopeSystem::RopeSystem(cro::MessageBus& mb)
 //public
 void RopeSystem::process(float dt)
 {
+    m_windOffset += (m_windDirection * dt);
     for (auto& rope : m_ropes)
     {
-        rope.simulate(dt);
+        rope.simulate(dt, m_windOffset);
     }
 }
 
 std::size_t RopeSystem::addRope(glm::vec3 start, glm::vec3 end, float slack)
 {
     auto ret = m_ropes.size();
-    m_ropes.emplace_back(start, end, slack, *getScene(), ret);
+    auto& rope = m_ropes.emplace_back(start, end, slack, *getScene(), ret);
 
-    //registerWindow([&]()
-    //    {
-    //        ImGui::Begin("sdfsd");
-    //        for (auto n : m_ropes.back().m_nodes)
-    //        {
-    //            const auto& node = n.getComponent<RopeNode>();
-    //            ImGui::Text("Pos: %3.2f, %3.2f, %3.2f", node.position.x, node.position.y, node.position.z);
-    //            ImGui::Text("Fixed: %s", node.fixed ? "true" : "false");
-    //        }
-    //        ImGui::End();
-    //    });
+    if (!m_windImage.empty())
+    {
+        rope.setNoiseMap(m_windImage, m_imageScale);
+    }
 
     return ret;
+}
+
+const std::vector<glm::vec3>& RopeSystem::getNodePositions(std::size_t ropeID) const
+{
+    CRO_ASSERT(ropeID < m_ropes.size(), "");
+    return m_ropes[ropeID].getNodePositions();
+}
+
+void RopeSystem::setNoiseTexture(const std::string& path, float scale)
+{
+    CRO_ASSERT(scale > 0, "");
+    if (m_windImage.loadFromFile(path))
+    {
+        m_imageScale = 1.f / scale;
+        for (auto& v : m_windImage)
+        {
+            v *= 2.f;
+            v -= 1.f;
+        }
+
+        for (auto& rope : m_ropes)
+        {
+            rope.setNoiseMap(m_windImage, scale);
+        }
+    }
 }
 
 //private
@@ -104,6 +126,8 @@ Rope::Rope(glm::vec3 start, glm::vec3 end, float slack, cro::Scene& scene, std::
     : m_startPoint  (start),
     m_endPoint      (end),
     m_slack         (slack),
+    m_noiseMap      (nullptr),
+    m_pixelsPerMetre(1.f),
     m_nodeSpacing   (0.f)
 {
     auto ent = scene.createEntity();
@@ -148,14 +172,29 @@ void Rope::removeNode(cro::Entity e)
     recalculate();
 }
 
-void Rope::simulate(float dt)
+void Rope::simulate(float dt, glm::vec3 windOffset)
 {
     if (m_nodes.size() > 2)
     {
-        integrate(dt);
+        integrate(dt, windOffset);
         constrain();
     }
 }
+
+void Rope::setNoiseMap(const cro::ImageArray<float>& noise, float scale)
+{
+    CRO_ASSERT(scale > 0.f, "");
+    if (noise.getChannels() > 2)
+    {
+        m_noiseMap = &noise;
+        m_pixelsPerMetre = { glm::vec2(noise.getDimensions()) / scale, 1.f };
+    }
+    else
+    {
+        m_noiseMap = nullptr;
+    }
+}
+
 
 //private
 void Rope::recalculate()
@@ -184,6 +223,7 @@ void Rope::recalculate()
                 auto& n = node.getComponent<RopeNode>();
                 n.position = position;
                 n.prevPosition = position;
+                n.samplePosition = position;
                 n.force = glm::vec3(0.f);
                 n.fixed = false;
 
@@ -196,17 +236,49 @@ void Rope::recalculate()
     }    
 }
 
-void Rope::integrate(float dt)
+void Rope::integrate(float dt, glm::vec3 windOffset)
 {
+    m_nodePositions.clear();
+
     for (auto node : m_nodes)
     {
         auto& n = node.getComponent<RopeNode>();
         //this means we're delayed one frame, but it has to happen
         //after we apply the constraints from the previous integration
         node.getComponent<cro::Transform>().setPosition(n.position);
+        m_nodePositions.push_back(n.position - m_startPoint);
 
         if (!n.fixed)
         {
+            if (m_noiseMap)
+            {
+                const glm::vec2 mapSize(m_noiseMap->getDimensions());
+                const auto stride = m_noiseMap->getChannels();
+                const auto samplePos = (n.samplePosition + windOffset) * m_pixelsPerMetre;
+                glm::vec2 texturePos = { std::fmod(samplePos.x, mapSize.x), std::fmod(samplePos.z, mapSize.y) };
+
+                //hmmm how do we do this without the conditional?
+                if (texturePos.x < 0)
+                {
+                    texturePos.x += mapSize.x;
+                }
+                if (texturePos.y < 0)
+                {
+                    texturePos.y += mapSize.y;
+                }
+
+                auto index = static_cast<std::int32_t>(std::floor(texturePos.y) * m_noiseMap->getDimensions().x + std::floor(texturePos.x));
+                index *= stride;
+
+                const float x = *(m_noiseMap->begin() + index);
+                const float y = *(m_noiseMap->begin() + index + 1);
+                const float z = *(m_noiseMap->begin() + index + 2);
+
+                n.force = { x,y/4.f,z };
+                n.force *= 5.f; //hmm we want to make this a variable somewhere?
+            }
+
+
             auto old = n.position;
             n.position = 2.f * n.position - n.prevPosition + ((n.force + Gravity) * (dt * dt));
             n.prevPosition = old;

@@ -1760,17 +1760,7 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
-    cro::ModelDefinition temp(m_resources);
-    temp.loadFromFile("assets/models/sphere.cmt");
-    auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(glm::vec3(-7.f, 3.f, 10.f), glm::vec3(7.f, 3.f, 10.f), 0.5f);
-    for (auto i = 0; i < 6; ++i)
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<RopeNode>().ropeID = rope;
-        temp.createModel(entity);
-    }
-
+    createRopes();
 
     m_backgroundScene.enableSkybox();
 
@@ -2513,6 +2503,39 @@ void MenuState::createClouds()
             modelIndex = (modelIndex + 1) % definitions.size();
         }
     }
+}
+
+void MenuState::createRopes()
+{
+    cro::ModelDefinition temp(m_resources);
+    temp.loadFromFile("assets/models/sphere.cmt");
+
+    auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(glm::vec3(-7.f, 3.f, 10.f), glm::vec3(7.f, 3.f, 10.f), 0.5f);
+    for (auto i = 0; i < 6; ++i)
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<RopeNode>().ropeID = rope;
+        temp.createModel(entity);
+    }
+
+    m_backgroundScene.getSystem<RopeSystem>()->setNoiseTexture("assets/golf/images/wind.png", 10.f);
+    m_backgroundScene.getSystem<RopeSystem>()->setWind(glm::vec3(0.15f, 0.02f, -0.15f));
+
+
+    //TODO create a line strip mesh for the rope
+    //and use the vertex ID to index these values
+    //as a uniform array.
+    registerWindow([&, rope]()
+        {
+            const auto& pos = m_backgroundScene.getSystem<RopeSystem>()->getNodePositions(rope);
+            ImGui::Begin("sdfsd");
+            for (auto p : pos)
+            {
+                ImGui::Text("Pos: %3.2f, %3.2f, %3.2f", p.x, p.y, p.z);
+            }
+            ImGui::End();
+        });
 }
 
 void MenuState::setVoiceCallbacks()
