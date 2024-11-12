@@ -58,6 +58,7 @@ namespace
 
     static constexpr float RotationSpeed = 1.2f;
     static constexpr float MaxRotation = 0.36f;
+    float FineTune = 1.f; //this is halved when using D-Pad for finer aiming
 
     static constexpr float MinPower = 0.01f;
     static constexpr float MaxPower = 1.f - MinPower;
@@ -302,10 +303,12 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == cro::GameController::DPadLeft)
                 {
                     m_inputFlags |= InputFlag::Left;
+                    FineTune = 0.5f;
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadRight)
                 {
                     m_inputFlags |= InputFlag::Right;
+                    FineTune = 0.5f;
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadUp)
                 {
@@ -375,10 +378,12 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == cro::GameController::DPadLeft)
                 {
                     m_inputFlags &= ~InputFlag::Left;
+                    FineTune = 1.f;
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadRight)
                 {
                     m_inputFlags &= ~InputFlag::Right;
+                    FineTune = 1.f;
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadUp)
                 {
@@ -1019,7 +1024,7 @@ void InputParser::updateStroke(float dt)
 
 
             //rotation
-            const float rotation = RotationSpeed * m_maxRotation * m_analogueAmount * dt;
+            const float rotation = RotationSpeed * FineTune * m_maxRotation * m_analogueAmount * dt;
 
             if (m_inputFlags & InputFlag::Left)
             {

@@ -346,6 +346,19 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     }
     m_cpuGolfer.setCPUCount(cpuCount, sd);
     
+
+    //if we're playing hotseat unlock all the clubs unless
+    //the clubset limit is set
+    if (clientCount == 1
+        && humanCount > 1)
+    {
+        if (!m_sharedData.clubLimit)
+        {
+            m_sharedData.clubSet = 2;
+        }
+    }
+
+
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     context.mainWindow.loadResources([this]() {
         addSystems();

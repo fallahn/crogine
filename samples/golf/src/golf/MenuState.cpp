@@ -67,6 +67,7 @@ source distribution.
 #include <crogine/util/Wavetable.hpp>
 
 #include <crogine/ecs/InfoFlags.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -2551,6 +2552,9 @@ void main(){FRAG_OUT = u_colour;}
     auto material = m_resources.materials.get(matID);
     material.setProperty("u_colour", CD32::Colours[CD32::GreyLight] * m_sharedData.menuSky.sunColour);
     
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
+    auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+
     const auto createRopeMesh = [&](glm::vec3 pos, std::size_t ropeID)
         {
             //position only, triangle strip
@@ -2559,6 +2563,11 @@ void main(){FRAG_OUT = u_colour;}
             auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
 
+            if (timeOfDay != TimeOfDay::Night)
+            {
+                entity.addComponent<cro::ShadowCaster>();
+                entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(shadowMatID));
+            }
 
             //indices are fixed at nodecount + 2 for anchors
             std::vector<std::uint32_t> indices;
