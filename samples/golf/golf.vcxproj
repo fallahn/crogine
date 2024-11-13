@@ -926,6 +926,7 @@
     <None Include="src\golf\shaders\CompositeShader.inl" />
     <None Include="src\golf\shaders\Glass.inl" />
     <None Include="src\golf\shaders\GlowShader.inl" />
+    <None Include="src\golf\shaders\Lantern.inl" />
     <None Include="src\golf\shaders\LensFlare.inl" />
     <None Include="src\golf\shaders\MinimapShader.inl" />
     <None Include="src\golf\shaders\PaletteSwap.inl" />

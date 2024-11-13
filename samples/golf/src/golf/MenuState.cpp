@@ -108,6 +108,7 @@ namespace
 #include "shaders/CloudShader.inl"
 #include "shaders/ShaderIncludes.inl"
 #include "shaders/ShadowMapping.inl"
+#include "shaders/Lantern.inl"
 
     constexpr std::array<MenuSky, TimeOfDay::Count> Skies =
     {
@@ -2425,25 +2426,33 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    ret.timeOfDay = TimeOfDay::Day;
+    /*ret.timeOfDay = TimeOfDay::Night;
     ret.propFilePath = "somer.bgd";
     
     m_sharedData.menuSky = Skies[ret.timeOfDay];
-    return ret;
+    return ret;*/
 
-    ret.spooky = cro::SysTime::now().months() == 10
-        && cro::SysTime::now().days() > 22;
+    const auto mon = cro::SysTime::now().months();
+    const auto day = cro::SysTime::now().days();
+
+    ret.spooky = mon == 10 && day > 22;
     if (ret.spooky)
     {
         ret.propFilePath = "spooky.bgd";
         ret.timeOfDay = TimeOfDay::Night;
         m_sharedData.menuSky = Skies[TimeOfDay::Night];
+        return ret;
+    }
+    else if (mon == 5 && day == 4)
+    {
+        ret.propFilePath = "midori.bgd";
+    }
+    else if (mon == 6 && day == 21)
+    {
+        ret.propFilePath = "somer.bgd";
     }
     else
     {
-        ret.timeOfDay = m_tod.getTimeOfDay();
-        m_sharedData.menuSky = Skies[ret.timeOfDay];
-        
         const std::array paths =
         {
             std::string("00.bgd"),
@@ -2454,6 +2463,9 @@ MenuState::PropFileData MenuState::getPropPath() const
         ret.propFilePath = paths[cro::Util::Random::value(0u, paths.size() - 1)];
     }
 
+
+    ret.timeOfDay = m_tod.getTimeOfDay();
+    m_sharedData.menuSky = Skies[ret.timeOfDay];
     return ret;
 }
 
@@ -2548,15 +2560,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
             //TODO - do we want to create an instanced material *just* for flag poles?
             //trouble is the unlit default shader doesn't include sunlight
 
-            const std::string frag =
-                R"(
-uniform vec4 u_colour = vec4(0.6784, 0.7255, 0.7216, 1.0);
-OUTPUT
-
-void main(){FRAG_OUT = u_colour;}
-    )";
-
-            m_resources.shaders.loadFromString(ShaderID::Rope, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), frag);
+            m_resources.shaders.loadFromString(ShaderID::Rope, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), RopeFrag);
             auto matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
             auto material = m_resources.materials.get(matID);
             material.setProperty("u_colour", CD32::Colours[CD32::GreyLight] * m_sharedData.menuSky.sunColour);
@@ -2614,6 +2618,28 @@ void main(){FRAG_OUT = u_colour;}
                         };
                 };
 
+            matID = m_materialIDs[MaterialID::Ball];
+            if (timeOfDay == TimeOfDay::Night)
+            {
+                m_resources.shaders.loadFromString(ShaderID::Lantern, LanternVert, LanternFrag);
+                matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Lantern));
+            }
+            
+            auto lightMaterial = m_resources.materials.get(matID);
+            if (md.loadFromFile("assets/golf/models/menu/lantern.cmt"))
+            {
+                applyMaterialData(md, lightMaterial);
+            }
+            const std::array LightColours = 
+            { 
+                CD32::Colours[CD32::BeigeMid],
+                CD32::Colours[CD32::Yellow], 
+                CD32::Colours[CD32::Orange],
+                CD32::Colours[CD32::BlueLight],
+                CD32::Colours[CD32::GreyLight],
+                CD32::Colours[CD32::PinkLight],
+            };
+
             for (auto i = 0u; i < polePos.size() - 1; ++i)
             {
                 auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
@@ -2623,10 +2649,16 @@ void main(){FRAG_OUT = u_colour;}
                     entity.addComponent<cro::Transform>();
                     entity.addComponent<RopeNode>().ropeID = rope;
 
-                    //TODO load models for lights
-                    //TODO day/night models. Shadow cast by day, self-illum at night
+                    //load models for lights
+                    //TODO projection maps for light spots?                                        
                     //TODO could have a version with flags on instead of lanterns?
-                    //md.createModel(entity);
+                    
+                    if (md.isLoaded())
+                    {
+                        md.createModel(entity);
+                        entity.getComponent<cro::Model>().setMaterial(0, lightMaterial);
+                        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", LightColours[cro::Util::Random::value(0u, LightColours.size() - 1)]);
+                    }
                 }
                 createRopeMesh(polePos[i], rope);
             }

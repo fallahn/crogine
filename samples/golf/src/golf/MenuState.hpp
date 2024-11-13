@@ -159,6 +159,7 @@ private:
             BillboardShadow,
             Ground,
             Trophy,
+            Lantern,
 
             Count
         };
