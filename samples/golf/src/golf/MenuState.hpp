@@ -254,8 +254,15 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+    struct PropFileData final
+    {
+        std::string propFilePath;
+        bool spooky = false;
+        std::int32_t timeOfDay = 0;
+    };
+    PropFileData getPropPath() const;
     void createClouds();
-    void createRopes(std::int32_t);
+    void createRopes(std::int32_t, const std::vector<glm::vec3>&);
     void setVoiceCallbacks();
     std::array<cro::Entity, ConstVal::MaxClients> m_voiceEntities;
 

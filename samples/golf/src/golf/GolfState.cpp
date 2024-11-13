@@ -6155,6 +6155,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         }
         ss << holeDiff << "%)";
 
+        //up & down arrows - look a bit pants quality though
+        //auto up = cro::String(std::uint32_t(0x2B06));
+        //up += std::uint32_t(0xFE0F);
+        // //OR std::uint32_t(0xA71B)
+        //auto down = cro::String(std::uint32_t(0x2B07));
+        //down += std::uint32_t(0xFE0F);
+        // //OR std::uint32_t(0xA71C)
+
         e.getComponent<cro::Text>().setString(ss.str());
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

@@ -1800,40 +1800,9 @@ void MenuState::createScene()
 
 
     //load random / seasonal props
-    std::string propFilePath;
-    std::int32_t timeOfDay = TimeOfDay::Day;
+    auto [propFilePath, spooky, timeOfDay] = getPropPath();
 
-    const bool spooky = cro::SysTime::now().months() == 10
-        && cro::SysTime::now().days() > 22;
-    if (spooky)
-    {
-        propFilePath = "spooky.bgd";
-        timeOfDay = TimeOfDay::Night;
-        m_sharedData.menuSky = Skies[TimeOfDay::Night];
-    }
-    else
-    {
-        timeOfDay = m_tod.getTimeOfDay();
-        switch (timeOfDay)
-        {
-        default:
-        case TimeOfDay::Night:
-            propFilePath = "00.bgd";
-            break;
-        case TimeOfDay::Morning:
-            propFilePath = "01.bgd";
-            break;
-        case TimeOfDay::Day:
-            propFilePath = "02.bgd";
-            break;
-        case TimeOfDay::Evening:
-            propFilePath = "03.bgd";
-            break;
-        }
-        m_sharedData.menuSky = Skies[timeOfDay];
-    }
-
-
+    std::vector<glm::vec3> polePositions;
     cro::ConfigFile propFile;
     if (propFile.loadFromFile("assets/golf/menu/" + propFilePath))
     {
@@ -1896,6 +1865,16 @@ void MenuState::createScene()
                         auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                         applyMaterialData(md, mat);
                         entity.getComponent<cro::Model>().setMaterial(0, mat);
+                    }
+                }
+            }
+            else if (objName == "flags")
+            {
+                for (const auto& p : obj.getProperties())
+                {
+                    if (p.getName() == "position")
+                    {
+                        polePositions.push_back(p.getValue<glm::vec3>());
                     }
                 }
             }
@@ -2293,7 +2272,12 @@ void MenuState::createScene()
         }
     }
 
-    createRopes(timeOfDay);
+    static constexpr std::size_t MaxPoles = 6;
+    if (polePositions.size() > MaxPoles)
+    {
+        polePositions.resize(MaxPoles);
+    }
+    createRopes(timeOfDay, polePositions);
     createClouds();
 
     //music
@@ -2438,6 +2422,41 @@ void MenuState::createScene()
 #endif
 }
 
+MenuState::PropFileData MenuState::getPropPath() const
+{
+    PropFileData ret;
+    ret.timeOfDay = TimeOfDay::Day;
+    ret.propFilePath = "somer.bgd";
+    
+    m_sharedData.menuSky = Skies[ret.timeOfDay];
+    return ret;
+
+    ret.spooky = cro::SysTime::now().months() == 10
+        && cro::SysTime::now().days() > 22;
+    if (ret.spooky)
+    {
+        ret.propFilePath = "spooky.bgd";
+        ret.timeOfDay = TimeOfDay::Night;
+        m_sharedData.menuSky = Skies[TimeOfDay::Night];
+    }
+    else
+    {
+        ret.timeOfDay = m_tod.getTimeOfDay();
+        m_sharedData.menuSky = Skies[ret.timeOfDay];
+        
+        const std::array paths =
+        {
+            std::string("00.bgd"),
+            std::string("01.bgd"),
+            std::string("02.bgd"),
+            std::string("03.bgd")
+        };
+        ret.propFilePath = paths[cro::Util::Random::value(0u, paths.size() - 1)];
+    }
+
+    return ret;
+}
+
 void MenuState::createClouds()
 {
     const std::array Paths =
@@ -2508,102 +2527,111 @@ void MenuState::createClouds()
     }
 }
 
-void MenuState::createRopes(std::int32_t timeOfDay)
+void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>& polePos)
 {
-    static constexpr std::int32_t NodeCount = 6;
-    static constexpr auto BasePos = glm::vec3(-10.f, 2.8f, 12.f);
-
-    //TODO day/night models. Shadow cast by day, self-illum at night
-    //TODO could have a version with flags on instead of lanterns?
-    cro::ModelDefinition temp(m_resources);
-    temp.loadFromFile("assets/models/sphere.cmt");
-
-    auto rope1 = m_backgroundScene.getSystem<RopeSystem>()->addRope(BasePos, glm::vec3(10.f, 2.8f, 12.f), 0.001f);
-    for (auto i = 0; i < NodeCount; ++i)
+    if (polePos.size() > 1)
     {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.25f, 0.f });
-        entity.addComponent<RopeNode>().ropeID = rope1;
+        cro::ModelDefinition md(m_resources);
+        if (md.loadFromFile("assets/golf/models/menu/flagpole.cmt", true))
+        {
+            std::vector<glm::mat4> tx;
+            for (auto p : polePos)
+            {
+                tx.push_back(glm::translate(glm::mat4(1.f), p));
+            }
 
-        temp.createModel(entity);
-    }
-    
-    auto rope2 = m_backgroundScene.getSystem<RopeSystem>()->addRope(BasePos, glm::vec3(-10.f, 3.f, -2.f), 0.001f);
-    for (auto i = 0; i < NodeCount; ++i)
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.25f, 0.f });
-        entity.addComponent<RopeNode>().ropeID = rope2;
+            //instance flag poles from positions
+            cro::Entity flags = m_backgroundScene.createEntity();
+            flags.addComponent<cro::Transform>();
+            md.createModel(flags);
+            flags.getComponent<cro::Model>().setInstanceTransforms(tx);
+            //TODO - do we want to create an instanced material *just* for flag poles?
+            //trouble is the unlit default shader doesn't include sunlight
 
-        temp.createModel(entity);
-    }
-
-    
-    const std::string frag =
-    R"(
+            const std::string frag =
+                R"(
 uniform vec4 u_colour = vec4(0.6784, 0.7255, 0.7216, 1.0);
 OUTPUT
 
 void main(){FRAG_OUT = u_colour;}
     )";
 
-    m_resources.shaders.loadFromString(ShaderID::Rope, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), frag);
-    auto matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
-    auto material = m_resources.materials.get(matID);
-    material.setProperty("u_colour", CD32::Colours[CD32::GreyLight] * m_sharedData.menuSky.sunColour);
-    
-    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
-    auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+            m_resources.shaders.loadFromString(ShaderID::Rope, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), frag);
+            auto matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
+            auto material = m_resources.materials.get(matID);
+            material.setProperty("u_colour", CD32::Colours[CD32::GreyLight] * m_sharedData.menuSky.sunColour);
 
-    const auto createRopeMesh = [&](glm::vec3 pos, std::size_t ropeID)
-        {
-            //position only, triangle strip
-            auto entity = m_backgroundScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(pos);
-            auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
-            entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+            auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
+            auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+            static constexpr std::int32_t NodeCount = 6;
 
-            if (timeOfDay != TimeOfDay::Night)
-            {
-                entity.addComponent<cro::ShadowCaster>();
-                entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(shadowMatID));
-            }
-
-            //indices are fixed at nodecount + 2 for anchors
-            std::vector<std::uint32_t> indices;
-            for (auto i = 0; i < NodeCount + 2; ++i)
-            {
-                indices.push_back(i);
-            }
-            auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
-            auto* submesh = &meshData->indexData[0];
-            submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-            //wildly inaccurate but passes the frustum culling...
-            meshData->boundingBox = { glm::vec3(0.1f, 0.f, 0.005f), glm::vec3(5.f, 1.f, -0.005f) };
-            meshData->boundingSphere = meshData->boundingBox;
-
-
-            //verts are updated via callback - we could have a static mesh and set positions
-            //via a uniform BUT we're still sending the same amount of data every time and
-            //that would actually require a more expensive shader...
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<std::vector<glm::vec3>>();
-            entity.getComponent<cro::Callback>().function =
-                [&, ropeID, meshData](cro::Entity e, float)
+            const auto createRopeMesh = [&](glm::vec3 pos, std::size_t ropeID)
                 {
-                    const auto& verts = m_backgroundScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
+                    //position only, triangle strip
+                    auto entity = m_backgroundScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition(pos);
+                    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
+                    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
 
-                    meshData->vertexCount = verts.size();
-                    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-                    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
-                    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+                    if (timeOfDay != TimeOfDay::Night)
+                    {
+                        entity.addComponent<cro::ShadowCaster>();
+                        entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(shadowMatID));
+                    }
+
+                    //indices are fixed at nodecount + 2 for anchors
+                    std::vector<std::uint32_t> indices;
+                    for (auto i = 0; i < NodeCount + 2; ++i)
+                    {
+                        indices.push_back(i);
+                    }
+                    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+                    auto* submesh = &meshData->indexData[0];
+                    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                    
+                    //just has to pass culling
+                    meshData->boundingBox = { glm::vec3(-15.f), glm::vec3(15.f) };
+                    meshData->boundingSphere = meshData->boundingBox;
+
+
+                    //verts are updated via callback - we could have a static mesh and set positions
+                    //via a uniform BUT we're still sending the same amount of data every time and
+                    //that would actually require a more expensive shader...
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().setUserData<std::vector<glm::vec3>>();
+                    entity.getComponent<cro::Callback>().function =
+                        [&, ropeID, meshData](cro::Entity e, float)
+                        {
+                            const auto& verts = m_backgroundScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
+
+                            meshData->vertexCount = verts.size();
+                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+                            glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
+                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+                        };
                 };
-        };
-    createRopeMesh(BasePos, rope1);
-    createRopeMesh(BasePos, rope2);
+
+            for (auto i = 0u; i < polePos.size() - 1; ++i)
+            {
+                auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
+                for (auto i = 0; i < NodeCount; ++i)
+                {
+                    auto entity = m_backgroundScene.createEntity();
+                    entity.addComponent<cro::Transform>();
+                    entity.addComponent<RopeNode>().ropeID = rope;
+
+                    //TODO load models for lights
+                    //TODO day/night models. Shadow cast by day, self-illum at night
+                    //TODO could have a version with flags on instead of lanterns?
+                    //md.createModel(entity);
+                }
+                createRopeMesh(polePos[i], rope);
+            }
+        }
+    }
 }
 
 void MenuState::setVoiceCallbacks()
