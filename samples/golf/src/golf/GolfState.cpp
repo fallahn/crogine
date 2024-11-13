@@ -6140,6 +6140,25 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    cmd.targetFlags = CommandID::UI::PinHeight;
+    cmd.action =
+        [&,player](cro::Entity e, float)
+    {
+        const auto holeDiff = (m_holeData[m_currentHole].pin.y - player.position.y) * 10.f;
+
+        std::stringstream ss;
+        ss.precision(2);
+        ss << " (";
+        if (holeDiff > 0)
+        {
+            ss << "+";
+        }
+        ss << holeDiff << "%)";
+
+        e.getComponent<cro::Text>().setString(ss.str());
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     cmd.targetFlags = CommandID::UI::MiniBall;
     cmd.action =
         [&,player](cro::Entity e, float)
@@ -6708,6 +6727,15 @@ void GolfState::hitBall()
         {
             e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             e.getComponent<cro::Callback>().active = false;
+        };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //hide height to pin
+    cmd.targetFlags = CommandID::UI::PinHeight;
+    cmd.action =
+        [](cro::Entity e, float)
+        {
+            e.getComponent<cro::Text>().setString(" ");
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

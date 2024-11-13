@@ -90,6 +90,7 @@ struct CommandID final
             PuttingLabel         = 0x10000000, //29
             BarEnt               = 0x20000000,
             ScoreTitle           = 0x40000000, //text at the bottom of the score board - used in skins games
+            PinHeight            = 0x80000000, //that's all we got folks (unless we refactor to 64bit...)
 
             GarbageCollect       = 0x1 //this is the same as the first entry! we're just renaming it for use in the Scrub game
         };
