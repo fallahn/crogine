@@ -1626,7 +1626,7 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
     //m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n");
@@ -1660,11 +1660,16 @@ void MenuState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
 
 
+    auto proj = glm::ortho(-20.f, 20.f, -14.f, 0.f, 0.1f, 10.f);
+    auto view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 2.f, 0.f));
+    view *= glm::toMat4(glm::rotate(cro::Transform::QUAT_IDENTITY, -cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS));
+    proj *= view;
+
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ground] = m_resources.materials.add(*shader);
-
+    m_resources.materials.get(m_materialIDs[MaterialID::Ground]).setProperty("u_menuViewProjectionMatrix", proj);
     
     cro::Image defaultMask;
     defaultMask.create(2, 2, cro::Colour::Black);
@@ -2426,11 +2431,11 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    /*ret.timeOfDay = TimeOfDay::Night;
-    ret.propFilePath = "somer.bgd";
+    ret.timeOfDay = TimeOfDay::Night;
+    ret.propFilePath = "midori.bgd";
     
     m_sharedData.menuSky = Skies[ret.timeOfDay];
-    return ret;*/
+    return ret;
 
     const auto mon = cro::SysTime::now().months();
     const auto day = cro::SysTime::now().days();
@@ -2658,6 +2663,12 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                         md.createModel(entity);
                         entity.getComponent<cro::Model>().setMaterial(0, lightMaterial);
                         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", LightColours[cro::Util::Random::value(0u, LightColours.size() - 1)]);
+
+                        if (timeOfDay != TimeOfDay::Night)
+                        {
+                            entity.addComponent<cro::ShadowCaster>();
+                            entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(shadowMatID));
+                        }
                     }
                 }
                 createRopeMesh(polePos[i], rope);
