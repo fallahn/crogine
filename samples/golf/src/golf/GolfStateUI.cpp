@@ -613,7 +613,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto holeDist = entity;
+    //pin elevation
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -12.f, 0.f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinHeight | CommandID::UI::UIElement;
@@ -622,9 +622,9 @@ void GolfState::buildUI()
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -16.f };
     entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    /*entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });*/
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

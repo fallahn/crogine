@@ -349,6 +349,7 @@ inline const std::string CelFragmentShader = R"(
     VARYING_IN vec4 v_targetProjection;
 #endif
 #if defined(MENU_PROJ)
+    uniform sampler2D u_menuTexture;
     VARYING_IN vec4 v_menuProjection;
 #endif    
 
@@ -720,10 +721,13 @@ inline const std::string CelFragmentShader = R"(
 #if defined(MENU_PROJ)
     vec2 projUV = v_menuProjection.xy/v_menuProjection.w;
     projUV = projUV * 0.5 + 0.5;
-FRAG_OUT.r *= step(0.001, projUV.x);
-FRAG_OUT.r *= 1.0 - step(0.999, projUV.x);
 
-FRAG_OUT.r *= step(0.001, projUV.y);
+FRAG_OUT.rgb += TEXTURE(u_menuTexture, projUV).rgb;
+
+//FRAG_OUT.r *= step(0.001, projUV.x);
+//FRAG_OUT.r *= 1.0 - step(0.999, projUV.x);
+//
+//FRAG_OUT.r *= step(0.001, projUV.y);
 //FRAG_OUT.r *= 1.0 - step(0.999, projUV.y);
 
 #endif

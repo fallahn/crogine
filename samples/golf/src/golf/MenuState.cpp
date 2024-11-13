@@ -1660,16 +1660,20 @@ void MenuState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
 
 
-    auto proj = glm::ortho(-20.f, 20.f, -14.f, 0.f, 0.1f, 10.f);
+    //view proj matrix to project lightmap. TODO make this a shader constant
+    auto proj = glm::ortho(-20.f, 20.f, -18.f, 0.f, 0.1f, 10.f);
     auto view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 2.f, 0.f));
     view *= glm::toMat4(glm::rotate(cro::Transform::QUAT_IDENTITY, -cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS));
-    proj *= view;
+    proj *= glm::inverse(view);
+
+    const auto& temp = m_resources.textures.get("assets/images/default_profile.png");
 
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ground] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Ground]).setProperty("u_menuViewProjectionMatrix", proj);
+    m_resources.materials.get(m_materialIDs[MaterialID::Ground]).setProperty("u_menuTexture", temp);
     
     cro::Image defaultMask;
     defaultMask.create(2, 2, cro::Colour::Black);
@@ -2650,8 +2654,10 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                 auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
                 for (auto i = 0; i < NodeCount; ++i)
                 {
+                    const auto scale = 1.f + cro::Util::Random::value(-0.2f, 0.2f);
+
                     auto entity = m_backgroundScene.createEntity();
-                    entity.addComponent<cro::Transform>();
+                    entity.addComponent<cro::Transform>().setScale(glm::vec3(scale));
                     entity.addComponent<RopeNode>().ropeID = rope;
 
                     //load models for lights
