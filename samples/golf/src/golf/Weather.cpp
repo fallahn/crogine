@@ -31,6 +31,7 @@ source distribution.
 #include "PoissonDisk.hpp"
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
+#include "CallbackData.hpp"
 #include "CloudSystem.hpp"
 #include "WeatherAnimationSystem.hpp"
 #include "FireworksSystem.hpp"
@@ -57,6 +58,7 @@ namespace
 #include "shaders/WireframeShader.inl"
 #include "shaders/CloudShader.inl"
 #include "shaders/Weather.inl"
+#include "shaders/RoidShader.inl"
 
 
     constexpr std::int32_t GridX = 3;
@@ -314,6 +316,83 @@ void GolfState::createClouds()
     }
 
     //createSun();
+}
+
+void GolfState::createRoids()
+{
+    //small chance of asteroid showers
+    //TODO could approximate this with calendar?
+    static constexpr glm::vec3 Position(0.f, 2.f, 8.5f);
+    if (cro::Util::Random::value(0, 6) == 0)
+    {
+        cro::ModelDefinition md(m_resources);
+        if (md.loadFromFile("assets/golf/models/skybox/roids.cmt"))
+        {
+            cro::Entity entity = m_skyScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(Position);
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 0.2f);
+            md.createModel(entity);
+
+            m_resources.shaders.loadFromString(ShaderID::Roids, 
+                cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), RoidFrag, "#define TEXTURED");
+            auto& shader = m_resources.shaders.get(ShaderID::Roids);
+            auto matID = m_resources.materials.add(shader);
+            auto material = m_resources.materials.get(matID);
+            
+            applyMaterialData(md, material);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
+
+            
+            
+            //we've used the callback system in the skt box
+            //for a hack with wind-powered entities (d'oh)
+            //so we need to create an entity in the game scene
+            //specifically to update the shader for the above...
+            struct RoidData final
+            {
+                float offset = -0.5f;
+                float timer = 0.f;
+                std::uint32_t shaderID = 0u;
+                std::int32_t offsetUniform = -1;
+                std::int32_t state = 0;
+            }roidData;
+            roidData.shaderID = shader.getGLHandle();
+            roidData.offsetUniform = shader.getUniformID("u_texOffset");
+
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<RoidData>(roidData);
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    auto& [offset, timer, shader, uniform, state] = e.getComponent<cro::Callback>().getUserData<RoidData>();
+
+                    if (state == 0)
+                    {
+                        offset += dt;
+                        if (offset > 0.5f)
+                        {
+                            offset -= 1.f;
+                            state = 1;
+                            timer = static_cast<float>(cro::Util::Random::value(12, 30));
+                        }
+
+                        glUseProgram(shader);
+                        glUniform1f(uniform, offset);
+                        glUseProgram(0);
+                    }
+                    else
+                    {
+                        timer -= dt;
+                        if (timer < 0)
+                        {
+                            state = 0;
+                        }
+                    }
+                };
+        }
+    }
 }
 
 void GolfState::createFireworks()

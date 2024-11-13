@@ -319,7 +319,8 @@ struct ShaderID final
         PointFlare,
         Firework,
         Rope,
-        Lantern
+        Lantern,
+        Roids
     };
 };
 

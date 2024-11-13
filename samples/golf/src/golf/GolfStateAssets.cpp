@@ -404,6 +404,7 @@ void GolfState::loadMap()
         if (m_sharedData.weatherType == WeatherType::Clear)
         {
             createFireworks();
+            createRoids();
         }
     }
 

@@ -1135,6 +1135,9 @@
     <None Include="src\golf\shaders\Lantern.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
+    <None Include="src\golf\shaders\RoidShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="golf.rc">

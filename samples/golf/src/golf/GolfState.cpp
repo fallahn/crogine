@@ -2713,6 +2713,8 @@ void GolfState::addSystems()
         m_gameScene.addDirector<TutorialDirector>(m_sharedData, m_inputParser);
     }
 
+    //this is used EXCLUSIVELY for updating wind entities
+    //(which is a pain now I come to have another use for it)
     m_skyScene.addSystem<cro::CallbackSystem>(mb);
     m_skyScene.addSystem<cro::SkeletalAnimator>(mb);
     m_skyScene.addSystem<cro::CameraSystem>(mb);
