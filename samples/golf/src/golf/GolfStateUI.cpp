@@ -616,6 +616,7 @@ void GolfState::buildUI()
     //pin elevation
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -12.f, 0.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinHeight | CommandID::UI::UIElement;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
@@ -623,16 +624,41 @@ void GolfState::buildUI()
     entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    /*entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });*/
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            
+            e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInOutSine(currTime), 1.f });
+
+            if(currTime == 1)
+            {
+                currTime = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    auto tEnt = entity;
+    const auto c = cro::Colour(0.f, 0.f, 0.f, OverlayAlpha);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -4.f, -0.05f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-28.f, 8.f), c),
+            cro::Vertex2D(glm::vec2(-22.f, -8.f), c),
+            cro::Vertex2D(glm::vec2(28.f, 8.f), c),
+            cro::Vertex2D(glm::vec2(22.f, -8.f), c)
+        });
+    tEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     cro::AudioScape as;
     as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
-    entity = m_gameScene.createEntity(); //needs to be in game s cene to play audio
+    entity = m_gameScene.createEntity(); //needs to be in game scene to play audio
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     auto audioEnt = entity;
@@ -2101,7 +2127,7 @@ void GolfState::buildUI()
         spinEnt.getComponent<cro::Transform>().setPosition(glm::vec2(std::floor(uiSize.x / 2.f), 32.f));
 
         //update the overlay
-        auto colour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
+        auto colour = cro::Colour(0.f, 0.f, 0.f, OverlayAlpha);
         infoEnt.getComponent<cro::Drawable2D>().getVertexData() =
         {
             //bottom bar

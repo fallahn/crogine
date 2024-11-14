@@ -6149,12 +6149,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         const auto holeDiff = (m_holeData[m_currentHole].pin.y - player.position.y) * 10.f;
 
         std::stringstream ss;
-        ss.precision(2);
-        ss << " (";
+        ss << "(";
         if (holeDiff > 0)
         {
             ss << "+";
         }
+        ss.precision(2);
         ss << holeDiff << "%)";
 
         //up & down arrows - look a bit pants quality though
@@ -6166,6 +6166,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         // //OR std::uint32_t(0xA71C)
 
         e.getComponent<cro::Text>().setString(ss.str());
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -6745,7 +6746,7 @@ void GolfState::hitBall()
     cmd.action =
         [](cro::Entity e, float)
         {
-            e.getComponent<cro::Text>().setString(" ");
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
