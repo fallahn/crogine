@@ -1938,7 +1938,7 @@ void MenuState::createScene()
                     {
                         entity.addComponent<LightmapProjector>().size = light.size;
                         entity.getComponent<LightmapProjector>().colour = light.colour;
-                        entity.getComponent<LightmapProjector>().brightness = 0.3f;
+                        entity.getComponent<LightmapProjector>().brightness = 0.5f;
 
                         if (!light.animation.empty())
                         {
@@ -2368,6 +2368,18 @@ void MenuState::createScene()
                 lightsDef.createModel(lightsEnt);
 
                 entity.getComponent<cro::Transform>().addChild(lightsEnt.getComponent<cro::Transform>());
+
+                glm::vec3 spotPos(2.3f, 0.01f, 0.6f);
+                for (auto j = 0; j < 2; ++j)
+                {
+                    auto spotEnt = m_backgroundScene.createEntity();
+                    spotEnt.addComponent<cro::Transform>().setPosition(spotPos);
+                    spotEnt.addComponent<LightmapProjector>().size = 4.f;
+                    spotEnt.getComponent<LightmapProjector>().colour = TextNormalColour;
+                    spotEnt.getComponent<LightmapProjector>().brightness = 0.3f;
+                    entity.getComponent<cro::Transform>().addChild(spotEnt.getComponent<cro::Transform>());
+                    spotPos.z *= -1.f;
+                }
             }
         }
     }
@@ -2526,7 +2538,7 @@ MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
     //ret.timeOfDay = TimeOfDay::Night;
-    //ret.propFilePath = "midori.bgd";
+    //ret.propFilePath = "somer.bgd";
     //
     //m_sharedData.menuSky = Skies[ret.timeOfDay];
     //return ret;
@@ -2534,7 +2546,7 @@ MenuState::PropFileData MenuState::getPropPath() const
     const auto mon = cro::SysTime::now().months();
     const auto day = cro::SysTime::now().days();
 
-    ret.spooky = mon == 10 && day > 22;
+    ret.spooky =  mon == 10 && day > 22;
     if (ret.spooky)
     {
         ret.propFilePath = "spooky.bgd";
@@ -2744,7 +2756,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                 auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
                 for (auto i = 0; i < NodeCount; ++i)
                 {
-                    const auto scale = 1.f + cro::Util::Random::value(-0.2f, 0.2f);
+                    const auto scale = 1.f + cro::Util::Random::value(-0.2f, 0.5f);
 
                     auto entity = m_backgroundScene.createEntity();
                     entity.addComponent<cro::Transform>().setScale(glm::vec3(scale));
@@ -2769,8 +2781,8 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                         else
                         {
                             entity.addComponent<LightmapProjector>().colour = colour;
-                            entity.getComponent<LightmapProjector>().size = 5.f * scale; //TODO how do we determine this
-                            entity.getComponent<LightmapProjector>().brightness = 0.2f; //and this based on model size / distance?
+                            entity.getComponent<LightmapProjector>().size = 6.f * scale; //TODO how do we determine this
+                            entity.getComponent<LightmapProjector>().brightness = 0.3f; //and this based on model size / distance?
                         }
                     }
                 }
