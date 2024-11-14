@@ -2026,6 +2026,7 @@ void MenuState::createScene()
 #endif
 
     auto texID = MaterialID::CelTextured;
+    auto bollardTexID = MaterialID::CelTextured;
 
     std::string pavilionPath = "assets/golf/models/menu_pavilion.cmt";
     std::string bollardPath = "assets/golf/models/bollard_day.cmt";
@@ -2036,9 +2037,13 @@ void MenuState::createScene()
     {
         texID = MaterialID::CelTexturedMasked;
         pavilionPath = "assets/golf/models/menu_pavilion_night.cmt";
-        bollardPath = "assets/golf/models/bollard_day_night.cmt";
         phoneBoxPath = "assets/golf/models/phone_box_night.cmt";
         cartPath = "assets/golf/models/menu/cart_night.cmt";
+    }
+    if (timeOfDay != TimeOfDay::Day)
+    {
+        bollardTexID = MaterialID::CelTexturedMasked;
+        bollardPath = "assets/golf/models/bollard_day_night.cmt";
     }
 
     if (md.loadFromFile(pavilionPath))
@@ -2069,11 +2074,12 @@ void MenuState::createScene()
             entity.addComponent<cro::Transform>().setPosition(pos);
             md.createModel(entity);
 
-            auto mat = m_resources.materials.get(m_materialIDs[texID]);
+            auto mat = m_resources.materials.get(m_materialIDs[bollardTexID]);
             applyMaterialData(md, mat);
             entity.getComponent<cro::Model>().setMaterial(0, mat);
 
-            if (timeOfDay == TimeOfDay::Night)
+            if (timeOfDay == TimeOfDay::Night
+                || timeOfDay == TimeOfDay::Evening)
             {
                 buns++;
 
@@ -2330,7 +2336,7 @@ void MenuState::createScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 87.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        auto texturedMat = m_resources.materials.get(m_materialIDs[/*MaterialID::Ground*/texID]);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[texID]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
