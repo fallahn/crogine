@@ -53,6 +53,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/LeagueNames.cpp
   ${PROJECT_DIR}/golf/LeagueState.cpp
   ${PROJECT_DIR}/golf/LightAnimationSystem.cpp
+  ${PROJECT_DIR}/golf/LightmapProjectionSystem.cpp
   ${PROJECT_DIR}/golf/MenuAvatars.cpp
   ${PROJECT_DIR}/golf/MapOverviewState.cpp
   ${PROJECT_DIR}/golf/MenuCallbacks.cpp

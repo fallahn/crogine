@@ -46,6 +46,7 @@ source distribution.
 #include "HoleData.hpp"
 #include "League.hpp"
 #include "RopeSystem.hpp"
+#include "LightmapProjectionSystem.hpp"
 #include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -120,8 +121,8 @@ namespace
 
     bool checkCommandLine = true;
 
-    ImVec4 C(1.f, 1.f, 1.f, 1.f);
-    float strength = 0.f;
+    /*ImVec4 C(1.f, 1.f, 1.f, 1.f);
+    float strength = 0.f;*/
 
     void refreshCourseAchievements()
     {
@@ -1572,6 +1573,7 @@ void MenuState::addSystems()
     m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
     m_backgroundScene.addSystem<cro::SpriteSystem3D>(mb); //clouds
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
+    m_backgroundScene.addSystem<LightmapProjectionSystem>(mb, &m_lightProjectionMap);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
@@ -1648,7 +1650,7 @@ void MenuState::loadAssets()
     LogI << proj[2] << std::endl;
     LogI << proj[3] << std::endl;*/
 
-    m_lightProjectionMap.create(1024, 1024, false);
+    m_lightProjectionMap.create(LightMapSize.x, LightMapSize.y, false);
     m_lightProjectionMap.setBorderColour(cro::Colour::Black);
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
@@ -2673,14 +2675,22 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     
                     if (md.isLoaded())
                     {
+                        const auto colour = LightColours[cro::Util::Random::value(0u, LightColours.size() - 1)];
+
                         md.createModel(entity);
                         entity.getComponent<cro::Model>().setMaterial(0, lightMaterial);
-                        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", LightColours[cro::Util::Random::value(0u, LightColours.size() - 1)]);
+                        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", colour);
 
                         if (timeOfDay != TimeOfDay::Night)
                         {
                             entity.addComponent<cro::ShadowCaster>();
                             entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(shadowMatID));
+                        }
+                        else
+                        {
+                            entity.addComponent<LightmapProjector>().colour = colour;
+                            entity.getComponent<LightmapProjector>().size = 3.f; //TODO how do we determine this
+                            entity.getComponent<LightmapProjector>().brightness = 0.2f; //and this based on model size / distance?
                         }
                     }
                 }

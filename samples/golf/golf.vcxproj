@@ -650,6 +650,7 @@
     <ClCompile Include="src\golf\LeagueNames.cpp" />
     <ClCompile Include="src\golf\LeagueState.cpp" />
     <ClCompile Include="src\golf\LightAnimationSystem.cpp" />
+    <ClCompile Include="src\golf\LightmapProjectionSystem.cpp" />
     <ClCompile Include="src\golf\MapOverviewState.cpp" />
     <ClCompile Include="src\golf\MenuAvatars.cpp" />
     <ClCompile Include="src\golf\MenuCallbacks.cpp" />
@@ -795,6 +796,7 @@
     <ClInclude Include="src\golf\LeagueNames.hpp" />
     <ClInclude Include="src\golf\LeagueState.hpp" />
     <ClInclude Include="src\golf\LightAnimationSystem.hpp" />
+    <ClInclude Include="src\golf\LightmapProjectionSystem.hpp" />
     <ClInclude Include="src\golf\MapOverviewState.hpp" />
     <ClInclude Include="src\golf\MenuCallbacks.hpp" />
     <ClInclude Include="src\golf\MenuConsts.hpp" />

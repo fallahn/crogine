@@ -510,6 +510,9 @@
     <ClCompile Include="src\golf\RopeSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\LightmapProjectionSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1044,6 +1047,9 @@
       <Filter>Header Files\golf\client\time of day</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\RopeSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\LightmapProjectionSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
