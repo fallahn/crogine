@@ -1624,8 +1624,8 @@ void MenuState::loadAssets()
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
     //m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
@@ -1636,6 +1636,20 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" /*+ wobble*/);
     //m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 600.0\n");
     
+    //view proj matrix to project lightmap
+    //this is currently a shader constant - left this here in case I need to recalculate it
+    /*auto proj = glm::ortho(-20.f, 20.f, -18.f, 0.f, 0.1f, 10.f);
+    auto view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 2.f, 0.f));
+    view *= glm::toMat4(glm::rotate(cro::Transform::QUAT_IDENTITY, -cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS));
+    proj *= glm::inverse(view);*/
+
+    /*LogI << proj[0] << std::endl;
+    LogI << proj[1] << std::endl;
+    LogI << proj[2] << std::endl;
+    LogI << proj[3] << std::endl;*/
+
+    m_lightProjectionMap.create(1024, 1024, false);
+    m_lightProjectionMap.setBorderColour(cro::Colour::Black);
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
@@ -1652,28 +1666,21 @@ void MenuState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedMasked);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedMasked] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
 
-
-    //view proj matrix to project lightmap. TODO make this a shader constant
-    auto proj = glm::ortho(-20.f, 20.f, -18.f, 0.f, 0.1f, 10.f);
-    auto view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 2.f, 0.f));
-    view *= glm::toMat4(glm::rotate(cro::Transform::QUAT_IDENTITY, -cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS));
-    proj *= glm::inverse(view);
-
-    const auto& temp = m_resources.textures.get("assets/images/default_profile.png");
 
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ground] = m_resources.materials.add(*shader);
-    m_resources.materials.get(m_materialIDs[MaterialID::Ground]).setProperty("u_menuViewProjectionMatrix", proj);
-    m_resources.materials.get(m_materialIDs[MaterialID::Ground]).setProperty("u_menuTexture", temp);
+    m_resources.materials.get(m_materialIDs[MaterialID::Ground]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
     
     cro::Image defaultMask;
     defaultMask.create(2, 2, cro::Colour::Black);

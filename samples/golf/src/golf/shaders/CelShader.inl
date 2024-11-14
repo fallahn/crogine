@@ -89,8 +89,13 @@ inline const std::string CelVertexShader = R"(
 #endif
 
 #if defined (MENU_PROJ)
-//TODO make this a constant
-uniform mat4 u_menuViewProjectionMatrix;
+const mat4 MenuViewProjectionMatrix = 
+    mat4(
+    vec4(0.05, 0.0,              0.0,              0.0),
+    vec4(0.0,  0.00000000662274, -0.20202,         0.0),
+    vec4(0.0,  -0.111111,        -0.0000000120413, 0.0),
+    vec4(0.0,  1.0,              -0.616162,        1.0)
+    );
 VARYING_OUT vec4 v_menuProjection;
 #endif
 
@@ -249,7 +254,7 @@ VARYING_OUT vec4 v_menuProjection;
         v_targetProjection = u_targetViewProjectionMatrix * u_worldMatrix * a_position;
 #endif
 #if defined (MENU_PROJ)
-        v_menuProjection = u_menuViewProjectionMatrix * u_worldMatrix * a_position;
+        v_menuProjection = MenuViewProjectionMatrix * u_worldMatrix * a_position;
 #endif
 #if defined(TERRAIN_CLIP)
     gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
@@ -722,14 +727,18 @@ inline const std::string CelFragmentShader = R"(
     vec2 projUV = v_menuProjection.xy/v_menuProjection.w;
     projUV = projUV * 0.5 + 0.5;
 
-FRAG_OUT.rgb += TEXTURE(u_menuTexture, projUV).rgb;
-
-//FRAG_OUT.r *= step(0.001, projUV.x);
-//FRAG_OUT.r *= 1.0 - step(0.999, projUV.x);
-//
-//FRAG_OUT.r *= step(0.001, projUV.y);
-//FRAG_OUT.r *= 1.0 - step(0.999, projUV.y);
+vec3 mapColour = TEXTURE(u_menuTexture, projUV).rgb;
+#if defined (MASK_MAP)
+    mapColour *= 1.0 - mask.g;
+#endif
+FRAG_OUT.rgb += mapColour;
 
 #endif
 //FRAG_OUT += vec4(1.0, 0.0, 0.0, 1.0);
     })";
+    
+//FRAG_OUT.r *= step(0.001, projUV.x);
+//FRAG_OUT.r *= 1.0 - step(0.999, projUV.x);
+
+//FRAG_OUT.r *= step(0.001, projUV.y);
+//FRAG_OUT.r *= 1.0 - step(0.999, projUV.y);

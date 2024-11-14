@@ -123,6 +123,7 @@ private:
     cro::ResourceCollection m_resources;
 
     TimeOfDay m_tod;
+    cro::RenderTexture m_lightProjectionMap;
 
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
