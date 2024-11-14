@@ -36,8 +36,9 @@ source distribution.
 #include <crogine/graphics/SimpleVertexArray.hpp>
 
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/util/Random.hpp>
 
-static inline constexpr glm::uvec2 LightMapSize(1024u);
+static inline constexpr glm::uvec2 LightMapSize(1024u, 512u);
 
 namespace cro
 {
@@ -49,6 +50,27 @@ struct LightmapProjector final
     cro::Colour colour;
     float size = 10.f;
     float brightness = 1.f;
+
+    std::vector<float> pattern;
+    std::size_t currentIndex = 0;
+    float animationTime = 0.f;
+
+    void setPattern(const std::string& s)
+    {
+        //use the classic quake engine light flicker pattern
+        pattern.clear();
+        currentIndex = 0;
+
+        for (auto c : s)
+        {
+            pattern.push_back(static_cast<float>(c - 'a') / 13.f);
+        }
+
+        if (!pattern.empty())
+        {
+            currentIndex = cro::Util::Random::value(0u, pattern.size()) % pattern.size();
+        }
+    }
 };
 
 class LightmapProjectionSystem final : public cro::System, public cro::GuiClient

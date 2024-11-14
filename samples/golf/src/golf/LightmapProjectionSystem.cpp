@@ -38,7 +38,7 @@ source distribution.
 namespace
 {
     static inline constexpr glm::vec2 LightMapWorldSize(LightMapSize);
-    static inline constexpr cro::FloatRect LightMapWorldCoords(-20.f, -18.f, 40.f, 18.f);
+    static inline constexpr cro::FloatRect LightMapWorldCoords(-20.f, -20.f, 40.f, 20.f);
     static inline constexpr glm::vec2 LightMapPixelsPerMetre(LightMapWorldSize / glm::vec2(LightMapWorldCoords.width, LightMapWorldCoords.height));
 }
 
@@ -78,23 +78,36 @@ LightmapProjectionSystem::LightmapProjectionSystem(cro::MessageBus& mb, cro::Ren
 }
 
 //public
-void LightmapProjectionSystem::process(float)
+void LightmapProjectionSystem::process(float dt)
 {
-    //TODO animate lightmaps
+    static constexpr float AnimFrameTime = 0.1f;
+
     auto& entities = getEntities();
-    if (true /*!entities.empty()*/)
+    if (!entities.empty())
     {
         std::vector<cro::Vertex2D> verts;
 
         for (auto entity : entities)
         {
+            auto& projector = entity.getComponent<LightmapProjector>();
+            float animValue = 1.f;
+            if (!projector.pattern.empty())
+            {
+                animValue = projector.pattern[projector.currentIndex];
+
+                projector.animationTime += dt;
+                if (projector.animationTime > AnimFrameTime)
+                {
+                    projector.currentIndex = (projector.currentIndex + 1) % projector.pattern.size();
+                    projector.animationTime -= AnimFrameTime;
+                }
+            }
+
+            const auto vertSize = (glm::vec2(projector.size) * LightMapPixelsPerMetre) / 2.f;
+            const auto c = projector.colour.getVec4() * projector.brightness * animValue;
+
             const auto pos = entity.getComponent<cro::Transform>().getWorldPosition();
             const auto vertPos = toVertPosition(pos);
-
-            auto& projector = entity.getComponent<LightmapProjector>();
-            const auto vertSize = (glm::vec2(projector.size) * LightMapPixelsPerMetre) / 2.f;
-
-            const auto c = projector.colour.getVec4() * projector.brightness;
 
             verts.emplace_back(glm::vec2(-vertSize.x, vertSize.y) + vertPos, glm::vec2(0.f, 1.f), c);
             verts.emplace_back(-vertSize + vertPos, glm::vec2(0.f), c);

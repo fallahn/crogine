@@ -1837,6 +1837,42 @@ void MenuState::createScene()
                 std::string propModelPath;
                 std::size_t animation = 0;
 
+                struct Light final
+                {
+                    cro::Colour colour;
+                    std::string animation;
+                    float size = 1.f;
+                    bool active = false;
+                }light;
+
+                const auto& modelObjs = obj.getObjects();
+                for (const auto& modelObj : modelObjs)
+                {
+                    if (modelObj.getName() == "light")
+                    {
+                        const auto& lightProps = modelObj.getProperties();
+                        for (const auto& p : lightProps)
+                        {
+                            const auto& pName = p.getName();
+                            if (pName == "radius")
+                            {
+                                light.size = p.getValue<float>() * 2.f;
+                                light.active = true;
+                            }
+                            else if (pName == "colour")
+                            {
+                                light.colour = p.getValue<cro::Colour>();
+                                light.active = true;
+                            }
+                            else if (pName == "animation")
+                            {
+                                light.animation = p.getValue<std::string>();
+                                light.active = true;
+                            }
+                        }
+                    }
+                }
+
                 const auto& modelProps = obj.getProperties();
                 for (const auto& prop : modelProps)
                 {
@@ -1884,6 +1920,19 @@ void MenuState::createScene()
                         auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                         applyMaterialData(md, mat);
                         entity.getComponent<cro::Model>().setMaterial(0, mat);
+                    }
+
+                    if (light.active
+                        && timeOfDay == TimeOfDay::Night)
+                    {
+                        entity.addComponent<LightmapProjector>().size = light.size;
+                        entity.getComponent<LightmapProjector>().colour = light.colour;
+                        entity.getComponent<LightmapProjector>().brightness = 0.3f;
+
+                        if (!light.animation.empty())
+                        {
+                            entity.getComponent<LightmapProjector>().setPattern(light.animation);
+                        }
                     }
                 }
             }
@@ -2444,11 +2493,11 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    ret.timeOfDay = TimeOfDay::Night;
-    ret.propFilePath = "midori.bgd";
-    
-    m_sharedData.menuSky = Skies[ret.timeOfDay];
-    return ret;
+    //ret.timeOfDay = TimeOfDay::Day;
+    //ret.propFilePath = "midori.bgd";
+    //
+    //m_sharedData.menuSky = Skies[ret.timeOfDay];
+    //return ret;
 
     const auto mon = cro::SysTime::now().months();
     const auto day = cro::SysTime::now().days();
@@ -2670,7 +2719,6 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                     entity.addComponent<RopeNode>().ropeID = rope;
 
                     //load models for lights
-                    //TODO projection maps for light spots?                                        
                     //TODO could have a version with flags on instead of lanterns?
                     
                     if (md.isLoaded())
@@ -2689,7 +2737,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                         else
                         {
                             entity.addComponent<LightmapProjector>().colour = colour;
-                            entity.getComponent<LightmapProjector>().size = 3.f; //TODO how do we determine this
+                            entity.getComponent<LightmapProjector>().size = 5.f * scale; //TODO how do we determine this
                             entity.getComponent<LightmapProjector>().brightness = 0.2f; //and this based on model size / distance?
                         }
                     }
