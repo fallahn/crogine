@@ -38,7 +38,6 @@ source distribution.
 namespace
 {
     static inline constexpr glm::vec2 LightMapWorldSize(LightMapSize);
-    static inline constexpr cro::FloatRect LightMapWorldCoords(-20.f, -20.f, 40.f, 20.f);
     static inline constexpr glm::vec2 LightMapPixelsPerMetre(LightMapWorldSize / glm::vec2(LightMapWorldCoords.width, LightMapWorldCoords.height));
 }
 
@@ -67,12 +66,12 @@ LightmapProjectionSystem::LightmapProjectionSystem(cro::MessageBus& mb, cro::Ren
     //registerWindow([&]() 
     //    {
     //        ImGui::Begin("sdfsg");
-    //        ImGui::Image(m_renderTexture->getTexture(), { 256.f,256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //        /*for (auto e : getEntities())
+    //        ImGui::Image(m_renderTexture->getTexture(), { 256.f,128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //        for (auto e : getEntities())
     //        {
     //            auto pos = toVertPosition(e.getComponent<cro::Transform>().getWorldPosition());
     //            ImGui::Text("Position: %3.2f, %3.2f", pos.x, pos.y);
-    //        }*/
+    //        }
     //        ImGui::End();
     //    });
 }
@@ -107,7 +106,7 @@ void LightmapProjectionSystem::process(float dt)
             const auto c = projector.colour.getVec4() * projector.brightness * animValue;
 
             const auto pos = entity.getComponent<cro::Transform>().getWorldPosition();
-            const auto vertPos = toVertPosition(pos);
+            const glm::vec2 vertPos = toVertPosition(pos);
 
             verts.emplace_back(glm::vec2(-vertSize.x, vertSize.y) + vertPos, glm::vec2(0.f, 1.f), c);
             verts.emplace_back(-vertSize + vertPos, glm::vec2(0.f), c);

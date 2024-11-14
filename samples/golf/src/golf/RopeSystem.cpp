@@ -52,7 +52,7 @@ RopeSystem::RopeSystem(cro::MessageBus& mb)
 //public
 void RopeSystem::process(float dt)
 {
-    m_windOffset += (m_windDirection * dt);
+    m_windOffset += (m_windDirection * dt) * 0.01f;
     for (auto& rope : m_ropes)
     {
         rope.simulate(dt, m_windOffset);

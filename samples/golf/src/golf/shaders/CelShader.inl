@@ -92,8 +92,8 @@ inline const std::string CelVertexShader = R"(
 const mat4 MenuViewProjectionMatrix = 
     mat4(
     vec4(0.05, 0.0,              0.0,              0.0),
-    vec4(0.0,  0.00000000662274, -0.20202,         0.0),
-    vec4(0.0,  -0.111111,        -0.0000000120413, 0.0),
+    vec4(0.0,  0.00000000596047, -0.20202,         0.0),
+    vec4(0.0,  -0.1,             -0.0000000120413, 0.0),
     vec4(0.0,  1.0,              -0.616162,        1.0)
     );
 VARYING_OUT vec4 v_menuProjection;

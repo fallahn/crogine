@@ -1627,7 +1627,8 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMaskedLightMap, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
     //m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
@@ -1640,12 +1641,14 @@ void MenuState::loadAssets()
     
     //view proj matrix to project lightmap
     //this is currently a shader constant - left this here in case I need to recalculate it
-    /*auto proj = glm::ortho(-20.f, 20.f, -18.f, 0.f, 0.1f, 10.f);
+    /*auto proj = glm::ortho(LightMapWorldCoords.left, LightMapWorldCoords.left + LightMapWorldCoords.width,
+                            LightMapWorldCoords.bottom, LightMapWorldCoords.bottom + LightMapWorldCoords.height,
+                            0.1f, 10.f);
     auto view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 2.f, 0.f));
     view *= glm::toMat4(glm::rotate(cro::Transform::QUAT_IDENTITY, -cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS));
-    proj *= glm::inverse(view);*/
+    proj *= glm::inverse(view);
 
-    /*LogI << proj[0] << std::endl;
+    LogI << proj[0] << std::endl;
     LogI << proj[1] << std::endl;
     LogI << proj[2] << std::endl;
     LogI << proj[3] << std::endl;*/
@@ -1675,7 +1678,15 @@ void MenuState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedMasked] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
-    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
+
+    //TODO we only want to create this at night otherwise we're
+    //just wasting resources
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedMaskedLightMap);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTexturedMaskedLightMap] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMaskedLightMap]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMaskedLightMap]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
 
 
     shader = &m_resources.shaders.get(ShaderID::Course);
@@ -2025,7 +2036,7 @@ void MenuState::createScene()
     {
         texID = MaterialID::CelTexturedMasked;
         pavilionPath = "assets/golf/models/menu_pavilion_night.cmt";
-        bollardPath = "assets/golf/models/bollard_night.cmt";
+        bollardPath = "assets/golf/models/bollard_day_night.cmt";
         phoneBoxPath = "assets/golf/models/phone_box_night.cmt";
         cartPath = "assets/golf/models/menu/cart_night.cmt";
     }
@@ -2051,7 +2062,7 @@ void MenuState::createScene()
             //glm::vec3(-10.5f, 0.f, 12.5f),
             glm::vec3(-8.2f, 0.f, 3.5f)
         };
-
+        int buns = 0;
         for (auto pos : positions)
         {
             auto entity = m_backgroundScene.createEntity();
@@ -2061,6 +2072,20 @@ void MenuState::createScene()
             auto mat = m_resources.materials.get(m_materialIDs[texID]);
             applyMaterialData(md, mat);
             entity.getComponent<cro::Model>().setMaterial(0, mat);
+
+            if (timeOfDay == TimeOfDay::Night)
+            {
+                buns++;
+
+                entity.addComponent<LightmapProjector>().size = 6.f;
+                entity.getComponent<LightmapProjector>().colour = TextNormalColour;
+                entity.getComponent<LightmapProjector>().brightness = 0.3f;
+
+                if (buns == 2)
+                {
+                    entity.getComponent<LightmapProjector>().setPattern("lllllllllllllllllllmlmlmllkllklllkllllk");
+                }
+            }
         }
     }
 
@@ -2242,6 +2267,7 @@ void MenuState::createScene()
     if (timeOfDay == TimeOfDay::Night)
     {
         lightsDef.loadFromFile("assets/golf/models/menu/headlights.cmt");
+        texID = MaterialID::CelTexturedMaskedLightMap;
     }
 
     //golf carts
@@ -2493,7 +2519,7 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    //ret.timeOfDay = TimeOfDay::Day;
+    //ret.timeOfDay = TimeOfDay::Night;
     //ret.propFilePath = "midori.bgd";
     //
     //m_sharedData.menuSky = Skies[ret.timeOfDay];

@@ -265,6 +265,7 @@ struct ShaderID final
         CelTextured,
         CelTexturedNoWind,
         CelTexturedMasked,
+        CelTexturedMaskedLightMap,
         CelTexturedMaskedNoWind,
         CelTexturedInstanced,
         CelTexturedSkinned,

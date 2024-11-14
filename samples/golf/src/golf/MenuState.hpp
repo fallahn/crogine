@@ -153,6 +153,7 @@ private:
             Cel,
             CelTextured,
             CelTexturedMasked,
+            CelTexturedMaskedLightMap,
             CelTexturedSkinned,
             Hair,
             HairReflect,

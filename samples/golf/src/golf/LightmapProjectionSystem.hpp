@@ -38,7 +38,10 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/util/Random.hpp>
 
+//remember if we modify these we need to re-calc the matrix
+//used for projection in the shader
 static inline constexpr glm::uvec2 LightMapSize(1024u, 512u);
+static inline constexpr cro::FloatRect LightMapWorldCoords(-20.f, -20.f, 40.f, 20.f);
 
 namespace cro
 {
