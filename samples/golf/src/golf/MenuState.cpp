@@ -1624,8 +1624,10 @@ void MenuState::loadAssets()
     static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
+    //hmmmm a whole bunch of these could be conditionally compiled based on time of day (eg the ball)
+    //but we don't know that until *after* the assets are loaded...
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
+    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedMaskedLightMap, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
@@ -2544,7 +2546,7 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    //ret.timeOfDay = TimeOfDay::Night;
+    //ret.timeOfDay = TimeOfDay::Morning;
     //ret.propFilePath = "somer.bgd";
     //
     //m_sharedData.menuSky = Skies[ret.timeOfDay];
@@ -2736,12 +2738,16 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                         };
                 };
 
-            matID = m_materialIDs[MaterialID::Ball];
+
             if (timeOfDay == TimeOfDay::Night)
             {
                 m_resources.shaders.loadFromString(ShaderID::Lantern, LanternVert, LanternFrag);
-                matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Lantern));
             }
+            else
+            {
+                m_resources.shaders.loadFromString(ShaderID::Lantern, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n");
+            }
+            matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Lantern));
             
             auto lightMaterial = m_resources.materials.get(matID);
             if (md.loadFromFile("assets/golf/models/menu/lantern.cmt"))
@@ -2756,6 +2762,7 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                 CD32::Colours[CD32::BlueLight],
                 CD32::Colours[CD32::GreyLight],
                 CD32::Colours[CD32::PinkLight],
+                CD32::Colours[CD32::GreenLight],
             };
 
             for (auto i = 0u; i < polePos.size() - 1; ++i)

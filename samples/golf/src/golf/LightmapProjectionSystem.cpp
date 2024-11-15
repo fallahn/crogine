@@ -108,7 +108,6 @@ void LightmapProjectionSystem::process(float dt)
             const glm::vec2 vertPos = toVertPosition(pos);
             auto vertSize = (glm::vec2(projector.size) * LightMapPixelsPerMetre) / 2.f;
 
-            //constexpr float FadeWidth = 64.f; //light* edgeFademap pixels
             float edgeFade = glm::smoothstep(0.f, vertSize.x, vertPos.x) * (1.f - glm::smoothstep(LightMapWorldSize.x - vertSize.x, LightMapWorldSize.x, vertPos.x));
             edgeFade *= glm::smoothstep(0.f, vertSize.y, vertPos.y);
 
