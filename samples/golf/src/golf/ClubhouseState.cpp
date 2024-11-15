@@ -1255,7 +1255,7 @@ void ClubhouseState::buildScene()
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(15.5f));
         md.createModel(entity);
-
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", m_sharedData.menuSky.sunColour);
         //registerWindow([entity]() mutable 
         //    {
         //        ImGui::Begin("sdf");

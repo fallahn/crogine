@@ -2191,6 +2191,7 @@ void MenuState::createScene()
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(15.5f));
         md.createModel(entity);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", m_sharedData.menuSky.sunColour);
     }
 
 
@@ -2537,7 +2538,7 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    //ret.timeOfDay = TimeOfDay::Night;
+    //ret.timeOfDay = TimeOfDay::Evening;
     //ret.propFilePath = "somer.bgd";
     //
     //m_sharedData.menuSky = Skies[ret.timeOfDay];
