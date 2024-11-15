@@ -261,11 +261,13 @@ private:
     {
         std::string propFilePath;
         bool spooky = false;
+        bool fireworks = false;
         std::int32_t timeOfDay = 0;
     };
     PropFileData getPropPath() const;
     void createClouds();
     void createRopes(std::int32_t, const std::vector<glm::vec3>&);
+    void createFireworks();
     void setVoiceCallbacks();
     std::array<cro::Entity, ConstVal::MaxClients> m_voiceEntities;
 

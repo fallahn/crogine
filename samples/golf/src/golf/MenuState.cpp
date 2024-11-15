@@ -47,6 +47,7 @@ source distribution.
 #include "League.hpp"
 #include "RopeSystem.hpp"
 #include "LightmapProjectionSystem.hpp"
+#include "FireworksSystem.hpp"
 #include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -63,6 +64,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/util/String.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
@@ -110,6 +112,7 @@ namespace
 #include "shaders/ShaderIncludes.inl"
 #include "shaders/ShadowMapping.inl"
 #include "shaders/Lantern.inl"
+#include "shaders/Weather.inl"
 
     constexpr std::array<MenuSky, TimeOfDay::Count> Skies =
     {
@@ -1832,7 +1835,7 @@ void MenuState::createScene()
 
 
     //load random / seasonal props
-    auto [propFilePath, spooky, timeOfDay] = getPropPath();
+    auto [propFilePath, spooky, fireworks, timeOfDay] = getPropPath();
 
     std::vector<glm::vec3> polePositions;
     cro::ConfigFile propFile;
@@ -2401,6 +2404,11 @@ void MenuState::createScene()
     createRopes(timeOfDay, polePositions);
     createClouds();
 
+    if (fireworks)
+    {
+        createFireworks();
+    }
+
     //music
     auto entity = m_backgroundScene.createEntity();
     if (spooky)
@@ -2546,9 +2554,9 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    //ret.timeOfDay = TimeOfDay::Morning;
+    //ret.timeOfDay = TimeOfDay::Evening;
     //ret.propFilePath = "somer.bgd";
-    //
+    //ret.fireworks = true;
     //m_sharedData.menuSky = Skies[ret.timeOfDay];
     //return ret;
 
@@ -2570,6 +2578,7 @@ MenuState::PropFileData MenuState::getPropPath() const
     else if (mon == 6 && day == 21)
     {
         ret.propFilePath = "somer.bgd";
+        ret.fireworks = true;
     }
     else
     {
@@ -2586,6 +2595,28 @@ MenuState::PropFileData MenuState::getPropPath() const
 
     ret.timeOfDay = m_tod.getTimeOfDay();
     m_sharedData.menuSky = Skies[ret.timeOfDay];
+
+    //see if we want fireworks
+    if (ret.timeOfDay == TimeOfDay::Night)
+    {
+        switch (mon)
+        {
+        default: break;
+        case 11:
+            ret.fireworks = day == 25;
+            break;
+        case 12:
+            ret.fireworks = (day == 12 || day == 31);
+            break;
+        case 1:
+            ret.fireworks = day == 1;
+            break;
+        case 6:
+            ret.fireworks = day == 16;
+            break;
+        }
+    }
+
     return ret;
 }
 
@@ -2802,6 +2833,44 @@ void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>
                 }
                 createRopeMesh(polePos[i], rope);
             }
+        }
+    }
+}
+
+void MenuState::createFireworks()
+{
+    cro::SphereBuilder builder(5.f);
+    const auto meshID = m_resources.meshes.loadMesh(builder);
+    auto& meshData = m_resources.meshes.getMesh(meshID);
+    meshData.primitiveType = GL_POINTS;
+    meshData.indexData[0].primitiveType = GL_POINTS;
+
+
+    m_resources.shaders.loadFromString(ShaderID::Firework, FireworkVert, FireworkFragment, "#define POINT_SIZE 50.0\n");
+    auto& shader = m_resources.shaders.get(ShaderID::Firework);
+    m_scaleBuffer.addShader(shader);
+    auto materialID = m_resources.materials.add(shader);
+
+    auto material = m_resources.materials.get(materialID);
+    material.blendMode = cro::Material::BlendMode::Additive;
+
+    auto* fireworkSystem = m_backgroundScene.addSystem<FireworksSystem>(cro::App::getInstance().getMessageBus(), meshData, material);
+
+    static constexpr float MinRadius = 15.f;
+    static constexpr float MaxRadius = 35.f;
+
+    static constexpr std::array<float, 3U> MinBounds = { -MaxRadius / 2.f, MinRadius, -MaxRadius * 2.f };
+    static constexpr std::array<float, 3U> MaxBounds = { MaxRadius, MaxRadius, MinRadius };
+
+    auto positions = pd::PoissonDiskSampling(10.75f, MinBounds, MaxBounds);
+    std::shuffle(positions.begin(), positions.end(), cro::Util::Random::rndEngine);
+    for (const auto& p : positions)
+    {
+        glm::vec3 worldPos(p[0], p[1], p[2]);
+        const auto l = glm::length(worldPos);
+        if (l < MaxRadius && l > MinRadius)
+        {
+            fireworkSystem->addPosition(worldPos);
         }
     }
 }

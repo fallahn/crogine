@@ -58,6 +58,10 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/menu/lobby.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
         "assets/golf/sound/woof.wav",
+
+        "assets/golf/sound/ambience/fw01.wav",
+        "assets/golf/sound/ambience/fw02.wav",
+        "assets/golf/sound/ambience/fw03.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -84,6 +88,15 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cl::MessageID::EnviroMessage:
+        {
+            const auto& data = msg.getData<EnviroEvent>();
+            auto ent = playSound(AudioID::Fw01 + cro::Util::Random::value(0, 2), 0.2f);
+            ent.getComponent<cro::AudioEmitter>().setPitch(data.size);
+            ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Environment);
+            ent.getComponent<cro::AudioEmitter>().setRolloff(0.f);
+        }
+        break;
         case cro::Message::SkeletalAnimationMessage:
         {
             const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();

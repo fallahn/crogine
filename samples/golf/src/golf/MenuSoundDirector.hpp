@@ -59,6 +59,9 @@ private:
             LobbyJoin,
             LobbyExit,
             Woof,
+            Fw01,
+            Fw02,
+            Fw03,
 
             Count
         };

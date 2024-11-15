@@ -345,7 +345,7 @@ void GolfState::createRoids()
 
             
             
-            //we've used the callback system in the skt box
+            //we've used the callback system in the sky box
             //for a hack with wind-powered entities (d'oh)
             //so we need to create an entity in the game scene
             //specifically to update the shader for the above...
@@ -437,14 +437,6 @@ void GolfState::createFireworks()
         case 14:
         case 24:
         case 31:
-            break;
-        }
-        break;
-    case 11:
-        switch (day)
-        {
-        default: return;
-        case 25:
             break;
         }
         break;
