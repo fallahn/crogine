@@ -106,13 +106,14 @@ void LightmapProjectionSystem::process(float dt)
 
             const auto pos = entity.getComponent<cro::Transform>().getWorldPosition();
             const glm::vec2 vertPos = toVertPosition(pos);
+            auto vertSize = (glm::vec2(projector.size) * LightMapPixelsPerMetre) / 2.f;
 
-            constexpr float FadeWidth = 64.f; //lightmap pixels
-            float edgeFade = glm::smoothstep(0.f, FadeWidth, vertPos.x) * (1.f - glm::smoothstep(LightMapWorldSize.x - FadeWidth, LightMapWorldSize.x, vertPos.x));
-            edgeFade *= glm::smoothstep(0.f, 64.f, vertPos.y);
+            //constexpr float FadeWidth = 64.f; //light* edgeFademap pixels
+            float edgeFade = glm::smoothstep(0.f, vertSize.x, vertPos.x) * (1.f - glm::smoothstep(LightMapWorldSize.x - vertSize.x, LightMapWorldSize.x, vertPos.x));
+            edgeFade *= glm::smoothstep(0.f, vertSize.y, vertPos.y);
 
+            vertSize *= edgeFade;
             const auto c = projector.colour.getVec4() * projector.brightness * animValue * edgeFade;
-            const auto vertSize = (glm::vec2(projector.size * edgeFade) * LightMapPixelsPerMetre) / 2.f;
 
             verts.emplace_back(glm::vec2(-vertSize.x, vertSize.y) + vertPos, glm::vec2(0.f, 1.f), c);
             verts.emplace_back(-vertSize + vertPos, glm::vec2(0.f), c);

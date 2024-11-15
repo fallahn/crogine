@@ -1853,6 +1853,7 @@ void MenuState::createScene()
                     cro::Colour colour;
                     std::string animation;
                     float size = 1.f;
+                    float brightness = 0.3f;
                     bool active = false;
                 }light;
 
@@ -1878,6 +1879,11 @@ void MenuState::createScene()
                             else if (pName == "animation")
                             {
                                 light.animation = p.getValue<std::string>();
+                                light.active = true;
+                            }
+                            else if (pName == "brightness")
+                            {
+                                light.brightness = std::clamp(p.getValue<float>(), 0.f, 1.f);
                                 light.active = true;
                             }
                         }
@@ -1938,7 +1944,7 @@ void MenuState::createScene()
                     {
                         entity.addComponent<LightmapProjector>().size = light.size;
                         entity.getComponent<LightmapProjector>().colour = light.colour;
-                        entity.getComponent<LightmapProjector>().brightness = 0.5f;
+                        entity.getComponent<LightmapProjector>().brightness = light.brightness;
 
                         if (!light.animation.empty())
                         {
@@ -2538,7 +2544,7 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    //ret.timeOfDay = TimeOfDay::Evening;
+    //ret.timeOfDay = TimeOfDay::Night;
     //ret.propFilePath = "somer.bgd";
     //
     //m_sharedData.menuSky = Skies[ret.timeOfDay];
@@ -2547,7 +2553,7 @@ MenuState::PropFileData MenuState::getPropPath() const
     const auto mon = cro::SysTime::now().months();
     const auto day = cro::SysTime::now().days();
 
-    ret.spooky =  mon == 10 && day > 22;
+    ret.spooky = mon == 10 && day > 22;
     if (ret.spooky)
     {
         ret.propFilePath = "spooky.bgd";
