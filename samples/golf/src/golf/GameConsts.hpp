@@ -232,7 +232,8 @@ struct SpriteAnimID final
         Medal,
         BillboardSwing,
         BillboardRewind,
-        Footstep
+        Footstep,
+        Pump
     };
 };
 

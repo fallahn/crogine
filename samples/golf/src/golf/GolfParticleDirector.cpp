@@ -103,6 +103,17 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case cro::Message::SkeletalAnimationMessage:
+    {
+        const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
+        if (data.userType == SpriteAnimID::Pump)
+        {
+            //bubbles
+            auto pos = data.position;
+            pos.y += 0.5f;
+        }
+    }
+        break;
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();
