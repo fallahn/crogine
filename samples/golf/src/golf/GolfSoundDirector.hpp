@@ -177,6 +177,9 @@ public:
             Fw02,
             Fw03,
 
+            ScrubDown,
+            ScrubUp,
+
             Count
         };
     };

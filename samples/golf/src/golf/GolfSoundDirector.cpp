@@ -199,6 +199,9 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/ambience/fw01.wav",
         "assets/golf/sound/ambience/fw02.wav",
         "assets/golf/sound/ambience/fw03.wav",
+
+        "assets/golf/sound/ambience/scrub_down.wav",
+        "assets/golf/sound/ambience/scrub_up.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -299,6 +302,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             else if (data.userType == SpriteAnimID::Footstep)
             {
                 auto sound = playSound(cro::Util::Random::value(AudioID::Foot01, AudioID::Foot04), data.position, 0.3f);
+                sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                sound.getComponent<cro::AudioEmitter>().setRolloff(0.74f);
+                sound.getComponent<cro::AudioEmitter>().setPitch(1.f + cro::Util::Random::value(-0.2f, 0.2f));
+            }
+            else if (data.userType == SpriteAnimID::Pump)
+            {
+                auto sound = playSound(cro::Util::Random::value(AudioID::ScrubDown, AudioID::ScrubUp), data.position, 0.3f);
                 sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 sound.getComponent<cro::AudioEmitter>().setRolloff(0.74f);
                 sound.getComponent<cro::AudioEmitter>().setPitch(1.f + cro::Util::Random::value(-0.2f, 0.2f));

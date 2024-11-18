@@ -3298,7 +3298,8 @@ void GolfState::buildScene()
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
             {
-                if ((m_currentHole % 3) == 2)
+                if ((m_currentHole % 3) == 2
+                    && !m_holeData[m_currentHole].puttFromTee)
                 {
                     auto& t = e.getComponent<cro::Callback>().getUserData<float>();
                     t -= dt;
