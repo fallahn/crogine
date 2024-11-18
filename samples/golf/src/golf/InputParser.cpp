@@ -568,7 +568,7 @@ bool InputParser::getButtonState(std::int32_t binding) const
 
 float InputParser::getPower() const
 {
-    return MinPower + (MaxPower * cro::Util::Easing::easeInSine(m_power));
+    return MinPower + (MaxPower * cro::Util::Easing::easeInSine(std::min(m_power, 1.f)));
 }
 
 float InputParser::getHook() const
@@ -1138,9 +1138,13 @@ void InputParser::updateStroke(float dt)
                 speed = (speed * MinBarSpeed) + ((speed * (1.f - MinBarSpeed)) * increase);
             }
 
-            m_power = std::min(1.f, std::max(0.f, m_power + (speed * m_powerbarDirection)));
+            //allowing the bar to go over 1 means we get a slight
+            //pause at the top (as the actual output is clamped to 1)
+            //TODO we could reduce this as the player skill level increases?
+            static constexpr float MaxPowerOutput = 1.05f;
+            m_power = std::min(MaxPowerOutput, std::max(0.f, m_power + (speed * m_powerbarDirection)));
 
-            if (m_power == 1)
+            if (m_power == MaxPowerOutput)
             {
                 m_powerbarDirection = -1.f;
             }
