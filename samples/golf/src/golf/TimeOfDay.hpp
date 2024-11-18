@@ -29,12 +29,13 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <cstdint>
 #include <string>
 
-class TimeOfDay final
+class TimeOfDay final : public cro::ConsoleClient
 {
 public:
     TimeOfDay();
@@ -53,6 +54,11 @@ public:
 private:
 
     glm::vec2 m_latlon;
+
+    //these are stored for debugging
+    //so that's my excuse for the code smell.
+    mutable std::string m_sunriseStr;
+    mutable std::string m_sunsetStr;
 
     //attempts to update the lat/lon data stored on disk
     void updateLatLon();

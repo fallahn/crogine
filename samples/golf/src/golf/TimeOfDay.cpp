@@ -99,6 +99,15 @@ TimeOfDay::TimeOfDay()
             updateLatLon();
         }
     }
+
+
+    registerCommand("sun_times", [&](const std::string&)
+        {
+            cro::Console::print("Current estimated times are:");
+            cro::Console::print(m_sunriseStr);
+            cro::Console::print(m_sunsetStr);
+            cro::Console::print("Accuracy may be improved on next game launch.");
+        });
 }
 
 //public
@@ -176,7 +185,9 @@ std::int32_t TimeOfDay::getTimeOfDay() const
             return Morning;
         }
 
-        //LogI << "Sunrise is " << risetm.tm_hour << ":" << risetm.tm_min << std::endl;
+        std::stringstream riseStream;
+        riseStream << "Sunrise: " << risetm.tm_hour << ":" << risetm.tm_min;
+        m_sunriseStr = riseStream.str();
 
         auto sunset = sunclock.sunset();
         auto settm = *std::localtime(&sunset);
@@ -189,7 +200,9 @@ std::int32_t TimeOfDay::getTimeOfDay() const
             return Evening;
         }
 
-        //LogI << "Sunset is " << settm.tm_hour << ":" << settm.tm_min << std::endl;
+        std::stringstream setStream;
+        setStream << "Sunset: " << settm.tm_hour << ":" << settm.tm_min;
+        m_sunsetStr = setStream.str();
 
         if (localtm.tm_hour > risetm.tm_hour
             && localtm.tm_hour < settm.tm_hour)
