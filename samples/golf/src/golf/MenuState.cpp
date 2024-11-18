@@ -1631,7 +1631,7 @@ void MenuState::loadAssets()
     //but we don't know that until *after* the assets are loaded...
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedMaskedLightMap, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
@@ -1672,11 +1672,20 @@ void MenuState::loadAssets()
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
     m_profileData.profileMaterials.ball = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
 
+    
+    //hmm we could be sharing this with the rope system - though that's not always
+    //added, so it probably doesn't matter.
+    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+    noiseTex.setRepeated(true);
+    noiseTex.setSmooth(true);
+    
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_noiseTexture", noiseTex);
 
     shader = &m_resources.shaders.get(ShaderID::CelTexturedMasked);
     m_scaleBuffer.addShader(*shader);
@@ -1940,8 +1949,11 @@ void MenuState::createScene()
                     else
                     {
                         auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                        applyMaterialData(md, mat);
-                        entity.getComponent<cro::Model>().setMaterial(0, mat);
+                        for (auto j = 0u; j < md.getMaterialCount(); ++j)
+                        {
+                            applyMaterialData(md, mat, j);
+                            entity.getComponent<cro::Model>().setMaterial(j, mat);
+                        }
                     }
 
                     if (light.active
@@ -2554,11 +2566,11 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    //ret.timeOfDay = TimeOfDay::Evening;
-    //ret.propFilePath = "somer.bgd";
-    //ret.fireworks = true;
-    //m_sharedData.menuSky = Skies[ret.timeOfDay];
-    //return ret;
+    ret.timeOfDay = TimeOfDay::Night;
+    ret.propFilePath = "geranium.bgd";
+    ret.fireworks = true;
+    m_sharedData.menuSky = Skies[ret.timeOfDay];
+    return ret;
 
     const auto mon = cro::SysTime::now().months();
     const auto day = cro::SysTime::now().days();
@@ -2570,6 +2582,10 @@ MenuState::PropFileData MenuState::getPropPath() const
         ret.timeOfDay = TimeOfDay::Night;
         m_sharedData.menuSky = Skies[TimeOfDay::Night];
         return ret;
+    }
+    else if (mon == 2 && day == 2)
+    {
+        ret.propFilePath = "geranium.bgd";
     }
     else if (mon == 5 && day == 4)
     {
@@ -2610,6 +2626,9 @@ MenuState::PropFileData MenuState::getPropPath() const
             break;
         case 1:
             ret.fireworks = day == 1;
+            break;
+        case 2:
+            ret.fireworks = day == 2;
             break;
         case 6:
             ret.fireworks = day == 16;
