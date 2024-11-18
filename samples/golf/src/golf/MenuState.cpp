@@ -2865,7 +2865,7 @@ void MenuState::createFireworks()
     meshData.indexData[0].primitiveType = GL_POINTS;
 
 
-    m_resources.shaders.loadFromString(ShaderID::Firework, FireworkVert, FireworkFragment, "#define POINT_SIZE 50.0\n");
+    m_resources.shaders.loadFromString(ShaderID::Firework, FireworkVert, FireworkFragment, "#define GRAVITY 0.6\n#define POINT_SIZE 50.0\n");
     auto& shader = m_resources.shaders.get(ShaderID::Firework);
     m_scaleBuffer.addShader(shader);
     auto materialID = m_resources.materials.add(shader);
