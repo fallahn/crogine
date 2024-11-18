@@ -2566,11 +2566,11 @@ void MenuState::createScene()
 MenuState::PropFileData MenuState::getPropPath() const
 {
     PropFileData ret;
-    ret.timeOfDay = TimeOfDay::Night;
-    ret.propFilePath = "geranium.bgd";
-    ret.fireworks = true;
-    m_sharedData.menuSky = Skies[ret.timeOfDay];
-    return ret;
+    //ret.timeOfDay = TimeOfDay::Night;
+    //ret.propFilePath = "geranium.bgd";
+    //ret.fireworks = true;
+    //m_sharedData.menuSky = Skies[ret.timeOfDay];
+    //return ret;
 
     const auto mon = cro::SysTime::now().months();
     const auto day = cro::SysTime::now().days();

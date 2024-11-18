@@ -53,6 +53,7 @@ using namespace cl;
 GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const SharedStateData& sd)
     : m_sharedData(sd)
 {
+    //m_emitterSettings[ParticleID::Bubbles].loadFromFile("assets/arcade/scrub/particles/bubble.cps", tr);
     m_emitterSettings[ParticleID::Water].loadFromFile("assets/golf/particles/water.cps", tr);
     m_emitterSettings[ParticleID::Grass].loadFromFile("assets/golf/particles/dirt.cps", tr);
     m_emitterSettings[ParticleID::GrassDark].loadFromFile("assets/golf/particles/grass_dark.cps", tr);
@@ -110,7 +111,8 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         {
             //bubbles
             auto pos = data.position;
-            pos.y += 0.5f;
+            pos.y += 0.45f;
+            getEnt(ParticleID::Water, pos);
         }
     }
         break;

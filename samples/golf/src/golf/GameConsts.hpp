@@ -289,6 +289,7 @@ struct ShaderID final
         CourseGrid,
         Ball,
         BallNight,
+        BallWasher,
         Slope,
         Minimap,
         MinimapView,

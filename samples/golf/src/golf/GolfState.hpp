@@ -276,6 +276,7 @@ private:
             Course,
             Ball,
             BallNight,
+            BallWasher,
             Billboard,
             Trophy,
             Beacon,

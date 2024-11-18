@@ -60,7 +60,7 @@ private:
             Sparkle, HIO, Bird,
             Drone, Explode, Blades, PowerShot,
             Puff, Star, Trail, Firework,
-
+            Bubbles,
             Count
         };
     };

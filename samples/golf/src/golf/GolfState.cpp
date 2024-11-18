@@ -3278,6 +3278,46 @@ void GolfState::buildScene()
         teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
+
+    //ball washer
+    if (md.loadFromFile("assets/golf/models/washer.cmt"))
+    {
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -0.3f, 0.f, 3.5f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -2.2f);
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+        teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        auto m = m_resources.materials.get(m_materialIDs[MaterialID::BallWasher]);
+        applyMaterialData(md, m);
+        entity.getComponent<cro::Model>().setMaterial(0, m);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                if ((m_currentHole % 3) == 2)
+                {
+                    auto& t = e.getComponent<cro::Callback>().getUserData<float>();
+                    t -= dt;
+                    if (t < 0)
+                    {
+                        t += cro::Util::Random::value(60, 180);
+                        e.getComponent<cro::Skeleton>().play(0);
+                    }
+
+                    e.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                }
+                else
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                }
+            };
+    }
+
+
     //carts
     md.loadFromFile("assets/golf/models/cart.cmt");
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
@@ -6142,33 +6182,36 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    cmd.targetFlags = CommandID::UI::PinHeight;
-    cmd.action =
-        [&,player](cro::Entity e, float)
+    if (player.terrain != TerrainID::Green)
     {
-        const auto holeDiff = (m_holeData[m_currentHole].pin.y - player.position.y) * 10.f;
+        cmd.targetFlags = CommandID::UI::PinHeight;
+        cmd.action =
+            [&, player](cro::Entity e, float)
+            {
+                const auto holeDiff = (m_holeData[m_currentHole].pin.y - player.position.y) * 10.f;
 
-        std::stringstream ss;
-        ss << "(";
-        if (holeDiff > 0)
-        {
-            ss << "+";
-        }
-        ss.precision(2);
-        ss << holeDiff << "%)";
+                std::stringstream ss;
+                ss << "(";
+                if (holeDiff > 0)
+                {
+                    ss << "+";
+                }
+                ss.precision(2);
+                ss << holeDiff << "%)";
 
-        //up & down arrows - look a bit pants quality though
-        //auto up = cro::String(std::uint32_t(0x2B06));
-        //up += std::uint32_t(0xFE0F);
-        // //OR std::uint32_t(0xA71B)
-        //auto down = cro::String(std::uint32_t(0x2B07));
-        //down += std::uint32_t(0xFE0F);
-        // //OR std::uint32_t(0xA71C)
+                //up & down arrows - look a bit pants quality though
+                //auto up = cro::String(std::uint32_t(0x2B06));
+                //up += std::uint32_t(0xFE0F);
+                // //OR std::uint32_t(0xA71B)
+                //auto down = cro::String(std::uint32_t(0x2B07));
+                //down += std::uint32_t(0xFE0F);
+                // //OR std::uint32_t(0xA71C)
 
-        e.getComponent<cro::Text>().setString(ss.str());
-        e.getComponent<cro::Callback>().active = true;
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                e.getComponent<cro::Text>().setString(ss.str());
+                e.getComponent<cro::Callback>().active = true;
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
 
     cmd.targetFlags = CommandID::UI::MiniBall;
     cmd.action =

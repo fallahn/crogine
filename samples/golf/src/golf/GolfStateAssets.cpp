@@ -1610,6 +1610,15 @@ void GolfState::loadMaterials()
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinnedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
 
 
+    //sigh we need a special case for ball washer so that it doesn't fade...
+    m_resources.shaders.loadFromString(ShaderID::BallWasher, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define SUBRECT\n#define MASK_MAP\n#define TERRAIN_CLIP\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::BallWasher);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BallWasher] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::BallWasher]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+
+
     m_resources.shaders.loadFromString(ShaderID::Glass, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment);
     shader = &m_resources.shaders.get(ShaderID::Glass);
     m_materialIDs[MaterialID::Glass] = m_resources.materials.add(*shader);
