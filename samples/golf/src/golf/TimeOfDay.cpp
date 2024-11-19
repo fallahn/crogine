@@ -34,6 +34,7 @@ source distribution.
 #include <Social.hpp>
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/Console.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 

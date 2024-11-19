@@ -30,7 +30,6 @@ source distribution.
 #include "MenuState.hpp"
 #include "MenuSoundDirector.hpp"
 #include "PacketIDs.hpp"
-#include "MenuConsts.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
@@ -55,6 +54,10 @@ source distribution.
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
 #include <Timeline.hpp>
+
+#ifdef USE_GNS
+#include <SteamBeta.hpp>
+#endif
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -226,6 +229,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             Achievements::update();
         }
+        checkBeta();
 #endif
 
         updateUnlockedItems(); //do this before attempting to load the assets...
@@ -621,7 +625,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //        }
     //        ImGui::End();
     //    });
-
 }
 
 MenuState::~MenuState()
@@ -1154,6 +1157,18 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 //UISystem
                 return true;
             }
+
+#ifdef USE_GNS
+            if (m_betaEntity.isValid())
+            {
+                const auto bounds = cro::Text::getLocalBounds(m_betaEntity).transform(m_betaEntity.getComponent<cro::Transform>().getWorldTransform());
+                const auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
+                if (bounds.contains(mousePos))
+                {
+                    SteamBeta::switchBranch();
+                }
+            }
+#endif
         }
     }
     else if (evt.type == SDL_MOUSEMOTION)
@@ -2930,6 +2945,57 @@ void MenuState::setVoiceCallbacks()
         };
     m_voiceChat.setDeletionCallback(voiceDelete);
 }
+
+#ifdef USE_GNS
+void MenuState::checkBeta()
+{
+    if (SteamBeta::isBetaAvailable())
+    {
+        auto messageStrings = cro::Util::String::tokenize(SteamBeta::getBetaDescription(), '\n');
+        if (!messageStrings.empty())
+        {
+            const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+            
+            cro::Entity entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString(messageStrings[0]);
+            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+            entity.addComponent<UIElement>().relativePosition = { 1.f, 0.f };
+            entity.getComponent<UIElement>().absolutePosition = { -2.f, 10.f };
+            entity.getComponent<UIElement>().depth = 0.05f;
+            entity.getComponent<UIElement>().resizeCallback =
+                [&](cro::Entity e)
+                {
+                    glm::vec2 p(e.getComponent<cro::Transform>().getPosition());
+                    e.getComponent<cro::Transform>().setPosition(p * m_viewScale);
+                    e.getComponent<cro::Transform>().setScale(m_viewScale);
+                };
+
+            static constexpr float TextTime = 6.f;
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(TextTime, 0);
+            entity.getComponent<cro::Callback>().function =
+                [messageStrings](cro::Entity e, float dt)
+                {
+                    auto& [ct, idx] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+                    ct -= dt;
+                    if (ct < 0)
+                    {
+                        ct += TextTime;
+                        idx = (idx + 1) % messageStrings.size();
+
+                        e.getComponent<cro::Text>().setString(messageStrings[idx]);
+                    }
+                };
+            m_betaEntity = entity;
+        }
+    }
+}
+#endif
 
 void MenuState::handleNetEvent(const net::NetEvent& evt)
 {

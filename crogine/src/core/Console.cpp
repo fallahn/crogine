@@ -494,7 +494,6 @@ void Console::init()
         Console::print("Available Commands:");
         for (const auto& [c, _] : commands)
         {
-            //Console::print(c.first);
             cmdNames.push_back(c);
         }
         std::sort(cmdNames.begin(), cmdNames.end());
@@ -518,7 +517,6 @@ void Console::init()
                     str += " - " + p.getValue<std::string>();
                 }
             }
-            //Console::print(str);
             cmdNames.push_back(str);
         }
         std::sort(cmdNames.begin(), cmdNames.end());

@@ -271,6 +271,11 @@ private:
     void setVoiceCallbacks();
     std::array<cro::Entity, ConstVal::MaxClients> m_voiceEntities;
 
+#ifdef USE_GNS
+    void checkBeta();
+    cro::Entity m_betaEntity;
+#endif
+
     SharedCourseData m_sharedCourseData;
     
     struct Range final
