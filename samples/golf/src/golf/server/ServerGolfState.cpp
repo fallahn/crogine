@@ -91,6 +91,7 @@ namespace
 GolfState::GolfState(SharedData& sd)
     : m_returnValue         (StateID::Golf),
     m_sharedData            (sd),
+    m_ntpPro                (sd.scoreType == ScoreType::NearestThePinPro),
     m_mapDataValid          (false),
     m_scene                 (sd.messageBus, 512),
     m_scoreboardTime        (0.f),
@@ -106,6 +107,11 @@ GolfState::GolfState(SharedData& sd)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
+        if (sd.scoreType == ScoreType::NearestThePinPro)
+        {
+            sd.scoreType = ScoreType::NearestThePin;
+        }
+
         initScene();
         buildWorld();
     }
@@ -1150,6 +1156,15 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                 //don't send this if all players forfeit
                 if (allPlayers[0].holeScore[m_currentHole] == MaxNTPStrokes)
                 {
+                    //if we're playing NTPPro we score based on total hole wins
+                    auto& group = m_playerInfo[m_groupAssignments[allPlayers[0].client]];
+                    auto player = std::find_if(group.playerInfo.begin(), group.playerInfo.end(),
+                        [&allPlayers](const PlayerStatus& p)
+                        {
+                            return p.client == allPlayers[0].client && p.player == allPlayers[0].player;
+                        });
+                    player->matchWins++;
+
                     std::uint16_t d = (std::uint16_t(allPlayers[0].client) << 8) | allPlayers[0].player;
                     m_sharedData.host.broadcastPacket(PacketID::HoleWon, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }

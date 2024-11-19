@@ -2965,6 +2965,10 @@ void GolfState::createScoreboard()
 #else
         str += " - " + ScoreTypes[m_sharedData.scoreType];
 #endif
+        if (m_ntpPro)
+        {
+            str += "+";
+        }
 
         if (m_sharedData.scoreType == ScoreType::Skins)
         {
@@ -3405,6 +3409,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         break;
                     case ScoreType::NearestThePin:
                         entry.frontNineDistance += f;
+                        entry.frontNine = client.playerData[i].matchScore; //displayed if playing pro mode
                         break;
                     }
 
@@ -3442,6 +3447,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         break;
                     case ScoreType::NearestThePin:
                         entry.backNineDistance += f;
+                        entry.backNine = client.playerData[i].matchScore;
                         break;
                     }
                 }
@@ -3478,6 +3484,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 break;
             case ScoreType::NearestThePin:
                 entry.totalDistance = entry.frontNineDistance + entry.backNineDistance;
+                entry.total = client.playerData[i].matchScore;
                 break;
             }
 
@@ -3491,7 +3498,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         clientID++;
     }
 
-    //if we're in a career game include the CPU playre scores
+    //if we're in a career game include the CPU player scores
     if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
     {
         playerCount += League::PlayerCount;
@@ -3569,6 +3576,14 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Skins:
                 return b.score < a.score;
             case ScoreType::NearestThePin:
+                if (m_ntpPro)
+                {
+                    if (a.score == b.score)
+                    {
+                        return a.distance < b.distance;
+                    }
+                    return a.score > b.score;
+                }
                 return a.distance < b.distance;
             }
         });
@@ -3597,6 +3612,14 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Match:
                 return b.total < a.total;
             case ScoreType::NearestThePin:
+                if (m_ntpPro)
+                {
+                    if (a.total == b.total)
+                    {
+                        return a.totalDistance < b.totalDistance;
+                    }
+                    return a.total > b.total;
+                }
                 return a.totalDistance < b.totalDistance;
             }
         });
@@ -3990,13 +4013,28 @@ void GolfState::updateScoreboard(bool updateParDiff)
             }
             break;
         case ScoreType::NearestThePin:
-            if (m_sharedData.imperialMeasurements)
+            if (m_ntpPro)
             {
-                totalString += " YARDS";
+                if (m_sharedData.imperialMeasurements)
+                {
+                    totalString += "yd";
+                }
+                else
+                {
+                    totalString += "m";
+                }
+                totalString += " - " + std::to_string(scores[i].frontNine) + " Point(s)";
             }
             else
             {
-                totalString += " METRES";
+                if (m_sharedData.imperialMeasurements)
+                {
+                    totalString += " YARDS";
+                }
+                else
+                {
+                    totalString += " METRES";
+                }
             }
             break;
         }
@@ -4150,13 +4188,28 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 }
                 break;
             case ScoreType::NearestThePin:
-                if (m_sharedData.imperialMeasurements)
+                if (m_ntpPro)
                 {
-                    totalString += " YARDS";
+                    if (m_sharedData.imperialMeasurements)
+                    {
+                        totalString += "yd";
+                    }
+                    else
+                    {
+                        totalString += "m";
+                    }
+                    totalString += " - " + std::to_string(scores[i].frontNine + scores[i].backNine) + " Point(s)";
                 }
                 else
                 {
-                    totalString += " METRES";
+                    if (m_sharedData.imperialMeasurements)
+                    {
+                        totalString += " YARDS";
+                    }
+                    else
+                    {
+                        totalString += " METRES";
+                    }
                 }
                 break;
             }
@@ -4873,7 +4926,12 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             }
             else
             {
-                textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
+                auto s = ScoreTypes[m_sharedData.scoreType];
+                if (m_ntpPro)
+                {
+                    s += "+";
+                }
+                textEnt3.getComponent<cro::Text>().setString(s);
             }
         }
         break;
@@ -4892,7 +4950,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
                 ss << std::fixed << m_NTPDistance << "m";
             }
-            textEnt.getComponent<cro::Text>().setString("Nearest The Pin");
+            if (m_ntpPro)
+            {
+                textEnt.getComponent<cro::Text>().setString("Nearest The Pin+");
+            }
+            else
+            {
+                textEnt.getComponent<cro::Text>().setString("Nearest The Pin");
+            }
             textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
             textEnt3.getComponent<cro::Text>().setString("Distance: " + ss.str());
         }

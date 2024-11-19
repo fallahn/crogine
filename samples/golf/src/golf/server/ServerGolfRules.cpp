@@ -399,6 +399,11 @@ bool GolfState::summariseRules()
         });
 
 
+    //TODO if we're playing NTPPro check how many holes are left
+    //and if there are enough points available for second place
+    //to tie or better current first place.
+
+
 
     //check if we tied the last hole in skins
     if (m_sharedData.scoreType == ScoreType::Skins

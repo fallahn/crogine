@@ -57,7 +57,6 @@ void GolfState::updateHoleScore(std::uint16_t data)
             Social::awardXP(50, XPStringID::HoleWon);
             Achievements::setActive(active);
         }
-
         showNotification(m_sharedData.connectionData[client].playerData[player].name + " won the hole!");
 
         auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);

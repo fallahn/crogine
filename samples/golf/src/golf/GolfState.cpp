@@ -163,6 +163,7 @@ namespace
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State            (stack, context),
     m_musicStream           (2,48000),
+    m_ntpPro                (sd.scoreType == ScoreType::NearestThePinPro),
     m_sharedData            (sd),
     m_gameScene             (context.appInstance.getMessageBus(), 1024/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_skyScene              (context.appInstance.getMessageBus(), 512),
@@ -213,14 +214,19 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         sd.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
     }
 
-    if (sd.scoreType == ScoreType::ClubShuffle)
+    switch (sd.scoreType)
     {
+    default: break;
+    case ScoreType::ClubShuffle:
         sd.inputBinding.clubset = ClubID::getRandomSet();
-    }
-    else if (sd.scoreType == ScoreType::NearestThePin)
-    {
+        break;
+    case ScoreType::NearestThePinPro:
+        sd.scoreType = ScoreType::NearestThePin;
+        [[fallthrough]];
+    case ScoreType::NearestThePin:
         //the server will have reset this so let's manually sync
         sd.gimmeRadius = 0;
+        break;
     }
 
     sd.holesPlayed = 0;
@@ -402,6 +408,12 @@ GolfState::~GolfState()
     for (auto i = 0; i < 4; ++i)
     {
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
+    }
+
+    //restore this so lobby uses correct mode again
+    if (m_ntpPro)
+    {
+        m_sharedData.scoreType = ScoreType::NearestThePinPro;
     }
 }
 
