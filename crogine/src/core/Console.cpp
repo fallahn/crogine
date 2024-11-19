@@ -489,12 +489,22 @@ void Console::init()
     addCommand("help",
         [](const std::string&)
     {
-        Console::print("Available Commands:");
-        for (const auto& c : commands)
-        {
-            Console::print(c.first);
-        }
+        std::vector<std::string> cmdNames;
 
+        Console::print("Available Commands:");
+        for (const auto& [c, _] : commands)
+        {
+            //Console::print(c.first);
+            cmdNames.push_back(c);
+        }
+        std::sort(cmdNames.begin(), cmdNames.end());
+        for (const auto& n : cmdNames)
+        {
+            Console::print(n);
+        }
+        Console::print("-------------------");
+
+        cmdNames.clear();
         Console::print("Available Variables:");
         const auto& objects = convars.getObjects();
         for (const auto& o : objects)
@@ -505,10 +515,16 @@ void Console::init()
             {
                 if (p.getName() == "help")
                 {
-                    str += " " + p.getValue<std::string>();
+                    str += " - " + p.getValue<std::string>();
                 }
             }
-            Console::print(str);
+            //Console::print(str);
+            cmdNames.push_back(str);
+        }
+        std::sort(cmdNames.begin(), cmdNames.end());
+        for (const auto& n : cmdNames)
+        {
+            Console::print(n);
         }
     });
 
