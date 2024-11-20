@@ -4881,13 +4881,14 @@ void MenuState::createPreviousScoreCard()
                 //cleared and resized until the beginning of the next one
                 //also means there are only as many scores as there are holes.
                 auto k = 0;
-                if (m_sharedData.scoreType == ScoreType::NearestThePin)
+                if (m_sharedData.scoreType == ScoreType::NearestThePin
+                    || m_sharedData.scoreType == ScoreType::NearestThePinPro)
                 {
                     for (auto score : m_sharedData.connectionData[i].playerData[j].distanceScores)
                     {
                         //need to track this so we know if player forfeited
                         entry.holeScores[k] = m_sharedData.connectionData[i].playerData[j].holeScores[k];
-                        
+
                         entry.distanceScores[k] = score;
                         entry.totalDistance += score;
                         if (k < 9)
@@ -4900,6 +4901,7 @@ void MenuState::createPreviousScoreCard()
                         }
                         k++;
                     }
+                    entry.roundScore = m_sharedData.connectionData[i].playerData[j].matchScore; //holes won in NTP+
                 }
                 else
                 {
@@ -4974,6 +4976,13 @@ void MenuState::createPreviousScoreCard()
                 return a.total > b.total;
             case ScoreType::NearestThePin:
                 return a.totalDistance < b.totalDistance;
+            case ScoreType::NearestThePinPro:
+                if (a.roundScore == b.roundScore)
+                {
+                    return a.totalDistance < b.totalDistance;
+                }
+                return a.roundScore < b.roundScore;
+                break;
             }
         });
 
@@ -5013,6 +5022,7 @@ void MenuState::createPreviousScoreCard()
     case ScoreType::Stableford:
     case ScoreType::StablefordPro:
     case ScoreType::NearestThePin:
+    case ScoreType::NearestThePinPro:
         str += " ";
         break;
     }
@@ -5039,6 +5049,7 @@ void MenuState::createPreviousScoreCard()
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
         case ScoreType::NearestThePin:
+        case ScoreType::NearestThePinPro:
             str += " ";
             break;
         }
@@ -5128,6 +5139,7 @@ void MenuState::createPreviousScoreCard()
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
         case ScoreType::NearestThePin:
+        case ScoreType::NearestThePinPro:
             str += " ";
             break;
         }
@@ -5169,6 +5181,7 @@ void MenuState::createPreviousScoreCard()
                 }
                 break;
             case ScoreType::NearestThePin:
+            case ScoreType::NearestThePinPro:
                 if (score > MaxNTPStrokes)
                 {
                     str += "\n";
@@ -5215,6 +5228,7 @@ void MenuState::createPreviousScoreCard()
                 case ScoreType::Stableford:
                 case ScoreType::StablefordPro:
                 case ScoreType::NearestThePin:
+                case ScoreType::NearestThePinPro:
                     str += " ";
                     break;
                 }
@@ -5252,6 +5266,7 @@ void MenuState::createPreviousScoreCard()
                         }
                         break;
                     case ScoreType::NearestThePin:
+                    case ScoreType::NearestThePinPro:
                         if (score > MaxNTPStrokes)
                         {
                             str += "\n";
@@ -5324,13 +5339,15 @@ void MenuState::createPreviousScoreCard()
         }
         break;
     case ScoreType::NearestThePin:
+    case ScoreType::NearestThePinPro:
         str += " ";
         break;
     }
 
     for (const auto& entry : scoreEntries)
     {
-        if (m_sharedData.scoreType == ScoreType::NearestThePin)
+        if (m_sharedData.scoreType == ScoreType::NearestThePin
+            || m_sharedData.scoreType == ScoreType::NearestThePinPro)
         {
             str += "\n ";
         }
@@ -5380,6 +5397,44 @@ void MenuState::createPreviousScoreCard()
                 ss << std::fixed << entry.totalDistance;
                 str += ss.str() + " METRES";
             }
+        }
+            break;
+        case ScoreType::NearestThePinPro:
+        {
+            float dist = entry.totalDistance;
+
+            std::stringstream ss;
+            ss.precision(2);
+            if (m_sharedData.imperialMeasurements)
+            {
+                dist *= ToYards;
+                ss << std::fixed << dist << "yd";
+            }
+            else
+            {
+                ss << std::fixed << dist << "m";
+            }
+
+            std::int32_t padding = 0;
+            if (dist < 100)
+            {
+                padding++;
+                if (dist < 10)
+                {
+                    padding++;
+                }
+            }
+            for (auto j = 0; j < padding; ++j)
+            {
+                ss << " ";
+            }
+            ss << " - " << entry.roundScore << "Point";
+
+            if (entry.roundScore != 1)
+            {
+                ss << "s";
+            }
+            str += ss.str();
         }
             break;
         }
@@ -5462,6 +5517,44 @@ void MenuState::createPreviousScoreCard()
                     ss << std::fixed << entry.totalDistance;
                     str += ss.str() + " METRES";
                 }
+            }
+            break;
+            case ScoreType::NearestThePinPro:
+            {
+                float dist = entry.totalDistance;
+
+                std::stringstream ss;
+                ss.precision(2);
+                if (m_sharedData.imperialMeasurements)
+                {
+                    dist *= ToYards;
+                    ss << std::fixed << dist << "yd";
+                }
+                else
+                {
+                    ss << std::fixed << dist << "m";
+                }
+
+                std::int32_t padding = 0;
+                if (dist < 100)
+                {
+                    padding++;
+                    if (dist < 10)
+                    {
+                        padding++;
+                    }
+                }
+                for (auto j = 0; j < padding; ++j)
+                {
+                    ss << " ";
+                }
+                ss << " - " << entry.roundScore << "Point";
+
+                if (entry.roundScore != 1)
+                {
+                    ss << "s";
+                }
+                str += ss.str();
             }
             break;
             }
