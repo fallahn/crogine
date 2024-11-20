@@ -3526,7 +3526,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             entry.leaguePlayer = true;
             entry.nameIndex = static_cast<std::int32_t>(i);
 
-            for (auto j = 0u; j < /*leagueScores[i].size()*/m_holeData.size(); ++j)
+            for (auto j = 0u; j < m_holeData.size(); ++j)
             {
                 auto s = leagueScores[i][j];
                 entry.holes.push_back(s);
@@ -3566,7 +3566,55 @@ void GolfState::updateScoreboard(bool updateParDiff)
         }
     }
 
+    if (m_friendlyPlayer)
+    {
+        const auto& friendlyScores = m_friendlyPlayer->getScores();
+        const auto i = m_friendlyPlayer->getPlayerIndex();
 
+        auto& entry = scores.emplace_back();
+        entry.name = m_sharedData.leagueNames[i];
+        entry.client = 0;
+        entry.player = 0;
+        entry.leaguePlayer = true;
+        entry.nameIndex = static_cast<std::int32_t>(i);
+
+        for (auto j = 0u; j < m_holeData.size(); ++j)
+        {
+            auto s = friendlyScores[j];
+            entry.holes.push_back(s);
+            entry.holeComplete.push_back(s != 0);
+
+            if (s)
+            {
+                if (updateParDiff
+                    || j < (m_currentHole)
+                    || entry.holeComplete.back())
+                {
+                    auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
+
+                    entry.parDiff += diff;
+                }
+            }
+
+            //assuming stroke score - TODO check what we need to include Stableford
+            if (j < 9)
+            {
+                entry.frontNine += friendlyScores[j];
+            }
+            else
+            {
+                entry.backNine += friendlyScores[j];
+            }
+        }
+
+        entry.total = entry.frontNine + entry.backNine;
+
+        auto& leaderboardEntry = m_statBoardScores.emplace_back();
+        leaderboardEntry.client = ConstVal::NullValue; //TODO if this works for end trophies make sure to remove the comment in showCountdown()
+        leaderboardEntry.player = ConstVal::NullValue;
+        leaderboardEntry.score = entry.total;
+        leaderboardEntry.distance = entry.totalDistance;
+    }
 
     //tracks stats and decides on trophy layout on round end (see showCountdown())
     std::sort(m_statBoardScores.begin(), m_statBoardScores.end(),
@@ -6100,6 +6148,11 @@ void GolfState::updateLeagueHole()
                 }
             }
             break;
+            }
+
+            if (m_friendlyPlayer)
+            {
+                m_friendlyPlayer->updateHoleScores(m_currentHole, par, playerScore > par, windChance);
             }
         }
         break;

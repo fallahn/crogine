@@ -61,6 +61,7 @@ source distribution.
 #include "XPAwardStrings.hpp"
 #include "ChunkVisSystem.hpp"
 #include "AvatarRotationSystem.hpp"
+#include "Career.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -209,6 +210,14 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat)
 {
+    //TODO check if this is quick play mode
+    //TODO how do we decide on a club set? Should be the same as whatever the player is using
+    if (false)
+    {
+        const auto& league = League(LeagueRoundID::Club, m_sharedData);
+        m_friendlyPlayer = std::make_unique<FriendlyPlayer>(league.getTable()[cro::Util::Random::value(0u, League::PlayerCount)], sd.clubSet);
+    }
+    
     if (sd.weatherType == WeatherType::Random)
     {
         sd.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);

@@ -87,6 +87,15 @@ struct LeagueRoundID final
 
 using HoleScores = std::array<std::int32_t, 18>;
 
+struct ScoreCalculator final
+{
+    explicit ScoreCalculator(std::int32_t clubset);
+    void calculate(LeaguePlayer&, std::uint32_t hole, std::int32_t par, bool overPar, HoleScores&) const;
+
+private:
+    std::int32_t m_clubset;
+};
+
 struct SharedStateData;
 class League final
 {
@@ -150,7 +159,7 @@ private:
 
     std::array<HoleScores, PlayerCount> m_holeScores = {};
 
-    void calculateHoleScore(LeaguePlayer&, std::uint32_t hole, std::int32_t par, bool overPar);
+    ScoreCalculator m_scoreCalculator;
 
     void rollPlayers(bool resetScores);
     void increaseDifficulty();
@@ -164,4 +173,25 @@ private:
     void write();
     void assertDB();
     void updateDB();
+};
+
+//single player used for quick rounds
+class FriendlyPlayer final
+{
+public:
+    explicit FriendlyPlayer(LeaguePlayer, std::int32_t clubset);
+    void updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance);
+
+    const HoleScores& getScores() const { return m_holeScores[m_player.nameIndex]; }
+    std::int32_t getPlayerIndex() const { return m_player.nameIndex; }
+
+private:
+
+    LeaguePlayer m_player;
+
+    //world's most pointless array - but it needs
+    //to work with the score calculator
+    std::array<HoleScores, League::PlayerCount> m_holeScores = {};
+
+    ScoreCalculator m_scoreCalculator;
 };
