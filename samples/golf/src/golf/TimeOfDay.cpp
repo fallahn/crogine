@@ -38,6 +38,8 @@ source distribution.
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+#include <iomanip>
+
 #ifdef _WIN32
 #include <winnls.h>
 #else
@@ -187,7 +189,7 @@ std::int32_t TimeOfDay::getTimeOfDay() const
         }
 
         std::stringstream riseStream;
-        riseStream << "Sunrise: " << risetm.tm_hour << ":" << risetm.tm_min;
+        riseStream << "Sunrise: " << std::setfill('0') << std::setw(2) << risetm.tm_hour << ":" << std::setfill('0') << std::setw(2) << risetm.tm_min;
         m_sunriseStr = riseStream.str();
 
         auto sunset = sunclock.sunset();
@@ -202,7 +204,7 @@ std::int32_t TimeOfDay::getTimeOfDay() const
         }
 
         std::stringstream setStream;
-        setStream << "Sunset: " << settm.tm_hour << ":" << settm.tm_min;
+        setStream << "Sunset: " << std::setfill('0') << std::setw(2) << settm.tm_hour << ":" << std::setfill('0') << std::setw(2) << settm.tm_min;
         m_sunsetStr = setStream.str();
 
         if (localtm.tm_hour > risetm.tm_hour

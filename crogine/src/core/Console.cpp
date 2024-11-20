@@ -126,14 +126,6 @@ void Console::show()
 
 void Console::doCommand(const std::string& str)
 {
-    //store in history
-    history.push_back(str);
-    if (history.size() > MAX_HISTORY)
-    {
-        history.pop_front();
-    }
-    historyIndex = -1;
-
     //parse the command from the string
     std::string command(str);
     std::string params;
@@ -152,6 +144,16 @@ void Console::doCommand(const std::string& str)
     auto cmd = commands.find(command);
     if (cmd != commands.end())
     {
+        //store in history
+        history.push_back(str);
+        if (history.size() > MAX_HISTORY)
+        {
+            history.pop_front();
+        }
+        historyIndex = -1;
+        
+        print(str);
+
         cmd->second.first(params);
     }
     else
