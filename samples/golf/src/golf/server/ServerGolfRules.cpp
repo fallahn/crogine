@@ -390,6 +390,34 @@ bool GolfState::summariseRules()
         return false;
     }
 
+    //if there aren't enough NTP holes left to win, end the game
+    if (m_ntpPro)
+    {
+        std::sort(sortData.begin(), sortData.end(),
+            [](const PlayerStatus& a, const PlayerStatus& b)
+            {
+                if (a.matchWins == b.matchWins)
+                {
+                    return a.distanceScore < b.distanceScore;
+                }
+                return a.matchWins > b.matchWins;
+            });
+
+        //we should *always* have two players in this case
+        CRO_ASSERT(sortData.size() > 1, "");
+        const auto remain = m_holeData.size() - m_currentHole;
+        const auto lead = sortData[0].matchWins - sortData[1].matchWins;
+        if (lead > remain)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+
     bool gameFinished = false;
 
     std::sort(sortData.begin(), sortData.end(),
@@ -397,12 +425,6 @@ bool GolfState::summariseRules()
         {
             return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
         });
-
-
-    //TODO if we're playing NTPPro check how many holes are left
-    //and if there are enough points available for second place
-    //to tie or better current first place.
-
 
 
     //check if we tied the last hole in skins
