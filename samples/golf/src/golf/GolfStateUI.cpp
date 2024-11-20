@@ -3936,14 +3936,24 @@ void GolfState::updateScoreboard(bool updateParDiff)
         break;
     }
 
+    std::int32_t padCount = 0;
     for (auto i = 0u; i < playerCount; ++i)
     {
+        padCount = 0;
         if (m_sharedData.scoreType == ScoreType::NearestThePin)
         {
             auto distScore = scores[i].frontNineDistance;
             if (m_sharedData.imperialMeasurements)
             {
                 distScore *= ToYards;
+            }
+            if (distScore < 100)
+            {
+                padCount++;
+                if (distScore < 10)
+                {
+                    padCount++;
+                }
             }
             totalString += "\n" + formatDistance(distScore);
         }
@@ -4033,7 +4043,17 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 {
                     totalString += "m";
                 }
-                totalString += " - " + std::to_string(scores[i].frontNine) + " Point(s)";
+
+                for(auto j = 0; j < padCount; ++j)
+                {
+                    totalString += " ";
+                }
+                totalString += " - " + std::to_string(scores[i].frontNine) + " Point";
+
+                if (scores[i].frontNine != 1)
+                {
+                    totalString += "s";
+                }
             }
             else
             {
@@ -4099,10 +4119,20 @@ void GolfState::updateScoreboard(bool updateParDiff)
         {
             if (m_sharedData.scoreType == ScoreType::NearestThePin)
             {
+                padCount = 0;
+
                 float distScore = scores[i].frontNineDistance + scores[i].backNineDistance;
                 if (m_sharedData.imperialMeasurements)
                 {
                     distScore *= ToYards;
+                }
+                if (distScore < 100)
+                {
+                    padCount++;
+                    if (distScore < 10)
+                    {
+                        padCount++;
+                    }
                 }
                 totalString += "\n" + formatDistance(distScore);
             }
@@ -4208,7 +4238,16 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     {
                         totalString += "m";
                     }
-                    totalString += " - " + std::to_string(scores[i].frontNine + scores[i].backNine) + " Point(s)";
+                    for (auto j = 0; j < padCount; ++j)
+                    {
+                        totalString += " ";
+                    }
+                    totalString += " - " + std::to_string(scores[i].frontNine + scores[i].backNine) + " Point";
+
+                    if ((scores[i].frontNine + scores[i].backNine) != 1)
+                    {
+                        totalString += "s";
+                    }
                 }
                 else
                 {
