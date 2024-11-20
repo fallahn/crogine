@@ -3310,6 +3310,16 @@ void GolfState::createScoreboard()
         }
     }
 
+    //create leaderboard entries for any 'quick round' players
+    if (m_friendlyPlayer)
+    {
+        for (auto i = 0u; i < m_friendlyPlayer->getPlayerCount(); ++i)
+        {
+            createAvatar(createIcon(0, 0, true), 0, 0);
+            iconPos.y -= IconSpacing;
+        }
+    }
+
     updateScoreboard();
 }
 
@@ -3568,8 +3578,11 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
     if (m_friendlyPlayer)
     {
+        //TODO make this for each friendly player
         const auto& friendlyScores = m_friendlyPlayer->getScores();
         const auto i = m_friendlyPlayer->getPlayerIndex();
+
+        playerCount++; 
 
         auto& entry = scores.emplace_back();
         entry.name = m_sharedData.leagueNames[i];
@@ -3609,8 +3622,10 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
         entry.total = entry.frontNine + entry.backNine;
 
+        //TODO if this works for end trophies make sure to remove the comment in showCountdown()
+        //TODO this *does* work but also needs to hide the avatar badge as well as the name
         auto& leaderboardEntry = m_statBoardScores.emplace_back();
-        leaderboardEntry.client = ConstVal::NullValue; //TODO if this works for end trophies make sure to remove the comment in showCountdown()
+        leaderboardEntry.client = ConstVal::NullValue;
         leaderboardEntry.player = ConstVal::NullValue;
         leaderboardEntry.score = entry.total;
         leaderboardEntry.distance = entry.totalDistance;

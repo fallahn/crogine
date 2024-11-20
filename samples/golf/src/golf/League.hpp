@@ -185,6 +185,8 @@ public:
     const HoleScores& getScores() const { return m_holeScores[m_player.nameIndex]; }
     std::int32_t getPlayerIndex() const { return m_player.nameIndex; }
 
+    std::size_t getPlayerCount() const { return 1; }
+
 private:
 
     LeaguePlayer m_player;

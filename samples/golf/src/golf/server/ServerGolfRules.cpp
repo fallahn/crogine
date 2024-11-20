@@ -405,7 +405,7 @@ bool GolfState::summariseRules()
 
         //we should *always* have two players in this case
         CRO_ASSERT(sortData.size() > 1, "");
-        const auto remain = m_holeData.size() - m_currentHole;
+        const auto remain = (m_holeData.size() - (m_currentHole + 1));
         const auto lead = sortData[0].matchWins - sortData[1].matchWins;
         if (lead > remain)
         {
