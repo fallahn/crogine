@@ -159,7 +159,9 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "top_flop",
     "fringe_benefit",
     "mulligan",
-    "off_the_wall"
+    "off_the_wall",
+    "plus_fours",
+    "clean_whistle"
 };
 
 //appears on the notification
@@ -277,7 +279,9 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Top Of The Flops",
     "Fringe Benefit",
     "Try, Try Again",
-    "Off The Wall"
+    "Off The Wall",
+    "Plus Fours",
+    "Clean As A Whistle",
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -396,6 +400,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Sink a hole from the fringe using a putter", false),
     std::make_pair("Use at least one Mulligan in Career Mode", false),
     std::make_pair("Use the far wall on hole 15, course 12 to stop the ball going out of bounds", false),
+    std::make_pair("Win a round of Nearest The Pin+ with at least 4 players", false),
+    std::make_pair("Scrub 30 balls in a single round of Scrub!", false),
 };
 
 //assuming trophies load correctly they are:
@@ -549,6 +555,9 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*111*/TrophyID::SilverCup,
     /*112*/TrophyID::BronzeCup,
     /*113*/TrophyID::Platinum,
+
+    /*114*/TrophyID::SilverCup,
+    /*115*/TrophyID::GoldFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

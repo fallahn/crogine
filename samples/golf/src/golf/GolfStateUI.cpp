@@ -2249,7 +2249,17 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     Achievements::awardAchievement(AchievementStrings[AchievementID::LikeTotallyRandom]);
                     break;
                 case ScoreType::NearestThePin:
-                    Achievements::awardAchievement(AchievementStrings[AchievementID::PinKing]);
+                    if (m_ntpPro)
+                    {
+                        if (m_achievementTracker.plusFour)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::PlusFours]);
+                        }
+                    }
+                    else
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::PinKing]);
+                    }
                     break;
                 }
             }

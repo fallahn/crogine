@@ -172,6 +172,8 @@ namespace AchievementID
         TryTryAgain,
 
         OffTheWall,
+        PlusFours,
+        CleanWhistle,
 
         Count
     };

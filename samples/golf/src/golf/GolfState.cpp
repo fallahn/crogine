@@ -335,6 +335,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         startLives++;
     }
 
+    if (playerCount > 3)
+    {
+        m_achievementTracker.plusFour = true;
+    }
+
     if (sd.scoreType == ScoreType::Elimination)
     {
         for (auto& c : sd.connectionData)

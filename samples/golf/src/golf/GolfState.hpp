@@ -644,6 +644,7 @@ private:
         bool hadFlop = false;
         bool hadPunch = false;
         bool wasGreen = false; //putt from fringe
+        bool plusFour = false; //has at least 4 players
 
         bool noHolesOverPar = true; //no mistake
         bool noGimmeUsed = true; //never give you up

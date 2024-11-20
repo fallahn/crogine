@@ -37,6 +37,8 @@ source distribution.
 #include "../golf/SharedStateData.hpp"
 #include "../Colordome-32.hpp"
 
+#include <AchievementStrings.hpp>
+
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -1806,6 +1808,11 @@ bool ScrubGameState::updateScore()
     m_score.ballsWashed++;
     m_score.cleanlinessSum += cleanliness;
     m_score.avgCleanliness = m_score.cleanlinessSum / m_score.ballsWashed;
+
+    if (m_score.ballsWashed == 30)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::CleanWhistle]);
+    }
 
     const auto ballScore = static_cast<std::int32_t>(std::floor(cleanliness));
     m_score.totalScore += ballScore;
