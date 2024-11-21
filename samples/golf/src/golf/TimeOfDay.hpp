@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <cstdint>
+#include <ctime>
 #include <string>
 
 class TimeOfDay final : public cro::ConsoleClient
@@ -54,6 +55,7 @@ public:
 private:
 
     glm::vec2 m_latlon;
+    std::time_t m_timeSinceLastCheck;
 
     //these are stored for debugging
     //so that's my excuse for the code smell.

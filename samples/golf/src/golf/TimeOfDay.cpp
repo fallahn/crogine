@@ -54,13 +54,15 @@ namespace
     constexpr float MinLon = -180.f;
     constexpr float MaxLon = 180.f;
 
-    constexpr std::time_t FourWeeks = 28 * 24 * 60 * 60;
+    constexpr std::time_t OneDay = 24 * 60 * 60;
+    constexpr std::time_t FourWeeks = 28 * OneDay;
 
     const std::string DataFile("latlon.pos");
 }
 
 TimeOfDay::TimeOfDay()
-    : m_latlon(0.f)
+    : m_latlon          (0.f),
+    m_timeSinceLastCheck(0)
 {
     //attempt to read local data file
     const auto path = Social::getBaseContentPath() + DataFile;
@@ -91,8 +93,9 @@ TimeOfDay::TimeOfDay()
             }
 
             auto tsNow = std::time(nullptr);
+            m_timeSinceLastCheck = (tsNow - ts);
             if (ts > tsNow
-                || (tsNow - ts) > FourWeeks)
+                || m_timeSinceLastCheck > FourWeeks)
             {
                 updateLatLon();
             }
@@ -110,6 +113,20 @@ TimeOfDay::TimeOfDay()
             cro::Console::print(m_sunriseStr);
             cro::Console::print(m_sunsetStr);
             cro::Console::print("Accuracy may be improved on next game launch.");
+        });
+
+    registerCommand("refresh_location", [&](const std::string&) 
+        {
+            if (m_timeSinceLastCheck > OneDay)
+            {
+                cro::Console::print("Checking Location...");
+                updateLatLon();
+                m_timeSinceLastCheck = 0;
+            }
+            else
+            {
+                cro::Console::print("Please wait at least one day before refreshing location");
+            }
         });
 }
 
@@ -238,6 +255,7 @@ void TimeOfDay::updateLatLon()
     Social::getLatLon();
 
     auto countryCode = getCountryCode();
+    cro::Console::print("Set location to " + countryCode);
 
     //kinda negates the point of unordered_map but for
     //some reason getCountryCode() isn't returning a string
