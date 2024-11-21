@@ -2517,7 +2517,9 @@ void GolfState::showCountdown(std::uint8_t seconds)
             m_trophies[i].trophy.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
             //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
 
-            if (m_statBoardScores[i].client != ConstVal::NullValue) //this should never be false with a club league...
+
+            //this might be true if we're playing a Quick Round
+            if (m_statBoardScores[i].client != ConstVal::NullValue)
             {
                 m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
                 m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
@@ -2537,6 +2539,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 m_trophies[i].avatar.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 m_trophies[i].avatar.getComponent<cro::Callback>().active = false; //otherwise this overrides the scale
                 m_trophies[i].label.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_trophies[i].label.getComponent<cro::Callback>().active = false;
                 m_trophies[i].badge.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
             
@@ -2666,7 +2669,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
     };
 
-    //attach to the scoreboard - surelt we can do this directly with m_scoreboardEnt?
+    //attach to the scoreboard - surely we can do this directly with m_scoreboardEnt?
     cmd.targetFlags = CommandID::UI::Scoreboard;
     cmd.action =
         [entity](cro::Entity e, float) mutable
@@ -3611,7 +3614,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     }
                 }
 
-                //assuming stroke score - TODO check what we need to include Stableford
+                //assuming stroke score
                 if (j < 9)
                 {
                     entry.frontNine += friendlyScores[j];
@@ -3624,8 +3627,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
             entry.total = entry.frontNine + entry.backNine;
 
-            //TODO if this works for end trophies make sure to remove the comment in showCountdown()
-            //TODO this *does* work but also needs to hide the avatar badge as well as the name
             auto& leaderboardEntry = m_statBoardScores.emplace_back();
             leaderboardEntry.client = ConstVal::NullValue;
             leaderboardEntry.player = ConstVal::NullValue;

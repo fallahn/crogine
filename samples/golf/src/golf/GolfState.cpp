@@ -210,7 +210,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat)
 {
-    sd.quickplayOpponents = std::clamp(0, 3, sd.quickplayOpponents);
+    sd.quickplayOpponents = std::clamp(sd.quickplayOpponents, 0, 3);
     if (sd.quickplayOpponents != 0)
     {
         m_friendlyPlayer = std::make_unique<FriendlyPlayer>(sd.clubSet);

@@ -409,6 +409,7 @@ private:
     void createPreviousScoreCard();
     void togglePreviousScoreCard();
 
+    void launchQuickPlay();
     void handleNetEvent(const net::NetEvent&);
 
     friend struct MainMenuContext;

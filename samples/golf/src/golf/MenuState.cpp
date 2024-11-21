@@ -191,8 +191,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f),
     m_scrollSpeed           (1.f)
 {
-    sd.quickplayOpponents = 3;
-    
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
 
@@ -312,7 +310,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
         //reset the state if we came from the tutorial (this is
         //also set if the player quit the game from the pause menu)
-        if (sd.gameMode != GameMode::FreePlay)
+        if (sd.gameMode != GameMode::FreePlay
+            || sd.quickplayOpponents != 0) //we were playing quickplay
         {
             m_voiceChat.disconnect();
 
@@ -327,7 +326,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
             sd.mapDirectory = m_sharedCourseData.courseData[courseOfTheMonth()].directory;
         }
-
+        sd.quickplayOpponents = 0; //make sure to always reset this
 
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
@@ -1026,12 +1025,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             showPlayerManagement();
             break;
-        case SDLK_k:
-            m_voiceChat.connect();
+        case SDLK_HOME:
+            launchQuickPlay();
             break;
-        case SDLK_l:
-            m_voiceChat.disconnect();
-            break;
+        //case SDLK_k:
+        //    m_voiceChat.connect();
+        //    break;
+        //case SDLK_l:
+        //    m_voiceChat.disconnect();
+        //    break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -2999,6 +3001,59 @@ void MenuState::checkBeta()
 }
 #endif
 
+void MenuState::launchQuickPlay()
+{
+    //TODO update this from UI
+    m_sharedData.quickplayOpponents = 1;
+
+    m_sharedData.hosting = true;
+    m_sharedData.gameMode = GameMode::FreePlay;
+    m_sharedData.localConnectionData.playerCount = 1;
+    m_sharedData.localConnectionData.playerData[0].isCPU = false;
+
+    m_sharedData.leagueRoundID = LeagueRoundID::Club;
+
+    //start a local server and connect
+    if (!m_sharedData.clientConnection.connected)
+    {
+        m_sharedData.serverInstance.launch(1, Server::GameMode::Golf, m_sharedData.fastCPU);
+
+        //small delay for server to get ready
+        cro::Clock clock;
+        while (clock.elapsed().asMilliseconds() < 500) {}
+
+#ifdef USE_GNS
+        m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
+#else
+        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+#endif
+
+        if (!m_sharedData.clientConnection.connected)
+        {
+            m_sharedData.serverInstance.stop();
+            m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
+                + std::to_string(ConstVal::GamePort)
+                + " is allowed through\nany firewalls or NAT";
+            requestStackPush(StateID::Error); //error makes sure to reset any connection
+        }
+        else
+        {
+            m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+            m_sharedData.serverInstance.setLeagueID(LeagueRoundID::Club);
+            m_sharedData.courseIndex = cro::Util::Random::value(0u, m_courseIndices[Range::Official].count - 1);
+            m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
+
+            //set the course
+            auto data = serialiseString(m_sharedData.mapDirectory);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+            //now we wait for the server to send us the map name so we know the
+            //course has been set. Then the network event handler PacketID::ConnectionAccepted
+            //applies the random options
+        }
+    }
+}
+
 void MenuState::handleNetEvent(const net::NetEvent& evt)
 {
     if (evt.type == net::NetEvent::PacketReceived)
@@ -3120,6 +3175,28 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     //TODO we may need to delay this a frame?
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
+                else if (m_sharedData.quickplayOpponents != 0)
+                {
+                    //club set should have been set by the player
+                    m_sharedData.reverseCourse = cro::Util::Random::value(0, 1);
+                    m_sharedData.scoreType = ScoreType::Stroke;
+                    m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+                    m_sharedData.holeCount = cro::Util::Random::value(1, 2);
+                    m_sharedData.nightTime = cro::Util::Random::value(0, 1);
+                    m_sharedData.gimmeRadius = GimmeSize::Leather; //hmmm should we let the player choose this?
+
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+
+                    //TODO we may need to delay this a frame?
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
                 else
                 {
                     //switch to lobby view
@@ -3207,8 +3284,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             //if that's what's set
             if (course == "tutorial")
             {
-                //moved to connection accepted - must happen after sending player info
+                //moved to PacketID::ConnectionAcccepted - must happen after sending player info
                 //m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            else if (m_sharedData.quickplayOpponents != 0)
+            {
+                //see above (this clause just consumes the case so below doesn't happen)
             }
             else
             {
