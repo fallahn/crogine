@@ -3003,8 +3003,10 @@ void MenuState::checkBeta()
 
 void MenuState::launchQuickPlay()
 {
-    //TODO update this from UI
-    m_sharedData.quickplayOpponents = 1;
+    //I quite like always having 3 actually, and it
+    //doesn't impact the round time. We'll see what beta
+    //feedback we get...
+    m_sharedData.quickplayOpponents = 3;
 
     m_sharedData.hosting = true;
     m_sharedData.gameMode = GameMode::FreePlay;

@@ -2539,7 +2539,9 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 m_trophies[i].avatar.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 m_trophies[i].avatar.getComponent<cro::Callback>().active = false; //otherwise this overrides the scale
                 m_trophies[i].label.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                m_trophies[i].label.getComponent<cro::Callback>().active = false;
+                //m_trophies[i].label.getComponent<cro::Callback>().active = false;
+                //TrophyDisplaySystem sets this true so we override the function to do nothing
+                m_trophies[i].label.getComponent<cro::Callback>().function = [](cro::Entity, float) {};
                 m_trophies[i].badge.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
             
