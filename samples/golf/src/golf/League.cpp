@@ -1132,9 +1132,8 @@ void ScoreCalculator::calculate(LeaguePlayer& player, std::uint32_t hole, std::i
 
 
 //----------Friendly Player------------//
-FriendlyPlayer::FriendlyPlayer(LeaguePlayer player, std::int32_t clubset)
-    : m_player          (player),
-    m_scoreCalculator   (clubset)
+FriendlyPlayer::FriendlyPlayer(std::int32_t clubset)
+    : m_scoreCalculator   (clubset)
 {
 
 }
@@ -1143,10 +1142,18 @@ FriendlyPlayer::FriendlyPlayer(LeaguePlayer player, std::int32_t clubset)
 void FriendlyPlayer::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance)
 {
     windChance = std::clamp(windChance, 1, 100);
-    m_scoreCalculator.calculate(m_player, hole, par, overPar, m_holeScores[m_player.nameIndex]);
-
-    if (cro::Util::Random::value(0, 99) < windChance)
+    for (auto& player : m_players)
     {
-        m_holeScores[m_player.nameIndex][hole]++;
+        m_scoreCalculator.calculate(player, hole, par, overPar, m_holeScores[player.nameIndex]);
+
+        if (cro::Util::Random::value(0, 99) < windChance)
+        {
+            m_holeScores[player.nameIndex][hole]++;
+        }
     }
+}
+
+void FriendlyPlayer::addPlayer(LeaguePlayer p)
+{
+    m_players.push_back(p);
 }

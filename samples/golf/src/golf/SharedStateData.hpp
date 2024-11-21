@@ -239,6 +239,7 @@ struct SharedStateData final
     std::uint8_t nightTime = 0; //bool
     std::uint8_t weatherType = 0;
     std::int32_t leagueRoundID = 0; //which league we're playing in
+    std::int32_t quickplayOpponents = 0; //1-3 if quickplay, 0 to disable
 
     //counts the number of holes actually played in elimination
     std::uint8_t holesPlayed = 0;

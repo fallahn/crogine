@@ -191,6 +191,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f),
     m_scrollSpeed           (1.f)
 {
+    sd.quickplayOpponents = 3;
+    
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     Timeline::setTimelineDesc("Main Menu");
 
@@ -198,7 +200,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
     }
-
+    
     checkCommandLine = false;
     sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;

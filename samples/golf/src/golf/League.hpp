@@ -179,17 +179,19 @@ private:
 class FriendlyPlayer final
 {
 public:
-    explicit FriendlyPlayer(LeaguePlayer, std::int32_t clubset);
+    explicit FriendlyPlayer(std::int32_t clubset);
     void updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance);
 
-    const HoleScores& getScores() const { return m_holeScores[m_player.nameIndex]; }
-    std::int32_t getPlayerIndex() const { return m_player.nameIndex; }
+    void addPlayer(LeaguePlayer);
 
-    std::size_t getPlayerCount() const { return 1; }
+    const HoleScores& getScores(std::size_t i) const { return m_holeScores[m_players[i].nameIndex]; }
+    std::int32_t getPlayerIndex(std::size_t i) const { return m_players[i].nameIndex; }
+
+    std::size_t getPlayerCount() const { return m_players.size(); }
 
 private:
 
-    LeaguePlayer m_player;
+    std::vector<LeaguePlayer> m_players;
 
     //world's most pointless array - but it needs
     //to work with the score calculator

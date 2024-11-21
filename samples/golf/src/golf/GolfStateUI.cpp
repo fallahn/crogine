@@ -2535,6 +2535,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
             {
                 //this is a league player so there's nothing to show...
                 m_trophies[i].avatar.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_trophies[i].avatar.getComponent<cro::Callback>().active = false; //otherwise this overrides the scale
                 m_trophies[i].label.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 m_trophies[i].badge.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             }
@@ -3578,57 +3579,59 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
     if (m_friendlyPlayer)
     {
-        //TODO make this for each friendly player
-        const auto& friendlyScores = m_friendlyPlayer->getScores();
-        const auto i = m_friendlyPlayer->getPlayerIndex();
-
-        playerCount++; 
-
-        auto& entry = scores.emplace_back();
-        entry.name = m_sharedData.leagueNames[i];
-        entry.client = 0;
-        entry.player = 0;
-        entry.leaguePlayer = true;
-        entry.nameIndex = static_cast<std::int32_t>(i);
-
-        for (auto j = 0u; j < m_holeData.size(); ++j)
+        for (auto k = 0u; k < m_friendlyPlayer->getPlayerCount(); ++k)
         {
-            auto s = friendlyScores[j];
-            entry.holes.push_back(s);
-            entry.holeComplete.push_back(s != 0);
+            const auto& friendlyScores = m_friendlyPlayer->getScores(k);
+            const auto i = m_friendlyPlayer->getPlayerIndex(k);
 
-            if (s)
+            playerCount++;
+
+            auto& entry = scores.emplace_back();
+            entry.name = m_sharedData.leagueNames[i];
+            entry.client = 0;
+            entry.player = 0;
+            entry.leaguePlayer = true;
+            entry.nameIndex = static_cast<std::int32_t>(i);
+
+            for (auto j = 0u; j < m_holeData.size(); ++j)
             {
-                if (updateParDiff
-                    || j < (m_currentHole)
-                    || entry.holeComplete.back())
-                {
-                    auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
+                auto s = friendlyScores[j];
+                entry.holes.push_back(s);
+                entry.holeComplete.push_back(s != 0);
 
-                    entry.parDiff += diff;
+                if (s)
+                {
+                    if (updateParDiff
+                        || j < (m_currentHole)
+                        || entry.holeComplete.back())
+                    {
+                        auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
+
+                        entry.parDiff += diff;
+                    }
+                }
+
+                //assuming stroke score - TODO check what we need to include Stableford
+                if (j < 9)
+                {
+                    entry.frontNine += friendlyScores[j];
+                }
+                else
+                {
+                    entry.backNine += friendlyScores[j];
                 }
             }
 
-            //assuming stroke score - TODO check what we need to include Stableford
-            if (j < 9)
-            {
-                entry.frontNine += friendlyScores[j];
-            }
-            else
-            {
-                entry.backNine += friendlyScores[j];
-            }
+            entry.total = entry.frontNine + entry.backNine;
+
+            //TODO if this works for end trophies make sure to remove the comment in showCountdown()
+            //TODO this *does* work but also needs to hide the avatar badge as well as the name
+            auto& leaderboardEntry = m_statBoardScores.emplace_back();
+            leaderboardEntry.client = ConstVal::NullValue;
+            leaderboardEntry.player = ConstVal::NullValue;
+            leaderboardEntry.score = entry.total;
+            leaderboardEntry.distance = entry.totalDistance;
         }
-
-        entry.total = entry.frontNine + entry.backNine;
-
-        //TODO if this works for end trophies make sure to remove the comment in showCountdown()
-        //TODO this *does* work but also needs to hide the avatar badge as well as the name
-        auto& leaderboardEntry = m_statBoardScores.emplace_back();
-        leaderboardEntry.client = ConstVal::NullValue;
-        leaderboardEntry.player = ConstVal::NullValue;
-        leaderboardEntry.score = entry.total;
-        leaderboardEntry.distance = entry.totalDistance;
     }
 
     //tracks stats and decides on trophy layout on round end (see showCountdown())
