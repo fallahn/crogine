@@ -4981,7 +4981,7 @@ void MenuState::createPreviousScoreCard()
                 {
                     return a.totalDistance < b.totalDistance;
                 }
-                return a.roundScore < b.roundScore;
+                return a.roundScore > b.roundScore;
                 break;
             }
         });
@@ -5339,7 +5339,7 @@ void MenuState::createPreviousScoreCard()
         }
         break;
     case ScoreType::NearestThePin:
-    case ScoreType::NearestThePinPro:
+    //case ScoreType::NearestThePinPro:
         str += " ";
         break;
     }
@@ -5375,13 +5375,13 @@ void MenuState::createPreviousScoreCard()
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
-            str += " - " + std::to_string(entry.total) + " POINTS";
+            str += " - " + std::to_string(entry.total) + " Points";
             break;
         case ScoreType::Match:
-            str += " - " + std::to_string(entry.roundScore) + " POINTS";
+            str += " - " + std::to_string(entry.roundScore) + " Points";
             break;
         case ScoreType::Skins:
-            str += " - " + std::to_string(entry.roundScore) + " SKINS";
+            str += " - " + std::to_string(entry.roundScore) + " Skins";
             break;
         case ScoreType::NearestThePin:
         {
@@ -5408,11 +5408,11 @@ void MenuState::createPreviousScoreCard()
             if (m_sharedData.imperialMeasurements)
             {
                 dist *= ToYards;
-                ss << std::fixed << dist << "yd";
+                ss << /*std::fixed <<*/ std::round(dist) << "yd";
             }
             else
             {
-                ss << std::fixed << dist << "m";
+                ss << /*std::fixed <<*/ std::round(dist) << "m";
             }
 
             std::int32_t padding = 0;
@@ -5428,7 +5428,7 @@ void MenuState::createPreviousScoreCard()
             {
                 ss << " ";
             }
-            ss << " - " << entry.roundScore << "Point";
+            ss << " - " << entry.roundScore << " Point";
 
             if (entry.roundScore != 1)
             {
@@ -5463,7 +5463,8 @@ void MenuState::createPreviousScoreCard()
 
         for (const auto& entry : scoreEntries)
         {
-            if (m_sharedData.scoreType == ScoreType::NearestThePin)
+            if (m_sharedData.scoreType == ScoreType::NearestThePin
+                || m_sharedData.scoreType == ScoreType::NearestThePinPro)
             {
                 str += "\n ";
             }
@@ -5495,13 +5496,13 @@ void MenuState::createPreviousScoreCard()
                 {
                     str += " ";
                 }
-                str += " - " + std::to_string(entry.total) + " POINTS";
+                str += " - " + std::to_string(entry.total) + " Points";
                 break;
             case ScoreType::Match:
-                str += " - " + std::to_string(entry.roundScore) + " POINTS";
+                str += " - " + std::to_string(entry.roundScore) + " Points";
                 break;
             case ScoreType::Skins:
-                str += " - " + std::to_string(entry.roundScore) + " SKINS";
+                str += " - " + std::to_string(entry.roundScore) + " Skins";
                 break;
             case ScoreType::NearestThePin:
             {
@@ -5528,11 +5529,11 @@ void MenuState::createPreviousScoreCard()
                 if (m_sharedData.imperialMeasurements)
                 {
                     dist *= ToYards;
-                    ss << std::fixed << dist << "yd";
+                    ss << /*std::fixed << */std::round(dist) << "yd";
                 }
                 else
                 {
-                    ss << std::fixed << dist << "m";
+                    ss << /*std::fixed <<*/ std::round(dist) << "m";
                 }
 
                 std::int32_t padding = 0;
@@ -5548,7 +5549,7 @@ void MenuState::createPreviousScoreCard()
                 {
                     ss << " ";
                 }
-                ss << " - " << entry.roundScore << "Point";
+                ss << " - " << entry.roundScore << " Point";
 
                 if (entry.roundScore != 1)
                 {
