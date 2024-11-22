@@ -375,7 +375,7 @@ and All Time best scores.)";
                 break;
             case 10:
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                helpText.getComponent<cro::Text>().setString("Sets the opponent's difficulty");
+                helpText.getComponent<cro::Text>().setString("Set the opponent's difficulty");
                 break;
             }
         });

@@ -41,7 +41,7 @@ if (NOT USE_PARALLEL_EXECUTION OR APPLE)
 endif()
 
 if(NOT GNS_TAG)
-  SET(GNS_TAG "HEAD")
+  SET(GNS_TAG "origin/master")
 endif()
 
 # We're using c++17
@@ -75,6 +75,7 @@ if(USE_STEAM)
   include(FetchContent)
   FetchContent_Declare(libgns
     GIT_REPOSITORY https://github.com/fallahn/libgns
+    GIT_PROGRESS true
     GIT_TAG ${GNS_TAG}) # Could specify a tag/commit hash here?
   FetchContent_MakeAvailable(libgns)
 
