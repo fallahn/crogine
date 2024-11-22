@@ -73,6 +73,16 @@ source distribution.
 namespace
 {
     constexpr float PadlockOffset = 58.f;
+
+    struct MenuID final
+    {
+        enum
+        {
+            GameMode, Quickplay,
+
+            Count
+        };
+    };
 }
 
 FreePlayState::FreePlayState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -301,13 +311,13 @@ Nearest the Pin and more.)";
 
 And...
 When playing Stroke Play you'll automatically compete in the Global
-League as well as the online global leaderboards for the Monthly and
-All Time best scores.)";
+League as well as the online global leaderboards for the Monthly
+and All Time best scores.)";
 #endif
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto descText = m_scene.createEntity();
-    descText.addComponent<cro::Transform>().setPosition({ /*-83.f*/0.f, 66.f });
+    descText.addComponent<cro::Transform>().setPosition({ /*-83.f*/0.f, -24.f });
     descText.addComponent<cro::Drawable2D>();
     descText.addComponent<cro::Text>(smallFont);
     descText.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -354,6 +364,10 @@ All Time best scores.)";
                 break;
             case 3:
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                helpText.getComponent<cro::Text>().setString("Start a round of 9 random\nholes against virtual opponents");
+                break;
+            case 4:
+                helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 helpText.getComponent<cro::Text>().setString("Return to Main Menu");
                 break;
             }
@@ -378,6 +392,7 @@ All Time best scores.)";
         e.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(e);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+        e.getComponent<cro::UIInput>().setGroup(MenuID::GameMode);
 
         e.addComponent<cro::Callback>().function = MenuTextCallback();
 
@@ -386,7 +401,7 @@ All Time best scores.)";
     };
 
 
-    glm::vec2 position(0.f, -23.f);
+    glm::vec2 position(0.f, 77.f);
     static constexpr float ItemHeight = 10.f;
     //create game
     entity = createItem(position, "Create Game", menuEntity);
@@ -414,7 +429,6 @@ All Time best scores.)";
                     msg->type = SystemEvent::MenuRequest;
                     msg->data = StateID::FreePlay;
 
-
                     quitState();
                 }            
             });
@@ -439,6 +453,21 @@ All Time best scores.)";
                     quitState();
                 }
             });
+    position.y -= ItemHeight;
+
+    //quick game
+    entity = createItem(position, "Quick Game", menuEntity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    //TODO switch menu layout
+                }
+            });
+
 
     position.y -= ItemHeight;
     position.y -= 3.f;
@@ -446,7 +475,7 @@ All Time best scores.)";
 
 
     //back button
-    entity = createItem(glm::vec2(0.f, -74.f), "Back", menuEntity);
+    entity = createItem(glm::vec2(0.f, 8.f), "Back", menuEntity);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
             {
