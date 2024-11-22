@@ -213,7 +213,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     sd.quickplayOpponents = std::clamp(sd.quickplayOpponents, 0, 3);
     if (sd.quickplayOpponents != 0)
     {
-        m_friendlyPlayer = std::make_unique<FriendlyPlayer>(sd.clubSet);
+        m_friendlyPlayers = std::make_unique<FriendlyPlayers>(sd.clubSet);
 
         const auto& league = League(LeagueRoundID::Club, m_sharedData);
         const auto stride = League::PlayerCount / sd.quickplayOpponents;
@@ -222,14 +222,14 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         std::array<std::size_t, 3u> indices = {};
         indices[0] = cro::Util::Random::value(0u, stride);
         
-        m_friendlyPlayer->addPlayer(league.getTable()[indices[0]]);
+        m_friendlyPlayers->addPlayer(league.getTable()[indices[0]]);
         for (auto i = 1; i < sd.quickplayOpponents; ++i)
         {
             auto idx = indices[i-1] + cro::Util::Random::value(1u, stride - 1);
             idx = std::clamp(idx, std::size_t(0), League::PlayerCount - 1);
             indices[i] = idx;
 
-            m_friendlyPlayer->addPlayer(league.getTable()[idx]);
+            m_friendlyPlayers->addPlayer(league.getTable()[idx]);
         }
     }
     

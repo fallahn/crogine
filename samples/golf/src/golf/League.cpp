@@ -1132,14 +1132,14 @@ void ScoreCalculator::calculate(LeaguePlayer& player, std::uint32_t hole, std::i
 
 
 //----------Friendly Player------------//
-FriendlyPlayer::FriendlyPlayer(std::int32_t clubset)
+FriendlyPlayers::FriendlyPlayers(std::int32_t clubset)
     : m_scoreCalculator   (clubset)
 {
 
 }
 
 //public
-void FriendlyPlayer::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance)
+void FriendlyPlayers::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance)
 {
     windChance = std::clamp(windChance, 1, 100);
     for (auto& player : m_players)
@@ -1153,7 +1153,7 @@ void FriendlyPlayer::updateHoleScores(std::uint32_t hole, std::int32_t par, bool
     }
 }
 
-void FriendlyPlayer::addPlayer(LeaguePlayer p)
+void FriendlyPlayers::addPlayer(LeaguePlayer p)
 {
     m_players.push_back(p);
 }

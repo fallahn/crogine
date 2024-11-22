@@ -533,7 +533,7 @@ private:
     cro::Entity m_freecamMenuEnt;
     std::uint8_t m_readyQuitFlags;
 
-    std::unique_ptr<FriendlyPlayer> m_friendlyPlayer;
+    std::unique_ptr<FriendlyPlayers> m_friendlyPlayers;
 
     void buildUI();
     void showCountdown(std::uint8_t);

@@ -176,10 +176,10 @@ private:
 };
 
 //single player used for quick rounds
-class FriendlyPlayer final
+class FriendlyPlayers final
 {
 public:
-    explicit FriendlyPlayer(std::int32_t clubset);
+    explicit FriendlyPlayers(std::int32_t clubset);
     void updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance);
 
     void addPlayer(LeaguePlayer);

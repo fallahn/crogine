@@ -174,6 +174,7 @@ namespace AchievementID
         OffTheWall,
         PlusFours,
         CleanWhistle,
+        DiveIn,
 
         Count
     };

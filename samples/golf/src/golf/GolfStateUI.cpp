@@ -2196,6 +2196,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
         Achievements::awardAchievement(AchievementStrings[AchievementID::Nested]);
     }
 
+    if (m_friendlyPlayers)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::DiveIn]);
+    }
+
     //hide any input
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::Root;
@@ -3317,9 +3322,9 @@ void GolfState::createScoreboard()
     }
 
     //create leaderboard entries for any 'quick round' players
-    if (m_friendlyPlayer)
+    if (m_friendlyPlayers)
     {
-        for (auto i = 0u; i < m_friendlyPlayer->getPlayerCount(); ++i)
+        for (auto i = 0u; i < m_friendlyPlayers->getPlayerCount(); ++i)
         {
             createAvatar(createIcon(0, 0, true), 0, 0);
             iconPos.y -= IconSpacing;
@@ -3582,12 +3587,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
         }
     }
 
-    if (m_friendlyPlayer)
+    if (m_friendlyPlayers)
     {
-        for (auto k = 0u; k < m_friendlyPlayer->getPlayerCount(); ++k)
+        for (auto k = 0u; k < m_friendlyPlayers->getPlayerCount(); ++k)
         {
-            const auto& friendlyScores = m_friendlyPlayer->getScores(k);
-            const auto i = m_friendlyPlayer->getPlayerIndex(k);
+            const auto& friendlyScores = m_friendlyPlayers->getScores(k);
+            const auto i = m_friendlyPlayers->getPlayerIndex(k);
 
             playerCount++;
 
@@ -6171,9 +6176,9 @@ void GolfState::updateLeagueHole()
             break;
             }
 
-            if (m_friendlyPlayer)
+            if (m_friendlyPlayers)
             {
-                m_friendlyPlayer->updateHoleScores(m_currentHole, par, playerScore > par, windChance);
+                m_friendlyPlayers->updateHoleScores(m_currentHole, par, playerScore > par, windChance);
             }
         }
         break;
