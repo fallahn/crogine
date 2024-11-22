@@ -1809,7 +1809,7 @@ bool ScrubGameState::updateScore()
     m_score.cleanlinessSum += cleanliness;
     m_score.avgCleanliness = m_score.cleanlinessSum / m_score.ballsWashed;
 
-    if (m_score.ballsWashed == 30)
+    if (m_score.ballsWashed == 40)
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::CleanWhistle]);
     }

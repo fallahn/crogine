@@ -325,6 +325,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             sd.clientConnection.netClient.disconnect();
 
             sd.mapDirectory = m_sharedCourseData.courseData[courseOfTheMonth()].directory;
+
+            sd.reverseCourse = 0;
+            sd.nightTime = 0;
+            sd.weatherType = WeatherType::Clear;
         }
         sd.quickplayOpponents = 0; //make sure to always reset this
 

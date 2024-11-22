@@ -401,7 +401,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Use at least one Mulligan in Career Mode", false),
     std::make_pair("Use the far wall on hole 15, course 12 to stop the ball going out of bounds", false),
     std::make_pair("Win a round of Nearest The Pin+ with at least 4 players", false),
-    std::make_pair("Scrub 30 balls in a single round of Scrub!", false),
+    std::make_pair("Scrub 40 balls in a single round of Scrub!", false),
 };
 
 //assuming trophies load correctly they are:
