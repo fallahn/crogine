@@ -5415,15 +5415,15 @@ void MenuState::createPreviousScoreCard()
             float dist = entry.totalDistance;
 
             std::stringstream ss;
-            ss.precision(2);
+            ss.precision(0);
             if (m_sharedData.imperialMeasurements)
             {
                 dist *= ToYards;
-                ss << /*std::fixed <<*/ std::round(dist) << "yd";
+                ss << std::fixed << std::round(dist) << "yd";
             }
             else
             {
-                ss << /*std::fixed <<*/ std::round(dist) << "m";
+                ss << std::fixed << std::round(dist) << "m";
             }
 
             std::int32_t padding = 0;
@@ -5543,15 +5543,15 @@ void MenuState::createPreviousScoreCard()
                 float dist = entry.totalDistance;
 
                 std::stringstream ss;
-                ss.precision(2);
+                ss.precision(0);
                 if (m_sharedData.imperialMeasurements)
                 {
                     dist *= ToYards;
-                    ss << /*std::fixed << */std::round(dist) << "yd";
+                    ss << std::fixed << std::round(dist) << "yd";
                 }
                 else
                 {
-                    ss << /*std::fixed <<*/ std::round(dist) << "m";
+                    ss << std::fixed << std::round(dist) << "m";
                 }
 
                 std::int32_t padding = 0;
