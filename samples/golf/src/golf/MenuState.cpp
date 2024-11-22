@@ -1029,9 +1029,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             showPlayerManagement();
             break;
-        case SDLK_HOME:
+        /*case SDLK_HOME:
             launchQuickPlay();
-            break;
+            break;*/
         //case SDLK_k:
         //    m_voiceChat.connect();
         //    break;
@@ -1384,6 +1384,12 @@ void MenuState::handleMessage(const cro::Message& msg)
                 m_menuEntities[MenuID::Main].getComponent<cro::Callback>().active = true;
 
                 Club::setClubLevel(m_sharedData.preferredClubSet);
+
+                if (m_clubsetButtons.lobby.isValid())
+                {
+                    m_clubsetButtons.lobby.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                    m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                }
             }
             else if (data.data == StateID::Career)
             {
@@ -1414,6 +1420,10 @@ void MenuState::handleMessage(const cro::Message& msg)
                     m_clubsetButtons.lobby.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                     m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                 }
+            }
+            else if (data.data == RequestID::QuickPlay)
+            {
+                launchQuickPlay();
             }
         }
         else if (data.type == SystemEvent::ShadowQualityChanged)
@@ -3018,6 +3028,7 @@ void MenuState::launchQuickPlay()
     m_sharedData.localConnectionData.playerData[0].isCPU = false;
 
     m_sharedData.leagueRoundID = LeagueRoundID::Club;
+    m_sharedData.clubLimit = 0;
 
     //start a local server and connect
     if (!m_sharedData.clientConnection.connected)

@@ -36,6 +36,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "Utility.hpp"
 #include "TextAnimCallback.hpp"
+#include "Clubs.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -301,12 +302,14 @@ void FreePlayState::buildScene()
 
 
     //decription text
+    float descPos = -36.f;
     cro::String desc = 
 R"(Play on any course, in 10 different game modes including: 
 Stroke Play, Match Play, Skins, Stableford, Elimination, Multi-Target,
 Nearest the Pin and more.)";
 
 #ifdef USE_GNS
+    descPos = -24.f;
     desc += R"(
 
 And...
@@ -317,7 +320,7 @@ and All Time best scores.)";
 
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto descText = m_scene.createEntity();
-    descText.addComponent<cro::Transform>().setPosition({ /*-83.f*/0.f, -24.f });
+    descText.addComponent<cro::Transform>().setPosition({ 0.f, descPos });
     descText.addComponent<cro::Drawable2D>();
     descText.addComponent<cro::Text>(smallFont);
     descText.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -370,6 +373,10 @@ and All Time best scores.)";
                 helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 helpText.getComponent<cro::Text>().setString("Return to Main Menu");
                 break;
+            case 10:
+                helpText.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                helpText.getComponent<cro::Text>().setString("Sets the opponent's difficulty");
+                break;
             }
         });
     auto unselectedID = uiSystem.addCallback(
@@ -400,11 +407,20 @@ and All Time best scores.)";
         return e;
     };
 
+    auto gameMenuEnt = m_scene.createEntity();
+    gameMenuEnt.addComponent<cro::Transform>();
+    menuEntity.getComponent<cro::Transform>().addChild(gameMenuEnt.getComponent<cro::Transform>());
 
-    glm::vec2 position(0.f, 77.f);
+    auto qpMenuEnt = m_scene.createEntity();
+    qpMenuEnt.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    menuEntity.getComponent<cro::Transform>().addChild(qpMenuEnt.getComponent<cro::Transform>());
+
+    //--------game menu------//
+    static constexpr float MenuStartHeight = 77.f;
+    glm::vec2 position(0.f, MenuStartHeight);
     static constexpr float ItemHeight = 10.f;
     //create game
-    entity = createItem(position, "Create Game", menuEntity);
+    entity = createItem(position, "Create Game", gameMenuEnt);
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 
@@ -435,7 +451,7 @@ and All Time best scores.)";
     position.y -= ItemHeight;
 
     //join game
-    entity = createItem(position, "Join Game", menuEntity);
+    entity = createItem(position, "Join Game", gameMenuEnt);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -456,7 +472,77 @@ and All Time best scores.)";
     position.y -= ItemHeight;
 
     //quick game
-    entity = createItem(position, "Quick Game", menuEntity);
+    entity = createItem(position, "Quick Game", gameMenuEnt);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, gameMenuEnt, qpMenuEnt]
+        (cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    //switch menu layout
+                    gameMenuEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    qpMenuEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Quickplay);
+                }
+            });
+
+
+    position.y -= ItemHeight;
+    position.y -= 6.f;
+    helpText.getComponent<cro::Transform>().setPosition(position);
+
+
+    //back button
+    entity = createItem(glm::vec2(0.f, 8.f), "Back", gameMenuEnt);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    quitState();
+                }
+            });
+
+
+
+    //-------quick play menu------//
+    position = { 0.f, MenuStartHeight };
+
+    static const std::array<std::string, 3u> ClubsetStrings =
+    {
+        std::string("Novice"), "Expert", "Pro"
+    };
+
+    //club selection
+    entity = createItem(position, "Club Set: " + ClubsetStrings[m_sharedData.clubSet], qpMenuEnt);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Quickplay);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(10);
+
+    if (Social::getClubLevel())
+    {
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                        m_sharedData.preferredClubSet = (m_sharedData.preferredClubSet + 1) % (Social::getClubLevel() + 1);
+                        m_sharedData.clubSet = m_sharedData.preferredClubSet;
+                        Club::setClubLevel(m_sharedData.clubSet);
+
+                        e.getComponent<cro::Text>().setString("Club Set: " + ClubsetStrings[m_sharedData.clubSet]);
+                        centreText(e);
+                    }
+                });
+    }
+    position.y -= ItemHeight;
+
+    //start
+    entity = createItem(position, "Start Game", qpMenuEnt);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Quickplay);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(11);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -464,26 +550,32 @@ and All Time best scores.)";
                 {
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                    //TODO switch menu layout
+                    auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::MenuRequest;
+                    msg->data = RequestID::QuickPlay;
                 }
             });
-
-
-    position.y -= ItemHeight;
-    position.y -= 3.f;
-    helpText.getComponent<cro::Transform>().setPosition(position);
 
 
     //back button
-    entity = createItem(glm::vec2(0.f, 8.f), "Back", menuEntity);
+    entity = createItem(glm::vec2(0.f, 8.f), "Back", qpMenuEnt);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Quickplay);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(12);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
+        uiSystem.addCallback(
+            [&, gameMenuEnt, qpMenuEnt](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
-                    quitState();
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    //switch menu layout
+                    gameMenuEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    qpMenuEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::GameMode);
                 }
             });
+
 
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable

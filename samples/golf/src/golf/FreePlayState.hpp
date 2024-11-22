@@ -36,7 +36,6 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 
 struct SharedStateData;
-
 class FreePlayState final : public cro::State
 {
 public:
