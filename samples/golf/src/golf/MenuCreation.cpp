@@ -5347,17 +5347,20 @@ void MenuState::createPreviousScoreCard()
         }
         break;
     case ScoreType::NearestThePin:
-    //case ScoreType::NearestThePinPro:
+    case ScoreType::NearestThePinPro:
         str += " ";
         break;
     }
 
     for (const auto& entry : scoreEntries)
     {
-        if (m_sharedData.scoreType == ScoreType::NearestThePin
-            || m_sharedData.scoreType == ScoreType::NearestThePinPro)
+        if (m_sharedData.scoreType == ScoreType::NearestThePin)
         {
             str += "\n ";
+        }
+        else if (m_sharedData.scoreType == ScoreType::NearestThePinPro)
+        {
+            str += "\n";
         }
         else
         {
@@ -5436,7 +5439,7 @@ void MenuState::createPreviousScoreCard()
             {
                 ss << " ";
             }
-            ss << " - " << entry.roundScore << " Point";
+            ss << " " << entry.roundScore << " Point";
 
             if (entry.roundScore != 1)
             {
@@ -5467,14 +5470,21 @@ void MenuState::createPreviousScoreCard()
         case ScoreType::StablefordPro:
             str += "B9 - FINAL";
             break;
+        case ScoreType::NearestThePin:
+        case ScoreType::NearestThePinPro:
+            str += " ";
+            break;
         }
 
         for (const auto& entry : scoreEntries)
         {
-            if (m_sharedData.scoreType == ScoreType::NearestThePin
-                || m_sharedData.scoreType == ScoreType::NearestThePinPro)
+            if (m_sharedData.scoreType == ScoreType::NearestThePin)
             {
                 str += "\n ";
+            }
+            else if (m_sharedData.scoreType == ScoreType::NearestThePinPro)
+            {
+                str += "\n";
             }
             else
             {
@@ -5557,7 +5567,7 @@ void MenuState::createPreviousScoreCard()
                 {
                     ss << " ";
                 }
-                ss << " - " << entry.roundScore << " Point";
+                ss << " " << entry.roundScore << " Point";
 
                 if (entry.roundScore != 1)
                 {
