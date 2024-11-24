@@ -1999,6 +1999,17 @@ void GolfState::handleMessage(const cro::Message& msg)
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                cmd.targetFlags = CommandID::UI::PinHeight;
+                cmd.action =
+                    [&](cro::Entity e, float)
+                    {   
+                        formatElevationString((m_holeData[m_currentHole].pin.y - m_currentPlayer.position.y), e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
+
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+
                 //and putting grid
                 cmd.targetFlags = CommandID::SlopeIndicator;
                 cmd.action = [](cro::Entity e, float)
@@ -6224,32 +6235,34 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    if (player.terrain != TerrainID::Green)
+    //if (player.terrain != TerrainID::Green)
     {
         cmd.targetFlags = CommandID::UI::PinHeight;
         cmd.action =
             [&, player](cro::Entity e, float)
             {
-                const auto holeDiff = (m_holeData[m_currentHole].pin.y - player.position.y) * 10.f;
+                formatElevationString((m_holeData[m_currentHole].pin.y - player.position.y), e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
 
-                std::stringstream ss;
-                ss << "(";
-                if (holeDiff > 0)
-                {
-                    ss << "+";
-                }
-                ss.precision(2);
-                ss << holeDiff << "%)";
 
-                //up & down arrows - look a bit pants quality though
-                //auto up = cro::String(std::uint32_t(0x2B06));
-                //up += std::uint32_t(0xFE0F);
-                // //OR std::uint32_t(0xA71B)
-                //auto down = cro::String(std::uint32_t(0x2B07));
-                //down += std::uint32_t(0xFE0F);
-                // //OR std::uint32_t(0xA71C)
+                //const auto holeDiff = (m_holeData[m_currentHole].pin.y - player.position.y) * 10.f;
 
-                e.getComponent<cro::Text>().setString(ss.str());
+                //std::stringstream ss;
+                //ss << "(";
+                //if (holeDiff > 0)
+                //{
+                //    ss << "+";
+                //}
+                //ss.precision(2);
+                //ss << holeDiff << "%)";
+                ////up & down arrows - look a bit pants quality though
+                ////auto up = cro::String(std::uint32_t(0x2B06));
+                ////up += std::uint32_t(0xFE0F);
+                //// //OR std::uint32_t(0xA71B)
+                ////auto down = cro::String(std::uint32_t(0x2B07));
+                ////down += std::uint32_t(0xFE0F);
+                //// //OR std::uint32_t(0xA71C)
+
+                //e.getComponent<cro::Text>().setString(ss.str());
                 e.getComponent<cro::Callback>().active = true;
             };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

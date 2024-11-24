@@ -63,7 +63,9 @@ source distribution.
 #include <iomanip>
 #include <array>
 
-static inline constexpr float ToYards = 1.09361f;
+static constexpr float ToYards = 1.09361f;
+static constexpr float ToFeet = 3.281f;
+static constexpr float ToInches = 12.f;
 
 static inline constexpr std::int32_t CrowdDensityCount = 4;
 //decreased for each additional player to a minimum of 2
@@ -1182,13 +1184,70 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
     target.addComponent<cro::Model>(meshData, material);
 }
 
+static inline void formatElevationString(float distance, cro::Text& target, bool imperial, bool decimal)
+{
+    if (imperial)
+    {
+        if (decimal)
+        {
+            std::stringstream ss;
+            ss.precision(2);
+            ss << "Elevation: ";
+            ss << std::fixed << (distance * ToYards);
+            ss << "yds";
+
+            target.setString(ss.str());
+        }
+        else
+        {
+            distance *= ToFeet;
+            if (distance > 3)
+            {
+                std::stringstream ss;
+                ss.precision(1);
+                ss << "Elevation: ";
+                ss << std::fixed << distance;
+                ss << "ft";
+
+                target.setString(ss.str());
+            }
+            else
+            {
+                auto dist = static_cast<std::int32_t>(distance * ToInches);
+                target.setString("Elevation: " + std::to_string(dist) + "in");
+            }
+        }
+    }
+    else
+    {
+        if (distance > 5)
+        {
+            auto dist = static_cast<std::int32_t>(std::round(distance));
+            target.setString("Elevation: " + std::to_string(dist) + "m");
+        }
+        else
+        {
+            if (decimal)
+            {
+                std::stringstream ss;
+                ss.precision(2);
+                ss << "Elevation: ";
+                ss << std::fixed << distance;
+                ss << "m";
+
+                target.setString(ss.str());
+            }
+            else
+            {
+                auto dist = static_cast<std::int32_t>(distance * 100.f);
+                target.setString("Elevation: " + std::to_string(dist) + "cm");
+            }
+        }
+    }
+}
+
 static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool decimal, bool isTarget = false)
 {
-    static constexpr float ToYards = 1.094f;
-    static constexpr float ToFeet = 3.281f;
-    static constexpr float ToInches = 12.f;
-
-
     const std::string Prefix = isTarget ? "Target: " : "Pin: ";
 
     if (imperial)

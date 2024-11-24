@@ -537,7 +537,7 @@ and All Time best scores.)";
                     }
                 });
     }
-    position.y -= ItemHeight;
+    position.y -= ItemHeight * 2.f;
 
     //start
     entity = createItem(position, "Start Game", qpMenuEnt);

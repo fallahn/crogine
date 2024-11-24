@@ -620,7 +620,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinHeight | CommandID::UI::UIElement;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, -16.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -10.f };
     entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -642,16 +642,20 @@ void GolfState::buildUI()
         };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    static constexpr float tWidth = 52.f;
+    static constexpr float tHeight = 4.f;
+    static constexpr float tSlope = tWidth - 3.f;
+
     auto tEnt = entity;
     const auto c = cro::Colour(0.f, 0.f, 0.f, OverlayAlpha);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, -4.f, -0.05f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -6.f, -0.05f });
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(-28.f, 8.f), c),
-            cro::Vertex2D(glm::vec2(-22.f, -8.f), c),
-            cro::Vertex2D(glm::vec2(28.f, 8.f), c),
-            cro::Vertex2D(glm::vec2(22.f, -8.f), c)
+            cro::Vertex2D(glm::vec2(-tWidth, tHeight), c),
+            cro::Vertex2D(glm::vec2(-tSlope, -tHeight), c),
+            cro::Vertex2D(glm::vec2(tWidth, tHeight), c),
+            cro::Vertex2D(glm::vec2(tSlope, -tHeight), c)
         });
     tEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
