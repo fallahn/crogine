@@ -503,6 +503,7 @@ bool GolfState::summariseRules()
                 if (!m_skinsFinals)
                 {
                     m_skinsPot++;
+                    m_skinsPot += m_currentHole % (m_holeData.size() / 3);
 
                     std::uint16_t data = 0xff00 | m_skinsPot;
                     m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
