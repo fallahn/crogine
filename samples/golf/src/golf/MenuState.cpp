@@ -826,7 +826,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 break;
             }
             //TODO the active menu might be a sub-group of the lobby
-            //however m_currentMenu is still set tl Lobby as this is
+            //however m_currentMenu is still set to Lobby as this is
             //used by the window resize callback (which I can't find
             //any more...) so we have to test for the actual active menu
             switch (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup())
@@ -837,6 +837,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 break;
             case MenuID::ConfirmQuit:
                 quitConfirmCallback();
+                break;
+            case MenuID::Weather:
+                quitWeatherCallback();
                 break;
             case MenuID::Scorecard:
             case MenuID::Dummy:
@@ -3753,6 +3756,9 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         {
             Timeline::setGameMode(Timeline::GameMode::Lobby);
             Timeline::setTimelineDesc("Hosting Game");
+
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, m_sharedData.randomWind, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, m_sharedData.windStrength + 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
 }

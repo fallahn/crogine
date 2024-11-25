@@ -2757,7 +2757,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             e.getComponent<cro::Sprite>().setTextureRect(bounds);
         });
 
-    //quit confirmation
+    //quit confirmation / weather selection
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
 
     struct ConfirmationData final
@@ -2772,6 +2772,232 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         bool startGame = false;
     };
 
+    //weather background
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 1.8f;
+    entity.addComponent<cro::Callback>().setUserData<ConfirmationData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+        {
+            auto& data = e.getComponent<cro::Callback>().getUserData<ConfirmationData>();
+            float scale = 0.f;
+            if (data.dir == ConfirmationData::In)
+            {
+                data.progress = std::min(1.f, data.progress + (dt * 2.f));
+                scale = cro::Util::Easing::easeOutBack(data.progress);
+
+                if (data.progress == 1)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Weather);
+                    m_currentMenu = MenuID::Lobby;
+                }
+            }
+            else
+            {
+                data.progress = std::max(0.f, data.progress - (dt * 4.f));
+                scale = cro::Util::Easing::easeOutQuint(data.progress);
+                if (data.progress == 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_currentMenu = MenuID::Lobby;
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Lobby);
+                    refreshUI();
+                }
+            }
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    auto weatherEnt = entity;
+
+    //quad to darken the screen
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, -0.1f });
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(-0.5f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(0.5f), cro::Colour::Black),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), cro::Colour::Black)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().setUserData<cro::Entity>(weatherEnt);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            auto parentEnt = e.getComponent<cro::Callback>().getUserData<cro::Entity>();
+
+            auto scale = parentEnt.getComponent<cro::Transform>().getScale().x;
+            scale = std::min(1.f, scale);
+
+            if (scale > 0)
+            {
+                auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
+                e.getComponent<cro::Transform>().setScale(size / scale);
+            }
+
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            for (auto& v : verts)
+            {
+                v.colour.setAlpha(BackgroundAlpha * parentEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().progress);
+            }
+
+            e.getComponent<cro::Callback>().active = parentEnt.getComponent<cro::Callback>().active;
+            m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = parentEnt.getComponent<cro::Callback>().active;
+        };
+    weatherEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto quadEnt = entity;
+
+
+    //stash this so we can access it from the event handler (escape to ignore etc)
+    quitWeatherCallback = [&, weatherEnt, quadEnt]() mutable
+        {
+            //closes weather menu
+            weatherEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::Out;
+            weatherEnt.getComponent<cro::Callback>().active = true;
+            quadEnt.getComponent<cro::Callback>().active = true;
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+        };
+
+    enterWeatherCallback = [&, weatherEnt, quadEnt]() mutable
+        {
+            //displays weather menu
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            weatherEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::In;
+            weatherEnt.getComponent<cro::Callback>().active = true;
+            quadEnt.getComponent<cro::Callback>().active = true;
+
+            //TODO update any text as needed
+            m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+        };
+
+    //weather select button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 56.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Text>(font).setString("Weather: " + WeatherStrings[m_sharedData.weatherType]);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
+    entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    std::uint8_t weatherType = (m_sharedData.weatherType + 1) % WeatherType::Count;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    e.getComponent<cro::Text>().setString("Weather: " + WeatherStrings[weatherType]);
+                }
+            });
+    weatherEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //random wind button
+    std::string s("Random Wind: ");
+    s += m_sharedData.randomWind ? "On" : "Off";
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 46.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Text>(font).setString(s);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
+    entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.randomWind = (m_sharedData.randomWind + 1) % 2;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, m_sharedData.randomWind, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    
+                    std::string s("Random Wind: ");
+                    s += m_sharedData.randomWind ? "On" : "Off";
+                    e.getComponent<cro::Text>().setString(s);
+                }
+            });
+    weatherEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //wind strength button
+    s = "Wind Strength: " + std::to_string(m_sharedData.windStrength + 1);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 36.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Text>(font).setString(s);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
+    entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.windStrength = ((m_sharedData.windStrength + 1) % 5);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, m_sharedData.windStrength + 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    e.getComponent<cro::Text>().setString("Wind Strength: " + std::to_string(m_sharedData.windStrength + 1));
+                }
+            });
+    weatherEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //weather close button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 22.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Text>(font).setString("OK");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
+    entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    quitWeatherCallback();
+                }
+            });
+    weatherEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+
+
+
+    //confirmation background
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
@@ -2835,7 +3061,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto confirmEnt = entity;
 
 
-    //quad to darken the screen
+    //quad to darken the screen - shame we can't recycle the above ent, we'll make do with a shared callback
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, -0.1f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
@@ -2846,29 +3072,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         cro::Vertex2D(glm::vec2(0.5f, -0.5f), cro::Colour::Black)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.addComponent<cro::Callback>().function =
-        [&, confirmEnt](cro::Entity e, float)
-    {
-        auto scale = confirmEnt.getComponent<cro::Transform>().getScale().x;
-        scale = std::min(1.f, scale);
-
-        if (scale > 0)
-        {
-            auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-            e.getComponent<cro::Transform>().setScale(size / scale);
-        }
-
-        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-        for (auto& v : verts)
-        {
-            v.colour.setAlpha(BackgroundAlpha * confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().progress);
-        }
-
-        e.getComponent<cro::Callback>().active = confirmEnt.getComponent<cro::Callback>().active;
-        m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = confirmEnt.getComponent<cro::Callback>().active;
-    };
+    entity.addComponent<cro::Callback>().setUserData<cro::Entity>(confirmEnt);
+    entity.getComponent<cro::Callback>().function = quadEnt.getComponent<cro::Callback>().function;
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto shadeEnt = entity;
+
 
     //confirmation text
     entity = m_uiScene.createEntity();

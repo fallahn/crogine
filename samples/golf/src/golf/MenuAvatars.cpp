@@ -1531,8 +1531,7 @@ void MenuState::createMenuCallbacks()
         {
             if (activated(evt))
             {
-                std::uint8_t weatherType = (m_sharedData.weatherType + 1) % WeatherType::Count;
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                enterWeatherCallback();
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });

@@ -1656,7 +1656,10 @@ void GolfState::initScene()
 
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_scene.addSystem<BallSystem>(mb)->setGimmeRadius(m_sharedData.gimmeRadius);
+    auto* bs = m_scene.addSystem<BallSystem>(mb);
+    bs->setGimmeRadius(m_sharedData.gimmeRadius);
+    bs->setMaxStrengthMultiplier(m_sharedData.maxWind);
+    bs->enableRandomWind(m_sharedData.randomWind);
 
     if (m_sharedData.weatherType == WeatherType::Showers)
     {

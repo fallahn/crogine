@@ -99,7 +99,7 @@ public:
         Dummy, 
         Main, Avatar, Join, Lobby,
         ProfileFlyout, ConfirmQuit,
-        Scorecard,
+        Scorecard, Weather,
 
         Count
     };
@@ -243,6 +243,9 @@ private:
     //hack to quit the lobby confirm menu from event input
     std::function<void(bool)> enterConfirmCallback;
     std::function<void()> quitConfirmCallback;
+
+    std::function<void()> enterWeatherCallback;
+    std::function<void()> quitWeatherCallback;
 
     struct TextEdit final
     {

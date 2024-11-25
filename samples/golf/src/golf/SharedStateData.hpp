@@ -238,6 +238,8 @@ struct SharedStateData final
     std::uint8_t clubLimit = 0; //limit game to lowest player's clubs
     std::uint8_t nightTime = 0; //bool
     std::uint8_t weatherType = 0;
+    std::uint8_t randomWind = 0; //bool
+    std::uint8_t windStrength = 0; //1-5 but stored 0-4 for ease of iteration
     std::int32_t leagueRoundID = 0; //which league we're playing in
     std::int32_t quickplayOpponents = 0; //1-3 if quickplay, 0 to disable
 
