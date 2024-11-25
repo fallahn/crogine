@@ -1374,9 +1374,12 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.useLensFlare = prop.getValue<bool>();
                 }
+                else if (name == "large_power")
+                {
+                    m_sharedData.useLargePowerBar = prop.getValue<bool>();
+                }
             }
         }
-
         else
         {
             restoreDefaults = true;
@@ -1606,6 +1609,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
+    cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
     cfg.save(path);
 
 
@@ -1634,7 +1638,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_tts").setValue(m_sharedData.useTTS);
     cfg.addProperty("use_flare").setValue(m_sharedData.useLensFlare);
     cfg.addProperty("use_mouse_action").setValue(m_sharedData.useMouseAction);
-    cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
+    //cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
     cfg.addProperty("decimate_power").setValue(m_sharedData.decimatePowerBar);
     cfg.addProperty("decimate_distance").setValue(m_sharedData.decimateDistance);
     cfg.addProperty("show_roster").setValue(m_sharedData.showRosterTip);
