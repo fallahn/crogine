@@ -113,6 +113,8 @@ public:
 
     glm::vec3 getWindDirection() const;
     void forceWindChange();
+    void setMaxStrengthMultiplier(float m) { m_maxStrengthMultiplier = std::clamp(m, 1.f, 5.f); }
+    void enableRandomWind(bool e) { m_useRandomWind = e; }
 
     //this will modify the hole data by reading the collision
     //mesh and correcting the height on the pin property.
@@ -153,9 +155,12 @@ private:
 
     cro::Clock m_windDirClock;
     cro::Clock m_windStrengthClock;
+    cro::Clock m_windRandomClock;
+    bool m_useRandomWind;
 
     cro::Time m_windDirTime;
     cro::Time m_windStrengthTime;
+    cro::Time m_windRandomTime;
 
     glm::vec3 m_windDirection;
     glm::vec3 m_windDirSrc;
@@ -164,6 +169,7 @@ private:
     float m_windStrength;
     float m_windStrengthSrc;
     float m_windStrengthTarget;
+    float m_maxStrengthMultiplier;
 
     float m_windInterpTime;
     float m_currentWindInterpTime;

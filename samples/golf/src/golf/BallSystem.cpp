@@ -147,14 +147,17 @@ const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt
 
 BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     : cro::System           (mb, typeid(BallSystem)),
+    m_useRandomWind         (false),
     m_windDirTime           (cro::seconds(0.f)),
     m_windStrengthTime      (cro::seconds(1.f)),
+    m_windRandomTime        (cro::seconds(30.f)),
     m_windDirection         (-1.f, 0.f, 0.f),
     m_windDirSrc            (m_windDirection),
     m_windDirTarget         (1.f, 0.f, 0.f),
     m_windStrength          (0.f),
     m_windStrengthSrc       (m_windStrength),
     m_windStrengthTarget    (0.1f),
+    m_maxStrengthMultiplier (1.f),
     m_windInterpTime        (1.f),
     m_currentWindInterpTime (0.f),
     m_holeData              (nullptr),
@@ -203,6 +206,15 @@ void BallSystem::process(float dt)
     m_windStrength = interpolate(m_windStrengthSrc, m_windStrengthTarget, interp);
 #endif
 
+    if (m_useRandomWind)
+    {
+        if (m_windRandomClock.elapsed() > m_windRandomTime)
+        {
+            forceWindChange();
+            m_windRandomClock.restart();
+            m_windRandomTime = cro::seconds(cro::Util::Random::value(30, 90));
+        }
+    }
 
     CRO_ASSERT(!std::isnan(m_windDirection.x), "");
     CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
@@ -1371,7 +1383,7 @@ void BallSystem::updateWind()
         m_windStrengthTime = cro::seconds(static_cast<float>(cro::Util::Random::value(80, 180)) / 10.f);
 
         m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f;
-
+        m_windStrengthTarget *= m_maxStrengthMultiplier;
         resetInterp();
     }
     //m_windStrengthTarget = 0.f;
