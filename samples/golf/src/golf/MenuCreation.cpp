@@ -1712,7 +1712,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("     to Chat");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setFillColour(m_sharedData.menuSky.stars > 0.5 ? TextNormalColour : LeaderboardTextDark);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     cro::SpriteSheet buttonSheet;
