@@ -1348,7 +1348,8 @@ void InputParser::updateSpin(float dt)
     }
 
 
-    auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY) * 2.f;
+    auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY, false) * 2.f;
+        
     m_spin.x = std::clamp(m_spin.x + (rotation.y * dt), -1.f, 1.f);
     m_spin.y = std::clamp(m_spin.y + (rotation.x * dt), -1.f, 1.f);
 
@@ -1508,7 +1509,7 @@ void InputParser::checkMouseInput()
     //m_mouseMove = 0;
 }
 
-glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const
+glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis, bool allowInvert) const
 {
     glm::vec2 rotation(0.f);
     if (m_inputFlags & (InputFlag::Left | InputFlag::Right))
@@ -1540,13 +1541,13 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
     if (std::abs(controllerX) > LeftThumbDeadZone)
     {
         rotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
-        rotation.y *= m_sharedData.invertX ? -1.f : 1.f;
+        rotation.y *= (m_sharedData.invertX && allowInvert) ? -1.f : 1.f;
         rotation.y *= m_sharedData.mouseSpeed;
     }
     if (std::abs(controllerY) > LeftThumbDeadZone)
     {
         rotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
-        rotation.x *= m_sharedData.invertY ? -1.f : 1.f;
+        rotation.x *= (m_sharedData.invertY && allowInvert) ? -1.f : 1.f;
         rotation.x *= m_sharedData.mouseSpeed;
     }
 

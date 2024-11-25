@@ -174,7 +174,7 @@ private:
     void rotate(float);
     void checkControllerInput();
     void checkMouseInput();
-    glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const; //used for drone cam and spin amount
+    glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis, bool allowInvert = true) const; //used for drone cam and spin amount
 
 
     Thumbsticks m_thumbsticks;
