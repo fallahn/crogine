@@ -163,6 +163,9 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "plus_fours",
     "clean_whistle",
     "dive_in",
+    "quick_start",
+    "quick_step",
+    "quick_of_it"
 };
 
 //appears on the notification
@@ -284,6 +287,9 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Plus Fours",
     "Clean As A Whistle",
     "Dive Right In",
+    "Quick Start",
+    "Quick Step",
+    "Into The Quick Of It",
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -405,6 +411,9 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a round of Nearest The Pin+ with at least 4 players", false),
     std::make_pair("Scrub 40 balls in a single round of Scrub!", false),
     std::make_pair("Play a random 9 holes in Quick Play", false),
+    std::make_pair("Come first in a Quick Play round using Novice clubs", false),
+    std::make_pair("Come first in a Quick Play round using Expert clubs", false),
+    std::make_pair("Come first in a Quick Play round using Pro clubs", false),
 };
 
 //assuming trophies load correctly they are:
@@ -562,6 +571,9 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*114*/TrophyID::SilverCup,
     /*115*/TrophyID::GoldFigure,
     /*116*/TrophyID::BronzeCup,
+    /*117*/TrophyID::BronzeFigure,
+    /*118*/TrophyID::SilverFigure,
+    /*119*/TrophyID::GoldFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

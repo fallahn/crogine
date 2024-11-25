@@ -175,6 +175,9 @@ namespace AchievementID
         PlusFours,
         CleanWhistle,
         DiveIn,
+        QuickStart,
+        QuickStep,
+        QuickOfIt,
 
         Count
     };

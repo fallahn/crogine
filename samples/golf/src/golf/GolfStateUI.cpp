@@ -2237,6 +2237,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 default: break;
                 case ScoreType::Stroke:
                     Achievements::awardAchievement(AchievementStrings[AchievementID::StrokeOfGenius]);
+
+                    if (m_friendlyPlayers)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::QuickStart + m_sharedData.preferredClubSet]);
+                    }
                     break;
                 case ScoreType::Match:
                     Achievements::awardAchievement(AchievementStrings[AchievementID::NoMatch]);
