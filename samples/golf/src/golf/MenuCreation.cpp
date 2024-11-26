@@ -2885,8 +2885,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 56.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::Text>(font).setString("Weather: " + WeatherStrings[m_sharedData.weatherType]);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.addComponent<cro::Text>(smallFont).setString("Weather: " + WeatherStrings[m_sharedData.weatherType]);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
@@ -2915,8 +2915,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 46.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::Text>(font).setString(s);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.addComponent<cro::Text>(smallFont).setString(s);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
@@ -2946,8 +2946,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 36.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::Text>(font).setString(s);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.addComponent<cro::Text>(smallFont).setString(s);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);

@@ -1054,11 +1054,11 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     if (m_sharedData.imperialMeasurements)
     {
-        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 2.2 mph.\nThe higher your ball goes\nthe more the wind affects it.");
+        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 4.4 mph.\nThe higher your ball goes\nthe more the wind affects it.");
     }
     else
     {
-        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 3.5 kph.\nThe higher your ball goes\nthe more the wind affects it.");
+        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 7.0 kph.\nThe higher your ball goes\nthe more the wind affects it.");
     }
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
