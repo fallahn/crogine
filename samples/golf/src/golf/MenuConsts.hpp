@@ -211,6 +211,8 @@ static const std::array<std::string, 5u> ShaderNames =
     "Cinematic"
 };
 
+bool quickConnect(struct SharedStateData&);
+
 static inline bool activated(const cro::ButtonEvent& evt)
 {
     switch (evt.type)

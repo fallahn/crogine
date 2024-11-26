@@ -358,45 +358,24 @@ void PracticeState::buildScene()
                     m_sharedData.localConnectionData.playerData[0].isCPU = false;
                     m_sharedData.clubSet = 0;
                     m_sharedData.preferredClubSet = 0;
-
                     m_sharedData.leagueRoundID = LeagueRoundID::Club;
 
                     //start a local server and connect
-                    if (!m_sharedData.clientConnection.connected)
+                    if (quickConnect(m_sharedData))
                     {
-                        m_sharedData.serverInstance.launch(1, Server::GameMode::Golf, m_sharedData.fastCPU);
+                        m_sharedData.mapDirectory = "tutorial";
 
-                        //small delay for server to get ready
-                        cro::Clock clock;
-                        while (clock.elapsed().asMilliseconds() < 500) {}
+                        //set the course to tutorial
+                        auto data = serialiseString(m_sharedData.mapDirectory);
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-#ifdef USE_GNS
-                        m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
-#else
-                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
-#endif
-
-                        if (!m_sharedData.clientConnection.connected)
-                        {
-                            m_sharedData.serverInstance.stop();
-                            m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
-                                + std::to_string(ConstVal::GamePort)
-                                + " is allowed through\nany firewalls or NAT";
-                            requestStackPush(StateID::Error); //error makes sure to reset any connection
-                        }
-                        else
-                        {
-                            m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
-                            m_sharedData.serverInstance.setLeagueID(0);
-                            m_sharedData.mapDirectory = "tutorial";
-
-                            //set the course to tutorial
-                            auto data = serialiseString(m_sharedData.mapDirectory);
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
-                            //now we wait for the server to send us the map name so we know the tutorial
-                            //course has been set. Then the network event handler launches the game.
-                        }
+                        //now we wait for the server to send us the map name so we know the tutorial
+                        //course has been set. Then the network event handler launches the game.
+                    }
+                    else
+                    {
+                        //quick connect sets the error for us
+                        requestStackPush(StateID::Error); //error makes sure to reset any connection
                     }
                 }            
             });

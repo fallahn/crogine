@@ -65,6 +65,15 @@ struct Tournament final
     Tournament();
 };
 
+struct TournamentIndex final
+{
+    enum
+    {
+        NullVal = -1,
+        A, B
+    };
+};
+
 //clears the brackets and shuffles tier0
 void resetTournament(Tournament&);
 

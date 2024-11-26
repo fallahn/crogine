@@ -312,7 +312,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //also set if the player quit the game from the pause menu)
         if (sd.gameMode != GameMode::FreePlay
             || sd.quickplayOpponents != 0 //we were playing quickplay
-            || sd.activeTournament != -1) //or a tournament (although the above ought to be set to 1 in this case...)
+            || sd.activeTournament != TournamentIndex::NullVal) //or a tournament (although the above ought to be set to 1 in this case...)
         {
             m_voiceChat.disconnect();
 
@@ -332,7 +332,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             sd.weatherType = WeatherType::Clear;
         }
         sd.quickplayOpponents = 0; //make sure to always reset this
-        sd.activeTournament = -1; //make sure to always reset this
+        sd.activeTournament = TournamentIndex::NullVal; //make sure to always reset this
 
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
@@ -3024,8 +3024,6 @@ void MenuState::checkBeta()
 
 void MenuState::launchQuickPlay()
 {
-    //TODO much of this can be shared with launching a tournament game
-    //or the tutorial mode
     m_sharedData.quickplayOpponents = 3;
 
     m_sharedData.hosting = true;
@@ -3037,43 +3035,23 @@ void MenuState::launchQuickPlay()
     m_sharedData.clubLimit = 0;
 
     //start a local server and connect
-    if (!m_sharedData.clientConnection.connected)
+    if (quickConnect(m_sharedData))
     {
-        m_sharedData.serverInstance.launch(1, Server::GameMode::Golf, m_sharedData.fastCPU);
+        m_sharedData.courseIndex = cro::Util::Random::value(0u, m_courseIndices[Range::Official].count - 1);
+        m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
 
-        //small delay for server to get ready
-        cro::Clock clock;
-        while (clock.elapsed().asMilliseconds() < 500) {}
+        //set the course
+        auto data = serialiseString(m_sharedData.mapDirectory);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-#ifdef USE_GNS
-        m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
-#else
-        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
-#endif
-
-        if (!m_sharedData.clientConnection.connected)
-        {
-            m_sharedData.serverInstance.stop();
-            m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
-                + std::to_string(ConstVal::GamePort)
-                + " is allowed through\nany firewalls or NAT";
-            requestStackPush(StateID::Error); //error makes sure to reset any connection
-        }
-        else
-        {
-            m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
-            m_sharedData.serverInstance.setLeagueID(LeagueRoundID::Club);
-            m_sharedData.courseIndex = cro::Util::Random::value(0u, m_courseIndices[Range::Official].count - 1);
-            m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
-
-            //set the course
-            auto data = serialiseString(m_sharedData.mapDirectory);
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
-            //now we wait for the server to send us the map name so we know the
-            //course has been set. Then the network event handler PacketID::ConnectionAccepted
-            //applies the random options
-        }
+        //now we wait for the server to send us the map name so we know the
+        //course has been set. Then the network event handler PacketID::ConnectionAccepted
+        //applies the random options
+    }
+    else
+    {
+        //error message is set by quickConnect()
+        requestStackPush(StateID::Error); //error makes sure to reset any connection
     }
 }
 
@@ -4020,4 +3998,38 @@ void MenuState::createDebugWindows()
             ImGui::End();
         
         });
+}
+
+//from MenuConsts.hpp - used for quick launching
+//career, tutorial, quick play and tournament
+bool quickConnect(SharedStateData& sharedData)
+{
+    if (!sharedData.clientConnection.connected)
+    {
+        sharedData.serverInstance.launch(1, Server::GameMode::Golf, sharedData.fastCPU);
+
+        //small delay for server to get ready
+        cro::Clock clock;
+        while (clock.elapsed().asMilliseconds() < 500) {}
+
+#ifdef USE_GNS
+        sharedData.clientConnection.connected = sharedData.serverInstance.addLocalConnection(sharedData.clientConnection.netClient);
+#else
+        sharedData.clientConnection.connected = sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+#endif
+
+        if (!sharedData.clientConnection.connected)
+        {
+            sharedData.serverInstance.stop();
+            sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
+                + std::to_string(ConstVal::GamePort)
+                + " is allowed through\nany firewalls or NAT";
+
+            return false;
+        }
+
+        sharedData.serverInstance.setHostID(sharedData.clientConnection.netClient.getPeer().getID());
+        sharedData.serverInstance.setLeagueID(sharedData.leagueRoundID);
+    }
+    return true;
 }
