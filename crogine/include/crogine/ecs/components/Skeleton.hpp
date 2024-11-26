@@ -176,6 +176,7 @@ namespace cro
         /*!
         \brief Plays the animation at the given index
         \param idx Index of the animation to play
+        \param rate A speed multiplier at which to play the animation eg 1 is normal speed
         \param blendTime time in seconds to blend / overlap the new animation
         with any previously playing animation
         */
@@ -411,8 +412,6 @@ namespace cro
         std::pair<std::int32_t, std::int32_t> getActiveAnimations() const { return std::make_pair(m_currentAnimation, m_nextAnimation); }
 
     private:
-
-        float m_playbackRate;
 
         std::int32_t m_currentAnimation;
         std::int32_t m_nextAnimation;

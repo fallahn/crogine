@@ -671,7 +671,6 @@ bool OptionsState::simulate(float dt)
             }
         }
 
-
         if (press.active)
         {
             press.scrollTimer += dt;

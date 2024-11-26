@@ -4901,7 +4901,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             if (m_achievementTracker.hadBackspin)
                             {
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::SpinClass]);
-                                Social::awardXP((XPValues[XPID::Special] * 5) / 2, XPStringID::BackSpinSkill);
+                                Social::awardXP((XPValues[XPID::Special] * 6) / 2, XPStringID::BackSpinSkill);
                             }
                             else if (m_achievementTracker.hadTopspin)
                             {

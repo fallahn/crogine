@@ -4544,8 +4544,8 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
     cmd.targetFlags = CommandID::UI::WindString;
     cmd.action = [&,direction](cro::Entity e, float dt)
     {
-        float knots = direction.y * KnotsPerMetre; //use this anyway to set the colour :3
-        float speed = direction.y;
+        const float knots = direction.y * KnotsPerMetre; //use this anyway to set the colour :3
+        const float speed = direction.y * 2.f; //this is an arbitrary display anyway...
 
         std::stringstream ss;
         ss.precision(2);
@@ -4596,6 +4596,13 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         e.getComponent<cro::Callback>().setUserData<float>(-direction.y);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //cmd.targetFlags = CommandID::Flag;
+    //cmd.action = [direction](cro::Entity e, float)
+    //    {
+    //        e.getComponent<cro::Skeleton>().setPlaybackRate(std::max(1.f, direction.y * 2.f));
+    //    };
+    //m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 float GolfState::estimatePuttPower()

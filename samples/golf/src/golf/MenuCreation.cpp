@@ -2960,7 +2960,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 if (activated(evt))
                 {
-                    m_sharedData.windStrength = ((m_sharedData.windStrength + 1) % 5);
+                    m_sharedData.windStrength = ((m_sharedData.windStrength + 1) % 3);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, m_sharedData.windStrength + 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     e.getComponent<cro::Text>().setString("Wind Strength: " + std::to_string(m_sharedData.windStrength + 1));
                 }

@@ -1382,7 +1382,7 @@ void BallSystem::updateWind()
         m_windStrengthClock.restart();
         m_windStrengthTime = cro::seconds(static_cast<float>(cro::Util::Random::value(80, 180)) / 10.f);
 
-        m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f;
+        m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 20)) / 20.f;
         m_windStrengthTarget *= m_maxStrengthMultiplier;
         resetInterp();
     }
