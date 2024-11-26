@@ -330,6 +330,8 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
         lastInput = LastInput::XBox;
     }
     
+    std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
+
     ctx.mainWindow.setMouseCaptured(false);
 
     m_videoSettings.fullScreen = ctx.mainWindow.isFullscreen();
@@ -397,7 +399,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     const auto scrollMenu = [&](std::int32_t direction)
     {
         std::int32_t callbackID = 0;
-        auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+        const auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
         if (menuID == MenuID::Achievements)
         {
             callbackID = direction == 0 ? ScrollID::AchUp : ScrollID::AchDown;
@@ -406,12 +408,17 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         {
             callbackID = direction == 0 ? ScrollID::StatUp : ScrollID::StatDown;
         }
+        else
+        {
+            return;
+        }
 
         cro::ButtonEvent fakeEvent;
         fakeEvent.type = SDL_MOUSEBUTTONDOWN;
         fakeEvent.button.button = SDL_BUTTON_LEFT;
         m_scrollFunctions[callbackID](cro::Entity(), fakeEvent);
     };
+
 
     if (evt.type == SDL_KEYUP)
     {
@@ -533,6 +540,56 @@ bool OptionsState::handleEvent(const cro::Event& evt)
 
             cro::App::getWindow().setMouseCaptured(true);
         }
+
+        if (evt.caxis.axis == cro::GameController::AxisRightY)
+        {
+            const auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+            const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
+            const auto amt = evt.caxis.value;
+
+            if (amt < -LeftThumbDeadZone
+                && m_controllerScrollAxes[controllerID] >= -LeftThumbDeadZone)
+            {
+                cro::ButtonEvent fakeEvent;
+                fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
+                fakeEvent.cbutton.button = cro::GameController::ButtonA;
+
+                if (menuID == MenuID::Achievements)
+                {
+                    m_scrollFunctions[ScrollID::AchUp](cro::Entity(), fakeEvent);
+                }
+                else if (menuID == MenuID::Stats)
+                {
+                    m_scrollFunctions[ScrollID::StatUp](cro::Entity(), fakeEvent);
+                }
+            }
+            else if (amt > LeftThumbDeadZone
+                && m_controllerScrollAxes[controllerID] <= LeftThumbDeadZone)
+            {
+                cro::ButtonEvent fakeEvent;
+                fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
+                fakeEvent.cbutton.button = cro::GameController::ButtonA;
+                
+                if (menuID == MenuID::Achievements)
+                {
+                    m_scrollFunctions[ScrollID::AchDown](cro::Entity(), fakeEvent);
+                }
+                else if (menuID == MenuID::Stats)
+                {
+                    m_scrollFunctions[ScrollID::StatDown](cro::Entity(), fakeEvent);
+                }
+            }
+            else if ((amt > -LeftThumbDeadZone
+                && m_controllerScrollAxes[controllerID] <= -LeftThumbDeadZone)
+                ||
+                (amt < LeftThumbDeadZone
+                    && m_controllerScrollAxes[controllerID] >= LeftThumbDeadZone))
+            {
+                resetScroll();
+            }
+
+            m_controllerScrollAxes[controllerID] = amt;
+        }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
@@ -607,6 +664,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         || evt.type == SDL_CONTROLLERDEVICEREMOVED)
         {
             m_refreshControllers = true;
+
+            resetScroll();
         }
 
     m_scene.forwardEvent(evt);
@@ -1330,6 +1389,9 @@ void OptionsState::buildScene()
         //refresh visible objects for one frame
         refreshView();
 
+        //stop any controller input from scrolling the current page
+        std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
+        resetScroll();
         m_currentTabFunction = 0;
     };
 
@@ -1348,6 +1410,8 @@ void OptionsState::buildScene()
         uiSystem.setActiveGroup(MenuID::Controls);
         uiSystem.selectByIndex(TabAchievements);
 
+        std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
+        resetScroll();
         m_currentTabFunction = 1;
     };
 
@@ -1366,6 +1430,8 @@ void OptionsState::buildScene()
         uiSystem.setActiveGroup(MenuID::Achievements);
         uiSystem.selectByIndex(TabStats);
 
+        std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
+        resetScroll();
         m_currentTabFunction = 2;
     };
 
@@ -1384,6 +1450,8 @@ void OptionsState::buildScene()
         uiSystem.setActiveGroup(MenuID::Stats);
         uiSystem.selectByIndex(TabAV);
 
+        std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
+        resetScroll();
         m_currentTabFunction = 3;
     };
 
@@ -5105,6 +5173,25 @@ void OptionsState::updateActiveCallbacks()
             entity.getComponent<cro::Callback>().active = entity.getComponent<cro::UIInput>().getGroup() == group;
         }
     }
+}
+
+void OptionsState::resetScroll()
+{
+    m_scrollPresses[ScrollID::AchUp].pressed = false;
+    m_scrollPresses[ScrollID::AchUp].pressedTimer = 0.f;
+    m_scrollPresses[ScrollID::AchUp].active = false;
+
+    m_scrollPresses[ScrollID::AchDown].pressed = false;
+    m_scrollPresses[ScrollID::AchDown].pressedTimer = 0.f;
+    m_scrollPresses[ScrollID::AchDown].active = false;
+
+    m_scrollPresses[ScrollID::StatUp].pressed = false;
+    m_scrollPresses[ScrollID::StatUp].pressedTimer = 0.f;
+    m_scrollPresses[ScrollID::StatUp].active = false;
+
+    m_scrollPresses[ScrollID::StatDown].pressed = false;
+    m_scrollPresses[ScrollID::StatDown].pressedTimer = 0.f;
+    m_scrollPresses[ScrollID::StatDown].active = false;
 }
 
 void OptionsState::applyAudioDevice()

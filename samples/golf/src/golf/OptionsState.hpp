@@ -126,6 +126,8 @@ private:
     std::array<std::function<void(cro::Entity, cro::ButtonEvent)>, ScrollID::Count> m_scrollFunctions = {};
     std::array<ScrollPress, ScrollID::Count> m_scrollPresses = {};
 
+    std::array<std::int16_t, 4u> m_controllerScrollAxes = {};
+
     cro::RenderTexture m_achievementBuffer;
     cro::RenderTexture m_statsBuffer;
 
@@ -163,6 +165,7 @@ private:
 
     void updateToolTip(cro::Entity, std::int32_t);
     void updateActiveCallbacks();
+    void resetScroll();
 
     cro::Entity m_deviceLabel;
     void applyAudioDevice();
