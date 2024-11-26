@@ -34,6 +34,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "PlayerData.hpp"
 #include "LeagueNames.hpp"
+#include "Tournament.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/audio/sound_system/Playlist.hpp>
@@ -319,4 +320,6 @@ struct SharedStateData final
     std::vector<std::string> resolutionStrings;
 
     LeagueNames leagueNames;
+    std::array<Tournament, 2u> tournaments;
+    std::int32_t activeTournament = -1;
 };

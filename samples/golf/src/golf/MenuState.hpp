@@ -413,7 +413,10 @@ private:
     void togglePreviousScoreCard();
 
     void launchQuickPlay();
+    void launchTournament(std::int32_t);
     void handleNetEvent(const net::NetEvent&);
+
+    void createDebugWindows();
 
     friend struct MainMenuContext;
 };

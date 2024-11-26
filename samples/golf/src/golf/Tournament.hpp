@@ -46,6 +46,8 @@ static inline const std::array<std::array<std::string, 4u>, 2u> TournamentCourse
     }
 };
 
+//note that this is read/written directly as a binary blob
+//so any changes in the future must be via the reserved bytes
 struct Tournament final
 {
     std::int32_t id = 0; //0 or 1 used to choose the course data array
@@ -57,6 +59,8 @@ struct Tournament final
     std::array<std::int32_t, 8u> tier1 = {}; //player IDs for round 2, -2 indicates no player assigned (-1 is human player index)
     std::array<std::int32_t, 4u> tier2 = {};
     std::array<std::int32_t, 2u> tier3 = {};
+
+    std::array<std::int32_t, 24u> Padding = {}; //reserve space in case we expand this in the future
 
     Tournament();
 };

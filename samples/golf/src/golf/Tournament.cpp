@@ -28,10 +28,15 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "Tournament.hpp"
+#include "Social.hpp"
 
+#include <crogine/detail/Types.hpp>
 #include <crogine/util/Random.hpp>
 
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
+
 
 Tournament::Tournament()
 {
@@ -45,7 +50,10 @@ Tournament::Tournament()
 
 void resetTournament(Tournament& src)
 {
+    const auto id = src.id;
     src = {};
+    src.id = id;
+
     for (auto i = -1; i < static_cast<std::int32_t>(League::PlayerCount); ++i)
     {
         src.tier0[i + 1] = i;
@@ -54,12 +62,52 @@ void resetTournament(Tournament& src)
     std::shuffle(src.tier0.begin(), src.tier0.end(), cro::Util::Random::rndEngine);
 }
 
+static inline std::string getFilePath(std::int32_t index)
+{
+    auto basePath = Social::getBaseContentPath();
+    std::stringstream ss;
+    ss << std::setw(2) << std::setfill('0') << index << ".tmt";
+
+    return basePath + ss.str();
+}
+
 void writeTournamentData(const Tournament& src)
 {
-
+    auto path = getFilePath(src.id);
+    cro::RaiiRWops file;
+    file.file = SDL_RWFromFile(path.c_str(), "wb");
+    if (file.file)
+    {
+        SDL_RWwrite(file.file, &src, sizeof(src), 1);
+    }
 }
 
 void readTournamentData(Tournament& dst)
 {
+    auto path = getFilePath(dst.id);
 
+    if (!cro::FileSystem::fileExists(path))
+    {
+        resetTournament(dst);
+        writeTournamentData(dst);
+        LogI << "Created tournament " << cro::FileSystem::getFileName(path) << std::endl;
+    }
+    else
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            if (!SDL_RWread(file.file, &dst, sizeof(dst), 1))
+            {
+                LogW << "Could not read " << cro::FileSystem::getFileName(path) << std::endl;
+                resetTournament(dst);
+                writeTournamentData(dst);
+            }
+            else
+            {
+                LogI << "Read tournament from " << cro::FileSystem::getFileName(path) << std::endl;
+            }
+        }
+    }
 }

@@ -311,7 +311,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         //reset the state if we came from the tutorial (this is
         //also set if the player quit the game from the pause menu)
         if (sd.gameMode != GameMode::FreePlay
-            || sd.quickplayOpponents != 0) //we were playing quickplay
+            || sd.quickplayOpponents != 0 //we were playing quickplay
+            || sd.activeTournament != -1) //or a tournament (although the above ought to be set to 1 in this case...)
         {
             m_voiceChat.disconnect();
 
@@ -331,6 +332,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             sd.weatherType = WeatherType::Clear;
         }
         sd.quickplayOpponents = 0; //make sure to always reset this
+        sd.activeTournament = -1; //make sure to always reset this
 
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
@@ -630,6 +632,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //        }
     //        ImGui::End();
     //    });
+
+    createDebugWindows();
 }
 
 MenuState::~MenuState()
@@ -2555,47 +2559,47 @@ void MenuState::createScene()
 #ifndef USE_GNS
     //creates an ent which triggers pre-loading of score values
     //whilst hopefully not hammering the connection
-    struct FetchData final
-    {
-        const float StepTime = 3.f;
-        float currTime = StepTime;
+    //struct FetchData final
+    //{
+    //    const float StepTime = 3.f;
+    //    float currTime = StepTime;
 
-        std::int32_t mapIndex = 0;
-        std::uint8_t holeIndex = 0;
-    };
+    //    std::int32_t mapIndex = 0;
+    //    std::uint8_t holeIndex = 0;
+    //};
 
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<FetchData>();
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            auto& [StepTime, currTime, mapIndex, holeIndex] = e.getComponent<cro::Callback>().getUserData<FetchData>();
-            currTime -= dt;
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<FetchData>();
+    //entity.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float dt)
+    //    {
+    //        auto& [StepTime, currTime, mapIndex, holeIndex] = e.getComponent<cro::Callback>().getUserData<FetchData>();
+    //        currTime -= dt;
 
-            if (currTime < 0)
-            {
-                if (auto s = Social::getTopFive(CourseNames[mapIndex], holeIndex);
-                    s.empty())
-                {
-                    //only reset the time if there was no string cached (and therefore a download was triggered)
-                    currTime += StepTime;
-                }
-                holeIndex++;
+    //        if (currTime < 0)
+    //        {
+    //            if (auto s = Social::getTopFive(CourseNames[mapIndex], holeIndex);
+    //                s.empty())
+    //            {
+    //                //only reset the time if there was no string cached (and therefore a download was triggered)
+    //                currTime += StepTime;
+    //            }
+    //            holeIndex++;
 
-                if (holeIndex == 3)
-                {
-                    holeIndex = 0;
-                    mapIndex++;
+    //            if (holeIndex == 3)
+    //            {
+    //                holeIndex = 0;
+    //                mapIndex++;
 
-                    if (mapIndex == CourseNames.size())
-                    {
-                        e.getComponent<cro::Callback>().active = false;
-                        m_uiScene.destroyEntity(e);
-                    }
-                }
-            }
-        };
+    //                if (mapIndex == CourseNames.size())
+    //                {
+    //                    e.getComponent<cro::Callback>().active = false;
+    //                    m_uiScene.destroyEntity(e);
+    //                }
+    //            }
+    //        }
+    //    };
 #endif
 }
 
@@ -3020,9 +3024,8 @@ void MenuState::checkBeta()
 
 void MenuState::launchQuickPlay()
 {
-    //I quite like always having 3 actually, and it
-    //doesn't impact the round time. We'll see what beta
-    //feedback we get...
+    //TODO much of this can be shared with launching a tournament game
+    //or the tutorial mode
     m_sharedData.quickplayOpponents = 3;
 
     m_sharedData.hosting = true;
@@ -3072,6 +3075,12 @@ void MenuState::launchQuickPlay()
             //applies the random options
         }
     }
+}
+
+void MenuState::launchTournament(std::int32_t tournamentID)
+{
+    CRO_ASSERT(tournamentID == 0 || tournamentID == 1, "");
+    LogI << "Boop " << tournamentID << std::endl;
 }
 
 void MenuState::handleNetEvent(const net::NetEvent& evt)
@@ -3918,4 +3927,97 @@ bool MenuState::applyTextEdit()
     }
     m_textEdit = {};
     return false;
+}
+
+void MenuState::createDebugWindows()
+{
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Tournament"))
+            {
+                const auto& n = m_sharedData.leagueNames;
+                const char PlayerName[] = "Player";
+                const char EmptyName[] = "Empty";
+                const auto getName = [&](std::int32_t idx)
+                    {
+                        if (idx > -1)
+                        {
+                            return n[idx].toUtf8();
+                        }
+                        return idx == -1 ?
+                            std::basic_string<std::uint8_t>(std::begin(PlayerName), std::end(PlayerName)) 
+                            : std::basic_string<std::uint8_t>(std::begin(EmptyName), std::end(EmptyName));
+                    };
+
+                const std::array<std::string, 2u> TabNames = { std::string("A"), "B" };
+                std::int32_t a = 0;
+
+                ImGui::BeginTabBar("##0002");
+                for (const auto& t : m_sharedData.tournaments)
+                {
+                    if (ImGui::BeginTabItem(TabNames[a].c_str()))
+                    {
+                        ImGui::Text("Current Round: %d", t.round);
+                        ImGui::Separator();
+                        ImGui::BeginChild("##0", { 160.f, 0.f });
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][0]);
+                        for (auto i = 0; i < 8; ++i)
+                        {
+                            ImGui::Text("%s", getName(t.tier0[i]).c_str());
+                        }
+                        ImGui::Separator();
+                        for (auto i = 8; i < 16; ++i)
+                        {
+                            ImGui::Text("%s", getName(t.tier0[i]).c_str());
+                        }
+                        ImGui::EndChild();
+                        ImGui::SameLine();
+
+                        ImGui::BeginChild("##1", { 160.f, 0.f });
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][1]);
+                        for (auto i = 0; i < 4; ++i)
+                        {
+                            ImGui::Text("%s", getName(t.tier1[i]).c_str());
+                        }
+                        ImGui::Separator();
+                        for (auto i = 4; i < 8; ++i)
+                        {
+                            ImGui::Text("%s", getName(t.tier1[i]).c_str());
+                        }
+                        ImGui::EndChild();
+                        ImGui::SameLine();
+
+                        ImGui::BeginChild("##2", { 160.f, 0.f });
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][2]);
+                        for (auto i = 0; i < 2; ++i)
+                        {
+                            ImGui::Text("%s", getName(t.tier2[i]).c_str());
+                        }
+                        ImGui::Separator();
+                        for (auto i = 2; i < 4; ++i)
+                        {
+                            ImGui::Text("%s", getName(t.tier2[i]).c_str());
+                        }
+                        ImGui::EndChild();
+                        ImGui::SameLine();
+
+                        ImGui::BeginChild("##3", { 160.f, 0.f });
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][3]);
+                        ImGui::Text("%s", getName(t.tier3[0]).c_str());
+                        ImGui::Text("%s", getName(t.tier3[1]).c_str());
+                        ImGui::EndChild();
+                        
+                        if (ImGui::Button("Launch"))
+                        {
+                            launchTournament(a);
+                        }
+                        ImGui::EndTabItem();
+                    }
+                    a++;
+                }
+                ImGui::EndTabBar();
+            }
+            ImGui::End();
+        
+        });
 }
