@@ -3194,7 +3194,6 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_sharedData.scoreType = ScoreType::Stroke;
                     m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
                     m_sharedData.holeCount = cro::Util::Random::value(1, 2);
-                    m_sharedData.nightTime = cro::Util::Random::value(0, 1);
                     m_sharedData.gimmeRadius = GimmeSize::Leather; //hmmm should we let the player choose this?
 
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
