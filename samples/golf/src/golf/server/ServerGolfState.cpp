@@ -35,6 +35,7 @@ source distribution.
 #include "../Clubs.hpp"
 #include "../MessageIDs.hpp"
 #include "../WeatherDirector.hpp"
+#include "../League.hpp"
 #include "CPUStats.hpp"
 #include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"
@@ -1866,26 +1867,14 @@ void GolfState::buildWorld()
         }
     }
 
-    //if this is a career league look for a progress file
-    //TODO what are the chances of this overlapping with the client?
-    if (m_sharedData.leagueID != 0)
-    {
-        const auto groupID = 0; //assume this is single player always
-
-        std::uint64_t h = 0;
-        std::vector<std::uint8_t> scores(m_holeData.size());
-
-        std::int32_t temp = 0;
-
-        if (Progress::read(m_sharedData.leagueID, h, scores, temp)
-            && h != 0)
+    
+    const auto applySaveData =
+        [&](std::vector<std::uint8_t>& scores, std::uint64_t holeIndex)
         {
-            m_currentHole = std::min(std::size_t(h), m_holeData.size() - 1);
-
-            scores.resize(m_holeData.size());
+            m_currentHole = std::min(std::size_t(holeIndex), m_holeData.size() - 1);
 
             //if we're here we *should* only have one player...
-            auto& player = m_playerInfo[groupID].playerInfo[0];
+            auto& player = m_playerInfo[0].playerInfo[0];
             player.holeScore.swap(scores);
 
             player.position = m_holeData[m_currentHole].tee;
@@ -1895,6 +1884,60 @@ void GolfState::buildWorld()
             player.terrain = m_scene.getSystem<BallSystem>()->getTerrain(player.position).terrain;
             player.ballEntity.getComponent<cro::Transform>().setPosition(player.position);
             player.ballEntity.getComponent<Ball>().terrain = player.terrain;
+        };
+
+
+    
+    
+    
+    //if this is a career league look for a progress file
+    //TODO what are the chances of this overlapping with the client?
+    if (m_sharedData.leagueID != 0)
+    {
+        std::uint64_t h = 0;
+        std::vector<std::uint8_t> scores(m_holeData.size());
+
+        //this is a fudge to let the server know we're
+        //actually on a tournament
+        if (m_sharedData.leagueID > LeagueRoundID::Count)
+        {
+            const auto tournamentID = std::numeric_limits<std::int32_t>::max() - m_sharedData.leagueID;
+            CRO_ASSERT(tournamentID < 2, "");
+
+            Tournament t;
+            t.id = tournamentID;
+            readTournamentData(t);
+
+            std::fill(scores.begin(), scores.end(), 0);
+
+            //tournament
+            for (auto i = 0; i < scores.size(); ++i)
+            {
+                scores[i] = t.scores[i];
+                if (scores[i] != 0)
+                {
+                    h++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (h != 0)
+            {
+                applySaveData(scores, h);
+            }
+        }
+        else
+        {
+            std::int32_t temp = 0;
+
+            if (Progress::read(m_sharedData.leagueID, h, scores, temp)
+                && h != 0)
+            {
+                applySaveData(scores, h);
+            }
         }
     }
 }

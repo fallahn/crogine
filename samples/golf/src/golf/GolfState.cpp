@@ -62,6 +62,7 @@ source distribution.
 #include "ChunkVisSystem.hpp"
 #include "AvatarRotationSystem.hpp"
 #include "Career.hpp"
+#include "Tournament.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -215,21 +216,38 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         m_friendlyPlayers = std::make_unique<FriendlyPlayers>(sd.clubSet);
 
+        //select random players in free play
         const auto& league = League(LeagueRoundID::Club, m_sharedData);
-        const auto stride = League::PlayerCount / sd.quickplayOpponents;
-        
-        //track these so we always ensure the next player has a greater index
-        std::array<std::size_t, 3u> indices = {};
-        indices[0] = cro::Util::Random::value(0u, stride);
-        
-        m_friendlyPlayers->addPlayer(league.getTable()[indices[0]]);
-        for (auto i = 1; i < sd.quickplayOpponents; ++i)
+        if (sd.gameMode == GameMode::FreePlay)
         {
-            auto idx = indices[i-1] + cro::Util::Random::value(1u, stride - 1);
-            idx = std::clamp(idx, std::size_t(0), League::PlayerCount - 1);
-            indices[i] = idx;
+            const auto stride = League::PlayerCount / sd.quickplayOpponents;
 
-            m_friendlyPlayers->addPlayer(league.getTable()[idx]);
+            //track these so we always ensure the next player has a greater index
+            std::array<std::size_t, 3u> indices = {};
+            indices[0] = cro::Util::Random::value(0u, stride);
+
+            m_friendlyPlayers->addPlayer(league.getTable()[indices[0]]);
+            for (auto i = 1; i < sd.quickplayOpponents; ++i)
+            {
+                auto idx = indices[i - 1] + cro::Util::Random::value(1u, stride - 1);
+                idx = std::clamp(idx, std::size_t(0), League::PlayerCount - 1);
+                indices[i] = idx;
+
+                m_friendlyPlayers->addPlayer(league.getTable()[idx]);
+            }
+        }
+        else
+        {
+            //in tournament mode load the selected player from the tournament
+            CRO_ASSERT(sd.activeTournament != TournamentIndex::NullVal, "");
+            if (sd.tournaments[sd.activeTournament].scores[0] == 0)
+            {
+                //this is a new round
+                const auto opponent = getTournamentOpponent(sd.tournaments[sd.activeTournament]);
+                sd.tournaments[sd.activeTournament].opponentStats = league.getPlayer(opponent);
+            }
+            m_friendlyPlayers->addPlayer(sd.tournaments[sd.activeTournament].opponentStats);
+            m_friendlyPlayers->setHoleScores(sd.tournaments[sd.activeTournament].opponentStats.nameIndex, sd.tournaments[sd.activeTournament].opponentScores);
         }
     }
     
@@ -272,7 +290,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
-    registerCommand("render_wavemap", [](const std::string& s) 
+    registerCommand("cl_render_wavemap", [](const std::string& s) 
         {
             if (s == "false" || s == "0")
             {
@@ -1548,6 +1566,12 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             m_mulliganCount = 0;
             m_sharedData.hasMulligan = false;
+
+            if (m_sharedData.gameMode == GameMode::Tournament)
+            {
+                m_sharedData.tournaments[m_sharedData.activeTournament].mulliganCount = 0;
+                writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament]);
+            }
 
             Achievements::awardAchievement(AchievementStrings[AchievementID::TryTryAgain]);
 
@@ -3545,7 +3569,7 @@ void GolfState::createDrone()
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(2.f));
-        entity.getComponent<cro::Transform>().setPosition({ 160.f, 1.f, -100.f }); //lazy man's half map size
+        entity.getComponent<cro::Transform>().setPosition({ MapSizeFloat.x / 2.f, 1.f, -MapSizeFloat.y / 2.f });
         md.createModel(entity);
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
@@ -6712,7 +6736,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     if (glm::length2(m_holeData[m_currentHole].tee - player.position) > 0.1f)
     {
         //crude way of telling if we're not at the tee
-        m_sharedData.hasMulligan = m_sharedData.leagueRoundID != LeagueRoundID::Club && m_mulliganCount != 0;
+        m_sharedData.hasMulligan = (m_sharedData.leagueRoundID != LeagueRoundID::Club || m_sharedData.gameMode == GameMode::Tournament)
+            && m_mulliganCount != 0;
     }
     else
     {

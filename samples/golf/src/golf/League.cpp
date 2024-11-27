@@ -411,6 +411,14 @@ void League::retrofitHoleScores(const std::vector<std::int32_t>& parVals)
     }
 }
 
+const LeaguePlayer& League::getPlayer(std::int32_t nameIndex) const
+{
+    auto r = std::find_if(m_players.begin(), m_players.end(), [nameIndex](const LeaguePlayer& p) {return p.nameIndex == nameIndex; });
+    CRO_ASSERT(r != m_players.end(), "");
+
+    return *r;
+}
+
 const cro::String& League::getPreviousResults(const cro::String& playerName) const
 {
     const auto path = getFilePath(PrevFileName);
@@ -1156,4 +1164,15 @@ void FriendlyPlayers::updateHoleScores(std::uint32_t hole, std::int32_t par, boo
 void FriendlyPlayers::addPlayer(LeaguePlayer p)
 {
     m_players.push_back(p);
+}
+
+void FriendlyPlayers::setHoleScores(std::int32_t playerNameIndex, const HoleScores& scores)
+{
+    m_holeScores[playerNameIndex] = scores;
+}
+
+const HoleScores& FriendlyPlayers::getHoleScores(std::int32_t playerNameIndex) const
+{
+    CRO_ASSERT(playerNameIndex > -1 && playerNameIndex < League::PlayerCount, "");
+    return m_holeScores[playerNameIndex];
 }

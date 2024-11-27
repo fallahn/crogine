@@ -1395,10 +1395,55 @@ void GolfState::loadMap()
         std::fill(data.holeTimes.begin(), data.holeTimes.end(), 0.f);
     }
 
+    
+    
+    
+    const auto applySaveData = [&](std::uint64_t& holeIndex, std::vector<std::uint8_t>& scores, std::int32_t& mulliganCount)
+        {
+            m_currentHole = std::min(holeStrings.size() - 1, std::size_t(holeIndex));
+            m_terrainBuilder.applyHoleIndex(m_currentHole);
+
+            m_depthMap.setModel(m_holeData[m_currentHole]);
+            m_depthMap.update(-1);
+
+            auto& player = m_sharedData.connectionData[0].playerData[0];
+            player.holeScores.swap(scores);
+
+            for (auto i = 0u; i < m_currentHole; ++i)
+            {
+                player.holeComplete[i] = true;
+
+                //look at previous holes and see if we need to take on the crowd positions
+                if (m_holeData[i].modelEntity == m_holeData[m_currentHole].modelEntity)
+                {
+                    if (m_holeData[m_currentHole].crowdPositions[0].empty())
+                    {
+                        for (auto j = 0u; j < m_holeData[i].crowdPositions.size(); ++j)
+                        {
+                            m_holeData[i].crowdPositions[j].swap(m_holeData[m_currentHole].crowdPositions[j]);
+                        }
+                    }
+
+                    if (m_holeData[m_currentHole].crowdCurves.empty())
+                    {
+                        m_holeData[i].crowdCurves.swap(m_holeData[m_currentHole].crowdCurves);
+                    }
+                }
+            }
+
+            m_resumedFromSave = true;
+            if (m_currentHole == 0)
+            {
+                mulliganCount = 1;
+            }
+        };
+    
+
+    
     //if this is a career game see if we had a round in progress
-    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+    if (m_sharedData.gameMode == GameMode::FreePlay)
     {
-        Social::setLeaderboardsEnabled(m_sharedData.gameMode == GameMode::FreePlay);
+        Social::setLeaderboardsEnabled(true);
     }
     else
     {
@@ -1410,59 +1455,52 @@ void GolfState::loadMap()
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(scoreSize);
         std::int32_t mulliganCount = 0;
-        if (Progress::read(m_sharedData.leagueRoundID, h, scores, mulliganCount))
+
+        if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
         {
+            std::fill(scores.begin(), scores.end(), 0);
+
+            //tournament
+            for (auto i = 0; i < scores.size(); ++i)
+            {
+                scores[i] = m_sharedData.tournaments[m_sharedData.activeTournament].scores[i];
+                if (scores[i] != 0)
+                {
+                    h++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            mulliganCount = m_sharedData.tournaments[m_sharedData.activeTournament].mulliganCount;
+
             if (h != 0)
             {
-                scores.resize(scoreSize);
-                m_currentHole = std::min(holeStrings.size() - 1, std::size_t(h));
-                m_terrainBuilder.applyHoleIndex(m_currentHole);
-                
-                m_depthMap.setModel(m_holeData[m_currentHole]);
-                m_depthMap.update(-1);
-
-                auto& player = m_sharedData.connectionData[0].playerData[0];
-                player.holeScores.swap(scores);
-                
-                for (auto i = 0u; i < m_currentHole; ++i)
+                applySaveData(h, scores, mulliganCount);
+            }
+        }
+        else
+        {
+            //league
+            if (Progress::read(m_sharedData.leagueRoundID, h, scores, mulliganCount))
+            {
+                if (h != 0)
                 {
-                    player.holeComplete[i] = true;
+                    applySaveData(h, scores, mulliganCount);
 
-                    //look at previous holes and see if we need to take on the crowd positions
-                    if (m_holeData[i].modelEntity == m_holeData[m_currentHole].modelEntity)
+                    //this might be an upgrade from the old league system
+                    //so we need to fill in the in-progress scores
+                    std::vector<std::int32_t> parVals;
+                    for (auto i = 0u; i < m_currentHole; ++i)
                     {
-                        if (m_holeData[m_currentHole].crowdPositions[0].empty())
-                        {
-                            for (auto j = 0u; j < m_holeData[i].crowdPositions.size(); ++j)
-                            {
-                                m_holeData[i].crowdPositions[j].swap(m_holeData[m_currentHole].crowdPositions[j]);
-                            }
-                        }
-
-                        if (m_holeData[m_currentHole].crowdCurves.empty())
-                        {
-                            m_holeData[i].crowdCurves.swap(m_holeData[m_currentHole].crowdCurves);
-                        }
+                        parVals.push_back(m_holeData[i].par);
+                        Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne].retrofitHoleScores(parVals);
                     }
-                }
-
-                m_resumedFromSave = true;
-                if (m_currentHole == 0)
-                {
-                    mulliganCount = 1;
-                }
-
-                //this might be an upgrade from the old league system
-                //so we need to fill in the in-progress scores
-                std::vector<std::int32_t> parVals;
-                for (auto i = 0u; i < m_currentHole; ++i)
-                {
-                    parVals.push_back(m_holeData[i].par);
-                    Career::instance(m_sharedData).getLeagueTables()[m_sharedData.leagueRoundID - LeagueRoundID::RoundOne].retrofitHoleScores(parVals);
                 }
             }
         }
-
         m_mulliganCount = mulliganCount;
     }
 

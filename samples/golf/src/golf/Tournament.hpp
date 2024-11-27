@@ -38,11 +38,11 @@ static inline const std::array<std::array<std::string, 4u>, 2u> TournamentCourse
 {
     std::array<std::string, 4u>
     {
-        std::string("course_10"), "course_07", "course_08", "course_01"
+        std::string("course_10"), "course_01", "course_08", "course_12"
     },
     std::array<std::string, 4u>
     {
-        std::string("course_12"), "course_05", "course_11", "course_02"
+        std::string("course_07"), "course_05", "course_02", "course_11"
     }
 };
 
@@ -52,15 +52,16 @@ struct Tournament final
 {
     std::int32_t id = 0; //0 or 1 used to choose the course data array
     std::int32_t round = 0; //current active round used to index into the array chosen by the above
+    std::int32_t mulliganCount = 1; //remaining mulligans this round
     LeaguePlayer opponentStats; //current opponent used to set FriendlyPlayer in GolfState
-    std::array<std::int32_t, 9u> opponentScores = {}; //opponent's progress in current round
-    std::array<std::int32_t, 9u> scores = {}; //our current scores. If first is zero we assume round is not yet started
+    std::array<std::int32_t, 18u> opponentScores = {}; //opponent's progress in current round
+    std::array<std::int32_t, 18u> scores = {}; //our current scores. If first is zero we assume round is not yet started
     std::array<std::int32_t, 16u> tier0 = {}; //IDs of players in the first tier, 8L and 8R
     std::array<std::int32_t, 8u> tier1 = {}; //player IDs for round 2, -2 indicates no player assigned (-1 is human player index)
     std::array<std::int32_t, 4u> tier2 = {};
     std::array<std::int32_t, 2u> tier3 = {};
 
-    std::array<std::int32_t, 24u> Padding = {}; //reserve space in case we expand this in the future
+    std::array<std::int32_t, 25u> Padding = {}; //reserve space in case we expand this in the future
 
     Tournament();
 };
@@ -73,6 +74,12 @@ struct TournamentIndex final
         A, B
     };
 };
+
+//returns if the given tournament game is f/b/a holes
+std::int32_t getTournamentHoleCount(const Tournament&);
+
+//fetches the current opponent index for the tournament
+std::int32_t getTournamentOpponent(const Tournament&);
 
 //clears the brackets and shuffles tier0
 void resetTournament(Tournament&);

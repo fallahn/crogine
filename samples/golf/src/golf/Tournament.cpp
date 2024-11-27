@@ -48,6 +48,72 @@ Tournament::Tournament()
     std::fill(tier3.begin(), tier3.end(), -2);
 }
 
+std::int32_t getTournamentHoleCount(const Tournament& t)
+{
+    //c++20's templated lambdas would be useful here
+    //const auto holeCount = [](const auto& tier)
+    //    {
+    //        const auto pos = std::find(tier.begin(), tier.end(), -1);
+    //        return std::distance(tier.begin(), pos) < (tier.size() / 2) ? 1 : 2;
+    //    };
+
+    switch (t.round)
+    {
+    default:
+    case 0:
+    {
+        const auto pos = std::find(t.tier0.begin(), t.tier0.end(), -1);
+        return std::distance(t.tier0.begin(), pos) < (t.tier0.size() / 2) ? 1 : 2;
+    }
+
+    case 1:
+    {
+        const auto pos = std::find(t.tier1.begin(), t.tier1.end(), -1);
+        return std::distance(t.tier1.begin(), pos) < (t.tier1.size() / 2) ? 1 : 2;
+    }
+
+    case 2:
+    {
+        const auto pos = std::find(t.tier2.begin(), t.tier2.end(), -1);
+        return std::distance(t.tier2.begin(), pos) < (t.tier2.size() / 2) ? 1 : 2;
+    }
+
+    case 3:
+        return 0; //18 holes for final
+    }
+}
+
+std::int32_t getTournamentOpponent(const Tournament& t)
+{
+    switch (t.round)
+    {
+    default:
+    case 0:
+    {
+        const auto pos = std::find(t.tier0.begin(), t.tier0.end(), -1);
+        const auto offset = std::distance(t.tier0.begin(), pos);
+        return offset % 2 == 0 ? t.tier0[offset + 1] : t.tier0[offset - 1];
+    }
+
+    case 1:
+    {
+        const auto pos = std::find(t.tier1.begin(), t.tier1.end(), -1);
+        const auto offset = std::distance(t.tier1.begin(), pos);
+        return offset % 2 == 0 ? t.tier1[offset + 1] : t.tier1[offset - 1];
+    }
+
+    case 2:
+    {
+        const auto pos = std::find(t.tier2.begin(), t.tier2.end(), -1);
+        const auto offset = std::distance(t.tier2.begin(), pos);
+        return offset % 2 == 0 ? t.tier2[offset + 1] : t.tier2[offset - 1];
+    }
+
+    case 3:
+        return t.tier3[0] == -1 ? t.tier3[1] : t.tier3[0];
+    }
+}
+
 void resetTournament(Tournament& src)
 {
     const auto id = src.id;

@@ -188,7 +188,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_screenChatActiveCount (0),
     m_showShortcuts         (false)
 {
-    registerCommand("use_tts", [&](const std::string& str)
+    registerCommand("cl_use_tts", [&](const std::string& str)
         {
             if (str == "1" || str == "true")
             {

@@ -519,7 +519,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 #endif
-    registerCommand("group_mode", [&](const std::string& param)
+    registerCommand("sv_group_mode", [&](const std::string& param)
         {
             const std::array GroupStrings =
             {
@@ -3058,10 +3058,50 @@ void MenuState::launchQuickPlay()
 void MenuState::launchTournament(std::int32_t tournamentID)
 {
     CRO_ASSERT(tournamentID == 0 || tournamentID == 1, "");
-    LogI << "Boop " << tournamentID << std::endl;
+        
+    m_sharedData.quickplayOpponents = 1; //golf state loads the player info from the active tournament
 
-    //make sure to set this so we return to correct menu
-    //m_sharedData.gameMode = GameMode::Tournament;
+    m_sharedData.hosting = true;
+    m_sharedData.gameMode = GameMode::Tournament; //ensures leaderboards are disabled and we return to correct menu
+    m_sharedData.activeTournament = tournamentID;
+    m_sharedData.localConnectionData.playerCount = 1;
+    m_sharedData.localConnectionData.playerData[0].isCPU = false;
+
+    //this gets passed to the server instance on creation so we know which
+    //save file it should be loading. MUST be reset to LeagueRoundID::Club, below
+    m_sharedData.leagueRoundID = std::numeric_limits<std::int32_t>::max() - tournamentID;
+    m_sharedData.clubLimit = 0;
+
+    m_sharedData.holeCount = getTournamentHoleCount(m_sharedData.tournaments[tournamentID]);
+    
+    //start a local server and connect
+    if (quickConnect(m_sharedData))
+    {
+        m_sharedData.mapDirectory = TournamentCourses[m_sharedData.tournaments[tournamentID].id][m_sharedData.tournaments[tournamentID].round];
+        auto res = std::find_if(m_sharedCourseData.courseData.begin(), m_sharedCourseData.courseData.end(),
+            [&](const SharedCourseData::CourseData& d)
+            {
+                return d.directory == m_sharedData.mapDirectory;
+            });
+        //res should never be out of range because the menu won't load if course data is missing
+        m_sharedData.courseIndex = std::distance(m_sharedCourseData.courseData.begin(), res);
+
+        //set the course
+        auto data = serialiseString(m_sharedData.mapDirectory);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+        //now we wait for the server to send us the map name so we know the
+        //course has been set. Then the network event handler PacketID::ConnectionAccepted
+        //applies the server options
+    }
+    else
+    {
+        //error message is set by quickConnect()
+        requestStackPush(StateID::Error); //error makes sure to reset any connection
+    }
+
+    //MUST restore this
+    m_sharedData.leagueRoundID = LeagueRoundID::Club;
 }
 
 void MenuState::handleNetEvent(const net::NetEvent& evt)
@@ -3888,7 +3928,7 @@ void MenuState::createDebugWindows()
                             : std::basic_string<std::uint8_t>(std::begin(EmptyName), std::end(EmptyName));
                     };
 
-                const std::array<std::string, 2u> TabNames = { std::string("A"), "B" };
+                const std::array<std::string, 2u> TabNames = { std::string(" Tournament A"), "Tournament B" };
                 std::int32_t a = 0;
 
                 ImGui::BeginTabBar("##0002");
@@ -3896,9 +3936,10 @@ void MenuState::createDebugWindows()
                 {
                     if (ImGui::BeginTabItem(TabNames[a].c_str()))
                     {
+                        ImVec2 ChildSize(160.f, 300.f);
                         ImGui::Text("Current Round: %d", t.round);
                         ImGui::Separator();
-                        ImGui::BeginChild("##0", { 160.f, 0.f });
+                        ImGui::BeginChild("##0", ChildSize);
                         ImGui::Text("Course: %s", TournamentCourses[t.id][0]);
                         for (auto i = 0; i < 8; ++i)
                         {
@@ -3912,7 +3953,7 @@ void MenuState::createDebugWindows()
                         ImGui::EndChild();
                         ImGui::SameLine();
 
-                        ImGui::BeginChild("##1", { 160.f, 0.f });
+                        ImGui::BeginChild("##1", ChildSize);
                         ImGui::Text("Course: %s", TournamentCourses[t.id][1]);
                         for (auto i = 0; i < 4; ++i)
                         {
@@ -3926,7 +3967,7 @@ void MenuState::createDebugWindows()
                         ImGui::EndChild();
                         ImGui::SameLine();
 
-                        ImGui::BeginChild("##2", { 160.f, 0.f });
+                        ImGui::BeginChild("##2", ChildSize);
                         ImGui::Text("Course: %s", TournamentCourses[t.id][2]);
                         for (auto i = 0; i < 2; ++i)
                         {
@@ -3940,7 +3981,7 @@ void MenuState::createDebugWindows()
                         ImGui::EndChild();
                         ImGui::SameLine();
 
-                        ImGui::BeginChild("##3", { 160.f, 0.f });
+                        ImGui::BeginChild("##3", ChildSize);
                         ImGui::Text("Course: %s", TournamentCourses[t.id][3]);
                         ImGui::Text("%s", getName(t.tier3[0]).c_str());
                         ImGui::Text("%s", getName(t.tier3[1]).c_str());

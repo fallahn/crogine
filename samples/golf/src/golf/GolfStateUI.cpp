@@ -6196,6 +6196,18 @@ void GolfState::updateLeagueHole()
             if (m_friendlyPlayers)
             {
                 m_friendlyPlayers->updateHoleScores(m_currentHole, par, playerScore > par, windChance);
+
+                if (m_sharedData.gameMode == GameMode::Tournament)
+                {
+                    //copy CPU scores to tournament data and update the save
+                    m_sharedData.tournaments[m_sharedData.activeTournament].opponentScores =
+                        m_friendlyPlayers->getHoleScores(m_sharedData.tournaments[m_sharedData.activeTournament].opponentStats.nameIndex);
+
+                    //and player score
+                    m_sharedData.tournaments[m_sharedData.activeTournament].scores[m_currentHole] 
+                        = m_sharedData.connectionData[0].playerData[0].holeScores[m_currentHole];
+                    writeTournamentData(m_sharedData.tournaments[m_sharedData.activeTournament]);
+                }
             }
         }
         break;

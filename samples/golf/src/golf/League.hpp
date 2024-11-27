@@ -118,6 +118,8 @@ public:
     const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
     const std::vector<TableEntry>& getSortedTable() const { return m_sortedTable; } //used for display
 
+    const LeaguePlayer& getPlayer(std::int32_t nameIndex) const;
+
     const cro::String& getPreviousResults(const cro::String& playerName) const;
     std::int32_t getPreviousPosition() const { return m_previousPosition; }
 
@@ -183,6 +185,8 @@ public:
     void updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance);
 
     void addPlayer(LeaguePlayer);
+    void setHoleScores(std::int32_t playerNameIndex, const HoleScores&);
+    const HoleScores& getHoleScores(std::int32_t) const;
 
     const HoleScores& getScores(std::size_t i) const { return m_holeScores[m_players[i].nameIndex]; }
     std::int32_t getPlayerIndex(std::size_t i) const { return m_players[i].nameIndex; }
