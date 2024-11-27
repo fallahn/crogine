@@ -1685,7 +1685,7 @@ void CareerState::createInfoMenu(cro::Entity parent)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 298.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Welcome To Career Mode!");
+    entity.addComponent<cro::Text>(largeFont).setString("Welcome To The Leagues!");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);

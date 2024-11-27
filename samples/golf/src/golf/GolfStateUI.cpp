@@ -6071,7 +6071,8 @@ void GolfState::updateProfileDB() const
 
 void GolfState::updateLeague()
 {
-    if (m_allowAchievements)
+    if (m_allowAchievements
+        && m_sharedData.gameMode != GameMode::Tournament)
     {
         std::array<std::int32_t, 18u> parVals;
         for (auto i = 0u; i < m_holeData.size(); ++i)

@@ -97,7 +97,7 @@ static constexpr float MaxFOV = 90.f;
 
 enum class GameMode
 {
-    Career, FreePlay, Tutorial, Clubhouse
+    Career, FreePlay, Tutorial, Clubhouse, Tournament
 };
 
 struct SharedCourseData;

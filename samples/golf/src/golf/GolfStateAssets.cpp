@@ -1398,7 +1398,7 @@ void GolfState::loadMap()
     //if this is a career game see if we had a round in progress
     if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
     {
-        Social::setLeaderboardsEnabled(true);
+        Social::setLeaderboardsEnabled(m_sharedData.gameMode == GameMode::FreePlay);
     }
     else
     {

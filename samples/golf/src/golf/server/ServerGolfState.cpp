@@ -1226,8 +1226,11 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 void GolfState::setNextHole()
 {
     m_currentBest = MaxStrokes;
-    m_scene.getSystem<BallSystem>()->forceWindChange();
-
+    
+    if (!m_sharedData.randomWind)
+    {
+        m_scene.getSystem<BallSystem>()->forceWindChange();
+    }
 
     //update player skins/match scores
     auto gameFinished = summariseRules();

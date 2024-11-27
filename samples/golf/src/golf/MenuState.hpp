@@ -417,6 +417,10 @@ private:
     void handleNetEvent(const net::NetEvent&);
 
     void createDebugWindows();
+    void applyTutorialConnection();
+    void applyCareerConnection();
+    void applyQuickPlayConnection();
+    void applyTournamentConnection();
 
     friend struct MainMenuContext;
 };
