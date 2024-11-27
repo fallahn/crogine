@@ -2720,8 +2720,18 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::SpriteAnimation>().play(0);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    auto enter = mouseEnter;
-    auto exit = mouseExit;
+    const auto enter = mouseEnter;
+    const auto exit = mouseExit;
+
+    const auto mouseEnterBounce = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&, entity](cro::Entity e) mutable
+        {
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            e.getComponent<cro::Callback>().active = true;
+
+            m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+        });
 
     mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&, entity](cro::Entity e) mutable
@@ -2867,18 +2877,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
         };
 
-    enterWeatherCallback = [&, weatherEnt, quadEnt]() mutable
-        {
-            //displays weather menu
-            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-            weatherEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::In;
-            weatherEnt.getComponent<cro::Callback>().active = true;
-            quadEnt.getComponent<cro::Callback>().active = true;
 
-            //TODO update any text as needed
-            m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-        };
 
     //weather select button
     entity = m_uiScene.createEntity();
@@ -2889,9 +2888,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
     entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterBounce;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2907,6 +2907,23 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             });
     weatherEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    enterWeatherCallback = [&, weatherEnt, quadEnt, entity]() mutable
+        {
+            //displays weather menu
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            weatherEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::In;
+            weatherEnt.getComponent<cro::Callback>().active = true;
+            quadEnt.getComponent<cro::Callback>().active = true;
+
+            //update any text as needed
+            entity.getComponent<cro::Text>().setString("Weather: " + WeatherStrings[m_sharedData.weatherType]);
+            m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+        };
+
+
+
     //random wind button
     std::string s("Random Wind: ");
     s += m_sharedData.randomWind ? "On" : "Off";
@@ -2919,9 +2936,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
     entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterBounce;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2950,9 +2968,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
     entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterBounce;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2976,9 +2995,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Weather);
     entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterBounce;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -3119,9 +3139,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(font).setString("No");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::ConfirmQuit);
     entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterBounce;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -3143,9 +3164,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(font).setString("Yes");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::ConfirmQuit);
     entity.getComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = enter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterBounce;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = exit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
