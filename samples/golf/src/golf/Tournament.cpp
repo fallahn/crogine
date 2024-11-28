@@ -176,4 +176,10 @@ void readTournamentData(Tournament& dst)
             }
         }
     }
+
+    //debugging
+    /*dst.scores = { 10,10,10,10,10,10,10,10,0 };
+    dst.opponentScores = { 1,1,1,1,1,1,1,1,0 };*/
+    dst.scores = { 1,1,1,1,1,1,1,1,0 };
+    dst.opponentScores = { 10,10,10,10,10,10,10,10,0 };
 }

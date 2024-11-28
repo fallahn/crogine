@@ -992,7 +992,7 @@ ScoreCalculator::ScoreCalculator(std::int32_t clubset)
 }
 
 //public
-void ScoreCalculator::calculate(LeaguePlayer& player, std::uint32_t hole, std::int32_t par, bool overPar, HoleScores& holeScores) const
+void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, std::int32_t par, bool overPar, HoleScores& holeScores) const
 {
     auto skill = player.skill;
     if (overPar

@@ -454,6 +454,7 @@ private:
     //scoring related stuff in GolfStateScoring.cpp
     void updateHoleScore(std::uint16_t); //< diplays result of a hole win/loss
     void updateLeaderboardScore(bool&, cro::String&); //updates the params with personal best from current leaderboard
+    void updateTournament(bool); //if player won the round updates all other CPU for that round, else for the rest of the tournament
 
     //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final

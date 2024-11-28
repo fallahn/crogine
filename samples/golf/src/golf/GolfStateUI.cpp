@@ -2201,7 +2201,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
         Achievements::awardAchievement(AchievementStrings[AchievementID::Nested]);
     }
 
-    if (m_friendlyPlayers)
+    if (m_friendlyPlayers
+        && m_sharedData.gameMode != GameMode::Tournament)
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::DiveIn]);
     }
@@ -2239,7 +2240,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 case ScoreType::Stroke:
                     Achievements::awardAchievement(AchievementStrings[AchievementID::StrokeOfGenius]);
 
-                    if (m_friendlyPlayers)
+                    if (m_friendlyPlayers
+                        && m_sharedData.gameMode != GameMode::Tournament)
                     {
                         Achievements::awardAchievement(AchievementStrings[AchievementID::QuickStart + m_sharedData.preferredClubSet]);
                     }
@@ -2486,7 +2488,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
-    //only show trophies in freeplay
+    //only show trophies in freeplay/tournament
     cro::Entity leagueEntity;
     if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
     {
@@ -2494,7 +2496,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
         for (auto i = 0u; i < trophyCount; ++i)
         {
-            if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID
+            if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID //if this is a virtual CPU client is NullVal
                 && !m_sharedData.localConnectionData.playerData[m_statBoardScores[i].player].isCPU)
             {
                 if (m_statBoardScores.size() > 1
@@ -2526,6 +2528,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                         break;
                     }
                     Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
+                    updateTournament(i == 0);
                 }
             }
 
@@ -3645,7 +3648,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             entry.total = entry.frontNine + entry.backNine;
 
             auto& leaderboardEntry = m_statBoardScores.emplace_back();
-            leaderboardEntry.client = ConstVal::NullValue;
+            leaderboardEntry.client = ConstVal::NullValue; //this is used when displaying the trophy to make sure only human players have an avatar
             leaderboardEntry.player = ConstVal::NullValue;
             leaderboardEntry.score = entry.total;
             leaderboardEntry.distance = entry.totalDistance;

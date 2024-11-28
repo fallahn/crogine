@@ -3944,12 +3944,12 @@ void MenuState::createDebugWindows()
                         ImGui::Text("Course: %s", TournamentCourses[t.id][0]);
                         for (auto i = 0; i < 8; ++i)
                         {
-                            ImGui::Text("%s", getName(t.tier0[i]).c_str());
+                            ImGui::Text("%d %s", t.tier0[i], getName(t.tier0[i]).c_str());
                         }
                         ImGui::Separator();
                         for (auto i = 8; i < 16; ++i)
                         {
-                            ImGui::Text("%s", getName(t.tier0[i]).c_str());
+                            ImGui::Text("%d %s", t.tier0[i], getName(t.tier0[i]).c_str());
                         }
                         ImGui::EndChild();
                         ImGui::SameLine();
@@ -3958,12 +3958,12 @@ void MenuState::createDebugWindows()
                         ImGui::Text("Course: %s", TournamentCourses[t.id][1]);
                         for (auto i = 0; i < 4; ++i)
                         {
-                            ImGui::Text("%s", getName(t.tier1[i]).c_str());
+                            ImGui::Text("%d %s", t.tier1[i], getName(t.tier1[i]).c_str());
                         }
                         ImGui::Separator();
                         for (auto i = 4; i < 8; ++i)
                         {
-                            ImGui::Text("%s", getName(t.tier1[i]).c_str());
+                            ImGui::Text("%d %s", t.tier1[i], getName(t.tier1[i]).c_str());
                         }
                         ImGui::EndChild();
                         ImGui::SameLine();
@@ -3972,20 +3972,20 @@ void MenuState::createDebugWindows()
                         ImGui::Text("Course: %s", TournamentCourses[t.id][2]);
                         for (auto i = 0; i < 2; ++i)
                         {
-                            ImGui::Text("%s", getName(t.tier2[i]).c_str());
+                            ImGui::Text("%d %s", t.tier2[i], getName(t.tier2[i]).c_str());
                         }
                         ImGui::Separator();
                         for (auto i = 2; i < 4; ++i)
                         {
-                            ImGui::Text("%s", getName(t.tier2[i]).c_str());
+                            ImGui::Text("%d %s", t.tier2[i], getName(t.tier2[i]).c_str());
                         }
                         ImGui::EndChild();
                         ImGui::SameLine();
 
                         ImGui::BeginChild("##3", ChildSize);
                         ImGui::Text("Course: %s", TournamentCourses[t.id][3]);
-                        ImGui::Text("%s", getName(t.tier3[0]).c_str());
-                        ImGui::Text("%s", getName(t.tier3[1]).c_str());
+                        ImGui::Text("%d %s", t.tier3[0], getName(t.tier3[0]).c_str());
+                        ImGui::Text("%d %s", t.tier3[1], getName(t.tier3[1]).c_str());
                         ImGui::EndChild();
                         
                         if (ImGui::Button("Launch"))

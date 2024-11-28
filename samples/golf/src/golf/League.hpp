@@ -90,7 +90,7 @@ using HoleScores = std::array<std::int32_t, 18>;
 struct ScoreCalculator final
 {
     explicit ScoreCalculator(std::int32_t clubset);
-    void calculate(LeaguePlayer&, std::uint32_t hole, std::int32_t par, bool overPar, HoleScores&) const;
+    void calculate(const LeaguePlayer&, std::uint32_t hole, std::int32_t par, bool overPar, HoleScores&) const;
 
 private:
     std::int32_t m_clubset;
