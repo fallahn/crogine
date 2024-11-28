@@ -249,8 +249,9 @@ void PauseState::buildScene()
             }
 
             {
+                //urrrgggghhhhhh
                 auto players = (m_sharedData.baseState == StateID::Golf
-                    && ((m_sharedData.leagueRoundID == LeagueRoundID::Club && m_sharedData.hosting)
+                    && ((m_sharedData.leagueRoundID == LeagueRoundID::Club && m_sharedData.hosting && m_sharedData.gameMode != GameMode::Tournament)
                     || m_sharedData.hasMulligan));
                 m_playerButton.getComponent<cro::UIInput>().enabled = players;
                 m_playerButton.getComponent<cro::Transform>().setScale(glm::vec2(players ? 1.f : 0.f));

@@ -146,7 +146,6 @@ namespace
     std::int32_t depthUpdateCount = 1;
 
     float godmode = 1.f;
-    std::int32_t survivorXP = 25;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -188,6 +187,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_distanceToHole        (1.f), //don't init to 0 in case we get div0
     m_NTPDistance           (1.f), //don't init to 0 in case we get div0
     m_strokeTimer           (0.f),
+    m_survivorXP            (25),
     m_resumedFromSave       (false),
     m_mulliganCount         (0),
     m_terrainBuilder        (sd, m_holeData),
@@ -274,7 +274,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     sd.holesPlayed = 0;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
-    survivorXP = 25;
     godmode = 1.f;
     registerCommand("god", [](const std::string&)
         {
@@ -4468,7 +4467,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 if (!m_sharedData.connectionData[c].playerData[p].isCPU)
                 {
                     showMessageBoard(MessageBoardID::Eliminated);
-                    survivorXP = 0; //prevents awarding this on other player's elimination after we're eliminated.
+                    m_survivorXP = 0; //prevents awarding this on other player's elimination after we're eliminated.
                 }
 
                 //for everyone on this client who isn't the eliminated player
@@ -4479,14 +4478,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     {
                         //we might be inactive between turns...
                         if (m_allowAchievements
-                            && survivorXP != 0)
+                            && m_survivorXP != 0)
                         {
                             auto active = Achievements::getActive();
                             Achievements::setActive(true);
-                            Social::awardXP(survivorXP, XPStringID::Survivor);
+                            Social::awardXP(m_survivorXP, XPStringID::Survivor);
                             Achievements::setActive(active);
 
-                            survivorXP *= 2;
+                            m_survivorXP *= 2;
                         }
                     }
                 }
@@ -4495,14 +4494,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 //we might be inactive between turns...
                 if (m_allowAchievements
-                    && survivorXP != 0)
+                    && m_survivorXP != 0)
                 {
                     auto active = Achievements::getActive();
                     Achievements::setActive(true);
-                    Social::awardXP(survivorXP, XPStringID::Survivor);
+                    Social::awardXP(m_survivorXP, XPStringID::Survivor);
                     Achievements::setActive(active);
 
-                    survivorXP *= 2;
+                    m_survivorXP *= 2;
                 }
             }
             

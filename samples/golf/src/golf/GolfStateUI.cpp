@@ -1438,7 +1438,8 @@ void GolfState::buildUI()
 
 
     //displays if a mulligan is available in Career
-    if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
+    if (m_sharedData.leagueRoundID != LeagueRoundID::Club
+        || m_sharedData.gameMode == GameMode::Tournament)
     {
         auto mRoot = m_uiScene.createEntity();
         mRoot.addComponent<cro::Transform>();

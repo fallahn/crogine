@@ -3938,6 +3938,7 @@ void MenuState::createDebugWindows()
                     {
                         ImVec2 ChildSize(160.f, 300.f);
                         ImGui::Text("Current Round: %d", t.round);
+                        ImGui::Text("Mulligans: %d", t.mulliganCount);
                         ImGui::Separator();
                         ImGui::BeginChild("##0", ChildSize);
                         ImGui::Text("Course: %s", TournamentCourses[t.id][0]);

@@ -669,25 +669,31 @@ void NewsState::buildScene()
     bounds.bottom += bounds.height;
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
 
-    entity = createSmallItem(glm::vec2(8.f, -82.f), "Discord Server", titleEnt);
+    std::string t;
+    std::string u;
+    auto dc = Social::discordURL(t, u);
+    
+    entity = createSmallItem(glm::vec2(8.f, -82.f), t, titleEnt);
     entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 4);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+        uiSystem.addCallback([&, u](cro::Entity e, cro::ButtonEvent evt)
             {
                 if (activated(evt))
                 {
-                    cro::Util::String::parseURL("https://discord.gg/6x8efntStC");
+                    cro::Util::String::parseURL(u);
                 }
             });
     //bounds.bottom += bounds.height;
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
 
-    auto iconEnt = m_scene.createEntity();
-    iconEnt.addComponent<cro::Transform>().setPosition({ -26.f, -12.f });
-    iconEnt.addComponent<cro::Drawable2D>();
-    iconEnt.addComponent<cro::Sprite>() = socialSprites.getSprite("discord");
-    entity.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
-
+    if (dc)
+    {
+        auto iconEnt = m_scene.createEntity();
+        iconEnt.addComponent<cro::Transform>().setPosition({ -26.f, -12.f });
+        iconEnt.addComponent<cro::Drawable2D>();
+        iconEnt.addComponent<cro::Sprite>() = socialSprites.getSprite("discord");
+        entity.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
+    }
 
 
     entity = m_scene.createEntity();
