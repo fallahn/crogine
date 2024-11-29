@@ -193,7 +193,8 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
 void GolfState::updateTournament(bool playerWon)
 {
     //TODO we might want to throw all this into an async func
-    //as long as it completes before the loading screen for menu finished (hold quitting state until future returns?)
+    //as long as it completes before the loading screen for menu
+    //finished (hold quitting state until future returns?)
     if (m_sharedData.gameMode == GameMode::Tournament)
     {
         ScoreCalculator scoreCalc(Club::getClubLevel());
@@ -207,21 +208,18 @@ void GolfState::updateTournament(bool playerWon)
         auto& tournament = m_sharedData.tournaments[m_sharedData.activeTournament];
 
         const auto updateCPUScores =
-            [&](std::int32_t* tierIn, std::size_t scoreCount, std::int32_t* tierOut)
+            [&](std::int32_t* tierIn, std::size_t playerCount, std::int32_t* tierOut, std::int32_t tierOffset)
             {
                 std::int32_t k = 0;
-                for (auto i = 0u; i < scoreCount; i += 2)
+                for (auto i = 0u; i < playerCount; i += 2)
                 {
                     //skip ourself and current opponent
-                    if (tierIn[i] == -1
-                        || tierIn[i] == tournament.opponentStats.nameIndex)
+                    if (tierOffset > -1 && //assuming we're even in the tier
+                        (tierIn[i] == -1
+                        || tierIn[i] == tournament.opponentStats.nameIndex))
                     {
-                        LogI << tierIn[i] << ": current" << std::endl;
-                        
                         //insert the winner into the output tier
                         tierOut[k++] = playerWon ? -1 : tournament.opponentStats.nameIndex;
-                        LogI << "Tier out " << tierOut[k - 1] << std::endl;
-                        //continue;
                     }
                     else
                     {
@@ -237,25 +235,45 @@ void GolfState::updateTournament(bool playerWon)
                         std::int32_t total0 = 0;
                         std::int32_t total1 = 0;
 
-                        for (auto j = 0u; j < m_holeData.size(); ++j)
-                        {
-                            scoreCalc.calculate(player0, j, m_holeData[j].par, overPar[j], scores0);
-                            scoreCalc.calculate(player1, j, m_holeData[j].par, overPar[j], scores1);
+                        const auto holeCount = tournament.round < 3 ? 9 : 18;
 
-                            total0 += scores0[j];
-                            total1 += scores1[j];
+                        for (auto j = 0; j < holeCount; ++j)
+                        {
+                            //check if we're front or back 9
+                            const auto cpuOffset = i < (playerCount / 2) ? 0 : 1;
+
+                            if (cpuOffset == tierOffset)
+                            {
+                                //we're in the same half of the tier as the player
+                                scoreCalc.calculate(player0, j, m_holeData[j].par, overPar[j], scores0);
+                                scoreCalc.calculate(player1, j, m_holeData[j].par, overPar[j], scores1);
+
+                                total0 += scores0[j];
+                                total1 += scores1[j];
+                            }
+                            //else we read the par values from the tables
+                            else
+                            {
+                                const auto hole = j + (cpuOffset * 9);
+                                const auto par = TierPars[m_sharedData.activeTournament][tournament.round][hole];
+                                scoreCalc.calculate(player0, hole, par, false, scores0);
+                                scoreCalc.calculate(player1, hole, par, false, scores1);
+
+                                total0 += scores0[hole];
+                                total1 += scores1[hole];
+                            }
                         }
 
-                        LogI << "Totals: " << total0 << ", " << total1 << std::endl;
+                        //LogI << "Totals: " << total0 << ", " << total1 << std::endl;
                         if (total0 < total1)
                         {
-                            LogI << "CPU 0 Won (player " << player0.nameIndex << ")" << std::endl;
+                            //LogI << "CPU 0 Won (player " << player0.nameIndex << ")" << std::endl;
                             tierOut[k++] = player0.nameIndex;
                         }
                         else
                         {
                             //let's not care about draws
-                            LogI << "CPU 1 Won (player " << player1.nameIndex << ")" << std::endl;
+                            //LogI << "CPU 1 Won (player " << player1.nameIndex << ")" << std::endl;
                             tierOut[k++] = player1.nameIndex;
                         }
                     }
@@ -270,28 +288,51 @@ void GolfState::updateTournament(bool playerWon)
                 switch (round)
                 {
                 default:
-                    LogI << "Tournament round " << round << ": invalid round!" << std::endl;
+                    LogE << "Tournament round " << round << ": invalid round!" << std::endl;
                     return;
                 case 0:
-                    //again, templated lambda would be useful here
                 {
                     auto& tierIn = tournament.tier0;
                     auto& tierOut = tournament.tier1;
-                    updateCPUScores(tierIn.data(), tierIn.size(), tierOut.data());
+                    auto tierOffset = -1; //-1 if player not in this tier (ie lost a round)
+                    if (auto pos = std::find(tierIn.begin(), tierIn.end(), -1); pos != tierIn.end())
+                    {
+                        tierOffset = std::distance(tierIn.begin(), pos) < (tierIn.size() / 2u) ? 0 : 1;
+                    }
+
+                    updateCPUScores(tierIn.data(), tierIn.size(), tierOut.data(), tierOffset);
                 }
                 break;
                 case 1:
                 {
                     auto& tierIn = tournament.tier1;
                     auto& tierOut = tournament.tier2;
-                    updateCPUScores(tierIn.data(), tierIn.size(), tierOut.data());
+                    auto tierOffset = -1;
+                    if (auto pos = std::find(tierIn.begin(), tierIn.end(), -1); pos != tierIn.end())
+                    {
+                        tierOffset = std::distance(tierIn.begin(), pos) < (tierIn.size() / 2u) ? 0 : 1;
+                    }
+
+                    updateCPUScores(tierIn.data(), tierIn.size(), tierOut.data(), tierOffset);
                 }
                 break;
                 case 2:
                 {
                     auto& tierIn = tournament.tier2;
                     auto& tierOut = tournament.tier3;
-                    updateCPUScores(tierIn.data(), tierIn.size(), tierOut.data());
+                    auto tierOffset = -1;
+                    if (auto pos = std::find(tierIn.begin(), tierIn.end(), -1); pos != tierIn.end())
+                    {
+                        tierOffset = std::distance(tierIn.begin(), pos) < (tierIn.size() / 2u) ? 0 : 1;
+                    }
+
+                    updateCPUScores(tierIn.data(), tierIn.size(), tierOut.data(), tierOffset);
+                }
+                break;
+                case 3:
+                {
+                    const auto tierOffset = (tournament.tier3[0] == -1 || tournament.tier3[1] == -1) ? 0 : -1;
+                    updateCPUScores(tournament.tier3.data(), 2, &tournament.winner, tierOffset);
                 }
                 break;
                 }
@@ -302,19 +343,19 @@ void GolfState::updateTournament(bool playerWon)
         if (!playerWon)
         {
             //iterate the CPU for all remaining round to find out who won!
-            for (auto i = tournament.round + 1; i < 4; ++i)
+            //iterateScores() has, at this point, incremented the round number already
+            for (auto i = tournament.round; i < 4; ++i)
             {
-                //TODO we need the hole pars for each of these rounds                
-                //to set in iterateCPUScores();                
-                //iterateScores(i);
+                iterateScores(i);
+                //LogI << "Iterate round " << i << std::endl;
             }
 
-            LogI << "Player lost tournament round" << std::endl;
+            //LogI << "Player lost tournament round" << std::endl;
         }
-        else
+        /*else
         {
             LogI << "player won tournament round" << std::endl;
-        }
+        }*/
 
         //save tournament
         std::fill(tournament.scores.begin(), tournament.scores.end(), 0);
@@ -324,6 +365,6 @@ void GolfState::updateTournament(bool playerWon)
     }
     else
     {
-        LogI << "Not a tournament" << std::endl;
+        LogW << "Not a tournament" << std::endl;
     }
 }

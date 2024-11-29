@@ -156,7 +156,7 @@ void readTournamentData(Tournament& dst)
     {
         resetTournament(dst);
         writeTournamentData(dst);
-        LogI << "Created tournament " << cro::FileSystem::getFileName(path) << std::endl;
+        //LogI << "Created tournament " << cro::FileSystem::getFileName(path) << std::endl;
     }
     else
     {
@@ -170,16 +170,16 @@ void readTournamentData(Tournament& dst)
                 resetTournament(dst);
                 writeTournamentData(dst);
             }
-            else
+            /*else
             {
                 LogI << "Read tournament from " << cro::FileSystem::getFileName(path) << std::endl;
-            }
+            }*/
         }
     }
 
     //debugging
     /*dst.scores = { 10,10,10,10,10,10,10,10,0 };
     dst.opponentScores = { 1,1,1,1,1,1,1,1,0 };*/
-    dst.scores = { 1,1,1,1,1,1,1,1,0 };
-    dst.opponentScores = { 10,10,10,10,10,10,10,10,0 };
+    /*dst.scores = { 1,1,1,1,1,1,1,1,0 };
+    dst.opponentScores = { 10,10,10,10,10,10,10,10,0 };*/
 }

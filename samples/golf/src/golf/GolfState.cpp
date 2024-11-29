@@ -240,9 +240,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             //in tournament mode load the selected player from the tournament
             CRO_ASSERT(sd.activeTournament != TournamentIndex::NullVal, "");
-            //if (sd.tournaments[sd.activeTournament].scores[0] == 0)
+            if (sd.tournaments[sd.activeTournament].scores[0] == 0)
             {
-                LogI << "Fix this when done debugging " << __LINE__ << std::endl;
+                //LogI << "Fix this when done debugging " << __LINE__ << std::endl;
                 //this is a new round
                 const auto opponent = getTournamentOpponent(sd.tournaments[sd.activeTournament]);
                 sd.tournaments[sd.activeTournament].opponentStats = league.getPlayer(opponent);

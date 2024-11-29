@@ -46,6 +46,29 @@ static inline const std::array<std::array<std::string, 4u>, 2u> TournamentCourse
     }
 };
 
+//to calculate the final standing of the CPUs when the player loses we need
+//the par values for the remaining courses. These are here just as a look-up
+//to save loading the actual file data - this means it may get outdated at
+//some point, however as the results are purely virtual (the player has
+//already lost at this point) some innaccuracy is acceptable.
+static inline const std::array<std::array<HoleScores, 4>, 2> TierPars =
+{
+    std::array<HoleScores, 4u>{
+        std::array<std::int32_t, 18u>{3,3,4,3,3,4,4,3,5,4,3,3,3,3,3,4,5,3},
+        std::array<std::int32_t, 18u>{4,4,4,3,4,5,4,4,4,5,4,5,4,4,4,4,3,4},
+        std::array<std::int32_t, 18u>{4,3,3,3,4,3,3,3,3,4,4,4,4,4,4,3,4,4},
+        std::array<std::int32_t, 18u>{4,5,4,4,3,4,3,3,4,4,4,4,4,4,5,3,3,4}
+    },
+    {
+        std::array<std::int32_t, 18u>{4,4,4,4,4,3,4,4,3,4,4,5,2,3,3,3,5,3},
+        std::array<std::int32_t, 18u>{4,4,3,5,4,4,4,4,4,3,4,4,5,4,4,3,4,4},
+        std::array<std::int32_t, 18u>{4,4,4,4,3,4,4,4,4,5,3,4,3,4,4,4,3,4},
+        std::array<std::int32_t, 18u>{3,4,3,3,4,4,3,3,4,4,3,3,4,4,4,3,4,3}
+    }
+};
+
+
+
 //note that this is read/written directly as a binary blob
 //so any changes in the future must be via the reserved bytes
 struct Tournament final
@@ -60,8 +83,9 @@ struct Tournament final
     std::array<std::int32_t, 8u> tier1 = {}; //player IDs for round 2, -2 indicates no player assigned (-1 is human player index)
     std::array<std::int32_t, 4u> tier2 = {};
     std::array<std::int32_t, 2u> tier3 = {};
+    std::int32_t winner = -2;
 
-    std::array<std::int32_t, 25u> Padding = {}; //reserve space in case we expand this in the future
+    std::array<std::int32_t, 24u> Padding = {}; //reserve space in case we expand this in the future
 
     Tournament();
 };

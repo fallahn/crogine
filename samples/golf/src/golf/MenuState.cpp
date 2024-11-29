@@ -3936,7 +3936,7 @@ void MenuState::createDebugWindows()
                 {
                     if (ImGui::BeginTabItem(TabNames[a].c_str()))
                     {
-                        ImVec2 ChildSize(160.f, 300.f);
+                        ImVec2 ChildSize(120.f, 300.f);
                         ImGui::Text("Current Round: %d", t.round);
                         ImGui::Text("Mulligans: %d", t.mulliganCount);
                         ImGui::Separator();
@@ -3987,6 +3987,8 @@ void MenuState::createDebugWindows()
                         ImGui::Text("%d %s", t.tier3[0], getName(t.tier3[0]).c_str());
                         ImGui::Text("%d %s", t.tier3[1], getName(t.tier3[1]).c_str());
                         ImGui::EndChild();
+
+                        ImGui::Text("Winner: %d %s", t.winner, getName(t.winner));
                         
                         if (ImGui::Button("Launch"))
                         {
