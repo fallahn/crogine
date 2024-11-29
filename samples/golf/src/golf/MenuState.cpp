@@ -3928,7 +3928,7 @@ void MenuState::createDebugWindows()
                             : std::basic_string<std::uint8_t>(std::begin(EmptyName), std::end(EmptyName));
                     };
 
-                const std::array<std::string, 2u> TabNames = { std::string(" Tournament A"), "Tournament B" };
+                const std::array<std::string, 2u> TabNames = { std::string("Dagle-Bunnage Cup"), "Citromfa Championship" };
                 std::int32_t a = 0;
 
                 ImGui::BeginTabBar("##0002");
@@ -3936,7 +3936,7 @@ void MenuState::createDebugWindows()
                 {
                     if (ImGui::BeginTabItem(TabNames[a].c_str()))
                     {
-                        ImVec2 ChildSize(120.f, 300.f);
+                        const ImVec2 ChildSize(160.f, 300.f);
                         ImGui::Text("Current Round: %d", t.round);
                         ImGui::Text("Mulligans: %d", t.mulliganCount);
                         ImGui::Separator();

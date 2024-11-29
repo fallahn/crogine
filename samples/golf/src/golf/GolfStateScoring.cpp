@@ -333,6 +333,12 @@ void GolfState::updateTournament(bool playerWon)
                 {
                     const auto tierOffset = (tournament.tier3[0] == -1 || tournament.tier3[1] == -1) ? 0 : -1;
                     updateCPUScores(tournament.tier3.data(), 2, &tournament.winner, tierOffset);
+
+                    //see if we came first or second
+                    if (tierOffset == 0)
+                    {
+                        tournament.currentBest = tournament.winner == -1 ? 1 : 2;
+                    }
                 }
                 break;
                 }

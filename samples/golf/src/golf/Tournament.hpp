@@ -85,7 +85,9 @@ struct Tournament final
     std::array<std::int32_t, 2u> tier3 = {};
     std::int32_t winner = -2;
 
-    std::array<std::int32_t, 24u> Padding = {}; //reserve space in case we expand this in the future
+    std::int32_t previousBest = std::numeric_limits<std::int32_t>::max(); //if this isn't set but the current is, it's not yet been awarded
+    std::int32_t currentBest = std::numeric_limits<std::int32_t>::max(); //this is only set on the final round and reset on a new tournament
+    std::array<std::int32_t, 23u> Padding = {}; //reserve space in case we expand this in the future
 
     Tournament();
 };

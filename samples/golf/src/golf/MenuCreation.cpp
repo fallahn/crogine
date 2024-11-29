@@ -4897,6 +4897,26 @@ void MenuState::updateUnlockedItems()
         }
         Social::setUnlockStatus(Social::UnlockType::CareerPosition, leagueFlags);
     }
+
+
+    //tournament unlocks
+    for (auto i = 0; i < 2; ++i)
+    {
+        if (m_sharedData.tournaments[i].currentBest <
+            m_sharedData.tournaments[i].previousBest)
+        {
+            //not yet awarded...
+
+            //TODO award points based on being 1st or second place
+
+            //TODO unlock ball if first place
+
+
+            //store that this was awarded so we don't award it more than once...
+            m_sharedData.tournaments[i].previousBest = m_sharedData.tournaments[i].currentBest;
+            writeTournamentData(m_sharedData.tournaments[i]);
+        }
+    }
 }
 
 void MenuState::createPreviousScoreCard()
