@@ -34,6 +34,8 @@ source distribution.
 
 #include "XPAwardStrings.hpp"
 
+#include <AchievementStrings.hpp>
+
 using namespace cl;
 
 void GolfState::updateHoleScore(std::uint16_t data)
@@ -338,6 +340,11 @@ void GolfState::updateTournament(bool playerWon)
                     if (tierOffset == 0)
                     {
                         tournament.currentBest = tournament.winner == -1 ? 1 : 2;
+
+                        if (tournament.currentBest == 1)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::Unreal + m_sharedData.activeTournament]);
+                        }
                     }
                 }
                 break;

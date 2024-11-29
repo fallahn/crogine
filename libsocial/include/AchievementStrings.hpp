@@ -165,7 +165,9 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "dive_in",
     "quick_start",
     "quick_step",
-    "quick_of_it"
+    "quick_of_it",
+    "unreal",
+    "beauchamp"
 };
 
 //appears on the notification
@@ -290,6 +292,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Quick Start",
     "Quick Step",
     "Into The Quick Of It",
+    "Unreal",
+    "Beauchamp"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -414,6 +418,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Come first in a Quick Play round using Novice clubs", false),
     std::make_pair("Come first in a Quick Play round using Expert clubs", false),
     std::make_pair("Come first in a Quick Play round using Pro clubs", false),
+    std::make_pair("Come first in the Dagle-Bunnage Cup", false),
+    std::make_pair("Come first in the Sammonfield Championship", false),
 };
 
 //assuming trophies load correctly they are:
@@ -574,6 +580,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*117*/TrophyID::BronzeFigure,
     /*118*/TrophyID::SilverFigure,
     /*119*/TrophyID::GoldFigure,
+    /*120*/TrophyID::GoldCup,
+    /*121*/TrophyID::GoldCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

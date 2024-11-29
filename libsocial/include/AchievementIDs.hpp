@@ -178,6 +178,8 @@ namespace AchievementID
         QuickStart,
         QuickStep,
         QuickOfIt,
+        Unreal,
+        Beauchamp,
 
         Count
     };
