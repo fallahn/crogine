@@ -633,7 +633,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //        ImGui::End();
     //    });
 
-    createDebugWindows();
+    //createDebugWindows();
 }
 
 MenuState::~MenuState()
@@ -3928,11 +3928,11 @@ void MenuState::createDebugWindows()
                             : std::basic_string<std::uint8_t>(std::begin(EmptyName), std::end(EmptyName));
                     };
 
-                const std::array<std::string, 2u> TabNames = { std::string("Dagle-Bunnage Cup"), "Citromfa Championship" };
+                const std::array<std::string, 2u> TabNames = { std::string("Dagle-Bunnage Cup"), "Sammonfield Championship" };
                 std::int32_t a = 0;
 
                 ImGui::BeginTabBar("##0002");
-                for (const auto& t : m_sharedData.tournaments)
+                for (auto& t : m_sharedData.tournaments)
                 {
                     if (ImGui::BeginTabItem(TabNames[a].c_str()))
                     {
@@ -3992,8 +3992,19 @@ void MenuState::createDebugWindows()
                         
                         if (ImGui::Button("Launch"))
                         {
+                            readTournamentData(t);
                             launchTournament(a);
                         }
+                        
+                        ImGui::SameLine();
+                        if (ImGui::ArrowButton("Reset", ImGuiDir_Up))
+                        {
+                            t = {};
+                            t.id = a;
+                            resetTournament(t);
+                            writeTournamentData(t);
+                        }
+                        
                         ImGui::EndTabItem();
                     }
                     a++;

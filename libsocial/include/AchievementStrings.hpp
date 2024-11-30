@@ -632,7 +632,9 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "rounds_showers",
     "rounds_fog",
     "drone_hits",
-    "sundays_played"
+    "sundays_played",
+    "unreal_complete",
+    "beauchamp_complete"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -682,7 +684,9 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number Of Rounds Played In Showers",
     "Number Of Rounds Played In Mist",
     "Number Of Times The Drone Was Hit",
-    "Number Of Times A Round Was Played On A Sunday"
+    "Number Of Times A Round Was Played On A Sunday",
+    "Number Of Times The Dagle-Bunnage Cup Was Won",
+    "Number Of Times The Sammonfield Championship Was Won",
 };
 
 struct StatType final
@@ -740,6 +744,8 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
 
+    StatType::Integer,
+    StatType::Integer,
     StatType::Integer,
     StatType::Integer,
 };

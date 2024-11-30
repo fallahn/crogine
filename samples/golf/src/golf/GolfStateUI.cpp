@@ -1093,6 +1093,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.addComponent<cro::Callback>().setUserData<WindHideData>();
     entity.getComponent<cro::Callback>().getUserData<WindHideData>().progress = 1.f;
     entity.getComponent<cro::Callback>().function =
@@ -2675,6 +2676,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
 
         if (m_sharedData.gameMode == GameMode::Tutorial
+            || m_sharedData.gameMode == GameMode::Tournament
             || m_sharedData.leagueRoundID != LeagueRoundID::Club)
         {
             e.getComponent<cro::Text>().setString("Returning to menu in: " + std::to_string(sec));
@@ -4564,7 +4566,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         e.getComponent<cro::Text>().setString(ss.str());
 
         auto bounds = cro::Text::getLocalBounds(e);
-        bounds.width = std::floor(bounds.width / 2.f);
+        bounds.width = std::round(bounds.width / 2.f);
         e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
 
         if (knots < 1.5f)

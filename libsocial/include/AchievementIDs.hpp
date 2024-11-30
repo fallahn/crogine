@@ -241,6 +241,8 @@ namespace StatID
 
         DroneHits,
         SundaysPlayed,
+        UnrealWon,
+        BeauchampWon,
 
         Count
     };
