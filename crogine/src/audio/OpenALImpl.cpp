@@ -131,6 +131,11 @@ bool OpenALImpl::init()
     bool current = false;
     /*alcCheck*/(current = alcMakeContextCurrent(m_context));
     
+    if (m_devices.empty())
+    {
+        m_devices.push_back("default");
+    }
+
     return current;
 }
 
@@ -830,6 +835,10 @@ void OpenALImpl::enumerateDevices()
                 }
             }
         }
+    }
+    else
+    {
+        m_devices.push_back("default");
     }
 }
 

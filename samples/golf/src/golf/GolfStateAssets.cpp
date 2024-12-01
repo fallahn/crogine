@@ -2473,349 +2473,354 @@ void GolfState::loadSpectators()
 
 void GolfState::initAudio(bool loadTrees)
 {
-    if (m_sharedData.nightTime)
+    if (cro::AudioMixer::hasAudioRenderer())
     {
-        auto ext = cro::FileSystem::getFileExtension(m_audioPath);
-        auto nightPath = m_audioPath.substr(0, m_audioPath.find(ext)) + "_n" + ext;
 
-        if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+        if (m_sharedData.nightTime)
         {
-            m_audioPath = nightPath;
-        }
-    }
+            auto ext = cro::FileSystem::getFileExtension(m_audioPath);
+            auto nightPath = m_audioPath.substr(0, m_audioPath.find(ext)) + "_n" + ext;
 
-
-    //6 evenly spaced points with ambient audio
-    auto envOffset = glm::vec2(MapSize) / 3.f;
-    cro::AudioScape as;
-    if (as.loadFromFile(m_audioPath, m_resources.audio))
-    {
-        std::array emitterNames =
-        {
-            std::string("01"),
-            std::string("02"),
-            std::string("03"),
-            std::string("04"),
-            std::string("05"),
-            std::string("06"),
-            std::string("03"),
-            std::string("04"),
-        };
-
-        for (auto i = 0; i < 2; ++i)
-        {
-            for (auto j = 0; j < 2; ++j)
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
             {
-                static constexpr float height = 4.f;
-                glm::vec3 position(envOffset.x * (i + 1), height, -envOffset.y * (j + 1));
-
-                auto idx = i * 2 + j;
-
-                if (as.hasEmitter(emitterNames[idx + 4]))
-                {
-                    auto entity = m_gameScene.createEntity();
-                    entity.addComponent<cro::Transform>().setPosition(position);
-                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx + 4]);
-                    entity.getComponent<cro::AudioEmitter>().play();
-                    entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(5.f));
-                }
-
-                position = { i * MapSize.x, height, -static_cast<float>(MapSize.y) * j };
-
-                if (as.hasEmitter(emitterNames[idx]))
-                {
-                    auto entity = m_gameScene.createEntity();
-                    entity.addComponent<cro::Transform>().setPosition(position);
-                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx]);
-                    entity.getComponent<cro::AudioEmitter>().play();
-                }
+                m_audioPath = nightPath;
             }
         }
 
-        //random incidental audio
-        if (as.hasEmitter("incidental01")
-            && as.hasEmitter("incidental02"))
+
+        //6 evenly spaced points with ambient audio
+        auto envOffset = glm::vec2(MapSize) / 3.f;
+        cro::AudioScape as;
+        if (as.loadFromFile(m_audioPath, m_resources.audio))
         {
-            auto entity = m_gameScene.createEntity();
-            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental01");
-            entity.getComponent<cro::AudioEmitter>().setLooped(false);
-            auto plane01 = entity;
-
-            entity = m_gameScene.createEntity();
-            entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental02");
-            entity.getComponent<cro::AudioEmitter>().setLooped(false);
-            auto plane02 = entity;
-
-            //we'll shoehorn the plane in here. won't make much sense
-            //if the audioscape has different audio but hey...
-            cro::ModelDefinition md(m_resources);
-            cro::Entity planeEnt;
-            if (md.loadFromFile("assets/golf/models/plane.cmt"))
+            std::array emitterNames =
             {
-                static constexpr glm::vec3 Start(-32.f, 60.f, 20.f);
-                static constexpr glm::vec3 End(352.f, 60.f, -220.f);
-
-                entity = m_gameScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition(Start);
-                entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 32.f * cro::Util::Const::degToRad);
-                entity.getComponent<cro::Transform>().setScale({ 0.01f, 0.01f, 0.01f });
-                md.createModel(entity);
-
-                entity.addComponent<cro::Callback>().function =
-                    [](cro::Entity e, float dt)
-                    {
-                        static constexpr float Speed = 10.f;
-                        const float MaxLen = glm::length2((Start - End) / 2.f);
-
-                        auto& tx = e.getComponent<cro::Transform>();
-                        auto dir = glm::normalize(tx.getRightVector()); //scaling means this isn't normalised :/
-                        tx.move(dir * Speed * dt);
-
-                        float currLen = glm::length2((Start + ((Start + End) / 2.f)) - tx.getPosition());
-                        float scale = std::max(1.f - (currLen / MaxLen), 0.001f); //can't scale to 0 because it breaks normalizing the right vector above
-                        tx.setScale({ scale, scale, scale });
-
-                        if (tx.getPosition().x > End.x)
-                        {
-                            tx.setPosition(Start);
-                            e.getComponent<cro::Callback>().active = false;
-                        }
-                    };
-
-                auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-                applyMaterialData(md, material);
-                entity.getComponent<cro::Model>().setMaterial(0, material);
-
-                //engine
-                entity.addComponent<cro::AudioEmitter>(); //always needs one in case audio doesn't exist
-                if (as.hasEmitter("plane"))
-                {
-                    entity.getComponent<cro::AudioEmitter>() = as.getEmitter("plane");
-                    entity.getComponent<cro::AudioEmitter>().setLooped(false);
-                }
-
-                planeEnt = entity;
-            }
-
-            struct AudioData final
-            {
-                float currentTime = 0.f;
-                float timeout = static_cast<float>(cro::Util::Random::value(32, 64));
-                cro::Entity activeEnt;
+                std::string("01"),
+                std::string("02"),
+                std::string("03"),
+                std::string("04"),
+                std::string("05"),
+                std::string("06"),
+                std::string("03"),
+                std::string("04"),
             };
 
-            entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<AudioData>();
-            entity.getComponent<cro::Callback>().function =
-                [plane01, plane02, planeEnt](cro::Entity e, float dt) mutable
+            for (auto i = 0; i < 2; ++i)
+            {
+                for (auto j = 0; j < 2; ++j)
                 {
-                    auto& [currTime, timeOut, activeEnt] = e.getComponent<cro::Callback>().getUserData<AudioData>();
+                    static constexpr float height = 4.f;
+                    glm::vec3 position(envOffset.x * (i + 1), height, -envOffset.y * (j + 1));
 
-                    if (!activeEnt.isValid()
-                        || activeEnt.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                    auto idx = i * 2 + j;
+
+                    if (as.hasEmitter(emitterNames[idx + 4]))
                     {
-                        currTime += dt;
+                        auto entity = m_gameScene.createEntity();
+                        entity.addComponent<cro::Transform>().setPosition(position);
+                        entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx + 4]);
+                        entity.getComponent<cro::AudioEmitter>().play();
+                        entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(5.f));
+                    }
 
-                        if (currTime > timeOut)
+                    position = { i * MapSize.x, height, -static_cast<float>(MapSize.y) * j };
+
+                    if (as.hasEmitter(emitterNames[idx]))
+                    {
+                        auto entity = m_gameScene.createEntity();
+                        entity.addComponent<cro::Transform>().setPosition(position);
+                        entity.addComponent<cro::AudioEmitter>() = as.getEmitter(emitterNames[idx]);
+                        entity.getComponent<cro::AudioEmitter>().play();
+                    }
+                }
+            }
+
+            //random incidental audio
+            if (as.hasEmitter("incidental01")
+                && as.hasEmitter("incidental02"))
+            {
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental01");
+                entity.getComponent<cro::AudioEmitter>().setLooped(false);
+                auto plane01 = entity;
+
+                entity = m_gameScene.createEntity();
+                entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental02");
+                entity.getComponent<cro::AudioEmitter>().setLooped(false);
+                auto plane02 = entity;
+
+                //we'll shoehorn the plane in here. won't make much sense
+                //if the audioscape has different audio but hey...
+                cro::ModelDefinition md(m_resources);
+                cro::Entity planeEnt;
+                if (md.loadFromFile("assets/golf/models/plane.cmt"))
+                {
+                    static constexpr glm::vec3 Start(-32.f, 60.f, 20.f);
+                    static constexpr glm::vec3 End(352.f, 60.f, -220.f);
+
+                    entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition(Start);
+                    entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 32.f * cro::Util::Const::degToRad);
+                    entity.getComponent<cro::Transform>().setScale({ 0.01f, 0.01f, 0.01f });
+                    md.createModel(entity);
+
+                    entity.addComponent<cro::Callback>().function =
+                        [](cro::Entity e, float dt)
                         {
-                            currTime = 0.f;
-                            timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
+                            static constexpr float Speed = 10.f;
+                            const float MaxLen = glm::length2((Start - End) / 2.f);
 
-                            auto id = cro::Util::Random::value(0, 2);
-                            if (id == 0)
+                            auto& tx = e.getComponent<cro::Transform>();
+                            auto dir = glm::normalize(tx.getRightVector()); //scaling means this isn't normalised :/
+                            tx.move(dir * Speed * dt);
+
+                            float currLen = glm::length2((Start + ((Start + End) / 2.f)) - tx.getPosition());
+                            float scale = std::max(1.f - (currLen / MaxLen), 0.001f); //can't scale to 0 because it breaks normalizing the right vector above
+                            tx.setScale({ scale, scale, scale });
+
+                            if (tx.getPosition().x > End.x)
                             {
-                                //fly the plane
-                                if (planeEnt.isValid())
-                                {
-                                    planeEnt.getComponent<cro::Callback>().active = true;
-                                    planeEnt.getComponent<cro::AudioEmitter>().play();
-                                    activeEnt = planeEnt;
-                                }
+                                tx.setPosition(Start);
+                                e.getComponent<cro::Callback>().active = false;
                             }
-                            else
+                        };
+
+                    auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                    applyMaterialData(md, material);
+                    entity.getComponent<cro::Model>().setMaterial(0, material);
+
+                    //engine
+                    entity.addComponent<cro::AudioEmitter>(); //always needs one in case audio doesn't exist
+                    if (as.hasEmitter("plane"))
+                    {
+                        entity.getComponent<cro::AudioEmitter>() = as.getEmitter("plane");
+                        entity.getComponent<cro::AudioEmitter>().setLooped(false);
+                    }
+
+                    planeEnt = entity;
+                }
+
+                struct AudioData final
+                {
+                    float currentTime = 0.f;
+                    float timeout = static_cast<float>(cro::Util::Random::value(32, 64));
+                    cro::Entity activeEnt;
+                };
+
+                entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<AudioData>();
+                entity.getComponent<cro::Callback>().function =
+                    [plane01, plane02, planeEnt](cro::Entity e, float dt) mutable
+                    {
+                        auto& [currTime, timeOut, activeEnt] = e.getComponent<cro::Callback>().getUserData<AudioData>();
+
+                        if (!activeEnt.isValid()
+                            || activeEnt.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                        {
+                            currTime += dt;
+
+                            if (currTime > timeOut)
                             {
-                                auto ent = (id == 1) ? plane01 : plane02;
-                                if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                                currTime = 0.f;
+                                timeOut = static_cast<float>(cro::Util::Random::value(120, 240));
+
+                                auto id = cro::Util::Random::value(0, 2);
+                                if (id == 0)
                                 {
-                                    ent.getComponent<cro::AudioEmitter>().play();
-                                    activeEnt = ent;
+                                    //fly the plane
+                                    if (planeEnt.isValid())
+                                    {
+                                        planeEnt.getComponent<cro::Callback>().active = true;
+                                        planeEnt.getComponent<cro::AudioEmitter>().play();
+                                        activeEnt = planeEnt;
+                                    }
+                                }
+                                else
+                                {
+                                    auto ent = (id == 1) ? plane01 : plane02;
+                                    if (ent.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                                    {
+                                        ent.getComponent<cro::AudioEmitter>().play();
+                                        activeEnt = ent;
+                                    }
                                 }
                             }
                         }
+                    };
+            }
+
+            //put the new hole music on the cam for accessibilty
+            //this is done *before* m_cameras is updated 
+            if (as.hasEmitter("music"))
+            {
+                m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>() = as.getEmitter("music");
+                m_gameScene.getActiveCamera().getComponent<cro::AudioEmitter>().setLooped(false);
+            }
+        }
+        else
+        {
+            //still needs an emitter to stop crash playing non-loaded music
+            m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>();
+            LogE << "Invalid AudioScape file was found" << std::endl;
+        }
+
+        //TODO this is all the same as the driving range, so we can wrap this up in a free func
+
+        registerCommand("list_tracks", [&](const std::string&)
+            {
+                const auto& trackList = m_sharedData.playlist.getTrackList();
+
+                if (!trackList.empty())
+                {
+                    for (const auto& str : trackList)
+                    {
+                        cro::Console::print(str);
+                    }
+                }
+                else
+                {
+                    cro::Console::print("No music loaded");
+                }
+            });
+
+        if (!m_sharedData.playlist.getTrackList().empty())
+        {
+            auto gameMusic = m_gameScene.getActiveCamera();
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::AudioEmitter>(m_musicStream).setMixerChannel(MixerChannel::UserMusic);
+            entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, gameMusic](cro::Entity e, float dt)
+                {
+                    //set the mixer channel to inverse valaue of main music channel
+                    //while the incidental music is playing
+                    if (gameMusic.isValid())
+                    {
+                        //fade out if the menu music is playing, ie in a transition
+                        const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
+                        float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
+                        if (target < vol)
+                        {
+                            vol = std::max(0.f, vol - (dt * 2.f));
+                        }
+                        else
+                        {
+                            vol = std::min(1.f, vol + dt);
+                        }
+                        cro::AudioMixer::setPrefadeVolume(vol, MixerChannel::UserMusic);
+                    }
+
+
+                    //check the current music state and pause when volume is low else play the
+                    //next track when we stop playing.
+                    const float currVol = cro::AudioMixer::getVolume(MixerChannel::UserMusic);
+                    auto state = e.getComponent<cro::AudioEmitter>().getState();
+
+                    if (state == cro::AudioEmitter::State::Playing)
+                    {
+                        if (currVol < MinMusicVolume)
+                        {
+                            e.getComponent<cro::AudioEmitter>().pause();
+                        }
+                    }
+                    else if ((state == cro::AudioEmitter::State::Paused
+                        && currVol > MinMusicVolume) || state == cro::AudioEmitter::State::Stopped)
+                    {
+                        e.getComponent<cro::AudioEmitter>().play();
+                    }
+
+
+                    if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
+                    {
+                        std::int32_t samples = 0;
+                        const auto* data = m_sharedData.playlist.getData(samples);
+                        m_musicStream.updateBuffer(data, samples);
                     }
                 };
         }
 
-        //put the new hole music on the cam for accessibilty
-        //this is done *before* m_cameras is updated 
-        if (as.hasEmitter("music"))
+
+
+        if (loadTrees)
         {
-            m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>() = as.getEmitter("music");
-            m_gameScene.getActiveCamera().getComponent<cro::AudioEmitter>().setLooped(false);
+            const std::array<std::string, 3u> paths =
+            {
+                "assets/golf/sound/ambience/trees01.ogg",
+                "assets/golf/sound/ambience/trees03.ogg",
+                "assets/golf/sound/ambience/trees02.ogg"
+            };
+
+            /*const std::array positions =
+            {
+                glm::vec3(80.f, 4.f, -66.f),
+                glm::vec3(240.f, 4.f, -66.f),
+                glm::vec3(160.f, 4.f, -66.f),
+                glm::vec3(240.f, 4.f, -123.f),
+                glm::vec3(160.f, 4.f, -123.f),
+                glm::vec3(80.f, 4.f, -123.f)
+            };
+
+            auto callback = [&](cro::Entity e, float)
+            {
+                float amount = std::min(1.f, m_windUpdate.currentWindSpeed);
+                float pitch = 0.5f + (0.8f * amount);
+                float volume = 0.05f + (0.3f * amount);
+
+                e.getComponent<cro::AudioEmitter>().setPitch(pitch);
+                e.getComponent<cro::AudioEmitter>().setVolume(volume);
+            };
+
+            //this works but... meh
+            for (auto i = 0u; i < paths.size(); ++i)
+            {
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + paths[i]))
+                {
+                    for (auto j = 0u; j < 2u; ++j)
+                    {
+                        auto id = m_resources.audio.load(paths[i], true);
+
+                        auto entity = m_gameScene.createEntity();
+                        entity.addComponent<cro::Transform>().setPosition(positions[i + (j * paths.size())]);
+                        entity.addComponent<cro::AudioEmitter>().setSource(m_resources.audio.get(id));
+                        entity.getComponent<cro::AudioEmitter>().setVolume(0.f);
+                        entity.getComponent<cro::AudioEmitter>().setLooped(true);
+                        entity.getComponent<cro::AudioEmitter>().setRolloff(0.f);
+                        entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                        entity.getComponent<cro::AudioEmitter>().play();
+
+                        entity.addComponent<cro::Callback>().active = true;
+                        entity.getComponent<cro::Callback>().function = callback;
+                    }
+                }
+            }*/
         }
-    }
-    else
-    {
-        //still needs an emitter to stop crash playing non-loaded music
-        m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>();
-        LogE << "Invalid AudioScape file was found" << std::endl;
-    }
 
-    //TODO this is all the same as the driving range, so we can wrap this up in a free func
 
-    registerCommand("list_tracks", [&](const std::string&)
-        {
-            const auto& trackList = m_sharedData.playlist.getTrackList();
-
-            if (!trackList.empty())
-            {
-                for (const auto& str : trackList)
-                {
-                    cro::Console::print(str);
-                }
-            }
-            else
-            {
-                cro::Console::print("No music loaded");
-            }
-        });
-
-    if (!m_sharedData.playlist.getTrackList().empty())
-    {
-        auto gameMusic = m_gameScene.getActiveCamera();
-
+        //fades in the audio
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::AudioEmitter>(m_musicStream).setMixerChannel(MixerChannel::UserMusic);
-        entity.getComponent<cro::AudioEmitter>().setVolume(0.6f);
         entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(0.f);
         entity.getComponent<cro::Callback>().function =
-            [&, gameMusic](cro::Entity e, float dt)
+            [&](cro::Entity e, float dt)
             {
-                //set the mixer channel to inverse valaue of main music channel
-                //while the incidental music is playing
-                if (gameMusic.isValid())
+                auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+                progress = std::min(1.f, progress + (dt / 5.f));
+
+                cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
+                cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Environment);
+                cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::UserMusic);
+
+                if (progress == 1)
                 {
-                    //fade out if the menu music is playing, ie in a transition
-                    const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
-                    float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
-                    if (target < vol)
-                    {
-                        vol = std::max(0.f, vol - (dt * 2.f));
-                    }
-                    else
-                    {
-                        vol = std::min(1.f, vol + dt);
-                    }
-                    cro::AudioMixer::setPrefadeVolume(vol, MixerChannel::UserMusic);
-                }
-
-
-                //check the current music state and pause when volume is low else play the
-                //next track when we stop playing.
-                const float currVol = cro::AudioMixer::getVolume(MixerChannel::UserMusic);
-                auto state = e.getComponent<cro::AudioEmitter>().getState();
-
-                if (state == cro::AudioEmitter::State::Playing)
-                {
-                    if (currVol < MinMusicVolume)
-                    {
-                        e.getComponent<cro::AudioEmitter>().pause();
-                    }
-                }
-                else if ((state == cro::AudioEmitter::State::Paused
-                    && currVol > MinMusicVolume) || state == cro::AudioEmitter::State::Stopped)
-                {
-                    e.getComponent<cro::AudioEmitter>().play();
-                }
-
-
-                if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing)
-                {
-                    std::int32_t samples = 0;
-                    const auto* data = m_sharedData.playlist.getData(samples);
-                    m_musicStream.updateBuffer(data, samples);
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
                 }
             };
+
     }
-
-
-
-    if (loadTrees)
-    {
-        const std::array<std::string, 3u> paths =
-        {
-            "assets/golf/sound/ambience/trees01.ogg",
-            "assets/golf/sound/ambience/trees03.ogg",
-            "assets/golf/sound/ambience/trees02.ogg"
-        };
-
-        /*const std::array positions =
-        {
-            glm::vec3(80.f, 4.f, -66.f),
-            glm::vec3(240.f, 4.f, -66.f),
-            glm::vec3(160.f, 4.f, -66.f),
-            glm::vec3(240.f, 4.f, -123.f),
-            glm::vec3(160.f, 4.f, -123.f),
-            glm::vec3(80.f, 4.f, -123.f)
-        };
-
-        auto callback = [&](cro::Entity e, float)
-        {
-            float amount = std::min(1.f, m_windUpdate.currentWindSpeed);
-            float pitch = 0.5f + (0.8f * amount);
-            float volume = 0.05f + (0.3f * amount);
-
-            e.getComponent<cro::AudioEmitter>().setPitch(pitch);
-            e.getComponent<cro::AudioEmitter>().setVolume(volume);
-        };
-
-        //this works but... meh
-        for (auto i = 0u; i < paths.size(); ++i)
-        {
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + paths[i]))
-            {
-                for (auto j = 0u; j < 2u; ++j)
-                {
-                    auto id = m_resources.audio.load(paths[i], true);
-
-                    auto entity = m_gameScene.createEntity();
-                    entity.addComponent<cro::Transform>().setPosition(positions[i + (j * paths.size())]);
-                    entity.addComponent<cro::AudioEmitter>().setSource(m_resources.audio.get(id));
-                    entity.getComponent<cro::AudioEmitter>().setVolume(0.f);
-                    entity.getComponent<cro::AudioEmitter>().setLooped(true);
-                    entity.getComponent<cro::AudioEmitter>().setRolloff(0.f);
-                    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                    entity.getComponent<cro::AudioEmitter>().play();
-
-                    entity.addComponent<cro::Callback>().active = true;
-                    entity.getComponent<cro::Callback>().function = callback;
-                }
-            }
-        }*/
-    }
-
-
-    //fades in the audio
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
-            progress = std::min(1.f, progress + (dt / 5.f));
-
-            cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
-            cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Environment);
-            cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::UserMusic);
-
-            if (progress == 1)
-            {
-                e.getComponent<cro::Callback>().active = false;
-                m_gameScene.destroyEntity(e);
-            }
-        };
 }
 
 void GolfState::TargetShader::update()
