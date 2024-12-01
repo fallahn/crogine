@@ -4961,7 +4961,8 @@ void OptionsState::applyAudioDevice()
 void OptionsState::assertDeviceIndex()
 {
     const auto& devices = cro::AudioDevice::getDeviceList();
-    if (cro::AudioDevice::getActiveDevice() != devices[audioDeviceIndex])
+    if (!devices.empty() &&
+        cro::AudioDevice::getActiveDevice() != devices[audioDeviceIndex])
     {
         //we couldn't apply the device so correct the label / index
         if (auto result = std::find(devices.begin(), devices.end(), cro::AudioDevice::getActiveDevice()); result != devices.end())
