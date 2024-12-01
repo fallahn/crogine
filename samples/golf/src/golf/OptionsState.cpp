@@ -1629,7 +1629,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::Volume] = createToolTip("Vol: 100");
     m_tooltips[ToolTipID::AA] = createToolTip("Automatically disabled when\nusing pixel scaling");
     m_tooltips[ToolTipID::FOV] = createToolTip("FOV: 60");
-    m_tooltips[ToolTipID::Pixel] = createToolTip("Scale up pixels to match\nthe current resolution.");
+    m_tooltips[ToolTipID::Pixel] = createToolTip("Increases the pixel size\nfor an extra pixelated look");
     m_tooltips[ToolTipID::VertSnap] = createToolTip("Snaps vertices to the nearest\nwhole pixel for a retro \'wobble\'.\nMay cause z-fighting.");
     m_tooltips[ToolTipID::Beacon] = createToolTip("Shows a beacon to indicate flag position\nat far distances.");
     m_tooltips[ToolTipID::BeaconColour] = createToolTip("Display colour of the beacon.");
@@ -1804,7 +1804,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     resolutionLabel = resLabel; //global static used by callback to update display when window is toggled FS
 
     //pixel scale label
-    auto pixelLabel = createLabel(glm::vec2(12.f, 169.f), "Pixel Scaling");
+    auto pixelLabel = createLabel(glm::vec2(12.f, 169.f), "Pixel Scaling      (default: OFF)");
     pixelLabel.addComponent<cro::Callback>().active = true;
     pixelLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -2345,7 +2345,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //pixel scale check box
     entity = createHighlight(glm::vec2(81.f, 160.f));
-    entity.setLabel("Scale up pixels to match the screen resolution.\nShortcut: +/- on numpad");
+    entity.setLabel("Makes everything extra pixelated. For the most dedicated retro enthusiast.\nShortcut: +/- on numpad. (Default OFF)");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVPixelScale);
     entity.getComponent<cro::UIInput>().setNextIndex(AVUnits, AVVertSnap);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVUnits, AVResolutionL);
@@ -2382,7 +2382,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //vertex snap checkbox
     entity = createHighlight(glm::vec2(81.f, 144.f));
-    entity.setLabel("Usually used in conjunction with Pixel Scaling. Default is OFF.\nMay cause z-fighting.");
+    entity.setLabel("Usually used in conjunction with Pixel Scaling.\nMay cause z-fighting. (Default OFF)");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVertSnap);
     entity.getComponent<cro::UIInput>().setNextIndex(AVGridL, AVFullScreen);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVGridR, AVPixelScale);
@@ -2654,7 +2654,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //lens flare highlight
-    entity = createHighlight(glm::vec2(81.f, 65.f));
+    entity = createHighlight(glm::vec2(81.f, 64.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVLensFlare);
 #ifdef _WIN32
     if (!Social::isSteamdeck())
@@ -2680,7 +2680,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //lens flare centre
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 67.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 66.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),

@@ -200,7 +200,7 @@ std::int32_t TimeOfDay::getTimeOfDay() const
         const auto riseMinutes = (risetm.tm_yday * 24 * 60) + (risetm.tm_hour * 60) + risetm.tm_min;
 
         //if (risetm.tm_hour == localtm.tm_hour)
-        if(localMinutes > (riseMinutes - 10) && localMinutes < (riseMinutes + 30))
+        if(localMinutes > (riseMinutes - 10) && localMinutes <= (riseMinutes + 30))
         {
             return Morning;
         }
@@ -215,7 +215,7 @@ std::int32_t TimeOfDay::getTimeOfDay() const
         const auto setMinutes = (settm.tm_yday * 24 * 60) + (settm.tm_hour * 60) + settm.tm_min;
 
         //if (settm.tm_hour == localtm.tm_hour)
-        if(localMinutes > (setMinutes - 30) && localMinutes < (setMinutes + 10))
+        if(localMinutes > (setMinutes - 30) && localMinutes <= (setMinutes + 10))
         {
             return Evening;
         }
@@ -225,7 +225,7 @@ std::int32_t TimeOfDay::getTimeOfDay() const
         m_sunsetStr = setStream.str();
 
         if (localtm.tm_hour > risetm.tm_hour
-            && localtm.tm_hour < settm.tm_hour)
+            && localtm.tm_hour <= settm.tm_hour)
         {
             return Day;
         }
