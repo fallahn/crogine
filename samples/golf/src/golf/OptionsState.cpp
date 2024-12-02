@@ -3226,7 +3226,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //highlight for fixed putter
     entity = createHighlight(glm::vec2(355.f, 32.f));
-    entity.setLabel("Fixes the range of the putter at 10m/33ft.\nMakes putting short distances more difficult.");
+    entity.setLabel("Fixes the range of the putter at 10m/33ft.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVFixedPutter);
 #ifdef _WIN32
     if (!Social::isSteamdeck())

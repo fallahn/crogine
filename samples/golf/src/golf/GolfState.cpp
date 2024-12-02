@@ -1735,7 +1735,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                 if (cro::Util::Random::value(0, 3) == 0)
                 {
-                    auto s = m_sharedData.connectionData[data.client].playerData[data.player].name;
+                    auto s = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name;
                     switch (data.terrain)
                     {
                     default: break;
@@ -1755,10 +1755,34 @@ void GolfState::handleMessage(const cro::Message& msg)
                         }
                         break;
                     case TerrainID::Water:
-                        s += " scared even the rubber duck";
+                        switch (cro::Util::Random::value(0, 2))
+                        {
+                        default:
+                        case 0:
+                            s += " scared even the rubber duck";
+                            break;
+                        case 1:
+                            s += " fetches their waders";
+                            break;
+                        case 2:
+                            s += " is disappointingly moist";
+                            break;
+                        }
                         break;
                     case TerrainID::Bunker:
-                        s += " is going to need their bucket and spade";
+                        switch (cro::Util::Random::value(0, 2))
+                        {
+                        default:
+                        case 0:
+                            s += " is going to need their bucket and spade";
+                            break;
+                        case 1:
+                            s += " hit the nitty gritty";
+                            break;
+                        case 2:
+                            s += " has sand in all the wrong places";
+                            break;
+                        }
                         break;
                     }
                     showNotification(s);
