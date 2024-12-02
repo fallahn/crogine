@@ -1891,6 +1891,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     createLabel({ 204.f, 89.f }, "Use Larger Power Bar");
     createLabel({ 204.f, 73.f }, "Use Decimated Power Bar");
     createLabel({ 204.f, 57.f }, "Use Decimalised Distances");
+    createLabel({ 204.f, 41.f }, "Fixed Range Putter");
 
 
     auto createSlider = [&](glm::vec2 position, float width = 142.f)
@@ -3181,13 +3182,13 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 #ifdef _WIN32
     if (!Social::isSteamdeck())
     {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVTextToSpeech, WindowClose);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVTextToSpeech, AVFixedPutter);
         entity.getComponent<cro::UIInput>().setPrevIndex(AVTextToSpeech, AVDecPower);
     }
     else
 #endif
     {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVLensFlare, WindowClose);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVLensFlare, AVFixedPutter);
         entity.getComponent<cro::UIInput>().setPrevIndex(AVLensFlare, AVDecPower);
     }
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -3220,6 +3221,57 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //highlight for fixed putter
+    entity = createHighlight(glm::vec2(355.f, 32.f));
+    entity.setLabel("Fixes the range of the putter at 10m/33ft.\nMakes putting short distances more difficult.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AVFixedPutter);
+#ifdef _WIN32
+    if (!Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVTextToSpeech, WindowClose);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVTextToSpeech, AVDecDist);
+    }
+    else
+#endif
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVLensFlare, WindowClose);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVLensFlare, AVDecDist);
+    }
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.fixedPuttingRange = !m_sharedData.fixedPuttingRange;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+            });
+
+    //centre for fixed putter
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(357.f, 34.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.fixedPuttingRange ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
     //text to speech
 #ifdef _WIN32
@@ -4909,7 +4961,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         upLeftA = AVBeacon;
         upLeftB = AVBeaconL;
         upRightA = AVCrowdL;
-        upRightB = AVDecDist;
+        upRightB = AVFixedPutter;
         break;
     case MenuID::Controls:
         downLeftA = TabAV;

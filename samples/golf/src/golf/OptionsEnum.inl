@@ -80,6 +80,7 @@ enum OptionsIndex
     AVLargePower,
     AVDecPower,
     AVDecDist,
+    AVFixedPutter,
 
 
     Controls = 300,

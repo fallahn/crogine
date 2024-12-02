@@ -106,8 +106,6 @@ public:
 
     std::string getDistanceLabel(bool imperial, std::int32_t level) const;
 
-    void setFixedDistance(bool b) { m_fixedDistance = b; }
-
     float getPower(float distanceToPin, bool imperial) const;
 
     float getAngle() const;
@@ -130,6 +128,8 @@ public:
     static std::int32_t getModifierIndex(); //default, punch, flop
     static void setModifierIndex(std::int32_t);
 
+    static void setFixedPuttingDistance(bool b) { m_fixedPuttingDistance = b; }
+
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI
@@ -138,7 +138,7 @@ private:
     float m_topspin = 1.f; //multiplier 0-1
 
     //hack to fix the putter distance at 10m if set in the options
-    bool m_fixedDistance = false;
+    static bool m_fixedPuttingDistance;
 
     //putter below this is rescaled
     static constexpr float ShortRange = 1.f / 3.f;
@@ -198,7 +198,7 @@ static constexpr std::array<std::int32_t, ClubID::Count> ClubShot =
 //};
 
 //remember if using these to also set the club stats in Clubs.cpp
-static inline /*const*/ std::array<Club, ClubID::Count> Clubs =
+static inline const std::array<Club, ClubID::Count> Clubs =
 {
     Club(ClubID::Driver,    "Driver ", 28.992f, 0.300f, 0.500f),
     Club(ClubID::ThreeWood, "3 Wood ", 32.315f, 0.350f, 0.550f),

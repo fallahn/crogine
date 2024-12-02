@@ -442,7 +442,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 
 
-    Clubs[ClubID::Putter].setFixedDistance(m_sharedData.fixedPuttingRange);
+    Club::setFixedPuttingDistance(m_sharedData.fixedPuttingRange);
     //prevents the non-steam account getting multiple writes from the same profile
     //when debugging networking
     //m_allowAchievements = false;
@@ -2092,7 +2092,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
                 cam.resizeCallback(cam);
 
-                Clubs[ClubID::Putter].setFixedDistance(m_sharedData.fixedPuttingRange);
+                Club::setFixedPuttingDistance(m_sharedData.fixedPuttingRange);
             }
         }
     }
