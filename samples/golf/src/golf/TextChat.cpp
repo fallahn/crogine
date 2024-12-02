@@ -540,7 +540,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     bounds.width = std::round(bounds.width + 5.f);
     bounds.height = std::round(bounds.height + 4.f);
 
-    static constexpr float BgAlpha = 0.6f;
+    static constexpr float BgAlpha = 0.45f;
     const cro::Colour c(0.f, 0.f, 0.f, BgAlpha);
 
     auto bgEnt = m_scene.createEntity();

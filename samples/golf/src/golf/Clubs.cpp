@@ -200,6 +200,11 @@ float Club::getPower(float distanceToPin, bool imperial) const
 {
     if (m_id == ClubID::Putter)
     {
+        if (m_fixedDistance)
+        {
+            return ClubStats[m_id].stats[0].target;
+        }
+
         //looks like a bug, but turns out we need the extra power.
         auto p = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
         //return getScaledValue(ClubStats[m_id].stats[0].power, distanceToPin);

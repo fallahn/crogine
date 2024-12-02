@@ -295,7 +295,7 @@ struct SharedStateData final
     bool logBenchmarks = false;
     bool showCustomCourses = true;
     bool showTutorialTip = true;
-    bool showPuttingPower = false;
+    bool showPuttingPower = true;
     bool showBallTrail = false;
     bool trailBeaconColour = true; //if false defaults to white
     bool fastCPU = true;
@@ -312,6 +312,7 @@ struct SharedStateData final
     bool decimatePowerBar = false;
     bool decimateDistance = false;
     bool showRosterTip = true;
+    bool fixedPuttingRange = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

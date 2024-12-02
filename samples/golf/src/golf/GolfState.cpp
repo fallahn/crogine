@@ -441,6 +441,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0,1,2));
     }
 
+
+    Clubs[ClubID::Putter].setFixedDistance(m_sharedData.fixedPuttingRange);
     //prevents the non-steam account getting multiple writes from the same profile
     //when debugging networking
     //m_allowAchievements = false;
@@ -2089,6 +2091,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 //updates the position of the entities based on bar size
                 auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
                 cam.resizeCallback(cam);
+
+                Clubs[ClubID::Putter].setFixedDistance(m_sharedData.fixedPuttingRange);
             }
         }
     }
@@ -5283,6 +5287,10 @@ void GolfState::handleMaxStrokes(std::uint8_t reason)
         {
         default:
             showNotification("Stroke Limit Reached.");
+            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+            {
+                updateLeagueHole();
+            }
             break;
         case ScoreType::MultiTarget:
             if (reason == MaxStrokeID::Forfeit)
