@@ -2983,7 +2983,15 @@ void DrivingState::createBall()
     const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);
     entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
-    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    if (ballDef.hasSkeleton())
+    {
+        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]));
+        entity.getComponent<cro::Skeleton>().play(0);
+    }
+    else
+    {
+        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    }
     if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
     {
         //this assumes the model loaded successfully, otherwise

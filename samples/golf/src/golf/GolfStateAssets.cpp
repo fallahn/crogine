@@ -1555,12 +1555,26 @@ void GolfState::loadMaterials()
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Ball]).setProperty("u_ballColour", cro::Colour::White);
 
+    m_resources.shaders.loadFromString(ShaderID::BallSkinned, CelVertexShader, CelFragmentShader, "#define SKINNED\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::BallSkinned);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BallSkinned] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::BallSkinned]).setProperty("u_ballColour", cro::Colour::White);
+    m_resources.materials.get(m_materialIDs[MaterialID::BallSkinned]).doubleSided = true;
+
     if (m_sharedData.nightTime)
     {
         m_resources.shaders.loadFromString(ShaderID::BallNight, GlowVertex, GlowFragment);
         shader = &m_resources.shaders.get(ShaderID::BallNight);
         m_materialIDs[MaterialID::BallNight] = m_resources.materials.add(*shader);
         m_resources.materials.get(m_materialIDs[MaterialID::BallNight]).setProperty("u_ballColour", cro::Colour::White);
+
+        m_resources.shaders.loadFromString(ShaderID::BallNightSkinned, GlowVertex, GlowFragment, "#define SKINNED\n");
+        shader = &m_resources.shaders.get(ShaderID::BallNightSkinned);
+        m_materialIDs[MaterialID::BallNightSkinned] = m_resources.materials.add(*shader);
+        m_resources.materials.get(m_materialIDs[MaterialID::BallNightSkinned]).setProperty("u_ballColour", cro::Colour::White);
+        m_resources.materials.get(m_materialIDs[MaterialID::BallNightSkinned]).doubleSided = true;
     }
 
 

@@ -2117,7 +2117,15 @@ void ProfileState::buildPreviewScene()
         entity.addComponent<cro::Transform>();
         ballDef.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
-        entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+        if (ballDef.hasSkeleton())
+        {
+            entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ballSkinned);
+            entity.getComponent<cro::Skeleton>().play(0);
+        }
+        else
+        {
+            entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+        }
         entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
         entity.addComponent<cro::Callback>().active = true;
 

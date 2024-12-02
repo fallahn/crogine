@@ -3975,6 +3975,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
 
     const auto matID = m_sharedData.nightTime ? MaterialID::BallNight : MaterialID::Ball;
+    const auto matIDSkinned = m_sharedData.nightTime ? MaterialID::BallNightSkinned : MaterialID::BallSkinned;
 
     material = m_resources.materials.get(m_materialIDs[matID]);
     material.setProperty("u_ballColour", ballUserColour);
@@ -3989,6 +3990,13 @@ void GolfState::spawnBall(const ActorInfo& info)
         if (m_ballModels[ballID]->isLoaded())
         {
             m_ballModels[ballID]->createModel(entity);
+
+            if (m_ballModels[ballID]->hasSkeleton())
+            {
+                material = m_resources.materials.get(m_materialIDs[matIDSkinned]);
+                material.setProperty("u_ballColour", ballUserColour);
+            }
+
             applyMaterialData(*m_ballModels[ballID], material);
 #ifdef USE_GNS
             if (ball->workshopID
@@ -4012,6 +4020,10 @@ void GolfState::spawnBall(const ActorInfo& info)
     //clamp scale of balls in case someone got funny with a large model
     const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);
     entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    if (entity.hasComponent<cro::Skeleton>())
+    {
+        entity.getComponent<cro::Skeleton>().play(0);
+    }
 
     entity.getComponent<cro::Model>().setMaterial(0, material);
     if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
