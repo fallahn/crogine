@@ -4907,10 +4907,31 @@ void MenuState::updateUnlockedItems()
         {
             //not yet awarded...
 
-            //TODO award points based on being 1st or second place
+            //award points based on being 1st or second place
+            const auto position = m_sharedData.tournaments[i].currentBest;
+            if (position < 3)
+            {
+                auto& item = m_sharedData.unlockedItems.emplace_back();
+                item.id = ul::UnlockID::CareerGold + (position - 1);
+                item.xp = 600 - (position * 100);
+                Social::awardXP(item.xp);
+            }
 
-            //TODO unlock ball if first place
-
+            //unlock ball if first place
+            if (position == 1)
+            {
+                auto flags = Social::getUnlockStatus(Social::UnlockType::Tournament);
+                if (flags != -1)
+                {
+                    auto flag = (1 << i);
+                    if ((flags & flag) == 0)
+                    {
+                        flags |= flag;
+                        Social::setUnlockStatus(Social::UnlockType::Tournament, flags);
+                        m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Tournament01 + i;
+                    }
+                }
+            }
 
             //store that this was awarded so we don't award it more than once...
             m_sharedData.tournaments[i].previousBest = m_sharedData.tournaments[i].currentBest;
@@ -4918,8 +4939,8 @@ void MenuState::updateUnlockedItems()
         }
     }
 
-    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Tournament01;
-    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Tournament02;
+    //m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Tournament01;
+    //m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Tournament02;
 }
 
 void MenuState::createPreviousScoreCard()

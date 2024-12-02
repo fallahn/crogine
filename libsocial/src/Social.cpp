@@ -60,6 +60,7 @@ namespace
             CareerHair,
             CareerAvatar,
             CareerPosition,
+            Tournament,
 
             Count
         };
@@ -78,7 +79,8 @@ namespace
         StoredValue("cba"),
         StoredValue("cha"),
         StoredValue("cav"),
-        StoredValue("cpo")
+        StoredValue("cpo"),
+        StoredValue("tul"),
     };
 
     StoredValue snapperFlags("snp");
@@ -447,6 +449,9 @@ std::int32_t Social::getUnlockStatus(UnlockType type)
     case UnlockType::CareerPosition:
         StoredValues[ValueID::CareerPosition].read();
         return StoredValues[ValueID::CareerPosition].value;
+    case UnlockType::Tournament:
+        StoredValues[ValueID::Tournament].read();
+        return StoredValues[ValueID::Tournament].value;
     }
 }
 
@@ -486,6 +491,10 @@ void Social::setUnlockStatus(UnlockType type, std::int32_t set)
     case UnlockType::CareerPosition:
         StoredValues[ValueID::CareerPosition].value = set;
         StoredValues[ValueID::CareerPosition].write();
+        break;
+    case UnlockType::Tournament:
+        StoredValues[ValueID::Tournament].value = set;
+        StoredValues[ValueID::Tournament].write();
         break;
     }    
 }

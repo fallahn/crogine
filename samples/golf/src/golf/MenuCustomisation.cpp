@@ -371,8 +371,32 @@ void MenuState::createBallScene()
         }
     }
 
+    //balls for winning a tournament
+    const std::array<std::string, 2u> TournamentPaths =
+    {
+        "assets/golf/career/tournament/01.ball",
+        "assets/golf/career/tournament/02.ball"
+    };
+    const auto tFlags = Social::getUnlockStatus(Social::UnlockType::Tournament);
+    for (auto i = 0u; i < TournamentPaths.size(); ++i)
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(TournamentPaths[i]))
+        {
+            auto info = readBallCfg(cfg);
+            info.type = SharedStateData::BallInfo::Unlock;
 
-
+            if ((tFlags & (1 << i)) != 0)
+            {
+                insertInfo(info, m_sharedData.ballInfo, true);
+            }
+            else
+            {
+                info.locked = true;
+                delayedEntries.push_back(info);
+            }
+        }
+    }
 
 
     //look in the user directory - only do this if the default dir is OK?

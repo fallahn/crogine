@@ -227,7 +227,7 @@ public:
     {
         Ball, Club, Level, Generic,
         CareerBalls, CareerHair, CareerAvatar,
-        CareerPosition
+        CareerPosition, Tournament
     };
     static std::int32_t getUnlockStatus(UnlockType);
     static void setUnlockStatus(UnlockType, std::int32_t set);
