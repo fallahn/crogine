@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,6 +40,11 @@ inline const std::string UnlockVertex = R"(
     uniform mat4 u_viewProjectionMatrix;
     uniform mat3 u_normalMatrix;
 
+    #if defined(SKINNED)
+#define MAX_BONES 64
+#include SKIN_UNIFORMS
+    #endif
+
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_worldPosition;
     VARYING_OUT vec4 v_colour;
@@ -49,12 +54,21 @@ inline const std::string UnlockVertex = R"(
     void main()
     {
         vec4 position = a_position;
+    #if defined(SKINNED)
+#include SKIN_MATRIX
+            position = skinMatrix * position;
+    #endif
+
         gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
 
         vec3 normal = a_normal;
+    #if defined(SKINNED)
+            normal = (skinMatrix * vec4(normal, 0.0)).xyz;
+    #endif
+
         v_normal = u_normalMatrix * normal;
 
-        v_worldPosition = u_worldMatrix * a_position;
+        v_worldPosition = u_worldMatrix * position;
         v_colour = a_colour;
     })";
 

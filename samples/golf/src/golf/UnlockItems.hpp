@@ -107,6 +107,9 @@ namespace ul
 
             GoldCup,
 
+            Tournament01,
+            Tournament02,
+
             Count
         };
     };
@@ -165,6 +168,9 @@ namespace ul
         std::string("assets/golf/models/trophies/trophy06.cmt"),
         
         std::string("assets/golf/models/trophies/trophy01.cmt"),
+
+        std::string("assets/golf/models/career/tournament/01.cmt"),
+        std::string("assets/golf/models/career/tournament/02.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
@@ -241,6 +247,9 @@ namespace ul
             CareerBronze,
             CareerLeague,
 
+            Tournament01,
+            Tournament02,
+
             Count
         };
     };
@@ -308,5 +317,8 @@ namespace ul
         { ModelID::CareerSecond,  "Second Place!",  "New Headwear!" },
         { ModelID::CareerThird,   "Third Place!",   "New Headwear!" },
         { ModelID::Padlock,       "New League",     "Now Available!" },
+
+        { ModelID::Tournament01,  "Gyro",      "New Golf Ball!" },
+        { ModelID::Tournament02,  "Clockwork", "New Golf Ball!" },
     };
 }

@@ -4917,6 +4917,9 @@ void MenuState::updateUnlockedItems()
             writeTournamentData(m_sharedData.tournaments[i]);
         }
     }
+
+    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Tournament01;
+    m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::Tournament02;
 }
 
 void MenuState::createPreviousScoreCard()

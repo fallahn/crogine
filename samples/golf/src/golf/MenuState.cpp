@@ -3058,7 +3058,16 @@ void MenuState::launchQuickPlay()
 void MenuState::launchTournament(std::int32_t tournamentID)
 {
     CRO_ASSERT(tournamentID == 0 || tournamentID == 1, "");
-        
+
+    if (m_sharedData.tournaments[tournamentID].winner != -2)
+    {
+        //reset the tournament. Do we want to store the previous
+        //winner in a stat somewhere? EG the stat database?
+        m_sharedData.tournaments[tournamentID] = {};
+        resetTournament(m_sharedData.tournaments[tournamentID]);
+        writeTournamentData(m_sharedData.tournaments[tournamentID]);
+    }
+
     m_sharedData.quickplayOpponents = 1; //golf state loads the player info from the active tournament
 
     m_sharedData.hosting = true;

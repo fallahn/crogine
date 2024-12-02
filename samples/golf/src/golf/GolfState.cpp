@@ -1732,6 +1732,38 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.2f);
                 }
+
+                if (cro::Util::Random::value(0, 3) == 0)
+                {
+                    auto s = m_sharedData.connectionData[data.client].playerData[data.player].name;
+                    switch (data.terrain)
+                    {
+                    default: break;
+                    case TerrainID::Scrub:
+                        switch (cro::Util::Random::value(0, 2))
+                        {
+                        default:
+                        case 0:
+                            s += " will have to fetch the weed whacker";
+                            break;
+                        case 1:
+                            s += " is doing their best Steve Irwin";
+                            break;
+                        case 2:
+                            s += " took to that like a snowball to hot asphalt";
+                            break;
+                        }
+                        break;
+                    case TerrainID::Water:
+                        s += " scared even the rubber duck";
+                        break;
+                    case TerrainID::Bunker:
+                        s += " is going to need their bucket and spade";
+                        break;
+                    }
+                    showNotification(s);
+                }
+
                 break;
             case TerrainID::Green:
                 if (getClub() != ClubID::Putter)
