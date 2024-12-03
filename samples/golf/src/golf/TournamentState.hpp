@@ -30,7 +30,6 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
-#include "Career.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -67,9 +66,6 @@ private:
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
 
-    std::size_t m_maxLeagueIndex;
-    std::array<std::uint64_t, Career::MaxLeagues> m_progressPositions = {};
-
     cro::AudioScape m_menuSounds;
     struct AudioID final
     {
@@ -87,15 +83,6 @@ private:
     cro::Entity m_playerName;
     cro::RenderTexture m_clubTexture;
 
-    struct LeagueDetails final
-    {
-        cro::Entity courseTitle;
-        cro::Entity courseDescription;
-        cro::Entity holeCount;
-        cro::Entity leagueDetails; //round number, current position and previous best
-        cro::Entity thumbnail;
-        cro::Entity highlight;
-    }m_leagueDetails;
 
     struct SettingsDetails final
     {
@@ -117,7 +104,6 @@ private:
     void createInfoMenu(cro::Entity);
     void createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&);
 
-    void selectLeague(std::size_t);
     void applySettingsValues();
 
     void quitState();

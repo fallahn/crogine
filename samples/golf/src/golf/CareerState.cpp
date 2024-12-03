@@ -38,7 +38,6 @@ source distribution.
 #include "Utility.hpp"
 #include "CallbackData.hpp"
 #include "MenuCallbacks.hpp"
-#include "MenuConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "PacketIDs.hpp"
 #include "Clubs.hpp"
@@ -146,7 +145,7 @@ CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 CareerState::~CareerState()
 {
     //this might be quitting from a cached state and not
-    //necessarily startinga career game.
+    //necessarily starting a career game.
     if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
     {
         saveConfig();
@@ -341,7 +340,7 @@ void CareerState::buildScene()
                     m_scene.setSystemActive<cro::UISystem>(true);
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
                     m_scene.getSystem<cro::UISystem>()->selectAt(CareerStart);
-                    Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
+                    Social::setStatus(Social::InfoID::Menu, { "Viewing the Leagues" });
 
                     applySettingsValues(); //loadConfig() might not load anything
                     loadConfig();

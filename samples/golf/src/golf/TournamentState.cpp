@@ -38,7 +38,6 @@ source distribution.
 #include "Utility.hpp"
 #include "CallbackData.hpp"
 #include "MenuCallbacks.hpp"
-#include "MenuConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "PacketIDs.hpp"
 #include "Clubs.hpp"
@@ -121,9 +120,6 @@ namespace
         CareerSeason = 100
     };
 
-    constexpr glm::vec3 LeagueListPosition = glm::vec3(119.f, 216.f, 0.2f);
-    constexpr float LeagueLineSpacing = 14.f;
-
     const std::string ConfigFile("career.cfg");
 }
 
@@ -131,13 +127,10 @@ TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, S
     : cro::State    (ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus()),
     m_sharedData    (sd),
-    m_maxLeagueIndex(0),
     m_viewScale     (2.f),
     m_currentMenu   (MenuID::Career)
 {
     ctx.mainWindow.setMouseCaptured(false);
-
-    std::fill(m_progressPositions.begin(), m_progressPositions.end(), 0);
 
     addSystems();
     buildScene();
@@ -146,11 +139,8 @@ TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, S
 TournamentState::~TournamentState()
 {
     //this might be quitting from a cached state and not
-    //necessarily startinga career game.
-    if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
-    {
-        saveConfig();
-    }
+    //necessarily starting a career game.
+    saveConfig();
 }
 
 //public
@@ -234,8 +224,6 @@ void TournamentState::handleMessage(const cro::Message& msg)
             if (data.id == StateID::Unlock
                 && m_sharedData.showCredits)
             {
-                Achievements::awardAchievement(AchievementStrings[AchievementID::SemiRetired]);
-
                 m_sharedData.showCredits = false;
                 requestStackPush(StateID::Credits);
             }
@@ -252,20 +240,23 @@ void TournamentState::handleMessage(const cro::Message& msg)
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         }
     }
-    else if (msg.id == Social::MessageID::SocialMessage)
-    {
-        const auto& data = msg.getData<Social::SocialEvent>();
-        if (data.type == Social::SocialEvent::PlayerNameChanged)
-        {
-            m_playerName.getComponent<cro::Text>().setString(Social::getPlayerName());
-            for (auto& table : Career::instance(m_sharedData).getLeagueTables())
-            {
-                //this is misleading - it says it's cont however it updates the
-                //internal string data with the player's name...
-                table.getPreviousResults(Social::getPlayerName());
-            }
-        }
-    }
+
+    //TODO we'll want this if we allow browsing leagues from this state
+    //as well as wanting to refresh the names in the tree view
+    //else if (msg.id == Social::MessageID::SocialMessage)
+    //{
+    //    const auto& data = msg.getData<Social::SocialEvent>();
+    //    if (data.type == Social::SocialEvent::PlayerNameChanged)
+    //    {
+    //        m_playerName.getComponent<cro::Text>().setString(Social::getPlayerName());
+    //        for (auto& table : Career::instance(m_sharedData).getLeagueTables())
+    //        {
+    //            //this is misleading - it says it's cont however it updates the
+    //            //internal string data with the player's name...
+    //            table.getPreviousResults(Social::getPlayerName());
+    //        }
+    //    }
+    //}
 
     m_scene.forwardMessage(msg);
 }
@@ -285,7 +276,7 @@ void TournamentState::render()
 void TournamentState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);// ->initDebug("Career UI");
+    m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteAnimator>(mb);
@@ -341,31 +332,11 @@ void TournamentState::buildScene()
                     m_scene.setSystemActive<cro::UISystem>(true);
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
                     m_scene.getSystem<cro::UISystem>()->selectAt(CareerStart);
-                    Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
+                    Social::setStatus(Social::InfoID::Menu, { "Choosing a Tournament" });
 
                     applySettingsValues(); //loadConfig() might not load anything
                     loadConfig();
                     
-                    //check if we just completed a league, and if we did and it's
-                    //one less than max leagues, increment our current round id
-                    auto currIdx = std::max(0, m_sharedData.leagueRoundID - 1);
-                    if (currIdx != 0 &&
-                        currIdx == m_maxLeagueIndex - 1)
-                    {
-                        if (Career::instance(m_sharedData).getLeagueTables()[currIdx].getCurrentIteration() == 0)
-                        {
-                            m_sharedData.leagueRoundID = std::min(std::int32_t(LeagueRoundID::RoundSix), m_sharedData.leagueRoundID + 1);
-                        }
-                    }
-
-                    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
-                    {
-                        selectLeague(m_maxLeagueIndex);
-                    }
-                    else
-                    {
-                        selectLeague(m_sharedData.leagueRoundID - 1);
-                    }
 
                     if (!m_sharedData.unlockedItems.empty())
                     {
@@ -373,14 +344,17 @@ void TournamentState::buildScene()
                     }
                     else
                     {
-                        auto idx = m_sharedData.leagueRoundID - LeagueRoundID::RoundOne;
-                        if (idx == 0 && m_progressPositions[idx] == 0 //no completed holes
-                            && Career::instance(m_sharedData).getLeagueTables()[idx].getCurrentIteration() == 0)
+                        //show the tournament info pane if we haven't played a tournament yet
+                        //TODO this needs a better case to make sure it only shows once
+                        //probably check the stats too to see any were completed yet?
+                        if (m_sharedData.tournaments[0].winner == -2
+                            && m_sharedData.tournaments[1].winner == -2)
                         {
-                            //if we're on the first league/season show the info
-                            enterInfoCallback();
+                            //enterInfoCallback();
+                            LogI << "Implement me! " << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << std::endl;
                         }
                     }
+
 
                     //start title animation
                     cro::Command cmd;
@@ -426,7 +400,7 @@ void TournamentState::buildScene()
     m_rootNode = rootNode;
 
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/career_menu.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/tournament_menu.spt", m_sharedData.sharedResources->textures);
 
     //background
     auto entity = m_scene.createEntity();
@@ -527,149 +501,10 @@ void TournamentState::buildScene()
     }
 
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    std::vector<cro::Entity> buttons; //temp store these here so we can correct button indices
-
-
-    //league items
-    const auto& leagueData = Career::instance(m_sharedData).getLeagueData();
-    const auto& leagueTables = Career::instance(m_sharedData).getLeagueTables();
-    glm::vec3 position = LeagueListPosition;
-
-    //active league highlight
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(position);
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f, 3.f, -0.1f));
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(-99.f, 7.f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(-99.f, -7.f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(99.f, 7.f), TextGoldColour),
-            cro::Vertex2D(glm::vec2(99.f, -7.f), TextGoldColour)
-        });
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueDetails.highlight = entity;
-
-    std::vector<std::uint8_t> temp(18);
-    std::int32_t temp2 = 0;
-
-    for (auto i = 0u; i < Career::MaxLeagues; ++i)
-    {
-        //this just builds up the string if needed, and finds the previous result (if any)
-        leagueTables[i].getPreviousResults(playerName);
-
-        const bool unlocked = (i == 0 || ((i > 0) && (leagueTables[i - 1].getCurrentBest() < CareerLeagueThreshold)));
-
-        //league titles, listed on left
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(position);
-        entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f, 0.f, -0.2f));
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(largeFont).setString(leagueData[i].title);
-        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-        entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-
-        const auto addButton = [&](cro::Entity parent, std::uint32_t index)
-            {
-                auto buttonEntity = m_scene.createEntity();
-                buttonEntity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, 0.5f });
-                buttonEntity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-                buttonEntity.addComponent<cro::Drawable2D>();
-                buttonEntity.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_highlight");
-                buttonEntity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-                buttonEntity.addComponent<cro::Callback>().function = MenuTextCallback();
-                auto b = buttonEntity.getComponent<cro::Sprite>().getTextureBounds();
-                buttonEntity.addComponent<cro::UIInput>().area = b;
-                buttonEntity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
-                buttonEntity.getComponent<cro::UIInput>().setSelectionIndex(CareerSeason + index);
-                buttonEntity.getComponent<cro::UIInput>().setNextIndex((CareerSeason + index) + 1, (CareerSeason + index) + 1);
-                buttonEntity.getComponent<cro::UIInput>().setPrevIndex((CareerSeason + index) - 1, (CareerSeason + index) - 1);
-                buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
-                buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
-                buttonEntity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-                    m_scene.getSystem<cro::UISystem>()->addCallback(
-                        [&, i](cro::Entity e, const cro::ButtonEvent& evt)
-                        {
-                            if (activated(evt))
-                            {
-                                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                                selectLeague(i);
-                            }
-                        });
-                buttonEntity.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
-                parent.getComponent<cro::Transform>().addChild(buttonEntity.getComponent<cro::Transform>());
-
-                return buttonEntity;
-            };
-
-
-        //activating updates preview
-        if (unlocked)
-        {
-            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
-
-            //add a trophy if previously complete
-            if (leagueTables[i].getCurrentBest() < 4)
-            {
-                auto statusEnt = m_scene.createEntity();
-                statusEnt.addComponent<cro::Transform>().setPosition({ 5.f, position.y - 9.f, 0.1f });
-                statusEnt.addComponent<cro::Drawable2D>();
-                statusEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_status");
-                statusEnt.addComponent<cro::SpriteAnimation>().play(leagueTables[i].getCurrentBest() - 1);
-                bgEnt.getComponent<cro::Transform>().addChild(statusEnt.getComponent<cro::Transform>());
-            }
-
-            //add a button - include index as metadata so we know which info to display when selected
-            auto button = addButton(entity, i);
-            buttons.push_back(button);
-
-            //if there's a save file this will update the current hole
-            if (Progress::read(i + 1, m_progressPositions[i], temp, temp2))
-            {
-                m_progressPositions[i] += 1; //convert from index to hole number
-            }
-        }
-        else
-        {
-            //padlock
-            auto statusEnt = m_scene.createEntity();
-            statusEnt.addComponent<cro::Transform>().setPosition({ 5.f, position.y - 9.f, 0.1f });
-            statusEnt.addComponent<cro::Drawable2D>();
-            statusEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_status");
-            statusEnt.addComponent<cro::SpriteAnimation>().play(3);
-            bgEnt.getComponent<cro::Transform>().addChild(statusEnt.getComponent<cro::Transform>());
-        }
-
-
-        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        position.y -= LeagueLineSpacing;
-    }
-    //correct selection indices for first / last
-    CRO_ASSERT(!buttons.empty(), "");
-    buttons.front().getComponent<cro::UIInput>().setPrevIndex(CareerProfile, CareerProfile);
-    buttons.back().getComponent<cro::UIInput>().setNextIndex(CareerGimme, CareerGimme);
-
-    //put player name on bottom row of the box
-    position.y -= LeagueLineSpacing;
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(position);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString(playerName);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    m_playerName = entity;
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //ticker for freeplay reminder
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-    position.x += 100.f;
-    position.y += LeagueLineSpacing + 1.f;
+    //ticker for freeplay reminder
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(position);
+    entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -707,7 +542,7 @@ void TournamentState::buildScene()
 
     //gimme
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 72.f, 96.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 320.f, 54.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("No Gimme");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -717,7 +552,7 @@ void TournamentState::buildScene()
     m_settingsDetails.gimme = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 72.f, 92.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 320.f, 50.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -728,7 +563,7 @@ void TournamentState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerGimme);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerWeather, Social::getClubLevel() ? CareerClubs : CareerClubStats);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerWeather, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
+    //entity.getComponent<cro::UIInput>().setPrevIndex(CareerWeather, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_scene.getSystem<cro::UISystem>()->addCallback(
@@ -756,7 +591,7 @@ void TournamentState::buildScene()
 
     //text for current weather type
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 174.f, 96.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 422.f, 54.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -788,7 +623,7 @@ void TournamentState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 179.f, 92.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 427.f, 50.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -799,7 +634,7 @@ void TournamentState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerWeather);
     entity.getComponent<cro::UIInput>().setNextIndex(CareerGimme, CareerNight);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CareerGimme, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
+    //entity.getComponent<cro::UIInput>().setPrevIndex(CareerGimme, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_scene.getSystem<cro::UISystem>()->addCallback(
@@ -819,7 +654,7 @@ void TournamentState::buildScene()
 
     //checkbox to show night time status
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 150.f, 72.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 398.f, 30.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("square");
@@ -827,7 +662,7 @@ void TournamentState::buildScene()
     m_settingsDetails.night = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 148.f, 70.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 396.f, 28.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
@@ -870,7 +705,7 @@ void TournamentState::buildScene()
 
     //info button highlight
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 487.f, 43.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 492.f, 29.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -897,66 +732,7 @@ void TournamentState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //right box - updated by selectLeague()
-    static constexpr float CentrePos = 366.f;
-    //title
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 226.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Course Title Goes Here");
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueDetails.courseTitle = entity;
-    //desc
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 214.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("This is where the longer description will be");
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueDetails.courseDescription = entity;
-    //hole count
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 82.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("All 18 Holes");
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueDetails.holeCount = entity;
-    //league info
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ CentrePos, 66.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("Round 3/6\nCurrent Position: 14th\nPrevious Best: 5th");
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueDetails.leagueDetails = entity;
-    //thumb
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 296, 90.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>();//138x104
-    if (!m_sharedData.courseData->courseThumbs.empty())
-    {
-        entity.getComponent<cro::Sprite>().setTexture(*m_sharedData.courseData->courseThumbs.begin()->second);
-        entity.getComponent<cro::Transform>().setScale(CourseThumbnailSize / glm::vec2(entity.getComponent<cro::Sprite>().getTexture()->getSize()));
-    }
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_leagueDetails.thumbnail = entity;
-
-    //select the most recent league
-    m_maxLeagueIndex = buttons.size() - 1;
-    //selectLeague(m_maxLeagueIndex); //this is done each time the menu is shown, so prob not necessary here
-
-
+    
     //options button
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 461.f, 241.f, 0.1f });
@@ -997,7 +773,7 @@ void TournamentState::buildScene()
         m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 69.f, 69.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 317.f, 27.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
@@ -1053,7 +829,7 @@ void TournamentState::buildScene()
 
     //club stats button
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 5.f, 23.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 27.f, 23.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -1201,8 +977,8 @@ void TournamentState::buildScene()
         bannerEnt.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
     }
 
-    //league browser
-    entity = m_scene.createEntity();
+    //league browser - TODO we might want this just so we can edit CPU player names
+    /*entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
@@ -1242,7 +1018,7 @@ void TournamentState::buildScene()
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     iconEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    iconEnt.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(entity).width;
+    iconEnt.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(entity).width;*/
 
     //start
     entity = m_scene.createEntity();
@@ -1685,7 +1461,7 @@ void TournamentState::createInfoMenu(cro::Entity parent)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 298.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Welcome To The Leagues!");
+    entity.addComponent<cro::Text>(largeFont).setString("Welcome To The Tournaments!");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -1815,7 +1591,7 @@ void TournamentState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSh
     if (m_clubTexture.create(210, 36, false))
     {
         auto clubEnt = m_scene.createEntity();
-        clubEnt.addComponent<cro::Transform>().setPosition({ 8.f, 26.f, 0.1f });
+        clubEnt.addComponent<cro::Transform>().setPosition({ 30.f, 26.f, 0.1f });
         clubEnt.addComponent<cro::Drawable2D>();
         clubEnt.addComponent<cro::Sprite>(m_clubTexture.getTexture());
         bgEnt.getComponent<cro::Transform>().addChild(clubEnt.getComponent<cro::Transform>());
@@ -1872,128 +1648,6 @@ void TournamentState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSh
         //TODO make this a button which deactivates the scene camera
         //and pushes the stats state on top so we can view the club data
     }
-}
-
-void TournamentState::selectLeague(std::size_t idx)
-{
-    const auto& leagueData = Career::instance(m_sharedData).getLeagueData()[idx];
-    const auto& league = Career::instance(m_sharedData).getLeagueTables()[idx];
-
-    const auto playlistIdx = league.getCurrentIteration() % Career::MaxLeagues;
-    const auto& courseData = m_sharedData.courseData->courseData[leagueData.playlist[playlistIdx].courseID];
-
-    //course title, description, hole count, round number and current league position and best finishing position, course thumbnail
-    m_leagueDetails.courseTitle.getComponent<cro::Text>().setString(courseData.title);
-    m_leagueDetails.courseDescription.getComponent<cro::Text>().setString(courseData.description);
-    
-    cro::String str = "All 18 Holes";
-    switch (leagueData.playlist[playlistIdx].holeCount)
-    {
-    default: 
-        m_sharedData.holeCount = 0;
-        break;
-    case 1:
-        m_sharedData.holeCount = 1;
-        str = "Front 9";
-        break;
-    case 2:
-        m_sharedData.holeCount = 2;
-        str = "Back 9";
-        break;
-    }
-    m_leagueDetails.holeCount.getComponent<cro::Text>().setString(str);
-
-
-    str = "Round " + std::to_string(playlistIdx + 1) + "/6";
-    if (m_progressPositions[idx] != 0)
-    {
-        str += " (Hole " + std::to_string(m_progressPositions[idx]) + ")";
-    }
-
-    if (league.getCurrentScore() == 0)
-    {
-        str += "\nProgress is automatically saved.";
-    }
-    else
-    {
-        str += "\nCurrent Position: " + std::to_string(league.getCurrentPosition());
-        switch (league.getCurrentPosition())
-        {
-        default:
-            str += "th";
-            break;
-        case 1:
-            str += "st";
-            break;
-        case 2:
-            str += "nd";
-            break;
-        case 3:
-            str += "rd";
-            break;
-        }
-    }
-
-    if (league.getCurrentSeason() > 1)
-    {
-        str += "\nPrevious Best: " + std::to_string(league.getPreviousPosition());
-
-        switch (league.getCurrentBest())
-        {
-        default:
-            str += "th";
-            break;
-        case 1:
-            str += "st";
-            break;
-        case 2:
-            str += "nd";
-            break;
-        case 3:
-            str += "rd";
-            break;
-        }
-
-        str += " - Completed " + std::to_string(league.getCurrentSeason() - 1) + " time";
-
-        if (league.getCurrentSeason() > 2)
-        {
-            str += "s";
-        }
-    }
-    m_leagueDetails.leagueDetails.getComponent<cro::Text>().setString(str);
-
-    auto& sharedCourseData = *m_sharedData.courseData;
-    if (sharedCourseData.videoPaths.count(courseData.directory) != 0
-        && sharedCourseData.videoPlayer.loadFromFile(sharedCourseData.videoPaths.at(courseData.directory)))
-    {
-        sharedCourseData.videoPlayer.setLooped(true);
-        sharedCourseData.videoPlayer.play();
-        sharedCourseData.videoPlayer.update(1.f / 30.f);
-
-        m_leagueDetails.thumbnail.getComponent<cro::Sprite>().setTexture(sharedCourseData.videoPlayer.getTexture());
-        auto scale = CourseThumbnailSize / glm::vec2(sharedCourseData.videoPlayer.getTexture().getSize());
-        m_leagueDetails.thumbnail.getComponent<cro::Transform>().setScale(scale);
-    }
-    else if (sharedCourseData.courseThumbs.count(courseData.directory) != 0)
-    {
-        m_leagueDetails.thumbnail.getComponent<cro::Sprite>().setTexture(*m_sharedData.courseData->courseThumbs.at(courseData.directory));
-        auto scale = CourseThumbnailSize / glm::vec2(m_sharedData.courseData->courseThumbs.at(courseData.directory)->getSize());
-        m_leagueDetails.thumbnail.getComponent<cro::Transform>().setScale(scale);
-    }
-    else
-    {
-        m_leagueDetails.thumbnail.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    }
-
-    auto pos = LeagueListPosition;
-    pos.y -= idx * LeagueLineSpacing;
-    m_leagueDetails.highlight.getComponent<cro::Transform>().setPosition(pos);
-
-
-    //set this in shared data so it gets sent to the server when we start
-    m_sharedData.mapDirectory = courseData.directory;
-    m_sharedData.leagueRoundID = LeagueRoundID::RoundOne + idx;
 }
 
 void TournamentState::applySettingsValues()
