@@ -1697,7 +1697,7 @@ Your career is split across 6 leagues, spanning 36 rounds over 12 courses. Each 
 consists of 6 rounds - two on the front 9, two on the back 9 and two rounds played over
 18 holes.
 
-Unlike Free Play mode you can leave a Career round at any time, and resume it again when
+Unlike Free Play mode you can leave a League round at any time, and resume it again when
 you're ready. Career mode will even remember which hole you're on!
 
 Standard league rules apply (see the league table for more information). Finish the current
@@ -1706,7 +1706,7 @@ time if you want to try and improve your existing score.
 
 Finish a league in the top 3 to unlock a new ball, in the top 2 to unlock a new piece of
 headwear and placing number one unlocks a new avatar! Each of these items will also be
-available to use in Free Play.
+available to use in Free Play. Items remain unlocked even if you reset your Career.
 
 You can reset your Career at any time from the Stats page of the Options menu.
 

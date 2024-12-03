@@ -273,18 +273,21 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
 
         //if we returned from a career game create a delayed
-        //entity to push the career state
-        if (sd.gameMode == GameMode::Career)
+        //entity to push the correct state
+        if (sd.gameMode == GameMode::Career
+            || sd.gameMode == GameMode::Tournament)
         {
+            const auto state = sd.gameMode == GameMode::Career ? StateID::Career : StateID::Tournament;
+
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float)
+                [&, state](cro::Entity e, float)
                 {
                     e.getComponent<cro::Callback>().active = false;
                     m_uiScene.destroyEntity(e);
 
-                    requestStackPush(StateID::Career);
+                    requestStackPush(state);
                 };
 
             //scales down main menu
@@ -1438,6 +1441,10 @@ void MenuState::handleMessage(const cro::Message& msg)
             else if (data.data == RequestID::QuickPlay)
             {
                 launchQuickPlay();
+            }
+            else if (data.data == RequestID::Tournament)
+            {
+                launchTournament(m_sharedData.activeTournament);
             }
         }
         else if (data.type == SystemEvent::ShadowQualityChanged)

@@ -86,6 +86,7 @@ struct RequestID final
 {
     enum
     {
-        QuickPlay = StateID::Count
+        QuickPlay = StateID::Count,
+        Tournament
     };
 };

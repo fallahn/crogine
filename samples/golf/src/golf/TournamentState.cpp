@@ -121,6 +121,9 @@ namespace
     };
 
     const std::string ConfigFile("career.cfg");
+
+    //temp - remove this once we have selection menu done
+    std::int32_t tournamentID = 0;
 }
 
 TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -508,7 +511,7 @@ void TournamentState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<ScrollData>();
     entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);
@@ -1268,26 +1271,11 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
                 {
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                    m_sharedData.hosting = true;
-                    m_sharedData.gameMode = GameMode::Career;
-                    m_sharedData.localConnectionData.playerCount = 1;
-                    m_sharedData.localConnectionData.playerData[0].isCPU = false;
+                    m_sharedData.activeTournament = tournamentID;
 
-                    //start a local server and connect
-                    if (quickConnect(m_sharedData))
-                    {
-                        //set the course - map directory and hole count is set in selectLeague()
-                        auto data = serialiseString(m_sharedData.mapDirectory);
-                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
-                        //now we wait for the server to send us the map name so we know the
-                        //know the course has been set. Then the network event handler 
-                        //sends the game rules and launches the game.
-                    }
-                    else
-                    {
-                        requestStackPush(StateID::Error); //error makes sure to reset any connection (message set by quickConnect())
-                    }
+                    auto* msg = postMessage<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::MenuRequest;
+                    msg->data = RequestID::Tournament;
                 }
             });
     centreText(entity);
@@ -1470,20 +1458,21 @@ void TournamentState::createInfoMenu(cro::Entity parent)
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     std::string desc = R"(
-Your career is split across 6 leagues, spanning 36 rounds over 12 courses. Each league
-consists of 6 rounds - two on the front 9, two on the back 9 and two rounds played over
-18 holes.
+There are two tournaments available; the Dagle-Bunnage Cup and the Sammonfield Challenge.
+Each tournament has 16 players, with initial positions drawn at random.
 
-Unlike Free Play mode you can leave a Career round at any time, and resume it again when
-you're ready. Career mode will even remember which hole you're on!
+Each round is 9 holes - the front 9 if you draw the left bracket, or the back 9 if you draw
+the right bracket. The exception is the final round which takes place across all 18 holes.
 
-Standard league rules apply (see the league table for more information). Finish the current
-league in the top 5 to unlock the next stage. You can return to an unlocked league at any
-time if you want to try and improve your existing score.
+Rounds are played one on one - if you lose your round the Tournament is over and you'll
+need to start again.
 
-Finish a league in the top 3 to unlock a new ball, in the top 2 to unlock a new piece of
-headwear and placing number one unlocks a new avatar! Each of these items will also be
-available to use in Free Play.
+Unlike Free Play mode you can leave a Tournament round at any time, and resume it again
+when you're ready. Career mode will even remember which hole you're on!
+
+Both Tournaments are always available and can be played at any time. Completing a
+Tournament in first place will unlock a new ball for your profile. These items remain
+unlocked even if you decide to reset your Career.
 
 You can reset your Career at any time from the Stats page of the Options menu.
 
