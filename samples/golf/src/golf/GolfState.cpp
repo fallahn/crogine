@@ -1235,6 +1235,8 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
         if (data.userType == SpriteAnimID::Swing)
         {
+            m_windTracker.reset();
+
             //relay this message with the info needed for particle/sound effects
             auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg2->type = GolfEvent::ClubSwing;
@@ -1884,6 +1886,10 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (data.terrain == TerrainID::Fairway)
             {
                 Social::awardXP(2, XPStringID::OnTheFairway);
+                if (m_windTracker.avg() > WindTracker::BonusSpeed)
+                {
+                    Social::awardXP(10, XPStringID::WindRider);
+                }
             }
 
             if (oob)
@@ -2391,6 +2397,9 @@ bool GolfState::simulate(float dt)
     
     m_windUpdate.currentWindSpeed += (m_windUpdate.windVector.y - m_windUpdate.currentWindSpeed) * dt;
     m_windUpdate.currentWindVector += (m_windUpdate.windVector - m_windUpdate.currentWindVector) * dt;
+
+    m_windTracker.totalSpeed += m_windUpdate.currentWindSpeed;
+    m_windTracker.tickCount++;
 
     WindData data;
     data.direction[0] = m_windUpdate.currentWindVector.x;

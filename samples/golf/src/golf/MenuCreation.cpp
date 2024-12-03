@@ -2720,7 +2720,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::SpriteAnimation>().play(0);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    const auto enter = mouseEnter;
+    //const auto enter = mouseEnter;
     const auto exit = mouseExit;
 
     const auto mouseEnterBounce = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2903,6 +2903,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                     e.getComponent<cro::Text>().setString("Weather: " + WeatherStrings[weatherType]);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
     weatherEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2953,6 +2955,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     std::string s("Random Wind: ");
                     s += m_sharedData.randomWind ? "On" : "Off";
                     e.getComponent<cro::Text>().setString(s);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
     weatherEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2982,6 +2986,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     m_sharedData.windStrength = ((m_sharedData.windStrength + 1) % 3);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, m_sharedData.windStrength + 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     e.getComponent<cro::Text>().setString("Wind Strength: " + std::to_string(m_sharedData.windStrength + 1));
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
     weatherEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

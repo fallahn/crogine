@@ -953,8 +953,8 @@ void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, fl
 cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::string& emitterName, glm::vec3 position)
 {
     //stops repeating the same voice twice
-    static std::int32_t lastIdx = 0;
-    static std::string lastEmitter = emitterName;
+    //static std::int32_t lastIdx = 0;
+    //static std::string lastEmitter = emitterName;
 
     auto ent = getNextEntity();
     ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
@@ -971,8 +971,8 @@ cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::stri
     ent.getComponent<cro::Transform>().setPosition(position);
 
 
-    lastIdx = idx;
-    lastEmitter = emitterName;
+    //lastIdx = idx;
+    //lastEmitter = emitterName;
 
     return ent;
 }

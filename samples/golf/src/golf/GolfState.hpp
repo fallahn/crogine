@@ -642,6 +642,25 @@ private:
 
     //------------
 
+    //used to track average wind speed and award XP
+    struct WindTracker final
+    {
+        float totalSpeed = 0.f;
+        std::int32_t tickCount = 0;
+
+        float avg() const
+        {
+            return tickCount == 0 ? 0.f : totalSpeed / tickCount;
+        }
+
+        void reset()
+        {
+            tickCount = 0;
+            totalSpeed = 0.f;
+        }
+        static constexpr float BonusSpeed = 2.2f;
+    }m_windTracker;
+
     struct AchievementTracker final
     {
         bool hadFoul = false; //tracks 'boomerang' stat

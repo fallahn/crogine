@@ -1226,7 +1226,9 @@ void GolfGame::convertPreferences() const
 void GolfGame::loadPreferences()
 {
     //hack around preference files getting corrupted for some reason
-    bool restoreDefaults = false;
+    //TODO I can't see where this was actually used - did I forget
+    //to finish it???
+    //bool restoreDefaults = false;
 
     auto path = getPreferencePath() + "prefs.cfg";
     if (cro::FileSystem::fileExists(path))
@@ -1380,10 +1382,10 @@ void GolfGame::loadPreferences()
                 }
             }
         }
-        else
+        /*else
         {
             restoreDefaults = true;
-        }
+        }*/
     }
 
 
@@ -1518,10 +1520,10 @@ void GolfGame::loadPreferences()
                 }
             }
 
-            else
+            /*else
             {
                 restoreDefaults = true;
-            }
+            }*/
         }
 
         path = Social::getBaseContentPath() + "league_names.txt";
@@ -1595,7 +1597,7 @@ void GolfGame::loadPreferences()
     loadMusic();
 
 
-    //do this last so were saving any settings which were loaded successfully too
+    //do this last so we're saving any settings which were loaded successfully too
     savePreferences();
 }
 

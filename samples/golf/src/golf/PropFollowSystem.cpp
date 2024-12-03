@@ -117,9 +117,9 @@ void PropFollowSystem::process(float dt)
                 static constexpr float MaxDecelProximity = 15.f;
                 static constexpr float MaxDecelProximitySqr = MaxDecelProximity * MaxDecelProximity;
                 auto deceleration = glm::length2(follower.path[follower.target] - tx.getPosition());
-                if (deceleration < MaxProximitySqr)
+                if (deceleration < MaxDecelProximitySqr)
                 {
-                    proximitySpeed *= 0.85f + (0.15f * smoothstep(0.05f, 0.99f, std::sqrt(deceleration) / MaxProximity));
+                    proximitySpeed *= 0.85f + (0.15f * smoothstep(0.05f, 0.99f, std::sqrt(deceleration) / MaxDecelProximity));
                 }                
                 
 
