@@ -97,6 +97,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/TextChat.cpp
   ${PROJECT_DIR}/golf/TimeOfDay.cpp
   ${PROJECT_DIR}/golf/Tournament.cpp
+  ${PROJECT_DIR}/golf/TournamentState.cpp
   ${PROJECT_DIR}/golf/TrophyDisplaySystem.cpp
   ${PROJECT_DIR}/golf/TrophyState.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp

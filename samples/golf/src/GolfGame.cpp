@@ -45,6 +45,7 @@ source distribution.
 #include "golf/KeyboardState.hpp"
 #include "golf/PracticeState.hpp"
 #include "golf/CareerState.hpp"
+#include "golf/TournamentState.hpp"
 #include "golf/DrivingState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/LeagueState.hpp"
@@ -207,6 +208,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<CareerState>(StateID::Career, m_sharedData);
+    m_stateStack.registerState<TournamentState>(StateID::Tournament, m_sharedData);
     m_stateStack.registerState<FreePlayState>(StateID::FreePlay, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData, *this);

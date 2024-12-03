@@ -701,6 +701,7 @@
     <ClCompile Include="src\golf\TextChat.cpp" />
     <ClCompile Include="src\golf\TimeOfDay.cpp" />
     <ClCompile Include="src\golf\Tournament.cpp" />
+    <ClCompile Include="src\golf\TournamentState.cpp" />
     <ClCompile Include="src\golf\TrophyDisplaySystem.cpp" />
     <ClCompile Include="src\golf\TrophyState.cpp" />
     <ClCompile Include="src\golf\TutorialDirector.cpp" />
@@ -867,6 +868,7 @@
     <ClInclude Include="src\golf\Thumbsticks.hpp" />
     <ClInclude Include="src\golf\TimeOfDay.hpp" />
     <ClInclude Include="src\golf\Tournament.hpp" />
+    <ClInclude Include="src\golf\TournamentState.hpp" />
     <ClInclude Include="src\golf\Treeset.hpp" />
     <ClInclude Include="src\golf\TrophyDisplaySystem.hpp" />
     <ClInclude Include="src\golf\TrophyState.hpp" />
