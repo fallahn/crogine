@@ -851,6 +851,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 break;
             }
             break;
+        case MenuID::Main:
+            if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::CareerSelect)
+            {
+                quitCareerCallback(-1);
+            }
+            break;
         /*case MenuID::ConfirmQuit:
             quitConfirmCallback();
             break;*/

@@ -43,6 +43,7 @@ struct StateID final
         Keyboard,
         Practice,
         Career,
+        Tournament,
         DrivingRange,
         PuttingRange,
         Clubhouse,

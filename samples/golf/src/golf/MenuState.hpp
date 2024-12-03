@@ -99,7 +99,7 @@ public:
         Dummy, 
         Main, Avatar, Join, Lobby,
         ProfileFlyout, ConfirmQuit,
-        Scorecard, Weather,
+        Scorecard, Weather, CareerSelect,
 
         Count
     };
@@ -247,6 +247,9 @@ private:
 
     std::function<void()> enterWeatherCallback;
     std::function<void()> quitWeatherCallback;
+
+    std::function<void()> enterCareerCallback;
+    std::function<void(std::int32_t)> quitCareerCallback; //-1 to close or career state ID to launch another menu
 
     struct TextEdit final
     {
