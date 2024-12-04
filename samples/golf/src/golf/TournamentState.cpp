@@ -134,15 +134,15 @@ namespace
     constexpr float Padding = 4.f;
     constexpr glm::vec2 Tier0Position(Padding + NameSpacing, TreeTexSizeF.y - 16.f);
     constexpr float Tier0Spacing = 12.f; //vertical spacing
-    constexpr float Tier0Stride = TreeTexSizeF.x - (NameSpacing * 2.f) - Padding; //horizontal spacing for right bracket
+    constexpr float Tier0Stride = TreeTexSizeF.x - (NameSpacing * 2.f) - (Padding * 2.f); //horizontal spacing for right bracket
 
     constexpr glm::vec2 Tier1Position = Tier0Position + glm::vec2(NameSpacing + Padding, -Tier0Spacing * 0.5f);
     constexpr float Tier1Spacing = Tier0Spacing * 2.f;
-    constexpr float Tier1Stride = Tier0Stride - (NameSpacing * 2.f) - Padding;
+    constexpr float Tier1Stride = Tier0Stride - (NameSpacing * 2.f) - (Padding * 2.f);
 
     constexpr glm::vec2 Tier2Position = Tier1Position + glm::vec2(NameSpacing + Padding, -Tier1Spacing * 0.5f);
     constexpr float Tier2Spacing = Tier1Spacing * 2.f;
-    constexpr float Tier2Stride = Tier1Stride - (NameSpacing * 2.f) - Padding;
+    constexpr float Tier2Stride = Tier1Stride - (NameSpacing * 2.f) - (Padding * 2.f);
 }
 
 TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -306,7 +306,8 @@ void TournamentState::loadAssets()
     m_treeText.setCharacterSize(UITextSize);
     m_treeText.setFillColour(TextNormalColour);
 
-    //TODO load the texture containing the bracket art into the quad
+    m_bracketTexture.loadFromFile("assets/golf/images/bracket.png");
+    m_treeQuad.setTexture(m_bracketTexture);
 }
 
 void TournamentState::addSystems()
@@ -1788,21 +1789,22 @@ void TournamentState::applySettingsValues()
 void TournamentState::refreshTree()
 {
     m_treeText.setString("Mostly Careless mC GG");
-    //TODO set text colour to yellow for own name
-    //TODO align right for left bracket, centre for tier 3 and left for right bracket
+    
+    static constexpr auto PlayerColour = cro::Colour(0xdbaf77ff);
 
     const auto& t = m_sharedData.tournaments[tournamentID];
     m_treeText.setAlignment(cro::SimpleText::Alignment::Right);
     m_treeText.setPosition(Tier0Position);
 
-    m_treeTexture.clear(cro::Colour::Blue);
+    m_treeTexture.clear(cro::Colour::Transparent);
+    m_treeQuad.draw();
     
     //tier 0
     for (auto i = 0u; i < t.tier0.size() / 2; ++i)
     {
         //TODO set name
 
-        m_treeText.setFillColour(t.tier0[i] == -1 ? TextGoldColour : TextNormalColour);
+        m_treeText.setFillColour(t.tier0[i] == -1 ? PlayerColour : TextNormalColour);
 
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier0Spacing });
@@ -1814,7 +1816,7 @@ void TournamentState::refreshTree()
     {
         //TODO set name
 
-        m_treeText.setFillColour(t.tier0[i] == -1 ? TextGoldColour : TextNormalColour);
+        m_treeText.setFillColour(t.tier0[i] == -1 ? PlayerColour : TextNormalColour);
 
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier0Spacing });
@@ -1828,7 +1830,7 @@ void TournamentState::refreshTree()
     {
         //TODO set name
 
-        m_treeText.setFillColour(t.tier1[i] == -1 ? TextGoldColour : TextNormalColour);
+        m_treeText.setFillColour(t.tier1[i] == -1 ? PlayerColour : TextNormalColour);
 
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier1Spacing });
@@ -1840,7 +1842,7 @@ void TournamentState::refreshTree()
     {
         //TODO set name
 
-        m_treeText.setFillColour(t.tier1[i] == -1 ? TextGoldColour : TextNormalColour);
+        m_treeText.setFillColour(t.tier1[i] == -1 ? PlayerColour : TextNormalColour);
 
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier1Spacing });
@@ -1854,7 +1856,7 @@ void TournamentState::refreshTree()
     {
         //TODO set name
 
-        m_treeText.setFillColour(t.tier2[i] == -1 ? TextGoldColour : TextNormalColour);
+        m_treeText.setFillColour(t.tier2[i] == -1 ? PlayerColour : TextNormalColour);
 
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier2Spacing });
@@ -1866,7 +1868,7 @@ void TournamentState::refreshTree()
     {
         //TODO set name
 
-        m_treeText.setFillColour(t.tier2[i] == -1 ? TextGoldColour : TextNormalColour);
+        m_treeText.setFillColour(t.tier2[i] == -1 ? PlayerColour : TextNormalColour);
 
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier2Spacing });
@@ -1879,13 +1881,13 @@ void TournamentState::refreshTree()
     m_treeText.setPosition({ TreeTexSizeF.x / 2.f, Tier0Position.y });
     //TODO set name
 
-    m_treeText.setFillColour(t.tier3[0] == -1 ? TextGoldColour : TextNormalColour);
+    m_treeText.setFillColour(t.tier3[0] == -1 ? PlayerColour : TextNormalColour);
 
     m_treeText.draw();
     m_treeText.move({ 0.f, -Tier0Spacing * 7.f});
     //TODO set name 
 
-    m_treeText.setFillColour(t.tier3[1] == -1 ? TextGoldColour : TextNormalColour);
+    m_treeText.setFillColour(t.tier3[1] == -1 ? PlayerColour : TextNormalColour);
 
     m_treeText.draw();
     m_treeTexture.display();

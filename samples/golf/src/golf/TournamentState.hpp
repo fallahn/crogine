@@ -85,6 +85,7 @@ private:
     cro::Entity m_playerName;
     cro::RenderTexture m_clubTexture;
 
+    cro::Texture m_bracketTexture;
     cro::SimpleText m_treeText;
     cro::SimpleQuad m_treeQuad;
     cro::RenderTexture m_treeTexture;
