@@ -114,7 +114,7 @@ void PropFollowSystem::process(float dt)
 
 
                 //and the proximity to the target so we can slow down as we approach
-                static constexpr float MaxDecelProximity = 15.f;
+                static constexpr float MaxDecelProximity = 10.f;
                 static constexpr float MaxDecelProximitySqr = MaxDecelProximity * MaxDecelProximity;
                 auto deceleration = glm::length2(follower.path[follower.target] - tx.getPosition());
                 if (deceleration < MaxDecelProximitySqr)
