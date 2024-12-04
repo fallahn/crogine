@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleText.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 #include <functional>
 
@@ -83,6 +85,11 @@ private:
     cro::Entity m_playerName;
     cro::RenderTexture m_clubTexture;
 
+    cro::SimpleText m_treeText;
+    cro::SimpleQuad m_treeQuad;
+    cro::RenderTexture m_treeTexture;
+
+    cro::Entity m_detailString;
 
     struct SettingsDetails final
     {
@@ -98,6 +105,7 @@ private:
     std::function<void()> enterInfoCallback;
     std::function<void()> quitInfoCallback;
 
+    void loadAssets();
     void addSystems();
     void buildScene();
     void createConfirmMenu(cro::Entity);
@@ -105,6 +113,7 @@ private:
     void createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&);
 
     void applySettingsValues();
+    void refreshTree();
 
     void quitState();
 

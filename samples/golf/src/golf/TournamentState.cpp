@@ -116,14 +116,33 @@ namespace
         CareerStart,
         CareerInfo,
 
+        CareerPrev,
+        CareerNext,
 
         CareerSeason = 100
     };
 
     const std::string ConfigFile("career.cfg");
 
-    //temp - remove this once we have selection menu done
     std::int32_t tournamentID = 0;
+
+
+    constexpr glm::uvec2 TreeTexSize(1280, 110);
+    constexpr glm::vec2 TreeTexSizeF(TreeTexSize);
+
+    constexpr float NameSpacing = 176.f;
+    constexpr float Padding = 4.f;
+    constexpr glm::vec2 Tier0Position(Padding + NameSpacing, TreeTexSizeF.y - 16.f);
+    constexpr float Tier0Spacing = 12.f; //vertical spacing
+    constexpr float Tier0Stride = TreeTexSizeF.x - (NameSpacing * 2.f) - Padding; //horizontal spacing for right bracket
+
+    constexpr glm::vec2 Tier1Position = Tier0Position + glm::vec2(NameSpacing + Padding, -Tier0Spacing * 0.5f);
+    constexpr float Tier1Spacing = Tier0Spacing * 2.f;
+    constexpr float Tier1Stride = Tier0Stride - (NameSpacing * 2.f) - Padding;
+
+    constexpr glm::vec2 Tier2Position = Tier1Position + glm::vec2(NameSpacing + Padding, -Tier1Spacing * 0.5f);
+    constexpr float Tier2Spacing = Tier1Spacing * 2.f;
+    constexpr float Tier2Stride = Tier1Stride - (NameSpacing * 2.f) - Padding;
 }
 
 TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -135,6 +154,7 @@ TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, S
 {
     ctx.mainWindow.setMouseCaptured(false);
 
+    loadAssets();
     addSystems();
     buildScene();
 }
@@ -276,6 +296,19 @@ void TournamentState::render()
 }
 
 //private
+void TournamentState::loadAssets()
+{
+    //these are used to create a texture containing the current tree
+    m_treeTexture.create(TreeTexSize.x, TreeTexSize.y, false);
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    m_treeText.setFont(font);
+    m_treeText.setCharacterSize(UITextSize);
+    m_treeText.setFillColour(TextNormalColour);
+
+    //TODO load the texture containing the bracket art into the quad
+}
+
 void TournamentState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
@@ -339,7 +372,7 @@ void TournamentState::buildScene()
 
                     applySettingsValues(); //loadConfig() might not load anything
                     loadConfig();
-                    
+                    refreshTree();
 
                     if (!m_sharedData.unlockedItems.empty())
                     {
@@ -505,43 +538,103 @@ void TournamentState::buildScene()
 
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-    //ticker for freeplay reminder
+
+
+    //current tournament name
+    static const std::array<std::string, 2u> TournamentNames = { std::string("Dagle-Bunnage Cup"), "Sammonfield Championship" };
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, 0.1f});
+    entity.addComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 98.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::Text>(largeFont).setString(TournamentNames[tournamentID]);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<ScrollData>();
-    entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);
-    entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.height += 2.f;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            auto& [bounds, xPos] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
-            xPos -= (dt * 30.f);
-
-            static constexpr float BGWidth = 198.f;
-
-            if (xPos < (-bounds.width))
-            {
-                xPos = BGWidth + 20.f;
-            }
-
-            auto pos = e.getComponent<cro::Transform>().getPosition();
-            pos.x = std::round(xPos);
-
-            e.getComponent<cro::Transform>().setPosition(pos);
-
-            auto cropping = bounds;
-            cropping.left = -pos.x;
-            cropping.left += 20.f;
-            cropping.width = BGWidth;
-            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
-        };
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //prev tournament
+    auto textEnt = entity;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 137.f, 88.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("previous");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerPrev);
+    //entity.getComponent<cro::UIInput>().setNextIndex(CareerWeather, Social::getClubLevel() ? CareerClubs : CareerClubStats);
+    //entity.getComponent<cro::UIInput>().setPrevIndex(CareerWeather, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+        {
+            if (activated(evt))
+            {
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                tournamentID = (tournamentID + 1) % 2;
+                textEnt.getComponent<cro::Text>().setString(TournamentNames[tournamentID]);
+
+                refreshTree();
+            }
+        }
+    );
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //next tournament
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 357.f, 88.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("next");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CareerNext);
+    //entity.getComponent<cro::UIInput>().setNextIndex(CareerWeather, Social::getClubLevel() ? CareerClubs : CareerClubStats);
+    //entity.getComponent<cro::UIInput>().setPrevIndex(CareerWeather, buttons.back().getComponent<cro::UIInput>().getSelectionIndex());
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+        {
+            if (activated(evt))
+            {
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                tournamentID = (tournamentID + 1) % 2;
+                textEnt.getComponent<cro::Text>().setString(TournamentNames[tournamentID]);
+
+                refreshTree();
+            }
+        }
+    );
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //displays winner if complete else current round / course
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 84.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont);// .setString("Put text here plz");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_detailString = entity;
+
+
+    //tournament tree - texture is updated by refreshTree()
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 8.f, 108.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();//.setCroppingArea({0.f, 0.f, 490.f, 124.f});
+    entity.addComponent<cro::Sprite>(m_treeTexture.getTexture());
+    //TODO add controls for scrolling tree
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //gimme
     entity = m_scene.createEntity();
@@ -1023,6 +1116,48 @@ void TournamentState::buildScene()
     iconEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     iconEnt.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(entity).width;*/
 
+    //ticker for freeplay reminder
+    //entity = m_scene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Text>(smallFont).setString("Don't forget you can practice any course at any time in Free Play mode!");
+    //entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    //entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    ////can't do this because the callback specifies the position
+    ////entity.addComponent<UIElement>().absolutePosition = { 0.f, 15.f };
+    ////entity.getComponent<UIElement>().relativePosition = { 0.6667f, 0.f };
+    ////entity.getComponent<UIElement>().depth = 0.2f;
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<ScrollData>();
+    //entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds = cro::Text::getLocalBounds(entity);
+    //entity.getComponent<cro::Callback>().getUserData<ScrollData>().bounds.height += 2.f;
+    //entity.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float dt)
+    //    {
+    //        auto& [bounds, xPos] = e.getComponent<cro::Callback>().getUserData<ScrollData>();
+    //        xPos -= (dt * 30.f);
+
+    //        static constexpr float BGWidth = 198.f;
+
+    //        if (xPos < (-bounds.width))
+    //        {
+    //            xPos = BGWidth + 20.f;
+    //        }
+
+    //        auto pos = e.getComponent<cro::Transform>().getPosition();
+    //        pos.x = std::round(xPos);
+
+    //        e.getComponent<cro::Transform>().setPosition(pos);
+
+    //        auto cropping = bounds;
+    //        cropping.left = -pos.x;
+    //        cropping.left += 20.f;
+    //        cropping.width = BGWidth;
+    //        e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+    //    };
+    //bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //start
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1458,7 +1593,7 @@ void TournamentState::createInfoMenu(cro::Entity parent)
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     std::string desc = R"(
-There are two tournaments available; the Dagle-Bunnage Cup and the Sammonfield Challenge.
+There are two tournaments available; the Dagle-Bunnage Cup and the Sammonfield Championship.
 Each tournament has 16 players, with initial positions drawn at random.
 
 Each round is 9 holes - the front 9 if you draw the left bracket, or the back 9 if you draw
@@ -1648,6 +1783,144 @@ void TournamentState::applySettingsValues()
     m_settingsDetails.gimme.getComponent<cro::Text>().setString(GimmeString[m_sharedData.gimmeRadius]);
     const float scale = m_sharedData.nightTime ? 1.f : 0.f;
     m_settingsDetails.night.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+}
+
+void TournamentState::refreshTree()
+{
+    m_treeText.setString("Mostly Careless mC GG");
+    //TODO set text colour to yellow for own name
+    //TODO align right for left bracket, centre for tier 3 and left for right bracket
+
+    const auto& t = m_sharedData.tournaments[tournamentID];
+    m_treeText.setAlignment(cro::SimpleText::Alignment::Right);
+    m_treeText.setPosition(Tier0Position);
+
+    m_treeTexture.clear(cro::Colour::Blue);
+    
+    //tier 0
+    for (auto i = 0u; i < t.tier0.size() / 2; ++i)
+    {
+        //TODO set name
+
+        m_treeText.setFillColour(t.tier0[i] == -1 ? TextGoldColour : TextNormalColour);
+
+        m_treeText.draw();
+        m_treeText.move({ 0.f, -Tier0Spacing });
+    }
+    m_treeText.setAlignment(cro::SimpleText::Alignment::Left);
+    m_treeText.setPosition(Tier0Position);
+    m_treeText.move({ Tier0Stride, 0.f });
+    for (auto i = t.tier0.size() / 2; i < t.tier0.size(); ++i)
+    {
+        //TODO set name
+
+        m_treeText.setFillColour(t.tier0[i] == -1 ? TextGoldColour : TextNormalColour);
+
+        m_treeText.draw();
+        m_treeText.move({ 0.f, -Tier0Spacing });
+    }
+
+
+    //tier 1
+    m_treeText.setAlignment(cro::SimpleText::Alignment::Right);
+    m_treeText.setPosition(Tier1Position);
+    for (auto i = 0u; i < t.tier1.size() / 2; ++i)
+    {
+        //TODO set name
+
+        m_treeText.setFillColour(t.tier1[i] == -1 ? TextGoldColour : TextNormalColour);
+
+        m_treeText.draw();
+        m_treeText.move({ 0.f, -Tier1Spacing });
+    }
+    m_treeText.setAlignment(cro::SimpleText::Alignment::Left);
+    m_treeText.setPosition(Tier1Position);
+    m_treeText.move({ Tier1Stride, 0.f });
+    for (auto i = t.tier1.size() / 2; i < t.tier1.size(); ++i)
+    {
+        //TODO set name
+
+        m_treeText.setFillColour(t.tier1[i] == -1 ? TextGoldColour : TextNormalColour);
+
+        m_treeText.draw();
+        m_treeText.move({ 0.f, -Tier1Spacing });
+    }
+
+
+    //tier 2
+    m_treeText.setAlignment(cro::SimpleText::Alignment::Right);
+    m_treeText.setPosition(Tier2Position);
+    for (auto i = 0u; i < t.tier2.size() / 2; ++i)
+    {
+        //TODO set name
+
+        m_treeText.setFillColour(t.tier2[i] == -1 ? TextGoldColour : TextNormalColour);
+
+        m_treeText.draw();
+        m_treeText.move({ 0.f, -Tier2Spacing });
+    }
+    m_treeText.setAlignment(cro::SimpleText::Alignment::Left);
+    m_treeText.setPosition(Tier2Position);
+    m_treeText.move({ Tier2Stride, 0.f });
+    for (auto i = t.tier2.size() / 2; i < t.tier2.size(); ++i)
+    {
+        //TODO set name
+
+        m_treeText.setFillColour(t.tier2[i] == -1 ? TextGoldColour : TextNormalColour);
+
+        m_treeText.draw();
+        m_treeText.move({ 0.f, -Tier2Spacing });
+    }
+
+
+
+    //finals (tier 3)
+    m_treeText.setAlignment(cro::SimpleText::Alignment::Centre);
+    m_treeText.setPosition({ TreeTexSizeF.x / 2.f, Tier0Position.y });
+    //TODO set name
+
+    m_treeText.setFillColour(t.tier3[0] == -1 ? TextGoldColour : TextNormalColour);
+
+    m_treeText.draw();
+    m_treeText.move({ 0.f, -Tier0Spacing * 7.f});
+    //TODO set name 
+
+    m_treeText.setFillColour(t.tier3[1] == -1 ? TextGoldColour : TextNormalColour);
+
+    m_treeText.draw();
+    m_treeTexture.display();
+
+    //m_treeTexture.getTexture().saveToFile("tree.png");
+
+
+    //update the info string
+    cro::String str;
+    if (t.winner == -2)
+    {
+        cro::String courseName;
+        const auto& p = TournamentCourses[tournamentID][t.round];
+        const auto& courseData = m_sharedData.courseData->courseData;
+        if (const auto res = std::find_if(courseData.begin(), courseData.end(), [&](const SharedCourseData::CourseData& cd) 
+            {return cd.directory == p;}); res != courseData.end())
+        {
+            courseName = res->title;
+        }
+        else
+        {
+            courseName = "Buns.";
+        }
+
+        //display the current round/course
+        str = "Round " + std::to_string(t.round + 1);
+        str += " - " + courseName;
+    }
+    else
+    {
+        //set the winner name
+        str = "Winner: ";
+    }
+    m_detailString.getComponent<cro::Text>().setString(str);
+    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
 }
 
 void TournamentState::quitState()
