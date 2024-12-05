@@ -115,4 +115,8 @@ private:
     void recreatePostProcess();
     void applyPostProcess();
     bool setShader(const char*);
+
+#ifdef _WIN32
+    void assertFileSystem();
+#endif
 };

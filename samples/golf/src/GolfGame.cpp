@@ -241,6 +241,10 @@ GolfGame::GolfGame()
 #ifdef USE_WORKSHOP
     m_stateStack.registerState<WorkshopState>(StateID::Workshop);
 #endif
+
+#ifdef _WIN32
+    assertFileSystem(); //explicitly ensures the property directories are created
+#endif
 }
 
 //public
@@ -2035,3 +2039,43 @@ bool GolfGame::setShader(const char* frag)
     }
     return false;
 };
+
+#ifdef _WIN32
+void GolfGame::assertFileSystem()
+{
+    const auto printErr =
+        [](const std::string& outPath) 
+        {
+            const std::string err = "Failed creating root preference path, reason:\n" + cro::Console::getLastOutput();
+            cro::FileSystem::showMessageBox("Could Not Create Directory", err);
+
+            cro::FileSystem::showMessageBox("Missing Directory", "Please ensure that\n" + outPath + "\nexists");
+        };
+
+    //appdata/roaming/trederia/golf/
+    auto rootPath = getPreferencePath();
+    if (!cro::FileSystem::directoryExists(rootPath))
+    {
+        LogI << "Creating root preferences directory..." << std::endl;
+        if (!cro::FileSystem::createDirectory(rootPath))
+        {
+            //problem with this specific case is that we can't log
+            //the error to the log file... because the log file wants
+            //to exist in this directory. Which wasn't created.
+            printErr(rootPath);
+            return;
+        }
+    }
+
+    rootPath += "user";
+    if (!cro::FileSystem::directoryExists(rootPath))
+    {
+        LogI << "Creating user preferences directory..." << std::endl;
+        if (!cro::FileSystem::createDirectory(rootPath))
+        {
+            printErr(rootPath);
+            return;
+        }
+    }
+}
+#endif
