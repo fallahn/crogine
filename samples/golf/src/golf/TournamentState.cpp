@@ -143,6 +143,31 @@ namespace
     constexpr glm::vec2 Tier2Position = Tier1Position + glm::vec2(NameSpacing + Padding, -Tier1Spacing * 0.5f);
     constexpr float Tier2Spacing = Tier1Spacing * 2.f;
     constexpr float Tier2Stride = Tier1Stride - (NameSpacing * 2.f) - (Padding * 2.f);
+
+    constexpr cro::FloatRect TreeCroppingArea({ 0.f, 0.f, 490.f, 110.f });
+
+    constexpr std::array ScrollPositions =
+    {
+        Tier0Position.x - (Padding + NameSpacing),
+
+        (TreeTexSizeF.x / 2.f) - (TreeCroppingArea.width / 2.f),
+
+        TreeTexSizeF.x - TreeCroppingArea.width
+    };
+
+    struct ScrollID final
+    {
+        enum
+        {
+            Left, Centre, Right
+        };
+    };
+
+    struct ScrollCallbackData final
+    {
+        std::int32_t scrollID = 0;
+        float progress = 0.f;
+    };
 }
 
 TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -621,7 +646,7 @@ void TournamentState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 84.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont);// .setString("Put text here plz");
+    entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -632,10 +657,30 @@ void TournamentState::buildScene()
     //tournament tree - texture is updated by refreshTree()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 8.f, 108.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();//.setCroppingArea({0.f, 0.f, 490.f, 124.f});
+    entity.addComponent<cro::Drawable2D>().setCroppingArea(TreeCroppingArea);
     entity.addComponent<cro::Sprite>(m_treeTexture.getTexture());
-    //TODO add controls for scrolling tree
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<ScrollCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& [id, progress] = e.getComponent<cro::Callback>().getUserData<ScrollCallbackData>();
+
+            const auto target = ScrollPositions[id];
+            const auto movement = (target - progress) * (dt * 10.f);
+            progress += movement;
+
+            auto origin = e.getComponent<cro::Transform>().getOrigin();
+            origin.x = std::round(progress);
+            e.getComponent<cro::Transform>().setOrigin(origin);
+
+            auto crop = TreeCroppingArea;
+            crop.left = origin.x;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        };
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_treeRoot = entity;
+
 
     //gimme
     entity = m_scene.createEntity();
@@ -1788,9 +1833,40 @@ void TournamentState::applySettingsValues()
 
 void TournamentState::refreshTree()
 {
-    m_treeText.setString("Mostly Careless mC GG");
-    
     static constexpr auto PlayerColour = cro::Colour(0xdbaf77ff);
+    cro::String playerName;
+    if (Social::isAvailable())
+    {
+        playerName = Social::getPlayerName();
+    }
+    else
+    {
+        playerName = m_sharedData.localConnectionData.playerData[0].name;
+    }
+
+    const auto setNameData = [&](std::int32_t id)
+        {
+            if (id > -1)
+            {
+                m_treeText.setString(m_sharedData.leagueNames[id]);
+                m_treeText.setFillColour(TextNormalColour);
+            }
+            else
+            {
+                if (id == -1)
+                {
+                    m_treeText.setString(playerName);
+                    m_treeText.setFillColour(PlayerColour);
+                    return true; //just to track if we're setting the player's name
+                }
+                else
+                {
+                    m_treeText.setString("N/A");
+                    m_treeText.setFillColour(LeaderboardTextDark);
+                }
+            }
+            return false;
+        };
 
     const auto& t = m_sharedData.tournaments[tournamentID];
     m_treeText.setAlignment(cro::SimpleText::Alignment::Right);
@@ -1799,13 +1875,12 @@ void TournamentState::refreshTree()
     m_treeTexture.clear(cro::Colour::Transparent);
     m_treeQuad.draw();
     
+    auto bracket = ScrollID::Left;
+
     //tier 0
     for (auto i = 0u; i < t.tier0.size() / 2; ++i)
     {
-        //TODO set name
-
-        m_treeText.setFillColour(t.tier0[i] == -1 ? PlayerColour : TextNormalColour);
-
+        setNameData(t.tier0[i]);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier0Spacing });
     }
@@ -1814,10 +1889,10 @@ void TournamentState::refreshTree()
     m_treeText.move({ Tier0Stride, 0.f });
     for (auto i = t.tier0.size() / 2; i < t.tier0.size(); ++i)
     {
-        //TODO set name
-
-        m_treeText.setFillColour(t.tier0[i] == -1 ? PlayerColour : TextNormalColour);
-
+        if (setNameData(t.tier0[i]))
+        {
+            bracket = ScrollID::Right;
+        }
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier0Spacing });
     }
@@ -1828,10 +1903,7 @@ void TournamentState::refreshTree()
     m_treeText.setPosition(Tier1Position);
     for (auto i = 0u; i < t.tier1.size() / 2; ++i)
     {
-        //TODO set name
-
-        m_treeText.setFillColour(t.tier1[i] == -1 ? PlayerColour : TextNormalColour);
-
+        setNameData(t.tier1[i]);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier1Spacing });
     }
@@ -1840,10 +1912,7 @@ void TournamentState::refreshTree()
     m_treeText.move({ Tier1Stride, 0.f });
     for (auto i = t.tier1.size() / 2; i < t.tier1.size(); ++i)
     {
-        //TODO set name
-
-        m_treeText.setFillColour(t.tier1[i] == -1 ? PlayerColour : TextNormalColour);
-
+        setNameData(t.tier1[i]);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier1Spacing });
     }
@@ -1854,10 +1923,7 @@ void TournamentState::refreshTree()
     m_treeText.setPosition(Tier2Position);
     for (auto i = 0u; i < t.tier2.size() / 2; ++i)
     {
-        //TODO set name
-
-        m_treeText.setFillColour(t.tier2[i] == -1 ? PlayerColour : TextNormalColour);
-
+        setNameData(t.tier2[i]);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier2Spacing });
     }
@@ -1866,10 +1932,7 @@ void TournamentState::refreshTree()
     m_treeText.move({ Tier2Stride, 0.f });
     for (auto i = t.tier2.size() / 2; i < t.tier2.size(); ++i)
     {
-        //TODO set name
-
-        m_treeText.setFillColour(t.tier2[i] == -1 ? PlayerColour : TextNormalColour);
-
+        setNameData(t.tier2[i]);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier2Spacing });
     }
@@ -1879,18 +1942,28 @@ void TournamentState::refreshTree()
     //finals (tier 3)
     m_treeText.setAlignment(cro::SimpleText::Alignment::Centre);
     m_treeText.setPosition({ TreeTexSizeF.x / 2.f, Tier0Position.y });
-    //TODO set name
-
-    m_treeText.setFillColour(t.tier3[0] == -1 ? PlayerColour : TextNormalColour);
-
+    
+    setNameData(t.tier3[0]);
     m_treeText.draw();
     m_treeText.move({ 0.f, -Tier0Spacing * 7.f});
-    //TODO set name 
 
-    m_treeText.setFillColour(t.tier3[1] == -1 ? PlayerColour : TextNormalColour);
-
+    setNameData(t.tier3[1]);
     m_treeText.draw();
+
+    if (t.winner != -2)
+    {
+        setNameData(t.winner);
+        m_treeText.setPosition(TreeTexSizeF / 2.f);
+        m_treeText.setFillColour(TextNormalColour);
+        m_treeText.setShadowColour(LeaderboardTextDark);
+        m_treeText.setShadowOffset({ 1.f, -1.f });
+        m_treeText.draw();
+    }
+
     m_treeTexture.display();
+
+
+
 
     //m_treeTexture.getTexture().saveToFile("tree.png");
 
@@ -1915,11 +1988,29 @@ void TournamentState::refreshTree()
         //display the current round/course
         str = "Round " + std::to_string(t.round + 1);
         str += " - " + courseName;
+
+        if (t.round == 0
+            || t.round == 1)
+        {
+            m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = bracket;
+        }
+        else
+        {
+            m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Centre;
+        }
     }
     else
     {
         //set the winner name
-        str = "Winner: ";
+        if (t.winner == -1)
+        {
+            str = "Winner: " + playerName;
+        }
+        else
+        {
+            str = "Winner: " + m_sharedData.leagueNames[t.winner];
+        }
+        m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Centre;
     }
     m_detailString.getComponent<cro::Text>().setString(str);
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;

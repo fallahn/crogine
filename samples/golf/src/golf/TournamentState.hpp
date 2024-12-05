@@ -91,6 +91,7 @@ private:
     cro::RenderTexture m_treeTexture;
 
     cro::Entity m_detailString;
+    cro::Entity m_treeRoot;
 
     struct SettingsDetails final
     {

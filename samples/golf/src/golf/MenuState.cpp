@@ -3972,7 +3972,7 @@ void MenuState::createDebugWindows()
                         ImGui::Text("Mulligans: %d", t.mulliganCount);
                         ImGui::Separator();
                         ImGui::BeginChild("##0", ChildSize);
-                        ImGui::Text("Course: %s", TournamentCourses[t.id][0]);
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][0].c_str());
                         for (auto i = 0; i < 8; ++i)
                         {
                             ImGui::Text("%d %s", t.tier0[i], getName(t.tier0[i]).c_str());
@@ -3986,7 +3986,7 @@ void MenuState::createDebugWindows()
                         ImGui::SameLine();
 
                         ImGui::BeginChild("##1", ChildSize);
-                        ImGui::Text("Course: %s", TournamentCourses[t.id][1]);
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][1].c_str());
                         for (auto i = 0; i < 4; ++i)
                         {
                             ImGui::Text("%d %s", t.tier1[i], getName(t.tier1[i]).c_str());
@@ -4000,7 +4000,7 @@ void MenuState::createDebugWindows()
                         ImGui::SameLine();
 
                         ImGui::BeginChild("##2", ChildSize);
-                        ImGui::Text("Course: %s", TournamentCourses[t.id][2]);
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][2].c_str());
                         for (auto i = 0; i < 2; ++i)
                         {
                             ImGui::Text("%d %s", t.tier2[i], getName(t.tier2[i]).c_str());
@@ -4019,7 +4019,7 @@ void MenuState::createDebugWindows()
                         ImGui::Text("%d %s", t.tier3[1], getName(t.tier3[1]).c_str());
                         ImGui::EndChild();
 
-                        ImGui::Text("Winner: %d %s", t.winner, getName(t.winner));
+                        ImGui::Text("Winner: %d %s", t.winner, getName(t.winner).c_str());
                         
                         if (ImGui::Button("Launch"))
                         {
