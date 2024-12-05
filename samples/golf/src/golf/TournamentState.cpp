@@ -112,7 +112,7 @@ namespace
         CareerClubStats,
         CareerQuit,
         CareerProfile,
-        //CareerRestart,
+        CareerReset,
         CareerStart,
         CareerInfo,
 
@@ -120,7 +120,6 @@ namespace
         CareerTournNext,
         CareerScrollPrev,
         CareerScrollNext,
-        CareerReset,
 
         //CareerSeason = 100
     };
@@ -273,6 +272,22 @@ bool TournamentState::handleEvent(const cro::Event& evt)
     {
         cro::App::getWindow().setMouseCaptured(false);
     }
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Career)
+        {
+            auto idx = m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID;
+            if (evt.wheel.y > 0)
+            {
+                idx = (idx + (ScrollPositions.size() - 1)) % ScrollPositions.size();
+            }
+            else
+            {
+                idx = (idx + 1) % ScrollPositions.size();
+            }
+            m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = idx;
+        }
+    }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_scene.forwardEvent(evt);
@@ -294,6 +309,10 @@ void TournamentState::handleMessage(const cro::Message& msg)
             {
                 m_sharedData.showCredits = false;
                 requestStackPush(StateID::Credits);
+            }
+            else if (data.id == StateID::Profile)
+            {
+                refreshTree(); // may have changed profile name
             }
         }
     }
@@ -341,7 +360,7 @@ void TournamentState::loadAssets()
 void TournamentState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);
+    m_scene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteAnimator>(mb);
@@ -416,7 +435,7 @@ void TournamentState::buildScene()
                             && m_sharedData.tournaments[1].winner == -2)
                         {
                             //enterInfoCallback();
-                            LogI << "Implement me! " << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << std::endl;
+                            //LogI << "Implement me! " << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << std::endl;
                         }
                     }
 
@@ -2122,10 +2141,20 @@ void TournamentState::refreshTree()
             || t.round == 1)
         {
             m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = bracket;
+
+            if (bracket == ScrollID::Left)
+            {
+                str += " Front 9";
+            }
+            else
+            {
+                str += " Back 9";
+            }
         }
         else
         {
             m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Centre;
+            str += " 18 Holes";
         }
     }
     else
