@@ -120,12 +120,28 @@ void resetTournament(Tournament& src)
     src = {};
     src.id = id;
 
-    for (auto i = -1; i < static_cast<std::int32_t>(League::PlayerCount); ++i)
+    //when the league rolls the CPUs they are degraded in skill from
+    //start to end (ie they get worse as their index increases)
+
+    //we can use this to decide where to insert the player based on the
+    //current clubset unlocked, so newbies start against lower skilled
+    //CPU players instead of the top ranked ones
+
+    for (auto i = 0; i < static_cast<std::int32_t>(League::PlayerCount / 2) + 1; ++i)
     {
-        src.tier0[i + 1] = i;
+        //the left/right bracket is split via front/back of the array
+        src.tier0[i] = (i * 2) - 1;
+        src.tier0[i+8] = i * 2;
     }
 
-    std::shuffle(src.tier0.begin(), src.tier0.end(), cro::Util::Random::rndEngine);
+    //use current skill to pick pseudo-random position
+    std::int32_t idx = 7 - (Social::getClubLevel() * 3);
+    idx -= cro::Util::Random::value(0, 1);
+    idx += cro::Util::Random::value(0, 1) * 8;
+
+    //we know player is always at 0
+    src.tier0[0] = src.tier0[idx];
+    src.tier0[idx] = -1;
 }
 
 static inline std::string getFilePath(std::int32_t index)
