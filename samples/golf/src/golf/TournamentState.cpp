@@ -590,7 +590,7 @@ void TournamentState::buildScene()
 
     //scroll tournament tree left
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 137.f, 221.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 133.f, 221.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("previous");
@@ -620,7 +620,7 @@ void TournamentState::buildScene()
 
     //scroll tournament tree right
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 357.f, 221.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 361.f, 221.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("next");
@@ -667,7 +667,7 @@ void TournamentState::buildScene()
     //prev tournament
     m_titleString = entity;
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 137.f, 88.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 133.f, 88.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("previous");
@@ -695,7 +695,7 @@ void TournamentState::buildScene()
 
     //next tournament
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 357.f, 88.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 361.f, 88.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("next");
