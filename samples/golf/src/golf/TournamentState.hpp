@@ -102,7 +102,7 @@ private:
     }m_settingsDetails;
 
     std::size_t m_currentMenu;
-    std::function<void(bool)> enterConfirmCallback;
+    std::function<void(bool, bool)> enterConfirmCallback;
     std::function<void()> quitConfirmCallback;
 
     std::function<void()> enterInfoCallback;
