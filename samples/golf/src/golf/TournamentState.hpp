@@ -90,6 +90,7 @@ private:
     cro::SimpleQuad m_treeQuad;
     cro::RenderTexture m_treeTexture;
 
+    cro::Entity m_titleString;
     cro::Entity m_detailString;
     cro::Entity m_treeRoot;
 
@@ -101,7 +102,7 @@ private:
     }m_settingsDetails;
 
     std::size_t m_currentMenu;
-    std::function<void()> enterConfirmCallback;
+    std::function<void(bool)> enterConfirmCallback;
     std::function<void()> quitConfirmCallback;
 
     std::function<void()> enterInfoCallback;
