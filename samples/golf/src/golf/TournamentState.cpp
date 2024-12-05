@@ -1981,6 +1981,8 @@ void TournamentState::applySettingsValues()
 
 void TournamentState::refreshTree()
 {
+    m_treeText.setShadowOffset({ 0.f, 0.f });
+
     static constexpr auto PlayerColour = cro::Colour(0xdbaf77ff);
     cro::String playerName;
     if (Social::isAvailable())
@@ -1992,19 +1994,33 @@ void TournamentState::refreshTree()
         playerName = m_sharedData.localConnectionData.playerData[0].name;
     }
 
-    const auto setNameData = [&](std::int32_t id)
+    const auto setNameData = [&](std::int32_t id, bool activeRound)
         {
+            static constexpr float activeAlpha = 0.7f;
+
             if (id > -1)
             {
+                auto c = TextNormalColour;
+                if (!activeRound)
+                {
+                    c.setAlpha(activeAlpha);
+                }
+
                 m_treeText.setString(m_sharedData.leagueNames[id]);
-                m_treeText.setFillColour(TextNormalColour);
+                m_treeText.setFillColour(c);
             }
             else
             {
                 if (id == -1)
                 {
+                    auto c = PlayerColour;
+                    if (!activeRound)
+                    {
+                        c.setAlpha(activeAlpha);
+                    }
+
                     m_treeText.setString(playerName);
-                    m_treeText.setFillColour(PlayerColour);
+                    m_treeText.setFillColour(c);
                     return true; //just to track if we're setting the player's name
                 }
                 else
@@ -2028,7 +2044,7 @@ void TournamentState::refreshTree()
     //tier 0
     for (auto i = 0u; i < t.tier0.size() / 2; ++i)
     {
-        setNameData(t.tier0[i]);
+        setNameData(t.tier0[i], t.round == 0);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier0Spacing });
     }
@@ -2037,7 +2053,7 @@ void TournamentState::refreshTree()
     m_treeText.move({ Tier0Stride, 0.f });
     for (auto i = t.tier0.size() / 2; i < t.tier0.size(); ++i)
     {
-        if (setNameData(t.tier0[i]))
+        if (setNameData(t.tier0[i], t.round == 0))
         {
             bracket = ScrollID::Right;
         }
@@ -2051,7 +2067,7 @@ void TournamentState::refreshTree()
     m_treeText.setPosition(Tier1Position);
     for (auto i = 0u; i < t.tier1.size() / 2; ++i)
     {
-        setNameData(t.tier1[i]);
+        setNameData(t.tier1[i], t.round == 1);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier1Spacing });
     }
@@ -2060,7 +2076,7 @@ void TournamentState::refreshTree()
     m_treeText.move({ Tier1Stride, 0.f });
     for (auto i = t.tier1.size() / 2; i < t.tier1.size(); ++i)
     {
-        setNameData(t.tier1[i]);
+        setNameData(t.tier1[i], t.round == 0);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier1Spacing });
     }
@@ -2071,7 +2087,7 @@ void TournamentState::refreshTree()
     m_treeText.setPosition(Tier2Position);
     for (auto i = 0u; i < t.tier2.size() / 2; ++i)
     {
-        setNameData(t.tier2[i]);
+        setNameData(t.tier2[i], t.round == 2);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier2Spacing });
     }
@@ -2080,7 +2096,7 @@ void TournamentState::refreshTree()
     m_treeText.move({ Tier2Stride, 0.f });
     for (auto i = t.tier2.size() / 2; i < t.tier2.size(); ++i)
     {
-        setNameData(t.tier2[i]);
+        setNameData(t.tier2[i], t.round == 2);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier2Spacing });
     }
@@ -2091,17 +2107,17 @@ void TournamentState::refreshTree()
     m_treeText.setAlignment(cro::SimpleText::Alignment::Centre);
     m_treeText.setPosition({ TreeTexSizeF.x / 2.f, Tier0Position.y });
     
-    setNameData(t.tier3[0]);
+    setNameData(t.tier3[0], t.round == 3);
     m_treeText.draw();
     m_treeText.move({ 0.f, -Tier0Spacing * 7.f});
 
-    setNameData(t.tier3[1]);
+    setNameData(t.tier3[1], t.round == 3);
     m_treeText.draw();
 
     if (t.winner != -2)
     {
-        setNameData(t.winner);
-        m_treeText.setPosition(TreeTexSizeF / 2.f);
+        setNameData(t.winner, true);
+        m_treeText.setPosition({ TreeTexSizeF.x / 2.f, (TreeTexSizeF.y / 2.f) - 32.f });
         m_treeText.setFillColour(TextNormalColour);
         m_treeText.setShadowColour(LeaderboardTextDark);
         m_treeText.setShadowOffset({ 1.f, -1.f });
