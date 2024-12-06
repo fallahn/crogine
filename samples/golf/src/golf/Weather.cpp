@@ -73,12 +73,12 @@ void GolfState::createWeather(std::int32_t weatherType)
     //auto t = static_cast<float>(clock.elapsed().asMilliseconds()) / 1000.f;
     //LogI << "Generated " << points.size() << " in " << t << " seconds" << std::endl;
 
-    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+    const auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
 
     auto* meshData = &m_resources.meshes.getMesh(meshID);
     std::vector<float> verts;
     std::vector<std::uint32_t> indices;
-    std::uint32_t stride = weatherType == WeatherType::Snow ? 1 : 2;
+    const std::uint32_t stride = weatherType == WeatherType::Snow ? 1 : 2;
     for (auto i = 0u; i < points.size(); i += stride)
     {
         verts.push_back(points[i][0]);
@@ -186,8 +186,8 @@ void GolfState::createWeather(std::int32_t weatherType)
             }
         }
     }
-    auto& shader = m_resources.shaders.get(ShaderID::Weather);
-    auto materialID = m_resources.materials.add(shader);
+    const auto& shader = m_resources.shaders.get(ShaderID::Weather);
+    const auto materialID = m_resources.materials.add(shader);
     auto material = m_resources.materials.get(materialID);
     //material.setProperty("u_colour", weatherColour); //this will override the fade animation
     material.blendMode = cro::Material::BlendMode::Alpha;

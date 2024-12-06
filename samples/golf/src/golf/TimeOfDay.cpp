@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/core/Console.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <iomanip>
 
@@ -242,6 +243,29 @@ void TimeOfDay::setLatLon(glm::vec2 latlon)
     m_latlon.y = std::clamp(m_latlon.y, MinLon, MaxLon);
 
     writeDataFile();
+}
+
+bool TimeOfDay::doSnow() const
+{
+    //return true;
+
+    static constexpr std::int32_t MinChance = 5;
+    if (cro::SysTime::now().months() == 12)
+    {
+        //up north
+        const float chance = 30.f * std::clamp((m_latlon.x / MaxLat), 0.f, 1.f);
+
+        //TODO this should probably be some curve or smoothstep, but eh.
+        return cro::Util::Random::value(0, MinChance + static_cast<std::int32_t>(chance)) == 0;
+    }
+    else if (cro::SysTime::now().months() == 6)
+    {
+        //down south
+        const float chance = 30.f * std::clamp((m_latlon.x / MinLat), 0.f, 1.f);
+        return cro::Util::Random::value(0, MinChance + static_cast<std::int32_t>(chance)) == 0;
+    }
+
+    return false;
 }
 
 //private

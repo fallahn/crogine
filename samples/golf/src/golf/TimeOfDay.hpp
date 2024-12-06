@@ -52,6 +52,9 @@ public:
     std::int32_t getTimeOfDay() const;
     void setLatLon(glm::vec2);
 
+    //random chance of snow based on month and latitude
+    bool doSnow() const;
+
 private:
 
     glm::vec2 m_latlon;

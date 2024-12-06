@@ -275,6 +275,7 @@ private:
     void createClouds();
     void createRopes(std::int32_t, const std::vector<glm::vec3>&);
     void createFireworks();
+    void createSnow();
     void setVoiceCallbacks();
     std::array<cro::Entity, ConstVal::MaxClients> m_voiceEntities;
 

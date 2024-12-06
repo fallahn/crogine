@@ -116,6 +116,7 @@ namespace
 #include "shaders/ShadowMapping.inl"
 #include "shaders/Lantern.inl"
 #include "shaders/Weather.inl"
+#include "shaders/WireframeShader.inl"
 
     constexpr std::array<MenuSky, TimeOfDay::Count> Skies =
     {
@@ -2483,6 +2484,11 @@ void MenuState::createScene()
         createFireworks();
     }
 
+    if (m_tod.doSnow())
+    {
+        createSnow();
+    }
+
     //music
     auto entity = m_backgroundScene.createEntity();
     if (spooky)
@@ -2954,6 +2960,64 @@ void MenuState::createFireworks()
             fireworkSystem->addPosition(worldPos);
         }
     }
+}
+
+void MenuState::createSnow()
+{
+    const std::array<float, 3u> AreaStart = { -30.f, 0.f, -10.f };
+    const std::array<float, 3u> AreaEnd = { 30.f, 50.f, 30.f };
+
+    auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+
+    auto* meshData = &m_resources.meshes.getMesh(meshID);
+    std::vector<float> verts;
+    std::vector<std::uint32_t> indices;
+    const std::uint32_t stride = 1;
+    for (auto i = 0u; i < points.size(); i += stride)
+    {
+        verts.push_back(points[i][0]);
+        verts.push_back(points[i][1]);
+        verts.push_back(points[i][2]);
+        verts.push_back(1.f);
+        verts.push_back(1.f);
+        verts.push_back(1.f);
+        verts.push_back(1.f);
+
+        indices.push_back(i);
+    }
+
+    meshData->vertexCount = points.size() / stride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    meshData->boundingBox[0] = { AreaStart[0], AreaStart[1], AreaStart[2] };
+    meshData->boundingBox[1] = { AreaEnd[0], AreaEnd[1], AreaEnd[2] };
+    meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+    meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+
+    m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment, "#define EASE_SNOW\n");
+
+    const auto& shader = m_resources.shaders.get(ShaderID::Weather);
+    const auto materialID = m_resources.materials.add(shader);
+    auto material = m_resources.materials.get(materialID);
+    material.blendMode = cro::Material::BlendMode::Alpha;
+    material.setProperty("u_colour", LeaderboardTextLight);
+
+    auto entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
+    m_windBuffer.addShader(shader);
+    m_scaleBuffer.addShader(shader);
 }
 
 void MenuState::setVoiceCallbacks()

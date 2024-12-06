@@ -6982,8 +6982,18 @@ void GolfState::updateActor(const ActorInfo& update)
             bool active = (interp.id == update.serverID);
             if (active)
             {
+                auto position = update.position;
+                //if (update.state == std::uint8_t(Ball::State::Roll))
+                //{
+                //    //hmm doesn't actually work - dipping must be a result of something else?
+                // 
+                //    //test the client side terrain to stop the ball dipping when rolling on the green
+                //    const auto terrainHeight = m_collisionMesh.getTerrain(update.position).height;
+                //    position.y = std::max(terrainHeight, position.y);
+                //}
+
                 //cro::Transform::QUAT_IDENTITY;
-                interp.addPoint({ update.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp});
+                interp.addPoint({ position, glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp});
 
                 //only follow the ball with the camera if it belongs to the active group
                 if (update.groupID == m_gameScene.getSystem<CameraFollowSystem>()->getTargetGroup())
