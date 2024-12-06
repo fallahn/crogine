@@ -164,6 +164,7 @@ namespace
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State            (stack, context),
     m_musicStream           (2,48000),
+    m_hasSnow               (false),
     m_ntpPro                (sd.scoreType == ScoreType::NearestThePinPro),
     m_sharedData            (sd),
     m_gameScene             (context.appInstance.getMessageBus(), 1024/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
@@ -3611,9 +3612,7 @@ void GolfState::buildScene()
             {
                 createWeather(WeatherType::Snow);
                 setFog(m_sharedData.nightTime ? 0.45f : 0.3f);
-
-                m_courseTitle += std::uint32_t(0x2744);
-                m_courseTitle += std::uint32_t(0xFE0F);
+                m_hasSnow = true;
             }
         }
         break;
@@ -6066,6 +6065,13 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     {
     default:
         //don't add anything if the weather is clear
+
+        //though we may have snow in december
+        if (m_hasSnow)
+        {
+            courseTitle += std::uint32_t(0x2744);
+            courseTitle += std::uint32_t(0xFE0F);
+        }
         break;
     case WeatherType::Rain:
         //rain cloud

@@ -126,6 +126,7 @@ private:
     cro::ResourceCollection m_resources;
     cro::DynamicAudioStream m_musicStream;
 
+    bool m_hasSnow; //we hardly ever use this, but have to ttrack it anyway...
     bool m_ntpPro; //hack to display different score in same game mode as NTP
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
