@@ -351,13 +351,10 @@ void GolfState::updateTournament(bool playerWon)
                             {
                             default: break;
                             case 0:
-                                Social::awardXP(100, XPStringID::ClubsetBonus);
-                                break;
                             case 1:
-                                Social::awardXP(200, XPStringID::ClubsetBonus);
-                                break;
                             case 2:
-                                Social::awardXP(300, XPStringID::ClubsetBonus);
+                                Social::awardXP(100 + (100 * tournament.initialClubSet), XPStringID::ClubsetBonus);
+                                Achievements::awardAchievement(AchievementStrings[AchievementID::BeginnersLuck + tournament.initialClubSet]);
                                 break;
                             }
                         }

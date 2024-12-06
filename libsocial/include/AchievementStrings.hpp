@@ -167,7 +167,10 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "quick_step",
     "quick_of_it",
     "unreal",
-    "beauchamp"
+    "beauchamp",
+    "beginners_luck",
+    "first_rodeo",
+    "bigger_shelf",
 };
 
 //appears on the notification
@@ -293,7 +296,10 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Quick Step",
     "Into The Quick Of It",
     "Unreal",
-    "Beauchamp"
+    "Beauchamp",
+    "Beginner's Luck",
+    "Not My First Rodeo",
+    "Gonna Need A Bigger Shelf"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -420,6 +426,9 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Come first in a Quick Play round using Pro clubs", false),
     std::make_pair("Come first in the Dagle-Bunnage Cup", false),
     std::make_pair("Come first in the Sammonfield Championship", false),
+    std::make_pair("Win a tournament using only the Novice clubs", false),
+    std::make_pair("Win a tournament using only the Expert clubs", false),
+    std::make_pair("Win a tournament using only the Pro clubs", false),
 };
 
 //assuming trophies load correctly they are:
@@ -580,8 +589,11 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*117*/TrophyID::BronzeFigure,
     /*118*/TrophyID::SilverFigure,
     /*119*/TrophyID::GoldFigure,
-    /*120*/TrophyID::GoldCup,
-    /*121*/TrophyID::GoldCup,
+    /*120*/TrophyID::GoldCup, //TODO change me
+    /*121*/TrophyID::GoldCup, //TODO change me
+    /*122*/TrophyID::BronzeFigure,
+    /*123*/TrophyID::SilverFigure,
+    /*124*/TrophyID::GoldFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

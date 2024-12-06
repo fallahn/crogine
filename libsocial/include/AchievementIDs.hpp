@@ -180,6 +180,9 @@ namespace AchievementID
         QuickOfIt,
         Unreal,
         Beauchamp,
+        BeginnersLuck,
+        FirstRodeo,
+        BiggerShelf,
 
         Count
     };
