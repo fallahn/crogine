@@ -1076,11 +1076,12 @@ void TournamentState::buildScene()
 
                     buttonEnt.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
 
-                    if (m_sharedData.tournaments[tournamentID].initialClubSet > -1
+                    if (m_sharedData.tournaments[tournamentID].winner == -2
+                        && m_sharedData.tournaments[tournamentID].initialClubSet > -1
                         && m_sharedData.tournaments[tournamentID].initialClubSet != m_sharedData.preferredClubSet)
                     {
                         //show warning for changing clubs mid-tournament
-                        m_warningString.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        m_warningString.getComponent<cro::Transform>().setScale(glm::vec2(1.f/m_viewScale.x));
                     }
                     else
                     {
@@ -1401,8 +1402,7 @@ void TournamentState::buildScene()
             const auto charSize = InfoTextSize * static_cast<std::uint32_t>(m_viewScale.x);
             m_warningString.getComponent<cro::Text>().setCharacterSize(charSize);
 
-            const auto scale = 1.f / m_viewScale.x;
-            m_warningString.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+            refreshClubsetWarning();
         }
     };
 
@@ -2239,7 +2239,7 @@ void TournamentState::refreshClubsetWarning()
         const float scale =
             (m_sharedData.tournaments[tournamentID].winner == -2
                 && m_sharedData.tournaments[tournamentID].initialClubSet > -1
-                && m_sharedData.tournaments[tournamentID].initialClubSet != m_sharedData.preferredClubSet) ? 1 : 0.f;
+                && m_sharedData.tournaments[tournamentID].initialClubSet != m_sharedData.preferredClubSet) ? (1/m_viewScale.x) : 0.f;
 
         m_warningString.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     }
