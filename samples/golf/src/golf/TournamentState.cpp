@@ -1013,11 +1013,12 @@ void TournamentState::buildScene()
 
 
 
+
+
     //select club set
     if (Social::getClubLevel())
     {
         m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
-
 
         //warning string 
         entity = m_scene.createEntity();
@@ -1394,6 +1395,15 @@ void TournamentState::buildScene()
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         bannerEnt.getComponent<cro::Callback>().active = true;
+
+        if (m_warningString.isValid())
+        {
+            const auto charSize = InfoTextSize * static_cast<std::uint32_t>(m_viewScale.x);
+            m_warningString.getComponent<cro::Text>().setCharacterSize(charSize);
+
+            const auto scale = 1.f / m_viewScale.x;
+            m_warningString.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        }
     };
 
     entity = m_scene.createEntity();
