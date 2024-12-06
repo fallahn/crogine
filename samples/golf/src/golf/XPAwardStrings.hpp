@@ -53,6 +53,7 @@ struct XPStringID final
         SecondPlace,
         ThirdPlace,
         NoGimme,
+        ClubsetBonus,
 
         HIO,
         Albatross,
@@ -99,6 +100,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     "Second Place",
     "Third Place",
     "No Gimme",
+    "Club Set Bonus",
 
     "Hole In One!!",
     "Albatross (No Assist)",

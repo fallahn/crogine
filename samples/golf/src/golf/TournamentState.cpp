@@ -440,6 +440,10 @@ void TournamentState::buildScene()
                     }
 
 
+                    //show club warning (in case clubset was changed elsewhere)
+                    refreshClubsetWarning();
+
+
                     //start title animation
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::Menu::TitleText;
@@ -1014,6 +1018,17 @@ void TournamentState::buildScene()
     {
         m_sharedData.preferredClubSet %= (Social::getClubLevel() + 1);
 
+
+        //warning string 
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 360.f, 38.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString(std::uint32_t(0x26A0));
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_warningString = entity;
+
+
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 317.f, 27.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
@@ -1059,6 +1074,18 @@ void TournamentState::buildScene()
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     buttonEnt.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+
+                    if (m_sharedData.tournaments[tournamentID].initialClubSet > -1
+                        && m_sharedData.tournaments[tournamentID].initialClubSet != m_sharedData.preferredClubSet)
+                    {
+                        //show warning for changing clubs mid-tournament
+                        m_warningString.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    }
+                    else
+                    {
+                        //hide it
+                        m_warningString.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    }
                 }
             });
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -2187,9 +2214,25 @@ void TournamentState::refreshTree()
         m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = ScrollID::Centre;
     }
     
+
+    refreshClubsetWarning();
+
     m_detailString.getComponent<cro::Text>().setString(str);
     m_titleString.getComponent<cro::Text>().setString(TournamentNames[tournamentID]);
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+}
+
+void TournamentState::refreshClubsetWarning()
+{
+    if (m_warningString.isValid())
+    {
+        const float scale =
+            (m_sharedData.tournaments[tournamentID].winner == -2
+                && m_sharedData.tournaments[tournamentID].initialClubSet > -1
+                && m_sharedData.tournaments[tournamentID].initialClubSet != m_sharedData.preferredClubSet) ? 1 : 0.f;
+
+        m_warningString.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    }
 }
 
 void TournamentState::quitState()

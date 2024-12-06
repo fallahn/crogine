@@ -48,6 +48,13 @@ Tournament::Tournament()
     std::fill(tier3.begin(), tier3.end(), -2);
 }
 
+std::int32_t getTournamentHoleIndex(const Tournament& t)
+{
+    std::int32_t idx = 0;
+    while (t.scores[idx] != 0) { idx++; }
+    return idx;
+}
+
 std::int32_t getTournamentHoleCount(const Tournament& t)
 {
     //c++20's templated lambdas would be useful here

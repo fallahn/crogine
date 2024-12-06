@@ -87,7 +87,9 @@ struct Tournament final
 
     std::int32_t previousBest = std::numeric_limits<std::int32_t>::max(); //if this isn't set but the current is, it's not yet been awarded
     std::int32_t currentBest = std::numeric_limits<std::int32_t>::max(); //this is only set on the final round and reset on a new tournament
-    std::array<std::int32_t, 23u> Padding = {}; //reserve space in case we expand this in the future
+    std::int32_t initialClubSet = -2; //clubset the tournament was first played with. If it changes at any point reset to -1 to invalidate
+    
+    std::array<std::int32_t, 22u> Padding = {}; //reserve space in case we expand this in the future
 
     Tournament();
 };
@@ -100,6 +102,9 @@ struct TournamentIndex final
         A, B
     };
 };
+
+//returns the current hole of the current round
+std::int32_t getTournamentHoleIndex(const Tournament&);
 
 //returns if the given tournament game is f/b/a holes
 std::int32_t getTournamentHoleCount(const Tournament&);

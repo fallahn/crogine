@@ -3090,6 +3090,21 @@ void MenuState::launchTournament(std::int32_t tournamentID)
         writeTournamentData(m_sharedData.tournaments[tournamentID]);
     }
 
+    //if this is a brand new tournament set the initial clubset
+    //else check if we need to invalidate it
+    if (m_sharedData.tournaments[tournamentID].round == 0
+        && getTournamentHoleIndex(m_sharedData.tournaments[tournamentID]) == 0)
+    {
+        m_sharedData.tournaments[tournamentID].initialClubSet = m_sharedData.preferredClubSet;
+    }
+    else
+    {
+        if (m_sharedData.tournaments[tournamentID].initialClubSet != m_sharedData.preferredClubSet)
+        {
+            m_sharedData.tournaments[tournamentID].initialClubSet = -1;
+        }
+    }
+
     m_sharedData.quickplayOpponents = 1; //golf state loads the player info from the active tournament
 
     m_sharedData.hosting = true;

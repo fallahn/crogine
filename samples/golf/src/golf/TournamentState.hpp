@@ -92,6 +92,7 @@ private:
 
     cro::Entity m_titleString;
     cro::Entity m_detailString;
+    cro::Entity m_warningString;
     cro::Entity m_treeRoot;
 
     struct SettingsDetails final
@@ -117,6 +118,7 @@ private:
 
     void applySettingsValues();
     void refreshTree();
+    void refreshClubsetWarning();
 
     void quitState();
 

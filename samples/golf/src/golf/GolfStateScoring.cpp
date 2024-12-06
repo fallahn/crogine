@@ -345,6 +345,21 @@ void GolfState::updateTournament(bool playerWon)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::Unreal + m_sharedData.activeTournament]);
                             Achievements::incrementStat(StatStrings[StatID::UnrealWon + m_sharedData.activeTournament]);
+
+                            //bonus for using the same club set the entire tournament
+                            switch (tournament.initialClubSet)
+                            {
+                            default: break;
+                            case 0:
+                                Social::awardXP(100, XPStringID::ClubsetBonus);
+                                break;
+                            case 1:
+                                Social::awardXP(200, XPStringID::ClubsetBonus);
+                                break;
+                            case 2:
+                                Social::awardXP(300, XPStringID::ClubsetBonus);
+                                break;
+                            }
                         }
                     }
                 }
