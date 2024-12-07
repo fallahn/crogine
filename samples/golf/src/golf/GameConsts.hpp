@@ -1203,7 +1203,7 @@ static inline void formatElevationString(float distance, cro::Text& target, bool
         else
         {
             distance *= ToFeet;
-            if (distance > 3)
+            if (distance > 3 || distance < -3)
             {
                 std::stringstream ss;
                 ss.precision(1);
@@ -1222,7 +1222,7 @@ static inline void formatElevationString(float distance, cro::Text& target, bool
     }
     else
     {
-        if (distance > 5)
+        if (distance > 5 || distance < -5)
         {
             auto dist = static_cast<std::int32_t>(std::round(distance));
             target.setString("Elevation: " + std::to_string(dist) + "m");

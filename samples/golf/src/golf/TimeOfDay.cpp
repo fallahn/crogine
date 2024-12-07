@@ -200,11 +200,6 @@ std::int32_t TimeOfDay::getTimeOfDay() const
         const auto localMinutes = (localtm.tm_yday * 24 * 60) + (localtm.tm_hour * 60) + localtm.tm_min;
         const auto riseMinutes = (risetm.tm_yday * 24 * 60) + (risetm.tm_hour * 60) + risetm.tm_min;
 
-        //if (risetm.tm_hour == localtm.tm_hour)
-        if(localMinutes > (riseMinutes - 10) && localMinutes <= (riseMinutes + 30))
-        {
-            return Morning;
-        }
 
         std::stringstream riseStream;
         riseStream << "Sunrise: " << std::setfill('0') << std::setw(2) << risetm.tm_hour << ":" << std::setfill('0') << std::setw(2) << risetm.tm_min;
@@ -215,21 +210,25 @@ std::int32_t TimeOfDay::getTimeOfDay() const
 
         const auto setMinutes = (settm.tm_yday * 24 * 60) + (settm.tm_hour * 60) + settm.tm_min;
 
-        //if (settm.tm_hour == localtm.tm_hour)
-        if(localMinutes > (setMinutes - 30) && localMinutes <= (setMinutes + 10))
-        {
-            return Evening;
-        }
-
         std::stringstream setStream;
         setStream << "Sunset: " << std::setfill('0') << std::setw(2) << settm.tm_hour << ":" << std::setfill('0') << std::setw(2) << settm.tm_min;
         m_sunsetStr = setStream.str();
 
-        if (localtm.tm_hour > risetm.tm_hour
-            && localtm.tm_hour <= settm.tm_hour)
+        if (localMinutes > (riseMinutes - 10) && localMinutes <= (riseMinutes + 30))
+        {
+            return Morning;
+        }
+
+        if (localMinutes > (riseMinutes + 30) && localMinutes <= (setMinutes - 30))
         {
             return Day;
         }
+
+        if(localMinutes > (setMinutes - 10) && localMinutes <= (setMinutes + 30))
+        {
+            return Evening;
+        }
+
         return Night;
     }
 

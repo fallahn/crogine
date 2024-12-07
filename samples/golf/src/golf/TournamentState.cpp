@@ -352,6 +352,7 @@ void TournamentState::loadAssets()
     m_treeText.setFont(font);
     m_treeText.setCharacterSize(UITextSize);
     m_treeText.setFillColour(TextNormalColour);
+    m_treeText.setShadowColour(LeaderboardTextDark);
 
     m_bracketTexture.loadFromFile("assets/golf/images/bracket.png");
     m_treeQuad.setTexture(m_bracketTexture);
@@ -590,7 +591,7 @@ void TournamentState::buildScene()
 
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-
+    const auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
 
     //scroll tournament tree left
     entity = m_scene.createEntity();
@@ -730,9 +731,9 @@ void TournamentState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 84.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont);
+    entity.addComponent<cro::Text>(labelFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_detailString = entity;
@@ -1825,13 +1826,13 @@ void TournamentState::createInfoMenu(cro::Entity parent)
 
     std::string desc = R"(
 There are two tournaments available; the Dagle-Bunnage Cup and the Sammonfield Championship.
-Each tournament has 16 players, with initial positions drawn at random.
+Each tournament has 16 players, with initial positions drawn based on your current XP level.
 
 Each round is 9 holes - the front 9 if you draw the left bracket, or the back 9 if you draw
 the right bracket. The exception is the final round which takes place across all 18 holes.
 
-Rounds are played one on one - if you lose your round the Tournament is over and you'll
-need to start again.
+Rounds are played one on one - if you lose your round you are eliminated and you'll have
+to start again.
 
 Unlike Free Play mode you can leave a Tournament round at any time, and resume it again
 when you're ready. Career mode will even remember which hole you're on!
@@ -2020,7 +2021,7 @@ void TournamentState::refreshTree()
 {
     m_treeText.setShadowOffset({ 0.f, 0.f });
 
-    static constexpr auto PlayerColour = cro::Colour(0xdbaf77ff);
+    static constexpr auto CPUPlayerColour = cro::Colour(0xdbaf77ff);
     cro::String playerName;
     if (Social::isAvailable())
     {
@@ -2037,7 +2038,7 @@ void TournamentState::refreshTree()
 
             if (id > -1)
             {
-                auto c = TextNormalColour;
+                auto c = CPUPlayerColour;
                 if (!activeRound)
                 {
                     c.setAlpha(activeAlpha);
@@ -2050,7 +2051,7 @@ void TournamentState::refreshTree()
             {
                 if (id == -1)
                 {
-                    auto c = PlayerColour;
+                    auto c = TextNormalColour;
                     if (!activeRound)
                     {
                         c.setAlpha(activeAlpha);
@@ -2151,15 +2152,15 @@ void TournamentState::refreshTree()
     setNameData(t.tier3[1], t.round == 3);
     m_treeText.draw();
 
+    //winner
+    setNameData(t.winner, true);
+    m_treeText.setPosition({ TreeTexSizeF.x / 2.f, (TreeTexSizeF.y / 2.f) - 32.f });
     if (t.winner != -2)
     {
-        setNameData(t.winner, true);
-        m_treeText.setPosition({ TreeTexSizeF.x / 2.f, (TreeTexSizeF.y / 2.f) - 32.f });
-        m_treeText.setFillColour(TextNormalColour);
-        m_treeText.setShadowColour(LeaderboardTextDark);
         m_treeText.setShadowOffset({ 1.f, -1.f });
-        m_treeText.draw();
     }
+    m_treeText.draw();
+    
 
     m_treeTexture.display();
 
