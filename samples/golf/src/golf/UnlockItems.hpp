@@ -107,8 +107,12 @@ namespace ul
 
             GoldCup,
 
-            Tournament01,
+            Tournament01, //these are the prize balls
             Tournament02,
+
+            TournamentTrophy01, //these are just for progress
+            TournamentTrophy02,
+            TournamentLadder,
 
             Count
         };
@@ -171,6 +175,10 @@ namespace ul
 
         std::string("assets/golf/models/career/tournament/01.cmt"),
         std::string("assets/golf/models/career/tournament/02.cmt"),
+
+        std::string("assets/golf/models/trophies/tourn01.cmt"),
+        std::string("assets/golf/models/trophies/tourn02.cmt"),
+        std::string("assets/golf/models/trophies/ladder.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
@@ -250,6 +258,10 @@ namespace ul
             Tournament01,
             Tournament02,
 
+            TournComplete01,
+            TournComplete02,
+            TournLadder,
+
             Count
         };
     };
@@ -320,5 +332,9 @@ namespace ul
 
         { ModelID::Tournament01,  "Gyro",      "New Golf Ball!" },
         { ModelID::Tournament02,  "Clockwork", "New Golf Ball!" },
+
+        { ModelID::TournamentTrophy01,  "First Place!",   "XP" },
+        { ModelID::TournamentTrophy02,  "First Place!",   "XP" },
+        { ModelID::TournamentLadder,    "Round Complete", "XP" },
     };
 }

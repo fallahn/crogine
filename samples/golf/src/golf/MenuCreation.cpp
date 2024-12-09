@@ -5152,13 +5152,13 @@ void MenuState::updateUnlockedItems()
         {
             //not yet awarded...
 
-            //award points based on being 1st or second place
+            //award points if second place
             const auto position = m_sharedData.tournaments[i].currentBest;
-            if (position < 3)
+            if (position == 2) //first place trophy is fancier, and awarded below
             {
                 auto& item = m_sharedData.unlockedItems.emplace_back();
-                item.id = ul::UnlockID::CareerGold + (position - 1);
-                item.xp = 600 - (position * 100);
+                item.id = ul::UnlockID::CareerSilver;
+                item.xp = 750;
                 Social::awardXP(item.xp);
             }
 
@@ -5181,6 +5181,29 @@ void MenuState::updateUnlockedItems()
             //store that this was awarded so we don't award it more than once...
             m_sharedData.tournaments[i].previousBest = m_sharedData.tournaments[i].currentBest;
             writeTournamentData(m_sharedData.tournaments[i]);
+        }
+    }
+
+    //hmm this is kind of doubling what we did above...
+    if (m_sharedData.gameMode == GameMode::Tournament)
+    {
+        //this should still be set from the previous round
+        const auto& t = m_sharedData.tournaments[m_sharedData.activeTournament];
+        if (t.winner == -1)
+        {
+            //we won
+            auto& item = m_sharedData.unlockedItems.emplace_back();
+            item.id = ul::UnlockID::TournComplete01 + m_sharedData.activeTournament;
+            item.xp = 1000;
+            Social::awardXP(item.xp);
+        }
+        else if (t.winner == -2)
+        {
+            //no one won yet so we must have climbed the ladder
+            auto& item = m_sharedData.unlockedItems.emplace_back();
+            item.id = ul::UnlockID::TournLadder;
+            item.xp = 250 * t.round;
+            Social::awardXP(item.xp);
         }
     }
 

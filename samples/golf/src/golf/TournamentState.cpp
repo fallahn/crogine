@@ -733,6 +733,8 @@ void TournamentState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2034,7 +2036,7 @@ void TournamentState::refreshTree()
 
     const auto setNameData = [&](std::int32_t id, bool activeRound)
         {
-            static constexpr float activeAlpha = 0.7f;
+            static constexpr float activeAlpha = 0.85f;
 
             if (id > -1)
             {
@@ -2189,6 +2191,13 @@ void TournamentState::refreshTree()
 
         //display the current round/course
         str = "Round " + std::to_string(t.round + 1);
+        
+        const auto hole = getTournamentHoleIndex(t);
+        if (hole)
+        {
+            str += " (Hole " + std::to_string(hole + 1) + ")";
+        }
+        
         str += " - " + courseName;
 
         if (t.round == 0

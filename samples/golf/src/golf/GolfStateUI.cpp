@@ -3912,6 +3912,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
         if (page2)
         {
+            stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
+
             for (auto j = 0u; j < 16 - playerCount; ++j)
             {
                 scoreString += "\n";

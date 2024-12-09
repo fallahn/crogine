@@ -436,7 +436,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
 Gold, silver, bronze cup
 Gold, silver, bronze mannequin
 Pool, Platinum,
-Level01 - Level50, Spoon
+Level01 - Level50, Spoon, Tournament01-02
 */
 
 struct TrophyID final
@@ -447,7 +447,8 @@ struct TrophyID final
         GoldFigure, SilverFigure, BronzeFigure,
         Pool, Platinum,
         Level01, Level10, Level20,
-        Level30, Level40, Level50, Spoon
+        Level30, Level40, Level50, Spoon,
+        Tournament01, Tournament02
     };
 };
 
@@ -589,8 +590,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*117*/TrophyID::BronzeFigure,
     /*118*/TrophyID::SilverFigure,
     /*119*/TrophyID::GoldFigure,
-    /*120*/TrophyID::GoldCup, //TODO change me
-    /*121*/TrophyID::GoldCup, //TODO change me
+    /*120*/TrophyID::Tournament01,
+    /*121*/TrophyID::Tournament02,
     /*122*/TrophyID::BronzeFigure,
     /*123*/TrophyID::SilverFigure,
     /*124*/TrophyID::GoldFigure,
