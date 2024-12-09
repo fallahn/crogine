@@ -468,7 +468,8 @@ void MenuState::createBallScene()
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             //allow for double sided balls.
-            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+            auto material = ballDef.hasSkeleton() ? m_resources.materials.get(m_materialIDs[MaterialID::BallSkinned])
+                : m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
             applyMaterialData(ballDef, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
             if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)

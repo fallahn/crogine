@@ -3112,6 +3112,13 @@ void MenuState::launchQuickPlay()
 {
     m_sharedData.quickplayOpponents = 3;
 
+    //make sure to always play with default profile
+    m_rosterMenu.activeIndex = 0;
+    setProfileIndex(0, false);
+    m_profileData.activeProfileIndex = 0;
+    m_profileData.playerProfiles[0].isCPU = false;
+    m_profileData.playerProfiles[0].saveProfile();
+
     m_sharedData.hosting = true;
     m_sharedData.gameMode = GameMode::FreePlay;
     m_sharedData.localConnectionData.playerCount = 1;
