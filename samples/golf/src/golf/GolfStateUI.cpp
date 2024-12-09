@@ -3189,19 +3189,19 @@ void GolfState::createScoreboard()
 
 
             //child ent for red score text
-            auto f = m_uiScene.createEntity();
+            /*auto f = m_uiScene.createEntity();
             f.addComponent<cro::Transform>().setPosition({ 0.f, -7.f, 0.f });;
             f.addComponent<cro::Drawable2D>();
             f.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
             f.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
             f.getComponent<cro::Text>().setFillColour(TextHighlightColour);
             e.getComponent<cro::Transform>().addChild(f.getComponent<cro::Transform>());
-            e.addComponent<cro::Entity>() = f;
+            e.addComponent<cro::Entity>() = f;*/
 
             if (e != ents.back())
             {
                 e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
-                f.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+                //f.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
             }
         }
 
@@ -3815,6 +3815,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
             holeNumber += 9;
         }*/
 
+        std::vector<std::pair<cro::Colour, std::uint32_t>> stringColours;
+
         std::string scoreString = std::to_string(holeNumber) + "\n";
         switch (m_sharedData.scoreType)
         {
@@ -3828,12 +3830,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
             break;
         }
 
-        std::string redScoreString = "\n";
+        //std::string redScoreString = "\n";
 
         for (auto j = 0u; j < playerCount; ++j)
         {
             scoreString += "\n";
-            redScoreString += "\n";
+            //redScoreString += "\n";
 
             auto holeIndex = i - 1;
             auto s = scores[j].holes[holeIndex];
@@ -3842,40 +3844,50 @@ void GolfState::updateScoreboard(bool updateParDiff)
             default:
             if (s)
             {
+                auto c = s == m_holeData[holeIndex].par ? LeaderboardTextDark : CD32::Colours[CD32::GreenMid];
                 if (s > m_holeData[holeIndex].par)
                 {
                     //add to red column
-                    redScoreString += std::to_string(s);
+                    //redScoreString += std::to_string(s);
+                    c = CD32::Colours[CD32::Red];
                 }
                 else
                 {
-                    scoreString += std::to_string(s);
+                    //auto c = s == m_holeData[holeIndex].par ? LeaderboardTextDark : CD32::Colours[CD32::GreenMid];
                 }
+                stringColours.emplace_back(c, static_cast<std::uint32_t>(scoreString.size()));
+                scoreString += std::to_string(s);
             }            
             break;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
                 if (scores[j].holeComplete[holeIndex])
                 {
-                    if (s > 0)
+                    auto c = LeaderboardTextDark;
+                    /*if (s > 0)
                     {
-                        scoreString += std::to_string(s);
                     }
-                    else
+                    else*/
+                    if(s < 1)
                     {
-                        redScoreString += std::to_string(s);
+                        //redScoreString += std::to_string(s);
+                        c = CD32::Colours[CD32::Red];
                     }
+                    stringColours.emplace_back(c, static_cast<std::uint32_t>(scoreString.size()));
+                    scoreString += std::to_string(s);
                 }
                 break;
             case ScoreType::NearestThePin:
                 if (s > MaxNTPStrokes)
                 {
-                    redScoreString += "F";
+                    stringColours.emplace_back(CD32::Colours[CD32::Red], static_cast<std::uint32_t>(scoreString.size()));
+                    scoreString += "F";
                 }
                 else
                 {
                     if (s != 0)
                     {
+                        stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                         scoreString += "-";
                     }
                 }
@@ -3883,7 +3895,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Elimination:
                 if (s == 12)
                 {
-                    redScoreString += "X";
+                    stringColours.emplace_back(CD32::Colours[CD32::Red], static_cast<std::uint32_t>(scoreString.size()));
+                    scoreString += "X";
                 }
                 else
                 {
@@ -3902,7 +3915,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             for (auto j = 0u; j < 16 - playerCount; ++j)
             {
                 scoreString += "\n";
-                redScoreString += "\n";
+                //redScoreString += "\n";
             }
 
             auto holeIndex = (i + MaxCols) - 1;
@@ -3922,11 +3935,11 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     break;
                 }
 
-                redScoreString += "\n\n\n";
+                //redScoreString += "\n\n\n";
                 for (auto j = 0u; j < playerCount; ++j)
                 {
                     scoreString += "\n";
-                    redScoreString += "\n";
+                    //redScoreString += "\n";
                     auto s = scores[j].holes[holeIndex];
 
                     switch (m_sharedData.scoreType)
@@ -3934,15 +3947,18 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     default:
                         if (s)
                         {
+                            auto c = s == m_holeData[holeIndex].par ? LeaderboardTextDark : CD32::Colours[CD32::GreenMid];
                             if (s > m_holeData[holeIndex].par)
                             {
                                 //add to red column
-                                redScoreString += std::to_string(s);
+                                //redScoreString += std::to_string(s);
+                                c = CD32::Colours[CD32::Red];
                             }
-                            else
+                            /*else
                             {
-                                scoreString += std::to_string(s);
-                            }
+                            }*/
+                            stringColours.emplace_back(c, static_cast<std::uint32_t>(scoreString.size()));
+                            scoreString += std::to_string(s);
                         }
                         break;
                     case ScoreType::Stableford:
@@ -3951,23 +3967,27 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         {
                             if (s > 0)
                             {
-                                scoreString += std::to_string(s);
+                                stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                             }
                             else
                             {
-                                redScoreString += std::to_string(s);
+                                //redScoreString += std::to_string(s);
+                                stringColours.emplace_back(CD32::Colours[CD32::Red], static_cast<std::uint32_t>(scoreString.size()));
                             }
+                            scoreString += std::to_string(s);
                         }
                         break;
                     case ScoreType::NearestThePin:
                         if (s > MaxNTPStrokes)
                         {
-                            redScoreString += "F";
+                            stringColours.emplace_back(CD32::Colours[CD32::Red], static_cast<std::uint32_t>(scoreString.size()));
+                            scoreString += "F";
                         }
                         else
                         {
                             if (s != 0)
                             {
+                                stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                                 scoreString += "-";
                             }
                         }
@@ -3975,12 +3995,14 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     case ScoreType::Elimination:
                         if (s == 12)
                         {
-                            redScoreString += "X";
+                            stringColours.emplace_back(CD32::Colours[CD32::Red], static_cast<std::uint32_t>(scoreString.size()));
+                            scoreString += "X";
                         }
                         else
                         {
                             if (s != 0)
                             {
+                                stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                                 scoreString += std::to_string(s);
                             }
                         }
@@ -3991,9 +4013,16 @@ void GolfState::updateScoreboard(bool updateParDiff)
         }
 
         ents[i].getComponent<cro::Text>().setString(scoreString);
-        ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setString(redScoreString); //yes there's an entity as a component.
+        for (const auto& [colour, idx] : stringColours)
+        {
+            ents[i].getComponent<cro::Text>().setFillColour(colour, idx);
+        }
+
+        //TODO remove this in favour of setting string colours
+        //ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setString(redScoreString); //yes there's an entity as a component.
+        //ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
         leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), scoreString);
-        leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), redScoreString);
+        //leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), redScoreString);
     }
 
     //total column

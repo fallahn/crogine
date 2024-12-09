@@ -171,7 +171,7 @@ void Text::setString(const String& str)
     //are going to be updated...
     m_context.fillColour.colours.resize(1);
     m_context.fillColour.charIndices.resize(1);
-    m_context.fillColour.index = -1;
+    m_context.fillColour.index = 0;
 
     /*if (!m_context.font->isRegistered(this))
     {
@@ -333,7 +333,7 @@ FloatRect Text::getLocalBounds(Entity entity)
                     }
                 }
             }
-            text.m_context.fillColour.index = -1;
+            text.m_context.fillColour.index = 0;
         }
         //else
         {

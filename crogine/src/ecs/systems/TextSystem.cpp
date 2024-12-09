@@ -92,7 +92,7 @@ void TextSystem::process(float)
                         verts[i].colour = text.m_context.fillColour.getColour(i / 6);
                     }
                 }
-                text.m_context.fillColour.index = -1;
+                text.m_context.fillColour.index = 0;
             }
             //else
             {

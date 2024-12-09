@@ -64,13 +64,14 @@ namespace cro
     //allow changing text colour at specific character indices
     struct ColourIndex final
     {
-        std::int32_t index = -1; //start at minus one because this increments the first time getColour() is called
+        std::int32_t index = 0;
         std::vector<cro::Colour> colours = { cro::Colour::White };
         std::vector<std::uint32_t> charIndices = { 0u };
         const cro::Colour& getColour(std::uint32_t currentIndex)
         {
             CRO_ASSERT(!charIndices.empty(), "");
-            if (index < static_cast<std::int32_t>(charIndices.size()) - 1 &&
+            if (currentIndex != 0 &&
+                index < static_cast<std::int32_t>(charIndices.size()) - 1 &&
                 charIndices[index + 1] == currentIndex)
             {
                 index++;

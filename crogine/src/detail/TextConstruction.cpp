@@ -209,7 +209,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
 
         x += glyph.advance;
     }
-    context.fillColour.index = -1;
+    context.fillColour.index = 0;
 
     //update alignment if there is no newline at the end
     if (rowStart != characterVerts.size())
