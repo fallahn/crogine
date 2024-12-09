@@ -36,11 +36,13 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -145,6 +147,7 @@ void MenuState::render()
 void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -179,8 +182,35 @@ void MenuState::createScene()
     entity.addComponent<cro::Text>(m_font).setString("Scratchpad");
     entity.getComponent<cro::Text>().setCharacterSize(80);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Green, 4);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Yellow, 6);
     entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
     entity.getComponent<cro::Text>().setOutlineThickness(1.5f);
+
+    struct CBData final
+    {
+        float currTime = 0.f;
+        std::uint32_t idx = 1;
+    };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<CBData>();
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& [currTime, idx] = e.getComponent<cro::Callback>().getUserData<CBData>();
+            static constexpr float ChangeTime = 0.5f;
+            currTime += dt;
+            if (currTime > ChangeTime)
+            {
+                currTime -= ChangeTime;
+
+                const auto charCount = e.getComponent<cro::Text>().getString().size();
+                idx = ((idx + 1) % charCount);
+
+                e.getComponent<cro::Text>().setString("Scratchpad");
+                e.getComponent<cro::Text>().setFillColour(cro::Colour::Green, 1 + idx);
+            }
+        };
 
     auto* uiSystem = m_scene.getSystem<cro::UISystem>();
     auto selected = uiSystem->addCallback([](cro::Entity e)
@@ -192,7 +222,7 @@ void MenuState::createScene()
             e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
         });
 
-
+    
     auto createButton = [&](const std::string label, glm::vec2 position)
     {
         auto e = m_scene.createEntity();
@@ -424,8 +454,6 @@ void MenuState::createScene()
                     cro::App::quit();
                 }
             });
-
-
 
 
     //camera

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -98,6 +98,9 @@ namespace cro
         /*!
         \brief Set the string to render with this Text
         \param str A cro::String containing the string to use
+        NOTE that setting the string will reset all fill colours
+        except for the first.
+        \sa setFillColour()
         */
         void setString(const String& str);
 
@@ -105,8 +108,17 @@ namespace cro
         \brief Set the Text fill colour
         \param colour The colour with which the inner part of the
         text will be rendered. Defaults to cro::Colour::White
+        \param idx Optional index at which to start using this colour
+        EG. setting this to 4 means that every character from the 4th
+        will be set to this colour, until another colour index is found:
+        to set characters 4-9 red do something like
+        \begincode
+        text.setFillColour(cro::Colour::Black);
+        text.setFillColour(cro::Colour::Red, 4);
+        text.setFillColour(cro::Colour::Black, 10);
+        \endcode
         */
-        void setFillColour(Colour colour);
+        void setFillColour(Colour colour, std::uint32_t idx = 0);
 
         /*!
         \brief Set the colour used for the text outline
@@ -172,6 +184,10 @@ namespace cro
 
         /*!
         \brief Returns the current fill colour
+        NOTE currently only returns the base colour, and
+        doesn't include any colour changes at specific
+        character indices
+        \sa setFillColour()
         */
         Colour getFillColour() const;
 

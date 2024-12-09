@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -164,19 +164,39 @@ void Text::setString(const String& str)
     {
         m_context.string = str;
         m_dirtyFlags |= DirtyFlags::All;
-
-        /*if (!m_context.font->isRegistered(this))
-        {
-            LogI << "text is not registered with ofotn observers!" << std::endl;
-        }*/
     }
+
+    //hmm, we have to do this even if the string
+    //itself is not the same, in case the indices
+    //are going to be updated...
+    m_context.fillColour.colours.resize(1);
+    m_context.fillColour.charIndices.resize(1);
+    m_context.fillColour.index = -1;
+
+    /*if (!m_context.font->isRegistered(this))
+    {
+        LogI << "text is not registered with font observers!" << std::endl;
+    }*/
 }
 
-void Text::setFillColour(Colour colour)
+void Text::setFillColour(Colour colour, std::uint32_t idx)
 {
-    if (m_context.fillColour != colour)
+    /*if (m_context.fillColour != colour)
     {
         m_context.fillColour = colour;
+        m_dirtyFlags |= DirtyFlags::Colour;
+    }*/
+
+    CRO_ASSERT(!m_context.fillColour.colours.empty(), "");
+    if (idx == 0)
+    {
+        m_context.fillColour.colours[0] = colour;
+        m_dirtyFlags |= DirtyFlags::Colour;
+    }
+    else if (idx > m_context.fillColour.charIndices.back())
+    {
+        m_context.fillColour.colours.push_back(colour);
+        m_context.fillColour.charIndices.push_back(idx);
         m_dirtyFlags |= DirtyFlags::Colour;
     }
 }
@@ -248,7 +268,7 @@ const String& Text::getString() const
 
 Colour Text::getFillColour() const
 {
-    return m_context.fillColour;
+    return m_context.fillColour.colours[0];
 }
 
 Colour Text::getOutlineColour() const
@@ -291,13 +311,15 @@ FloatRect Text::getLocalBounds(Entity entity)
 
             if (text.m_context.outlineThickness == 0)
             {
-                for (auto v : verts)
+                //for (auto v : verts)
+                for (auto i = 0u; i < verts.size(); ++i)
                 {
-                    v.colour = text.m_context.fillColour;
+                    verts[i].colour = text.m_context.fillColour.getColour(i / 6);
                 }
             }
             else
             {
+                const auto charCount = text.getString().size();
                 for (auto i = 0u; i < verts.size(); ++i)
                 {
                     if (i < verts.size() / 2)
@@ -306,10 +328,12 @@ FloatRect Text::getLocalBounds(Entity entity)
                     }
                     else
                     {
-                        verts[i].colour = text.m_context.fillColour;
+                        //6 verts per char, plus we have double size verts (including outline)
+                        verts[i].colour = text.m_context.fillColour.getColour((i / 6) - charCount);
                     }
                 }
             }
+            text.m_context.fillColour.index = -1;
         }
         //else
         {

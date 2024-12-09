@@ -101,13 +101,14 @@ void SimpleText::setString(const String& str)
 
 void SimpleText::setFillColour(Colour colour)
 {
-    if (m_context.fillColour != colour)
+    CRO_ASSERT(!m_context.fillColour.colours.empty(), "");
+    if (m_context.fillColour.colours[0] != colour)
     {
         //hmm if we cached vertex data we
         //could just update the colour property rather
         //than rebuild the entire thing if only
         //the colour flag is set
-        m_context.fillColour = colour;
+        m_context.fillColour.colours[0] = colour;
         m_dirtyFlags |= DirtyFlags::ColourInner;
     }
 }
@@ -189,7 +190,8 @@ const String& SimpleText::getString() const
 
 Colour SimpleText::getFillColour() const
 {
-    return m_context.fillColour;
+    CRO_ASSERT(!m_context.fillColour.colours.empty(), "");
+    return m_context.fillColour.colours[0];
 }
 
 Colour SimpleText::getOutlineColour() const

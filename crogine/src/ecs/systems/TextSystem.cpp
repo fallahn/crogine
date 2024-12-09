@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -79,18 +79,20 @@ void TextSystem::process(float)
                         verts[i].colour = secondColour;
                     }
 
+                    const auto charCount = text.getString().size();
                     for (auto i = verts.size() / 2; i < verts.size(); ++i)
                     {
-                        verts[i].colour = text.m_context.fillColour;
+                        verts[i].colour = text.m_context.fillColour.getColour((i / 6) - charCount);
                     }
                 }
                 else
                 {
-                    for (auto& v : verts)
+                    for(auto i =0u ; i < verts.size(); ++i )
                     {
-                        v.colour = text.m_context.fillColour;
+                        verts[i].colour = text.m_context.fillColour.getColour(i / 6);
                     }
                 }
+                text.m_context.fillColour.index = -1;
             }
             //else
             {
