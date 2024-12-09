@@ -479,6 +479,10 @@ void MenuState::createBallScene()
                 entity.getComponent<cro::Model>().setMaterial(1, material);
             }
             entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
+            if (entity.hasComponent<cro::Skeleton>())
+            {
+                entity.getComponent<cro::Skeleton>().play(0);
+            }
             baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             entity.addComponent<cro::Callback>().active = true;

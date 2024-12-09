@@ -2116,7 +2116,7 @@ void TournamentState::refreshTree()
     m_treeText.move({ Tier1Stride, 0.f });
     for (auto i = t.tier1.size() / 2; i < t.tier1.size(); ++i)
     {
-        setNameData(t.tier1[i], t.round == 0);
+        setNameData(t.tier1[i], t.round == 1);
         m_treeText.draw();
         m_treeText.move({ 0.f, -Tier1Spacing });
     }
