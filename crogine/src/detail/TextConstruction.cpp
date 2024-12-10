@@ -152,6 +152,9 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             maxX = std::max(maxX, x);
             maxY = std::max(maxY, y);
 
+            //we have to check colour indices here else they
+            //get skipped if incrementing on whitespace
+            context.fillColour.getColour(i);
             continue; //skip quad for whitespace
         }
 

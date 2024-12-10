@@ -2491,10 +2491,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     //only show trophies in freeplay/tournament
     cro::Entity leagueEntity;
+    bool firstPlace = false;
+    
     if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
     {
         auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
-
         for (auto i = 0u; i < trophyCount; ++i)
         {
             if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID //if this is a virtual CPU client is NullVal
@@ -2518,6 +2519,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     case 0:
                         xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
                         xpReason = XPStringID::FirstPlace;
+                        firstPlace = true;
                         break;
                     case 1:
                         xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
@@ -2644,10 +2646,21 @@ void GolfState::showCountdown(std::uint8_t seconds)
     cro::String bestString("PERSONAL BEST!");
 
 #ifndef CRO_DEBUG_
-    //enter score into leaderboard - note this also
-    //sets the 'tutorial' string so debug builds will
-    //show the wrong message when completing the tutorial
-    updateLeaderboardScore(personalBest, bestString);
+    if (m_sharedData.gameMode == GameMode::Tournament)
+    {
+        if (firstPlace)
+        {
+            personalBest = true; //this just indicates we want to show the message
+            bestString = "ELIMINATED";
+        }
+    }
+    else
+    {
+        //enter score into leaderboard - note this also
+        //sets the 'tutorial' string so debug builds will
+        //show the wrong message when completing the tutorial
+        updateLeaderboardScore(personalBest, bestString);
+    }
 #endif
 
     auto entity = m_uiScene.createEntity();
@@ -2702,7 +2715,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
 
     if ((personalBest && Social::getLeaderboardsEnabled())
-        || m_sharedData.gameMode == GameMode::Tutorial)
+        || m_sharedData.gameMode == GameMode::Tutorial
+        || (personalBest && m_sharedData.gameMode == GameMode::Tournament))
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.8f });
@@ -2727,10 +2741,13 @@ void GolfState::showCountdown(std::uint8_t seconds)
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-        //extra fireworks for a good score
-        for (auto fw : m_fireworks)
+        //extra fireworks for a good score (probably don't want them for losing a tournament...)
+        if (m_sharedData.gameMode != GameMode::Tournament)
         {
-            fw.getComponent<cro::Callback>().active = true;
+            for (auto fw : m_fireworks)
+            {
+                fw.getComponent<cro::Callback>().active = true;
+            }
         }
     }
     
@@ -3830,13 +3847,11 @@ void GolfState::updateScoreboard(bool updateParDiff)
             break;
         }
 
-        //std::string redScoreString = "\n";
-
+        
         for (auto j = 0u; j < playerCount; ++j)
         {
             scoreString += "\n";
-            //redScoreString += "\n";
-
+            
             auto holeIndex = i - 1;
             auto s = scores[j].holes[holeIndex];
             switch (m_sharedData.scoreType)
@@ -3847,14 +3862,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 auto c = s == m_holeData[holeIndex].par ? LeaderboardTextDark : CD32::Colours[CD32::GreenMid];
                 if (s > m_holeData[holeIndex].par)
                 {
-                    //add to red column
-                    //redScoreString += std::to_string(s);
                     c = CD32::Colours[CD32::Red];
                 }
-                else
-                {
-                    //auto c = s == m_holeData[holeIndex].par ? LeaderboardTextDark : CD32::Colours[CD32::GreenMid];
-                }
+
                 stringColours.emplace_back(c, static_cast<std::uint32_t>(scoreString.size()));
                 scoreString += std::to_string(s);
             }            
@@ -3864,13 +3874,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 if (scores[j].holeComplete[holeIndex])
                 {
                     auto c = LeaderboardTextDark;
-                    /*if (s > 0)
-                    {
-                    }
-                    else*/
                     if(s < 1)
                     {
-                        //redScoreString += std::to_string(s);
                         c = CD32::Colours[CD32::Red];
                     }
                     stringColours.emplace_back(c, static_cast<std::uint32_t>(scoreString.size()));
@@ -3885,9 +3890,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 }
                 else
                 {
+                    stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                     if (s != 0)
                     {
-                        stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                         scoreString += "-";
                     }
                 }
@@ -3900,13 +3905,13 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 }
                 else
                 {
+                    stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                     if (s != 0)
                     {
                         scoreString += std::to_string(s);
                     }
                 }
                 break;
-
             }
         }
 
@@ -3917,7 +3922,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
             for (auto j = 0u; j < 16 - playerCount; ++j)
             {
                 scoreString += "\n";
-                //redScoreString += "\n";
             }
 
             auto holeIndex = (i + MaxCols) - 1;
@@ -3937,11 +3941,10 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     break;
                 }
 
-                //redScoreString += "\n\n\n";
                 for (auto j = 0u; j < playerCount; ++j)
                 {
                     scoreString += "\n";
-                    //redScoreString += "\n";
+
                     auto s = scores[j].holes[holeIndex];
 
                     switch (m_sharedData.scoreType)
@@ -3952,13 +3955,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                             auto c = s == m_holeData[holeIndex].par ? LeaderboardTextDark : CD32::Colours[CD32::GreenMid];
                             if (s > m_holeData[holeIndex].par)
                             {
-                                //add to red column
-                                //redScoreString += std::to_string(s);
                                 c = CD32::Colours[CD32::Red];
                             }
-                            /*else
-                            {
-                            }*/
+
                             stringColours.emplace_back(c, static_cast<std::uint32_t>(scoreString.size()));
                             scoreString += std::to_string(s);
                         }
@@ -3973,7 +3972,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
                             }
                             else
                             {
-                                //redScoreString += std::to_string(s);
                                 stringColours.emplace_back(CD32::Colours[CD32::Red], static_cast<std::uint32_t>(scoreString.size()));
                             }
                             scoreString += std::to_string(s);
@@ -3987,9 +3985,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         }
                         else
                         {
+                            stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                             if (s != 0)
                             {
-                                stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                                 scoreString += "-";
                             }
                         }
@@ -4002,9 +4000,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         }
                         else
                         {
+                            stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                             if (s != 0)
                             {
-                                stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                                 scoreString += std::to_string(s);
                             }
                         }
@@ -4020,11 +4018,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             ents[i].getComponent<cro::Text>().setFillColour(colour, idx);
         }
 
-        //TODO remove this in favour of setting string colours
-        //ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setString(redScoreString); //yes there's an entity as a component.
-        //ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Red]);
         leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), scoreString);
-        //leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), redScoreString);
     }
 
     //total column

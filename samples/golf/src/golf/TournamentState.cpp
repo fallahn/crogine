@@ -1911,7 +1911,7 @@ void TournamentState::createProfileLayout(cro::Entity bgEnt, const cro::SpriteSh
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto labelEnt = m_scene.createEntity();
     labelEnt.addComponent<cro::Transform>().setPosition({ (-BarWidth / 2.f) + 2.f, 4.f, 0.1f });
     labelEnt.addComponent<cro::Drawable2D>();
