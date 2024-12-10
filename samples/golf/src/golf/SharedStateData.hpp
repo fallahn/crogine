@@ -313,6 +313,7 @@ struct SharedStateData final
     bool decimateDistance = false;
     bool showRosterTip = true;
     bool fixedPuttingRange = false;
+    bool remoteContent = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

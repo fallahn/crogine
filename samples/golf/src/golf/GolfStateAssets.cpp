@@ -2143,7 +2143,7 @@ void GolfState::loadModels()
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
                 if (isRandom)
                 {
-                    //to make sure there's a consitent experience when a model is unavailable
+                    //to make sure there's a consistent experience when a model is unavailable
                     //eg we're not subbed to a workshop item, load a default model.
                     m_modelDefs[ModelID::PlayerFallBack]->createModel(entity);
                     applyMaterialData(*m_modelDefs[ModelID::PlayerFallBack], material);

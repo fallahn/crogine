@@ -1519,6 +1519,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.fixedPuttingRange = prop.getValue<bool>();
                     }
+                    else if (name == "remote_content")
+                    {
+                        m_sharedData.remoteContent = prop.getValue<bool>();
+                    }
                     /*else if (name == "group_mode")
                     {
                         m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
@@ -1662,6 +1666,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_roster").setValue(m_sharedData.showRosterTip);
     cfg.addProperty("group_mode").setValue(m_sharedData.groupMode);
     cfg.addProperty("fixed_putting").setValue(m_sharedData.fixedPuttingRange);
+    cfg.addProperty("remote_content").setValue(m_sharedData.remoteContent);
     cfg.save(path);
 
 
