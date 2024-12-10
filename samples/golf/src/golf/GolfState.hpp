@@ -305,6 +305,7 @@ private:
             BallShadow,
             PlayerShadow,
             BullsEye,
+            PlayerFallBack,
 
             Count
         };

@@ -2027,6 +2027,7 @@ void GolfState::loadModels()
     m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
     m_modelDefs[ModelID::PlayerShadow]->loadFromFile("assets/golf/models/player_shadow.cmt");
     m_modelDefs[ModelID::BullsEye]->loadFromFile("assets/golf/models/target.cmt"); //TODO we can only load this if challenge month or game mode requires
+    m_modelDefs[ModelID::PlayerFallBack]->loadFromFile("assets/golf/models/avatars/default.cmt");
 
     //ball models - the menu should never have let us get this far if it found no ball files
     for (const auto& info : m_sharedData.ballInfo)
@@ -2047,7 +2048,7 @@ void GolfState::loadModels()
     //however: while it may load unnecessary audioscapes, it does ensure they are loaded in the correct order :S
 
     //copy into active player slots
-    const auto indexFromSkinID = [&](std::uint32_t skinID)->std::size_t
+    const auto indexFromSkinID = [&](std::uint32_t skinID, bool& isRandom)->std::size_t
         {
             auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
                 [skinID](const SharedStateData::AvatarInfo& ai)
@@ -2057,8 +2058,10 @@ void GolfState::loadModels()
 
             if (result != m_sharedData.avatarInfo.end())
             {
+                isRandom = false;
                 return std::distance(m_sharedData.avatarInfo.begin(), result);
             }
+            isRandom = true;
             return cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1);
         };
 
@@ -2081,7 +2084,8 @@ void GolfState::loadModels()
         for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
         {
             auto skinID = m_sharedData.connectionData[i].playerData[j].skinID;
-            auto avatarIndex = indexFromSkinID(skinID);
+            bool isRandom = false;
+            const auto avatarIndex = indexFromSkinID(skinID, isRandom);
 
             //if this returned a random index because the skinID wasn't found, correct the skinID
             skinID = m_sharedData.avatarInfo[avatarIndex].uid;
@@ -2135,12 +2139,23 @@ void GolfState::loadModels()
                         auto yScale = cro::Util::Easing::easeOutBack(scale);
                         e.getComponent<cro::Transform>().setScale(glm::vec3(xScale, yScale, yScale));
                     };
-                md.createModel(entity);
-
+                
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::Player]);
-                applyMaterialData(md, material); //apply mask map if it exists
-                material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[i][j]);
-                entity.getComponent<cro::Model>().setMaterial(0, material);
+                if (isRandom)
+                {
+                    //to make sure there's a consitent experience when a model is unavailable
+                    //eg we're not subbed to a workshop item, load a default model.
+                    m_modelDefs[ModelID::PlayerFallBack]->createModel(entity);
+                    applyMaterialData(*m_modelDefs[ModelID::PlayerFallBack], material);
+                    entity.getComponent<cro::Model>().setMaterial(0, material);
+                }
+                else
+                {
+                    md.createModel(entity);
+                    applyMaterialData(md, material); //apply mask map if it exists
+                    material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[i][j]);
+                    entity.getComponent<cro::Model>().setMaterial(0, material);
+                }
 
                 if (m_avatars[i][j].flipped)
                 {
