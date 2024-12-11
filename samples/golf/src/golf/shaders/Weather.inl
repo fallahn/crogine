@@ -56,7 +56,11 @@ static const inline std::string WeatherVertex = R"(
 
     VARYING_OUT LOW vec4 v_colour;
 
+#if defined(SYSTEM_HEIGHT)
+    const float SystemHeight = SYSTEM_HEIGHT;
+#else
     const float SystemHeight = 80.0;
+#endif
 
 #if defined(EASE_SNOW)
     const float PI = 3.1412;

@@ -1795,7 +1795,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     auto fovLabel = createLabel(glm::vec2(12.f, 201.f), "FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
 
     //resolution label
-    auto resLabel = createLabel(glm::vec2(12.f, 183.f), "Resolution");
+    auto resLabel = createLabel(glm::vec2(12.f, 185.f), "Resolution");
     //centreText(resLabel);
 
     //resolution value text
@@ -1804,7 +1804,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     resolutionLabel = resLabel; //global static used by callback to update display when window is toggled FS
 
     //pixel scale label
-    auto pixelLabel = createLabel(glm::vec2(12.f, 169.f), "Pixel Scaling      (default: OFF)");
+    auto pixelLabel = createLabel(glm::vec2(12.f, 169.f), "Pixel Scaling      (Default: OFF)");
     pixelLabel.addComponent<cro::Callback>().active = true;
     pixelLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1813,7 +1813,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
 
     //vertex snap label
-    auto vertLabel = createLabel(glm::vec2(12.f, 153.f), "Vertex Snap      (requires restart)");
+    auto vertLabel = createLabel(glm::vec2(12.f, 153.f), "Vertex Snap      (Requires Restart)");
     vertLabel.addComponent<cro::Callback>().active = true;
     vertLabel.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -1842,6 +1842,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //lens flare label
     createLabel(glm::vec2(12.f, 73.f), "Lens Flare");
+
+
+    //remote content label
+    createLabel(glm::vec2(12.f, 57.f), "Download           Remote Content");
+
 
     //ball trail label
     createLabel({ 204.f, 217.f }, "Enable       Ball Trail");
@@ -2346,7 +2351,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //pixel scale check box
     entity = createHighlight(glm::vec2(81.f, 160.f));
-    entity.setLabel("Makes everything extra pixelated. For the most dedicated retro enthusiast.\nShortcut: +/- on numpad. (Default OFF)");
+    entity.setLabel("Makes everything extra pixelated. For the most dedicated retro enthusiast.\nShortcut: +/- on numpad. (Default: OFF)");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVPixelScale);
     entity.getComponent<cro::UIInput>().setNextIndex(AVUnits, AVVertSnap);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVUnits, AVResolutionL);
@@ -2383,7 +2388,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //vertex snap checkbox
     entity = createHighlight(glm::vec2(81.f, 144.f));
-    entity.setLabel("Usually used in conjunction with Pixel Scaling.\nMay cause z-fighting. (Default OFF)");
+    entity.setLabel("Usually used in conjunction with Pixel Scaling.\nMay cause z-fighting. (Default: OFF)");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVertSnap);
     entity.getComponent<cro::UIInput>().setNextIndex(AVGridL, AVFullScreen);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVGridR, AVPixelScale);
@@ -2657,16 +2662,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //lens flare highlight
     entity = createHighlight(glm::vec2(81.f, 64.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVLensFlare);
-#ifdef _WIN32
-    if (!Social::isSteamdeck())
-    {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVDecPower, AVTextToSpeech);
-    }
-    else
-#endif
-    {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVDecPower, WindowCredits);
-    }
+    entity.getComponent<cro::UIInput>().setNextIndex(AVDecPower, AVRemoteContent);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVDecPower, AVBeacon);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -2699,6 +2695,53 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+
+    //remote content highlight
+    entity = createHighlight(glm::vec2(81.f, 48.f));
+    entity.setLabel("Allow downloading remote content such as Workshop items from other\nplayers when joining a network game");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AVRemoteContent);
+#ifdef _WIN32
+    if (!Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVDecDist, AVTextToSpeech);
+    }
+    else
+#endif
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVDecDist, WindowCredits);
+    }
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVDecDist, AVLensFlare);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.remoteContent = !m_sharedData.remoteContent;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+            });
+
+    //remote content centre
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 50.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.remoteContent ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
 
@@ -3179,18 +3222,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity = createHighlight(glm::vec2(355.f, 48.f));
     entity.setLabel("All distances appear as decimalised values eg 0.5m instead of smaller denominations\nsuch as 50cm");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVDecDist);
-#ifdef _WIN32
-    if (!Social::isSteamdeck())
-    {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVTextToSpeech, AVFixedPutter);
-        entity.getComponent<cro::UIInput>().setPrevIndex(AVTextToSpeech, AVDecPower);
-    }
-    else
-#endif
-    {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVLensFlare, AVFixedPutter);
-        entity.getComponent<cro::UIInput>().setPrevIndex(AVLensFlare, AVDecPower);
-    }
+    entity.getComponent<cro::UIInput>().setNextIndex(AVRemoteContent, AVFixedPutter);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVRemoteContent, AVDecPower);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -3202,7 +3235,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
-    //centre for decimated power bar
+    //centre for decimated distance
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(357.f, 50.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
@@ -3237,8 +3270,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     else
 #endif
     {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVLensFlare, WindowClose);
-        entity.getComponent<cro::UIInput>().setPrevIndex(AVLensFlare, AVDecDist);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVRemoteContent, WindowClose);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVRemoteContent, AVDecDist);
     }
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -3278,7 +3311,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     if (!Social::isSteamdeck())
     {
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 12.f, 49.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 12.f, 33.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("use_tts");
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3307,8 +3340,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         entity = createHighlight(glm::vec2(69.f, -1.f));
         entity.setLabel("Enables text-to-speech for in game text chat.\nUse the Speech option in Windows Control Panel to set advanced options.");
         entity.getComponent<cro::UIInput>().setSelectionIndex(AVTextToSpeech);
-        entity.getComponent<cro::UIInput>().setNextIndex(AVDecDist, WindowAdvanced);
-        entity.getComponent<cro::UIInput>().setPrevIndex(AVDecDist, AVLensFlare);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVFixedPutter, WindowAdvanced);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVFixedPutter, AVRemoteContent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
@@ -4958,7 +4991,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         }
         else
 #endif
-        upLeftA = AVBeacon;
+        upLeftA = AVRemoteContent;
         upLeftB = AVBeaconL;
         upRightA = AVCrowdL;
         upRightB = AVFixedPutter;

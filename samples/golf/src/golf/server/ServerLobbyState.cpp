@@ -192,7 +192,8 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         case PacketID::MaxWind:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
-                m_sharedData.maxWind = evt.packet.as<std::uint8_t>();
+                std::uint8_t v = evt.packet.as<std::uint8_t>();
+                m_sharedData.maxWind = v;
             }
             break;
         case PacketID::GroupMode:

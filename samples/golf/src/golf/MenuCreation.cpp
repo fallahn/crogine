@@ -3223,7 +3223,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 if (activated(evt))
                 {
                     m_sharedData.windStrength = ((m_sharedData.windStrength + 1) % 3);
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, m_sharedData.windStrength + 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(m_sharedData.windStrength + 1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     e.getComponent<cro::Text>().setString("Wind Strength: " + std::to_string(m_sharedData.windStrength + 1));
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
@@ -3852,34 +3852,37 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
 
 #ifdef USE_GNS
         //check the new player data for UGC
-        for (auto i = 0u; i < cd.playerCount; ++i)
+        if (m_sharedData.remoteContent)
         {
-            //hmmm using 0 as the return value seems suspicious
-            //as it's not strictly an invalid index - however
-            //we will fall back to this *anyway* if the remote content
-            //is unavailable.
-            if (indexFromBallID(cd.playerData[i].ballID) == 0)
+            for (auto i = 0u; i < cd.playerCount; ++i)
             {
-                //no local ball for this player
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
-            }
+                //hmmm using 0 as the return value seems suspicious
+                //as it's not strictly an invalid index - however
+                //we will fall back to this *anyway* if the remote content
+                //is unavailable.
+                if (indexFromBallID(cd.playerData[i].ballID) == 0)
+                {
+                    //no local ball for this player
+                    Social::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
+                }
 
-            if (indexFromHairID(cd.playerData[i].hairID) == 0)
-            {
-                //no local hair model
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
-            }
+                if (indexFromHairID(cd.playerData[i].hairID) == 0)
+                {
+                    //no local hair model
+                    Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
+                }
 
-            if (indexFromHairID(cd.playerData[i].hatID) == 0)
-            {
-                //no local hat model
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Social::UserContent::Hair);
-            }
+                if (indexFromHairID(cd.playerData[i].hatID) == 0)
+                {
+                    //no local hat model
+                    Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Social::UserContent::Hair);
+                }
 
-            if (indexFromAvatarID(cd.playerData[i].skinID) == 0)
-            {
-                //no local avatar model
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Social::UserContent::Avatar);
+                if (indexFromAvatarID(cd.playerData[i].skinID) == 0)
+                {
+                    //no local avatar model
+                    Social::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Social::UserContent::Avatar);
+                }
             }
         }
 #endif

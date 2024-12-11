@@ -2965,7 +2965,7 @@ void MenuState::createFireworks()
 void MenuState::createSnow()
 {
     const std::array<float, 3u> AreaStart = { -30.f, 0.f, -10.f };
-    const std::array<float, 3u> AreaEnd = { 30.f, 50.f, 30.f };
+    const std::array<float, 3u> AreaEnd = { 30.f, 50.f, 30.f }; //NOTE the height has to be set as a shader define, below
 
     auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
 
@@ -3004,7 +3004,7 @@ void MenuState::createSnow()
     meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
     meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
 
-    m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment, "#define EASE_SNOW\n");
+    m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment, "#define EASE_SNOW\n#define SYSTEM_HEIGHT 50.0\n");
 
     const auto& shader = m_resources.shaders.get(ShaderID::Weather);
     const auto materialID = m_resources.materials.add(shader);
@@ -3872,7 +3872,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
             if (m_sharedData.quickplayOpponents == 0)
             {
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, m_sharedData.randomWind, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, m_sharedData.windStrength + 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(m_sharedData.windStrength + 1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
         }
     }

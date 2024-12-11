@@ -31,7 +31,7 @@ template <typename T>
 T NetEvent::Packet::as() const
 {
     CRO_ASSERT(m_packet, "Not a valid packet instance");
-    CRO_ASSERT(sizeof(T) == getSize(), "This type's size does not match data size");
+    CRO_ASSERT(sizeof(T) == getSize(), "This type's size does not match data size: expected " + std::to_string(sizeof(T)) + " size is " + std::to_string(getSize()));
 
     T returnData;
     std::memcpy(&returnData, getData(), getSize());
