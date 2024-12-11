@@ -1264,13 +1264,20 @@ void DrivingState::loadAssets()
     cro::ModelDefinition md(m_resources);
     m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
     m_clubModels[ClubModel::Wood].addComponent<cro::Transform>();
-    if (md.loadFromFile("assets/golf/models/club_wood.cmt"))
+    if (md.loadFromFile("assets/golf/clubs/default/club_wood.cmt"))
     {
         md.createModel(m_clubModels[ClubModel::Wood]);
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
+
+        if (md.getMaterialCount() > 1)
+        {
+            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+            applyMaterialData(md, material, 1);
+            m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(1, material);
+        }
     }
     else
     {
@@ -1280,13 +1287,20 @@ void DrivingState::loadAssets()
 
     m_clubModels[ClubModel::Iron] = m_gameScene.createEntity();
     m_clubModels[ClubModel::Iron].addComponent<cro::Transform>();
-    if (md.loadFromFile("assets/golf/models/club_iron.cmt"))
+    if (md.loadFromFile("assets/golf/clubs/default/club_iron.cmt"))
     {
         md.createModel(m_clubModels[ClubModel::Iron]);
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
+
+        if (md.getMaterialCount() > 1)
+        {
+            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+            applyMaterialData(md, material, 1);
+            m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(1, material);
+        }
     }
     else
     {

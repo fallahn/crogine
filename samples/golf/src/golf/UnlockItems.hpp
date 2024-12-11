@@ -120,8 +120,8 @@ namespace ul
 
     static inline const std::array<std::string, ModelID::Count> ModelPaths = 
     {
-        std::string("assets/golf/models/club_wood.cmt"),
-        std::string("assets/golf/models/club_iron.cmt"),
+        std::string("assets/golf/clubs/default/club_wood.cmt"),
+        std::string("assets/golf/clubs/default/club_iron.cmt"),
         std::string("assets/golf/models/balls/ball_bronze.cmt"),
         std::string("assets/golf/models/balls/ball_silver.cmt"),
         std::string("assets/golf/models/balls/ball_gold.cmt"),

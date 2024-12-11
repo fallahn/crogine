@@ -616,7 +616,7 @@ void UnlockState::buildUI()
             }
             else
             {
-                for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+                for (auto i = 0u; i < std::min(entity.getComponent<cro::Model>().getMeshData().submeshCount, std::size_t(2)); ++i)
                 {
                     entity.getComponent<cro::Model>().setMaterial(i, m_materials[i]);
                 }

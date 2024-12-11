@@ -1059,7 +1059,7 @@ void MenuState::createAvatarScene()
 
     //load the preview models
     cro::ModelDefinition clubDef(m_resources);
-    clubDef.loadFromFile("assets/golf/models/club_iron.cmt");
+    clubDef.loadFromFile("assets/golf/clubs/default/club_iron.cmt");
 
     cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
@@ -1092,6 +1092,14 @@ void MenuState::createAvatarScene()
                     applyMaterialData(clubDef, material);
                     material.doubleSided = true; //we could update front face with parent model but meh
                     e.getComponent<cro::Model>().setMaterial(0, material);
+
+                    if (clubDef.getMaterialCount() > 1)
+                    {
+                        material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+                        applyMaterialData(clubDef, material);
+                        material.doubleSided = true;
+                        e.getComponent<cro::Model>().setMaterial(1, material);
+                    }
 
                     entity.getComponent<cro::Skeleton>().getAttachments()[id].setModel(e);
                 }
