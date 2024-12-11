@@ -4100,7 +4100,7 @@ void MenuState::createDebugWindows()
                         ImGui::SameLine();
 
                         ImGui::BeginChild("##3", ChildSize);
-                        ImGui::Text("Course: %s", TournamentCourses[t.id][3]);
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][3].c_str());
                         ImGui::Text("%d %s", t.tier3[0], getName(t.tier3[0]).c_str());
                         ImGui::Text("%d %s", t.tier3[1], getName(t.tier3[1]).c_str());
                         ImGui::EndChild();

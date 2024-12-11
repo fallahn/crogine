@@ -359,7 +359,7 @@ void MenuState::createBallScene()
             info.type = SharedStateData::BallInfo::Unlock;
 
             if ((ballFlags == -1 && Leagues[i].getCurrentBest() < 4)
-                || ((ballFlags & (1 << i)) != 0))
+                || (ballFlags != -1 && (ballFlags & (1 << i)) != 0))
             {
                 insertInfo(info, m_sharedData.ballInfo, true);
             }
@@ -386,7 +386,8 @@ void MenuState::createBallScene()
             auto info = readBallCfg(cfg);
             info.type = SharedStateData::BallInfo::Unlock;
 
-            if ((tFlags & (1 << i)) != 0)
+            if ((tFlags == -1 && m_sharedData.tournaments[i].winner == -1)
+                || (tFlags != -1 && (tFlags & (1 << i)) != 0))
             {
                 insertInfo(info, m_sharedData.ballInfo, true);
             }
@@ -653,7 +654,7 @@ void MenuState::parseAvatarDirectory()
     auto start = m_sharedData.avatarInfo.size();
     for (auto i = 0u; i < CareerAvatars.size(); ++i)
     {
-        const bool unlocked = ((avatarFlags == -1 && Leagues[i].getCurrentBest() == 1) || ((avatarFlags & (1 << i)) != 0));
+        const bool unlocked = ((avatarFlags == -1 && Leagues[i].getCurrentBest() == 1) || (avatarFlags != -1 && (avatarFlags & (1 << i)) != 0));
         processAvatarList(/*Leagues[i].getCurrentBest() > 1*/!unlocked, {CareerAvatars[i]}, CareerPath);
     }
 
@@ -769,7 +770,7 @@ void MenuState::parseAvatarDirectory()
             info.type = SharedStateData::HairInfo::Unlock;
 
             if ((hairFlags == -1 && Leagues[i].getCurrentBest() < 3)
-                || ((hairFlags & (1 << i)) != 0))
+                || (hairFlags != -1 && (hairFlags & (1 << i)) != 0))
             {
                 insertInfo(info, m_sharedData.hairInfo, true);
             }
