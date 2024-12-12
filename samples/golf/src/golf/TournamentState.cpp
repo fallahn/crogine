@@ -2226,8 +2226,7 @@ void TournamentState::refreshTree()
         
         str += " - " + courseName;
 
-        if (t.round == 0
-            || t.round == 1)
+        if (t.round < 3)
         {
             m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = bracket;
 

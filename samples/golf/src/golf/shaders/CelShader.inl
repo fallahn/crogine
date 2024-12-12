@@ -641,13 +641,26 @@ inline const std::string CelFragmentShader = R"(
 
 #if defined(HOLE_HEIGHT)
 #if !defined(CONTOUR) //regular green
-    vec3 f = fract(v_worldPosition * 0.5);
-    vec3 df = fwidth(v_worldPosition * 0.5);
-    //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    vec3 g = step(df * u_pixelScale, f);
+    //vec3 f = fract(v_worldPosition * 0.5);
+    //vec3 df = fwidth(v_worldPosition * 0.5);
+    ////df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
+    //vec3 g = step(df * u_pixelScale, f);
 
-    float contour = /*round*/(1.0 - (g.x * g.y * g.z));
-    vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.8 + (0.4 * holeHeight));
+    //float contour = /*round*/(1.0 - (g.x * g.y * g.z));
+
+vec3 f = fract(v_worldPosition );
+
+float edge0 = 0.968;
+float edge1 = 0.975;
+float edge2 = 0.993;
+
+float contourX = smoothstep(edge0, edge1, f.x) * (1.0 - smoothstep(edge2, 1.0, f.x));
+float contourY = smoothstep(edge0, edge1, f.z) * (1.0 - smoothstep(edge2, 1.0, f.z));
+float contour = clamp(contourX + contourY, 0.0, 1.0);
+
+
+    vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.4 + (0.6 * holeHeight)) * 0.2;
+    //vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.8 + (0.4 * holeHeight));
     
 
 //    float slope = 1.0 - dot(normal, vec3(0.0, 1.0, 0.0));
@@ -656,7 +669,10 @@ inline const std::string CelFragmentShader = R"(
 
 
     float transparency = 1.0 - pow(1.0 - u_transparency, 4.0);
-    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contour * holeHeightFade * transparency);
+    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contour * holeHeightFade * transparency);
+
+    FRAG_OUT.rgb += gridColour * contour * holeHeightFade * transparency;
+
 
 #else //putting green
 
