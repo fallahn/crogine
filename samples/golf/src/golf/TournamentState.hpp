@@ -95,6 +95,8 @@ private:
     cro::Entity m_warningString;
     cro::Entity m_treeRoot;
 
+    float m_axisPosition; //tracks right stick for tree scrolling
+
     struct SettingsDetails final
     {
         cro::Entity gimme;

@@ -182,6 +182,7 @@ TournamentState::TournamentState(cro::StateStack& ss, cro::State::Context ctx, S
     m_scene         (ctx.appInstance.getMessageBus()),
     m_sharedData    (sd),
     m_viewScale     (2.f),
+    m_axisPosition  (0.f),
     m_currentMenu   (MenuID::Career)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -207,6 +208,24 @@ bool TournamentState::handleEvent(const cro::Event& evt)
     {
         return false;
     }
+
+    const auto scrollTree = [&](bool left)
+        {
+            if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Career)
+            {
+                auto idx = m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID;
+                if (left)
+                {
+                    idx = (idx + (ScrollPositions.size() - 1)) % ScrollPositions.size();
+                }
+                else
+                {
+                    idx = (idx + 1) % ScrollPositions.size();
+                }
+                m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = idx;
+            }
+        };
+
 
     if (evt.type == SDL_KEYUP)
     {
@@ -267,6 +286,24 @@ bool TournamentState::handleEvent(const cro::Event& evt)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
+
+        if (evt.caxis.axis == cro::GameController::AxisRightX)
+        {
+            static constexpr auto DeadZone = LeftThumbDeadZone * 2;
+
+            if (evt.caxis.value > DeadZone
+                && m_axisPosition < DeadZone)
+            {
+                scrollTree(false);
+            }
+            else if (evt.caxis.value < -DeadZone
+                && m_axisPosition > -DeadZone)
+            {
+                scrollTree(true);
+            }
+
+            m_axisPosition = evt.caxis.value;
+        }
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
@@ -274,19 +311,7 @@ bool TournamentState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
-        if (m_scene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Career)
-        {
-            auto idx = m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID;
-            if (evt.wheel.y > 0)
-            {
-                idx = (idx + (ScrollPositions.size() - 1)) % ScrollPositions.size();
-            }
-            else
-            {
-                idx = (idx + 1) % ScrollPositions.size();
-            }
-            m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = idx;
-        }
+        scrollTree(evt.wheel.y > 0);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -444,6 +469,7 @@ void TournamentState::buildScene()
                     //show club warning (in case clubset was changed elsewhere)
                     refreshClubsetWarning();
 
+                    m_axisPosition = 0.f;
 
                     //start title animation
                     cro::Command cmd;
