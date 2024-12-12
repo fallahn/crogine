@@ -1626,14 +1626,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (m_activeAvatar
                 && m_activeAvatar->hands)
             {
-                if (getClub() <= ClubID::FiveWood)
-                {
-                    m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
-                }
-                else
-                {
-                    m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
-                }
+                m_activeAvatar->hands->setModel(m_clubModels.models[m_clubModels.indices[getClub()]]);
                 m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
             }
 
@@ -5146,13 +5139,17 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 auto animID = evt.packet.as<std::uint8_t>();
                 if (animID == AnimationID::Celebrate)
                 {
-                    m_clubModels[ClubModel::Wood].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-                    m_clubModels[ClubModel::Iron].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                    for (auto e : m_clubModels.models)
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                    }
                 }
                 else
                 {
-                    m_clubModels[ClubModel::Wood].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-                    m_clubModels[ClubModel::Iron].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                    for (auto e : m_clubModels.models)
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                    }
                 }
 
                 /*if (animID == AnimationID::Swing)
@@ -6575,14 +6572,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
         if (m_activeAvatar->hands)
         {
-            if (getClub() < ClubID::FiveIron)
-            {
-                m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
-            }
-            else
-            {
-                m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Iron]);
-            }
+            m_activeAvatar->hands->setModel(m_clubModels.models[m_clubModels.indices[getClub()]]);
             m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
         }
 

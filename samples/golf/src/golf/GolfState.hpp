@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "../sqlite/ProfileDB.hpp"
+#include "ClubModels.hpp"
 #include "HoleData.hpp"
 #include "GameConsts.hpp"
 #include "InputParser.hpp"
@@ -509,12 +510,8 @@ private:
 
     std::array<std::array<Avatar, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar;
+    ClubModels m_clubModels;
 
-    struct ClubModel final
-    {
-        enum { Wood, Iron, Count };
-    };
-    std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
     glm::vec3 m_terrainLevel;
     float m_camRotation; //used to offset the rotation of the wind indicator

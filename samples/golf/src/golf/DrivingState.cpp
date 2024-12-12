@@ -793,21 +793,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             //set the correct club model on our attachment
             if (m_avatar.hands)
             {
-                //TODO handle cases when club model failed to load...
-                if (m_inputParser.getClub() <= ClubID::FiveWood)
-                {
-                    m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(true);
-                    m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(false);
-
-                    m_avatar.hands->setModel(m_clubModels[ClubModel::Wood]);
-                }
-                else
-                {
-                    m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(false);
-                    m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(true);
-
-                    m_avatar.hands->setModel(m_clubModels[ClubModel::Iron]);
-                }
+                m_avatar.hands->setModel(m_clubModels.models[m_clubModels.indices[m_inputParser.getClub()]]);
             }
         }
         break;
@@ -1261,51 +1247,26 @@ void DrivingState::loadAssets()
     m_saturationUniform = m_saturationShader.getUniformID("u_amount");
 
     //club models
-    cro::ModelDefinition md(m_resources);
-    m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
-    m_clubModels[ClubModel::Wood].addComponent<cro::Transform>();
-    if (md.loadFromFile("assets/golf/clubs/default/club_wood.cmt"))
+    if (!m_clubModels.loadFromFile("assets/golf/clubs/default/list.cst", m_resources, m_gameScene))
     {
-        md.createModel(m_clubModels[ClubModel::Wood]);
+        m_clubModels.models.push_back(m_gameScene.createEntity());
+        createFallbackModel(m_clubModels.models.back(), m_resources);
+    }
+
+    for (auto e : m_clubModels.models)
+    {
+        const auto matCount = e.getComponent<cro::Model>().getMeshData().submeshCount;
 
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
-        applyMaterialData(md, material, 0);
-        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
+        //applyMaterialData(md, material, 0);
+        e.getComponent<cro::Model>().setMaterial(0, material);
 
-        if (md.getMaterialCount() > 1)
+        if (matCount > 1)
         {
             material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-            applyMaterialData(md, material, 1);
-            m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(1, material);
+            //applyMaterialData(md, material, 1);
+            e.getComponent<cro::Model>().setMaterial(1, material);
         }
-    }
-    else
-    {
-        createFallbackModel(m_clubModels[ClubModel::Wood], m_resources);
-    }
-
-
-    m_clubModels[ClubModel::Iron] = m_gameScene.createEntity();
-    m_clubModels[ClubModel::Iron].addComponent<cro::Transform>();
-    if (md.loadFromFile("assets/golf/clubs/default/club_iron.cmt"))
-    {
-        md.createModel(m_clubModels[ClubModel::Iron]);
-
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
-        applyMaterialData(md, material, 0);
-        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
-
-        if (md.getMaterialCount() > 1)
-        {
-            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-            applyMaterialData(md, material, 1);
-            m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(1, material);
-        }
-    }
-    else
-    {
-        createFallbackModel(m_clubModels[ClubModel::Iron], m_resources);
-        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Cyan);
     }
 
     initAudio();
@@ -2468,8 +2429,10 @@ void DrivingState::createPlayer()
         entity.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
         playerXScale = -1.f; //used to flip the hook/slice message
 
-        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
-        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+        for (auto e : m_clubModels.models)
+        {
+            e.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+        }
     }
 
     //avatar requirement is single material
@@ -2610,7 +2573,7 @@ void DrivingState::createPlayer()
         if (id > -1)
         {
             m_avatar.hands = &skel.getAttachments()[id];
-            m_avatar.hands->setModel(m_clubModels[ClubModel::Wood]);
+            m_avatar.hands->setModel(m_clubModels.models[m_clubModels.indices[ClubID::Driver]]);
         }
         else
         {

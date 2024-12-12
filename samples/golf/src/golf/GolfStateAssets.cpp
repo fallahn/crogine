@@ -2328,78 +2328,41 @@ void GolfState::loadModels()
     }
 #endif
 
-    //club models
-    m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
-    m_clubModels[ClubModel::Wood].addComponent<cro::Transform>();
-    if (md.loadFromFile("assets/golf/clubs/default/club_wood.cmt"))
+    //club models - TODO we'll eventually want to do this for each player profile?
+    if (!m_clubModels.loadFromFile("assets/golf/clubs/default/list.cst", m_resources, m_gameScene))
     {
-        md.createModel(m_clubModels[ClubModel::Wood]);
+        m_clubModels.models.push_back(m_gameScene.createEntity());
+        createFallbackModel(m_clubModels.models.back(), m_resources);
+    }
 
+    for (auto entity : m_clubModels.models)
+    {
+        const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-        applyMaterialData(md, material, 0);
-        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
-        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
+        //applyMaterialData(md, material, 0); //this is the wrong model def!!
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
 
-        if (md.getMaterialCount() > 1)
+        if (matCount > 1)
         {
             material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-            applyMaterialData(md, material, 1);
-            m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(1, material);
+            //applyMaterialData(md, material, 1);
+            entity.getComponent<cro::Model>().setMaterial(1, material);
         }
-    }
-    else
-    {
-        createFallbackModel(m_clubModels[ClubModel::Wood], m_resources);
-    }
-    m_clubModels[ClubModel::Wood].addComponent<cro::Callback>().active = true;
-    m_clubModels[ClubModel::Wood].getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-        {
-            if (m_activeAvatar)
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
             {
-                bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
-                    m_activeAvatar->hands->getModel() == e);
+                if (m_activeAvatar)
+                {
+                    bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
+                        m_activeAvatar->hands->getModel() == e);
 
-                e.getComponent<cro::Model>().setHidden(hidden);
-            }
-        };
-
-
-    m_clubModels[ClubModel::Iron] = m_gameScene.createEntity();
-    m_clubModels[ClubModel::Iron].addComponent<cro::Transform>();
-    if (md.loadFromFile("assets/golf/clubs/default/club_iron.cmt"))
-    {
-        md.createModel(m_clubModels[ClubModel::Iron]);
-
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-        applyMaterialData(md, material, 0);
-        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
-        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
-
-        if (md.getMaterialCount() > 1)
-        {
-            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-            applyMaterialData(md, material, 1);
-            m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(1, material);
-        }
+                    e.getComponent<cro::Model>().setHidden(hidden);
+                }
+            };
     }
-    else
-    {
-        createFallbackModel(m_clubModels[ClubModel::Iron], m_resources);
-        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::Cyan);
-    }
-    m_clubModels[ClubModel::Iron].addComponent<cro::Callback>().active = true;
-    m_clubModels[ClubModel::Iron].getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-        {
-            if (m_activeAvatar)
-            {
-                bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
-                    m_activeAvatar->hands->getModel() == e);
-
-                e.getComponent<cro::Model>().setHidden(hidden);
-            }
-        };
 
 
     //ball resources - ball is rendered as a single point
