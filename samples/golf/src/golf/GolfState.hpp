@@ -129,6 +129,7 @@ private:
 
     bool m_hasSnow; //we hardly ever use this, but have to ttrack it anyway...
     bool m_ntpPro; //hack to display different score in same game mode as NTP
+    bool m_hotSeat; //we're playing local hotseat
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_skyScene;
@@ -574,6 +575,7 @@ private:
     std::int32_t m_courseIndex; //-1 if not an official course
     mutable std::array<std::array<PersonalBestRecord, 18>, ConstVal::MaxPlayers> m_personalBests = {};
     std::future<void> m_statResult; //stat updates are async - this makes sure to wait when quitting
+    std::future<void> m_csvResult;
     void updateProfileDB() const;
 
     void buildTrophyScene();

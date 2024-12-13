@@ -166,6 +166,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_musicStream           (2,48000),
     m_hasSnow               (false),
     m_ntpPro                (sd.scoreType == ScoreType::NearestThePinPro),
+    m_hotSeat               (false),
     m_sharedData            (sd),
     m_gameScene             (context.appInstance.getMessageBus(), 1024/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_skyScene              (context.appInstance.getMessageBus(), 512),
@@ -410,6 +411,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             m_sharedData.clubSet = 2;
         }
+        m_hotSeat = true;
     }
 
 
@@ -464,6 +466,17 @@ GolfState::~GolfState()
     if (m_ntpPro)
     {
         m_sharedData.scoreType = ScoreType::NearestThePinPro;
+    }
+
+    //wait for any active async
+    if (m_statResult.valid())
+    {
+        m_statResult.wait_for(std::chrono::milliseconds(50));
+    }
+
+    if (m_csvResult.valid())
+    {
+        m_csvResult.wait_for(std::chrono::milliseconds(50));
     }
 }
 
@@ -712,6 +725,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
             m_textChat.toggleWindow(false, true, false);
             break;
+        /*case SDLK_F6:
+            logCSV();
+            break;*/
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
             {

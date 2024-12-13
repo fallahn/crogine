@@ -2916,6 +2916,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     }
     refreshUI();
+
+    if (m_hotSeat)
+    {
+        m_csvResult = std::async(std::launch::async, &GolfState::logCSV, this);
+    }
 }
 
 void GolfState::createScoreboard()
@@ -4445,9 +4450,12 @@ void GolfState::logCSV() const
             {
                 for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
                 {
-                    auto scoreCount = m_sharedData.connectionData[i].playerData[j].holeScores.size();
+                    const auto scoreCount = m_sharedData.connectionData[i].playerData[j].holeScores.size();
 
-                    ss << m_sharedData.connectionData[i].playerData[j].name.toAnsiString() << ",";
+                    const auto nameBytes = m_sharedData.connectionData[i].playerData[j].name.toUtf8();
+                    const std::string nameString(nameBytes.begin(), nameBytes.end());
+                    
+                    ss << nameString << ",";
                     std::int32_t total = 0;
                     for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
                     {

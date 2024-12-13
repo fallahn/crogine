@@ -389,8 +389,8 @@ void GolfState::updateTournament(bool playerWon)
         tournament.mulliganCount = 1;
         writeTournamentData(tournament);
     }
-    else
+    /*else
     {
         LogW << "Not a tournament" << std::endl;
-    }
+    }*/
 }
