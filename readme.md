@@ -16,6 +16,22 @@ On windows you can use the included Visual Studio 2022 solution to build crogine
 
 Android make files can also be created with the included cmake file, but the toolchain will first need configuring in cmake/toolchains/android-arm.cmake
 
+## Linux
+
+Install the required dependencies
+
+```
+sudo apt install libfreetype-dev libsdl2-dev libopenal-dev libbullet-dev libopus-dev libunwind-dev libtbb-dev libsqlite3-dev libcurl4-openssl-dev
+```
+
+Build with cmake
+
+```
+mkdir build
+cd build
+cmake -DBUILD_SAMPLES=ON ../
+make
+```
 
 #### About
 crogine was built with the aim of creating a flexible ECS based framework to run on mobile devices which support OpenGLES2. crogine supplies renderers for both 2D and 3D GLES2 based graphics, although desktop builds provide an OpenGL 4.6 context (GL 4.1 on macOS). As crogine is targeted at lower end hardware it doesn't feature a huge array of cutting edge rendering techniques - however desktop builds do support some PBR rendering, and new features are still being added.  
