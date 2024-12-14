@@ -5553,7 +5553,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
         }
     }
 
-    updateScoreboard();
+    //updateScoreboard();
     m_achievementTracker.hadFoul = false;// m_resumedFromSave;// false;
     m_achievementTracker.bullseyeChallenge = false; //monthly challenge is OK
     m_achievementTracker.puttCount = m_resumedFromSave ? 2 : 0;
@@ -5810,6 +5810,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     };
 
     m_currentHole = hole;
+    updateScoreboard();
     startFlyBy(); //requires current hole
 
     //restore the drone if someone hit it

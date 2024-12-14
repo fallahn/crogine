@@ -137,6 +137,8 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
             }
             else
             {
+                //force a forfeit so that no one will win if all players are OOB
+                m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes; 
                 m_playerInfo[groupID].playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;
             }
             break;

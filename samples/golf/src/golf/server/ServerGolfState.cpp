@@ -317,6 +317,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                     playerInfo[0].distanceToHole = 0.f;
                     playerInfo[0].terrain = TerrainID::Green;
                 }
+
+                if (m_sharedData.scoreType == ScoreType::NearestThePin)
+                {
+                    playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes + 1;
+                }
             }
             else if (data.type == GolfBallEvent::Landed)
             {

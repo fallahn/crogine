@@ -3896,13 +3896,14 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 }
                 else
                 {
-                    if (s == 1)
+                    if (s == 1 &&
+                        holeIndex != m_currentHole)
                     {
                         //this is used to mark a hole winner
                         stringColours.emplace_back(CD32::Colours[CD32::GreenMid], static_cast<std::uint32_t>(scoreString.size()));
                         scoreString += "W";
                     }
-                    else if (s == 2)
+                    else if (s != 0)
                     {
                         stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                         scoreString += "-";
@@ -3997,13 +3998,14 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         }
                         else
                         {
-                            if (s == 1)
+                            if (s == 1
+                                && holeIndex != m_currentHole)
                             {
                                 //this is used to mark a hole winner
                                 stringColours.emplace_back(CD32::Colours[CD32::GreenMid], static_cast<std::uint32_t>(scoreString.size()));
                                 scoreString += "W";
                             }
-                            else if (s == 2)
+                            else if (s != 0)
                             {
                                 stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                                 scoreString += "-";
