@@ -219,7 +219,7 @@ std::int32_t TimeOfDay::getTimeOfDay() const
             return Morning;
         }
 
-        if (localMinutes > (riseMinutes + 30) && localMinutes <= (setMinutes - 30))
+        if (localMinutes > (riseMinutes + 30) && localMinutes <= (setMinutes - 10))
         {
             return Day;
         }

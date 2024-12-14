@@ -5176,7 +5176,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
     case MessageBoardID::Water:
         textEnt.getComponent<cro::Text>().setString("Foul!");
         textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
-        textEnt2.getComponent<cro::Text>().setString("1 Stroke Penalty");
+        textEnt2.getComponent<cro::Text>().setString(m_sharedData.scoreType == ScoreType::NearestThePin ? "Hole Forfeit" : "1 Stroke Penalty");
         imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Foul];
         bounds = m_sprites[SpriteID::Foul].getTextureBounds();
 
