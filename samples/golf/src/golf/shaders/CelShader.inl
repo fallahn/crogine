@@ -648,11 +648,18 @@ inline const std::string CelFragmentShader = R"(
 
     //float contour = /*round*/(1.0 - (g.x * g.y * g.z));
 
-vec3 f = fract(v_worldPosition );
+vec3 f = fract(v_worldPosition * 0.5);
 
-float edge0 = 0.968;
-float edge1 = 0.975;
-float edge2 = 0.993;
+float sizeMultiplier = smoothstep(10.0, 20.0, length(u_holePosition - v_cameraWorldPosition));
+float falloff = 0.003;
+falloff += 0.02 * sizeMultiplier;
+
+float thickness = 0.018;
+thickness += thickness * sizeMultiplier;
+
+float edge2 = 1.0 - falloff;
+float edge1 = edge2 - thickness;
+float edge0 = edge1 - falloff;
 
 float contourX = smoothstep(edge0, edge1, f.x) * (1.0 - smoothstep(edge2, 1.0, f.x));
 float contourY = smoothstep(edge0, edge1, f.z) * (1.0 - smoothstep(edge2, 1.0, f.z));
@@ -729,7 +736,7 @@ float contour = clamp(contourX + contourY, 0.0, 1.0);
 
 #if defined(MULTI_TARGET)
     //this is effectively clip-space so +/- 1 is perfect for circles
-    vec2 projUV = v_targetProjection.xy/v_targetProjection.w;
+    vec2 projUV = v_targetProjection.xy / v_targetProjection.w;
 
     float RingCount = 5.0;
     float l = length(projUV);
