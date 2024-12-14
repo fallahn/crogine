@@ -335,6 +335,6 @@ namespace ul
 
         { ModelID::TournamentTrophy01,  "First Place!",   "XP" },
         { ModelID::TournamentTrophy02,  "First Place!",   "XP" },
-        { ModelID::TournamentLadder,    "Round Complete", "XP" },
+        { ModelID::TournamentLadder,    "Round Won!",     "XP" },
     };
 }

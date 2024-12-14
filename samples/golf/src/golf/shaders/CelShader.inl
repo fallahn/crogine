@@ -328,7 +328,7 @@ inline const std::string CelFragmentShader = R"(
 #if !defined (CONTOUR)
     uniform float u_transparency = 0.5;
 #endif
-    uniform float u_holeHeight = 1.0;
+    uniform vec3 u_holePosition = vec3(0.0, 1.0, 0.0);
 #endif
 
 #if defined (COMP_SHADE)
@@ -530,8 +530,8 @@ inline const std::string CelFragmentShader = R"(
         }
 
 #else
-        float minHeight = u_holeHeight - 0.25;
-        float maxHeight = u_holeHeight + 0.008;
+        float minHeight = u_holePosition.y - 0.25;
+        float maxHeight = u_holePosition.y + 0.008;
         float holeHeight = clamp((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 0.0, 1.0);
         //colour.rgb += clamp(height, 0.0, 1.0) * 0.1;
 
@@ -693,8 +693,8 @@ float contour = clamp(contourX + contourY, 0.0, 1.0);
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contour * fade);
 
-    float minHeight = u_holeHeight - 0.025;
-    float maxHeight = u_holeHeight + 0.08;
+    float minHeight = u_holePosition.y - 0.025;
+    float maxHeight = u_holePosition.y + 0.08;
     float height = min((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 1.0);
     FRAG_OUT.rgb += clamp(height, 0.0, 1.0) * 0.1;
 #endif

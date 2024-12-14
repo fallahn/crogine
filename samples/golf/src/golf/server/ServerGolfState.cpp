@@ -1166,6 +1166,9 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                         });
                     player->matchWins++;
 
+                    //set this to 1 to show that this player won the hole on the score board
+                    player->holeScore[m_currentHole] = 1;
+
                     std::uint16_t d = (std::uint16_t(allPlayers[0].client) << 8) | allPlayers[0].player;
                     m_sharedData.host.broadcastPacket(PacketID::HoleWon, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }

@@ -3618,10 +3618,10 @@ void DrivingState::triggerGC(glm::vec3 position)
     //set a limit on the number of times this can trigger
     //we don't want to do this more than once per game run
 #ifndef CRO_DEBUG_
-    if (cro::Util::Random::value(0, 3) != 0)
+    /*if (cro::Util::Random::value(0, 3) != 0)
     {
         return;
-    }
+    }*/
     
     static std::int32_t triggerCount = 0;
     if (triggerCount++)

@@ -2917,7 +2917,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
     refreshUI();
 
-    if (m_hotSeat)
+    if (m_hotSeat
+        && m_sharedData.scoreType == ScoreType::Stroke)
     {
         m_csvResult = std::async(std::launch::async, &GolfState::logCSV, this);
     }
@@ -3895,9 +3896,15 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 }
                 else
                 {
-                    stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
-                    if (s != 0)
+                    if (s == 1)
                     {
+                        //this is used to mark a hole winner
+                        stringColours.emplace_back(CD32::Colours[CD32::GreenMid], static_cast<std::uint32_t>(scoreString.size()));
+                        scoreString += "W";
+                    }
+                    else if (s == 2)
+                    {
+                        stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                         scoreString += "-";
                     }
                 }
@@ -3990,9 +3997,15 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         }
                         else
                         {
-                            stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
-                            if (s != 0)
+                            if (s == 1)
                             {
+                                //this is used to mark a hole winner
+                                stringColours.emplace_back(CD32::Colours[CD32::GreenMid], static_cast<std::uint32_t>(scoreString.size()));
+                                scoreString += "W";
+                            }
+                            else if (s == 2)
+                            {
+                                stringColours.emplace_back(LeaderboardTextDark, static_cast<std::uint32_t>(scoreString.size()));
                                 scoreString += "-";
                             }
                         }
@@ -4361,7 +4374,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     {
                         totalString += " ";
                     }
-                    totalString += " - " + std::to_string(scores[i].frontNine + scores[i].backNine) + " Point";
+                    //font nine and back nine both contain the total so don't sum them
+                    totalString += " - " + std::to_string(/*scores[i].frontNine +*/ scores[i].backNine) + " Point";
 
                     if ((scores[i].frontNine + scores[i].backNine) != 1)
                     {

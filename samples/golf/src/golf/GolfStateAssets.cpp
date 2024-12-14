@@ -1735,7 +1735,7 @@ void GolfState::loadMaterials()
 
     m_gridShaders[0].shaderID = shader->getGLHandle();
     m_gridShaders[0].transparency = shader->getUniformID("u_transparency");
-    m_gridShaders[0].holeHeight = shader->getUniformID("u_holeHeight");
+    m_gridShaders[0].holeHeight = shader->getUniformID("u_holePosition");
 
 
     m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble + targetDefines);
@@ -1752,7 +1752,7 @@ void GolfState::loadMaterials()
 
     m_gridShaders[1].shaderID = shader->getGLHandle();
     m_gridShaders[1].transparency = shader->getUniformID("u_transparency");
-    m_gridShaders[1].holeHeight = shader->getUniformID("u_holeHeight");
+    m_gridShaders[1].holeHeight = shader->getUniformID("u_holePosition");
 
     if (m_sharedData.nightTime)
     {

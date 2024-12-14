@@ -5856,8 +5856,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
             targetInfo.currentLookAt = targetInfo.prevLookAt + ((targetInfo.targetLookAt - targetInfo.prevLookAt) * percent);
 
-            auto pinMove = m_holeData[m_currentHole].pin - m_holeData[m_currentHole - 1].pin;
-            auto pinPos = m_holeData[m_currentHole - 1].pin + (pinMove * percent);
+            const auto pinMove = m_holeData[m_currentHole].pin - m_holeData[m_currentHole - 1].pin;
+            const auto pinPos = m_holeData[m_currentHole - 1].pin + (pinMove * percent);
 
             cro::Command cmd;
             cmd.targetFlags = CommandID::Hole;
@@ -5871,7 +5871,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
             for (auto& s : m_gridShaders)
             {
                 glUseProgram(s.shaderID);
-                glUniform1f(s.holeHeight, pinPos.y);
+                glUniform3f(s.holeHeight, pinPos.x, pinPos.y, pinPos.z);
             }
 
             auto teeMove = m_holeData[m_currentHole].tee - m_holeData[m_currentHole - 1].tee;
@@ -5920,11 +5920,11 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
         if (glm::length2(travel) < 0.0001f)
         {
-            float height = m_holeData[m_currentHole].pin.y;
+            const glm::vec3 pinPos = m_holeData[m_currentHole].pin;
             for (auto& s : m_gridShaders)
             {
                 glUseProgram(s.shaderID);
-                glUniform1f(s.holeHeight, height);
+                glUniform3f(s.holeHeight, pinPos.x, pinPos.y, pinPos.z);
             }
 
             targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
