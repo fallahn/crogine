@@ -2939,7 +2939,9 @@ void GolfState::buildScene()
     md.createModel(entity);
     if (md.hasSkeleton())
     {
-        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Flag]));
+        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Flag]);
+        applyMaterialData(md, mat);
+        entity.getComponent<cro::Model>().setMaterial(0, mat);
         entity.getComponent<cro::Skeleton>().play(0);
     }
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));

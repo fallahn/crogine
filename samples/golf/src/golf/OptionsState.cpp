@@ -3466,8 +3466,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 {
     auto parentBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
 
-    auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-    auto& uiFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& uiFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto titleEnt = m_scene.createEntity();
     titleEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, 174.f, TextOffset });
@@ -3569,6 +3569,33 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     layoutEnt.addComponent<cro::SpriteAnimation>().play(LayoutID::Keyboard);
     parent.getComponent<cro::Transform>().addChild(layoutEnt.getComponent<cro::Transform>());
     m_layoutEnt = layoutEnt;
+
+
+    if (!Social::isSteamdeck())
+    {
+        auto e = m_scene.createEntity();
+        e.addComponent<cro::Transform>().setPosition({ 45.f, -8.f, 0.1f });
+        e.addComponent<cro::Drawable2D>();
+        e.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
+        e.getComponent<cro::Text>().setString("F2: Toggle Ball Labels\nF3: Toggle UI\nF4: Toggle Chat Window");
+        e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        e.getComponent<cro::Text>().setFillColour(TextNormalColour, 4);
+        e.getComponent<cro::Text>().setFillColour(TextGoldColour, 23);
+        e.getComponent<cro::Text>().setFillColour(TextNormalColour, 27);
+        e.getComponent<cro::Text>().setFillColour(TextGoldColour, 37);
+        e.getComponent<cro::Text>().setFillColour(TextNormalColour, 41);
+        e.getComponent<cro::Text>().setVerticalSpacing(-3.f);
+
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().function =
+            [&](cro::Entity f, float)
+            {
+                const float scale = m_layoutEnt.getComponent<cro::SpriteAnimation>().id == LayoutID::Keyboard ? 1.f : 0.f;
+                f.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+            };
+        layoutEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+    }
+
 
     auto createHighlight = [&, infoEnt, layoutEnt](glm::vec2 position, std::int32_t keyIndex) mutable
     {
