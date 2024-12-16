@@ -211,7 +211,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scoreColumnCount      (2),
     m_readyQuitFlags        (0),
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
-    m_emoteWheel            (sd, m_currentPlayer, m_textChat)
+    m_emoteWheel            (sd, m_currentPlayer, m_textChat),
+    m_minimapTexturePass    (MaxMinimapPasses)
 {
     sd.quickplayOpponents = std::clamp(sd.quickplayOpponents, 0, 3);
     if (sd.quickplayOpponents != 0)
@@ -2254,6 +2255,11 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 bool GolfState::simulate(float dt)
 {
+    if (m_minimapTexturePass < MaxMinimapPasses)
+    {
+        updateMinimapTexture();
+    }
+
     m_strokeTimer += dt;
     m_textChat.update(dt);
 

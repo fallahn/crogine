@@ -630,6 +630,9 @@ private:
     cro::Entity m_mapCam;
     cro::Entity m_mapRoot;
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
+    
+    std::int32_t m_minimapTexturePass;
+    static constexpr std::int32_t MaxMinimapPasses = 1;
     void updateMinimapTexture();
     void updateMiniMap();
 

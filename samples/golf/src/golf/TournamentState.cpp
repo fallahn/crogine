@@ -1869,13 +1869,14 @@ Both Tournaments are always available and can be played at any time. Completing 
 Tournament in first place will unlock a new ball for your profile. These items remain
 unlocked even if you decide to reset your Career.
 
-You can reset your Career at any time from the Stats page of the Options menu.
+You can reset your Career at any time from the Stats page of the Options menu, and
+edit your opponent's names in the League Browser.
 
 Good Luck!
 )";
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 272.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 280.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(desc);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);

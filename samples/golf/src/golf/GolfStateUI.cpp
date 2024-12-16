@@ -1632,7 +1632,8 @@ void GolfState::buildUI()
 
             if (scale == 0)
             {
-                updateMinimapTexture();
+                //starts the multipass rendering (actually done in Scene::simulate())
+                m_minimapTexturePass = 0;
 
                 //and set to grow
                 state = 1;
@@ -5801,6 +5802,7 @@ void GolfState::buildTrophyScene()
 
 void GolfState::updateMinimapTexture()
 {
+    //TODO assert if we need to do this every pass
     if (m_sharedData.scoreType == ScoreType::MultiTarget)
     {
         auto* shader = m_holeData[m_currentHole].puttFromTee ? &m_resources.shaders.get(ShaderID::CourseGrid) : &m_resources.shaders.get(ShaderID::Course);
@@ -5822,6 +5824,15 @@ void GolfState::updateMinimapTexture()
     glUseProgram(m_gridShaders[1].shaderID);
     glUniform1f(m_gridShaders[1].transparency, 0.f); //hides any putting grid
 
+
+    //16 pass for 4x4 smaller renders
+    /*glm::vec2 viewSize(MapSize);
+    auto& miniCam = m_mapCam.getComponent<cro::Camera>();
+    miniCam.setOrthographic(-viewSize.x / 8.f, viewSize.x / 8.f, -viewSize.y / 8.f, viewSize.y / 8.f, -0.1f, 60.f);
+    miniCam.viewport = { 0.f, 0.f, 1.f/4.f, 1.f/4.f };*/
+
+
+
     auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
     m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
     //m_gameScene.simulate(0.f);
@@ -5836,9 +5847,26 @@ void GolfState::updateMinimapTexture()
 
     cro::Colour c = cro::Colour::Transparent;
     //cro::Colour c(std::uint8_t(39), 56, 153);
-    m_mapTextureMRT.clear(c);
+    
+    if (m_minimapTexturePass == 0)
+    {
+        m_mapTextureMRT.clear(c);
+    }
+    else
+    {
+        m_mapTextureMRT.activate(true);
+    }
     m_gameScene.render();
-    m_mapTextureMRT.display();
+    m_minimapTexturePass++;
+
+    if (m_minimapTexturePass == MaxMinimapPasses)
+    {
+        m_mapTextureMRT.display();
+    }
+    else
+    {
+        m_mapTextureMRT.activate(false);
+    }
     m_gameScene.setActiveCamera(oldCam);
     //m_mapTextureMRT.setBorderColour(c);
 
@@ -5847,22 +5875,28 @@ void GolfState::updateMinimapTexture()
         model.getMaterialData(cro::Mesh::IndexData::Pass::Final, i).addCustomSetting(GL_CLIP_DISTANCE1);
     }
 
-    //this triggers a map refresh so don't set it until
-    //we know the texture is up to date.
-    m_sharedData.minimapData.holeNumber = m_currentHole;
 
-    //disable the cam again
-    m_mapCam.getComponent<cro::Camera>().active = false;
 
-    retargetMinimap(true);
-
-    auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
-    msg->type = SceneEvent::MinimapUpdated;
-
-    if (m_sharedData.scoreType == ScoreType::MultiTarget)
+    //only finalise the minimap once all passes are complete
+    if (m_minimapTexturePass == MaxMinimapPasses)
     {
-        m_targetShader.size = 0.f;
-        m_targetShader.update();
+        //this triggers a map refresh so don't set it until
+        //we know the texture is up to date.
+        m_sharedData.minimapData.holeNumber = m_currentHole;
+
+        //disable the cam again
+        m_mapCam.getComponent<cro::Camera>().active = false;
+
+        retargetMinimap(true);
+
+        auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+        msg->type = SceneEvent::MinimapUpdated;
+
+        if (m_sharedData.scoreType == ScoreType::MultiTarget)
+        {
+            m_targetShader.size = 0.f;
+            m_targetShader.update();
+        }
     }
 }
 

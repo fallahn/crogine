@@ -1708,7 +1708,8 @@ Finish a league in the top 3 to unlock a new ball, in the top 2 to unlock a new 
 headwear and placing number one unlocks a new avatar! Each of these items will also be
 available to use in Free Play. Items remain unlocked even if you reset your Career.
 
-You can reset your Career at any time from the Stats page of the Options menu.
+You can reset your Career at any time from the Stats page of the Options menu, and
+edit your opponent's names in the League Browser.
 
 Good Luck!
 )";
