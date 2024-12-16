@@ -2614,7 +2614,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
         for (auto i = 1u; i < ents.size() - 1; ++i)
         {
             ents[i].getComponent<cro::Text>().setFillColour(dark);
-            ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setFillColour(red);
         }
         ents[0].getComponent<cro::Text>().setFillColour(dark); //no red text on first column!
         ents.back().getComponent<cro::Text>().setFillColour(dark); //no red text on final column!
@@ -3158,12 +3157,6 @@ void GolfState::createScoreboard()
             crop.height += 1.f;
             crop.bottom = -(bgCrop.height - 1.f) - pos.y;
             ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
-            if (ent.hasComponent<cro::Entity>())
-            {
-                crop.width += 10.f;
-                crop.left -= RightAdj;
-                ent.getComponent<cro::Entity>().getComponent<cro::Drawable2D>().setCroppingArea(crop); //red text
-            }
         }
         //TODO these values need to be rounded to
         //the nearest scaled pixel ie nearest 2,3 or whatever viewScale is
