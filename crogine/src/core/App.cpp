@@ -692,6 +692,21 @@ void App::setApplicationStrings(const std::string& organisation, const std::stri
 //private
 void App::handleEvents()
 {
+    const auto toggleFullScreen = [&]()
+        {
+            auto fs = m_window.isFullscreen();
+            fs = !fs;
+            m_window.setFullScreen(fs);
+
+            //hack to hide console if it's open as the full screen
+            //checkbox won't be updated
+            if (Console::isVisible())
+            {
+                Console::show();
+            }
+            saveSettings();
+        };
+
     cro::Event evt;
     while (m_window.pollEvent(evt))
     {
@@ -800,21 +815,18 @@ void App::handleEvents()
                 if (evt.key.keysym.mod & KMOD_ALT)
 #endif
                 {
-                    auto fs = m_window.isFullscreen();
-                    fs = !fs;
-                    m_window.setFullScreen(fs);
-
-                    //hack to hide console if it's open as the full screen
-                    //checkbox won't be updated
-                    if (Console::isVisible())
-                    {
-                        Console::show();
-                    }
-                    saveSettings();
+                    toggleFullScreen();
                 }
                 break;
             case SDLK_F5:
                 saveScreenshot();
+                break;
+            case SDLK_F11:
+                //ctrl f11 enables steam recording...
+                if ((evt.key.keysym.mod & KMOD_CTRL) == 0)
+                {
+                    toggleFullScreen();
+                }
                 break;
             }
             break;

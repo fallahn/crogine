@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -143,6 +143,12 @@ namespace cro
         \brief Returns the last line printed to the console output
         */
         static const std::string& getLastOutput();
+
+        /*!
+        \brief dumps the entire buffer to a text file
+        \param str Optional string to append to file name (eg a timestamp)
+        */
+        static void dumpBuffer(const std::string& str);
 
     private:
         friend class App;

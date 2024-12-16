@@ -39,6 +39,7 @@ source distribution.
 #include <unordered_map>
 #include <algorithm>
 #include <array>
+#include <fstream>
 
 using namespace cro;
 namespace ui = ImGui;
@@ -216,6 +217,25 @@ bool Console::isVisible()
 const std::string& Console::getLastOutput()
 {
     return buffer.back().first;
+}
+
+void Console::dumpBuffer(const std::string& str)
+{
+    std::string fileName = "console_dump";
+    if (!str.empty())
+    {
+        fileName += str;
+    }
+    fileName += ".txt";
+
+    std::ofstream ofile(fileName);
+    if (ofile.is_open() && ofile.good())
+    {
+        for (const auto& [b, _] : buffer)
+        {
+            ofile << b << "\n";
+        }
+    }
 }
 
 //private

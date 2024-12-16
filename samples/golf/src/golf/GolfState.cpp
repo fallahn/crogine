@@ -3808,9 +3808,10 @@ void GolfState::spawnBall(const ActorInfo& info)
         });
 
     //pick a ball at random if model is missing
+    //hmm, this becomes inconsistent across clients though
     if (ball == m_sharedData.ballInfo.end())
     {
-        ball = m_sharedData.ballInfo.begin() + cro::Util::Random::value(0u, m_sharedData.ballInfo.size() - 1);
+        ball = m_sharedData.ballInfo.begin();// +cro::Util::Random::value(0u, m_sharedData.ballInfo.size() - 1);
         ballID = ball->uid;
     }
     //the above now makes this superfluous - but hey let's try avoiding butterflies

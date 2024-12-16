@@ -34,6 +34,7 @@ source distribution.
 
 #include "ust.hpp"
 
+#include <crogine/core/Console.hpp>
 #include <crogine/detail/StackDump.hpp>
 
 #include <iostream>
@@ -46,6 +47,10 @@ void StackDump::dump(int type)
     //hmm apparently we can get a few hundred reports so..
     static int reportCount = 0;
 
+    //TODO this might actually be because we're getting a stack dump
+    //from every active thread - we really need to ensure we only dump
+    //the main thread.
+
     if (reportCount)
     {
         return;
@@ -55,7 +60,7 @@ void StackDump::dump(int type)
     auto t = std::time(nullptr);
     auto* tm = std::localtime(&t);
 
-    std::string str = std::to_string(tm->tm_year + 1900);
+    std::string str = "_" + std::to_string(tm->tm_year + 1900);
     str += "-" + std::to_string(tm->tm_mon + 1);
     str += "-" + std::to_string(tm->tm_mday);
     str += "-" + std::to_string(tm->tm_hour + 1);
@@ -63,7 +68,9 @@ void StackDump::dump(int type)
     str += "-" + std::to_string(tm->tm_sec);
     //auto str = std::to_string(t);
 
-    std::ofstream file("stack_dump_" + str + ".txt");
+    Console::dumpBuffer(str);
+
+    std::ofstream file("stack_dump" + str + ".txt");
     switch (type)
     {
     case StackDump::Generic:
