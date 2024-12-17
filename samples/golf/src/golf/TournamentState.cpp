@@ -1959,7 +1959,7 @@ void TournamentState::createStatMenu(cro::Entity parent)
     auto& menuTransform = parent.getComponent<cro::Transform>();
 
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/avatar_browser.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/tourn_stats.spt", m_sharedData.sharedResources->textures);
 
     //background sprite
     auto entity = m_scene.createEntity();
@@ -2013,7 +2013,7 @@ void TournamentState::createStatMenu(cro::Entity parent)
 
     //close button
     auto buttonEnt = m_scene.createEntity();
-    buttonEnt.addComponent<cro::Transform>().setPosition({ 468.f, 331.f, 0.1f });
+    buttonEnt.addComponent<cro::Transform>().setPosition({ 161.f, 69.f, 0.1f });
     buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonEnt.addComponent<cro::Drawable2D>();
     buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("close_button");
@@ -2087,10 +2087,11 @@ void TournamentState::createStatMenu(cro::Entity parent)
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 10.f, 60.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 58.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto textEnt = entity;
@@ -2113,7 +2114,7 @@ void TournamentState::createStatMenu(cro::Entity parent)
 
             const auto entered = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealPlayed + tournamentID])->value);
             const auto won = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealWon + tournamentID])->value);
-            const auto tier = Achievements::getStat(StatStrings[StatID::UnrealBest + tournamentID])->value;
+            const auto tier = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealBest + tournamentID])->value);
 
             std::string s = "Number of times entered: " + std::to_string(entered);
             s += "\nNumber of times won: " + std::to_string(won);
