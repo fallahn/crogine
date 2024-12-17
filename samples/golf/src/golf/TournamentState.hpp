@@ -111,11 +111,15 @@ private:
     std::function<void()> enterInfoCallback;
     std::function<void()> quitInfoCallback;
 
+    std::function<void()> enterStatCallback;
+    std::function<void()> quitStatCallback;
+
     void loadAssets();
     void addSystems();
     void buildScene();
     void createConfirmMenu(cro::Entity);
     void createInfoMenu(cro::Entity);
+    void createStatMenu(cro::Entity);
     void createProfileLayout(cro::Entity bgEnt, const cro::SpriteSheet&);
 
     void applySettingsValues();

@@ -246,6 +246,10 @@ namespace StatID
         SundaysPlayed,
         UnrealWon,
         BeauchampWon,
+        UnrealPlayed,
+        BeauchampPlayed,
+        UnrealBest,
+        BeauchampBest,
 
         Count
     };

@@ -5199,6 +5199,9 @@ void MenuState::updateUnlockedItems()
             item.id = ul::UnlockID::TournComplete01 + m_sharedData.activeTournament;
             item.xp = 1000;
             Social::awardXP(item.xp);
+
+            Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
+            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], 3);
         }
         else if (t.winner == -2)
         {
@@ -5207,6 +5210,12 @@ void MenuState::updateUnlockedItems()
             item.id = ul::UnlockID::TournLadder;
             item.xp = 250 * t.round;
             Social::awardXP(item.xp);
+        }
+        else
+        {
+            //the tournament has ended with a CPU victory
+            Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
+            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], t.round);
         }
     }
 
