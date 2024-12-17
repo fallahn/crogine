@@ -172,6 +172,7 @@ void Text::setString(const String& str)
     m_context.fillColour.colours.resize(1);
     m_context.fillColour.charIndices.resize(1);
     m_context.fillColour.index = 0;
+    m_dirtyFlags |= DirtyFlags::Colour;
 
     /*if (!m_context.font->isRegistered(this))
     {

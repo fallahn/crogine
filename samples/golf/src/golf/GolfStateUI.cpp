@@ -2608,16 +2608,20 @@ void GolfState::showCountdown(std::uint8_t seconds)
         //dim the score text which gets in the way of the message
         auto dark = LeaderboardTextDark;
         dark.setAlpha(0.4f);
-        auto red = TextHighlightColour;
-        red.setAlpha(0.4f);
 
         auto& ents = m_scoreboardEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         for (auto i = 1u; i < ents.size() - 1; ++i)
         {
+            //hmmmm as we use multi-colours in a single string now the best we can
+            //do for the alpha is reset ALL the colours (although this is post-game
+            //so probably doesn't really matter)
+            const auto s = ents[i].getComponent<cro::Text>().getString();
             ents[i].getComponent<cro::Text>().setFillColour(dark);
+            //calling setString() resets all the colours
+            ents[i].getComponent<cro::Text>().setString(s);
         }
-        ents[0].getComponent<cro::Text>().setFillColour(dark); //no red text on first column!
-        ents.back().getComponent<cro::Text>().setFillColour(dark); //no red text on final column!
+        ents[0].getComponent<cro::Text>().setFillColour(dark);
+        ents.back().getComponent<cro::Text>().setFillColour(dark);
 
         //check to see if we are top of the scoreboard
         if (m_achievementTracker.leadingCareerRound

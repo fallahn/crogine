@@ -371,7 +371,13 @@ bool GolfState::summariseRules()
             //this is an intentional copy
             sortData.insert(sortData.end(), group.playerInfo.begin(), group.playerInfo.end());
         }
-    }    
+    }
+
+    //players have quit to the point the minimum amount is not met
+    if (ScoreType::MinPlayerCount[m_sharedData.scoreType] > sortData.size())
+    {
+        return true;
+    }
     
     
     //check sort data to see if we have 1 remaining player
@@ -383,8 +389,8 @@ bool GolfState::summariseRules()
                 return !a.eliminated;
             });
 
-        if (sortData.size() == 1
-            || sortData[1].eliminated)
+        if (/*sortData.size() == 1
+            || */sortData[1].eliminated)
         {
             //everyone quit or all but player 1 are eliminated
             return true;
@@ -392,30 +398,39 @@ bool GolfState::summariseRules()
         return false;
     }
 
-    //if there aren't enough NTP holes left to win, end the game
-    if (m_ntpPro)
-    {
-        std::sort(sortData.begin(), sortData.end(),
-            [](const PlayerStatus& a, const PlayerStatus& b)
-            {
-                if (a.matchWins == b.matchWins)
-                {
-                    return a.distanceScore < b.distanceScore;
-                }
-                return a.matchWins > b.matchWins;
-            });
+    //if (m_sharedData.scoreType == ScoreType::NearestThePin)
+    //{
+    //    //players have quit / disconnected
+    //    if (sortData.size() == 1)
+    //    {
+    //        return true;
+    //    }
 
-        //we should *always* have two players in this case
-        CRO_ASSERT(sortData.size() > 1, "");
-        const auto remain = (m_holeData.size() - (m_currentHole + 1));
-        const auto lead = sortData[0].matchWins - sortData[1].matchWins;
-        if (lead > remain)
+        //if there aren't enough NTP holes left to win, end the game
+        if (m_ntpPro)
         {
-            return true;
-        }
+            std::sort(sortData.begin(), sortData.end(),
+                [](const PlayerStatus& a, const PlayerStatus& b)
+                {
+                    if (a.matchWins == b.matchWins)
+                    {
+                        return a.distanceScore < b.distanceScore;
+                    }
+                    return a.matchWins > b.matchWins;
+                });
 
-        return false;
-    }
+            //we should *always* have two players in this case
+            CRO_ASSERT(sortData.size() > 1, "");
+            const auto remain = (m_holeData.size() - (m_currentHole + 1));
+            const auto lead = sortData[0].matchWins - sortData[1].matchWins;
+            if (lead > remain)
+            {
+                return true;
+            }
+
+            return false;
+        }
+    //}
 
 
 
@@ -465,11 +480,12 @@ bool GolfState::summariseRules()
     if (m_sharedData.scoreType == ScoreType::Skins
         || m_sharedData.scoreType == ScoreType::Match)
     {
-        if (m_playerInfo[0].playerCount == 1)
+        //if (m_playerInfo[0].playerCount == 1)
+        /*if (sortData.size() == 1)
         {
             gameFinished = true;
         }
-        else
+        else*/
         {
             //only score if no player tied
             if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.

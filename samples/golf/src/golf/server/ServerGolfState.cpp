@@ -1135,16 +1135,17 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 
     if (!allPlayers.empty())
     {
-        bool playersForfeit =
-            (allPlayers.size() == 1
+        bool playersForfeit = ScoreType::MinPlayerCount[m_sharedData.scoreType] > allPlayers.size();
+            /*(allPlayers.size() == 1
                 && (m_sharedData.scoreType == ScoreType::Elimination
                     || m_sharedData.scoreType == ScoreType::Match
-                    || m_sharedData.scoreType == ScoreType::Skins));
+                    || m_sharedData.scoreType == ScoreType::NearestThePin
+                    || m_sharedData.scoreType == ScoreType::Skins));*/
 
         //TODO move this to some game rule check function
         if ((allPlayers[0].distanceToHole == 0 //all players must be in the hole
             || (m_sharedData.scoreType == ScoreType::NearestThePin && allPlayers[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
-            || playersForfeit//(m_sharedData.scoreType == ScoreType::Elimination && allPlayers.size() == 1) //players have quit the game so attempt next hole
+            || playersForfeit //players have quit the game so attempt next hole
             || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers[1].eliminated)) //(which triggers the rules to end the game)  
             && waitingCount >= m_playerInfo.size() - 1) //don't move on until all but this group are waiting
         {
