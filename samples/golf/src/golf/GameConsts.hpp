@@ -33,7 +33,6 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "SharedStateData.hpp"
 #include "InputParser.hpp"
-#include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
 #include "../GolfGame.hpp"
 
