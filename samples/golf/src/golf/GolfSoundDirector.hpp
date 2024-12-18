@@ -52,7 +52,7 @@ public:
     void handleMessage(const cro::Message&) override;
     void process(float) override;
 
-    void addAudioScape(const std::string& path, cro::AudioResource& resource);
+    std::size_t addAudioScape(const std::string& path, cro::AudioResource& resource);
     void setPlayerIndex(std::size_t client, std::size_t player, std::int32_t index);
     void setActivePlayer(std::size_t client, std::size_t player, bool skipAudio);
     void setCrowdPositions(const std::vector<glm::mat4>& v) { m_crowdPositions = &v; }

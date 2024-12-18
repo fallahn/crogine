@@ -1136,11 +1136,6 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
     if (!allPlayers.empty())
     {
         bool playersForfeit = ScoreType::MinPlayerCount[m_sharedData.scoreType] > allPlayers.size();
-            /*(allPlayers.size() == 1
-                && (m_sharedData.scoreType == ScoreType::Elimination
-                    || m_sharedData.scoreType == ScoreType::Match
-                    || m_sharedData.scoreType == ScoreType::NearestThePin
-                    || m_sharedData.scoreType == ScoreType::Skins));*/
 
         //TODO move this to some game rule check function
         if ((allPlayers[0].distanceToHole == 0 //all players must be in the hole

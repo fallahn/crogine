@@ -2042,6 +2042,7 @@ void GolfState::loadModels()
     {
         m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(avatar.audioscape, m_resources.audio);
     }
+    auto defaultAudio = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape("assets/golf/sound/avatars/default.xas", m_resources.audio);
 
     //TODO we don't actually need to load *every* sprite sheet, just look up the index first
     //and load it as necessary...
@@ -2090,7 +2091,7 @@ void GolfState::loadModels()
             //if this returned a random index because the skinID wasn't found, correct the skinID
             skinID = m_sharedData.avatarInfo[avatarIndex].uid;
 
-            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(avatarIndex));
+            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, isRandom ? defaultAudio : static_cast<std::int32_t>(avatarIndex));
             m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
 
             //player avatar model

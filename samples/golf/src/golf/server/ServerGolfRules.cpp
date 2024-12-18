@@ -389,48 +389,41 @@ bool GolfState::summariseRules()
                 return !a.eliminated;
             });
 
-        if (/*sortData.size() == 1
-            || */sortData[1].eliminated)
+        if (sortData[1].eliminated)
         {
-            //everyone quit or all but player 1 are eliminated
+            //all but player 1 are eliminated
             return true;
         }
         return false;
     }
 
-    //if (m_sharedData.scoreType == ScoreType::NearestThePin)
-    //{
-    //    //players have quit / disconnected
-    //    if (sortData.size() == 1)
-    //    {
-    //        return true;
-    //    }
 
-        //if there aren't enough NTP holes left to win, end the game
-        if (m_ntpPro)
-        {
-            std::sort(sortData.begin(), sortData.end(),
-                [](const PlayerStatus& a, const PlayerStatus& b)
-                {
-                    if (a.matchWins == b.matchWins)
-                    {
-                        return a.distanceScore < b.distanceScore;
-                    }
-                    return a.matchWins > b.matchWins;
-                });
 
-            //we should *always* have two players in this case
-            CRO_ASSERT(sortData.size() > 1, "");
-            const auto remain = (m_holeData.size() - (m_currentHole + 1));
-            const auto lead = sortData[0].matchWins - sortData[1].matchWins;
-            if (lead > remain)
+    //if there aren't enough NTP holes left to win, end the game
+    if (m_ntpPro)
+    {
+        std::sort(sortData.begin(), sortData.end(),
+            [](const PlayerStatus& a, const PlayerStatus& b)
             {
-                return true;
-            }
+                if (a.matchWins == b.matchWins)
+                {
+                    return a.distanceScore < b.distanceScore;
+                }
+                return a.matchWins > b.matchWins;
+            });
 
-            return false;
+        //we should *always* have two players in this case
+        CRO_ASSERT(sortData.size() > 1, "");
+        const auto remain = (m_holeData.size() - (m_currentHole + 1));
+        const auto lead = sortData[0].matchWins - sortData[1].matchWins;
+        if (lead > remain)
+        {
+            return true;
         }
-    //}
+
+        return false;
+    }
+
 
 
 

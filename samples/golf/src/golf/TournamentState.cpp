@@ -2087,7 +2087,7 @@ void TournamentState::createStatMenu(cro::Entity parent)
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 10.f, 58.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 50.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -2116,15 +2116,15 @@ void TournamentState::createStatMenu(cro::Entity parent)
             const auto won = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealWon + tournamentID])->value);
             const auto tier = static_cast<std::int32_t>(Achievements::getStat(StatStrings[StatID::UnrealBest + tournamentID])->value);
 
-            std::string s = "Number of times entered: " + std::to_string(entered);
+            std::string s = "Number of times completed: " + std::to_string(entered);
             s += "\nNumber of times won: " + std::to_string(won);
             if (tier == 3)
             {
-                s += "\n\nBest rank: Winner!";
+                s += "\nBest rank: Winner!";
             }
             else
             {
-                s += "\n\nBest tier rating: " + std::to_string(tier + 1);
+                s += "\nBest tier rating: " + std::to_string(tier + 1);
             }
 
             textEnt.getComponent<cro::Text>().setString(s);
