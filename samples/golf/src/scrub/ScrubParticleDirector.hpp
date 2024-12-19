@@ -48,6 +48,7 @@ public:
     ScrubParticleDirector(cro::TextureResource&);
 
     void handleMessage(const cro::Message&) override;
+    void init() { resizeEmitters(); }
 private:
 
     std::array<cro::EmitterSettings, sc::ParticleID::Count> m_emitterSettings = {};

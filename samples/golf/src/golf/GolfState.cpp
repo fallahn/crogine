@@ -2864,8 +2864,8 @@ void GolfState::addSystems()
     //m_gameScene.setSystemActive<cro::SkeletalAnimator>(false); //can't do this because we rely on player animation events
 #endif
 
-    m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData);
-    m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio, m_sharedData);
+    m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData)->init();
+    m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio, m_sharedData)->init();
 
 
     if (m_sharedData.gameMode == GameMode::Tutorial)

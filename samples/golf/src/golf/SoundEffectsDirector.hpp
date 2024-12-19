@@ -77,11 +77,11 @@ public:
 
 protected:
     cro::Entity getNextEntity();
+    void resizeEmitters();
 
 private:
 
     std::size_t m_nextFreeEmitter;
     std::vector<cro::Entity> m_emitters;
 
-    void resizeEmitters();
 };

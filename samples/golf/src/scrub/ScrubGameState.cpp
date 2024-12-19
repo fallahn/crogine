@@ -625,7 +625,7 @@ void ScrubGameState::addSystems()
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb); //hm we should probably move this to ui scene for consistency with other states?
 
-    m_gameScene.addDirector<ScrubParticleDirector>(m_resources.textures);
+    m_gameScene.addDirector<ScrubParticleDirector>(m_resources.textures)->init();
     m_soundDirector = m_gameScene.addDirector<ScrubSoundDirector>();
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);

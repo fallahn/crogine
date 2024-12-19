@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -75,6 +75,7 @@ public:
     void process(float) override;
 
 protected:
+    void resizeEmitters();
     cro::Entity getNextEntity();
 
 private:
@@ -82,5 +83,4 @@ private:
     std::size_t m_nextFreeEmitter;
     std::vector<cro::Entity> m_emitters;
 
-    void resizeEmitters();
 };

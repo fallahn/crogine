@@ -51,6 +51,7 @@ public:
 
     void handleMessage(const cro::Message&) override;
     void process(float) override;
+    void init() { resizeEmitters(); }
 
     std::size_t addAudioScape(const std::string& path, cro::AudioResource& resource);
     void setPlayerIndex(std::size_t client, std::size_t player, std::int32_t index);
