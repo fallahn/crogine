@@ -5037,6 +5037,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
                                 Achievements::incrementStat(StatStrings[StatID::ChipIns]);
                                 Social::awardXP(XPValues[XPID::Special], XPStringID::TopChip);
+
+                                if (m_sharedData.gameMode == GameMode::Tutorial)
+                                {
+                                    const auto wasActive = Achievements::getActive();
+                                    Achievements::setActive(true);
+                                    Achievements::awardAchievement(AchievementStrings[AchievementID::AheadOfTheGame]);
+                                    Achievements::setActive(wasActive);
+                                }
                             }
 
                             if (m_achievementTracker.hadBackspin)

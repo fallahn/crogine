@@ -184,6 +184,8 @@ namespace AchievementID
         FirstRodeo,
         BiggerShelf,
 
+        AheadOfTheGame,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

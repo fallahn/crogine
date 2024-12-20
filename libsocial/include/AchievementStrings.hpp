@@ -171,6 +171,7 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "beginners_luck",
     "first_rodeo",
     "bigger_shelf",
+    "ahead_of_the_game"
 };
 
 //appears on the notification
@@ -299,7 +300,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Beauchamp",
     "Beginner's Luck",
     "Not My First Rodeo",
-    "Gonna Need A Bigger Shelf"
+    "Gonna Need A Bigger Shelf",
+    "Ahead Of The Game"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -429,6 +431,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a tournament using only the Novice clubs", false),
     std::make_pair("Win a tournament using only the Expert clubs", false),
     std::make_pair("Win a tournament using only the Pro clubs", false),
+    std::make_pair("Complete the tutorial early with a chip-in", false),
 };
 
 //assuming trophies load correctly they are:
@@ -595,6 +598,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*122*/TrophyID::BronzeFigure,
     /*123*/TrophyID::SilverFigure,
     /*124*/TrophyID::GoldFigure,
+    /*125*/TrophyID::SilverCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
