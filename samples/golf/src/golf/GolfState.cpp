@@ -180,6 +180,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_groupIdle             (false),
     m_serverGroup           (0),
     m_allowAchievements     (false),
+    m_deferredGameState     (-1),
     m_lightVolumeDefinition (m_resources),
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
@@ -1231,7 +1232,17 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<SystemEvent>();
         if (data.type == SystemEvent::StateRequest)
         {
-            requestStackPush(data.data);
+            //these come from the tutorial director, so check
+            //we don't have the options/pause window open and
+            //defer the request if we do
+            if (getStateCount() == 1)
+            {
+                requestStackPush(data.data);
+            }
+            else
+            {
+                m_deferredGameState = data.data;
+            }
         }
         else if (data.type == SystemEvent::ShadowQualityChanged)
         {
@@ -2166,6 +2177,14 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cam.resizeCallback(cam);
 
                 Club::setFixedPuttingDistance(m_sharedData.fixedPuttingRange);
+            }
+
+            //check if we have any deferred tutorial states pending
+            if (m_deferredGameState != -1
+                && getStateCount() == 1)
+            {
+                requestStackPush(m_deferredGameState);
+                m_deferredGameState = -1;
             }
         }
     }
