@@ -727,9 +727,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
             m_textChat.toggleWindow(false, true, false);
             break;
-        /*case SDLK_F6:
-            logCSV();
-            break;*/
+        //case SDLK_F6:
+        //    //logCSV();
+        //{
+        //    auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+        //    msg->type = GolfEvent::Scored;
+        //    msg->score = static_cast<std::uint8_t>(3);
+        //    msg->travelDistance = 100.f;
+        //    msg->club = getClub();
+        //    msg->position = m_currentPlayer.position;
+        //}
+        //    break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
             {
@@ -742,7 +750,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 cro::Console::doCommand("build_cubemaps");
             }
             break;
-
 #ifdef CRO_DEBUG_
         case SDLK_F7:
             //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);

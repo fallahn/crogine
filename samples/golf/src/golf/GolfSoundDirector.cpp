@@ -460,13 +460,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 default:
                     playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                     break;
-                case ClubID::Driver:
+                /*case ClubID::Driver:
                     playSound(cro::Util::Random::value(AudioID::Drive01, AudioID::Drive03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                     break;
                 case ClubID::FiveWood:
                 case ClubID::ThreeWood:
                     playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Drive01), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                    break;
+                    break;*/
                 case ClubID::PitchWedge:
                 case ClubID::GapWedge:
                 case ClubID::SandWedge:
@@ -533,9 +533,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
                         if (cro::Util::Random::value(0, 5) == 0)
                         {
-                            auto& emitter = playSound(AudioID::Enthusiast, data.position, 1.6f).getComponent<cro::AudioEmitter>();
-                            emitter.setMixerChannel(MixerChannel::Environment);
-                            emitter.setRolloff(0.45f);
+                            playSoundDelayed(AudioID::Enthusiast, data.position, 4.f, 1.4f, MixerChannel::Effects);
                         }
                     }
                 }
@@ -634,6 +632,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                             if (m_soundTimers[AudioID::ApplausePlus].elapsed() > ApplauseSoundTime)
                             {
                                 playSoundDelayed(AudioID::ApplausePlus, data.position, 0.8f, 0.6f, MixerChannel::Effects);
+                            }
+
+                            if (cro::Util::Random::value(0, 5) == 0)
+                            {
+                                playSoundDelayed(AudioID::Enthusiast, glm::vec3(MapSizeFloat.x / 2.f, 6.f, -MapSizeFloat.y / 2.f), 4.f, 1.4f, MixerChannel::Effects);
                             }
                         }
                     }

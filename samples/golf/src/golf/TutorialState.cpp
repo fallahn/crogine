@@ -2131,7 +2131,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("With Putting Assist enabled in the Options you can\nuse the flag on the power bar to judge the distance to the hole.");
+    entity.addComponent<cro::Text>(font).setString("With Putting Assist enabled in the Options you can\nuse the flag on the Power Bar to judge the distance to the hole.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -2201,7 +2201,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("NOTE: Unlike other clubs the putter will automatically adjust its maximum range!\nKeep an eye on the maximum distance next to the power bar.\nThis behaviour can be disabled in the Options menu.");
+    entity.addComponent<cro::Text>(font).setString("NOTE: Unlike other clubs the putter will automatically adjust its maximum range!\nKeep an eye on the maximum distance next to the Power Bar.\nThis behaviour can be disabled in the Options menu.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);

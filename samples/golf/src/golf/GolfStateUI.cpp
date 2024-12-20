@@ -4894,12 +4894,20 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         if (messageType == MessageBoardID::HoleScore)
         {
             //this triggers the VO which we only want if it went in the hole.
+            auto playerDir = m_holeData[m_currentHole].pin - m_currentPlayer.position;
+
             auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::Scored;
             msg->score = static_cast<std::uint8_t>(score);
-            msg->travelDistance = glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position);
+            msg->travelDistance = glm::length2(playerDir);
             msg->club = getClub();
-            msg->position = m_currentPlayer.position;
+            
+            const float t = playerDir.x;
+            playerDir.x = -playerDir.z;
+            playerDir.z = t;
+            playerDir *= 2.5f;
+            
+            msg->position = m_holeData[m_currentHole].pin + playerDir;
 
             if (score == ScoreID::HIO)
             {
