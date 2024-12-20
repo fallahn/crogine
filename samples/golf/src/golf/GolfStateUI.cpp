@@ -2121,8 +2121,7 @@ void GolfState::buildUI()
 
         //update minimap
         const auto uiSize = size / m_viewScale;
-        auto mapSize = glm::vec2(MiniMapSize / 2u);
-        mapSize /= 2.f;
+        constexpr auto mapSize = glm::vec2(MiniMapSize / 4u);
         m_mapRoot.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.65f }); //map sprite is rotated 90
 
 
