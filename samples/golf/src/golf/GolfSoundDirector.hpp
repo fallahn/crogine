@@ -72,6 +72,10 @@ public:
             Swing02,
             Swing03,
 
+            Drive01,
+            Drive02,
+            Drive03,
+
             Wedge,
 
             Hole,
@@ -102,6 +106,7 @@ public:
 
             Applause,
             ApplausePlus,
+            Enthusiast,
 
             TerrainBunker01,
             TerrainBunker02,

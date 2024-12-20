@@ -90,6 +90,10 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/ball/swing02.wav",
         "assets/golf/sound/ball/swing03.wav",
 
+        "assets/golf/sound/ball/drive01.wav",
+        "assets/golf/sound/ball/drive02.wav",
+        "assets/golf/sound/ball/drive03.wav",
+
         "assets/golf/sound/ball/wedge01.wav",
 
         "assets/golf/sound/ball/holed.wav",
@@ -120,6 +124,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
 
         "assets/golf/sound/ball/applause.wav",
         "assets/golf/sound/ball/applause_plus.wav",
+        "assets/golf/sound/ball/enthusiast.wav",
 
         "assets/golf/sound/terrain/bunker01.wav",
         "assets/golf/sound/terrain/bunker02.wav",
@@ -450,17 +455,26 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 break;
             case GolfEvent::ClubSwing:
             {
-                if (data.terrain == TerrainID::Green)
+                switch (data.club)
                 {
-                    playSound(cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                }
-                else if (data.terrain == TerrainID::Bunker)
-                {
-                    playSound(AudioID::Wedge, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                }
-                else
-                {
+                default:
                     playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    break;
+                case ClubID::Driver:
+                    playSound(cro::Util::Random::value(AudioID::Drive01, AudioID::Drive03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    break;
+                case ClubID::FiveWood:
+                case ClubID::ThreeWood:
+                    playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Drive01), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    break;
+                case ClubID::PitchWedge:
+                case ClubID::GapWedge:
+                case ClubID::SandWedge:
+                    playSound(AudioID::Wedge, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    break;
+                case ClubID::Putter:
+                    playSound(cro::Util::Random::value(AudioID::Putt01, AudioID::Putt03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    break;
                 }
             }
             break;
@@ -516,6 +530,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     if (data.club == ClubID::Putter)
                     {
                         playSoundDelayed(cro::Util::Random::value(AudioID::NicePutt01, AudioID::NicePutt02), glm::vec3(0.f), 2.2f, 1.f, MixerChannel::Voice);
+
+                        if (cro::Util::Random::value(0, 5) == 0)
+                        {
+                            auto& emitter = playSound(AudioID::Enthusiast, data.position, 1.6f).getComponent<cro::AudioEmitter>();
+                            emitter.setMixerChannel(MixerChannel::Environment);
+                            emitter.setRolloff(0.45f);
+                        }
                     }
                 }
 
@@ -793,7 +814,7 @@ void GolfSoundDirector::process(float dt)
             const auto& cp = *m_crowdPositions;
             if (!cp.empty())
             {
-                auto pos = glm::vec3((cp[cro::Util::Random::value(0u, cp.size() - 1)][3]));
+                const auto pos = glm::vec3((cp[cro::Util::Random::value(0u, cp.size() - 1)][3]));
                 auto& emitter = playSound(AudioID::CrowdClearThroat + cro::Util::Random::value(0, 2), pos, 1.6f).getComponent<cro::AudioEmitter>();
                 emitter.setMixerChannel(MixerChannel::Environment);
                 emitter.setRolloff(0.45f);

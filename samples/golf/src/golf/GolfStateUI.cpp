@@ -4900,6 +4900,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             msg->score = static_cast<std::uint8_t>(score);
             msg->travelDistance = glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position);
             msg->club = getClub();
+            msg->position = m_currentPlayer.position;
 
             if (score == ScoreID::HIO)
             {
