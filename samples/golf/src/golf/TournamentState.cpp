@@ -818,7 +818,7 @@ void TournamentState::buildScene()
 
     //gimme
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 320.f, 54.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 310.f, 54.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("No Gimme");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -828,7 +828,7 @@ void TournamentState::buildScene()
     m_settingsDetails.gimme = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 320.f, 50.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 310.f, 50.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -867,7 +867,7 @@ void TournamentState::buildScene()
 
     //text for current weather type
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 422.f, 54.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 406.f, 54.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -899,7 +899,7 @@ void TournamentState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 427.f, 50.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 411.f, 50.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -930,7 +930,7 @@ void TournamentState::buildScene()
 
     //checkbox to show night time status
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 398.f, 30.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 382.f, 30.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("square");
@@ -938,7 +938,7 @@ void TournamentState::buildScene()
     m_settingsDetails.night = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 396.f, 28.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 380.f, 28.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
@@ -981,7 +981,7 @@ void TournamentState::buildScene()
 
     //stats button highlight
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 492.f, 50.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 475.f, 50.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -1010,7 +1010,7 @@ void TournamentState::buildScene()
 
     //info button highlight
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 492.f, 29.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 475.f, 31.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
@@ -1080,7 +1080,7 @@ void TournamentState::buildScene()
 
         //warning string 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 360.f, 38.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 350.f, 38.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(std::uint32_t(0x26A0));
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1089,7 +1089,7 @@ void TournamentState::buildScene()
 
 
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 317.f, 27.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 307.f, 27.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("bag_select");
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
