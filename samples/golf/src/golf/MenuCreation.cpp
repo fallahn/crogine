@@ -3850,42 +3850,7 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         m_sharedData.connectionData[cd.connectionID] = cd;
         m_sharedData.connectionData[cd.connectionID].level = lvl;
 
-#ifdef USE_GNS
-        //check the new player data for UGC
-        if (m_sharedData.remoteContent)
-        {
-            for (auto i = 0u; i < cd.playerCount; ++i)
-            {
-                //hmmm using 0 as the return value seems suspicious
-                //as it's not strictly an invalid index - however
-                //we will fall back to this *anyway* if the remote content
-                //is unavailable.
-                if (indexFromBallID(cd.playerData[i].ballID) == 0)
-                {
-                    //no local ball for this player
-                    Social::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
-                }
-
-                if (indexFromHairID(cd.playerData[i].hairID) == 0)
-                {
-                    //no local hair model
-                    Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
-                }
-
-                if (indexFromHairID(cd.playerData[i].hatID) == 0)
-                {
-                    //no local hat model
-                    Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Social::UserContent::Hair);
-                }
-
-                if (indexFromAvatarID(cd.playerData[i].skinID) == 0)
-                {
-                    //no local avatar model
-                    Social::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Social::UserContent::Avatar);
-                }
-            }
-        }
-#endif
+        updateRemoteContent(cd);
     }
 
     if (m_sharedData.hosting)
@@ -3916,6 +3881,46 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerXP, xp, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     updateLobbyAvatars();
+}
+
+void MenuState::updateRemoteContent(const ConnectionData& cd)
+{
+#ifdef USE_GNS
+    //check the new player data for UGC
+    if (m_sharedData.remoteContent)
+    {
+        for (auto i = 0u; i < cd.playerCount; ++i)
+        {
+            //hmmm using 0 as the return value seems suspicious
+            //as it's not strictly an invalid index - however
+            //we will fall back to this *anyway* if the remote content
+            //is unavailable.
+            if (indexFromBallID(cd.playerData[i].ballID) == 0)
+            {
+                //no local ball for this player
+                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
+            }
+
+            if (indexFromHairID(cd.playerData[i].hairID) == 0)
+            {
+                //no local hair model
+                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
+            }
+
+            if (indexFromHairID(cd.playerData[i].hatID) == 0)
+            {
+                //no local hat model
+                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Social::UserContent::Hair);
+            }
+
+            if (indexFromAvatarID(cd.playerData[i].skinID) == 0)
+            {
+                //no local avatar model
+                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Social::UserContent::Avatar);
+            }
+        }
+    }
+#endif
 }
 
 void MenuState::updateLobbyList()

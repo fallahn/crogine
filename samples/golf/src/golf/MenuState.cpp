@@ -354,6 +354,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+
+                    //we also want to delay this so let's do it here
+                    for (const auto& cd : sd.connectionData)
+                    {
+                        if (cd.playerCount)
+                        {
+                            updateRemoteContent(cd);
+                        }
+                    }
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

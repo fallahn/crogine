@@ -400,6 +400,7 @@ private:
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
     void updateLobbyData(const net::NetEvent&);
+    void updateRemoteContent(const ConnectionData&);
     void updateLobbyAvatars();
     void updateLobbyList();
     void quitLobby();
