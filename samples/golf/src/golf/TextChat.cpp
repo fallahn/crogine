@@ -296,7 +296,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         if (ImGui::Button(m_buttonStrings.applaud.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Applaud);
-                            m_visible = false;
+                            //m_visible = false;
                         }
                         ImGui::PopFont();
                         showToolTip("Applaud - Shortcut: Number 7");
@@ -305,7 +305,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         if (ImGui::Button(m_buttonStrings.happy.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Happy);
-                            m_visible = false;
+                            //m_visible = false;
                         }
                         ImGui::PopFont();
                         showToolTip("Happy - Shortcut: Number 8");
@@ -314,7 +314,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         if (ImGui::Button(m_buttonStrings.laughing.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Laughing);
-                            m_visible = false;
+                            //m_visible = false;
                         }
                         ImGui::PopFont();
                         showToolTip("Laughing - Shortcut: Number 9");
@@ -323,7 +323,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         if (ImGui::Button(m_buttonStrings.angry.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Angry);
-                            m_visible = false;
+                            //m_visible = false;
                         }
                         ImGui::PopFont();
                         showToolTip("Grumpy - Shortcut: Number 0");
