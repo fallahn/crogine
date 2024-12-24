@@ -65,6 +65,8 @@ namespace States
             ScrubAttract,
             ScrubPause,
 
+            GKGame,
+
             Count
         };
     };

@@ -163,6 +163,12 @@
     <Filter Include="Source Files\path follower">
       <UniqueIdentifier>{e7984fef-76c9-4d06-84da-15d7c76b96d2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\groundskeeper">
+      <UniqueIdentifier>{d7bc29d4-33dc-41f7-a453-1a4b2f93bc9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\groundskeeper">
+      <UniqueIdentifier>{c48e3157-2496-4f39-8918-f763ddd9b1c9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -332,6 +338,9 @@
     </ClCompile>
     <ClCompile Include="src\pathfollow\PathFollowSystem.cpp">
       <Filter>Source Files\path follower</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gk\GKGameState.cpp">
+      <Filter>Source Files\groundskeeper</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -553,6 +562,9 @@
     </ClInclude>
     <ClInclude Include="src\pathfollow\PathFollowSystem.hpp">
       <Filter>Header Files\path follower</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gk\GKGameState.hpp">
+      <Filter>Header Files\groundskeeper</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -320,6 +320,7 @@
     <ClCompile Include="src\endless\EndlessDrivingState.cpp" />
     <ClCompile Include="src\frustum\FrustumState.cpp" />
     <ClCompile Include="src\gc\GcState.cpp" />
+    <ClCompile Include="src\gk\GKGameState.cpp" />
     <ClCompile Include="src\interiormapping\InteriormappingState.cpp" />
     <ClCompile Include="src\league\League.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
@@ -392,6 +393,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\frustum\FrustumState.hpp" />
     <ClInclude Include="src\gc\GcState.hpp" />
+    <ClInclude Include="src\gk\GKGameState.hpp" />
     <ClInclude Include="src\interiormapping\InteriormappingState.hpp" />
     <ClInclude Include="src\league\League.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />

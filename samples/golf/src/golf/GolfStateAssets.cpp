@@ -2075,7 +2075,7 @@ void GolfState::loadModels()
                 return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
             }
 
-            return static_cast<std::int32_t>(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1));
+            return 0;// static_cast<std::int32_t>(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1));
         };
 
     //player avatars
