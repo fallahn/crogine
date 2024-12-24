@@ -502,7 +502,7 @@ bool GolfState::summariseRules()
 
                         if (m_holeData.size() > 2)
                         {
-                            m_skinsPot += (m_currentHole % (m_holeData.size() / 3));
+                            m_skinsPot += (m_currentHole / (m_holeData.size() / 3));
                         }
                         sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
 
@@ -522,7 +522,7 @@ bool GolfState::summariseRules()
                     
                     if (m_holeData.size() > 2)
                     {
-                        m_skinsPot += m_currentHole % (m_holeData.size() / 3);
+                        m_skinsPot += m_currentHole / (m_holeData.size() / 3);
                     }
                     std::uint16_t data = 0xff00 | m_skinsPot;
                     m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
