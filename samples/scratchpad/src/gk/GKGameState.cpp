@@ -41,8 +41,39 @@ void main()
 {
     float diffuseAmount = max(dot(normalize(v_normalVector), normalize(-u_lightDirection)), 0.0);
 
-    FRAG_OUT = v_colour * diffuseAmount;
+    FRAG_OUT = vec4(v_colour.rgb * diffuseAmount, 1.0);
 })";
+
+    glm::vec3 CamOffset = { 0.f, 4.f, 7.f };
+
+
+    //TODO move some of these to their own header
+    static constexpr float TileWorldSize = 5.f; //world dsize of a tile in metres
+    static constexpr float TileWorldHeight = 15.f; //max height of terrain
+
+    static constexpr std::uint32_t HeightMapSize = 257; //dimension of heightmap image
+
+    //map is split into 16x16 chunks
+    static constexpr std::int32_t ChunkCount = 16;
+    static constexpr std::int32_t ChunkSize = (HeightMapSize - 1) / ChunkCount;
+    static constexpr std::int32_t ChunkRowSize = HeightMapSize * ChunkSize;
+
+    struct ShaderID final
+    {
+        enum
+        {
+            Terrain
+        };
+
+    };
+
+    struct MaterialID final
+    {
+        enum
+        {
+            Terrain
+        };
+    };
 }
 
 GKGameState::GKGameState(cro::StateStack& stack, cro::State::Context context)
@@ -105,11 +136,11 @@ bool GKGameState::simulate(float dt)
     }
     if (cro::Keyboard::isKeyPressed(SDLK_q))
     {
-        movement.y += 1.f;
+        movement.y -= 1.f;
     }
     if (cro::Keyboard::isKeyPressed(SDLK_e))
     {
-        movement.y -= 1.f;
+        movement.y += 1.f;
     }
     if (cro::Keyboard::isKeyPressed(SDLK_a))
     {
@@ -122,8 +153,40 @@ bool GKGameState::simulate(float dt)
 
     if (glm::length2(movement) != 0)
     {
-        m_gameScene.getActiveCamera().getComponent<cro::Transform>().move(glm::normalize(movement) * 50.f * dt);
+        m_playerPoint.getComponent<cro::Transform>().move(glm::normalize(movement) * 50.f * dt);
     }
+
+
+
+    //TODO move this to some chunk processing-specific place
+    //const auto pos = m_playerPoint.getComponent<cro::Transform>().getPosition();
+    //const float xFloat = (pos.x / TileWorldSize) / ChunkSize;
+    //const float yFloat = (-pos.z / TileWorldSize) / ChunkSize;
+
+    //const std::int32_t x = static_cast<std::int32_t>(xFloat);
+    //const std::int32_t y = static_cast<std::int32_t>(yFloat);
+
+    //const auto yN = std::min(ChunkCount - 1, y + 1);
+    //const auto yS = std::max(0, y - 1);
+    //const auto xW = std::max(0, x - 1);
+    //const auto xE = std::min(ChunkCount - 1, x + 1);
+
+    //auto index = x + y * ChunkCount;
+    //m_chunkEnts[index].getComponent<cro::Model>().setHidden(false);
+
+    //index = x + yN * ChunkCount;
+    //m_chunkEnts[index].getComponent<cro::Model>().setHidden(glm::fract(yFloat) < 0.5f);
+
+    //index = x + yS * ChunkCount;
+    //m_chunkEnts[index].getComponent<cro::Model>().setHidden(glm::fract(yFloat) > 0.5f);
+
+    //index = xE + y * ChunkCount;
+    //m_chunkEnts[index].getComponent<cro::Model>().setHidden(glm::fract(xFloat) < 0.5f);
+
+    //index = xW + y * ChunkCount;
+    //m_chunkEnts[index].getComponent<cro::Model>().setHidden(glm::fract(xFloat) > 0.5f);
+
+
 
 
     m_gameScene.simulate(dt);
@@ -133,6 +196,12 @@ bool GKGameState::simulate(float dt)
 
 void GKGameState::render()
 {
+    auto oldCam = m_gameScene.setActiveCamera(m_overheadCam);
+    m_overheadTexture.clear();
+    m_gameScene.render();
+    m_overheadTexture.display();
+
+    m_gameScene.setActiveCamera(oldCam);
     m_gameScene.render();
     m_uiScene.render();
 }
@@ -152,27 +221,37 @@ void GKGameState::addSystems()
 
 void GKGameState::loadAssets()
 {
+    m_overheadTexture.create(512, 512);
 
+    m_resources.shaders.loadFromString(ShaderID::Terrain, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), Frag, "#define VERTEX_COLOUR\n");
+    m_resources.materials.add(MaterialID::Terrain, m_resources.shaders.get(ShaderID::Terrain));
 }
 
 void GKGameState::createScene()
 {
     loadMap("assets/gk/maps/01");
 
+    cro::Entity entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 128.f * TileWorldSize, TileWorldHeight * 2.f, -128.f * TileWorldSize });
+    entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
+    entity.addComponent<cro::Camera>().setOrthographic(-128.f * TileWorldSize, 128.f * TileWorldSize, -128.f * TileWorldSize, 128.f * TileWorldSize, 0.1f, TileWorldHeight * 2.5);
+    entity.getComponent<cro::Camera>().viewport = { 0.f ,0.f, 1.f ,1.f };
+    m_overheadCam = entity;
 
 
+    m_playerPoint = m_gameScene.createEntity();
+    m_playerPoint.addComponent<cro::Transform>();
 
-    //TODO camera is fixed Z from target
-    //follows X of target
-    //is fixed Y above target position (not camera position)
-    //uses LookAt each frame for correct orientation
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/models/sphere_1m.cmt");
+    md.createModel(m_playerPoint);
 
 
     auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 256.f);
+        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 150.f);
     };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -180,6 +259,17 @@ void GKGameState::createScene()
     resize(cam);
 
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 128.f, 10.8f, 2.f });
+    m_gameScene.getActiveCamera().addComponent<cro::Callback>().active = true;
+    m_gameScene.getActiveCamera().getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            auto targetPos = m_playerPoint.getComponent<cro::Transform>().getWorldPosition();
+
+            //static constexpr glm::vec3 CamOffset = { 0.f, 6.f, 7.f };
+            const auto tx = glm::inverse(glm::lookAt(targetPos + CamOffset, targetPos, cro::Transform::Y_AXIS));
+            e.getComponent<cro::Transform>().setLocalTransform(tx);
+        };
+
     m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -(cro::Util::Const::PI / 4.f));
 }
 
@@ -191,11 +281,8 @@ void GKGameState::createUI()
             auto texSize = glm::vec2(m_inputTexture.getSize());
             ImGui::Image(m_inputTexture, { texSize.x, texSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
             
-            ImGui::SameLine();
-
-            texSize = glm::vec2(m_loadedTexture.getSize());
-            ImGui::Image(m_loadedTexture, { texSize.x, texSize.y }, { 0.f, 1.f }, { 1.f, 0.f });
-
+            texSize *= 2.f;
+            ImGui::Image(m_overheadTexture.getTexture(), {texSize.x, texSize.y}, {0.f, 1.f}, {1.f, 0.f});
 
             static float t = -cro::Util::Const::PI / 4.f;
             if (ImGui::SliderFloat("Rot", &t, -cro::Util::Const::PI, cro::Util::Const::PI))
@@ -206,6 +293,9 @@ void GKGameState::createUI()
 
             const auto pos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
             ImGui::Text("Cam Pos: %3.2f, %3.2f, %3.2f", pos.x, pos.y, pos.z);
+
+            ImGui::SliderFloat("Vert Offset", &CamOffset[1], 2.f, 30.f);
+            ImGui::SliderFloat("Dist Offset", &CamOffset[2], 2.f, 30.f);
 
 
             ImGui::End();
@@ -238,7 +328,7 @@ bool GKGameState::loadMap(const std::string& path)
 
     //heightmap should be 257x257 which includes extra row / column
     //to create 256 tiles
-    static constexpr std::uint32_t HeightMapSize = 257;
+
     if (heightmap.getDimensions().x != HeightMapSize
         || heightmap.getDimensions().y != HeightMapSize)
     {
@@ -247,28 +337,13 @@ bool GKGameState::loadMap(const std::string& path)
     }
 
 
-    std::vector<std::uint8_t> debugArray(HeightMapSize * HeightMapSize * heightmap.getChannels());
-    std::fill(debugArray.begin(), debugArray.end(), 0xff);
-
-
-    //map is split into 16x16 chunks
-    static constexpr std::int32_t ChunkCount = 16;
-    static constexpr std::int32_t ChunkSize = (HeightMapSize - 1) / ChunkCount;
-    static constexpr std::int32_t ChunkRowSize = HeightMapSize * ChunkSize;
     const auto stride = heightmap.getChannels();
-
-    static constexpr float TileWorldSize = 5.f; //TODO increase to 5
-    static constexpr float TileWorldHeight = 5.f; //max height of terrain
 
     const auto heightAtIndex = [&](std::uint32_t i)
         {
             return (static_cast<float>(heightmap[i]) / 255.f) * TileWorldHeight;
         };
 
-
-    //TODO do we want to leave all entities at 0,0,0 and set the verts in absolute space?
-    //if we offset the entity by chunk position we get the added bonus of proper frustum culling
-    //of any entities parented to the chunk entity
 
     std::vector<float> verts;
     std::vector<std::uint32_t> indices;
@@ -296,14 +371,13 @@ bool GKGameState::loadMap(const std::string& path)
         {
             const std::int32_t chunkIdx = ((chunkX * ChunkSize) + (chunkY * ChunkRowSize)) * stride;
 
+            const glm::vec3 ChunkPos(chunkX * ChunkSize * TileWorldSize, 0.f, -(chunkY * ChunkSize * TileWorldSize));
+
             for (auto tileY = 0; tileY < ChunkSize; ++tileY)
             {
                 for (auto tileX = 0; tileX < ChunkSize; ++tileX)
                 {
                     const auto tileIdx = ((tileX + (tileY * HeightMapSize)) * stride) + chunkIdx;
-
-                    debugArray[tileIdx] = heightmap[tileIdx];
-
 
                     const float x0 = (static_cast<float>(chunkX * ChunkSize) + tileX) * TileWorldSize;
                     const float z0 = -static_cast<float>((chunkY * ChunkSize) + tileY) * TileWorldSize;
@@ -333,10 +407,22 @@ bool GKGameState::loadMap(const std::string& path)
                     const auto baseIndex = vertexCount;
                     vertexCount += 4;
 
-                    addVertex(v0, cro::Colour::White, norm);
-                    addVertex(v1, cro::Colour::White, norm);
-                    addVertex(v2, cro::Colour::White, norm);
-                    addVertex(v3, cro::Colour::White, norm);
+                    cro::Colour c = cro::Colour::Green;
+                    switch (static_cast<std::int32_t>(std::floor(avgHeight)))
+                    {
+                    default: break;
+                    case 0:
+                        c = cro::Colour::Blue;
+                        break;
+                    case 1:
+                        c = cro::Colour::Yellow;
+                        break;
+                    }
+
+                    addVertex(v0 - ChunkPos, c, norm);
+                    addVertex(v1 - ChunkPos, c, norm);
+                    addVertex(v2 - ChunkPos, c, norm);
+                    addVertex(v3 - ChunkPos, c, norm);
 
                     indices.push_back(baseIndex);
                     indices.push_back(baseIndex + 1);
@@ -346,15 +432,25 @@ bool GKGameState::loadMap(const std::string& path)
                     indices.push_back(baseIndex + 3);
                 }
             }
+
+            createChunk(verts, indices, vertexCount, ChunkPos);
+            verts.clear();
+            indices.clear();
+            vertexCount = 0;
         }
     }
 
-    //auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::BuiltIn::VertexLit, cro::ShaderResource::BuiltInFlags::VertexColour);
 
-    m_resources.shaders.loadFromString(0, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), Frag, "#define VERTEX_COLOUR\n");
-    auto matID = m_resources.materials.add(m_resources.shaders.get(0));
-    auto material = m_resources.materials.get(matID);
-    
+    m_inputTexture.create(HeightMapSize, HeightMapSize, heightmap.getFormat());
+    m_inputTexture.update(heightmap.data());
+
+
+    return true;
+}
+
+void GKGameState::createChunk(const std::vector<float>& verts, const std::vector<std::uint32_t>& indices, std::uint32_t vertexCount, glm::vec3 chunkPos)
+{
+    auto material = m_resources.materials.get(MaterialID::Terrain);
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal, 1, GL_TRIANGLES));
     auto* meshData = &m_resources.meshes.getMesh(meshID);
@@ -370,24 +466,13 @@ bool GKGameState::loadMap(const std::string& path)
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    meshData->boundingBox = { {0.f, 0.f, 0.f}, {256.f * TileWorldSize, 10.f, -256.f * TileWorldSize} };
+    meshData->boundingBox = { {0.f, 0.f, 0.f}, {ChunkCount * TileWorldSize, TileWorldHeight, -ChunkCount * TileWorldSize} };
     meshData->boundingSphere = meshData->boundingBox;
 
-    //temp - for now we'll stick all the verts on here to check rendering
     cro::Entity entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setPosition(glm::vec3(0.f, 0.f, 0.f));
+    entity.addComponent<cro::Transform>().setPosition(chunkPos);
     entity.addComponent<cro::Model>(*meshData, material);
+    //entity.getComponent<cro::Model>().setHidden(true);
 
-
-
-
-    m_inputTexture.create(HeightMapSize, HeightMapSize, heightmap.getFormat());
-    m_inputTexture.update(heightmap.data());
-
-    m_loadedTexture.create(HeightMapSize, HeightMapSize, heightmap.getFormat());
-    m_loadedTexture.update(debugArray.data());
-
-
-
-    return true;
+    m_chunkEnts.push_back(entity);
 }

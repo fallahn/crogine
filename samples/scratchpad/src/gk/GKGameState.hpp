@@ -29,6 +29,13 @@ private:
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
+    cro::Entity m_playerPoint;
+    cro::Entity m_overheadCam;
+    cro::RenderTexture m_overheadTexture;
+    cro::Texture m_inputTexture;
+
+    std::vector<cro::Entity> m_chunkEnts;
+
     void addSystems();
     void loadAssets();
     void createScene();
@@ -36,8 +43,5 @@ private:
 
 
     bool loadMap(const std::string&);
-
-    cro::Texture m_inputTexture;
-    cro::Texture m_loadedTexture;
-
+    void createChunk(const std::vector<float>&, const std::vector<std::uint32_t>&, std::uint32_t vertexCount, glm::vec3 pos);
 };
