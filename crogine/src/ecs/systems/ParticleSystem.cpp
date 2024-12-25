@@ -329,6 +329,13 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     //        }
     //        ImGui::End();
     //    });
+    addStats([&]() 
+        {
+            for (auto i = 0u; i < m_drawLists.size(); ++i)
+            {
+                ImGui::Text("Visible particle systems to Camera %lu: %lu", i, m_drawLists[i].size());
+            }        
+        });
 #endif
 }
 
@@ -427,8 +434,6 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 #ifdef USE_PARALLEL_PROCESSING
     );
 #endif
-
-    DPRINT("Visible particle Systems", std::to_string(drawlist[0].size()));
 }
 
 void ParticleSystem::process(float dt)

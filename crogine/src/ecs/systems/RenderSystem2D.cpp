@@ -39,6 +39,10 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
 
+#ifdef CRO_DEBUG_
+#include <crogine/gui/Gui.hpp>
+#endif
+
 #include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
 
@@ -79,6 +83,16 @@ RenderSystem2D::RenderSystem2D(MessageBus& mb)
     //load default shaders
     m_colouredShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Coloured);
     m_texturedShader.loadFromString(Shaders::Sprite::Vertex, Shaders::Sprite::Textured, "#define TEXTURED\n");
+
+#ifdef CRO_DEBUG_
+    addStats([&]() 
+        {
+            for (auto i = 0u; i < m_drawLists.size(); ++i)
+            {
+                ImGui::Text("Visible 2D entities to Camera %lu: %lu", i, m_drawLists[i].size());
+            }
+        });
+#endif
 }
 
 RenderSystem2D::~RenderSystem2D()
@@ -156,8 +170,6 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
 #ifdef USE_PARALLEL_PROCESSING
     );
 #endif
-
-    DPRINT("Visible 2D ents", std::to_string(drawlist.size()));
 
     if (m_needsSort)
     {

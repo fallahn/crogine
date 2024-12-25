@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,11 +27,13 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/DebugInfo.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
+#include <crogine/gui/Gui.hpp>
 
 using namespace cro;
 
@@ -39,11 +41,25 @@ DebugInfo::DebugInfo(MessageBus& mb)
     : System(mb, typeid(DebugInfo))
 {
     requireComponent<Transform>();
+
+    addStats([&]() 
+        {
+            ImGui::Text("%lu entities in scene %lu", getEntities().size(), getScene()->getInstanceID());
+            if (ImGui::CollapsingHeader("Entity List"))
+            {
+                for (const auto& s : m_debugLines)
+                {
+                    ImGui::Text("%s", s.c_str());
+                }
+            }
+        });
 }
 
 //public
 void DebugInfo::process(float)
 {
+    m_debugLines.clear();
+
     auto& entities = getEntities();
     for (auto& e : entities)
     {
@@ -57,6 +73,6 @@ void DebugInfo::process(float)
 
         op += " World position: " + std::to_string(wtx[3][0]) + ", " + std::to_string(wtx[3][1]);
 
-        Console::printStat("Entity " + std::to_string(e.getIndex()), op);
+        m_debugLines.push_back("Entity " + std::to_string(e.getIndex()) + ": " + op);
     }
 }

@@ -43,6 +43,10 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Frustum.hpp>
 
+#ifdef CRO_DEBUG_
+#include <crogine/gui/Gui.hpp>
+#endif
+
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -75,6 +79,18 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 {
     requireComponent<Transform>();
     requireComponent<Model>();
+
+#ifdef CRO_DEBUG_
+    addStats([&]() 
+        {
+            for (auto i = 0u; i < m_drawLists.size(); ++i)
+            {
+                const auto sceneID = getScene()->getInstanceID();
+                const auto& dList = m_drawLists[i];
+                ImGui::Text("Visisble entities in scene %lu, to Camera %lu: %lu", sceneID, i, dList[0].size());
+            }        
+        });
+#endif
 }
 
 //public
@@ -97,9 +113,8 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     
     auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
-    DPRINT("Visible 3D ents in Scene " + std::to_string(getScene()->getInstanceID()) 
-        + ", Camera " + std::to_string(cameraEnt.getIndex()), std::to_string(m_drawLists[camComponent.getDrawListIndex()][0].size()));
-    //DPRINT("Total ents", std::to_string(entities.size()));
+    //DPRINT("Visible 3D ents in Scene " + std::to_string(getScene()->getInstanceID()) 
+    //    + ", Camera " + std::to_string(cameraEnt.getIndex()), std::to_string(m_drawLists[camComponent.getDrawListIndex()][0].size()));
 
     //sort lists by depth
     //flag values make sure transparent materials are rendered last

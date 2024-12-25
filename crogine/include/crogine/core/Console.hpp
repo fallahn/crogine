@@ -132,6 +132,7 @@ namespace cro
         /*!
         \brief Prints the given stat and value to the Stats tab in the console window
         */
+        [[deprecated("Prefer GuiClient::addStats()")]]
         static void printStat(const std::string& name, const std::string& value);
 
         /*!
@@ -154,10 +155,11 @@ namespace cro
         friend class App;
         friend class ConsoleClient;
 
-        static std::vector<std::string> m_debugLines;
-
         static void addCommand(const std::string& name, const Command& cmd, const ConsoleClient* owner);
         static void removeCommands(const ConsoleClient*); //removes all commands belonging to the given client
+
+        static void addStats(const std::function<void()>&, const GuiClient*);
+        static void removeStats(const GuiClient*);
 
         static void addConsoleTab(const std::string&, const std::function<void()>&, const GuiClient*);
         static void removeConsoleTab(const GuiClient*);

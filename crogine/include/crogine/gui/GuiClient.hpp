@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -75,6 +75,21 @@ namespace cro
         void registerWindow(const std::function<void()>& windowFunc, bool isDebug = false) const;
 
         /*!
+        \brief Registers a function to be drawn in the Stats tab of the console window.
+        Similar to registerConsoleTab(), though specifically targets the Stats tab. As
+        such the function should contains only draw commands and omit calls to Begin() and End()
+        \param func A std::function containing the list of draw commands to be displayed on
+        the stats tab.
+        */
+        void addStats(const std::function<void()>& func) const;
+
+
+        /*!
+        \breif Removes all stats functions registered by this state.
+        */
+        void removeStats() const;
+
+        /*!
         \brief Removes all ImGui windows currently registered by this state
         */
         void unregisterWindows() const;
@@ -85,6 +100,7 @@ namespace cro
         void unregisterConsoleTabs() const;
 
     private:
+        mutable bool m_wantsStatsRemoving = true;
         mutable bool m_wantsWindowsRemoving = true;
         mutable bool m_wantsTabsRemoving = true;
     };

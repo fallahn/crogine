@@ -971,6 +971,18 @@ void App::doImGui()
     }
 }
 
+void App::addStats(const std::function<void()>& f, const GuiClient* c)
+{
+    //errr why are we forwarding this to the console when it's a
+    //static func ew could be calling directly from GuiClient??
+    Console::addStats(f, c);
+}
+
+void App::removeStats(const GuiClient* c)
+{
+    Console::removeStats(c);
+}
+
 void App::addConsoleTab(const std::string& name, const std::function<void()>& func, const GuiClient* c)
 {
     Console::addConsoleTab(name, func, c);

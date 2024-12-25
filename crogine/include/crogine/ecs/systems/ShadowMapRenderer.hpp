@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,6 +34,10 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/DepthTexture.hpp>
+
+#ifdef CRO_DEBUG_
+#include <crogine/gui/GuiClient.hpp>
+#endif
 
 namespace cro
 {
@@ -86,7 +90,10 @@ namespace cro
     any camera without a valid depthBuffer will be skipped.
     \see Camera
     */
-    class CRO_EXPORT_API ShadowMapRenderer final : public cro::System, public cro::Renderable
+    class CRO_EXPORT_API ShadowMapRenderer final : public System, public Renderable
+#ifdef CRO_DEBUG_
+        , public GuiClient
+#endif
     {
     public:
         /*!
@@ -140,6 +147,6 @@ namespace cro
 
         void render();
 
-        void onEntityAdded(cro::Entity) override;
+        void onEntityAdded(Entity) override;
     };
 }

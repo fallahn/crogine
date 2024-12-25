@@ -18,6 +18,7 @@
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/DebugInfo.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -213,6 +214,7 @@ void GKGameState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    //m_gameScene.addSystem<cro::DebugInfo>(mb);
 
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);

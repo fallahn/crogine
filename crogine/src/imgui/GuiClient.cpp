@@ -34,6 +34,11 @@ using namespace cro;
 
 GuiClient::~GuiClient()
 {
+    if (m_wantsStatsRemoving)
+    {
+        App::removeStats(this);
+    }
+    
     if (m_wantsTabsRemoving)
     {
         App::removeConsoleTab(this);
@@ -61,6 +66,17 @@ void GuiClient::registerWindow(const std::function<void()>& f, bool isDebug) con
     {
         LogW << "Registered window with isDebug flag set to true, but r_drawDebugWindows is currently false." << std::endl;
     }
+}
+
+void GuiClient::addStats(const std::function<void()>& func) const
+{
+    App::addStats(func, this);
+}
+
+void GuiClient::removeStats() const
+{
+    App::removeStats(this);
+    m_wantsStatsRemoving = false;
 }
 
 void GuiClient::unregisterWindows() const
