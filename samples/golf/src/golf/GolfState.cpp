@@ -4727,6 +4727,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::FlagHit:
         {
+            //this packet is only ever sent to the rekative client
+            //so we can be sure this is only ever for us.
+
             auto data = evt.packet.as<BullHit>();
             data.player = std::clamp(data.player, std::uint8_t(0), ConstVal::MaxPlayers);
             if (!m_sharedData.localConnectionData.playerData[data.player].isCPU)
@@ -4737,7 +4740,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 Achievements::incrementStat(StatStrings[StatID::FlagHits]);
                 Achievements::setActive(active);
             }
-
+            //TODO this needs to be dropped for all clients, not just the one receiving this
+            //packet - however we need to do it in this class to be able to use the timer.
             Timeline::addEvent(Timeline::Event::BeefStick, m_strokeTimer);
         }
         break;

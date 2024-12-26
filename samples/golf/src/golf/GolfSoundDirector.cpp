@@ -686,7 +686,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         {
                             playSoundDelayed(AudioID::BigStick, data.position, 2.2f, 1.f, MixerChannel::Voice);
                         }*/
-                        hadBeefstick = true;
+                        hadBeefstick = true; //this allows us to wait for the BallLanded event to play the beefstick voice
+                        Social::awardXP(25, XPStringID::BeefStick);
                     }
                     break;
                 default:

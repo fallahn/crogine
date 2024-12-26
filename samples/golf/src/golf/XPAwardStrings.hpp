@@ -75,6 +75,7 @@ struct XPStringID final
 
         FIR,
         GIR,
+        BeefStick,
 
         Count
     };
@@ -121,5 +122,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     "Hole Winner",
 
     "Fairway In Regulation",
-    "Green In Regulation"
+    "Green In Regulation",
+
+    "Beef Stick"
 };

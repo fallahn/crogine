@@ -320,7 +320,7 @@ void FreePlayState::buildScene()
     //decription text
     float descPos = -36.f;
     cro::String desc = 
-R"(Play on any course, in 10 different game modes including: 
+R"(Play on any course, in many different game modes including: 
 Stroke Play, Match Play, Skins, Stableford, Elimination, Multi-Target,
 Nearest the Pin and more... or dive straight into a random 9 holes)";
 
