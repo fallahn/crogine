@@ -750,7 +750,7 @@ void NewsState::buildScene()
                 }
             });
 
-    auto fb = createButton({ 76.f, -4.f }, "facebook");
+    auto fb = createButton({ 78.f, -4.f }, "facebook");
     fb.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex);
     fb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
@@ -872,7 +872,7 @@ void NewsState::buildScene()
                 }
             });
 
-    auto fb = createButton({ 76.f, -4.f }, "facebook");
+    auto fb = createButton({ 78.f, -4.f }, "facebook");
     fb.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex);
     fb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)

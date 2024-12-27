@@ -1016,19 +1016,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 });
         confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
         
         //freeplay
         entity = createButton("Free Play");

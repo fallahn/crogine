@@ -3139,7 +3139,23 @@ void MenuState::launchQuickPlay()
     //start a local server and connect
     if (quickConnect(m_sharedData))
     {
-        m_sharedData.courseIndex = cro::Util::Random::value(0u, m_courseIndices[Range::Official].count - 1);
+        //we want this to last the entire run of the game, so statics
+        //are probably amost (probably) acceptable here (this stops the
+        //randomiser picking the same course twice in a row and actually
+        //feels more random...)
+        static std::vector<std::size_t> indices;
+        if (indices.empty())
+        {
+            for (auto i = m_courseIndices[Range::Official].start; i < m_courseIndices[Range::Official].count; ++i)
+            {
+                indices.push_back(i);
+            }
+            std::shuffle(indices.begin(), indices.end(), cro::Util::Random::rndEngine);
+        }
+        static std::size_t indexIndex = 0;
+        indexIndex = (indexIndex + 1) % indices.size();
+
+        m_sharedData.courseIndex = indices[indexIndex];
         m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
 
         //set the course
