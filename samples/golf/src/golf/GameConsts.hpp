@@ -993,6 +993,7 @@ struct SkyboxMaterials final
     std::int32_t horizon = -1;
     std::int32_t horizonSun = -1;
     std::int32_t skinned = -1;
+    std::int32_t glass = -1;
     
     //if loading the skybox finds a 
     //sun position this is set to true
@@ -1009,6 +1010,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
     float stars = 0.f;
+    bool loadClouds = true;
 
     cro::ConfigFile cfg;
 
@@ -1046,6 +1048,10 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                 {
                     materials.requestLensFlare = true;
                     materials.sunPos = p.getValue<glm::vec3>();
+                }
+                else if (name == "clouds")
+                {
+                    loadClouds = p.getValue<bool>();
                 }
             }
         }
@@ -1120,8 +1126,26 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
 
                 for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
                 {
-                    applyMaterialData(md, material, i);
-                    entity.getComponent<cro::Model>().setMaterial(i, material);
+                    if (md.hasTag(i, "glass"))
+                    {
+                        if (materials.glass != -1)
+                        {
+                            auto glassMat = resources.materials.get(materials.glass);
+                            applyMaterialData(md, glassMat, i);
+                            entity.getComponent<cro::Model>().setMaterial(i, glassMat);
+                        }
+                        else
+                        {
+                            LogW << "Model " << model.path << " has glass material but no material available." << std::endl;
+                            applyMaterialData(md, material, i);
+                            entity.getComponent<cro::Model>().setMaterial(i, material);
+                        }
+                    }
+                    else
+                    {
+                        applyMaterialData(md, material, i);
+                        entity.getComponent<cro::Model>().setMaterial(i, material);
+                    }
                 }
             }
 
@@ -1147,7 +1171,8 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
     skyScene.setStarsAmount(stars);
 
     cro::Entity cloudEnt;
-    if (md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))
+    if (loadClouds &&
+        md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))
     {
         auto entity = skyScene.createEntity();
         entity.addComponent<cro::Transform>();

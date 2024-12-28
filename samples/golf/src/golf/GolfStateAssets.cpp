@@ -267,10 +267,9 @@ void GolfState::loadMap()
                 if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
                 {
                     skyboxPath = nightPath;
-
-                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(SkyNight);
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(SkyNight);
                 }
+                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(SkyNight);
+                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(SkyNight);
             }
         }
         else if (name == "shrubbery")
@@ -355,6 +354,7 @@ void GolfState::loadMap()
     materials.horizon = m_materialIDs[MaterialID::Horizon];
     materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
     materials.skinned = m_materialIDs[MaterialID::CelTexturedSkinned];
+    materials.glass = m_materialIDs[MaterialID::Glass];
 
     auto cloudRing = loadSkybox(skyboxPath, m_skyScene, m_resources, materials);
     if (cloudRing.isValid()
@@ -1365,7 +1365,12 @@ void GolfState::loadMap()
     shader = &m_resources.shaders.get(ShaderID::Slope);
     m_windBuffer.addShader(*shader);
 
-    createClouds();
+    //only create overhead clouds if the skybox
+    //requested we create any (and created the cloud ring
+    if (cloudRing.isValid())
+    {
+        createClouds();
+    }
 
     //reserve the slots for each hole score
     for (auto& client : m_sharedData.connectionData)
@@ -1395,9 +1400,7 @@ void GolfState::loadMap()
         std::fill(data.holeTimes.begin(), data.holeTimes.end(), 0.f);
     }
 
-    
-    
-    
+
     const auto applySaveData = [&](std::uint64_t& holeIndex, std::vector<std::uint8_t>& scores, std::int32_t& mulliganCount)
         {
             m_currentHole = std::min(holeStrings.size() - 1, std::size_t(holeIndex));
@@ -1438,7 +1441,6 @@ void GolfState::loadMap()
             }
         };
     
-
     
     //if this is a career game see if we had a round in progress
     if (m_sharedData.gameMode == GameMode::FreePlay)
