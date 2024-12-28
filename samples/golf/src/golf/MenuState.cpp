@@ -3654,8 +3654,17 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 auto strClientCount = std::to_string(m_connectedClientCount);
                 auto strGameType = std::to_string(ConstVal::MaxClients) + " - " + ScoreTypes[m_sharedData.scoreType];
 
-                Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
-
+                switch (m_sharedData.quickplayOpponents)
+                {
+                default: break;
+                case 3:
+                    Social::setStatus(Social::InfoID::Menu, { "Launching a Quick Play Round" });
+                    break;
+                case 0:
+                    Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
+                    Social::setGroup(m_sharedData.clientConnection.hostID, m_connectedPlayerCount);
+                    break;
+                }
                 //hide the ticker if not stroke play
                 if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
                 {
