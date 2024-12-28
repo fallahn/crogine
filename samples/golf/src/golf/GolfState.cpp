@@ -2108,7 +2108,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.action =
                     [&](cro::Entity e, float)
                 {
-                    formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
+                    formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, m_currentPlayer.terrain == TerrainID::Green);
 
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
@@ -2495,7 +2495,7 @@ bool GolfState::simulate(float dt)
             cmd.targetFlags = CommandID::UI::PinDistance;
             cmd.action = [&, ballDist, isMultiTarget](cro::Entity e, float)
                 {
-                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, isMultiTarget);
+                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, false, isMultiTarget);
 
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
@@ -6402,7 +6402,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action =
         [&](cro::Entity e, float)
     {
-        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
+        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, player.terrain == TerrainID::Green);
 
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);
@@ -7137,11 +7137,15 @@ void GolfState::updateActor(const ActorInfo& update)
         m_greenCam.getComponent<cro::Callback>().getUserData<MiniCamData>().targetSize =
             interpolate(MiniCamData::MinSize, MiniCamData::MaxSize, smoothstep(MiniCamData::MinSize, MiniCamData::MaxSize, ballDist + 0.4f)); //pad the dist so ball is always in view
 
+
+        auto terrain = m_collisionMesh.getTerrain(update.position).terrain;
+
         //this is the active ball so update the UI
         cmd.targetFlags = CommandID::UI::PinDistance;
-        cmd.action = [&, ballDist, isMultiTarget](cro::Entity e, float)
+        cmd.action = [&, ballDist, terrain, isMultiTarget](cro::Entity e, float)
         {
-            formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, isMultiTarget);
+            //hmmm this is actually wrong, because it doesn't use the current (lagged) output of the interpolation
+            formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, terrain == TerrainID::Green, isMultiTarget);
 
             auto bounds = cro::Text::getLocalBounds(e);
             bounds.width = std::floor(bounds.width / 2.f);

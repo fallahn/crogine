@@ -1194,8 +1194,18 @@ static inline void formatElevationString(float distance, cro::Text& target, bool
             std::stringstream ss;
             ss.precision(2);
             ss << "Elevation: ";
-            ss << std::fixed << (distance * ToYards);
-            ss << "yds";
+
+            distance *= ToYards;
+            if (distance < 1 && distance > -1)
+            {
+                ss << std::fixed << ((distance * ToFeet) * ToInches);
+                ss << "in";
+            }
+            else
+            {
+                ss << std::fixed << distance;
+                ss << "yds";
+            }
 
             target.setString(ss.str());
         }
@@ -1247,13 +1257,14 @@ static inline void formatElevationString(float distance, cro::Text& target, bool
     }
 }
 
-static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool decimal, bool isTarget = false)
+static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool decimal, bool onGreen, bool isTarget = false)
 {
     const std::string Prefix = isTarget ? "Target: " : "Pin: ";
 
     if (imperial)
     {
-        if (distance > 7) //TODO this should read the putter value (?)
+        //if (distance > 7) //TODO this should read the putter value (?)
+        if (!onGreen)
         {
             auto dist = static_cast<std::int32_t>(std::round(distance * ToYards));
             target.setString(Prefix + std::to_string(dist) + "yds");
@@ -1274,9 +1285,17 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
                 std::stringstream ss;
                 ss.precision(2);
                 ss << "Distance: ";
-                ss << std::fixed << (distance * ToYards);
-                ss << "yds";
 
+                if (!onGreen)
+                {
+                    ss << std::fixed << (distance * ToYards);
+                    ss << "yds";
+                }
+                else
+                {
+                    ss << std::fixed << ((distance * ToYards) * ToFeet);
+                    ss << "ft";
+                }
                 target.setString(ss.str());
             }
             else

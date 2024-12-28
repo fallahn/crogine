@@ -855,7 +855,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 {
                     float ballDist = 
                         glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
-                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
+                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, false);
 
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
@@ -2843,7 +2843,7 @@ void DrivingState::createBall()
                 float ballDist =
                     glm::length(pos - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
 
-                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
+                formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, false);
 
                 auto bounds = cro::Text::getLocalBounds(e);
                 bounds.width = std::floor(bounds.width / 2.f);
@@ -3417,7 +3417,7 @@ void DrivingState::setHole(std::int32_t index)
     cmd.action = [&, index](cro::Entity e, float)
     {
         float ballDist = glm::length(PlayerPosition - m_holeData[index].pin);
-        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance);
+        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, m_sharedData.decimateDistance, false);
 
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);
