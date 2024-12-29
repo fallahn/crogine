@@ -1001,6 +1001,7 @@ struct SkyboxMaterials final
     //mode to act on it.
     bool requestLensFlare = false;
     glm::vec3 sunPos = glm::vec3(0.f);
+    cro::Colour sunColour = cro::Colour::White;
 };
 
 //returns the entity with the cloud ring (so we can apply material)
@@ -1048,6 +1049,10 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                 {
                     materials.requestLensFlare = true;
                     materials.sunPos = p.getValue<glm::vec3>();
+                }
+                else if (name == "sun_colour")
+                {
+                    materials.sunColour = p.getValue<cro::Colour>();
                 }
                 else if (name == "clouds")
                 {

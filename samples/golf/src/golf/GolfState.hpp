@@ -337,7 +337,7 @@ private:
     void loadModels();
     void loadSpectators();
     void loadMap();
-    void initAudio(bool loadTrees);
+    void initAudio(bool loadTrees, bool loadPlane);
 
     void addSystems();
     void buildScene();

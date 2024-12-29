@@ -94,6 +94,24 @@ void GolfState::loadAssets()
     loadModels();
 
     loadMap();
+
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("Sun");
+
+    //        static float c[3] = { 1.f };
+
+    //        if (ImGui::ColorPicker3("Sun", c))
+    //        {
+    //            cro::Colour col(c[0], c[1], c[2], 1.f);
+    //            m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(col);
+    //            m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(col);
+
+    //        }
+    //        ImGui::Text("R %3.2f, G %3.2f, B %3.2f", c[0], c[1], c[2]);
+
+    //        ImGui::End();
+    //    });
 }
 
 void GolfState::loadMap()
@@ -369,6 +387,14 @@ void GolfState::loadMap()
         material.setProperty("u_skyColourBottom", m_skyScene.getSkyboxColours().middle);
         cloudRing.getComponent<cro::Model>().setMaterial(0, material);
     }
+
+
+    if (!m_sharedData.nightTime)
+    {
+        m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(materials.sunColour);
+        m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(materials.sunColour);
+    }
+
 
     if (materials.requestLensFlare
         && m_sharedData.weatherType == WeatherType::Clear)
@@ -1506,7 +1532,7 @@ void GolfState::loadMap()
         m_mulliganCount = mulliganCount;
     }
 
-    initAudio(theme.treesets.size() > 2);
+    initAudio(theme.treesets.size() > 2, cloudRing.isValid());
 }
 
 void GolfState::loadMaterials()
@@ -2480,7 +2506,7 @@ void GolfState::loadSpectators()
     std::shuffle(m_spectatorModels.begin(), m_spectatorModels.end(), cro::Util::Random::rndEngine);
 }
 
-void GolfState::initAudio(bool loadTrees)
+void GolfState::initAudio(bool loadTrees, bool loadPlane)
 {
     if (cro::AudioMixer::hasAudioRenderer())
     {
@@ -2562,7 +2588,8 @@ void GolfState::initAudio(bool loadTrees)
                 //if the audioscape has different audio but hey...
                 cro::ModelDefinition md(m_resources);
                 cro::Entity planeEnt;
-                if (md.loadFromFile("assets/golf/models/plane.cmt"))
+                if (loadPlane &&
+                    md.loadFromFile("assets/golf/models/plane.cmt"))
                 {
                     static constexpr glm::vec3 Start(-32.f, 60.f, 20.f);
                     static constexpr glm::vec3 End(352.f, 60.f, -220.f);
