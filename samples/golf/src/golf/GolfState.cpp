@@ -727,7 +727,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
             m_textChat.toggleWindow(false, true, false);
             break;
-        //case SDLK_F6:
+        case SDLK_F6:
         //    //logCSV();
         //{
         //    auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
@@ -737,7 +737,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         //    msg->club = getClub();
         //    msg->position = m_currentPlayer.position;
         //}
-        //    break;
+            break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
             {

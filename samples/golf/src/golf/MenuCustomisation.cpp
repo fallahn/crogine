@@ -524,7 +524,8 @@ void MenuState::createBallScene()
             {
                 entity = m_backgroundScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.001f, 0.f });
-                entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
+                entity.getComponent<cro::Transform>().setScale(glm::vec3(15.f));
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.06f); //hides the crappy horizon
                 m_profileData.grassDef->createModel(entity);
                 baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);

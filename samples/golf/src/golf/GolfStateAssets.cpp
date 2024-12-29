@@ -78,11 +78,14 @@ namespace
 
 void GolfState::loadAssets()
 {
+    std::string skyboxPath = "assets/golf/images/skybox/billiards/trophy.ccm";
+
     if (m_sharedData.nightTime)
     {
+        skyboxPath = "assets/golf/images/skybox/night/sky.ccm";
         m_lightVolumeDefinition.loadFromFile("assets/golf/models/light_sphere.cmt");
     }
-    if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm"))
+    if (m_reflectionMap.loadFromFile(skyboxPath))
     {
         m_reflectionMap.generateMipMaps();
     }
