@@ -79,10 +79,11 @@ namespace
 void GolfState::loadAssets()
 {
     std::string skyboxPath = "assets/golf/images/skybox/billiards/trophy.ccm";
+    //std::string skyboxPath = "assets/golf/courses/course_10/cmap/01/d/1/cmap.ccm";
 
     if (m_sharedData.nightTime)
     {
-        skyboxPath = "assets/golf/images/skybox/night/sky.ccm";
+        //skyboxPath = "assets/golf/images/skybox/night/sky.ccm";
         m_lightVolumeDefinition.loadFromFile("assets/golf/models/light_sphere.cmt");
     }
     if (m_reflectionMap.loadFromFile(skyboxPath))

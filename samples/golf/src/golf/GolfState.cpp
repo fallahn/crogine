@@ -728,6 +728,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_textChat.toggleWindow(false, true, false);
             break;
         case SDLK_F6:
+            //cro::Console::doCommand("build_cubemaps");
         //    //logCSV();
         //{
         //    auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
