@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1138,7 +1138,7 @@ void ProfileState::buildScene()
     topDarkColour.getComponent<cro::UIInput>().setPrevIndex(ButtonTopLight, ButtonSkinTone);
 
 
-    auto bottomLightColour = createButton("colour_highlight", glm::vec2(17.f, 69.f), ButtonBottomLight);
+    auto bottomLightColour = createButton("colour_highlight", glm::vec2(17.f, 70.f), ButtonBottomLight);
     bottomLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -1160,7 +1160,7 @@ void ProfileState::buildScene()
     bottomLightColour.getComponent<cro::UIInput>().setNextIndex(ButtonBottomDark, ButtonSouthPaw);
     bottomLightColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescDown, ButtonTopLight);
 
-    auto bottomDarkColour = createButton("colour_highlight", glm::vec2(49.f, 69.f), ButtonBottomDark);
+    auto bottomDarkColour = createButton("colour_highlight", glm::vec2(49.f, 70.f), ButtonBottomDark);
     bottomDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
