@@ -1098,9 +1098,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             showOptions();
             break;
-        case SDLK_F11:
+        /*case SDLK_F11:
             cro::Console::doCommand("al_config");
-            break;
+            break;*/
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
@@ -3181,10 +3181,12 @@ void MenuState::launchTournament(std::int32_t tournamentID)
     {
         //reset the tournament. Do we want to store the previous
         //winner in a stat somewhere? EG the stat database?
-        m_sharedData.tournaments[tournamentID] = {};
+        //m_sharedData.tournaments[tournamentID] = {}; //don't do this, it erases the id
+        //m_sharedData.tournaments[tournamentID].id = tournamentID;
         resetTournament(m_sharedData.tournaments[tournamentID]);
         writeTournamentData(m_sharedData.tournaments[tournamentID]);
     }
+
 
     //if this is a brand new tournament set the initial clubset
     //else check if we need to invalidate it

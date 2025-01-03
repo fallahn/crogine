@@ -1666,7 +1666,8 @@ void TournamentState::createConfirmMenu(cro::Entity parent)
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy); //disable the input so we can't do anything while anim plays
 
-                m_sharedData.tournaments[tournamentID] = {};
+                //m_sharedData.tournaments[tournamentID] = {}; //don't do this it erases the ID
+                //m_sharedData.tournaments[tournamentID].id = tournamentID;
                 resetTournament(m_sharedData.tournaments[tournamentID]);
                 writeTournamentData(m_sharedData.tournaments[tournamentID]);
 
