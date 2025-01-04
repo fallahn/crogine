@@ -81,7 +81,7 @@ BEGIN
             VALUE "FileDescription", "Super Video Golf"
             VALUE "FileVersion", "1.19.0.0"
             VALUE "InternalName", "golf.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2024 Trederia Games"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Trederia Games"
             VALUE "OriginalFilename", "golf.exe"
             VALUE "ProductName", "Super Video Golf"
             VALUE "ProductVersion", "1.19.0.0"
