@@ -529,7 +529,7 @@ static inline float getViewScale(glm::vec2 size = GolfGame::getActiveTarget()->g
 {
     const float ratio = size.x / size.y;
 
-    if (ratio < 1.7)
+    if (ratio < 1.7f)
     {
         //4:3
         return std::min(8.f, std::floor(size.x / 512.f));
@@ -537,12 +537,12 @@ static inline float getViewScale(glm::vec2 size = GolfGame::getActiveTarget()->g
 
     if (ratio < 2.37f)
     {
-        //widescreen
-        return std::min(8.f, std::floor(size.x / 540.f));
+        //widescreen - clamp at 6x for 4k
+        return std::min(6.f, std::floor(size.x / 540.f));
     }
 
     //ultrawide
-    return std::min(8.f, std::floor(size.y / 360.f));
+    return std::min(6.f, std::floor(size.y / 360.f));
 }
 
 static inline void togglePixelScale(SharedStateData& sharedData, bool on)
