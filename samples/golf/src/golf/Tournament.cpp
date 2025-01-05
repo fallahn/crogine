@@ -36,7 +36,6 @@ source distribution.
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
-#include <limits>
 
 
 Tournament::Tournament()

@@ -33,6 +33,7 @@ source distribution.
 
 #include <array>
 #include <string>
+#include <limits>
 
 static inline const std::array<std::array<std::string, 4u>, 2u> TournamentCourses =
 {
