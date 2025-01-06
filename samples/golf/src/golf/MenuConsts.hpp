@@ -72,6 +72,7 @@ static inline const std::array<std::string, ScoreType::Count> ScoreTypes =
     "Elimination",
     "Clubset Shuffle",
     "Nearest the Pin",
+    "Nearest the Pin+",
     /*
     "Bingo Bango Bongo",
     "Longest Drive",
@@ -113,6 +114,7 @@ static inline const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "Scored as Stroke Play, however each player has\n2-4 \'lives\', depending on player count. Scoring par\nor worse on a hole loses 1 life, while scoring an\neagle or better awards 1 life. The game ends when\none player remains, or all holes have been played.\nMinimum 2 players, recommended for 4+ players.",
     "Each player has a Putter plus one random Wood,\nIron and Wedge. Scoring is regular Stroke Play.\nNote that these rules are ignored on putting\ncourses for obvious reasons.\n\nRecommended for 2-4 players.",
     "Each player has two strokes to get as near\nto the pin as possible. The winner is the player\nwith the shortest total distance. If the\nball goes in the cup the player forfeits that hole.\n\nGreat for casual play, minimum 2 players.",
+    "Play as Nearest The Pin, but each hole is worth\none point for the player who is nearest the pin.\nThe winner is the player with most points\nwhen the round ends.\n\nMinimum 2 players."
     /*
     "The first player on the green scores Bingo, the\nplayer closest to the pin when all players are on\nthe green scores Bango and first to hole out wins\nBongo. Not recommended for putting courses.",
     "Each player has one stroke to make the longest\ndrive possible while staying on the fairway.\nThe winner is the player with the longest total\ndistance.",
@@ -160,6 +162,7 @@ static constexpr cro::Colour LeaderboardTextLight(0xfff8e1ff);
 
 static constexpr float LeaderboardTextSpacing = 6.f;
 static constexpr float BackgroundAlpha = 0.7f;
+static constexpr float OverlayAlpha = 0.25f;
 static constexpr glm::vec2 LobbyTextRootPosition(8.f, 172.f);
 
 static constexpr float UIBarHeight = 16.f;
@@ -175,6 +178,7 @@ struct UIElement final
     glm::vec2 absolutePosition = glm::vec2(0.f); //absolute in units offset from relative position
     glm::vec2 relativePosition = glm::vec2(0.f); //normalised relative to screen size
     float depth = 0.f; //z depth
+    std::uint32_t characterSize = 0; //base size if text, multiplied by view scale (scrub only atm)
     std::function<void(cro::Entity)> resizeCallback;
 };
 static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
@@ -206,6 +210,8 @@ static const std::array<std::string, 5u> ShaderNames =
     "CRT Effect",
     "Cinematic"
 };
+
+bool quickConnect(struct SharedStateData&);
 
 static inline bool activated(const cro::ButtonEvent& evt)
 {

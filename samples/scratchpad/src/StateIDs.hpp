@@ -60,7 +60,12 @@ namespace States
             PseutheBackground,
             PseutheGame,
             PseutheMenu,
+            Scrub,
+            ScrubBackground,
+            ScrubAttract,
+            ScrubPause,
 
+            GKGame,
 
             Count
         };

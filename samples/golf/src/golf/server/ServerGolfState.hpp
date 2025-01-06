@@ -54,6 +54,7 @@ namespace sv
     private:
         std::int32_t m_returnValue;
         SharedData& m_sharedData;
+        bool m_ntpPro; //hack so we can use existing rules
         bool m_mapDataValid;
 
         std::vector<HoleData> m_holeData;

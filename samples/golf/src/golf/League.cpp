@@ -115,7 +115,8 @@ League::League(std::int32_t id, const SharedStateData& sd)
     m_lastIterationPosition (15),
     m_currentBest           (15),
     m_nemesis               (-1),
-    m_previousPosition      (17)
+    m_previousPosition      (17),
+    m_scoreCalculator       (sd.clubSet)
 {
     CRO_ASSERT(id < LeagueRoundID::Count, "");
 
@@ -378,7 +379,7 @@ void League::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar
     windChance = std::clamp(windChance, 1, 100);
     for (auto& player : m_players)
     {
-        calculateHoleScore(player, hole, par, overPar);
+        m_scoreCalculator.calculate(player, hole, par, overPar, m_holeScores[player.nameIndex]);
 
         if (cro::Util::Random::value(0, 99) < windChance)
         {
@@ -397,7 +398,7 @@ void League::retrofitHoleScores(const std::vector<std::int32_t>& parVals)
         {
             for (auto& player : m_players)
             {
-                calculateHoleScore(player, i, parVals[i], false);
+               m_scoreCalculator.calculate(player, i, parVals[i], false, m_holeScores[player.nameIndex]);
             }
             //LogI << "Retrofit " << parVals.size() << " scores for hole " << i+1 << std::endl;
             writeWhenDone = true;
@@ -408,6 +409,14 @@ void League::retrofitHoleScores(const std::vector<std::int32_t>& parVals)
     {
         updateDB();
     }
+}
+
+const LeaguePlayer& League::getPlayer(std::int32_t nameIndex) const
+{
+    auto r = std::find_if(m_players.begin(), m_players.end(), [nameIndex](const LeaguePlayer& p) {return p.nameIndex == nameIndex; });
+    CRO_ASSERT(r != m_players.end(), "");
+
+    return *r;
 }
 
 const cro::String& League::getPreviousResults(const cro::String& playerName) const
@@ -456,112 +465,6 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
 }
 
 //private
-void League::calculateHoleScore(LeaguePlayer& player, std::uint32_t hole, std::int32_t par, bool overPar)
-{
-    auto skill = player.skill;
-    if (overPar
-        && m_sharedData.clubSet != 2)
-    {
-        //have a little leniency on the player
-        skill++;
-    }
-
-    //CPU players exhibit better skill when playing with longer club sets
-    auto skillOffset = cro::Util::Random::value(0, 2) == 0 ? 0 : 1;
-    if (m_sharedData.clubSet == 1)
-    {
-        auto s = std::max(1, skill - 1);
-        skillOffset = cro::Util::Random::value(-s, s);
-    }
-    else if (m_sharedData.clubSet == 0)
-    {
-        skillOffset = cro::Util::Random::value(-skill, skill);
-    }
-
-    //calc aim accuracy
-    float aim = 1.f - AimSkill[SkillCentre + skillOffset];
-
-    //calc power accuracy
-    float power = 1.f - PowerSkill[SkillCentre + skillOffset];
-
-    float quality = aim * power;
-
-    //outlier for cock-up
-    if (cro::Util::Random::value(0, 49) < player.outlier)
-    {
-        float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
-        quality *= errorAmount;
-    }
-
-    //pass through active curve
-    quality = applyCurve(quality, MaxCurve - player.curve) * player.quality;
-
-
-    //calc ideal
-    float ideal = 3.f; //triple bogey
-    switch (par)
-    {
-    default:
-    case 2:
-        ideal += 1.f; //1 under par etc
-        break;
-    case 3:
-    case 4:
-        ideal += 2.f;
-        break;
-    case 5:
-        ideal += 3.f;
-        break;
-    }
-
-
-    //find range of triple bogey - ideal
-    float score = std::round(ideal * quality);
-    score -= 2.f; //average out to birdie
-
-    //then use the player skill chance to decide if we got an eagle
-    if (cro::Util::Random::value(1, 10) > skill)
-    {
-        score -= 1.f;
-    }
-
-    //add player score to player total
-    std::int32_t holeScore = -score;
-    holeScore += par;
-
-    //too many HIOs
-    if (holeScore == 1)
-    {
-        //players with skill 0 (0 good, 2 bad) + good clubs have better chance of keeping the HIO
-        //players with skill 2 and short clubs have worse chance of keeping the HIO
-        const auto hioSkill = (player.skill + (2 - m_sharedData.clubSet)) * 2;
-        if (cro::Util::Random::value(0, (3 + hioSkill)) != 0)
-        {
-            holeScore += std::max(1, (par - 2));
-        }
-    }
-
-    //make sure novice club sets rarely get better than a birdie
-    if (m_sharedData.clubSet == 0
-        && holeScore < (par - 1)
-        && cro::Util::Random::value(0, 2) != 0)
-    {
-        holeScore += cro::Util::Random::value(2, 4) / 2;
-    }
-
-    //there's a flaw in my logic here which means the result occasionally
-    //comes back as zero - rather than fix my logic I'm going to paste over the cracks.
-    if (holeScore == 0)
-    {
-        holeScore = std::max(2, par + cro::Util::Random::value(-1, 1));
-    }
-
-
-    //write this to the hole scores which get saved in a file / used to display on scoreboard
-    CRO_ASSERT(player.nameIndex != -1, "this shouldn't be a human player");
-    m_holeScores[player.nameIndex][hole] = holeScore;// +par;
-}
-
 void League::rollPlayers(bool resetScores)
 {
     std::int32_t nameIndex = 0;
@@ -1078,4 +981,198 @@ void League::updateDB()
             }
         }
     }
+}
+
+
+//------------Score Calculator---------//
+ScoreCalculator::ScoreCalculator(std::int32_t clubset)
+    : m_clubset (clubset)
+{
+
+}
+
+//public
+void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, std::int32_t par, bool overPar, HoleScores& holeScores) const
+{
+    auto skill = player.skill;
+    if (overPar
+        && m_clubset != 2)
+    {
+        //have a little leniency on the player
+        skill++;
+    }
+
+    //CPU players exhibit better skill when playing with longer club sets
+    auto skillOffset = cro::Util::Random::value(0, 2) == 0 ? 0 : 1;
+    if (m_clubset == 1)
+    {
+        auto s = std::max(1, skill - 1);
+        skillOffset = cro::Util::Random::value(-s, s);
+    }
+    else if (m_clubset == 0)
+    {
+        skillOffset = cro::Util::Random::value(-skill, skill);
+    }
+
+    //calc aim accuracy
+    const float aim = 1.f - AimSkill[SkillCentre + skillOffset];
+
+    //calc power accuracy
+    const float power = 1.f - PowerSkill[SkillCentre + skillOffset];
+
+    float quality = aim * power;
+
+    //outlier for cock-up
+    if (cro::Util::Random::value(0, 49) < player.outlier)
+    {
+        float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
+        quality *= errorAmount;
+    }
+
+    //pass through active curve
+    quality = applyCurve(quality, MaxCurve - player.curve) * player.quality;
+
+
+    //calc ideal
+    float ideal = 3.f; //triple bogey
+    switch (par)
+    {
+    default:
+    case 2:
+        ideal += 1.f; //1 under par etc
+        break;
+    case 3:
+    case 4:
+        ideal += 2.f;
+        break;
+    case 5:
+        ideal += 3.f;
+        break;
+    }
+
+
+    //find range of triple bogey - ideal
+    float score = std::round(ideal * quality);
+    score -= 2.f; //average out to birdie
+
+    //then use the player skill chance to decide if we got an eagle
+    if (cro::Util::Random::value(0, 10) > skill)
+    {
+        score -= 1.f;
+    }
+
+    //add player score to player total
+    std::int32_t holeScore = -score;
+    holeScore += par;
+
+    //too many HIOs
+    if (holeScore == 1)
+    {
+        //players with skill 0 (0 good, 2 bad) + good clubs have better chance of keeping the HIO
+        //players with skill 2 and short clubs have worse chance of keeping the HIO
+        const auto hioSkill = (player.skill + (2 - m_clubset)) * 2;
+        if (cro::Util::Random::value(0, (3 + hioSkill)) != 0)
+        {
+            holeScore += std::max(1, (par - 2));
+        }
+        else
+        {
+            //check the previous hole and increase it anyway if it
+            //was a HIO just so we don't get consecutive HIOs
+            if (hole > 0)
+            {
+                if (holeScores[hole - 1] == 1)
+                {
+                    holeScore += cro::Util::Random::value(0, 4) == 0 ? 1 : 2;
+                }
+            }
+        }
+    }
+
+    //make sure novice club sets rarely get better than a birdie
+    //and reduce the overall chance of eagles on higher clubs
+    if (holeScore < (par - 1))
+    {
+        switch (m_clubset)
+        {
+        default:
+        case 0: //novice
+            if (cro::Util::Random::value(0, 2) != 0)
+            {
+                holeScore += cro::Util::Random::value(2, 4) / 2;
+            }
+            break;
+        case 1: //expert
+            if (cro::Util::Random::value(0, 1) != 0)
+            {
+                holeScore += cro::Util::Random::value(2, 4) / 2;
+            }
+            break;
+        case 2: //pro
+            if (cro::Util::Random::value(0, 1) != 0)
+            {
+                holeScore += cro::Util::Random::value(0, 4) / 2;
+            }
+            break;
+        }
+    }
+    /*if (m_sharedData.clubSet == 0
+        && holeScore < (par - 1)
+        && cro::Util::Random::value(0, 2) != 0)
+    {
+        holeScore += cro::Util::Random::value(2, 4) / 2;
+    }*/
+
+
+    //there's a flaw in my logic here which means the result occasionally
+    //comes back as zero - rather than fix my logic I'm going to paste over the cracks.
+    if (holeScore == 0)
+    {
+        holeScore = std::max(2, par + cro::Util::Random::value(-1, 1));
+    }
+
+
+    //write this to the hole scores which get saved in a file / used to display on scoreboard
+    CRO_ASSERT(player.nameIndex != -1, "this shouldn't be a human player");
+    holeScores[hole] = holeScore;// +par;
+}
+
+
+
+//----------Friendly Player------------//
+FriendlyPlayers::FriendlyPlayers(std::int32_t clubset)
+    : m_scoreCalculator   (clubset)
+{
+
+}
+
+//public
+void FriendlyPlayers::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance)
+{
+    windChance = std::clamp(windChance, 1, 100);
+    for (auto& player : m_players)
+    {
+        m_scoreCalculator.calculate(player, hole, par, overPar, m_holeScores[player.nameIndex]);
+
+        if (cro::Util::Random::value(0, 99) < windChance)
+        {
+            m_holeScores[player.nameIndex][hole]++;
+        }
+    }
+}
+
+void FriendlyPlayers::addPlayer(LeaguePlayer p)
+{
+    m_players.push_back(p);
+}
+
+void FriendlyPlayers::setHoleScores(std::int32_t playerNameIndex, const HoleScores& scores)
+{
+    m_holeScores[playerNameIndex] = scores;
+}
+
+const HoleScores& FriendlyPlayers::getHoleScores(std::int32_t playerNameIndex) const
+{
+    CRO_ASSERT(playerNameIndex > -1 && playerNameIndex < League::PlayerCount, "");
+    return m_holeScores[playerNameIndex];
 }

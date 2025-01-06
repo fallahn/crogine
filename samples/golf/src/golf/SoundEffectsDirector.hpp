@@ -58,7 +58,7 @@ if(msg.id == PlayerMessage)
         emitter.getComponent<cro::AudioEmitter>().setSource(m_audioResource.get(AudioID::Explosion));
         break;
     case PlayerEvent::Respawned:
-        emitter.getComponent<cro::AudioEmitter>()..setSource(m_audioResource.get(AudioID::Sparkles));
+        emitter.getComponent<cro::AudioEmitter>().setSource(m_audioResource.get(AudioID::Sparkles));
         break;
     }
     emitter.getComponent<cro::AudioEmitter>().play();
@@ -77,11 +77,11 @@ public:
 
 protected:
     cro::Entity getNextEntity();
+    void resizeEmitters();
 
 private:
 
     std::size_t m_nextFreeEmitter;
     std::vector<cro::Entity> m_emitters;
 
-    void resizeEmitters();
 };

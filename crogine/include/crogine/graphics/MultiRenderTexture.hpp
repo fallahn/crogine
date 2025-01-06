@@ -152,6 +152,11 @@ namespace cro
         void setBorderColour(Colour colour);
 
 
+        /*!
+        \brief Hack to enable target for rendering without clearing it
+        */
+        void activate(bool b) { setActive(b); }
+
     private:
         std::uint32_t m_fboID;
         mutable std::int32_t m_maxAttachments;

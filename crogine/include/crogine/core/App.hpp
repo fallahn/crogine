@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -81,7 +81,7 @@ namespace cro
         App& operator = (const App&) = delete;
         App& operator = (const App&&) = delete;
 
-        void run();
+        void run(bool resetSettings = false);
 
         void setClearColour(Colour);
         const Colour& getClearColour() const;
@@ -242,6 +242,9 @@ namespace cro
         std::vector<std::pair<std::function<void()>, const GuiClient*>> m_guiWindows;
         bool m_drawDebugWindows;
         void doImGui();
+
+        static void addStats(const std::function<void()>&, const GuiClient*);
+        static void removeStats(const GuiClient*);
 
         static void addConsoleTab(const std::string&, const std::function<void()>&, const GuiClient*);
         static void removeConsoleTab(const GuiClient*);

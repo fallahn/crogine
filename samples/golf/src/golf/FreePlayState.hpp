@@ -36,7 +36,6 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 
 struct SharedStateData;
-
 class FreePlayState final : public cro::State
 {
 public:
@@ -71,7 +70,23 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
+
+    //references in menu open/close callbacks
+    struct CallbackEntID final
+    {
+        enum
+        {
+            NightButton,
+            GameMenu,
+            QuickPlayMenu,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, CallbackEntID::Count> m_callbackEntities = {};
+
     void buildScene();
 
+    void menuShownCallback();
     void quitState();
 };

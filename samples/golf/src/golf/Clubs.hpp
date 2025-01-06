@@ -128,12 +128,17 @@ public:
     static std::int32_t getModifierIndex(); //default, punch, flop
     static void setModifierIndex(std::int32_t);
 
+    static void setFixedPuttingDistance(bool b) { m_fixedPuttingDistance = b; }
+
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI
     float m_angle = 0.f; //pitch of shot (should be positive) - not a clubstat as it remains constant with range
     float m_sidespin = 1.f; //multiplier 0-1
     float m_topspin = 1.f; //multiplier 0-1
+
+    //hack to fix the putter distance at 10m if set in the options
+    static bool m_fixedPuttingDistance;
 
     //putter below this is rescaled
     static constexpr float ShortRange = 1.f / 3.f;

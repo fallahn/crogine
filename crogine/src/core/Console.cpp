@@ -39,6 +39,7 @@ source distribution.
 #include <unordered_map>
 #include <algorithm>
 #include <array>
+#include <fstream>
 
 using namespace cro;
 namespace ui = ImGui;
@@ -48,6 +49,8 @@ namespace
     using ConsoleTab = std::tuple<std::string, std::function<void()>, const GuiClient*>;
     std::vector<ConsoleTab> m_consoleTabs;
 
+    using StatFunc = std::pair<std::function<void()>, const GuiClient*>;
+    std::vector<StatFunc> m_statFuncs;
 
     std::vector<glm::uvec2> resolutions;
     int currentResolution = 0;
@@ -79,7 +82,6 @@ namespace
 }
 int textEditCallback(ImGuiInputTextCallbackData* data);
 
-std::vector<std::string> Console::m_debugLines;
 
 //public
 void Console::print(const std::string& line)
@@ -126,14 +128,6 @@ void Console::show()
 
 void Console::doCommand(const std::string& str)
 {
-    //store in history
-    history.push_back(str);
-    if (history.size() > MAX_HISTORY)
-    {
-        history.pop_front();
-    }
-    historyIndex = -1;
-
     //parse the command from the string
     std::string command(str);
     std::string params;
@@ -152,6 +146,16 @@ void Console::doCommand(const std::string& str)
     auto cmd = commands.find(command);
     if (cmd != commands.end())
     {
+        //store in history
+        history.push_back(str);
+        if (history.size() > MAX_HISTORY)
+        {
+            history.pop_front();
+        }
+        historyIndex = -1;
+        
+        print(str);
+
         cmd->second.first(params);
     }
     else
@@ -203,7 +207,7 @@ void Console::addConvar(const std::string& name, const std::string& defaultValue
 
 void Console::printStat(const std::string& name, const std::string& value)
 {
-    m_debugLines.push_back(name + ":" + value);
+
 }
 
 bool Console::isVisible()
@@ -214,6 +218,25 @@ bool Console::isVisible()
 const std::string& Console::getLastOutput()
 {
     return buffer.back().first;
+}
+
+void Console::dumpBuffer(const std::string& str)
+{
+    std::string fileName = "console_dump";
+    if (!str.empty())
+    {
+        fileName += str;
+    }
+    fileName += ".txt";
+
+    std::ofstream ofile(fileName);
+    if (ofile.is_open() && ofile.good())
+    {
+        for (const auto& [b, _] : buffer)
+        {
+            ofile << b << "\n";
+        }
+    }
 }
 
 //private
@@ -390,15 +413,13 @@ void Console::draw()
                 {
                     ui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
                     ui::NewLine();
-                    for (auto& line : m_debugLines)
+
+                    for (const auto& [f, _] : m_statFuncs)
                     {
-                        ImGui::TextUnformatted(line.c_str());
+                        f();
                     }
                     ui::EndTabItem();
                 }
-                m_debugLines.clear();
-                m_debugLines.reserve(10);
-
 
                 //display registered tabs
                 for (const auto& tab : m_consoleTabs)
@@ -441,9 +462,28 @@ void Console::draw()
     }
 }
 
+void Console::addStats(const std::function<void()>& f, const GuiClient* c)
+{
+    m_statFuncs.emplace_back(std::make_pair(f, c));
+}
+
+void Console::removeStats(const GuiClient* c)
+{
+    if (m_statFuncs.empty())
+    {
+        return;
+    }
+
+    m_statFuncs.erase(std::remove_if(m_statFuncs.begin(), m_statFuncs.end(),
+        [c](const StatFunc& s)
+        {
+            return s.second == c;
+        }), m_statFuncs.end());
+}
+
 void Console::addConsoleTab(const std::string& name, const std::function<void()>& f, const GuiClient* c)
 {
-    m_consoleTabs.push_back(std::make_tuple(name, f, c));
+    m_consoleTabs.emplace_back(std::make_tuple(name, f, c));
 }
 
 void Console::removeConsoleTab(const GuiClient* c)
@@ -489,12 +529,21 @@ void Console::init()
     addCommand("help",
         [](const std::string&)
     {
-        Console::print("Available Commands:");
-        for (const auto& c : commands)
-        {
-            Console::print(c.first);
-        }
+        std::vector<std::string> cmdNames;
 
+        Console::print("Available Commands:");
+        for (const auto& [c, _] : commands)
+        {
+            cmdNames.push_back(c);
+        }
+        std::sort(cmdNames.begin(), cmdNames.end());
+        for (const auto& n : cmdNames)
+        {
+            Console::print(n);
+        }
+        Console::print("-------------------");
+
+        cmdNames.clear();
         Console::print("Available Variables:");
         const auto& objects = convars.getObjects();
         for (const auto& o : objects)
@@ -505,10 +554,15 @@ void Console::init()
             {
                 if (p.getName() == "help")
                 {
-                    str += " " + p.getValue<std::string>();
+                    str += " - " + p.getValue<std::string>();
                 }
             }
-            Console::print(str);
+            cmdNames.push_back(str);
+        }
+        std::sort(cmdNames.begin(), cmdNames.end());
+        for (const auto& n : cmdNames)
+        {
+            Console::print(n);
         }
     });
 

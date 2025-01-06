@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -61,6 +61,25 @@ namespace cro
         bool useFillColour = true;
     };
 
+    //allow changing text colour at specific character indices
+    struct ColourIndex final
+    {
+        std::int32_t index = 0;
+        std::vector<cro::Colour> colours = { cro::Colour::White };
+        std::vector<std::uint32_t> charIndices = { 0u };
+        const cro::Colour& getColour(std::uint32_t currentIndex)
+        {
+            CRO_ASSERT(!charIndices.empty(), "");
+            if (currentIndex != 0 &&
+                index < static_cast<std::int32_t>(charIndices.size()) - 1 &&
+                charIndices[index + 1] == currentIndex)
+            {
+                index++;
+            }
+            return colours[index];
+        }
+    };
+
     class Font;
     struct TextContext final
     {
@@ -68,7 +87,8 @@ namespace cro
         const Font* font = nullptr;
         std::uint32_t charSize = 30u;
         float verticalSpacing = 0.f;
-        Colour fillColour = Colour::White;
+        //Colour fillColour = Colour::White;
+        ColourIndex fillColour;
         Colour outlineColour = Colour::Black;
         float outlineThickness = 0.f;
         Colour shadowColour = Colour::Black;

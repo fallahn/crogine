@@ -359,7 +359,7 @@ void MenuState::createBallScene()
             info.type = SharedStateData::BallInfo::Unlock;
 
             if ((ballFlags == -1 && Leagues[i].getCurrentBest() < 4)
-                || ((ballFlags & (1 << i)) != 0))
+                || (ballFlags != -1 && (ballFlags & (1 << i)) != 0))
             {
                 insertInfo(info, m_sharedData.ballInfo, true);
             }
@@ -371,8 +371,33 @@ void MenuState::createBallScene()
         }
     }
 
+    //balls for winning a tournament
+    const std::array<std::string, 2u> TournamentPaths =
+    {
+        "assets/golf/career/tournament/01.ball",
+        "assets/golf/career/tournament/02.ball"
+    };
+    const auto tFlags = Social::getUnlockStatus(Social::UnlockType::Tournament);
+    for (auto i = 0u; i < TournamentPaths.size(); ++i)
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(TournamentPaths[i]))
+        {
+            auto info = readBallCfg(cfg);
+            info.type = SharedStateData::BallInfo::Unlock;
 
-
+            if ((tFlags == -1 && m_sharedData.tournaments[i].winner == -1)
+                || (tFlags != -1 && (tFlags & (1 << i)) != 0))
+            {
+                insertInfo(info, m_sharedData.ballInfo, true);
+            }
+            else
+            {
+                info.locked = true;
+                delayedEntries.push_back(info);
+            }
+        }
+    }
 
 
     //look in the user directory - only do this if the default dir is OK?
@@ -444,7 +469,8 @@ void MenuState::createBallScene()
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             //allow for double sided balls.
-            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+            auto material = ballDef.hasSkeleton() ? m_resources.materials.get(m_materialIDs[MaterialID::BallSkinned])
+                : m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
             applyMaterialData(ballDef, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
             if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
@@ -454,6 +480,10 @@ void MenuState::createBallScene()
                 entity.getComponent<cro::Model>().setMaterial(1, material);
             }
             entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
+            if (entity.hasComponent<cro::Skeleton>())
+            {
+                entity.getComponent<cro::Skeleton>().play(0);
+            }
             baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             entity.addComponent<cro::Callback>().active = true;
@@ -494,7 +524,8 @@ void MenuState::createBallScene()
             {
                 entity = m_backgroundScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.001f, 0.f });
-                entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
+                entity.getComponent<cro::Transform>().setScale(glm::vec3(15.f));
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, 0.06f); //hides the crappy horizon
                 m_profileData.grassDef->createModel(entity);
                 baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
@@ -624,7 +655,7 @@ void MenuState::parseAvatarDirectory()
     auto start = m_sharedData.avatarInfo.size();
     for (auto i = 0u; i < CareerAvatars.size(); ++i)
     {
-        const bool unlocked = ((avatarFlags == -1 && Leagues[i].getCurrentBest() == 1) || ((avatarFlags & (1 << i)) != 0));
+        const bool unlocked = ((avatarFlags == -1 && Leagues[i].getCurrentBest() == 1) || (avatarFlags != -1 && (avatarFlags & (1 << i)) != 0));
         processAvatarList(/*Leagues[i].getCurrentBest() > 1*/!unlocked, {CareerAvatars[i]}, CareerPath);
     }
 
@@ -740,7 +771,7 @@ void MenuState::parseAvatarDirectory()
             info.type = SharedStateData::HairInfo::Unlock;
 
             if ((hairFlags == -1 && Leagues[i].getCurrentBest() < 3)
-                || ((hairFlags & (1 << i)) != 0))
+                || (hairFlags != -1 && (hairFlags & (1 << i)) != 0))
             {
                 insertInfo(info, m_sharedData.hairInfo, true);
             }
@@ -1029,7 +1060,7 @@ void MenuState::createAvatarScene()
 
     //load the preview models
     cro::ModelDefinition clubDef(m_resources);
-    clubDef.loadFromFile("assets/golf/models/club_iron.cmt");
+    clubDef.loadFromFile("assets/golf/clubs/default/club_iron.cmt");
 
     cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
@@ -1062,6 +1093,14 @@ void MenuState::createAvatarScene()
                     applyMaterialData(clubDef, material);
                     material.doubleSided = true; //we could update front face with parent model but meh
                     e.getComponent<cro::Model>().setMaterial(0, material);
+
+                    if (clubDef.getMaterialCount() > 1)
+                    {
+                        material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+                        applyMaterialData(clubDef, material);
+                        material.doubleSided = true;
+                        e.getComponent<cro::Model>().setMaterial(1, material);
+                    }
 
                     entity.getComponent<cro::Skeleton>().getAttachments()[id].setModel(e);
                 }

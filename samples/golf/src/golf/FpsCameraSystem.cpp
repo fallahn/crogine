@@ -85,6 +85,9 @@ namespace
     };
     RollingAvg xAvg;
     RollingAvg yAvg;
+
+    //glm::vec3 rawIntersect(0.f);
+    //glm::vec3 clampedIntersect(0.f);
 }
 
 FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, const SharedStateData& sd)
@@ -112,8 +115,11 @@ FpsCameraSystem::FpsCameraSystem(cro::MessageBus& mb, const CollisionMesh& cm, c
     //            //ImGui::Text("Forward %3.5f", fwd);
     //            //ImGui::Text("Side %3.5f", swd);
 
-    //            ImGui::Text("X Avg: %3.3f", xAvg.total / RollingAvg::AvgSize);
-    //            ImGui::Text("X Move: %d", xDebug);
+    //            /*ImGui::Text("X Avg: %3.3f", xAvg.total / RollingAvg::AvgSize);
+    //            ImGui::Text("X Move: %d", xDebug);*/
+
+    //            ImGui::Text("Intersection: %3.2f, %3.2f, %3.2f", rawIntersect.x, rawIntersect.y, rawIntersect.z);
+    //            ImGui::Text("Clamped: %3.2f, %3.2f, %3.2f", clampedIntersect.x, clampedIntersect.y, clampedIntersect.z);
     //        }
     //        ImGui::End();
     //    });
@@ -633,12 +639,28 @@ void FpsCameraSystem::process(float dt)
 
 
             glm::vec3 intersection(0.f);
-            if (entity.getComponent<TargetInfo>().waterPlane.isValid()
-                && planeIntersect(tx.getWorldTransform(), intersection))
+            if (entity.getComponent<TargetInfo>().waterPlane.isValid())
             {
-                intersection.x = std::clamp(intersection.x, WaterRadius, MapSizeFloat.x - WaterRadius);
+                static constexpr float MaxDist = 220.f;
+                static constexpr float MaxDistSqr = MaxDist * MaxDist;
+
+                if (!planeIntersect(tx.getWorldTransform(), intersection))
+                {
+                    intersection = /*glm::normalize*/pos + (tx.getForwardVector() * MaxDist);
+                }
+
+
+                auto dir = glm::vec2(intersection.x, intersection.z) - glm::vec2(pos.x, pos.z);
+                if (auto len2 = glm::length2(dir); len2 > MaxDistSqr)
+                {
+                    dir /= std::sqrt(len2);
+                    dir *= MaxDist;
+                }
+
+                
+                intersection.x = pos.x + dir.x;
                 intersection.y = WaterLevel;
-                intersection.z = std::clamp(intersection.z, -WaterRadius, (-MapSizeFloat.y) + WaterRadius);
+                intersection.z = pos.z + dir.y;
                 entity.getComponent<TargetInfo>().waterPlane.getComponent<cro::Callback>().setUserData<glm::vec3>(intersection);
             }
         }

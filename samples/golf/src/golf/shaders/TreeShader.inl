@@ -131,9 +131,11 @@ float distance = length(worldPosition.xyz - u_cameraWorldPosition);
     #if defined (HQ)
 if(visibility > MinVisibility
     && distance < MinWindDistance){
+        float strength = clamp(u_windData.y, 0.0, 1.1) * (1.0 - smoothstep(0.8, 0.99, distance / MinWindDistance));
+
         WindResult windResult = getWindData(position.xz, worldPosition.xz);
-        windResult.lowFreq *= (0.5 * u_windData.y) + 0.5;
-        windResult.highFreq *= (0.5 * u_windData.y) + 0.5;
+        windResult.lowFreq *= (0.5 * strength) + 0.5;
+        windResult.highFreq *= (0.5 * strength) + 0.5;
 
         float x = windResult.highFreq.x;
         float y = windResult.lowFreq.y;
@@ -143,7 +145,7 @@ if(visibility > MinVisibility
         float dirStrength = dot(v_data.normal, windDir);
 
         x *= 3.0;
-        vec2 rot = vec2(sin(x * u_windData.y), cos(x * u_windData.y));
+        vec2 rot = vec2(sin(x * strength), cos(x * strength));
         v_data.rotation[0] = vec2(rot.y, -rot.x);
         v_data.rotation[1]= rot;
 
@@ -151,8 +153,8 @@ if(visibility > MinVisibility
         dirStrength *= 0.5;
 
 
-        windOffset += windDir * u_windData.y * dirStrength * 2.0;
-        worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+        windOffset += windDir * strength * dirStrength * 2.0;
+        worldPosition.xyz += windOffset * MaxWindOffset * strength;
 
         worldPosition.x += windResult.lowFreq.x;
         worldPosition.z += windResult.lowFreq.y;

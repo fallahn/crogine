@@ -47,6 +47,7 @@ namespace ScoreType
         Elimination,
         ClubShuffle,
         NearestThePin,
+        NearestThePinPro,
 
         Count,
 
@@ -56,12 +57,12 @@ namespace ScoreType
 
     static const inline std::array<std::int32_t, Count> MinPlayerCount =
     {
-        1,1,1,2,2,1,1,2,1,2,//2,2
+        1,1,1,2,2,1,1,2,1,2,2//,2
     };
 
     static const inline std::array<std::int32_t, Count> MaxPlayerCount =
     {
-        16,16,16,2,16,16,16,16,16,16,//16,16
+        16,16,16,2,16,16,16,16,16,16,16//,16
     };
 }
 

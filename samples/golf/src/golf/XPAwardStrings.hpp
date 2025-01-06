@@ -41,6 +41,7 @@ struct XPStringID final
         GreatAccuracy,
         NiceTiming,
         OnTheFairway,
+        WindRider,
         DroneHit,
         CourseComplete,
         LongPutt,
@@ -52,6 +53,7 @@ struct XPStringID final
         SecondPlace,
         ThirdPlace,
         NoGimme,
+        ClubsetBonus,
 
         HIO,
         Albatross,
@@ -73,6 +75,7 @@ struct XPStringID final
 
         FIR,
         GIR,
+        BeefStick,
 
         Count
     };
@@ -86,6 +89,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     "Great Accuracy",
     "Nice Timing!",
     "Fairway",
+    "Wind Rider",
     "Drone Hit!",
     "Course Complete",
     "Long Putt",
@@ -97,6 +101,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     "Second Place",
     "Third Place",
     "No Gimme",
+    "Club Set Bonus",
 
     "Hole In One!!",
     "Albatross (No Assist)",
@@ -117,5 +122,7 @@ static inline const std::array<std::string, XPStringID::Count> XPStrings =
     "Hole Winner",
 
     "Fairway In Regulation",
-    "Green In Regulation"
+    "Green In Regulation",
+
+    "Beef Stick"
 };

@@ -345,7 +345,7 @@ App::~App()
 }
 
 //public
-void App::run()
+void App::run(bool resetSettings)
 {
     SDL_version v;
     SDL_VERSION(&v);
@@ -355,7 +355,7 @@ void App::run()
     //hmm we have to *copy* this ?? (it also has to live as long as the app runs)
     std::vector<std::uint8_t> fontBuff(std::begin(FA_Regular400), std::end(FA_Regular400));
 
-    auto settings = loadSettings();
+    auto settings = resetSettings ? WindowSettings() : loadSettings();
     glm::uvec2 size = settings.fullscreen ? glm::uvec2(settings.windowedSize) : glm::uvec2(settings.width, settings.height);
 
     if (m_window.create(size.x, size.y, "crogine game", m_windowStyleFlags))
@@ -692,6 +692,21 @@ void App::setApplicationStrings(const std::string& organisation, const std::stri
 //private
 void App::handleEvents()
 {
+    const auto toggleFullScreen = [&]()
+        {
+            auto fs = m_window.isFullscreen();
+            fs = !fs;
+            m_window.setFullScreen(fs);
+
+            //hack to hide console if it's open as the full screen
+            //checkbox won't be updated
+            if (Console::isVisible())
+            {
+                Console::show();
+            }
+            saveSettings();
+        };
+
     cro::Event evt;
     while (m_window.pollEvent(evt))
     {
@@ -800,21 +815,18 @@ void App::handleEvents()
                 if (evt.key.keysym.mod & KMOD_ALT)
 #endif
                 {
-                    auto fs = m_window.isFullscreen();
-                    fs = !fs;
-                    m_window.setFullScreen(fs);
-
-                    //hack to hide console if it's open as the full screen
-                    //checkbox won't be updated
-                    if (Console::isVisible())
-                    {
-                        Console::show();
-                    }
-                    saveSettings();
+                    toggleFullScreen();
                 }
                 break;
             case SDLK_F5:
                 saveScreenshot();
+                break;
+            case SDLK_F11:
+                //ctrl f11 enables steam recording...
+                if ((evt.key.keysym.mod & KMOD_CTRL) == 0)
+                {
+                    toggleFullScreen();
+                }
                 break;
             }
             break;
@@ -957,6 +969,18 @@ void App::doImGui()
             f.first();
         }
     }
+}
+
+void App::addStats(const std::function<void()>& f, const GuiClient* c)
+{
+    //errr why are we forwarding this to the console when it's a
+    //static func ew could be calling directly from GuiClient??
+    Console::addStats(f, c);
+}
+
+void App::removeStats(const GuiClient* c)
+{
+    Console::removeStats(c);
 }
 
 void App::addConsoleTab(const std::string& name, const std::function<void()>& func, const GuiClient* c)

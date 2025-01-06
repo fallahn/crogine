@@ -312,4 +312,6 @@ private:
     cro::RenderTexture m_mugshotTexture;
     bool m_mugshotUpdated;
     void generateMugshot();
+
+    void renderBallFrames();
 };

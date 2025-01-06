@@ -126,6 +126,7 @@ TrackOverlayState::TrackOverlayState(cro::StateStack& stack, cro::State::Context
     });
 
     cro::App::getInstance().setClearColour(cro::Colour(0.f, 1.f, 0.f, 0.f));
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 }
 
 //public

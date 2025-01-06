@@ -74,5 +74,6 @@ namespace sp
 
         bool createStub(const std::string&) const;
         void fileToByteArray(const std::string&, const std::string&) const;
+        void CSVToMap();
     };
 }

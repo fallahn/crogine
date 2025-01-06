@@ -59,6 +59,8 @@ enum OptionsIndex
     AVBeacon,
     AVBeaconL,
     AVBeaconR,
+    AVRemoteContent,
+    AVLensFlare,
     AVTextToSpeech,
     AVTrail,
     AVTrailL,
@@ -76,10 +78,10 @@ enum OptionsIndex
     AVShadowR,
     AVCrowdL,
     AVCrowdR,
-    AVLensFlare,
     AVLargePower,
     AVDecPower,
     AVDecDist,
+    AVFixedPutter,
 
 
     Controls = 300,

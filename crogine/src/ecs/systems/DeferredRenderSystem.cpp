@@ -248,8 +248,8 @@ void DeferredRenderSystem::updateDrawList(Entity camera)
             return a.distanceFromCamera < b.distanceFromCamera;
         });
 
-    DPRINT("Deferred ents: ", std::to_string(deferred.size()));
-    DPRINT("Forward ents: ", std::to_string(forward.size()));
+    /*DPRINT("Deferred ents: ", std::to_string(deferred.size()));
+    DPRINT("Forward ents: ", std::to_string(forward.size()));*/
 
     m_listIndices[cam.getDrawListIndex()] = m_cameraCount;
     m_cameraCount++;

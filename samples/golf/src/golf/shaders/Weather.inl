@@ -56,7 +56,11 @@ static const inline std::string WeatherVertex = R"(
 
     VARYING_OUT LOW vec4 v_colour;
 
+#if defined(SYSTEM_HEIGHT)
+    const float SystemHeight = SYSTEM_HEIGHT;
+#else
     const float SystemHeight = 80.0;
+#endif
 
 #if defined(EASE_SNOW)
     const float PI = 3.1412;
@@ -146,6 +150,7 @@ static const inline std::string FireworkVert = R"(
 ATTRIBUTE vec4 a_position;
 
 #include WVP_UNIFORMS
+uniform mat4 u_viewMatrix;
 
 uniform float u_size = 1.0;
 uniform float u_progress = 0.0;
@@ -155,17 +160,24 @@ layout (std140) uniform PixelScale
     float u_pixelScale;
 };
 
-const float Gravity = 0.06;
-const float PointSize = 15.0;
+#if !defined(GRAVITY)
+#define GRAVITY 0.06
+#endif
+
+const float Gravity = GRAVITY;
+#if !defined(POINT_SIZE)
+#define POINT_SIZE 15.0
+#endif
+const float PointSize = POINT_SIZE;
 
 void main()
 {
-    vec4 position = a_position;
+    vec4 position = u_worldMatrix * a_position;
     position.y -= (Gravity * u_progress) * u_progress;
 
-    gl_Position = u_projectionMatrix * u_worldViewMatrix * position;
+    gl_Position = u_projectionMatrix * u_viewMatrix * position;
     
-    gl_PointSize = u_progress * PointSize * u_size * u_pixelScale * (u_projectionMatrix[1][1] / gl_Position.w);
+    gl_PointSize = (0.2 + (0.8 * u_progress)) * PointSize * u_size * u_pixelScale * (u_projectionMatrix[1][1] / gl_Position.w);
 })";
 
 
@@ -182,6 +194,11 @@ void main()
 {
     vec2 coord = gl_PointCoord - vec2(0.5);
     float len2 = dot(coord, coord);
-
+#if !defined(POINT_SIZE) //for some reason we have to do this differently on the menu
     FRAG_OUT = vec4(u_colour.rgb * pow(2.0, -8.0 * u_progress) * (1.0 - step(stepPos, len2)), 1.0);
+#else
+    FRAG_OUT = vec4(u_colour.rgb * (1.0 - smoothstep(0.6, 0.998, u_progress)) * (1.0 - step(stepPos, len2)), 1.0);
+#endif
+//FRAG_OUT = vec4(gl_PointCoord, 1.0, 1.0);
+
 })";

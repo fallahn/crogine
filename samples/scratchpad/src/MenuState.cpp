@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2024
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,26 +29,32 @@ source distribution.
 
 #include "MenuState.hpp"
 #include "MyApp.hpp"
+#include "rapidcsv.h"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/String.hpp>
 
 #include <fstream>
 #include <iomanip>
+#include <iostream>
+#include <sstream>
 
 using namespace sp;
 
@@ -141,6 +147,7 @@ void MenuState::render()
 void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::TextSystem>(mb);
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -175,8 +182,35 @@ void MenuState::createScene()
     entity.addComponent<cro::Text>(m_font).setString("Scratchpad");
     entity.getComponent<cro::Text>().setCharacterSize(80);
     entity.getComponent<cro::Text>().setFillColour(cro::Colour::Plum);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Green, 4);
+    entity.getComponent<cro::Text>().setFillColour(cro::Colour::Yellow, 6);
     entity.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
     entity.getComponent<cro::Text>().setOutlineThickness(1.5f);
+
+    struct CBData final
+    {
+        float currTime = 0.f;
+        std::uint32_t idx = 1;
+    };
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<CBData>();
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& [currTime, idx] = e.getComponent<cro::Callback>().getUserData<CBData>();
+            static constexpr float ChangeTime = 0.5f;
+            currTime += dt;
+            if (currTime > ChangeTime)
+            {
+                currTime -= ChangeTime;
+
+                const auto charCount = e.getComponent<cro::Text>().getString().size();
+                idx = ((idx + 1) % charCount);
+
+                e.getComponent<cro::Text>().setString("Scratchpad");
+                e.getComponent<cro::Text>().setFillColour(cro::Colour::Green, 1 + idx);
+            }
+        };
 
     auto* uiSystem = m_scene.getSystem<cro::UISystem>();
     auto selected = uiSystem->addCallback([](cro::Entity e)
@@ -188,7 +222,7 @@ void MenuState::createScene()
             e.getComponent<cro::Text>().setOutlineColour(cro::Colour::Teal);
         });
 
-
+    
     auto createButton = [&](const std::string label, glm::vec2 position)
     {
         auto e = m_scene.createEntity();
@@ -422,8 +456,6 @@ void MenuState::createScene()
             });
 
 
-
-
     //camera
     auto updateCam = [&](cro::Camera& cam)
     {
@@ -488,6 +520,11 @@ void MenuState::createUI()
                     if (ImGui::MenuItem("Convert File To Byte Array"))
                     {
                         m_fileBrowser.Open();
+                    }
+
+                    if (ImGui::MenuItem("CSV To map"))
+                    {
+                        CSVToMap();
                     }
 
                     ImGui::EndMenu();
@@ -939,5 +976,87 @@ void MenuState::fileToByteArray(const std::string& infile, const std::string& ds
             const auto str = ss.str();
             file.file->write(file.file, str.c_str(), str.length(), 1);
         }
+    }
+}
+
+void MenuState::CSVToMap()
+{
+    std::unordered_map<std::string, glm::vec2> map =
+    {
+        std::make_pair("buns", glm::vec2(0.f)),
+        std::make_pair("flaps", glm::vec2(0.f)),
+        std::make_pair("giblets", glm::vec2(0.f)),
+        std::make_pair("cake", glm::vec2(0.f)),
+        std::make_pair("sofa", glm::vec2(0.f)),
+    };
+
+    //created for a specific use case, so not much general use.
+    if (auto path = cro::FileSystem::openFileDialogue("", "csv"); !path.empty())
+    {
+        rapidcsv::Document doc(path);
+
+        //hm this is supposed to auto-remove the quotes according to the docs,
+        //but my experience proves otherwise...
+        std::vector<std::string> codes = doc.GetColumn<std::string>("Alpha-2 code");
+        std::vector<std::string> latStr = doc.GetColumn<std::string>("Latitude (average)");
+        std::vector<std::string> lonStr = doc.GetColumn<std::string>("Longitude (average)");
+
+        std::vector<float> lat;
+        std::vector<float> lon;
+
+
+        for (auto i = 0u; i < codes.size(); ++i)
+        {
+            cro::Util::String::removeChar(codes[i], ' ');
+            cro::Util::String::removeChar(latStr[i], '\"');
+            cro::Util::String::removeChar(lonStr[i], '\"');
+
+            float t = 0.f;
+            try
+            {
+                t = std::stof(latStr[i]);
+            }
+            catch (...)
+            {
+                t = 0.f;
+            }
+            lat.push_back(t);
+
+            try
+            {
+                t = std::stof(lonStr[i]);
+            }
+            catch (...)
+            {
+                t = 0.f;
+            }
+            lon.push_back(t);
+
+            //std::cout << codes[i] << ", " << lat[i] << ", " << lon[i] << std::endl;
+        }
+
+        LogI << "Parsed " << codes.size() << " rows" << std::endl;
+        LogI << "Writing header file..." << std::endl;
+
+        auto outpath = path;
+        cro::Util::String::replace(outpath, "csv", "hpp");
+        std::ofstream outfile(outpath);
+        if (outfile.is_open() && outfile.good())
+        {
+            outfile << "#include <crogine/detail/glm/vec2.hpp>\n";
+            outfile << "#include <string>\n";
+            outfile << "#include <unordered_map>\n\n";
+
+            outfile << "static inline const std::unordered_map<std::string, glm::vec2> LatLong = \n{\n";
+
+            for (auto i = 0u; i < codes.size(); ++i)
+            {
+                outfile << "    std::make_pair(" << codes[i] << ", glm::vec2(" << lat[i] << ", " << lon[i] << ")),\n";
+            }
+
+            outfile << "};\n\n";
+        }
+
+        LogI << "Wrote file successfully" << std::endl;
     }
 }

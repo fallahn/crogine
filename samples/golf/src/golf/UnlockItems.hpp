@@ -107,14 +107,21 @@ namespace ul
 
             GoldCup,
 
+            Tournament01, //these are the prize balls
+            Tournament02,
+
+            TournamentTrophy01, //these are just for progress
+            TournamentTrophy02,
+            TournamentLadder,
+
             Count
         };
     };
 
     static inline const std::array<std::string, ModelID::Count> ModelPaths = 
     {
-        std::string("assets/golf/models/club_wood.cmt"),
-        std::string("assets/golf/models/club_iron.cmt"),
+        std::string("assets/golf/clubs/default/club_wood.cmt"),
+        std::string("assets/golf/clubs/default/club_iron.cmt"),
         std::string("assets/golf/models/balls/ball_bronze.cmt"),
         std::string("assets/golf/models/balls/ball_silver.cmt"),
         std::string("assets/golf/models/balls/ball_gold.cmt"),
@@ -165,6 +172,13 @@ namespace ul
         std::string("assets/golf/models/trophies/trophy06.cmt"),
         
         std::string("assets/golf/models/trophies/trophy01.cmt"),
+
+        std::string("assets/golf/models/career/tournament/01.cmt"),
+        std::string("assets/golf/models/career/tournament/02.cmt"),
+
+        std::string("assets/golf/models/trophies/tourn01.cmt"),
+        std::string("assets/golf/models/trophies/tourn02.cmt"),
+        std::string("assets/golf/models/trophies/ladder.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
@@ -241,6 +255,13 @@ namespace ul
             CareerBronze,
             CareerLeague,
 
+            Tournament01,
+            Tournament02,
+
+            TournComplete01,
+            TournComplete02,
+            TournLadder,
+
             Count
         };
     };
@@ -308,5 +329,12 @@ namespace ul
         { ModelID::CareerSecond,  "Second Place!",  "New Headwear!" },
         { ModelID::CareerThird,   "Third Place!",   "New Headwear!" },
         { ModelID::Padlock,       "New League",     "Now Available!" },
+
+        { ModelID::Tournament01,  "Gyro",      "New Golf Ball!" },
+        { ModelID::Tournament02,  "Clockwork", "New Golf Ball!" },
+
+        { ModelID::TournamentTrophy01,  "First Place!",   "XP" },
+        { ModelID::TournamentTrophy02,  "First Place!",   "XP" },
+        { ModelID::TournamentLadder,    "Round Won!",     "XP" },
     };
 }

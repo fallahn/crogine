@@ -30,7 +30,6 @@ source distribution.
 #include "MenuState.hpp"
 #include "MenuSoundDirector.hpp"
 #include "PacketIDs.hpp"
-#include "MenuConsts.hpp"
 #include "Utility.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
@@ -45,12 +44,20 @@ source distribution.
 #include "Clubs.hpp"
 #include "HoleData.hpp"
 #include "League.hpp"
+#include "RopeSystem.hpp"
+#include "LightmapProjectionSystem.hpp"
+#include "FireworksSystem.hpp"
+#include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
 #include <Timeline.hpp>
+
+#ifdef USE_GNS
+#include <SteamBeta.hpp>
+#endif
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -60,11 +67,13 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/util/String.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
 
 #include <crogine/ecs/InfoFlags.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -105,13 +114,22 @@ namespace
 #include "shaders/CloudShader.inl"
 #include "shaders/ShaderIncludes.inl"
 #include "shaders/ShadowMapping.inl"
+#include "shaders/Lantern.inl"
+#include "shaders/Weather.inl"
+#include "shaders/WireframeShader.inl"
 
-    //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
+    constexpr std::array<MenuSky, TimeOfDay::Count> Skies =
+    {
+        MenuSky(glm::vec3(-0.2505335f, 0.62932f, 0.590418f), cro::Colour(0.396f, 0.404f, 0.698f, 1.f),       cro::Colour(0.004f, 0.035f, 0.105f,1.f),        cro::Colour(0.176f,0.239f,0.321f,1.f),          1.f),
+        MenuSky(glm::vec3(-0.505335f,0.600000f,0.590418f),   cro::Colour(0.565738f,0.498943f,0.877451f,1.f), cro::Colour(0.817771f,0.716792f,0.931373f,1.f), cro::Colour(0.882353f,0.612660f,0.423875f,1.f), 0.252f),
+        MenuSky(glm::vec3(-0.2505335f, 1.62932f, 0.590418f), cro::Colour(1.f,1.f,1.f,1.f),                   cro::Colour(0.723f, 0.847f, 0.792f, 1.f),       cro::Colour(1.f, 0.973f, 0.882f, 1.f),          0.f),
+        MenuSky(glm::vec3(0.505335f,0.629320f,0.590418f),    cro::Colour(0.473237f,0.403427f,0.799020f,1.f), cro::Colour(0.710784f,0.546615f,0.400687f,1.f), cro::Colour(0.877451f,0.742618f,0.288182f,1.f), 0.252f)
+    };
 
     bool checkCommandLine = true;
 
-    ImVec4 C(1.f, 1.f, 1.f, 1.f);
-    float strength = 0.f;
+    /*ImVec4 C(1.f, 1.f, 1.f, 1.f);
+    float strength = 0.f;*/
 
     void refreshCourseAchievements()
     {
@@ -181,7 +199,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, {});
     }
-
+    
     checkCommandLine = false;
     sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;
@@ -212,6 +230,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             Achievements::update();
         }
+        checkBeta();
 #endif
 
         updateUnlockedItems(); //do this before attempting to load the assets...
@@ -225,6 +244,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
         cacheState(StateID::Career);
+        cacheState(StateID::Tournament);
         cacheState(StateID::FreePlay);
         cacheState(StateID::Keyboard);
         cacheState(StateID::Leaderboard);
@@ -254,18 +274,21 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
 
         //if we returned from a career game create a delayed
-        //entity to push the career state
-        if (sd.gameMode == GameMode::Career)
+        //entity to push the correct state
+        if (sd.gameMode == GameMode::Career
+            || sd.gameMode == GameMode::Tournament)
         {
+            const auto state = sd.gameMode == GameMode::Career ? StateID::Career : StateID::Tournament;
+
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float)
+                [&, state](cro::Entity e, float)
                 {
                     e.getComponent<cro::Callback>().active = false;
                     m_uiScene.destroyEntity(e);
 
-                    requestStackPush(StateID::Career);
+                    requestStackPush(state);
                 };
 
             //scales down main menu
@@ -292,7 +315,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
         //reset the state if we came from the tutorial (this is
         //also set if the player quit the game from the pause menu)
-        if (sd.gameMode != GameMode::FreePlay)
+        if (sd.gameMode != GameMode::FreePlay
+            || sd.quickplayOpponents != 0 //we were playing quickplay
+            || sd.activeTournament != TournamentIndex::NullVal) //or a tournament (although the above ought to be set to 1 in this case...)
         {
             m_voiceChat.disconnect();
 
@@ -306,8 +331,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             sd.clientConnection.netClient.disconnect();
 
             sd.mapDirectory = m_sharedCourseData.courseData[courseOfTheMonth()].directory;
-        }
 
+            sd.reverseCourse = 0;
+            sd.nightTime = 0;
+            sd.weatherType = WeatherType::Clear;
+        }
+        sd.quickplayOpponents = 0; //make sure to always reset this
+        sd.activeTournament = TournamentIndex::NullVal; //make sure to always reset this
 
         //we returned from a previous game (this will have been disconnected above, otherwise)
         if (sd.clientConnection.connected)
@@ -324,6 +354,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+
+                    //we also want to delay this so let's do it here
+                    for (const auto& cd : sd.connectionData)
+                    {
+                        if (cd.playerCount)
+                        {
+                            updateRemoteContent(cd);
+                        }
+                    }
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -494,7 +533,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 #endif
-    registerCommand("group_mode", [&](const std::string& param)
+    registerCommand("sv_group_mode", [&](const std::string& param)
         {
             const std::array GroupStrings =
             {
@@ -608,6 +647,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //        ImGui::End();
     //    });
 
+    //createDebugWindows();
 }
 
 MenuState::~MenuState()
@@ -804,7 +844,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 break;
             }
             //TODO the active menu might be a sub-group of the lobby
-            //however m_currentMenu is still set tl Lobby as this is
+            //however m_currentMenu is still set to Lobby as this is
             //used by the window resize callback (which I can't find
             //any more...) so we have to test for the actual active menu
             switch (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup())
@@ -816,10 +856,19 @@ bool MenuState::handleEvent(const cro::Event& evt)
             case MenuID::ConfirmQuit:
                 quitConfirmCallback();
                 break;
+            case MenuID::Weather:
+                quitWeatherCallback();
+                break;
             case MenuID::Scorecard:
             case MenuID::Dummy:
                 togglePreviousScoreCard();
                 break;
+            }
+            break;
+        case MenuID::Main:
+            if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::CareerSelect)
+            {
+                quitCareerCallback(-1);
             }
             break;
         /*case MenuID::ConfirmQuit:
@@ -1007,12 +1056,15 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             showPlayerManagement();
             break;
-        case SDLK_k:
-            m_voiceChat.connect();
-            break;
-        case SDLK_l:
-            m_voiceChat.disconnect();
-            break;
+        /*case SDLK_HOME:
+            launchQuickPlay();
+            break;*/
+        //case SDLK_k:
+        //    m_voiceChat.connect();
+        //    break;
+        //case SDLK_l:
+        //    m_voiceChat.disconnect();
+        //    break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -1046,9 +1098,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_p:
             showOptions();
             break;
-        case SDLK_F11:
+        /*case SDLK_F11:
             cro::Console::doCommand("al_config");
-            break;
+            break;*/
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
@@ -1140,6 +1192,18 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 //UISystem
                 return true;
             }
+
+#ifdef USE_GNS
+            if (m_betaEntity.isValid())
+            {
+                const auto bounds = cro::Text::getLocalBounds(m_betaEntity).transform(m_betaEntity.getComponent<cro::Transform>().getWorldTransform());
+                const auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
+                if (bounds.contains(mousePos))
+                {
+                    SteamBeta::switchBranch();
+                }
+            }
+#endif
         }
     }
     else if (evt.type == SDL_MOUSEMOTION)
@@ -1277,6 +1341,13 @@ void MenuState::handleMessage(const cro::Message& msg)
             break;
         }
     }
+    else if (msg.id == Social::MessageID::LocationMessage)
+    {
+        const auto& data = msg.getData<Social::LocationEvent>();
+        m_tod.setLatLon(data.latlon);
+
+        //TODO we could refresh the background, but is there much point?
+    }
     else if (msg.id == MessageID::SystemMessage)
     {
         const auto& data = msg.getData<SystemEvent>();
@@ -1340,6 +1411,12 @@ void MenuState::handleMessage(const cro::Message& msg)
                 m_menuEntities[MenuID::Main].getComponent<cro::Callback>().active = true;
 
                 Club::setClubLevel(m_sharedData.preferredClubSet);
+
+                if (m_clubsetButtons.lobby.isValid())
+                {
+                    m_clubsetButtons.lobby.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                    m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
+                }
             }
             else if (data.data == StateID::Career)
             {
@@ -1371,6 +1448,19 @@ void MenuState::handleMessage(const cro::Message& msg)
                     m_clubsetButtons.roster.getComponent<cro::SpriteAnimation>().play(m_sharedData.preferredClubSet);
                 }
             }
+            else if (data.data == RequestID::QuickPlay)
+            {
+                launchQuickPlay();
+            }
+            else if (data.data == RequestID::Tournament)
+            {
+                launchTournament(m_sharedData.activeTournament);
+            }
+        }
+        else if (data.type == SystemEvent::ShadowQualityChanged)
+        {
+            auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
+            cam.resizeCallback(cam);
         }
     }
 #ifdef USE_GNS
@@ -1540,12 +1630,17 @@ void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
+    //TODO this isn't strictly necessary to add if we're not adding any ropes
+    m_backgroundScene.addSystem<RopeSystem>(mb)->setNoiseTexture("assets/golf/images/wind.png", 10.f);
+    m_backgroundScene.getSystem<RopeSystem>()->setWind(glm::vec3(0.15f, 0.02f, -0.15f));
+
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<CloudSystem>(mb)->setWindVector(glm::vec3(0.25f));
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
     m_backgroundScene.addSystem<cro::SpriteSystem3D>(mb); //clouds
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
+    m_backgroundScene.addSystem<LightmapProjectionSystem>(mb, &m_lightProjectionMap);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
@@ -1578,8 +1673,6 @@ void MenuState::addSystems()
 
 void MenuState::loadAssets()
 {
-    m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
-    m_backgroundScene.setSkyboxColours(cro::Colour(0.2f, 0.31f, 0.612f, 1.f), cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
     if (m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm"))
     {
         m_reflectionMap.generateMipMaps();
@@ -1598,18 +1691,40 @@ void MenuState::loadAssets()
     static const std::string MapSizeString = "const vec2 MapSize = vec2(" + std::to_string(MapSize.x) + ".0, " + std::to_string(MapSize.y) + ".0); ";
     m_resources.shaders.addInclude("MAP_SIZE", MapSizeString.c_str());
 
+    //hmmmm a whole bunch of these could be conditionally compiled based on time of day (eg the ball)
+    //but we don't know that until *after* the assets are loaded...
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
-    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
+    m_resources.shaders.loadFromString(ShaderID::BallSkinned, CelVertexShader, CelFragmentShader, "#define SKINNED\n#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define BALL_COLOUR\n"/* + wobble*/); //this breaks rendering thumbs
+    m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMaskedLightMap, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define RX_SHADOWS\n#define TEXTURED\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define MENU_PROJ\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
+    //m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n");
     m_resources.shaders.loadFromString(ShaderID::HairReflect, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define REFLECTIONS\n");
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
-    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" /*+ wobble*/);
+    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define REFLECTIONS\n" /*+ wobble*/);
     //m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 600.0\n");
     
+    //view proj matrix to project lightmap
+    //this is currently a shader constant - left this here in case I need to recalculate it
+    /*auto proj = glm::ortho(LightMapWorldCoords.left, LightMapWorldCoords.left + LightMapWorldCoords.width,
+                            LightMapWorldCoords.bottom, LightMapWorldCoords.bottom + LightMapWorldCoords.height,
+                            0.1f, 10.f);
+    auto view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 2.f, 0.f));
+    view *= glm::toMat4(glm::rotate(cro::Transform::QUAT_IDENTITY, -cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS));
+    proj *= glm::inverse(view);
+
+    LogI << proj[0] << std::endl;
+    LogI << proj[1] << std::endl;
+    LogI << proj[2] << std::endl;
+    LogI << proj[3] << std::endl;*/
+
+    m_lightProjectionMap.create(LightMapSize.x, LightMapSize.y, false);
+    m_lightProjectionMap.setBorderColour(cro::Colour::Black);
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
@@ -1622,16 +1737,49 @@ void MenuState::loadAssets()
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
     m_profileData.profileMaterials.ball = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
 
+    shader = &m_resources.shaders.get(ShaderID::BallSkinned);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BallSkinned] = m_resources.materials.add(*shader);
+    m_profileData.profileMaterials.ballSkinned = m_resources.materials.get(m_materialIDs[MaterialID::BallSkinned]);
+    m_profileData.profileMaterials.ballSkinned.doubleSided = true;
+
+    
+    //hmm we could be sharing this with the rope system - though that's not always
+    //added, so it probably doesn't matter.
+    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+    noiseTex.setRepeated(true);
+    noiseTex.setSmooth(true);
+    
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_noiseTexture", noiseTex);
+
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedMasked);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTexturedMasked] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+
+    //TODO we only want to create this at night otherwise we're
+    //just wasting resources
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedMaskedLightMap);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTexturedMaskedLightMap] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMaskedLightMap]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMaskedLightMap]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
+
 
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ground] = m_resources.materials.add(*shader);
-
+    m_resources.materials.get(m_materialIDs[MaterialID::Ground]).setProperty("u_menuTexture", m_lightProjectionMap.getTexture());
     
     cro::Image defaultMask;
     defaultMask.create(2, 2, cro::Colour::Black);
@@ -1733,6 +1881,8 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    m_backgroundScene.enableSkybox();
+
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Effects);
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Environment);
@@ -1761,17 +1911,283 @@ void MenuState::createScene()
         }
     };
 
-    auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-
+   
     cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/golf/models/menu_pavilion.cmt"))
+
+
+    //load random / seasonal props
+    auto [propFilePath, spooky, fireworks, timeOfDay] = getPropPath();
+
+    std::vector<glm::vec3> polePositions;
+    cro::ConfigFile propFile;
+    if (propFile.loadFromFile("assets/golf/menu/" + propFilePath))
     {
-        applyMaterialData(md, texturedMat);
+        const auto& objs = propFile.getObjects();
+        for (const auto& obj : objs)
+        {
+            const auto& objName = obj.getName();
+            if (objName == "prop")
+            {
+                glm::vec3 position(0.f);
+                float rotation = 0.f;
+                glm::vec3 scale(1.f);
+                std::string propModelPath;
+                std::size_t animation = 0;
+
+                struct Light final
+                {
+                    cro::Colour colour;
+                    std::string animation;
+                    float size = 1.f;
+                    float brightness = 0.3f;
+                    bool active = false;
+                }light;
+
+                const auto& modelObjs = obj.getObjects();
+                for (const auto& modelObj : modelObjs)
+                {
+                    if (modelObj.getName() == "light")
+                    {
+                        const auto& lightProps = modelObj.getProperties();
+                        for (const auto& p : lightProps)
+                        {
+                            const auto& pName = p.getName();
+                            if (pName == "radius")
+                            {
+                                light.size = p.getValue<float>() * 2.f;
+                                light.active = true;
+                            }
+                            else if (pName == "colour")
+                            {
+                                light.colour = p.getValue<cro::Colour>();
+                                light.active = true;
+                            }
+                            else if (pName == "animation")
+                            {
+                                light.animation = p.getValue<std::string>();
+                                light.active = true;
+                            }
+                            else if (pName == "brightness")
+                            {
+                                light.brightness = std::clamp(p.getValue<float>(), 0.f, 1.f);
+                                light.active = true;
+                            }
+                        }
+                    }
+                }
+
+                const auto& modelProps = obj.getProperties();
+                for (const auto& prop : modelProps)
+                {
+                    const auto& propName = prop.getName();
+                    if (propName == "model")
+                    {
+                        propModelPath = prop.getValue<std::string>();
+                    }
+                    else if (propName == "position")
+                    {
+                        position = prop.getValue<glm::vec3>();
+                    }
+                    else if (propName == "rotation")
+                    {
+                        rotation = prop.getValue<float>() * cro::Util::Const::degToRad;
+                    }
+                    else if (propName == "scale")
+                    {
+                        scale = prop.getValue<glm::vec3>();
+                    }
+                    else if (propName == "animation")
+                    {
+                        animation = prop.getValue<std::uint32_t>();
+                    }
+                }
+
+                if (!propModelPath.empty()
+                    && md.loadFromFile(propModelPath))
+                {
+                    auto entity = m_backgroundScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition(position);
+                    entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+                    entity.getComponent<cro::Transform>().setScale(scale);
+                    md.createModel(entity);
+
+                    if (md.hasSkeleton())
+                    {
+                        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                        applyMaterialData(md, mat);
+                        entity.getComponent<cro::Model>().setMaterial(0, mat);
+                        entity.getComponent<cro::Skeleton>().play(animation);
+                    }
+                    else
+                    {
+                        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                        for (auto j = 0u; j < md.getMaterialCount(); ++j)
+                        {
+                            applyMaterialData(md, mat, j);
+                            entity.getComponent<cro::Model>().setMaterial(j, mat);
+                        }
+                    }
+
+                    if (light.active
+                        && timeOfDay == TimeOfDay::Night)
+                    {
+                        entity.addComponent<LightmapProjector>().size = light.size;
+                        entity.getComponent<LightmapProjector>().colour = light.colour;
+                        entity.getComponent<LightmapProjector>().brightness = light.brightness;
+
+                        if (!light.animation.empty())
+                        {
+                            entity.getComponent<LightmapProjector>().setPattern(light.animation);
+                        }
+                    }
+                }
+            }
+            else if (objName == "flags")
+            {
+                for (const auto& p : obj.getProperties())
+                {
+                    if (p.getName() == "position")
+                    {
+                        polePositions.push_back(p.getValue<glm::vec3>());
+                    }
+                }
+            }
+        }
+    }
+
+    m_backgroundScene.setStarsAmount(m_sharedData.menuSky.stars);
+    m_backgroundScene.setSkyboxColours(SkyBottom, m_sharedData.menuSky.skyBottom, m_sharedData.menuSky.skyTop);
+
+    auto sunEnt = m_backgroundScene.getSunlight();
+    sunEnt.getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(m_sharedData.menuSky.sunPos, glm::vec3(0.f), cro::Transform::Y_AXIS)));
+    sunEnt.getComponent<cro::Sunlight>().setColour(m_sharedData.menuSky.sunColour);
+
+
+//#define BUNS
+#ifdef BUNS
+    registerWindow([&]() 
+        {
+            ImGui::Begin("Sky");
+
+            auto cols = m_backgroundScene.getSkyboxColours();
+            ImVec4 top = cols.top;
+            ImVec4 bottom = cols.middle;
+
+            if (ImGui::ColorEdit3("Sky Top", &top.x))
+            {
+                cols.top = top;
+                m_backgroundScene.setSkyboxColours(cols);
+            }
+            if (ImGui::ColorEdit3("Sky Bottom", &bottom.x))
+            {
+                cols.middle = bottom;
+                m_backgroundScene.setSkyboxColours(cols);
+            }
+
+            ImVec4 sun = m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().getColour();
+            if (ImGui::ColorEdit3("Sun", &sun.x))
+            {
+                m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour(sun));
+            }
+
+            glm::vec3 sunP = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getPosition();
+            if (ImGui::SliderFloat("Sun Height", &sunP.y, 0.1f, 50.f))
+            {
+                m_backgroundScene.getSunlight().getComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(sunP, glm::vec3(0.f), cro::Transform::Y_AXIS)));
+            }
+
+            float starsAmount = m_backgroundScene.getStarsAmount();
+            if (ImGui::SliderFloat("Stars", &starsAmount, 0.f, 1.f))
+            {
+                m_backgroundScene.setStarsAmount(starsAmount);
+            }
+
+            if (ImGui::Button("Save"))
+            {
+                if (auto path = cro::FileSystem::saveFileDialogue("", "cfg"); !path.empty())
+                {
+                    cro::ConfigFile cfg;
+                    auto* skyObj = cfg.addObject("sky");
+                    skyObj->addProperty("top").setValue(top);
+                    skyObj->addProperty("bottom").setValue(bottom);
+                    skyObj->addProperty("stars").setValue(starsAmount);
+                    skyObj->addProperty("sun_position").setValue(sunP);
+                    skyObj->addProperty("sun_colour").setValue(sun);
+                    cfg.save(path);
+                }
+            }
+            ImGui::End();        
+        });
+#endif
+
+    auto texID = MaterialID::CelTextured;
+    auto bollardTexID = MaterialID::CelTextured;
+
+    std::string pavilionPath = "assets/golf/models/menu_pavilion.cmt";
+    std::string bollardPath = "assets/golf/models/bollard_day.cmt";
+    std::string phoneBoxPath = "assets/golf/models/phone_box.cmt";
+    std::string cartPath = "assets/golf/models/menu/cart.cmt";
+
+    if (timeOfDay == TimeOfDay::Night)
+    {
+        texID = MaterialID::CelTexturedMasked;
+        pavilionPath = "assets/golf/models/menu_pavilion_night.cmt";
+        phoneBoxPath = "assets/golf/models/phone_box_night.cmt";
+        cartPath = "assets/golf/models/menu/cart_night.cmt";
+    }
+    if (timeOfDay != TimeOfDay::Day)
+    {
+        bollardTexID = MaterialID::CelTexturedMasked;
+        bollardPath = "assets/golf/models/bollard_day_night.cmt";
+    }
+
+    if (md.loadFromFile(pavilionPath))
+    {
+        auto mat = m_resources.materials.get(m_materialIDs[texID]);
+
+        applyMaterialData(md, mat);
 
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
-        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, mat);
+    }
+
+    if (md.loadFromFile(bollardPath))
+    {
+        constexpr std::array positions =
+        {
+            glm::vec3(7.2f, 0.f, 12.f),
+            glm::vec3(7.2f, 0.f, 3.5f),
+            //glm::vec3(-10.5f, 0.f, 12.5f),
+            glm::vec3(-8.2f, 0.f, 3.5f)
+        };
+        int buns = 0;
+        for (auto pos : positions)
+        {
+            auto entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            md.createModel(entity);
+
+            auto mat = m_resources.materials.get(m_materialIDs[bollardTexID]);
+            applyMaterialData(md, mat);
+            entity.getComponent<cro::Model>().setMaterial(0, mat);
+
+            if (timeOfDay == TimeOfDay::Night
+                || timeOfDay == TimeOfDay::Evening)
+            {
+                buns++;
+
+                entity.addComponent<LightmapProjector>().size = 6.f;
+                entity.getComponent<LightmapProjector>().colour = TextNormalColour;
+                entity.getComponent<LightmapProjector>().brightness = 0.3f;
+
+                if (buns == 2)
+                {
+                    entity.getComponent<LightmapProjector>().setPattern("lllllllllllllllllllmlmlmllkllklllkllllk");
+                }
+            }
+        }
     }
 
     if (md.loadFromFile("assets/golf/models/menu_ground.cmt"))
@@ -1779,22 +2195,66 @@ void MenuState::createScene()
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
         entity.getComponent<cro::Model>().setRenderFlags(~BallRenderFlags);
     }
 
-    if (md.loadFromFile("assets/golf/models/phone_box.cmt"))
+    if (md.loadFromFile(phoneBoxPath))
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 8.2f, 0.f, 13.2f });
         entity.getComponent<cro::Transform>().setScale(glm::vec3(0.7f));
         md.createModel(entity);
 
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[texID]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+    }
+
+    if (md.loadFromFile("assets/golf/models/woof.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 9.2f, 0.f, 14.2f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -0.7f);
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.65f));
+        md.createModel(entity);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+        applyMaterialData(md, texturedMat);
+        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        entity.getComponent<cro::Skeleton>().play(0, 2.f);
+        struct WoofData final
+        {
+            std::int32_t anim = 0;
+            float currentTime = 6.f;
+        };
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<WoofData>();
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+            {
+                auto& [anim, currTime] = e.getComponent<cro::Callback>().getUserData<WoofData>();
+                currTime -= dt;
+                switch (anim)
+                {
+                default:
+                    if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Stopped)
+                    {
+                        anim = 0;
+                        e.getComponent<cro::Skeleton>().play(anim, 2.f, 0.1f);
+                        currTime = static_cast<float>(cro::Util::Random::value(10, 16));
+                    }
+                    break;
+                case 0:
+                    if (currTime < 0.f)
+                    {
+                        anim = cro::Util::Random::value(0, 4) == 0 ? 2 : 1;
+                        e.getComponent<cro::Skeleton>().play(anim, 1.f, 0.1f);
+                    }
+                    break;
+                }
+            };
     }
 
     if (md.loadFromFile("assets/golf/models/garden_bench.cmt"))
@@ -1804,21 +2264,9 @@ void MenuState::createScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-    }
-
-    if (md.loadFromFile("assets/golf/models/spectators/sitting/02.cmt"))
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 12.2f, 0.f, 13.6f });
-        md.createModel(entity);
-
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
-        applyMaterialData(md, texturedMat);
-        entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-        entity.getComponent<cro::Skeleton>().play(1);
     }
 
     if (md.loadFromFile("assets/golf/models/sign_post.cmt"))
@@ -1828,40 +2276,19 @@ void MenuState::createScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -150.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
     }
 
-    if (md.loadFromFile("assets/golf/models/bollard_day.cmt"))
-    {
-        constexpr std::array positions =
-        {
-            glm::vec3(7.2f, 0.f, 12.f),
-            glm::vec3(7.2f, 0.f, 3.5f),
-            //glm::vec3(-10.5f, 0.f, 12.5f),
-            glm::vec3(-8.2f, 0.f, 3.5f)
-        };
-
-        for (auto pos : positions)
-        {
-            auto entity = m_backgroundScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(pos);
-            md.createModel(entity);
-
-            texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-            applyMaterialData(md, texturedMat);
-            entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
-        }
-    }
-    /*cro::EmitterSettings sprinkler;
-    if (sprinkler.loadFromFile("assets/golf/particles/sprinkler.cps", m_resources.textures))
+    if (md.loadFromFile("assets/golf/models/skybox/horizon01.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -11.f, 0.f, 13.8f });
-        entity.addComponent<cro::ParticleEmitter>().settings = sprinkler;
-        entity.getComponent<cro::ParticleEmitter>().start();
-    }*/
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(15.5f));
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", m_sharedData.menuSky.sunColour);
+    }
+
 
     //billboards
     auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
@@ -1938,10 +2365,17 @@ void MenuState::createScene()
     }
 
 
-    //golf carts
-    if (md.loadFromFile("assets/golf/models/menu/cart.cmt"))
+    cro::ModelDefinition lightsDef(m_resources);
+    if (timeOfDay == TimeOfDay::Night)
     {
-        const std::array<std::string, 6u> passengerStrings =
+        lightsDef.loadFromFile("assets/golf/models/menu/headlights.cmt");
+        texID = MaterialID::CelTexturedMaskedLightMap;
+    }
+
+    //golf carts
+    if (md.loadFromFile(cartPath))
+    {
+        std::array<std::string, 6u> passengerStrings =
         {
             "assets/golf/models/menu/driver01.cmt",
             "assets/golf/models/menu/passenger01.cmt",
@@ -1950,6 +2384,12 @@ void MenuState::createScene()
             "assets/golf/models/menu/passenger03.cmt",
             "assets/golf/models/menu/passenger04.cmt"
         };
+
+        if (spooky)
+        {
+            passengerStrings[1] = "assets/golf/models/menu/spooky.cmt";
+            passengerStrings[4] = "assets/golf/models/menu/spooky.cmt";
+        }
 
         std::array<cro::Entity, 6u> passengers = {};
 
@@ -1961,6 +2401,12 @@ void MenuState::createScene()
                 passengers[i] = m_backgroundScene.createEntity();
                 passengers[i].addComponent<cro::Transform>();
                 passengerDef.createModel(passengers[i]);
+
+                if (spooky && (i == 1 || i == 4))
+                {
+                    passengers[i].getComponent<cro::Transform>().setPosition({ -0.754f, 0.275f, -0.2f });
+                    passengers[i].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
+                }
 
                 cro::Material::Data material;
                 if (passengers[i].hasComponent<cro::Skeleton>())
@@ -1986,7 +2432,7 @@ void MenuState::createScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 87.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
+        auto texturedMat = m_resources.materials.get(m_materialIDs[texID]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
 
@@ -2010,14 +2456,58 @@ void MenuState::createScene()
                     entity.getComponent<cro::Transform>().addChild(passengers[index].getComponent<cro::Transform>());
                 }
             }
+
+            if (lightsDef.isLoaded())
+            {
+                auto lightsEnt = m_backgroundScene.createEntity();
+                lightsEnt.addComponent<cro::Transform>();
+                lightsDef.createModel(lightsEnt);
+
+                entity.getComponent<cro::Transform>().addChild(lightsEnt.getComponent<cro::Transform>());
+
+                glm::vec3 spotPos(2.3f, 0.01f, 0.6f);
+                for (auto j = 0; j < 2; ++j)
+                {
+                    auto spotEnt = m_backgroundScene.createEntity();
+                    spotEnt.addComponent<cro::Transform>().setPosition(spotPos);
+                    spotEnt.addComponent<LightmapProjector>().size = 4.f;
+                    spotEnt.getComponent<LightmapProjector>().colour = TextNormalColour;
+                    spotEnt.getComponent<LightmapProjector>().brightness = 0.3f;
+                    entity.getComponent<cro::Transform>().addChild(spotEnt.getComponent<cro::Transform>());
+                    spotPos.z *= -1.f;
+                }
+            }
         }
     }
 
+    static constexpr std::size_t MaxPoles = 6;
+    if (polePositions.size() > MaxPoles)
+    {
+        polePositions.resize(MaxPoles);
+    }
+    createRopes(timeOfDay, polePositions);
     createClouds();
+
+    if (fireworks)
+    {
+        createFireworks();
+    }
+
+    if (m_tod.doSnow())
+    {
+        createSnow();
+    }
 
     //music
     auto entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("music");
+    if (spooky)
+    {
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("spooky_music");
+    }
+    else
+    {
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("music");
+    }
     entity.getComponent<cro::AudioEmitter>().play();
     entity.getComponent<cro::AudioEmitter>().setLooped(true);
 
@@ -2046,6 +2536,9 @@ void MenuState::createScene()
             m_backgroundTexture.create(ctx) 
             && m_sharedData.multisamples != 0
             && !m_sharedData.pixelScale;
+
+        const auto res = m_sharedData.hqShadows ? 4096 : 2048;
+        cam.shadowMapBuffer.create(res, res);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 600.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -2092,12 +2585,8 @@ void MenuState::createScene()
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -8.f * cro::Util::Const::degToRad);
 
     //add the ambience to the cam cos why not
-    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("01");
+    camEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter(timeOfDay == TimeOfDay::Night ? "02" : "01");
     camEnt.getComponent<cro::AudioEmitter>().play();
-
-    auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -40.56f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -39.f * cro::Util::Const::degToRad);
 
     //set up cam / models for ball preview
     createBallScene();    
@@ -2107,48 +2596,124 @@ void MenuState::createScene()
 #ifndef USE_GNS
     //creates an ent which triggers pre-loading of score values
     //whilst hopefully not hammering the connection
-    struct FetchData final
-    {
-        const float StepTime = 3.f;
-        float currTime = StepTime;
+    //struct FetchData final
+    //{
+    //    const float StepTime = 3.f;
+    //    float currTime = StepTime;
 
-        std::int32_t mapIndex = 0;
-        std::uint8_t holeIndex = 0;
-    };
+    //    std::int32_t mapIndex = 0;
+    //    std::uint8_t holeIndex = 0;
+    //};
 
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<FetchData>();
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-        {
-            auto& [StepTime, currTime, mapIndex, holeIndex] = e.getComponent<cro::Callback>().getUserData<FetchData>();
-            currTime -= dt;
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<FetchData>();
+    //entity.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float dt)
+    //    {
+    //        auto& [StepTime, currTime, mapIndex, holeIndex] = e.getComponent<cro::Callback>().getUserData<FetchData>();
+    //        currTime -= dt;
 
-            if (currTime < 0)
-            {
-                if (auto s = Social::getTopFive(CourseNames[mapIndex], holeIndex);
-                    s.empty())
-                {
-                    //only reset the time if there was no string cached (and therefore a download was triggered)
-                    currTime += StepTime;
-                }
-                holeIndex++;
+    //        if (currTime < 0)
+    //        {
+    //            if (auto s = Social::getTopFive(CourseNames[mapIndex], holeIndex);
+    //                s.empty())
+    //            {
+    //                //only reset the time if there was no string cached (and therefore a download was triggered)
+    //                currTime += StepTime;
+    //            }
+    //            holeIndex++;
 
-                if (holeIndex == 3)
-                {
-                    holeIndex = 0;
-                    mapIndex++;
+    //            if (holeIndex == 3)
+    //            {
+    //                holeIndex = 0;
+    //                mapIndex++;
 
-                    if (mapIndex == CourseNames.size())
-                    {
-                        e.getComponent<cro::Callback>().active = false;
-                        m_uiScene.destroyEntity(e);
-                    }
-                }
-            }
-        };
+    //                if (mapIndex == CourseNames.size())
+    //                {
+    //                    e.getComponent<cro::Callback>().active = false;
+    //                    m_uiScene.destroyEntity(e);
+    //                }
+    //            }
+    //        }
+    //    };
 #endif
+}
+
+MenuState::PropFileData MenuState::getPropPath() const
+{
+    PropFileData ret;
+    //ret.timeOfDay = TimeOfDay::Night;
+    //ret.propFilePath = "geranium.bgd";
+    //ret.fireworks = true;
+    //m_sharedData.menuSky = Skies[ret.timeOfDay];
+    //return ret;
+
+    const auto mon = cro::SysTime::now().months();
+    const auto day = cro::SysTime::now().days();
+
+    ret.spooky = mon == 10 && day > 22;
+    if (ret.spooky)
+    {
+        ret.propFilePath = "spooky.bgd";
+        ret.timeOfDay = TimeOfDay::Night;
+        m_sharedData.menuSky = Skies[TimeOfDay::Night];
+        return ret;
+    }
+    else if (mon == 2 && day == 2)
+    {
+        ret.propFilePath = "geranium.bgd";
+    }
+    else if (mon == 5 && day == 4)
+    {
+        ret.propFilePath = "midori.bgd";
+    }
+    else if (mon == 6 && day == 21)
+    {
+        ret.propFilePath = "somer.bgd";
+        ret.fireworks = true;
+    }
+    else
+    {
+        const std::array paths =
+        {
+            std::string("00.bgd"),
+            std::string("01.bgd"),
+            std::string("02.bgd"),
+            std::string("03.bgd")
+        };
+        ret.propFilePath = paths[cro::Util::Random::value(0u, paths.size() - 1)];
+    }
+
+
+    ret.timeOfDay = m_tod.getTimeOfDay();
+    m_sharedData.menuSky = Skies[ret.timeOfDay];
+
+    //see if we want fireworks
+    if (ret.timeOfDay == TimeOfDay::Night)
+    {
+        switch (mon)
+        {
+        default: break;
+        case 11:
+            ret.fireworks = day == 25;
+            break;
+        case 12:
+            ret.fireworks = (day == 12 || day == 31);
+            break;
+        case 1:
+            ret.fireworks = day == 1;
+            break;
+        case 2:
+            ret.fireworks = day == 2;
+            break;
+        case 6:
+            ret.fireworks = day == 16;
+            break;
+        }
+    }
+
+    return ret;
 }
 
 void MenuState::createClouds()
@@ -2221,6 +2786,249 @@ void MenuState::createClouds()
     }
 }
 
+void MenuState::createRopes(std::int32_t timeOfDay, const std::vector<glm::vec3>& polePos)
+{
+    if (polePos.size() > 1)
+    {
+        cro::ModelDefinition md(m_resources);
+        if (md.loadFromFile("assets/golf/models/menu/flagpole.cmt", true))
+        {
+            std::vector<glm::mat4> tx;
+            for (auto p : polePos)
+            {
+                tx.push_back(glm::translate(glm::mat4(1.f), p));
+            }
+
+            //instance flag poles from positions
+            cro::Entity flags = m_backgroundScene.createEntity();
+            flags.addComponent<cro::Transform>();
+            md.createModel(flags);
+            flags.getComponent<cro::Model>().setInstanceTransforms(tx);
+            //TODO - do we want to create an instanced material *just* for flag poles?
+            //trouble is the unlit default shader doesn't include sunlight
+
+            m_resources.shaders.loadFromString(ShaderID::Rope, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), RopeFrag);
+            auto matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Rope));
+            auto material = m_resources.materials.get(matID);
+            material.setProperty("u_colour", CD32::Colours[CD32::GreyLight] * m_sharedData.menuSky.sunColour);
+
+            auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
+            auto shadowMatID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+            static constexpr std::int32_t NodeCount = 6;
+
+            const auto createRopeMesh = [&](glm::vec3 pos, std::size_t ropeID)
+                {
+                    //position only, triangle strip
+                    auto entity = m_backgroundScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition(pos);
+                    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position, 1, GL_LINE_STRIP));
+                    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
+                    if (timeOfDay != TimeOfDay::Night)
+                    {
+                        entity.addComponent<cro::ShadowCaster>();
+                        entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(shadowMatID));
+                    }
+
+                    //indices are fixed at nodecount + 2 for anchors
+                    std::vector<std::uint32_t> indices;
+                    for (auto i = 0; i < NodeCount + 2; ++i)
+                    {
+                        indices.push_back(i);
+                    }
+                    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+                    auto* submesh = &meshData->indexData[0];
+                    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_DYNAMIC_DRAW));
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                    
+                    //just has to pass culling
+                    meshData->boundingBox = { glm::vec3(-15.f), glm::vec3(15.f) };
+                    meshData->boundingSphere = meshData->boundingBox;
+
+
+                    //verts are updated via callback - we could have a static mesh and set positions
+                    //via a uniform BUT we're still sending the same amount of data every time and
+                    //that would actually require a more expensive shader...
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().setUserData<std::vector<glm::vec3>>();
+                    entity.getComponent<cro::Callback>().function =
+                        [&, ropeID, meshData](cro::Entity e, float)
+                        {
+                            const auto& verts = m_backgroundScene.getSystem<RopeSystem>()->getNodePositions(ropeID);
+
+                            meshData->vertexCount = verts.size();
+                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+                            glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_DYNAMIC_DRAW));
+                            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+                        };
+                };
+
+
+            if (timeOfDay == TimeOfDay::Night)
+            {
+                m_resources.shaders.loadFromString(ShaderID::Lantern, LanternVert, LanternFrag);
+            }
+            else
+            {
+                m_resources.shaders.loadFromString(ShaderID::Lantern, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define BALL_COLOUR\n");
+            }
+            matID = m_resources.materials.add(m_resources.shaders.get(ShaderID::Lantern));
+            
+            auto lightMaterial = m_resources.materials.get(matID);
+            if (md.loadFromFile("assets/golf/models/menu/lantern.cmt"))
+            {
+                applyMaterialData(md, lightMaterial);
+            }
+            const std::array LightColours = 
+            { 
+                CD32::Colours[CD32::BeigeMid],
+                CD32::Colours[CD32::Yellow], 
+                CD32::Colours[CD32::Orange],
+                CD32::Colours[CD32::BlueLight],
+                CD32::Colours[CD32::GreyLight],
+                CD32::Colours[CD32::PinkLight],
+                CD32::Colours[CD32::GreenLight],
+            };
+
+            for (auto i = 0u; i < polePos.size() - 1; ++i)
+            {
+                auto rope = m_backgroundScene.getSystem<RopeSystem>()->addRope(polePos[i], polePos[i+1], 0.001f);
+                for (auto i = 0; i < NodeCount; ++i)
+                {
+                    const auto scale = 1.f + cro::Util::Random::value(-0.2f, 0.5f);
+
+                    auto entity = m_backgroundScene.createEntity();
+                    entity.addComponent<cro::Transform>().setScale(glm::vec3(scale));
+                    entity.addComponent<RopeNode>().ropeID = rope;
+
+                    //load models for lights
+                    //TODO could have a version with flags on instead of lanterns?
+                    
+                    if (md.isLoaded())
+                    {
+                        const auto colour = LightColours[cro::Util::Random::value(0u, LightColours.size() - 1)];
+
+                        md.createModel(entity);
+                        entity.getComponent<cro::Model>().setMaterial(0, lightMaterial);
+                        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_ballColour", colour);
+
+                        if (timeOfDay != TimeOfDay::Night)
+                        {
+                            entity.addComponent<cro::ShadowCaster>();
+                            entity.getComponent<cro::Model>().setShadowMaterial(0, m_resources.materials.get(shadowMatID));
+                        }
+                        else
+                        {
+                            entity.addComponent<LightmapProjector>().colour = colour;
+                            entity.getComponent<LightmapProjector>().size = 6.f * scale; //TODO how do we determine this
+                            entity.getComponent<LightmapProjector>().brightness = 0.3f; //and this based on model size / distance?
+                        }
+                    }
+                }
+                createRopeMesh(polePos[i], rope);
+            }
+        }
+    }
+}
+
+void MenuState::createFireworks()
+{
+    cro::SphereBuilder builder(5.f);
+    const auto meshID = m_resources.meshes.loadMesh(builder);
+    auto& meshData = m_resources.meshes.getMesh(meshID);
+    meshData.primitiveType = GL_POINTS;
+    meshData.indexData[0].primitiveType = GL_POINTS;
+
+
+    m_resources.shaders.loadFromString(ShaderID::Firework, FireworkVert, FireworkFragment, "#define GRAVITY 0.6\n#define POINT_SIZE 50.0\n");
+    auto& shader = m_resources.shaders.get(ShaderID::Firework);
+    m_scaleBuffer.addShader(shader);
+    auto materialID = m_resources.materials.add(shader);
+
+    auto material = m_resources.materials.get(materialID);
+    material.blendMode = cro::Material::BlendMode::Additive;
+
+    auto* fireworkSystem = m_backgroundScene.addSystem<FireworksSystem>(cro::App::getInstance().getMessageBus(), meshData, material);
+
+    static constexpr float MinRadius = 15.f;
+    static constexpr float MaxRadius = 35.f;
+
+    static constexpr std::array<float, 3U> MinBounds = { -MaxRadius / 2.f, MinRadius, -MaxRadius * 2.f };
+    static constexpr std::array<float, 3U> MaxBounds = { MaxRadius, MaxRadius, MinRadius };
+
+    auto positions = pd::PoissonDiskSampling(10.75f, MinBounds, MaxBounds);
+    std::shuffle(positions.begin(), positions.end(), cro::Util::Random::rndEngine);
+    for (const auto& p : positions)
+    {
+        glm::vec3 worldPos(p[0], p[1], p[2]);
+        const auto l = glm::length(worldPos);
+        if (l < MaxRadius && l > MinRadius)
+        {
+            fireworkSystem->addPosition(worldPos);
+        }
+    }
+}
+
+void MenuState::createSnow()
+{
+    const std::array<float, 3u> AreaStart = { -30.f, 0.f, -10.f };
+    const std::array<float, 3u> AreaEnd = { 30.f, 50.f, 30.f }; //NOTE the height has to be set as a shader define, below
+
+    auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
+
+    auto* meshData = &m_resources.meshes.getMesh(meshID);
+    std::vector<float> verts;
+    std::vector<std::uint32_t> indices;
+    const std::uint32_t stride = 1;
+    for (auto i = 0u; i < points.size(); i += stride)
+    {
+        verts.push_back(points[i][0]);
+        verts.push_back(points[i][1]);
+        verts.push_back(points[i][2]);
+        verts.push_back(1.f);
+        verts.push_back(1.f);
+        verts.push_back(1.f);
+        verts.push_back(1.f);
+
+        indices.push_back(i);
+    }
+
+    meshData->vertexCount = points.size() / stride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    meshData->boundingBox[0] = { AreaStart[0], AreaStart[1], AreaStart[2] };
+    meshData->boundingBox[1] = { AreaEnd[0], AreaEnd[1], AreaEnd[2] };
+    meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+    meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
+
+    m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment, "#define EASE_SNOW\n#define SYSTEM_HEIGHT 50.0\n");
+
+    const auto& shader = m_resources.shaders.get(ShaderID::Weather);
+    const auto materialID = m_resources.materials.add(shader);
+    auto material = m_resources.materials.get(materialID);
+    material.blendMode = cro::Material::BlendMode::Alpha;
+    material.setProperty("u_colour", LeaderboardTextLight);
+
+    auto entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+
+    m_windBuffer.addShader(shader);
+    m_scaleBuffer.addShader(shader);
+}
+
 void MenuState::setVoiceCallbacks()
 {
     const auto voiceCreate =
@@ -2256,6 +3064,188 @@ void MenuState::setVoiceCallbacks()
             }
         };
     m_voiceChat.setDeletionCallback(voiceDelete);
+}
+
+#ifdef USE_GNS
+void MenuState::checkBeta()
+{
+    if (SteamBeta::isBetaAvailable())
+    {
+        auto messageStrings = cro::Util::String::tokenize(SteamBeta::getBetaDescription(), '\n');
+        if (!messageStrings.empty())
+        {
+            const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+            
+            cro::Entity entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString(messageStrings[0]);
+            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+            entity.addComponent<UIElement>().relativePosition = { 1.f, 0.f };
+            entity.getComponent<UIElement>().absolutePosition = { -2.f, 10.f };
+            entity.getComponent<UIElement>().depth = 0.05f;
+            entity.getComponent<UIElement>().resizeCallback =
+                [&](cro::Entity e)
+                {
+                    glm::vec2 p(e.getComponent<cro::Transform>().getPosition());
+                    e.getComponent<cro::Transform>().setPosition(p * m_viewScale);
+                    e.getComponent<cro::Transform>().setScale(m_viewScale);
+                };
+
+            static constexpr float TextTime = 6.f;
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(TextTime, 0);
+            entity.getComponent<cro::Callback>().function =
+                [messageStrings](cro::Entity e, float dt)
+                {
+                    auto& [ct, idx] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+                    ct -= dt;
+                    if (ct < 0)
+                    {
+                        ct += TextTime;
+                        idx = (idx + 1) % messageStrings.size();
+
+                        e.getComponent<cro::Text>().setString(messageStrings[idx]);
+                    }
+                };
+            m_betaEntity = entity;
+        }
+    }
+}
+#endif
+
+void MenuState::launchQuickPlay()
+{
+    m_sharedData.quickplayOpponents = 3;
+
+    //make sure to always play with default profile
+    m_rosterMenu.activeIndex = 0;
+    setProfileIndex(0, false);
+    m_profileData.activeProfileIndex = 0;
+    m_profileData.playerProfiles[0].isCPU = false;
+    m_profileData.playerProfiles[0].saveProfile();
+
+    m_sharedData.hosting = true;
+    m_sharedData.gameMode = GameMode::FreePlay;
+    m_sharedData.localConnectionData.playerCount = 1;
+    m_sharedData.localConnectionData.playerData[0].isCPU = false;
+
+    m_sharedData.leagueRoundID = LeagueRoundID::Club;
+    m_sharedData.clubLimit = 0;
+
+    //start a local server and connect
+    if (quickConnect(m_sharedData))
+    {
+        //we want this to last the entire run of the game, so statics
+        //are probably amost (probably) acceptable here (this stops the
+        //randomiser picking the same course twice in a row and actually
+        //feels more random...)
+        static std::vector<std::size_t> indices;
+        if (indices.empty())
+        {
+            for (auto i = m_courseIndices[Range::Official].start; i < m_courseIndices[Range::Official].count; ++i)
+            {
+                indices.push_back(i);
+            }
+            std::shuffle(indices.begin(), indices.end(), cro::Util::Random::rndEngine);
+        }
+        static std::size_t indexIndex = 0;
+        indexIndex = (indexIndex + 1) % indices.size();
+
+        m_sharedData.courseIndex = indices[indexIndex];
+        m_sharedData.mapDirectory = m_sharedCourseData.courseData[m_sharedData.courseIndex].directory;
+
+        //set the course
+        auto data = serialiseString(m_sharedData.mapDirectory);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+        //now we wait for the server to send us the map name so we know the
+        //course has been set. Then the network event handler PacketID::ConnectionAccepted
+        //applies the random options
+    }
+    else
+    {
+        //error message is set by quickConnect()
+        requestStackPush(StateID::Error); //error makes sure to reset any connection
+    }
+}
+
+void MenuState::launchTournament(std::int32_t tournamentID)
+{
+    CRO_ASSERT(tournamentID == 0 || tournamentID == 1, "");
+
+    if (m_sharedData.tournaments[tournamentID].winner != -2)
+    {
+        //reset the tournament. Do we want to store the previous
+        //winner in a stat somewhere? EG the stat database?
+        //m_sharedData.tournaments[tournamentID] = {}; //don't do this, it erases the id
+        //m_sharedData.tournaments[tournamentID].id = tournamentID;
+        resetTournament(m_sharedData.tournaments[tournamentID]);
+        writeTournamentData(m_sharedData.tournaments[tournamentID]);
+    }
+
+
+    //if this is a brand new tournament set the initial clubset
+    //else check if we need to invalidate it
+    if (m_sharedData.tournaments[tournamentID].round == 0
+        && getTournamentHoleIndex(m_sharedData.tournaments[tournamentID]) == 0)
+    {
+        m_sharedData.tournaments[tournamentID].initialClubSet = m_sharedData.preferredClubSet;
+    }
+    else
+    {
+        if (m_sharedData.tournaments[tournamentID].initialClubSet != m_sharedData.preferredClubSet)
+        {
+            m_sharedData.tournaments[tournamentID].initialClubSet = -1;
+        }
+    }
+
+    m_sharedData.quickplayOpponents = 1; //golf state loads the player info from the active tournament
+
+    m_sharedData.hosting = true;
+    m_sharedData.gameMode = GameMode::Tournament; //ensures leaderboards are disabled and we return to correct menu
+    m_sharedData.activeTournament = tournamentID;
+    m_sharedData.localConnectionData.playerCount = 1;
+    m_sharedData.localConnectionData.playerData[0].isCPU = false;
+
+    //this gets passed to the server instance on creation so we know which
+    //save file it should be loading. MUST be reset to LeagueRoundID::Club, below
+    m_sharedData.leagueRoundID = std::numeric_limits<std::int32_t>::max() - tournamentID;
+    m_sharedData.clubLimit = 0;
+
+    m_sharedData.holeCount = getTournamentHoleCount(m_sharedData.tournaments[tournamentID]);
+    
+    //start a local server and connect
+    if (quickConnect(m_sharedData))
+    {
+        m_sharedData.mapDirectory = TournamentCourses[m_sharedData.tournaments[tournamentID].id][m_sharedData.tournaments[tournamentID].round];
+        auto res = std::find_if(m_sharedCourseData.courseData.begin(), m_sharedCourseData.courseData.end(),
+            [&](const SharedCourseData::CourseData& d)
+            {
+                return d.directory == m_sharedData.mapDirectory;
+            });
+        //res should never be out of range because the menu won't load if course data is missing
+        m_sharedData.courseIndex = std::distance(m_sharedCourseData.courseData.begin(), res);
+
+        //set the course
+        auto data = serialiseString(m_sharedData.mapDirectory);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+        //now we wait for the server to send us the map name so we know the
+        //course has been set. Then the network event handler PacketID::ConnectionAccepted
+        //applies the server options
+    }
+    else
+    {
+        //error message is set by quickConnect()
+        requestStackPush(StateID::Error); //error makes sure to reset any connection
+    }
+
+    //MUST restore this
+    m_sharedData.leagueRoundID = LeagueRoundID::Club;
 }
 
 void MenuState::handleNetEvent(const net::NetEvent& evt)
@@ -2349,35 +3339,22 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
                 if (m_sharedData.gameMode == GameMode::Tutorial)
                 {
-                    //hmmm is this going to get in soon enough?
-                    m_sharedData.gimmeRadius = GimmeSize::None;
-                    m_sharedData.scoreType = ScoreType::Stroke;
-                    
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    applyTutorialConnection();
                 }
                 else if (m_sharedData.gameMode == GameMode::Career)
                 {
-                    //apply the current league settings
-                    m_sharedData.clubLimit = 0;
-                    m_sharedData.reverseCourse = 0;
-                    m_sharedData.scoreType = ScoreType::Stroke;
-
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    
-                    //set by career menu
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-
-                    //TODO we may need to delay this a frame?
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    applyCareerConnection();
+                }
+                else if (m_sharedData.gameMode == GameMode::Tournament)
+                {
+                    applyTournamentConnection();
+                }
+                else if (m_sharedData.quickplayOpponents != 0)
+                {
+                    //this will also be true if we're in a tournament,
+                    //however the above case should catch that instance
+                    //so here we assume the game modeis FreePlay
+                    applyQuickPlayConnection();
                 }
                 else
                 {
@@ -2466,8 +3443,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             //if that's what's set
             if (course == "tutorial")
             {
-                //moved to connection accepted - must happen after sending player info
+                //moved to PacketID::ConnectionAcccepted - must happen after sending player info
                 //m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(0), cro::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            else if (m_sharedData.quickplayOpponents != 0)
+            {
+                //see above (this clause just consumes the case so below doesn't happen)
             }
             else
             {
@@ -2675,8 +3656,17 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 auto strClientCount = std::to_string(m_connectedClientCount);
                 auto strGameType = std::to_string(ConstVal::MaxClients) + " - " + ScoreTypes[m_sharedData.scoreType];
 
-                Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
-
+                switch (m_sharedData.quickplayOpponents)
+                {
+                default: break;
+                case 3:
+                    Social::setStatus(Social::InfoID::Menu, { "Launching a Quick Play Round" });
+                    break;
+                case 0:
+                    Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
+                    Social::setGroup(m_sharedData.clientConnection.hostID, m_connectedPlayerCount);
+                    break;
+                }
                 //hide the ticker if not stroke play
                 if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
                 {
@@ -2914,6 +3904,12 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         {
             Timeline::setGameMode(Timeline::GameMode::Lobby);
             Timeline::setTimelineDesc("Hosting Game");
+
+            if (m_sharedData.quickplayOpponents == 0)
+            {
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, m_sharedData.randomWind, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(m_sharedData.windStrength + 1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
         }
     }
 }
@@ -3063,4 +4059,215 @@ bool MenuState::applyTextEdit()
     }
     m_textEdit = {};
     return false;
+}
+
+void MenuState::createDebugWindows()
+{
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Tournament"))
+            {
+                const auto& n = m_sharedData.leagueNames;
+                const char PlayerName[] = "Player";
+                const char EmptyName[] = "Empty";
+                const auto getName = [&](std::int32_t idx)
+                    {
+                        if (idx > -1)
+                        {
+                            return n[idx].toUtf8();
+                        }
+                        return idx == -1 ?
+                            std::basic_string<std::uint8_t>(std::begin(PlayerName), std::end(PlayerName)) 
+                            : std::basic_string<std::uint8_t>(std::begin(EmptyName), std::end(EmptyName));
+                    };
+
+                const std::array<std::string, 2u> TabNames = { std::string("Dagle-Bunnage Cup"), "Sammonfield Championship" };
+                std::int32_t a = 0;
+
+                ImGui::BeginTabBar("##0002");
+                for (auto& t : m_sharedData.tournaments)
+                {
+                    if (ImGui::BeginTabItem(TabNames[a].c_str()))
+                    {
+                        const ImVec2 ChildSize(160.f, 300.f);
+                        ImGui::Text("Current Round: %d", t.round);
+                        ImGui::Text("Mulligans: %d", t.mulliganCount);
+                        ImGui::Separator();
+                        ImGui::BeginChild("##0", ChildSize);
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][0].c_str());
+                        for (auto i = 0; i < 8; ++i)
+                        {
+                            ImGui::Text("%d %s", t.tier0[i], getName(t.tier0[i]).c_str());
+                        }
+                        ImGui::Separator();
+                        for (auto i = 8; i < 16; ++i)
+                        {
+                            ImGui::Text("%d %s", t.tier0[i], getName(t.tier0[i]).c_str());
+                        }
+                        ImGui::EndChild();
+                        ImGui::SameLine();
+
+                        ImGui::BeginChild("##1", ChildSize);
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][1].c_str());
+                        for (auto i = 0; i < 4; ++i)
+                        {
+                            ImGui::Text("%d %s", t.tier1[i], getName(t.tier1[i]).c_str());
+                        }
+                        ImGui::Separator();
+                        for (auto i = 4; i < 8; ++i)
+                        {
+                            ImGui::Text("%d %s", t.tier1[i], getName(t.tier1[i]).c_str());
+                        }
+                        ImGui::EndChild();
+                        ImGui::SameLine();
+
+                        ImGui::BeginChild("##2", ChildSize);
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][2].c_str());
+                        for (auto i = 0; i < 2; ++i)
+                        {
+                            ImGui::Text("%d %s", t.tier2[i], getName(t.tier2[i]).c_str());
+                        }
+                        ImGui::Separator();
+                        for (auto i = 2; i < 4; ++i)
+                        {
+                            ImGui::Text("%d %s", t.tier2[i], getName(t.tier2[i]).c_str());
+                        }
+                        ImGui::EndChild();
+                        ImGui::SameLine();
+
+                        ImGui::BeginChild("##3", ChildSize);
+                        ImGui::Text("Course: %s", TournamentCourses[t.id][3].c_str());
+                        ImGui::Text("%d %s", t.tier3[0], getName(t.tier3[0]).c_str());
+                        ImGui::Text("%d %s", t.tier3[1], getName(t.tier3[1]).c_str());
+                        ImGui::EndChild();
+
+                        ImGui::Text("Winner: %d %s", t.winner, getName(t.winner).c_str());
+                        
+                        if (ImGui::Button("Launch"))
+                        {
+                            readTournamentData(t);
+                            launchTournament(a);
+                        }
+                        
+                        ImGui::SameLine();
+                        if (ImGui::ArrowButton("Reset", ImGuiDir_Up))
+                        {
+                            t = {};
+                            t.id = a;
+                            resetTournament(t);
+                            writeTournamentData(t);
+                        }
+                        
+                        ImGui::EndTabItem();
+                    }
+                    a++;
+                }
+                ImGui::EndTabBar();
+            }
+            ImGui::End();
+        
+        });
+}
+
+void MenuState::applyTutorialConnection()
+{
+    //hmmm is this going to get in soon enough?
+    m_sharedData.gimmeRadius = GimmeSize::None;
+    m_sharedData.scoreType = ScoreType::Stroke;
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void MenuState::applyCareerConnection()
+{
+    //apply the current league settings
+    m_sharedData.clubLimit = 0;
+    m_sharedData.reverseCourse = 0;
+    m_sharedData.scoreType = ScoreType::Stroke;
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    //set by career menu
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    //TODO we may need to delay this a frame?
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void MenuState::applyQuickPlayConnection()
+{
+    //club set should have been set by the player
+    m_sharedData.reverseCourse = cro::Util::Random::value(0, 1);
+    m_sharedData.scoreType = ScoreType::Stroke;
+    m_sharedData.weatherType = cro::Util::Random::value(WeatherType::Clear, WeatherType::Mist);
+    m_sharedData.holeCount = cro::Util::Random::value(1, 2);
+    m_sharedData.gimmeRadius = GimmeSize::Leather; //hmmm should we let the player choose this?
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RandomWind, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MaxWind, std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    //TODO we may need to delay this a frame?
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void MenuState::applyTournamentConnection()
+{
+    //assuming we have a similar menu in the tournament screen,
+    //this will probably do for applying settings
+    applyCareerConnection();
+}
+
+//from MenuConsts.hpp - used for quick launching
+//career, tutorial, quick play and tournament
+bool quickConnect(SharedStateData& sharedData)
+{
+    if (!sharedData.clientConnection.connected)
+    {
+        sharedData.serverInstance.launch(1, Server::GameMode::Golf, sharedData.fastCPU);
+
+        //small delay for server to get ready
+        cro::Clock clock;
+        while (clock.elapsed().asMilliseconds() < 500) {}
+
+#ifdef USE_GNS
+        sharedData.clientConnection.connected = sharedData.serverInstance.addLocalConnection(sharedData.clientConnection.netClient);
+#else
+        sharedData.clientConnection.connected = sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+#endif
+
+        if (!sharedData.clientConnection.connected)
+        {
+            sharedData.serverInstance.stop();
+            sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
+                + std::to_string(ConstVal::GamePort)
+                + " is allowed through\nany firewalls or NAT";
+
+            return false;
+        }
+
+        sharedData.serverInstance.setHostID(sharedData.clientConnection.netClient.getPeer().getID());
+        sharedData.serverInstance.setLeagueID(sharedData.leagueRoundID);
+    }
+    return true;
 }

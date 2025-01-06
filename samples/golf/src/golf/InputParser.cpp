@@ -58,6 +58,8 @@ namespace
 
     static constexpr float RotationSpeed = 1.2f;
     static constexpr float MaxRotation = 0.36f;
+    float FineTune = 1.f; //this is halved when using D-Pad for finer aiming
+    static constexpr float FineTuneAmount = 0.4f;
 
     static constexpr float MinPower = 0.01f;
     static constexpr float MaxPower = 1.f - MinPower;
@@ -302,10 +304,12 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == cro::GameController::DPadLeft)
                 {
                     m_inputFlags |= InputFlag::Left;
+                    FineTune = FineTuneAmount;
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadRight)
                 {
                     m_inputFlags |= InputFlag::Right;
+                    FineTune = FineTuneAmount;
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadUp)
                 {
@@ -375,10 +379,12 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == cro::GameController::DPadLeft)
                 {
                     m_inputFlags &= ~InputFlag::Left;
+                    FineTune = 1.f;
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadRight)
                 {
                     m_inputFlags &= ~InputFlag::Right;
+                    FineTune = 1.f;
                 }
                 else if (evt.cbutton.button == cro::GameController::DPadUp)
                 {
@@ -562,7 +568,7 @@ bool InputParser::getButtonState(std::int32_t binding) const
 
 float InputParser::getPower() const
 {
-    return MinPower + (MaxPower * cro::Util::Easing::easeInSine(m_power));
+    return MinPower + (MaxPower * cro::Util::Easing::easeInSine(std::min(m_power, 1.f)));
 }
 
 float InputParser::getHook() const
@@ -1019,7 +1025,7 @@ void InputParser::updateStroke(float dt)
 
 
             //rotation
-            const float rotation = RotationSpeed * m_maxRotation * m_analogueAmount * dt;
+            const float rotation = RotationSpeed * FineTune * m_maxRotation * m_analogueAmount * dt;
 
             if (m_inputFlags & InputFlag::Left)
             {
@@ -1132,9 +1138,13 @@ void InputParser::updateStroke(float dt)
                 speed = (speed * MinBarSpeed) + ((speed * (1.f - MinBarSpeed)) * increase);
             }
 
-            m_power = std::min(1.f, std::max(0.f, m_power + (speed * m_powerbarDirection)));
+            //allowing the bar to go over 1 means we get a slight
+            //pause at the top (as the actual output is clamped to 1)
+            //TODO we could reduce this as the player skill level increases?
+            static constexpr float MaxPowerOutput = 1.025f;
+            m_power = std::min(MaxPowerOutput, std::max(0.f, m_power + (speed * m_powerbarDirection)));
 
-            if (m_power == 1)
+            if (m_power == MaxPowerOutput)
             {
                 m_powerbarDirection = -1.f;
             }
@@ -1338,7 +1348,8 @@ void InputParser::updateSpin(float dt)
     }
 
 
-    auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY) * 2.f;
+    auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY, false) * 2.f;
+        
     m_spin.x = std::clamp(m_spin.x + (rotation.y * dt), -1.f, 1.f);
     m_spin.y = std::clamp(m_spin.y + (rotation.x * dt), -1.f, 1.f);
 
@@ -1498,7 +1509,7 @@ void InputParser::checkMouseInput()
     //m_mouseMove = 0;
 }
 
-glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const
+glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis, bool allowInvert) const
 {
     glm::vec2 rotation(0.f);
     if (m_inputFlags & (InputFlag::Left | InputFlag::Right))
@@ -1530,13 +1541,13 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
     if (std::abs(controllerX) > LeftThumbDeadZone)
     {
         rotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
-        rotation.y *= m_sharedData.invertX ? -1.f : 1.f;
+        rotation.y *= (m_sharedData.invertX && allowInvert) ? -1.f : 1.f;
         rotation.y *= m_sharedData.mouseSpeed;
     }
     if (std::abs(controllerY) > LeftThumbDeadZone)
     {
         rotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
-        rotation.x *= m_sharedData.invertY ? -1.f : 1.f;
+        rotation.x *= (m_sharedData.invertY && allowInvert) ? -1.f : 1.f;
         rotation.x *= m_sharedData.mouseSpeed;
     }
 

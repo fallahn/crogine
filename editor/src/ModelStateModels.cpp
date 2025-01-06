@@ -282,6 +282,18 @@ void ModelState::openModelAtPath(const std::string& path)
         m_showAABB = m_showSphere = false;
         updateGridMesh(m_entities[EntityID::GridMesh].getComponent<cro::Model>().getMeshData(), std::nullopt, std::nullopt);
     }
+
+    if (m_entities[EntityID::ActiveModel].isValid())
+    {
+        if (m_entities[EntityID::ActiveModel].hasComponent<cro::Skeleton>())
+        {
+            m_importedTransform.rootTransform = m_entities[EntityID::ActiveModel].getComponent<cro::Skeleton>().getRootTransform();
+        }
+        else
+        {
+            m_importedTransform.rootTransform = glm::mat4(1.f);
+        }
+    }
 }
 
 void ModelState::saveModel(const std::string& path)
@@ -473,12 +485,14 @@ void ModelState::saveModel(const std::string& path)
         m_currentFilePath = path;
         m_currentModelConfig = newCfg;
 
-        if (m_modelProperties.type == ModelProperties::Skinned)
+        if (m_modelProperties.type == ModelProperties::Skinned
+            || m_transformUpdated)
         {
             //write the binary in case attachments or notifications
             //were updated.
             cro::Detail::ModelBinary::write(m_entities[EntityID::ActiveModel], meshPath, true);
         }
+        m_transformUpdated = false;
     }
     else
     {
@@ -1072,7 +1086,7 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
     }
 }
 
-void ModelState::applyImportTransform()
+void ModelState::applyImportTransform(std::vector<float>& vertexData)
 {
     const auto& transform = m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().getLocalTransform();
 
@@ -1122,7 +1136,7 @@ void ModelState::applyImportTransform()
 
         auto applyTransform = [&](const glm::mat4& tx, std::size_t idx, bool normalise = false)
         {
-            glm::vec4 v(m_importedVBO[idx], m_importedVBO[idx + 1], m_importedVBO[idx + 2], 1.f);
+            glm::vec4 v(vertexData[idx], vertexData[idx + 1], vertexData[idx + 2], 1.f);
             v = tx * v;
 
             if (normalise)
@@ -1130,13 +1144,13 @@ void ModelState::applyImportTransform()
                 v = glm::normalize(v);
             }
 
-            m_importedVBO[idx] = v.x;
-            m_importedVBO[idx + 1] = v.y;
-            m_importedVBO[idx + 2] = v.z;
+            vertexData[idx] = v.x;
+            vertexData[idx + 1] = v.y;
+            vertexData[idx + 2] = v.z;
         };
 
         //loop over the vertex data and modify
-        for (std::size_t i = 0u; i < m_importedVBO.size(); i += vertexSize)
+        for (std::size_t i = 0u; i < vertexData.size(); i += vertexSize)
         {
             //position
             applyTransform(transform, i);
@@ -1162,7 +1176,7 @@ void ModelState::applyImportTransform()
 
         //upload the data to the preview model
         glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
-        glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, m_importedVBO.data(), GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, meshData.vertexSize * meshData.vertexCount, vertexData.data(), GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         m_importedTransform = {};
     }

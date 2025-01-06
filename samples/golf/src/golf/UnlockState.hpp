@@ -37,7 +37,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/MaterialData.hpp>
-#include <crogine/graphics/Shader.hpp>
+#include <crogine/graphics/ShaderResource.hpp>
 
 #include <array>
 
@@ -98,12 +98,9 @@ private:
 
     cro::RenderTexture m_modelTexture;
 
-    //TODO these would probably be faster to load
-    //in shader resources, and would be more consistent
-    cro::Shader m_celShader;
-    cro::Shader m_reflectionShader;
+    cro::ShaderResource m_shaderResource;
     cro::CubemapTexture m_cubemap;
-    std::array<cro::Material::Data, 2u> m_materials = {};
+    std::array<cro::Material::Data, 3u> m_materials = {};
 
     void addSystems();
     void buildScene();

@@ -35,6 +35,7 @@ source distribution.
 #include "../Clubs.hpp"
 #include "../MessageIDs.hpp"
 #include "../WeatherDirector.hpp"
+#include "../League.hpp"
 #include "CPUStats.hpp"
 #include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"
@@ -91,6 +92,7 @@ namespace
 GolfState::GolfState(SharedData& sd)
     : m_returnValue         (StateID::Golf),
     m_sharedData            (sd),
+    m_ntpPro                (sd.scoreType == ScoreType::NearestThePinPro),
     m_mapDataValid          (false),
     m_scene                 (sd.messageBus, 512),
     m_scoreboardTime        (0.f),
@@ -106,6 +108,11 @@ GolfState::GolfState(SharedData& sd)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
+        if (sd.scoreType == ScoreType::NearestThePinPro)
+        {
+            sd.scoreType = ScoreType::NearestThePin;
+        }
+
         initScene();
         buildWorld();
     }
@@ -309,6 +316,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                     playerInfo[0].position = m_holeData[m_currentHole].pin;
                     playerInfo[0].distanceToHole = 0.f;
                     playerInfo[0].terrain = TerrainID::Green;
+                }
+
+                if (m_sharedData.scoreType == ScoreType::NearestThePin)
+                {
+                    playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes + 1;
                 }
             }
             else if (data.type == GolfBallEvent::Landed)
@@ -1123,16 +1135,12 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 
     if (!allPlayers.empty())
     {
-        bool playersForfeit =
-            (allPlayers.size() == 1
-                && (m_sharedData.scoreType == ScoreType::Elimination
-                    || m_sharedData.scoreType == ScoreType::Match
-                    || m_sharedData.scoreType == ScoreType::Skins));
+        bool playersForfeit = ScoreType::MinPlayerCount[m_sharedData.scoreType] > allPlayers.size();
 
         //TODO move this to some game rule check function
         if ((allPlayers[0].distanceToHole == 0 //all players must be in the hole
             || (m_sharedData.scoreType == ScoreType::NearestThePin && allPlayers[0].holeScore[m_currentHole] >= MaxNTPStrokes) //all players must have taken their turn
-            || playersForfeit//(m_sharedData.scoreType == ScoreType::Elimination && allPlayers.size() == 1) //players have quit the game so attempt next hole
+            || playersForfeit //players have quit the game so attempt next hole
             || (m_sharedData.scoreType == ScoreType::Elimination && allPlayers[1].eliminated)) //(which triggers the rules to end the game)  
             && waitingCount >= m_playerInfo.size() - 1) //don't move on until all but this group are waiting
         {
@@ -1150,6 +1158,18 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
                 //don't send this if all players forfeit
                 if (allPlayers[0].holeScore[m_currentHole] == MaxNTPStrokes)
                 {
+                    //if we're playing NTPPro we score based on total hole wins
+                    auto& group = m_playerInfo[m_groupAssignments[allPlayers[0].client]];
+                    auto player = std::find_if(group.playerInfo.begin(), group.playerInfo.end(),
+                        [&allPlayers](const PlayerStatus& p)
+                        {
+                            return p.client == allPlayers[0].client && p.player == allPlayers[0].player;
+                        });
+                    player->matchWins++;
+
+                    //set this to 1 to show that this player won the hole on the score board
+                    player->holeScore[m_currentHole] = 1;
+
                     std::uint16_t d = (std::uint16_t(allPlayers[0].client) << 8) | allPlayers[0].player;
                     m_sharedData.host.broadcastPacket(PacketID::HoleWon, d, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
@@ -1211,8 +1231,11 @@ void GolfState::setNextPlayer(std::int32_t groupID, bool newHole)
 void GolfState::setNextHole()
 {
     m_currentBest = MaxStrokes;
-    m_scene.getSystem<BallSystem>()->forceWindChange();
-
+    
+    if (!m_sharedData.randomWind)
+    {
+        m_scene.getSystem<BallSystem>()->forceWindChange();
+    }
 
     //update player skins/match scores
     auto gameFinished = summariseRules();
@@ -1641,7 +1664,10 @@ void GolfState::initScene()
 
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_scene.addSystem<BallSystem>(mb)->setGimmeRadius(m_sharedData.gimmeRadius);
+    auto* bs = m_scene.addSystem<BallSystem>(mb);
+    bs->setGimmeRadius(m_sharedData.gimmeRadius);
+    bs->setMaxStrengthMultiplier(m_sharedData.maxWind);
+    bs->enableRandomWind(m_sharedData.randomWind);
 
     if (m_sharedData.weatherType == WeatherType::Showers)
     {
@@ -1845,26 +1871,14 @@ void GolfState::buildWorld()
         }
     }
 
-    //if this is a career league look for a progress file
-    //TODO what are the chances of this overlapping with the client?
-    if (m_sharedData.leagueID != 0)
-    {
-        const auto groupID = 0; //assume this is single player always
-
-        std::uint64_t h = 0;
-        std::vector<std::uint8_t> scores(m_holeData.size());
-
-        std::int32_t temp = 0;
-
-        if (Progress::read(m_sharedData.leagueID, h, scores, temp)
-            && h != 0)
+    
+    const auto applySaveData =
+        [&](std::vector<std::uint8_t>& scores, std::uint64_t holeIndex)
         {
-            m_currentHole = std::min(std::size_t(h), m_holeData.size() - 1);
-
-            scores.resize(m_holeData.size());
+            m_currentHole = std::min(std::size_t(holeIndex), m_holeData.size() - 1);
 
             //if we're here we *should* only have one player...
-            auto& player = m_playerInfo[groupID].playerInfo[0];
+            auto& player = m_playerInfo[0].playerInfo[0];
             player.holeScore.swap(scores);
 
             player.position = m_holeData[m_currentHole].tee;
@@ -1874,6 +1888,60 @@ void GolfState::buildWorld()
             player.terrain = m_scene.getSystem<BallSystem>()->getTerrain(player.position).terrain;
             player.ballEntity.getComponent<cro::Transform>().setPosition(player.position);
             player.ballEntity.getComponent<Ball>().terrain = player.terrain;
+        };
+
+
+    
+    
+    
+    //if this is a career league look for a progress file
+    //TODO what are the chances of this overlapping with the client?
+    if (m_sharedData.leagueID != 0)
+    {
+        std::uint64_t h = 0;
+        std::vector<std::uint8_t> scores(m_holeData.size());
+
+        //this is a fudge to let the server know we're
+        //actually on a tournament
+        if (m_sharedData.leagueID > LeagueRoundID::Count)
+        {
+            const auto tournamentID = std::numeric_limits<std::int32_t>::max() - m_sharedData.leagueID;
+            CRO_ASSERT(tournamentID < 2, "");
+
+            Tournament t;
+            t.id = tournamentID;
+            readTournamentData(t);
+
+            std::fill(scores.begin(), scores.end(), 0);
+
+            //tournament
+            for (auto i = 0; i < scores.size(); ++i)
+            {
+                scores[i] = t.scores[i];
+                if (scores[i] != 0)
+                {
+                    h++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            if (h != 0)
+            {
+                applySaveData(scores, h);
+            }
+        }
+        else
+        {
+            std::int32_t temp = 0;
+
+            if (Progress::read(m_sharedData.leagueID, h, scores, temp)
+                && h != 0)
+            {
+                applySaveData(scores, h);
+            }
         }
     }
 }

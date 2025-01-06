@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,7 +33,6 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "SharedStateData.hpp"
 #include "InputParser.hpp"
-#include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
 #include "../GolfGame.hpp"
 
@@ -63,7 +62,9 @@ source distribution.
 #include <iomanip>
 #include <array>
 
-static inline constexpr float ToYards = 1.09361f;
+static constexpr float ToYards = 1.09361f;
+static constexpr float ToFeet = 3.281f;
+static constexpr float ToInches = 12.f;
 
 static inline constexpr std::int32_t CrowdDensityCount = 4;
 //decreased for each additional player to a minimum of 2
@@ -232,7 +233,8 @@ struct SpriteAnimID final
         Medal,
         BillboardSwing,
         BillboardRewind,
-        Footstep
+        Footstep,
+        Pump
     };
 };
 
@@ -265,6 +267,7 @@ struct ShaderID final
         CelTextured,
         CelTexturedNoWind,
         CelTexturedMasked,
+        CelTexturedMaskedLightMap,
         CelTexturedMaskedNoWind,
         CelTexturedInstanced,
         CelTexturedSkinned,
@@ -286,7 +289,10 @@ struct ShaderID final
         CourseGreen,
         CourseGrid,
         Ball,
+        BallSkinned,
         BallNight,
+        BallNightSkinned,
+        BallWasher,
         Slope,
         Minimap,
         MinimapView,
@@ -318,6 +324,9 @@ struct ShaderID final
         LensFlare,
         PointFlare,
         Firework,
+        Rope,
+        Lantern,
+        Roids
     };
 };
 
@@ -520,7 +529,7 @@ static inline float getViewScale(glm::vec2 size = GolfGame::getActiveTarget()->g
 {
     const float ratio = size.x / size.y;
 
-    if (ratio < 1.7)
+    if (ratio < 1.7f)
     {
         //4:3
         return std::min(8.f, std::floor(size.x / 512.f));
@@ -528,12 +537,12 @@ static inline float getViewScale(glm::vec2 size = GolfGame::getActiveTarget()->g
 
     if (ratio < 2.37f)
     {
-        //widescreen
-        return std::min(8.f, std::floor(size.x / 540.f));
+        //widescreen - clamp at 6x for 4k
+        return std::min(6.f, std::floor(size.x / 540.f));
     }
 
     //ultrawide
-    return std::min(8.f, std::floor(size.y / 360.f));
+    return std::min(6.f, std::floor(size.y / 360.f));
 }
 
 static inline void togglePixelScale(SharedStateData& sharedData, bool on)
@@ -984,6 +993,7 @@ struct SkyboxMaterials final
     std::int32_t horizon = -1;
     std::int32_t horizonSun = -1;
     std::int32_t skinned = -1;
+    std::int32_t glass = -1;
     
     //if loading the skybox finds a 
     //sun position this is set to true
@@ -991,6 +1001,7 @@ struct SkyboxMaterials final
     //mode to act on it.
     bool requestLensFlare = false;
     glm::vec3 sunPos = glm::vec3(0.f);
+    cro::Colour sunColour = cro::Colour::White;
 };
 
 //returns the entity with the cloud ring (so we can apply material)
@@ -1000,6 +1011,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
     float stars = 0.f;
+    bool loadClouds = true;
 
     cro::ConfigFile cfg;
 
@@ -1037,6 +1049,14 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                 {
                     materials.requestLensFlare = true;
                     materials.sunPos = p.getValue<glm::vec3>();
+                }
+                else if (name == "sun_colour")
+                {
+                    materials.sunColour = p.getValue<cro::Colour>();
+                }
+                else if (name == "clouds")
+                {
+                    loadClouds = p.getValue<bool>();
                 }
             }
         }
@@ -1111,8 +1131,26 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
 
                 for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
                 {
-                    applyMaterialData(md, material, i);
-                    entity.getComponent<cro::Model>().setMaterial(i, material);
+                    if (md.hasTag(i, "glass"))
+                    {
+                        if (materials.glass != -1)
+                        {
+                            auto glassMat = resources.materials.get(materials.glass);
+                            applyMaterialData(md, glassMat, i);
+                            entity.getComponent<cro::Model>().setMaterial(i, glassMat);
+                        }
+                        else
+                        {
+                            LogW << "Model " << model.path << " has glass material but no material available." << std::endl;
+                            applyMaterialData(md, material, i);
+                            entity.getComponent<cro::Model>().setMaterial(i, material);
+                        }
+                    }
+                    else
+                    {
+                        applyMaterialData(md, material, i);
+                        entity.getComponent<cro::Model>().setMaterial(i, material);
+                    }
                 }
             }
 
@@ -1138,7 +1176,8 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
     skyScene.setStarsAmount(stars);
 
     cro::Entity cloudEnt;
-    if (md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))
+    if (loadClouds &&
+        md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))
     {
         auto entity = skyScene.createEntity();
         entity.addComponent<cro::Transform>();
@@ -1176,18 +1215,86 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
     target.addComponent<cro::Model>(meshData, material);
 }
 
-static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool decimal, bool isTarget = false)
+static inline void formatElevationString(float distance, cro::Text& target, bool imperial, bool decimal)
 {
-    static constexpr float ToYards = 1.094f;
-    static constexpr float ToFeet = 3.281f;
-    static constexpr float ToInches = 12.f;
+    if (imperial)
+    {
+        if (decimal)
+        {
+            std::stringstream ss;
+            ss.precision(2);
+            ss << "Elevation: ";
 
+            distance *= ToYards;
+            if (distance < 1 && distance > -1)
+            {
+                ss << std::fixed << ((distance * ToFeet) * ToInches);
+                ss << "in";
+            }
+            else
+            {
+                ss << std::fixed << distance;
+                ss << "yds";
+            }
 
+            target.setString(ss.str());
+        }
+        else
+        {
+            distance *= ToFeet;
+            if (distance > 3 || distance < -3)
+            {
+                std::stringstream ss;
+                ss.precision(1);
+                ss << "Elevation: ";
+                ss << std::fixed << distance;
+                ss << "ft";
+
+                target.setString(ss.str());
+            }
+            else
+            {
+                auto dist = static_cast<std::int32_t>(distance * ToInches);
+                target.setString("Elevation: " + std::to_string(dist) + "in");
+            }
+        }
+    }
+    else
+    {
+        if (distance > 5 || distance < -5)
+        {
+            auto dist = static_cast<std::int32_t>(std::round(distance));
+            target.setString("Elevation: " + std::to_string(dist) + "m");
+        }
+        else
+        {
+            if (decimal)
+            {
+                std::stringstream ss;
+                ss.precision(2);
+                ss << "Elevation: ";
+                ss << std::fixed << distance;
+                ss << "m";
+
+                target.setString(ss.str());
+            }
+            else
+            {
+                auto dist = static_cast<std::int32_t>(distance * 100.f);
+                target.setString("Elevation: " + std::to_string(dist) + "cm");
+            }
+        }
+    }
+}
+
+static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool decimal, bool onGreen, bool isTarget = false)
+{
     const std::string Prefix = isTarget ? "Target: " : "Pin: ";
 
     if (imperial)
     {
-        if (distance > 7) //TODO this should read the putter value (?)
+        //if (distance > 7) //TODO this should read the putter value (?)
+        if (!onGreen)
         {
             auto dist = static_cast<std::int32_t>(std::round(distance * ToYards));
             target.setString(Prefix + std::to_string(dist) + "yds");
@@ -1208,9 +1315,17 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
                 std::stringstream ss;
                 ss.precision(2);
                 ss << "Distance: ";
-                ss << std::fixed << (distance * ToYards);
-                ss << "yds";
 
+                if (!onGreen)
+                {
+                    ss << std::fixed << (distance * ToYards);
+                    ss << "yds";
+                }
+                else
+                {
+                    ss << std::fixed << ((distance * ToYards) * ToFeet);
+                    ss << "ft";
+                }
                 target.setString(ss.str());
             }
             else

@@ -51,11 +51,11 @@ source distribution.
 //(player avatar data format changed 1153 -> 1160)
 //(player avatar data format changed 1170 -> 1180)
 //(course data changed 1180 -> 1181)
-static constexpr std::uint16_t CURRENT_VER = 1182;
+static constexpr std::uint16_t CURRENT_VER = 1190;
 #ifdef __APPLE__
-static const std::string StringVer("1.18.2 (macOS beta)");
+static const std::string StringVer("1.19.0 (macOS beta)");
 #else
-static const std::string StringVer("1.18.2");
+static const std::string StringVer("1.19.0");
 #endif
 
 struct HallEntry final
@@ -87,7 +87,8 @@ public:
         enum
         {
             SocialMessage = 10000,
-            StatsMessage
+            StatsMessage,
+            LocationMessage
         };
     };
 
@@ -99,7 +100,8 @@ public:
             HOFReceived,
             AwardsReceived,
             RequestRestart,
-            LeagueReceived
+            LeagueReceived,
+            ScrubScoresReceived
         }type = StatsReceived;
         std::int32_t index = -1;
         std::int32_t page = -1;
@@ -127,6 +129,11 @@ public:
             std::uint64_t playerID = 0;
             std::int32_t challengeID; //id of monthly challenge
         };
+    };
+
+    struct LocationEvent final
+    {
+        glm::vec2 latlon = glm::vec2(0.f);
     };
 
     struct ProgressData final
@@ -220,7 +227,7 @@ public:
     {
         Ball, Club, Level, Generic,
         CareerBalls, CareerHair, CareerAvatar,
-        CareerPosition
+        CareerPosition, Tournament
     };
     static std::int32_t getUnlockStatus(UnlockType);
     static void setUnlockStatus(UnlockType, std::int32_t set);
@@ -239,6 +246,13 @@ public:
     static MonthlyChallenge& getMonthlyChallenge();
     static std::int32_t getMonth();
 
+    static void setScrubScore(std::int32_t);
+    static void refreshScrubScore();
+    static const cro::String& getScrubScores();
+    static std::int32_t getScrubPB();
+
     static void showWebPage(const std::string&) {}
     static void readAllStats();
+
+    static bool getLatLon() { return false; } //triggers a LocationEvent if lat/lon was found
 };

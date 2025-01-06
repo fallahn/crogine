@@ -225,6 +225,8 @@ namespace PacketID
         HoleCount, //< uint8 0 - 2: all, front or back
         ReverseCourse, //< uint8 0 false else true
         ClubLimit, //< uint8 0 false else true
+        RandomWind, //uint8 0 or 1
+        MaxWind, //uint8 1-5
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
         AchievementGet, //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
         Activity, //< Activity struct contains start/end events for 'thinking'

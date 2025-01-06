@@ -39,15 +39,29 @@ ATTRIBUTE vec4 a_colour;
 
 #include WVP_UNIFORMS
 
+#if defined(SKINNED)
+#define MAX_BONES 64
+#include SKIN_UNIFORMS
+#endif
+
 VARYING_OUT vec4 v_colour;
 VARYING_OUT vec3 v_normal;
 VARYING_OUT vec3 v_worldPosition;
 
 void main()
 {
-    gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
-    v_worldPosition = (u_worldMatrix * a_position).xyz;
-    v_normal = u_normalMatrix * a_normal;
+    vec4 position = a_position;
+    #if defined(SKINNED)
+#include SKIN_MATRIX
+    position = skinMatrix * position;
+#endif
+    gl_Position = u_projectionMatrix * u_worldViewMatrix * position;
+    v_worldPosition = (u_worldMatrix * position).xyz;
+    vec3 normal = a_normal;
+#if defined(SKINNED)
+    normal = (skinMatrix * vec4(normal, 0.0)).xyz;
+#endif
+    v_normal = u_normalMatrix * normal;
     v_colour = a_colour;
 }
 

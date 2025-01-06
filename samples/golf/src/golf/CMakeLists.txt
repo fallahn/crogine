@@ -18,6 +18,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/CloudSystem.cpp
   ${PROJECT_DIR}/golf/ClubhouseState.cpp
+  ${PROJECT_DIR}/golf/ClubModels.cpp
   ${PROJECT_DIR}/golf/ClubhouseStateUI.cpp
   ${PROJECT_DIR}/golf/Clubs.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
@@ -53,6 +54,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/LeagueNames.cpp
   ${PROJECT_DIR}/golf/LeagueState.cpp
   ${PROJECT_DIR}/golf/LightAnimationSystem.cpp
+  ${PROJECT_DIR}/golf/LightmapProjectionSystem.cpp
   ${PROJECT_DIR}/golf/MenuAvatars.cpp
   ${PROJECT_DIR}/golf/MapOverviewState.cpp
   ${PROJECT_DIR}/golf/MenuCallbacks.cpp
@@ -81,6 +83,7 @@ set(GOLF_SRC
   #${PROJECT_DIR}/golf/PuttingState.cpp
   #${PROJECT_DIR}/golf/PuttingStateUI.cpp
   ${PROJECT_DIR}/golf/RayResultCallback.cpp
+  ${PROJECT_DIR}/golf/RopeSystem.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
   ${PROJECT_DIR}/golf/SpectatorSystem.cpp
@@ -93,6 +96,9 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/TerrainChunks.cpp
   ${PROJECT_DIR}/golf/TerrainDepthmap.cpp
   ${PROJECT_DIR}/golf/TextChat.cpp
+  ${PROJECT_DIR}/golf/TimeOfDay.cpp
+  ${PROJECT_DIR}/golf/Tournament.cpp
+  ${PROJECT_DIR}/golf/TournamentState.cpp
   ${PROJECT_DIR}/golf/TrophyDisplaySystem.cpp
   ${PROJECT_DIR}/golf/TrophyState.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp

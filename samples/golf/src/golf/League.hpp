@@ -87,6 +87,15 @@ struct LeagueRoundID final
 
 using HoleScores = std::array<std::int32_t, 18>;
 
+struct ScoreCalculator final
+{
+    explicit ScoreCalculator(std::int32_t clubset);
+    void calculate(const LeaguePlayer&, std::uint32_t hole, std::int32_t par, bool overPar, HoleScores&) const;
+
+private:
+    std::int32_t m_clubset;
+};
+
 struct SharedStateData;
 class League final
 {
@@ -108,6 +117,8 @@ public:
 
     const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
     const std::vector<TableEntry>& getSortedTable() const { return m_sortedTable; } //used for display
+
+    const LeaguePlayer& getPlayer(std::int32_t nameIndex) const;
 
     const cro::String& getPreviousResults(const cro::String& playerName) const;
     std::int32_t getPreviousPosition() const { return m_previousPosition; }
@@ -150,7 +161,7 @@ private:
 
     std::array<HoleScores, PlayerCount> m_holeScores = {};
 
-    void calculateHoleScore(LeaguePlayer&, std::uint32_t hole, std::int32_t par, bool overPar);
+    ScoreCalculator m_scoreCalculator;
 
     void rollPlayers(bool resetScores);
     void increaseDifficulty();
@@ -164,4 +175,31 @@ private:
     void write();
     void assertDB();
     void updateDB();
+};
+
+//single player used for quick rounds
+class FriendlyPlayers final
+{
+public:
+    explicit FriendlyPlayers(std::int32_t clubset);
+    void updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance);
+
+    void addPlayer(LeaguePlayer);
+    void setHoleScores(std::int32_t playerNameIndex, const HoleScores&);
+    const HoleScores& getHoleScores(std::int32_t) const;
+
+    const HoleScores& getScores(std::size_t i) const { return m_holeScores[m_players[i].nameIndex]; }
+    std::int32_t getPlayerIndex(std::size_t i) const { return m_players[i].nameIndex; }
+
+    std::size_t getPlayerCount() const { return m_players.size(); }
+
+private:
+
+    std::vector<LeaguePlayer> m_players;
+
+    //world's most pointless array - but it needs
+    //to work with the score calculator
+    std::array<HoleScores, League::PlayerCount> m_holeScores = {};
+
+    ScoreCalculator m_scoreCalculator;
 };

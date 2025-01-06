@@ -126,10 +126,9 @@ void FireworksSystem::process(float dt)
             auto entity = getScene()->createEntity();
             entity.addComponent<cro::Transform>().setPosition(m_positions[m_spawnIndex]);
             entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-            //nice idea but we need to fix gravity in the shader if we do this
-            /*entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI));
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI));
             entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI));
-            entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI));*/
+            entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI));
             entity.addComponent<cro::Model>(m_meshData, m_materialData);
             entity.addComponent<Firework>().maxRadius = size;
             entity.getComponent<Firework>().progress = -static_cast<float>(i) / 7.f;

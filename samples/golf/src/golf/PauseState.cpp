@@ -249,8 +249,9 @@ void PauseState::buildScene()
             }
 
             {
+                //urrrgggghhhhhh
                 auto players = (m_sharedData.baseState == StateID::Golf
-                    && ((m_sharedData.leagueRoundID == LeagueRoundID::Club && m_sharedData.hosting)
+                    && ((m_sharedData.leagueRoundID == LeagueRoundID::Club && m_sharedData.hosting && m_sharedData.gameMode != GameMode::Tournament)
                     || m_sharedData.hasMulligan));
                 m_playerButton.getComponent<cro::UIInput>().enabled = players;
                 m_playerButton.getComponent<cro::Transform>().setScale(glm::vec2(players ? 1.f : 0.f));
@@ -452,15 +453,16 @@ void PauseState::buildScene()
     m_minimapButton = entity;
 
     //player management
-    const std::string title = m_sharedData.leagueRoundID == LeagueRoundID::Club ? "Player Management" : "Take A Mulligan";
+    const bool mulligan = (m_sharedData.gameMode == GameMode::Career || m_sharedData.gameMode == GameMode::Tournament);
+    const std::string title = mulligan ? "Take A Mulligan" : "Player Management";
     entity = createItem(glm::vec2(0.f, -5.f), title, menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
+        uiSystem.addCallback([&, mulligan](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
-                    if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
+                    if (!mulligan)
                     {
                         requestStackPush(StateID::PlayerManagement);
                     }
@@ -582,7 +584,8 @@ void PauseState::buildScene()
         entity.addComponent<cro::Transform>();// .setPosition(glm::vec2(0.f, 2.f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-        if (m_sharedData.gameMode == GameMode::Career)
+        if (m_sharedData.gameMode == GameMode::Career
+            || m_sharedData.gameMode == GameMode::Tournament)
         {
             entity.getComponent<cro::Transform>().move({ 0.f, 10.f });
             entity.getComponent<cro::Text>().setString("Your Progress Up To The\nCurrent Hole Will Be Saved.");

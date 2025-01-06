@@ -37,6 +37,7 @@ source distribution.
 #include "Utility.hpp"
 #include "TextAnimCallback.hpp"
 #include "Career.hpp"
+#include "Tournament.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -359,46 +360,29 @@ void MessageOverlayState::buildScene()
                         m_sharedData.gameMode = GameMode::Tutorial;
                         m_sharedData.localConnectionData.playerCount = 1;
                         m_sharedData.localConnectionData.playerData[0].isCPU = false;
+                        m_sharedData.clubSet = 0;
+                        m_sharedData.preferredClubSet = 0;
+                        m_sharedData.leagueRoundID = LeagueRoundID::Club;
 
                         //start a local server and connect
-                        if (!m_sharedData.clientConnection.connected)
+                        if (quickConnect(m_sharedData))
                         {
-                            m_sharedData.serverInstance.launch(1, Server::GameMode::Golf, m_sharedData.fastCPU);
+                            m_sharedData.mapDirectory = "tutorial";
 
-                            //small delay for server to get ready
-                            cro::Clock clock;
-                            while (clock.elapsed().asMilliseconds() < 500) {}
+                            //set the course to tutorial
+                            auto data = serialiseString(m_sharedData.mapDirectory);
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-#ifdef USE_GNS
-                            m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
-#else
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
-#endif
-
-                            if (!m_sharedData.clientConnection.connected)
-                            {
-                                m_sharedData.serverInstance.stop();
-                                m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
-                                    + std::to_string(ConstVal::GamePort)
-                                    + " is allowed through\nany firewalls or NAT";
-                                requestStackPush(StateID::Error); //error makes sure to reset any connection
-                            }
-                            else
-                            {
-                                m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
-                                m_sharedData.serverInstance.setLeagueID(0);
-                                m_sharedData.mapDirectory = "tutorial";
-
-                                //set the course to tutorial
-                                auto data = serialiseString(m_sharedData.mapDirectory);
-                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
-                                //now we wait for the server to send us the map name so we know the tutorial
-                                //course has been set. Then the network event handler launches the game.
-                            }
+                            //now we wait for the server to send us the map name so we know the tutorial
+                            //course has been set. Then the network event handler launches the game.
 
                             //reset the tutorial flag in shared data
                             m_sharedData.showTutorialTip = false;
+                        }
+                        else
+                        {
+                            //quick connect sets the error for us
+                            requestStackPush(StateID::Error); //error makes sure to reset any connection
                         }
                     }
                 });
@@ -610,6 +594,14 @@ void MessageOverlayState::buildScene()
                         League l(LeagueRoundID::Club, m_sharedData);
                         l.reset();
                         
+                        Tournament t;
+                        t.id = 0;
+                        resetTournament(t);
+                        writeTournamentData(t);
+                        t.id = 1;
+                        resetTournament(t);
+                        writeTournamentData(t);
+
                         cro::App::quit();
 
                         /*requestStackClear();
@@ -627,7 +619,7 @@ void MessageOverlayState::buildScene()
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(0.f, -4.f));
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\n career progress, preserving\nany unlocked items.");
+        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\ncareer progress, preserving\nany unlocked items.");
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
@@ -662,6 +654,14 @@ void MessageOverlayState::buildScene()
                         m_sharedData.leagueRoundID = 0;
 
                         Career::instance(m_sharedData).reset();
+
+                        Tournament t;
+                        t.id = 0;
+                        resetTournament(t);
+                        writeTournamentData(t);
+                        t.id = 1;
+                        resetTournament(t);
+                        writeTournamentData(t);
 
                         /*Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
                         Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);

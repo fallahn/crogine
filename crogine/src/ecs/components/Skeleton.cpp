@@ -46,7 +46,7 @@ void SkeletalAnim::resetInterp(const Skeleton& skel)
 
 
 Skeleton::Skeleton()
-    : m_playbackRate        (1.f),
+    : //m_playbackRate        (1.f),
     m_currentAnimation      (0),
     m_nextAnimation         (-1),
     m_state                 (Stopped),
@@ -100,9 +100,22 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
         m_animations[idx].resetInterp(*this);
     }
 
-    m_playbackRate = rate;
     m_state = Playing;
 }
+
+//void Skeleton::setPlaybackRate(float rate)
+//{
+//    CRO_ASSERT(rate > 0, "");
+//    if (m_state == Playing)
+//    {
+//        m_animations[m_currentAnimation].playbackRate = rate;
+//
+//        if (m_nextAnimation != m_currentAnimation)
+//        {
+//            m_animations[m_nextAnimation].playbackRate = rate;
+//        }
+//    }
+//}
 
 void Skeleton::prevFrame()
 {

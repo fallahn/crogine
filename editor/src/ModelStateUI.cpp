@@ -552,6 +552,7 @@ void ModelState::buildUI()
                     }
                     ImGui::MenuItem("Text Editor", nullptr, &m_textEditor.visible);
                     ImGui::MenuItem("Image Combiner", nullptr, &m_showImageCombiner);
+                    ImGui::MenuItem("Modify Transform", nullptr, &m_showTransformModifier);
 
                     ImGui::EndMenu();
                 }
@@ -714,6 +715,26 @@ void ModelState::buildUI()
                 drawImageCombiner();
             }
 
+            if (m_showTransformModifier)
+            {
+                ImGui::SetNextWindowSize({ 400.f, 200.f });
+                if (ImGui::Begin("Update Transform", &m_showTransformModifier))
+                {
+                    drawTransformControls();
+                    if (ImGui::Button("Apply Transform"))
+                    {
+                        applyImportTransform(m_modelProperties.vertexData);
+                        m_transformUpdated = true;
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Close##23"))
+                    {
+                        m_showTransformModifier = false;
+                    }
+                }
+                ImGui::End();
+            }
+
             if (m_browseGLTF)
             {
                 showGLTFBrowser();
@@ -814,33 +835,10 @@ void ModelState::drawInspector()
                     }
 
                     ImGui::NewLine();
-                    ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
-                    if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
-                    {
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
-                    }
-                    if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
-                    {
-                        //scale needs to be uniform, else we'd have to recalc all the normal data
-                        m_importedTransform.scale = std::min(10.f, std::max(0.1f, m_importedTransform.scale));
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                    }
-                    ImGui::Text("Quick Scale:"); ImGui::SameLine();
-                    if (ImGui::Button("0.5"))
-                    {
-                        m_importedTransform.scale = std::max(0.1f, m_importedTransform.scale / 2.f);
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                    }ImGui::SameLine();
-                    if (ImGui::Button("2.0"))
-                    {
-                        m_importedTransform.scale = std::min(10.f, m_importedTransform.scale * 2.f);
-                        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
-                    }
+                    drawTransformControls();
                     if (ImGui::Button("Apply Transform"))
                     {
-                        applyImportTransform();
+                        applyImportTransform(m_importedVBO);
                     }
                     ImGui::SameLine();
                     helpMarker("Applies this transform directly to the model data, before exporting the model.\nUseful if an imported model uses z-up coordinates, or is much\nlarger or smaller than other models in the scene.\nTIP: if a model doesn't scale enough in either direction try applying the current scale first before rescaling");
@@ -2893,6 +2891,34 @@ void ModelState::drawImageCombiner()
         }
     }
     ImGui::End();
+}
+
+void ModelState::drawTransformControls()
+{
+    ImGui::Text("Transform"); ImGui::SameLine(); helpMarker("Double Click to change Values");
+    if (ImGui::DragFloat3("Rotation", &m_importedTransform.rotation[0], 1.f, -180.f, 180.f))
+    {
+        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, m_importedTransform.rotation.z * cro::Util::Const::degToRad);
+        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, m_importedTransform.rotation.y * cro::Util::Const::degToRad);
+        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, m_importedTransform.rotation.x * cro::Util::Const::degToRad);
+    }
+    if (ImGui::DragFloat("Scale", &m_importedTransform.scale, 0.01f, 0.1f, 10.f))
+    {
+        //scale needs to be uniform, else we'd have to recalc all the normal data
+        m_importedTransform.scale = std::min(10.f, std::max(0.1f, m_importedTransform.scale));
+        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+    }
+    ImGui::Text("Quick Scale:"); ImGui::SameLine();
+    if (ImGui::Button("0.5"))
+    {
+        m_importedTransform.scale = std::max(0.1f, m_importedTransform.scale / 2.f);
+        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+    }ImGui::SameLine();
+    if (ImGui::Button("2.0"))
+    {
+        m_importedTransform.scale = std::min(10.f, m_importedTransform.scale * 2.f);
+        m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(m_importedTransform.scale));
+    }
 }
 
 void ModelState::updateLayout(std::int32_t w, std::int32_t h)

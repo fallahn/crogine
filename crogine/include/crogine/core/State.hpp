@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -175,6 +175,23 @@ namespace cro
         cached this one.
         */
         bool isCached() const { return m_cached; }
+
+
+        /*!
+        \brief Called on cached states when they are pushed onto the stack
+        Can be used to reset the state for example, as if it were created
+        as new, but without reloading all resources
+        */
+        virtual void onCachedPush() {}
+
+
+        /*!
+        \brief Called immediately before a cached state is popped from the stack.
+        Use this to (optionally) tidy up any game state within the state itself.
+        */
+        virtual void onCachedPop() {}
+
+
     private:
         StateStack& m_stack;
         Context m_context;

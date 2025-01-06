@@ -164,6 +164,12 @@ namespace cro
         static const std::uint32_t MaxParticles = 10000u;
         EmitterSettings settings;
 
+#ifdef CRO_DEBUG_
+        bool wasCulledLastFrame() const { return m_culledLastFrame; }
+        std::size_t getParticleCount() const { return m_nextFreeParticle; }
+#endif 
+
+
     private:
         std::uint32_t m_vbo;
         std::uint32_t m_vao; //< used on desktop
@@ -171,6 +177,8 @@ namespace cro
         //std::array<Particle, MaxParticles> m_particles;
         std::vector<Particle> m_particles;
         std::size_t m_nextFreeParticle;
+
+        bool m_culledLastFrame;
 
         bool m_running;
         float m_emissionTime;

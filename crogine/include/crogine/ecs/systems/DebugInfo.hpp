@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,14 +30,21 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/gui/GuiClient.hpp>
+
+#include <string>
+#include <vector>
 
 namespace cro
 {
-    class CRO_EXPORT_API DebugInfo final : public System
+    class CRO_EXPORT_API DebugInfo final : public System, public GuiClient
     {
     public:
         explicit DebugInfo(MessageBus&);
 
         void process(float) override;
+
+    private:
+        std::vector<std::string> m_debugLines;
     };
 }

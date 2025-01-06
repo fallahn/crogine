@@ -80,7 +80,7 @@ struct TableClientData final : public TableData
     std::int32_t ballSkinIndex = 0;
 };
 
-struct HOFCallbackData final
+struct SubmenuCallbackData final
 {
     std::int32_t state = 0; //in,hold,out
     float progress = 0.f;
@@ -111,6 +111,7 @@ public:
             Main, PlayerSelect,
             Join, Lobby,
             HallOfFame,
+            Arcade,
             Inactive,
 
             Count
@@ -285,6 +286,7 @@ private:
     void createBrowserMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createStatMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createArcadeMenu(cro::Entity, std::uint32_t, std::uint32_t);
 
     void updateLobbyData(const net::NetEvent&);
     void updateLobbyList();

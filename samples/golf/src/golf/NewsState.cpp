@@ -669,29 +669,35 @@ void NewsState::buildScene()
     bounds.bottom += bounds.height;
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
 
-    entity = createSmallItem(glm::vec2(8.f, -82.f), "Discord Server", titleEnt);
+    std::string t;
+    std::string u;
+    auto dc = Social::discordURL(t, u);
+    
+    entity = createSmallItem(glm::vec2(8.f, -82.f), t, titleEnt);
     entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 4);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+        uiSystem.addCallback([&, u](cro::Entity e, cro::ButtonEvent evt)
             {
                 if (activated(evt))
                 {
-                    cro::Util::String::parseURL("https://discord.gg/6x8efntStC");
+                    cro::Util::String::parseURL(u);
                 }
             });
     //bounds.bottom += bounds.height;
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
 
-    auto iconEnt = m_scene.createEntity();
-    iconEnt.addComponent<cro::Transform>().setPosition({ -26.f, -12.f });
-    iconEnt.addComponent<cro::Drawable2D>();
-    iconEnt.addComponent<cro::Sprite>() = socialSprites.getSprite("discord");
-    entity.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
-
+    if (dc)
+    {
+        auto iconEnt = m_scene.createEntity();
+        iconEnt.addComponent<cro::Transform>().setPosition({ -26.f, -12.f });
+        iconEnt.addComponent<cro::Drawable2D>();
+        iconEnt.addComponent<cro::Sprite>() = socialSprites.getSprite("discord");
+        entity.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
+    }
 
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 12.f, -102.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 2.f, -102.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Share:");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -732,7 +738,19 @@ void NewsState::buildScene()
     static const std::string msg = "Check%20out%20Super%20Video%20Golf%21";
     static const std::string url = "https%3A%2F%2Fstore.steampowered.com%2Fapp%2F2173760%2FSuper_Video_Golf%2F";
 
-    auto fb = createButton({ 56.f, -4.f }, "facebook");
+    auto bs = createButton({ 56.f, -5.f }, "bluesky");
+    bs.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex);
+    bs.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    const std::string dst = "https://bsky.app/intent/compose?text=" + msg + "%0A" + url;
+                    cro::Util::String::parseURL(dst);
+                }
+            });
+
+    auto fb = createButton({ 78.f, -4.f }, "facebook");
     fb.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex);
     fb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
@@ -743,7 +761,7 @@ void NewsState::buildScene()
                     cro::Util::String::parseURL(dst);
                 }
             });
-    auto twit = createButton({ 80.f, -4.f }, "twitter");
+    auto twit = createButton({ 100.f, -4.f }, "twitter");
     twit.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+1);
     twit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
@@ -754,7 +772,7 @@ void NewsState::buildScene()
                     cro::Util::String::parseURL(dst);
                 }
             });
-    auto tel = createButton({ 100.f, -4.f }, "telegram");
+    auto tel = createButton({ 120.f, -4.f }, "telegram");
     tel.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+2);
     tel.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
@@ -765,7 +783,7 @@ void NewsState::buildScene()
                     cro::Util::String::parseURL(dst);
                 }
             });
-    auto red = createButton({ 122.f, -4.f }, "reddit");
+    auto red = createButton({ 142.f, -4.f }, "reddit");
     red.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+3);
     red.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
@@ -801,7 +819,7 @@ void NewsState::buildScene()
 
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 32.f, -93.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 12.f, -93.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("Share:");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -842,7 +860,19 @@ void NewsState::buildScene()
     static const std::string msg = "Check%20out%20Super%20Video%20Golf%21";
     static const std::string url = "https%3A%2F%2Ffallahn.itch.io%2Fsuper-video-golf";
 
-    auto fb = createButton({ 56.f, -4.f }, "facebook");
+    auto bs = createButton({ 56.f, -5.f }, "bluesky");
+    bs.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex);
+    bs.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    const std::string dst = "https://bsky.app/intent/compose?text=" + msg + "%0A" + url;
+                    cro::Util::String::parseURL(dst);
+                }
+            });
+
+    auto fb = createButton({ 78.f, -4.f }, "facebook");
     fb.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex);
     fb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
@@ -853,7 +883,7 @@ void NewsState::buildScene()
                     cro::Util::String::parseURL(dst);
                 }
     });
-    auto twit = createButton({ 80.f, -4.f }, "twitter");
+    auto twit = createButton({ 100.f, -4.f }, "twitter");
     twit.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+1);
     twit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
@@ -864,7 +894,7 @@ void NewsState::buildScene()
                     cro::Util::String::parseURL(dst);
                 }
             });
-    auto tel = createButton({ 100.f, -4.f }, "telegram");
+    auto tel = createButton({ 120.f, -4.f }, "telegram");
     tel.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+2);
     tel.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)
@@ -875,7 +905,7 @@ void NewsState::buildScene()
                     cro::Util::String::parseURL(dst);
                 }
             });
-    auto red = createButton({ 122.f, -4.f }, "reddit");
+    auto red = createButton({ 142.f, -4.f }, "reddit");
     red.getComponent<cro::UIInput>().setSelectionIndex(SocialButtonIndex+3);
     red.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([](cro::Entity, const cro::ButtonEvent& evt)

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -152,6 +152,9 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             maxX = std::max(maxX, x);
             maxY = std::max(maxY, y);
 
+            //we have to check colour indices here else they
+            //get skipped if incrementing on whitespace
+            context.fillColour.getColour(i);
             continue; //skip quad for whitespace
         }
 
@@ -189,7 +192,9 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             //add a shadow if only no outline
             Detail::Text::addQuad(shadowVerts, glm::vec2(x, y) + context.shadowOffset, context.shadowColour, glyph, texture.getSize());
         }
-        Detail::Text::addQuad(characterVerts, glm::vec2(x, y), glyph.useFillColour ? context.fillColour : cro::Colour(1.f,1.f,1.f, context.fillColour.getAlpha()), glyph, texture.getSize());
+        
+        const auto colour = glyph.useFillColour ? context.fillColour.getColour(i) : cro::Colour(1.f, 1.f, 1.f, context.fillColour.getColour(i).getAlpha());
+        Detail::Text::addQuad(characterVerts, glm::vec2(x, y), colour, glyph, texture.getSize());
 
         //only do this if not outlined
         //if (context.outlineThickness == 0)
@@ -207,6 +212,8 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
 
         x += glyph.advance;
     }
+    context.fillColour.index = 0;
+
     //update alignment if there is no newline at the end
     if (rowStart != characterVerts.size())
     {

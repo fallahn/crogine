@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -308,16 +308,24 @@ void SimpleDrawable::setPrimitiveType(std::uint32_t primitiveType)
 
 void SimpleDrawable::setVertexData(const std::vector<Vertex2D>& vertexData)
 {
-    CRO_ASSERT(m_vbo, "");
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(Vertex2D), vertexData.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-
+    if (!vertexData.empty())
+    {
+        CRO_ASSERT(m_vbo, "");
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+        glCheck(glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(Vertex2D), vertexData.data(), GL_STATIC_DRAW));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    }
     m_vertexCount = static_cast<std::uint32_t>(vertexData.size());
 }
 
 void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
 {
+    if (m_vertexCount == 0)
+    {
+        //nothing to do.
+        return;
+    }
+
     //set projection
     const auto& projectionMatrix = RenderTarget::getActiveTarget()->getProjectionMatrix();    
        

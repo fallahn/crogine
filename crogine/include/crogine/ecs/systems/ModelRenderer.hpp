@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -38,6 +38,10 @@ source distribution.
 #include <crogine/detail/BalancedTree.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
+#ifdef CRO_DEBUG_
+#include <crogine/gui/GuiClient.hpp>
+#endif
+
 #include <vector>
 
 namespace cro
@@ -63,6 +67,9 @@ namespace cro
     are rendered with RenderSystem2D.
     */
     class CRO_EXPORT_API ModelRenderer final : public System, public Renderable
+#ifdef CRO_DEBUG_
+        , public GuiClient
+#endif
     {
     public:
         /*!

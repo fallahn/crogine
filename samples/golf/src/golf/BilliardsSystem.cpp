@@ -45,6 +45,7 @@ namespace
 
 }
 
+//conversion funcs are declared in GameConsts
 glm::vec3 btToGlm(btVector3 v)
 {
     return { v.getX(), v.getY(), v.getZ() };
@@ -66,7 +67,7 @@ void BilliardBall::setWorldTransform(const btTransform& src)
     static std::array<float, 16> matrixBuffer = {};
 
     src.getOpenGLMatrix(matrixBuffer.data());
-    auto mat = glm::make_mat4(matrixBuffer.data());
+    const auto mat = glm::make_mat4(matrixBuffer.data());
 
     auto& tx = m_parent.getComponent<cro::Transform>();
     tx.setPosition(glm::vec3(mat[3]));

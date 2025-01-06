@@ -188,7 +188,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_screenChatActiveCount (0),
     m_showShortcuts         (false)
 {
-    registerCommand("use_tts", [&](const std::string& str)
+    registerCommand("cl_use_tts", [&](const std::string& str)
         {
             if (str == "1" || str == "true")
             {
@@ -296,7 +296,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         if (ImGui::Button(m_buttonStrings.applaud.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Applaud);
-                            m_visible = false;
+                            //m_visible = false;
                         }
                         ImGui::PopFont();
                         showToolTip("Applaud - Shortcut: Number 7");
@@ -305,7 +305,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         if (ImGui::Button(m_buttonStrings.happy.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Happy);
-                            m_visible = false;
+                            //m_visible = false;
                         }
                         ImGui::PopFont();
                         showToolTip("Happy - Shortcut: Number 8");
@@ -314,7 +314,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         if (ImGui::Button(m_buttonStrings.laughing.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Laughing);
-                            m_visible = false;
+                            //m_visible = false;
                         }
                         ImGui::PopFont();
                         showToolTip("Laughing - Shortcut: Number 9");
@@ -323,7 +323,7 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         if (ImGui::Button(m_buttonStrings.angry.data(), ImVec2(0.f, m_sharedData.chatFonts.buttonHeight * viewScale)))
                         {
                             quickEmote(TextChat::Angry);
-                            m_visible = false;
+                            //m_visible = false;
                         }
                         ImGui::PopFont();
                         showToolTip("Grumpy - Shortcut: Number 0");
@@ -526,7 +526,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 18.f), 2.f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 18.f), 2.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
@@ -540,7 +540,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     bounds.width = std::round(bounds.width + 5.f);
     bounds.height = std::round(bounds.height + 4.f);
 
-    static constexpr float BgAlpha = 0.4f;
+    static constexpr float BgAlpha = 0.45f;
     const cro::Colour c(0.f, 0.f, 0.f, BgAlpha);
 
     auto bgEnt = m_scene.createEntity();

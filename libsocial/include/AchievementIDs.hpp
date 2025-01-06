@@ -172,6 +172,19 @@ namespace AchievementID
         TryTryAgain,
 
         OffTheWall,
+        PlusFours,
+        CleanWhistle,
+        DiveIn,
+        QuickStart,
+        QuickStep,
+        QuickOfIt,
+        Unreal,
+        Beauchamp,
+        BeginnersLuck,
+        FirstRodeo,
+        BiggerShelf,
+
+        AheadOfTheGame,
 
         Count
     };
@@ -232,6 +245,13 @@ namespace StatID
         PlaysInFog,
 
         DroneHits,
+        SundaysPlayed,
+        UnrealWon,
+        BeauchampWon,
+        UnrealPlayed,
+        BeauchampPlayed,
+        UnrealBest,
+        BeauchampBest,
 
         Count
     };

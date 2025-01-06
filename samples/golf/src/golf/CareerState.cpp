@@ -38,7 +38,6 @@ source distribution.
 #include "Utility.hpp"
 #include "CallbackData.hpp"
 #include "MenuCallbacks.hpp"
-#include "MenuConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "PacketIDs.hpp"
 #include "Clubs.hpp"
@@ -146,7 +145,7 @@ CareerState::CareerState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 CareerState::~CareerState()
 {
     //this might be quitting from a cached state and not
-    //necessarily startinga career game.
+    //necessarily starting a career game.
     if (m_sharedData.leagueRoundID != LeagueRoundID::Club)
     {
         saveConfig();
@@ -341,7 +340,7 @@ void CareerState::buildScene()
                     m_scene.setSystemActive<cro::UISystem>(true);
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
                     m_scene.getSystem<cro::UISystem>()->selectAt(CareerStart);
-                    Social::setStatus(Social::InfoID::Menu, { "Making Career Decisions" });
+                    Social::setStatus(Social::InfoID::Menu, { "Viewing the Leagues" });
 
                     applySettingsValues(); //loadConfig() might not load anything
                     loadConfig();
@@ -1498,41 +1497,19 @@ void CareerState::createConfirmMenu(cro::Entity parent)
                     m_sharedData.localConnectionData.playerData[0].isCPU = false;
 
                     //start a local server and connect
-                    if (!m_sharedData.clientConnection.connected)
+                    if (quickConnect(m_sharedData))
                     {
-                        m_sharedData.serverInstance.launch(1, Server::GameMode::Golf, m_sharedData.fastCPU);
+                        //set the course - map directory and hole count is set in selectLeague()
+                        auto data = serialiseString(m_sharedData.mapDirectory);
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
-                        //small delay for server to get ready
-                        cro::Clock clock;
-                        while (clock.elapsed().asMilliseconds() < 500) {}
-
-#ifdef USE_GNS
-                        m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
-#else
-                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
-#endif
-
-                        if (!m_sharedData.clientConnection.connected)
-                        {
-                            m_sharedData.serverInstance.stop();
-                            m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
-                                + std::to_string(ConstVal::GamePort)
-                                + " is allowed through\nany firewalls or NAT";
-                            requestStackPush(StateID::Error); //error makes sure to reset any connection
-                        }
-                        else
-                        {
-                            m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
-                            m_sharedData.serverInstance.setLeagueID(m_sharedData.leagueRoundID);
-                            
-                            //set the course - map directory and hole count is set in selectLeague()
-                            auto data = serialiseString(m_sharedData.mapDirectory);
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
-                            //now we wait for the server to send us the map name so we know the
-                            //know the course has been set. Then the network event handler 
-                            //sends the game rules and launches the game.
-                        }
+                        //now we wait for the server to send us the map name so we know the
+                        //know the course has been set. Then the network event handler 
+                        //sends the game rules and launches the game.
+                    }
+                    else
+                    {
+                        requestStackPush(StateID::Error); //error makes sure to reset any connection (message set by quickConnect())
                     }
                 }
             });
@@ -1707,7 +1684,7 @@ void CareerState::createInfoMenu(cro::Entity parent)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 298.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Welcome To Career Mode!");
+    entity.addComponent<cro::Text>(largeFont).setString("Welcome To The Leagues!");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -1720,7 +1697,7 @@ Your career is split across 6 leagues, spanning 36 rounds over 12 courses. Each 
 consists of 6 rounds - two on the front 9, two on the back 9 and two rounds played over
 18 holes.
 
-Unlike Free Play mode you can leave a Career round at any time, and resume it again when
+Unlike Free Play mode you can leave a League round at any time, and resume it again when
 you're ready. Career mode will even remember which hole you're on!
 
 Standard league rules apply (see the league table for more information). Finish the current
@@ -1729,9 +1706,10 @@ time if you want to try and improve your existing score.
 
 Finish a league in the top 3 to unlock a new ball, in the top 2 to unlock a new piece of
 headwear and placing number one unlocks a new avatar! Each of these items will also be
-available to use in Free Play.
+available to use in Free Play. Items remain unlocked even if you reset your Career.
 
-You can reset your Career at any time from the Stats page of the Options menu.
+You can reset your Career at any time from the Stats page of the Options menu, and
+edit your opponent's names in the League Browser.
 
 Good Luck!
 )";

@@ -61,3 +61,36 @@ void main()
 }
 
 )";
+
+//based on https://www.rastergrid.com/blog/2010/09/efficient-gaussian-blur-with-linear-sampling/
+
+static inline const std::string GaussianFrag =
+R"(
+uniform sampler2D u_texture;
+uniform vec2 u_offset;
+
+//uniform int u_blurAmount = 2;
+
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+
+OUTPUT
+
+void main()
+{
+    vec2 texCoords = v_texCoord;
+    vec4 colour = vec4(0.0);
+//for(int i = 0; i < u_blurAmount; ++i){
+    colour += TEXTURE(u_texture, texCoords - 4.0 * u_offset) * 0.0162162162;
+    colour += TEXTURE(u_texture, texCoords - 3.0 * u_offset) * 0.0540540541;
+    colour += TEXTURE(u_texture, texCoords - 2.0 * u_offset) * 0.1216216216;
+    colour += TEXTURE(u_texture, texCoords - u_offset) * 0.1945945946;
+    colour += TEXTURE(u_texture, texCoords) * 0.2270270270;
+    colour += TEXTURE(u_texture, texCoords + u_offset) * 0.1945945946;
+    colour += TEXTURE(u_texture, texCoords + 2.0 * u_offset) * 0.1216216216;
+    colour += TEXTURE(u_texture, texCoords + 3.0 * u_offset) * 0.0540540541;
+    colour += TEXTURE(u_texture, texCoords + 4.0 * u_offset) * 0.0162162162;
+//}
+    FRAG_OUT = colour * v_colour;
+    FRAG_OUT.a = 1.0;
+})";

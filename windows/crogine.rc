@@ -71,7 +71,7 @@ BEGIN
             VALUE "FileDescription", "github.com/fallahn/crogine"
             VALUE "FileVersion", "0.0.0.1"
             VALUE "InternalName", "crogine.dll"
-            VALUE "LegalCopyright", "Copyright (C) 2024 Matt Marchant"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Matt Marchant"
             VALUE "OriginalFilename", "crogine.dll"
             VALUE "ProductName", "crogine"
             VALUE "ProductVersion", "0.0.0.1"

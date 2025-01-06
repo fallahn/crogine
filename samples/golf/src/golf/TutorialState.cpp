@@ -63,6 +63,7 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/util/Maths.hpp>
 #include <crogine/util/String.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
@@ -518,6 +519,8 @@ void TutorialState::buildScene()
     //create the layout depending on the requested tutorial
     //tutorialPutt(rootNode);
     //tutorialSpin(rootNode);
+    //tutorialThree(rootNode);
+    
     switch (m_sharedData.tutorialIndex)
     {
     default:
@@ -1054,11 +1057,11 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     if (m_sharedData.imperialMeasurements)
     {
-        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 2.2 mph.\nThe higher your ball goes\nthe more the wind affects it.");
+        entity.addComponent<cro::Text>(font).setString("This is the Wind Indicator.\nThe strength ranges from\n0 to 4.4 mph.\nThe higher your ball goes\nthe more the wind affects it.");
     }
     else
     {
-        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 3.5 kph.\nThe higher your ball goes\nthe more the wind affects it.");
+        entity.addComponent<cro::Text>(font).setString("This is the Wind Indicator.\nThe strength ranges from\n0 to 7.0 kph.\nThe higher your ball goes\nthe more the wind affects it.");
     }
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -1170,7 +1173,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     power bar indicator appears at bottom and moves to middle of screen
     upward motion is continued with first arrow / tip in the middle:
 
-    This is the stroke indicatior
+    This is the stroke indicator
 
 
     next tip moves left to right, text then arrow
@@ -1187,6 +1190,13 @@ void TutorialState::tutorialThree(cro::Entity root)
 
     Press A when the hook/slice bar is centred.
 
+
+    A range indicator appears - The markings on the power bar align with the range indicator
+
+    Press A and the bar moves over the minimap
+
+    Press A to continue
+
     */
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     std::int32_t animID = 0;
@@ -1198,6 +1208,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     cro::SpriteSheet uiSprites;
     uiSprites.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
 
+    static constexpr float PowerBarVertPos = 0.6f;
 
     //cancel tip text
     auto entity = m_scene.createEntity();
@@ -1240,8 +1251,8 @@ void TutorialState::tutorialThree(cro::Entity root)
         centreText(entity);
     }
     auto bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) - 110.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) - 156.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
@@ -1265,6 +1276,108 @@ void TutorialState::tutorialThree(cro::Entity root)
 
 
 
+    //range indicator text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
+    entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setString("The markings on the Power Bar align with those on the Range Indicator");
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) - 116.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt) mutable
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            auto area = bounds;
+            area.width *= currTime;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+            if (currTime == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                showContinue();
+            }
+        };
+
+    auto rangeTextEnt = entity;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //range indicator ent
+    const auto barBounds = uiSprites.getSprite("power_bar").getTextureBounds();
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, -102.f });
+    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimateDistance);
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
+    entity.getComponent<UIElement>().absolutePosition = { std::floor(-barBounds.width / 2.f), -102.f};
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+
+    struct RangeData final
+    {
+        std::int32_t state = 0;
+        float rotation = 0.f;
+    };
+    entity.addComponent<cro::Callback>().setUserData<RangeData>();
+    entity.getComponent<cro::Callback>().function =
+        [&,barBounds](cro::Entity e, float dt)
+        {
+            auto& [state, rotation] = e.getComponent<cro::Callback>().getUserData<RangeData>();
+            if (state == 0)
+            {
+                //move into view
+                auto origin = e.getComponent<cro::Transform>().getOrigin();
+                origin.y = std::min(0.f, origin.y + (dt * 140.f));
+                if (origin.y == 0)
+                {
+                    state = 1;
+                    e.getComponent<cro::Callback>().active = false;
+                }
+                e.getComponent<cro::Transform>().setOrigin(origin);
+                e.getComponent<cro::Transform>().setScale({ barBounds.width * 2.f, 1.f });
+            }
+            else
+            {
+                auto& uiElement = e.getComponent<UIElement>();
+                uiElement.relativePosition = { 1.f, 1.f };
+                uiElement.absolutePosition = { -50.f, -154.f };
+
+
+                //move to minimap pos and rotate
+                const auto size = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
+                auto targetPos = size + uiElement.absolutePosition;
+                targetPos.x = std::floor(targetPos.x);
+                targetPos.y = std::floor(targetPos.y);
+
+                const auto move = targetPos - glm::vec2(e.getComponent<cro::Transform>().getPosition());
+
+                if (glm::length2(move) < 2.f)
+                {
+                    e.getComponent<cro::Transform>().setPosition(targetPos);
+                }
+                else
+                {
+                    e.getComponent<cro::Transform>().move(move * (dt * 4.f));
+                }
+
+                const float r = cro::Util::Maths::shortestRotation(rotation, 90.f * cro::Util::Const::degToRad);
+                rotation += r * (dt * 5.f);
+                e.getComponent<cro::Transform>().setRotation(rotation);
+            }
+        };
+
+    auto rangeIndicatorEnt = entity;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
 
     //fourth tip text
@@ -1274,7 +1387,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.addComponent<UIElement>().absolutePosition = { 0.f, -50.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
 
@@ -1348,7 +1461,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<UIElement>().absolutePosition = { 0.f, -16.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1382,7 +1495,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         cro::Vertex2D(glm::vec2(6.f, -24.f), TextNormalColour)
     };
     pingEnt.getComponent<cro::Drawable2D>().updateLocalBounds();
-    pingEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    pingEnt.addComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
     pingEnt.getComponent<UIElement>().depth = -0.06f;
     pingEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
 
@@ -1493,7 +1606,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         entity.getComponent<cro::Text>().setString(str);
     }
     bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
     entity.getComponent<UIElement>().absolutePosition = { 80.f, std::floor(bounds.height / 2.f) };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1530,7 +1643,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<UIElement>().absolutePosition = { 48.f, 0.5f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1596,7 +1709,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<UIElement>().absolutePosition = { -68.f, 0.5f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1657,7 +1770,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         entity.getComponent<cro::Text>().setString(str);
     }
     bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
     entity.getComponent<UIElement>().absolutePosition = { -(bounds.width + 80.f), std::floor(bounds.height / 2.f) };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1685,12 +1798,12 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("This is the stroke indicator.");
+    entity.addComponent<cro::Text>(font).setString("This is the Power Bar.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
     entity.addComponent<UIElement>().absolutePosition = { 0.f, 52.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     bounds = cro::Text::getLocalBounds(entity);
@@ -1726,7 +1839,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<UIElement>().absolutePosition = { 0.f, 16.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, PowerBarVertPos };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1774,7 +1887,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         [&, arrow01](cro::Entity e, float dt) mutable
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<PowerbarData>();
-        auto size = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
+        const auto size = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
         switch (data.state)
         {
         default: break;
@@ -1787,7 +1900,7 @@ void TutorialState::tutorialThree(cro::Entity root)
             break;
         case PowerbarData::In:
             data.currentTime = std::min(1.f, data.currentTime + (dt * 2.f));
-            e.getComponent<cro::Transform>().setPosition({ size.x / 2.f, data.currentTime * (size.y / 2.f) });
+            e.getComponent<cro::Transform>().setPosition({ size.x / 2.f, data.currentTime * (size.y * PowerBarVertPos) });
 
             if (data.currentTime == 1)
             {
@@ -1798,7 +1911,7 @@ void TutorialState::tutorialThree(cro::Entity root)
 
             break;
         case PowerbarData::Hold:
-            e.getComponent<cro::Transform>().setPosition(size / 2.f);
+            e.getComponent<cro::Transform>().setPosition({ size.x / 2.f, std::floor(size.y * PowerBarVertPos) });
             break;
         }
     };
@@ -1819,11 +1932,26 @@ void TutorialState::tutorialThree(cro::Entity root)
             hookBar.getComponent<cro::Callback>().active = true;
             arrow04.getComponent<cro::Callback>().active = true;
         });
-    m_actionCallbacks.push_back([cancelEnt, hookBar]() mutable
+    
+    //applies the accuracy
+    m_actionCallbacks.push_back([rangeTextEnt, hookBar, rangeIndicatorEnt]() mutable
         {
             hookBar.getComponent<cro::Callback>().active = false;
-            cancelEnt.getComponent<cro::Callback>().active = true;
+            rangeTextEnt.getComponent<cro::Callback>().active = true;
+            rangeIndicatorEnt.getComponent<cro::Callback>().active = true;
         });
+    
+    
+    //moves / rotates range indicator over minimap,
+    //displays cancel text
+    m_actionCallbacks.push_back([cancelEnt, rangeIndicatorEnt]() mutable
+        {
+            cancelEnt.getComponent<cro::Callback>().active = true;
+            rangeIndicatorEnt.getComponent<cro::Callback>().active = true;
+            rangeIndicatorEnt.getComponent<cro::Callback>().getUserData<RangeData>().state = 1;
+        });
+
+    //closes the window
     m_actionCallbacks.push_back([&]() mutable
         {
             auto e = m_scene.createEntity();
@@ -2003,7 +2131,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("With Putting Assist enabled in the Options you can\nuse the flag on the power bar to judge the distance to the hole.");
+    entity.addComponent<cro::Text>(font).setString("With Putting Assist enabled in the Options you can\nuse the flag on the Power Bar to judge the distance to the hole.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -2073,7 +2201,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("NOTE: Unlike other clubs the putter will automatically adjust its maximum range!\nKeep an eye on the maximum distance next to the power bar.");
+    entity.addComponent<cro::Text>(font).setString("NOTE: Unlike other clubs the putter will automatically adjust its maximum range!\nKeep an eye on the maximum distance next to the Power Bar.\nThis behaviour can be disabled in the Options menu.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);

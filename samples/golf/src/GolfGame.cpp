@@ -28,6 +28,13 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfGame.hpp"
+#include "LoadingScreen.hpp"
+#include "SplashScreenState.hpp"
+#include "icon.hpp"
+#include "Achievements.hpp"
+#include "ImTheme.hpp"
+#include "M3UPlaylist.hpp"
+
 #include "golf/MenuState.hpp"
 #include "golf/GolfState.hpp"
 #include "golf/BilliardsState.hpp"
@@ -38,6 +45,7 @@ source distribution.
 #include "golf/KeyboardState.hpp"
 #include "golf/PracticeState.hpp"
 #include "golf/CareerState.hpp"
+#include "golf/TournamentState.hpp"
 #include "golf/DrivingState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/LeagueState.hpp"
@@ -60,22 +68,21 @@ source distribution.
 #include "golf/MessageIDs.hpp"
 #include "golf/PacketIDs.hpp"
 #include "golf/UnlockItems.hpp"
+#include "golf/Clubs.hpp"
+#include "golf/XPAwardStrings.hpp"
+
 #include "editor/BushState.hpp"
 #include "sqlite/SqliteState.hpp"
 #include "runner/EndlessAttractState.hpp"
 #include "runner/EndlessDrivingState.hpp"
 #include "runner/EndlessPauseState.hpp"
 #include "runner/EndlessShared.hpp"
-#include "LoadingScreen.hpp"
-#include "SplashScreenState.hpp"
-#include "ErrorCheck.hpp"
-#include "icon.hpp"
-#include "Achievements.hpp"
-#include "golf/Clubs.hpp"
-#include "golf/XPAwardStrings.hpp"
+#include "scrub/ScrubAttractState.hpp"
+#include "scrub/ScrubBackgroundState.hpp"
+#include "scrub/ScrubGameState.hpp"
+#include "scrub/ScrubPauseState.hpp"
 
-#include "ImTheme.hpp"
-#include "M3UPlaylist.hpp"
+#include "ErrorCheck.hpp"
 
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
@@ -201,6 +208,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<CareerState>(StateID::Career, m_sharedData);
+    m_stateStack.registerState<TournamentState>(StateID::Tournament, m_sharedData);
     m_stateStack.registerState<FreePlayState>(StateID::FreePlay, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData, *this);
@@ -219,6 +227,11 @@ GolfGame::GolfGame()
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
 
+    m_stateStack.registerState<ScrubBackgroundState>(StateID::ScrubBackground, m_scrubData);
+    m_stateStack.registerState<ScrubAttractState>(StateID::ScrubAttract, m_sharedData, m_scrubData);
+    m_stateStack.registerState<ScrubGameState>(StateID::ScrubGame, m_sharedData, m_scrubData);
+    m_stateStack.registerState<ScrubPauseState>(StateID::ScrubPause, m_sharedData, m_scrubData);
+
     m_sharedData.courseIndex = courseOfTheMonth();
 
 #ifdef CRO_DEBUG_
@@ -227,6 +240,10 @@ GolfGame::GolfGame()
 
 #ifdef USE_WORKSHOP
     m_stateStack.registerState<WorkshopState>(StateID::Workshop);
+#endif
+
+#ifdef _WIN32
+    assertFileSystem(); //explicitly ensures the property directories are created
 #endif
 }
 
@@ -820,6 +837,13 @@ bool GolfGame::initialise()
             }        
         });
 
+    registerCommand("scrub", 
+        [&](const std::string&)
+        {
+            m_stateStack.clearStates();
+            m_stateStack.pushState(StateID::ScrubBackground);
+        });
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
@@ -952,7 +976,7 @@ bool GolfGame::initialise()
     m_activeIndex = m_sharedData.postProcessIndex;
 
 #ifdef CRO_DEBUG_
-    //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
+   // m_stateStack.pushState(StateID::ScrubBackground);
     //m_stateStack.pushState(StateID::Bush);
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
@@ -962,6 +986,7 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::Workshop);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
+    //m_stateStack.pushState(StateID::ScrubBackground);
 #endif
 
     applyImGuiStyle(m_sharedData);
@@ -995,6 +1020,11 @@ void GolfGame::finalise()
     }
 
     Achievements::shutdown();
+
+    if (m_scrubData.fonts)
+    {
+        m_scrubData.fonts.reset();
+    }
 
     m_sharedData.sharedResources.reset();
     m_postQuad.reset();
@@ -1202,7 +1232,9 @@ void GolfGame::convertPreferences() const
 void GolfGame::loadPreferences()
 {
     //hack around preference files getting corrupted for some reason
-    bool restoreDefaults = false;
+    //TODO I can't see where this was actually used - did I forget
+    //to finish it???
+    //bool restoreDefaults = false;
 
     auto path = getPreferencePath() + "prefs.cfg";
     if (cro::FileSystem::fileExists(path))
@@ -1350,13 +1382,16 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.useLensFlare = prop.getValue<bool>();
                 }
+                else if (name == "large_power")
+                {
+                    m_sharedData.useLargePowerBar = prop.getValue<bool>();
+                }
             }
         }
-
-        else
+        /*else
         {
             restoreDefaults = true;
-        }
+        }*/
     }
 
 
@@ -1480,6 +1515,14 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.showRosterTip = prop.getValue<bool>();
                         }
+                    else if (name == "fixed_putting")
+                    {
+                        m_sharedData.fixedPuttingRange = prop.getValue<bool>();
+                    }
+                    else if (name == "remote_content")
+                    {
+                        m_sharedData.remoteContent = prop.getValue<bool>();
+                    }
                     /*else if (name == "group_mode")
                     {
                         m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
@@ -1487,10 +1530,10 @@ void GolfGame::loadPreferences()
                 }
             }
 
-            else
+            /*else
             {
                 restoreDefaults = true;
-            }
+            }*/
         }
 
         path = Social::getBaseContentPath() + "league_names.txt";
@@ -1502,6 +1545,12 @@ void GolfGame::loadPreferences()
         {
             m_sharedData.leagueNames.read();
         }
+
+
+        m_sharedData.tournaments[0].id = 0;
+        m_sharedData.tournaments[1].id = 1;
+        readTournamentData(m_sharedData.tournaments[0]);
+        readTournamentData(m_sharedData.tournaments[1]);
     }
 
 
@@ -1558,7 +1607,7 @@ void GolfGame::loadPreferences()
     loadMusic();
 
 
-    //do this last so were saving any settings which were loaded successfully too
+    //do this last so we're saving any settings which were loaded successfully too
     savePreferences();
 }
 
@@ -1582,6 +1631,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
+    cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
     cfg.save(path);
 
 
@@ -1610,11 +1660,13 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_tts").setValue(m_sharedData.useTTS);
     cfg.addProperty("use_flare").setValue(m_sharedData.useLensFlare);
     cfg.addProperty("use_mouse_action").setValue(m_sharedData.useMouseAction);
-    cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
+    //cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
     cfg.addProperty("decimate_power").setValue(m_sharedData.decimatePowerBar);
     cfg.addProperty("decimate_distance").setValue(m_sharedData.decimateDistance);
     cfg.addProperty("show_roster").setValue(m_sharedData.showRosterTip);
     cfg.addProperty("group_mode").setValue(m_sharedData.groupMode);
+    cfg.addProperty("fixed_putting").setValue(m_sharedData.fixedPuttingRange);
+    cfg.addProperty("remote_content").setValue(m_sharedData.remoteContent);
     cfg.save(path);
 
 
@@ -1992,3 +2044,43 @@ bool GolfGame::setShader(const char* frag)
     }
     return false;
 };
+
+#ifdef _WIN32
+void GolfGame::assertFileSystem()
+{
+    const auto printErr =
+        [](const std::string& outPath) 
+        {
+            const std::string err = "Failed creating root preference path, reason:\n" + cro::Console::getLastOutput();
+            cro::FileSystem::showMessageBox("Could Not Create Directory", err);
+
+            cro::FileSystem::showMessageBox("Missing Directory", "Please ensure that\n" + outPath + "\nexists");
+        };
+
+    //appdata/roaming/trederia/golf/
+    auto rootPath = getPreferencePath();
+    if (!cro::FileSystem::directoryExists(rootPath))
+    {
+        LogI << "Creating root preferences directory..." << std::endl;
+        if (!cro::FileSystem::createDirectory(rootPath))
+        {
+            //problem with this specific case is that we can't log
+            //the error to the log file... because the log file wants
+            //to exist in this directory. Which wasn't created.
+            printErr(rootPath);
+            return;
+        }
+    }
+
+    rootPath += "user";
+    if (!cro::FileSystem::directoryExists(rootPath))
+    {
+        LogI << "Creating user preferences directory..." << std::endl;
+        if (!cro::FileSystem::createDirectory(rootPath))
+        {
+            printErr(rootPath);
+            return;
+        }
+    }
+}
+#endif

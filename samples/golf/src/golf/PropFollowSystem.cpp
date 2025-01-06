@@ -31,7 +31,6 @@ source distribution.
 #include "CollisionMesh.hpp"
 #include "MessageIDs.hpp"
 
-#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/util/Maths.hpp>
@@ -39,8 +38,20 @@ source distribution.
 
 namespace
 {
-    constexpr float MinTargetRad = 0.5f;
-    constexpr float MinTargetRadSqr = MinTargetRad * MinTargetRad;
+    glm::quat getTargetRotation(glm::vec3 target)
+    {
+        glm::vec3 z_axis = glm::normalize(-target);
+        glm::vec3 x_axis = glm::normalize(glm::cross(cro::Transform::Y_AXIS, z_axis));
+        glm::vec3 y_axis = glm::normalize(glm::cross(z_axis, x_axis));
+
+        glm::mat4 rotationMatrix(
+            glm::vec4(x_axis, 0.f),
+            glm::vec4(y_axis, 0.f),
+            glm::vec4(z_axis, 0.f),
+            glm::vec4(0.f, 0.f, 0.f, 1.f));
+
+        return glm::quat_cast(rotationMatrix);
+    }
 }
 
 PropFollowSystem::PropFollowSystem(cro::MessageBus& mb, const CollisionMesh& cm)
@@ -68,15 +79,16 @@ void PropFollowSystem::process(float dt)
                 {
                     follower.state = PropFollower::Follow;
                     follower.stateTimer = 0.f;
-                    follower.initAxis(entity);
                 }
             }
             else
             {
+                auto& tx = entity.getComponent<cro::Transform>();
+
                 //check proximity to player position so we don't bump into them :)
                 static constexpr float MaxProximity = 5.f;
                 static constexpr float MaxProximitySqr = MaxProximity * MaxProximity;
-                auto proximitySpeed = glm::length2(entity.getComponent<cro::Transform>().getWorldPosition() - m_playerPosition);
+                auto proximitySpeed = glm::length2(tx.getWorldPosition() - m_playerPosition);
                 if (proximitySpeed < MaxProximitySqr)
                 {
                     proximitySpeed = glm::smoothstep(0.5f, 0.99f, std::sqrt(proximitySpeed) / MaxProximity);
@@ -89,7 +101,7 @@ void PropFollowSystem::process(float dt)
                             follower.waitTimeout = PropFollower::WaitTime + cro::Util::Random::value(5, 10);
 
                             auto* msg = postMessage<CollisionEvent>(cl::MessageID::CollisionMessage);
-                            msg->position = entity.getComponent<cro::Transform>().getWorldPosition();
+                            msg->position = tx.getWorldPosition();
                             msg->terrain = CollisionEvent::Special::Timeout;
                             msg->type = CollisionEvent::Begin;
                         }
@@ -100,41 +112,66 @@ void PropFollowSystem::process(float dt)
                     proximitySpeed = 1.f;
                 }
 
-                for (auto& point : follower.axis)
+
+                //and the proximity to the target so we can slow down as we approach
+                static constexpr float MaxDecelProximity = 10.f;
+                static constexpr float MaxDecelProximitySqr = MaxDecelProximity * MaxDecelProximity;
+                auto deceleration = glm::length2(follower.path[follower.target] - tx.getPosition());
+                if (deceleration < MaxDecelProximitySqr)
                 {
-                    auto targetPos = follower.path.getPoint(point.target);
-                    auto dir = targetPos - point.position;
-                    auto len2 = glm::length2(glm::vec2(dir.x, dir.z));
+                    proximitySpeed *= 0.85f + (0.15f * smoothstep(0.05f, 0.99f, std::sqrt(deceleration) / MaxDecelProximity));
+                }                
+                
 
-                    point.position += glm::normalize(dir) * follower.speed * proximitySpeed * dt;
-                    //point.position = cro::Util::Maths::smoothDamp(point.position, targetPos, point.velocity, 0.0125f, dt, follower.speed);
-
-                    if (len2 < MinTargetRadSqr)
-                    {
-                        point.target = (point.target + 1) % follower.path.getPoints().size();
-
-                        if (point.target == 0)
-                        {
-                            if (!follower.loop)
-                            {
-                                follower.path.reverse();
-                            }
-                            /*else
-                            {
-                                point.target = 1;
-                            }*/
-
-                            follower.state = PropFollower::Idle;
-                        }
-                    }
+                //update our rotation
+                if (follower.currentTurn < 1)
+                {
+                    follower.currentTurn = std::min(1.f, follower.currentTurn + (dt * follower.turnSpeed));
+                    auto rotation = glm::slerp(follower.startRotation, follower.targetRotation, follower.currentTurn);
+                    tx.setRotation(rotation);
                 }
 
-                auto axis = (follower.axis[0].position - follower.axis[1].position) / 2.f;
-                auto pos = axis + follower.axis[1].position;
+                //move along our forward vector
+                const auto forward = glm::normalize(tx.getForwardVector());
+                tx.move(forward * follower.moveSpeed * proximitySpeed * dt);
+
+                //as we've moved the rotation will be out of date, so check
+                //to see if we need to update it
+                const auto worldPos = tx.getWorldPosition();
+                if (glm::dot(forward, glm::normalize(follower.path[follower.target] - worldPos)) < 0.98f)
+                {
+                    follower.startRotation = entity.getComponent<cro::Transform>().getRotation();
+                    follower.targetRotation = getTargetRotation(follower.path[follower.target] - worldPos);
+                    follower.currentTurn = 0.f;
+                }
+
+
+                //if we're in the radius of the target point
+                //fetch the next target
+                auto dist = glm::length2(entity.getComponent<cro::Transform>().getWorldPosition() - follower.path[follower.target]);
+                if (dist < (follower.minRadius * follower.minRadius))
+                {
+                    follower.target = (follower.target + 1) % follower.path.size();
+
+                    if (follower.target == 0)
+                    {
+                        //if we loop carry on, else idle and reverse the path
+                        if (!follower.loop)
+                        {
+                            follower.state = PropFollower::Idle;
+                            std::reverse(follower.path.begin(), follower.path.end());
+                        }
+                    }
+
+                    follower.startRotation = entity.getComponent<cro::Transform>().getRotation();
+                    follower.targetRotation = getTargetRotation(follower.path[follower.target] - worldPos);
+                    follower.currentTurn = 0.f;
+                }
 
                 //some paths might be aircraft, such as a blimp, so
                 //only snap these below a threshold
                 //or boats which need to be above water level
+                auto pos = tx.getPosition();
                 if (pos.y < 15.f)
                 {
                     auto result = m_collisionMesh.getTerrain(pos);
@@ -144,49 +181,24 @@ void PropFollowSystem::process(float dt)
                     }
                 }
 
-                entity.getComponent<cro::Transform>().setPosition(pos);
-
-
-                follower.targetRotation = std::atan2(-axis.z, axis.x);
-                follower.rotation += cro::Util::Maths::shortestRotation(follower.rotation, follower.targetRotation) * (dt * 6.f);
-                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, follower.rotation);
+                tx.setPosition(pos);
             }
         }
     }
 }
 
 //private
-void PropFollowSystem::onEntityAdded(cro::Entity e)
+void PropFollowSystem::onEntityAdded(cro::Entity entity)
 {
-    e.getComponent<PropFollower>().initAxis(e);
-}
+    //e.getComponent<PropFollower>().initAxis(e);
+    auto& follower = entity.getComponent<PropFollower>();
+    CRO_ASSERT(follower.path.size() > 1, "Needs at least 2 points");
 
-void PropFollower::initAxis(cro::Entity e)
-{
-    //this assumes the model is aligned along the X axis
-    //to match atan2
+    entity.getComponent<cro::Transform>().setPosition(follower.path[0]);
 
-    //we align the axis along the first segment of the path
-    //and space them bounding box width
+    follower.targetRotation = getTargetRotation(follower.path[1] - follower.path[0]);
+    follower.startRotation = follower.targetRotation;
+    follower.currentTurn = 1.f;
 
-    auto bb = e.getComponent<cro::Model>().getAABB();
-
-    //bigger models such as the blimp want their axes scaling
-    //less as they're already big - so we'll approximate around
-    //the blimp length
-    const float scale = 4.f - (3.f * (bb[1].x / 38.f));
-
-    auto& follower = e.getComponent<PropFollower>();
-    follower.axis[0].position = follower.path.getPoint(0);
-    auto dir = glm::normalize(follower.path.getPoint(1) - follower.path.getPoint(0));
-    follower.axis[0].position += dir * bb[1].x * scale;
-
-    follower.axis[1].position = follower.path.getPoint(0);
-    follower.axis[1].position += dir * bb[0].x * scale;
-
-
-    follower.axis[0].target = 1;
-    follower.axis[1].target = 1;
-
-    e.getComponent<cro::Transform>().setPosition(follower.path.getPoint(0));
+    entity.getComponent<cro::Transform>().setRotation(follower.startRotation);
 }

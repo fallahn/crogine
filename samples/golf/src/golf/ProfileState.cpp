@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -360,6 +360,9 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 applyTextEdit();
             }
             break;
+        /*case SDLK_p:
+            renderBallFrames();
+            break;*/
         //case SDLK_k:
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>()++;
         //    m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
@@ -768,6 +771,26 @@ void ProfileState::render()
 //private
 void ProfileState::addSystems()
 {
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("Camera");
+    //        auto pos = m_cameras[CameraID::Ball].getComponent<cro::Transform>().getWorldPosition();
+    //        ImGui::Text("Pos: %3.2f, %3.2f, %3.2f", pos.x, pos.y, pos.z);
+
+    //        if (ImGui::SliderFloat("Y", &pos.y, 0.01f, 0.1f))
+    //        {
+    //            m_cameras[CameraID::Ball].getComponent<cro::Transform>().setPosition(pos);
+    //        }
+
+    //        if (ImGui::SliderFloat("Z", &pos.z, 0.01f, 0.1f))
+    //        {
+    //            m_cameras[CameraID::Ball].getComponent<cro::Transform>().setPosition(pos);
+    //        }
+
+    //        ImGui::End();
+    //    });
+
+
     auto& mb = getContext().appInstance.getMessageBus();
     m_uiScene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
     m_uiScene.addSystem<ButtonHoldSystem>(mb);
@@ -1115,7 +1138,7 @@ void ProfileState::buildScene()
     topDarkColour.getComponent<cro::UIInput>().setPrevIndex(ButtonTopLight, ButtonSkinTone);
 
 
-    auto bottomLightColour = createButton("colour_highlight", glm::vec2(17.f, 69.f), ButtonBottomLight);
+    auto bottomLightColour = createButton("colour_highlight", glm::vec2(17.f, 70.f), ButtonBottomLight);
     bottomLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -1137,7 +1160,7 @@ void ProfileState::buildScene()
     bottomLightColour.getComponent<cro::UIInput>().setNextIndex(ButtonBottomDark, ButtonSouthPaw);
     bottomLightColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescDown, ButtonTopLight);
 
-    auto bottomDarkColour = createButton("colour_highlight", glm::vec2(49.f, 69.f), ButtonBottomDark);
+    auto bottomDarkColour = createButton("colour_highlight", glm::vec2(49.f, 70.f), ButtonBottomDark);
     bottomDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -2117,7 +2140,15 @@ void ProfileState::buildPreviewScene()
         entity.addComponent<cro::Transform>();
         ballDef.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
-        entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+        if (ballDef.hasSkeleton())
+        {
+            entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ballSkinned);
+            entity.getComponent<cro::Skeleton>().play(0);
+        }
+        else
+        {
+            entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+        }
         entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
         entity.addComponent<cro::Callback>().active = true;
 
@@ -4689,4 +4720,46 @@ void ProfileState::generateMugshot()
     m_mugshotUpdated = true;
     m_menuEntities[EntityID::Mugshot].getComponent<cro::Sprite>().setTexture(m_mugshotTexture.getTexture());
     m_menuEntities[EntityID::Mugshot].getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
+}
+
+void ProfileState::renderBallFrames()
+{
+    if (!cro::FileSystem::directoryExists("anim"))
+    {
+        cro::FileSystem::createDirectory("anim");
+    }
+
+
+    const auto oldPos = m_cameras[CameraID::Ball].getComponent<cro::Transform>().getPosition();
+    m_cameras[CameraID::Ball].getComponent<cro::Transform>().setPosition({ oldPos.x, 0.026f, 0.058f });
+
+    static constexpr float Angle = cro::Util::Const::PI / 16.f;
+    const auto oldCam = m_modelScene.setActiveCamera(m_cameras[CameraID::Ball]);
+
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Callback>().active = false;
+
+    for (auto i = 0; i < 31; ++i)
+    {
+        //set angle
+        m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, Angle * i);
+
+        //update scene
+        m_modelScene.simulate(0.f);
+
+        //render scene
+        m_ballTexture.clear();
+        m_modelScene.render();
+        m_ballTexture.display();
+
+        //save image
+        std::string n = "anim/anim" + std::to_string(m_ballIndex) + "_";
+        if (i < 10) n += "0";
+        n += std::to_string(i) + ".png";
+        m_ballTexture.getTexture().saveToFile(n);
+    }
+
+
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Callback>().active = true;
+    m_modelScene.setActiveCamera(oldCam);
+    m_cameras[CameraID::Ball].getComponent<cro::Transform>().setPosition(oldPos);
 }

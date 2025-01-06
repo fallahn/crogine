@@ -159,7 +159,19 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "top_flop",
     "fringe_benefit",
     "mulligan",
-    "off_the_wall"
+    "off_the_wall",
+    "plus_fours",
+    "clean_whistle",
+    "dive_in",
+    "quick_start",
+    "quick_step",
+    "quick_of_it",
+    "unreal",
+    "beauchamp",
+    "beginners_luck",
+    "first_rodeo",
+    "bigger_shelf",
+    "ahead_of_the_game"
 };
 
 //appears on the notification
@@ -277,7 +289,19 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Top Of The Flops",
     "Fringe Benefit",
     "Try, Try Again",
-    "Off The Wall"
+    "Off The Wall",
+    "Plus Fours",
+    "Clean As A Whistle",
+    "Dive Right In",
+    "Quick Start",
+    "Quick Step",
+    "Into The Quick Of It",
+    "Unreal",
+    "Beauchamp",
+    "Beginner's Luck",
+    "Not My First Rodeo",
+    "Gonna Need A Bigger Shelf",
+    "Ahead Of The Game"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -331,7 +355,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Use the drone camera to view the course", false),
     std::make_pair("Play once a day for 7 days", false),
     std::make_pair("Play once a day for 4 weeks", false),
-    std::make_pair("Play once a day for 30 weeks", false),
+    std::make_pair("Play at least once on a Sunday 30 different times", false),
     std::make_pair("Get the ball in the hole using back spin", false),
     std::make_pair("Play a full 18 holes on Westington Links", false),
     std::make_pair("Play a full 18 holes on Grove Bank", false),
@@ -396,6 +420,18 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Sink a hole from the fringe using a putter", false),
     std::make_pair("Use at least one Mulligan in Career Mode", false),
     std::make_pair("Use the far wall on hole 15, course 12 to stop the ball going out of bounds", false),
+    std::make_pair("Win a round of Nearest The Pin+ with at least 4 players", false),
+    std::make_pair("Scrub 40 balls in a single round of Scrub!", false),
+    std::make_pair("Play a random 9 holes in Quick Play", false),
+    std::make_pair("Come first in a Quick Play round using Novice clubs", false),
+    std::make_pair("Come first in a Quick Play round using Expert clubs", false),
+    std::make_pair("Come first in a Quick Play round using Pro clubs", false),
+    std::make_pair("Come first in the Dagle-Bunnage Cup", false),
+    std::make_pair("Come first in the Sammonfield Championship", false),
+    std::make_pair("Win a tournament using only the Novice clubs", false),
+    std::make_pair("Win a tournament using only the Expert clubs", false),
+    std::make_pair("Win a tournament using only the Pro clubs", false),
+    std::make_pair("Complete the tutorial early with a chip-in", false),
 };
 
 //assuming trophies load correctly they are:
@@ -403,7 +439,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
 Gold, silver, bronze cup
 Gold, silver, bronze mannequin
 Pool, Platinum,
-Level01 - Level50, Spoon
+Level01 - Level50, Spoon, Tournament01-02
 */
 
 struct TrophyID final
@@ -414,7 +450,8 @@ struct TrophyID final
         GoldFigure, SilverFigure, BronzeFigure,
         Pool, Platinum,
         Level01, Level10, Level20,
-        Level30, Level40, Level50, Spoon
+        Level30, Level40, Level50, Spoon,
+        Tournament01, Tournament02
     };
 };
 
@@ -549,6 +586,19 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     /*111*/TrophyID::SilverCup,
     /*112*/TrophyID::BronzeCup,
     /*113*/TrophyID::Platinum,
+
+    /*114*/TrophyID::SilverCup,
+    /*115*/TrophyID::GoldFigure,
+    /*116*/TrophyID::BronzeCup,
+    /*117*/TrophyID::BronzeFigure,
+    /*118*/TrophyID::SilverFigure,
+    /*119*/TrophyID::GoldFigure,
+    /*120*/TrophyID::Tournament01,
+    /*121*/TrophyID::Tournament02,
+    /*122*/TrophyID::BronzeFigure,
+    /*123*/TrophyID::SilverFigure,
+    /*124*/TrophyID::GoldFigure,
+    /*125*/TrophyID::SilverCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
@@ -598,7 +648,14 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "rounds_rain",
     "rounds_showers",
     "rounds_fog",
-    "drone_hits"
+    "drone_hits",
+    "sundays_played",
+    "unreal_complete",
+    "beauchamp_complete",
+    "unreal_played",
+    "beauchamp_played",
+    "unreal_best",
+    "beauchamp_best",
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -647,7 +704,14 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number Of Rounds Played In Rain",
     "Number Of Rounds Played In Showers",
     "Number Of Rounds Played In Mist",
-    "Number Of Times The Drone Was Hit"
+    "Number Of Times The Drone Was Hit",
+    "Number Of Times A Round Was Played On A Sunday",
+    "Number Of Times The Dagle-Bunnage Cup Was Won",
+    "Number Of Times The Sammonfield Championship Was Won",
+    "Number Of Times The Dagle-Bunnage Cup Was Played",
+    "Number Of Times The Sammonfield Championship Was Played",
+    "Best Position In The Dagle-Bunnage Cup",
+    "Best Position In The Sammonfield Championship",
 };
 
 struct StatType final
@@ -705,6 +769,13 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
 
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
     StatType::Integer,
 };
 

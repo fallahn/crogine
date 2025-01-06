@@ -88,6 +88,17 @@ inline const std::string CelVertexShader = R"(
     VARYING_OUT vec4 v_targetProjection;
 #endif
 
+#if defined (MENU_PROJ)
+const mat4 MenuViewProjectionMatrix = 
+    mat4(
+    vec4(0.05, 0.0,              0.0,              0.0),
+    vec4(0.0,  0.00000000596047, -0.20202,         0.0),
+    vec4(0.0,  -0.1,             -0.0000000120413, 0.0),
+    vec4(0.0,  1.0,              -0.616162,        1.0)
+    );
+VARYING_OUT vec4 v_menuProjection;
+#endif
+
 //dirX, strength, dirZ, elapsedTime
 #include WIND_BUFFER
 
@@ -242,6 +253,9 @@ inline const std::string CelVertexShader = R"(
 #if defined(MULTI_TARGET)
         v_targetProjection = u_targetViewProjectionMatrix * u_worldMatrix * a_position;
 #endif
+#if defined (MENU_PROJ)
+        v_menuProjection = MenuViewProjectionMatrix * u_worldMatrix * a_position;
+#endif
 #if defined(TERRAIN_CLIP)
     gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
 #endif
@@ -314,7 +328,7 @@ inline const std::string CelFragmentShader = R"(
 #if !defined (CONTOUR)
     uniform float u_transparency = 0.5;
 #endif
-    uniform float u_holeHeight = 1.0;
+    uniform vec3 u_holePosition = vec3(0.0, 1.0, 0.0);
 #endif
 
 #if defined (COMP_SHADE)
@@ -339,7 +353,11 @@ inline const std::string CelFragmentShader = R"(
 #if defined(MULTI_TARGET)
     VARYING_IN vec4 v_targetProjection;
 #endif
-    
+#if defined(MENU_PROJ)
+    uniform sampler2D u_menuTexture;
+    VARYING_IN vec4 v_menuProjection;
+#endif    
+
 #define USE_MRT
 #include OUTPUT_LOCATION
 
@@ -415,7 +433,11 @@ inline const std::string CelFragmentShader = R"(
 
     void main()
     {
+#if defined(NO_SUN_COLOUR)
+        vec4 colour = vec4(1.0);
+#else
         vec4 colour = getLightColour();
+#endif
 
 #if defined (TEXTURED)
         vec2 texCoord = v_texCoord;
@@ -508,8 +530,8 @@ inline const std::string CelFragmentShader = R"(
         }
 
 #else
-        float minHeight = u_holeHeight - 0.25;
-        float maxHeight = u_holeHeight + 0.008;
+        float minHeight = u_holePosition.y - 0.25;
+        float maxHeight = u_holePosition.y + 0.008;
         float holeHeight = clamp((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 0.0, 1.0);
         //colour.rgb += clamp(height, 0.0, 1.0) * 0.1;
 
@@ -619,13 +641,33 @@ inline const std::string CelFragmentShader = R"(
 
 #if defined(HOLE_HEIGHT)
 #if !defined(CONTOUR) //regular green
-    vec3 f = fract(v_worldPosition * 0.5);
-    vec3 df = fwidth(v_worldPosition * 0.5);
-    //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
-    vec3 g = step(df * u_pixelScale, f);
+    //vec3 f = fract(v_worldPosition * 0.5);
+    //vec3 df = fwidth(v_worldPosition * 0.5);
+    ////df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
+    //vec3 g = step(df * u_pixelScale, f);
 
-    float contour = /*round*/(1.0 - (g.x * g.y * g.z));
-    vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.8 + (0.4 * holeHeight));
+    //float contour = /*round*/(1.0 - (g.x * g.y * g.z));
+
+vec3 f = fract(v_worldPosition * 0.5);
+
+float sizeMultiplier = smoothstep(10.0, 20.0, length(u_holePosition - v_cameraWorldPosition));
+float falloff = 0.003;
+falloff += 0.02 * sizeMultiplier;
+
+float thickness = 0.018;
+thickness += thickness * sizeMultiplier;
+
+float edge2 = 1.0 - falloff;
+float edge1 = edge2 - thickness;
+float edge0 = edge1 - falloff;
+
+float contourX = smoothstep(edge0, edge1, f.x) * (1.0 - smoothstep(edge2, 1.0, f.x));
+float contourY = smoothstep(edge0, edge1, f.z) * (1.0 - smoothstep(edge2, 1.0, f.z));
+float contour = clamp(contourX + contourY, 0.0, 1.0);
+
+
+    vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.4 + (0.6 * holeHeight)) * 0.2;
+    //vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.8 + (0.4 * holeHeight));
     
 
 //    float slope = 1.0 - dot(normal, vec3(0.0, 1.0, 0.0));
@@ -634,7 +676,10 @@ inline const std::string CelFragmentShader = R"(
 
 
     float transparency = 1.0 - pow(1.0 - u_transparency, 4.0);
-    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contour * holeHeightFade * transparency);
+    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contour * holeHeightFade * transparency);
+
+    FRAG_OUT.rgb += gridColour * contour * holeHeightFade * transparency;
+
 
 #else //putting green
 
@@ -655,8 +700,8 @@ inline const std::string CelFragmentShader = R"(
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contour * fade);
 
-    float minHeight = u_holeHeight - 0.025;
-    float maxHeight = u_holeHeight + 0.08;
+    float minHeight = u_holePosition.y - 0.025;
+    float maxHeight = u_holePosition.y + 0.08;
     float height = min((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 1.0);
     FRAG_OUT.rgb += clamp(height, 0.0, 1.0) * 0.1;
 #endif
@@ -691,7 +736,7 @@ inline const std::string CelFragmentShader = R"(
 
 #if defined(MULTI_TARGET)
     //this is effectively clip-space so +/- 1 is perfect for circles
-    vec2 projUV = v_targetProjection.xy/v_targetProjection.w;
+    vec2 projUV = v_targetProjection.xy / v_targetProjection.w;
 
     float RingCount = 5.0;
     float l = length(projUV);
@@ -705,5 +750,22 @@ inline const std::string CelFragmentShader = R"(
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, targetColour + FRAG_OUT.rgb, targetAmount);
 #endif
+#if defined(MENU_PROJ)
+    vec2 projUV = v_menuProjection.xy/v_menuProjection.w;
+    projUV = projUV * 0.5 + 0.5;
+
+vec3 mapColour = TEXTURE(u_menuTexture, projUV).rgb;
+#if defined (MASK_MAP)
+    mapColour *= 1.0 - mask.g;
+#endif
+FRAG_OUT.rgb += mapColour;
+
+#endif
 //FRAG_OUT += vec4(1.0, 0.0, 0.0, 1.0);
     })";
+    
+//FRAG_OUT.r *= step(0.001, projUV.x);
+//FRAG_OUT.r *= 1.0 - step(0.999, projUV.x);
+
+//FRAG_OUT.r *= step(0.001, projUV.y);
+//FRAG_OUT.r *= 1.0 - step(0.999, projUV.y);

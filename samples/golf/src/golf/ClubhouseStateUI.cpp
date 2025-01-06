@@ -35,10 +35,10 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "Utility.hpp"
 #include "NameScrollSystem.hpp"
-#include "../GolfGame.hpp"
-#include "../Colordome-32.hpp"
 #include "MessageIDs.hpp"
 #include "AchievementStrings.hpp"
+#include "../GolfGame.hpp"
+#include "../Colordome-32.hpp"
 
 #include <Social.hpp>
 
@@ -138,6 +138,7 @@ void ClubhouseState::createUI()
 #endif
     createLobbyMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     createStatMenu(rootNode, mouseEnterCallback, mouseExitCallback);
+    createArcadeMenu(rootNode, mouseEnterCallback, mouseExitCallback);
 
     //hack to activate main menu - this will eventually be done
     //by animation callback
@@ -450,11 +451,10 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
             {
                 if (activated(evt))
                 {
-                    //requestStackPush(StateID::Trophy);
                     m_currentMenu = MenuID::Dummy;
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
 
-                    m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().getUserData<HOFCallbackData>().state = 0;
+                    m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>().state = 0;
                     m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().active = true;
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
@@ -480,9 +480,13 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
             {
                 if (activated(evt))
                 {
-                    requestStackClear();
-                    requestStackPush(StateID::EndlessRunner);
-                    requestStackPush(StateID::EndlessAttract);
+                    m_currentMenu = MenuID::Dummy;
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
+
+                    m_menuEntities[MenuID::Arcade].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>().state = 0;
+                    m_menuEntities[MenuID::Arcade].getComponent<cro::Callback>().active = true;
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -491,7 +495,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
         entity.getComponent<cro::UIInput>().enabled = false;
         entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
-    m_arcadeEnt = entity;
+    m_arcadeEnt = entity; //we stash this in case someone finds out how to enable it :)
 
 
     //leave button
@@ -2436,12 +2440,12 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
 
-    entity.addComponent<cro::Callback>().setUserData<HOFCallbackData>();
+    entity.addComponent<cro::Callback>().setUserData<SubmenuCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [&, parent](cro::Entity e, float dt)
     {
         const float Speed = dt * 3.f;
-        auto& [state, progress] = e.getComponent<cro::Callback>().getUserData<HOFCallbackData>();
+        auto& [state, progress] = e.getComponent<cro::Callback>().getUserData<SubmenuCallbackData>();
         switch (state)
         {
         default: break;
@@ -2501,7 +2505,7 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
     {
         if (m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().active)
         {
-            const auto progress = m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().getUserData<HOFCallbackData>().progress;
+            const auto progress = m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>().progress;
 
             auto scale = glm::vec2(cro::App::getWindow().getSize()) / parent.getComponent<cro::Transform>().getScale().x;
             e.getComponent<cro::Transform>().setScale(scale);
@@ -2559,7 +2563,7 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
     {
         if (m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().active)
         {
-            const auto [state, progress] = m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().getUserData<HOFCallbackData>();
+            const auto [state, progress] = m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>();
 
             switch (state)
             {
@@ -2592,7 +2596,7 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     auto boardEntity = entity;
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     static constexpr float TextOffset = 28.f;
     static constexpr float LineSpacing = 10.f;
     glm::vec3 textPos = { TextOffset, 62.f, 0.1f };
@@ -2680,94 +2684,235 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
                 if (activated(evt))
                 {
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<HOFCallbackData>().state = 2;
+                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>().state = 2;
                     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
                     m_currentMenu = MenuID::Dummy;
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
+}
+
+void ClubhouseState::createArcadeMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
+{
+    //transform node
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+
+    entity.addComponent<cro::Callback>().setUserData<SubmenuCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [&, parent](cro::Entity e, float dt)
+        {
+            const float Speed = dt * 3.f;
+            auto& [state, progress] = e.getComponent<cro::Callback>().getUserData<SubmenuCallbackData>();
+            switch (state)
+            {
+            default: break;
+            case 0:
+                //in
+                progress = std::min(1.f, progress + Speed);
+                if (progress == 1)
+                {
+                    state = 1;
+                    m_currentMenu = MenuID::Arcade;
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
+                }
+                break;
+            case 1:
+                //hold
+
+                break;
+            case 2:
+                //out
+                progress = std::max(0.f, progress - Speed);
+                if (progress == 0)
+                {
+                    state = 0;
+                    m_currentMenu = MenuID::Main;
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(m_currentMenu);
+                    e.getComponent<cro::Callback>().active = false;
+                }
+                break;
+            }
+
+            //centre in screen
+            auto pos = glm::vec2(cro::App::getWindow().getSize()) / parent.getComponent<cro::Transform>().getScale().x;
+            pos /= 2.f;
+            pos.x = std::floor(pos.x);
+            pos.y = std::floor(pos.y);
+            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.6f));
+        };
+
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_menuEntities[MenuID::Arcade] = entity;
+
+    //background node
+    const auto c = cro::Colour::Black;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-0.5f, 0.5f), c),
+            cro::Vertex2D(glm::vec2(-0.5f), c),
+            cro::Vertex2D(glm::vec2(0.5f), c),
+            cro::Vertex2D(glm::vec2(0.5f, -0.5f), c)
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, parent](cro::Entity e, float)
+        {
+            if (m_menuEntities[MenuID::Arcade].getComponent<cro::Callback>().active)
+            {
+                const auto progress = m_menuEntities[MenuID::Arcade].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>().progress;
+
+                auto scale = glm::vec2(cro::App::getWindow().getSize()) / parent.getComponent<cro::Transform>().getScale().x;
+                e.getComponent<cro::Transform>().setScale(scale);
+
+                float alpha = BackgroundAlpha * progress;
+                auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+                for (auto& v : verts)
+                {
+                    v.colour.setAlpha(alpha);
+                }
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    m_menuEntities[MenuID::Arcade].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_resources.textures);
+
+    mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e) mutable
+        {
+            e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+            e.getComponent<cro::Callback>().active = true;
+            e.getComponent<cro::AudioEmitter>().play();
+        });
 
 
-    //auto& tex = m_resources.textures.get("assets/golf/images/monthly_challenge.png");
+    spriteSheet.loadFromFile("assets/golf/sprites/clubhouse_menu.spt", m_resources.textures);
 
-    ////state of the current monthly challenge
-    //const float offset = bounds.width / 2.f;
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>();
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<UIElement>().absolutePosition = { offset, 56.f };
-    //entity.getComponent<UIElement>().relativePosition = { 0.f, -0.5f };
-    //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    //entity.addComponent<cro::Sprite>(tex);
-    //bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    //entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
-    //boardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    //auto bgEnt = entity;
+    //menu panel node
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu_background");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
 
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 41.f, 0.2f });
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Text>(font).setString(Social::getMonthlyChallenge().getProgressString());
-    //entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    //entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    //entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
-    //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    //bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_menuEntities[MenuID::Arcade].getComponent<cro::Callback>().active)
+            {
+                const auto [state, progress] = m_menuEntities[MenuID::Arcade].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>();
 
-    //auto textEnt = entity;
-    //static constexpr float BarWidth = 100.f;
-    //static constexpr float BarHeight = 12.f;
-    //auto [value, target, _] = Social::getMonthlyChallenge().getProgress();
-    //const float progress = static_cast<float>(value) / target;
+                switch (state)
+                {
+                default:
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                }
+                break;
+                case 0:
+                {
+                    float scale = cro::Util::Easing::easeOutQuint(progress);
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, scale));
+                }
+                break;
+                case 2:
+                {
+                    float scale = cro::Util::Easing::easeOutQuad(progress);
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+                }
+                break;
+                }
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        };
+    m_menuEntities[MenuID::Arcade].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ 0.f, -22.f,-0.1f });
-    //std::vector<cro::Vertex2D> verts = 
-    //    {
-    //        cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), LeaderboardTextDark),
-    //        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
-    //        cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
 
-    //        cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
-    //        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
-    //        cro::Vertex2D(glm::vec2(BarWidth, 0.f), LeaderboardTextDark),
+    auto boardEntity = entity;
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    static constexpr float LineSpacing = 10.f;
+    glm::vec3 textPos = { std::floor(bounds.width / 2.f), 57.f, 0.1f };
+
+    auto createButton = [&](const std::string& label)
+        {
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(textPos);
+            entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString(label);
+            entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+            entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
+            entity.getComponent<cro::UIInput>().setGroup(MenuID::Arcade);
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+            entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+            boardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            textPos.y -= LineSpacing;
+
+            return entity;
+        };
+
+    //scrub
+    entity = createButton("Scrub!");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(StateID::ScrubBackground);
+                }
+            });
 
 
+    //cartrun
+    entity = createButton("Cartrun");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(StateID::EndlessRunner);
+                    requestStackPush(StateID::EndlessAttract);
+                }
+            });
 
-    //        cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), TextHighlightColour),
-    //        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
-    //        cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
 
-    //        cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
-    //        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
-    //        cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, 0.f), TextHighlightColour),
-    //};
+    textPos.y -= LineSpacing;
 
-    ////corners
-    //constexpr std::array<glm::vec2, 4u> CornerPos =
-    //{
-    //    glm::vec2(0.f, (BarHeight / 6.f) * 5.f),
-    //    glm::vec2(0.f),
-    //    glm::vec2((BarWidth * 2.f) - 2.f, (BarHeight / 6.f) * 5.f),
-    //    glm::vec2((BarWidth * 2.f) - 2.f, 0.f)
-    //};
-    //const auto cd = CD32::Colours[CD32::Brown];
-    //for (auto i = 0; i < 4; ++i)
-    //{
-    //    verts.emplace_back(glm::vec2(-BarWidth, BarHeight / 6.f) + CornerPos[i], cd);
-    //    verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
-    //    verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
+    //back
+    entity = createButton("Back");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>().state = 2;
+                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+                    m_currentMenu = MenuID::Dummy;
 
-    //    verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
-    //    verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
-    //    verts.emplace_back(glm::vec2(-BarWidth + 2.f, 0.f) + CornerPos[i], cd);
-    //}
-
-    //entity.addComponent<cro::Drawable2D>().setVertexData(verts);
-    //entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    //textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
 }
 
 void ClubhouseState::updateLobbyData(const net::NetEvent& evt)

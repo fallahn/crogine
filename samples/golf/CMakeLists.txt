@@ -41,7 +41,7 @@ if (NOT USE_PARALLEL_EXECUTION OR APPLE)
 endif()
 
 if(NOT GNS_TAG)
-  SET(GNS_TAG "HEAD")
+  SET(GNS_TAG "origin/master")
 endif()
 
 # We're using c++17
@@ -75,6 +75,7 @@ if(USE_STEAM)
   include(FetchContent)
   FetchContent_Declare(libgns
     GIT_REPOSITORY https://github.com/fallahn/libgns
+    GIT_PROGRESS true
     GIT_TAG ${GNS_TAG}) # Could specify a tag/commit hash here?
   FetchContent_MakeAvailable(libgns)
 
@@ -110,10 +111,11 @@ include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/golf/CMakeLists.txt)
 include(${PROJECT_DIR}/editor/CMakeLists.txt)
 include(${PROJECT_DIR}/runner/CMakeLists.txt)
+include(${PROJECT_DIR}/scrub/CMakeLists.txt)
 include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
-SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SQLITE_SRC})
+SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SCRUB_SRC} ${SQLITE_SRC})
 #Steam version actually uses this too now...
 #if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)

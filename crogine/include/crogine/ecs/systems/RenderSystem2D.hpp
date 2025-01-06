@@ -37,6 +37,10 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/matrix.hpp>
 
+#ifdef CRO_DEBUG_
+#include <crogine/gui/GuiClient.hpp>
+#endif
+
 namespace cro
 {
     /*!
@@ -72,7 +76,10 @@ namespace cro
     \see Text
     \see Camera
     */
-    class CRO_EXPORT_API RenderSystem2D final : public cro::System, public cro::Renderable
+    class CRO_EXPORT_API RenderSystem2D final : public System, public Renderable
+#ifdef CRO_DEBUG_
+        , public GuiClient
+#endif
     {
     public:
         /*!

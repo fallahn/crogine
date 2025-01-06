@@ -41,6 +41,11 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 
+namespace
+{
+    const cro::Time MinAudioTime = cro::seconds(0.5f);
+}
+
 MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& currentMenu)
     : m_currentMenu(currentMenu)
 {
@@ -52,6 +57,11 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/menu/snapshot.wav",
         "assets/golf/sound/menu/lobby.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
+        "assets/golf/sound/woof.wav",
+
+        "assets/golf/sound/ambience/fw01.wav",
+        "assets/golf/sound/ambience/fw02.wav",
+        "assets/golf/sound/ambience/fw03.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -78,6 +88,26 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cl::MessageID::EnviroMessage:
+        {
+            const auto& data = msg.getData<EnviroEvent>();
+            auto ent = playSound(AudioID::Fw01 + cro::Util::Random::value(0, 2), 0.2f);
+            ent.getComponent<cro::AudioEmitter>().setPitch(data.size);
+            ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Environment);
+            ent.getComponent<cro::AudioEmitter>().setRolloff(0.f);
+        }
+        break;
+        case cro::Message::SkeletalAnimationMessage:
+        {
+            const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
+            if (data.userType == 10)
+            {
+                auto e = playSound(AudioID::Woof, 0.5f);
+                e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                e.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.9f, 1.1f));
+            }
+        }
+        break;
         case cro::Message::SystemMessage:
         {
             const auto& data = msg.getData<cro::Message::SystemEvent>();
@@ -154,11 +184,20 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
 }
 
 //private
-void MenuSoundDirector::playSound(std::int32_t id, float vol)
+cro::Entity MenuSoundDirector::playSound(std::int32_t id, float vol)
 {
     auto ent = getNextEntity();
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
     ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
     ent.getComponent<cro::AudioEmitter>().setVolume(vol);
-    ent.getComponent<cro::AudioEmitter>().play();
+
+    //only play if the min time since the last occurance of
+    //the sound has been met. Ent is automatically recycled otherwise
+    if (m_audioTimers[id].elapsed() > MinAudioTime)
+    {
+        ent.getComponent<cro::AudioEmitter>().play();
+        m_audioTimers[id].restart();
+    }
+
+    return ent;
 }

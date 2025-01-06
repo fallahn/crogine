@@ -34,6 +34,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "PlayerData.hpp"
 #include "LeagueNames.hpp"
+#include "Tournament.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/audio/sound_system/Playlist.hpp>
@@ -53,6 +54,21 @@ namespace cro
 {
     class MultiRenderTexture;
 }
+
+struct MenuSky final
+{
+    glm::vec3 sunPos = glm::vec3(-0.505335f, 0.62932f, 0.590418f);
+    cro::Colour sunColour = cro::Colour::White;
+
+    cro::Colour skyTop = cro::Colour(0.723f, 0.847f, 0.792f, 1.f);
+    cro::Colour skyBottom = 0xfff8e1ff;
+    float stars = 0.f;
+
+    MenuSky() = default;
+
+    constexpr MenuSky(glm::vec3 sPos, cro::Colour sCol, cro::Colour top, cro::Colour bottom, float s)
+        : sunPos(sPos), sunColour(sCol), skyTop(top), skyBottom(bottom), stars(s) {}
+};
 
 struct ChatFonts final
 {
@@ -81,12 +97,15 @@ static constexpr float MaxFOV = 90.f;
 
 enum class GameMode
 {
-    Career, FreePlay, Tutorial, Clubhouse
+    Career, FreePlay, Tutorial, Clubhouse, Tournament
 };
 
 struct SharedCourseData;
 struct SharedStateData final
 {
+    //used to set background colour in main menu and clubhouse
+    MenuSky menuSky;
+
     cro::Playlist playlist;
 
     bool showCredits = false;
@@ -220,7 +239,10 @@ struct SharedStateData final
     std::uint8_t clubLimit = 0; //limit game to lowest player's clubs
     std::uint8_t nightTime = 0; //bool
     std::uint8_t weatherType = 0;
+    std::uint8_t randomWind = 0; //bool
+    std::uint8_t windStrength = 0; //1-5 but stored 0-4 for ease of iteration
     std::int32_t leagueRoundID = 0; //which league we're playing in
+    std::int32_t quickplayOpponents = 0; //1-3 if quickplay, 0 to disable
 
     //counts the number of holes actually played in elimination
     std::uint8_t holesPlayed = 0;
@@ -273,7 +295,7 @@ struct SharedStateData final
     bool logBenchmarks = false;
     bool showCustomCourses = true;
     bool showTutorialTip = true;
-    bool showPuttingPower = false;
+    bool showPuttingPower = true;
     bool showBallTrail = false;
     bool trailBeaconColour = true; //if false defaults to white
     bool fastCPU = true;
@@ -290,6 +312,8 @@ struct SharedStateData final
     bool decimatePowerBar = false;
     bool decimateDistance = false;
     bool showRosterTip = true;
+    bool fixedPuttingRange = false;
+    bool remoteContent = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;
@@ -298,4 +322,6 @@ struct SharedStateData final
     std::vector<std::string> resolutionStrings;
 
     LeagueNames leagueNames;
+    std::array<Tournament, 2u> tournaments;
+    std::int32_t activeTournament = -1;
 };

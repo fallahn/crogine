@@ -114,6 +114,8 @@ namespace
     };
 }
 
+bool Club::m_fixedPuttingDistance = false;
+
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
     : m_id      (id), 
     m_name      (name), 
@@ -200,6 +202,11 @@ float Club::getPower(float distanceToPin, bool imperial) const
 {
     if (m_id == ClubID::Putter)
     {
+        if (m_fixedPuttingDistance)
+        {
+            return ClubStats[m_id].stats[0].target;
+        }
+
         //looks like a bug, but turns out we need the extra power.
         auto p = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
         //return getScaledValue(ClubStats[m_id].stats[0].power, distanceToPin);
@@ -228,7 +235,7 @@ float Club::getTarget(float distanceToPin) const
 {
     if (m_id == ClubID::Putter)
     {
-        return getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
+        return m_fixedPuttingDistance ? getBaseTarget() : getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
     }
 
     return getBaseTarget(); //this includes target multiplier

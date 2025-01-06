@@ -175,8 +175,13 @@ void AudioEmitter::pause()
 
 void AudioEmitter::stop()
 {
-    m_transportFlags |= Stop;
-    m_state = State::Stopped;
+    //note that stopping an emitter resets the ID
+    //to 0 so we can't call stop on it again
+    if (m_ID)
+    {
+        m_transportFlags |= Stop;
+        m_state = State::Stopped;
+    }
 }
 
 void AudioEmitter::setPlayingOffset(Time offset)

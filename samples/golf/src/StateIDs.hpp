@@ -43,6 +43,7 @@ struct StateID final
         Keyboard,
         Practice,
         Career,
+        Tournament,
         DrivingRange,
         PuttingRange,
         Clubhouse,
@@ -67,7 +68,25 @@ struct StateID final
         EndlessRunner,
         EndlessPause,
 
+        ScrubBackground,
+        ScrubGame,
+        ScrubAttract,
+        ScrubPause,
+
         SQLite, //used for testing SQLite features
-        Workshop = 1100
+        Workshop = 1100,
+        Count
+    };
+};
+
+//these are used to request game modes without a specific
+//StateID so we extend the StateID enum for use with
+//SystemEvent::MenuRequest (see FreePlayState)
+struct RequestID final
+{
+    enum
+    {
+        QuickPlay = StateID::Count,
+        Tournament
     };
 };

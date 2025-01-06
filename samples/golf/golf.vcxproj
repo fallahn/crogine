@@ -618,6 +618,7 @@
     <ClCompile Include="src\golf\CloudSystem.cpp" />
     <ClCompile Include="src\golf\ClubhouseState.cpp" />
     <ClCompile Include="src\golf\ClubhouseStateUI.cpp" />
+    <ClCompile Include="src\golf\ClubModels.cpp" />
     <ClCompile Include="src\golf\Clubs.cpp" />
     <ClCompile Include="src\golf\CollisionMesh.cpp" />
     <ClCompile Include="src\golf\CPUGolfer.cpp" />
@@ -650,6 +651,7 @@
     <ClCompile Include="src\golf\LeagueNames.cpp" />
     <ClCompile Include="src\golf\LeagueState.cpp" />
     <ClCompile Include="src\golf\LightAnimationSystem.cpp" />
+    <ClCompile Include="src\golf\LightmapProjectionSystem.cpp" />
     <ClCompile Include="src\golf\MapOverviewState.cpp" />
     <ClCompile Include="src\golf\MenuAvatars.cpp" />
     <ClCompile Include="src\golf\MenuCallbacks.cpp" />
@@ -676,6 +678,7 @@
     <ClCompile Include="src\golf\ProgressIcon.cpp" />
     <ClCompile Include="src\golf\PropFollowSystem.cpp" />
     <ClCompile Include="src\golf\RayResultCallback.cpp" />
+    <ClCompile Include="src\golf\RopeSystem.cpp" />
     <ClCompile Include="src\golf\server\EightballDirector.cpp" />
     <ClCompile Include="src\golf\server\NineballDirector.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
@@ -697,6 +700,9 @@
     <ClCompile Include="src\golf\TerrainChunks.cpp" />
     <ClCompile Include="src\golf\TerrainDepthmap.cpp" />
     <ClCompile Include="src\golf\TextChat.cpp" />
+    <ClCompile Include="src\golf\TimeOfDay.cpp" />
+    <ClCompile Include="src\golf\Tournament.cpp" />
+    <ClCompile Include="src\golf\TournamentState.cpp" />
     <ClCompile Include="src\golf\TrophyDisplaySystem.cpp" />
     <ClCompile Include="src\golf\TrophyState.cpp" />
     <ClCompile Include="src\golf\TutorialDirector.cpp" />
@@ -720,9 +726,17 @@
     <ClCompile Include="src\runner\EndlessPauseState.cpp" />
     <ClCompile Include="src\runner\EndlessSoundDirector.cpp" />
     <ClCompile Include="src\runner\Track.cpp" />
+    <ClCompile Include="src\scrub\ScrubAttractState.cpp" />
+    <ClCompile Include="src\scrub\ScrubBackgroundState.cpp" />
+    <ClCompile Include="src\scrub\ScrubGameState.cpp" />
+    <ClCompile Include="src\scrub\ScrubParticleDirector.cpp" />
+    <ClCompile Include="src\scrub\ScrubPauseState.cpp" />
+    <ClCompile Include="src\scrub\ScrubPhysicsSystem.cpp" />
+    <ClCompile Include="src\scrub\ScrubSoundDirector.cpp" />
     <ClCompile Include="src\SplashScreenState.cpp" />
     <ClCompile Include="src\sqlite\ProfileDB.cpp" />
     <ClCompile Include="src\sqlite\SqliteState.cpp" />
+    <ClCompile Include="src\Sunclock.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -752,6 +766,7 @@
     <ClInclude Include="src\golf\ClientPacketData.hpp" />
     <ClInclude Include="src\golf\CloudSystem.hpp" />
     <ClInclude Include="src\golf\ClubhouseState.hpp" />
+    <ClInclude Include="src\golf\ClubModels.hpp" />
     <ClInclude Include="src\golf\ClubModifiers.hpp" />
     <ClInclude Include="src\golf\Clubs.hpp" />
     <ClInclude Include="src\golf\CollisionMesh.hpp" />
@@ -785,6 +800,7 @@
     <ClInclude Include="src\golf\LeagueNames.hpp" />
     <ClInclude Include="src\golf\LeagueState.hpp" />
     <ClInclude Include="src\golf\LightAnimationSystem.hpp" />
+    <ClInclude Include="src\golf\LightmapProjectionSystem.hpp" />
     <ClInclude Include="src\golf\MapOverviewState.hpp" />
     <ClInclude Include="src\golf\MenuCallbacks.hpp" />
     <ClInclude Include="src\golf\MenuConsts.hpp" />
@@ -817,6 +833,7 @@
     <ClInclude Include="src\golf\PuttingState.hpp" />
     <ClInclude Include="src\golf\RandNames.hpp" />
     <ClInclude Include="src\golf\RayResultCallback.hpp" />
+    <ClInclude Include="src\golf\RopeSystem.hpp" />
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
     <ClInclude Include="src\golf\ScoreType.hpp" />
     <ClInclude Include="src\golf\server\BilliardsDirector.hpp" />
@@ -851,6 +868,9 @@
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />
     <ClInclude Include="src\golf\TextChat.hpp" />
     <ClInclude Include="src\golf\Thumbsticks.hpp" />
+    <ClInclude Include="src\golf\TimeOfDay.hpp" />
+    <ClInclude Include="src\golf\Tournament.hpp" />
+    <ClInclude Include="src\golf\TournamentState.hpp" />
     <ClInclude Include="src\golf\Treeset.hpp" />
     <ClInclude Include="src\golf\TrophyDisplaySystem.hpp" />
     <ClInclude Include="src\golf\TrophyState.hpp" />
@@ -866,6 +886,7 @@
     <ClInclude Include="src\golf\WeatherDirector.hpp" />
     <ClInclude Include="src\golf\XPAwardStrings.hpp" />
     <ClInclude Include="src\ImTheme.hpp" />
+    <ClInclude Include="src\LatLong.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\GolfGame.hpp" />
     <ClInclude Include="src\M3UPlaylist.hpp" />
@@ -885,10 +906,20 @@
     <ClInclude Include="src\runner\TrackCamera.hpp" />
     <ClInclude Include="src\runner\TrackSegment.hpp" />
     <ClInclude Include="src\runner\TrackSprite.hpp" />
+    <ClInclude Include="src\scrub\ScrubAttractState.hpp" />
+    <ClInclude Include="src\scrub\ScrubBackgroundState.hpp" />
+    <ClInclude Include="src\scrub\ScrubConsts.hpp" />
+    <ClInclude Include="src\scrub\ScrubGameState.hpp" />
+    <ClInclude Include="src\scrub\ScrubParticleDirector.hpp" />
+    <ClInclude Include="src\scrub\ScrubPauseState.hpp" />
+    <ClInclude Include="src\scrub\ScrubPhysicsSystem.hpp" />
+    <ClInclude Include="src\scrub\ScrubSharedData.hpp" />
+    <ClInclude Include="src\scrub\ScrubSoundDirector.hpp" />
     <ClInclude Include="src\SplashScreenState.hpp" />
     <ClInclude Include="src\sqlite\ProfileDB.hpp" />
     <ClInclude Include="src\sqlite\SqliteState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="src\Sunclock.hpp" />
     <ClInclude Include="VersionNumber.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -903,11 +934,13 @@
     <None Include="src\golf\shaders\CompositeShader.inl" />
     <None Include="src\golf\shaders\Glass.inl" />
     <None Include="src\golf\shaders\GlowShader.inl" />
+    <None Include="src\golf\shaders\Lantern.inl" />
     <None Include="src\golf\shaders\LensFlare.inl" />
     <None Include="src\golf\shaders\MinimapShader.inl" />
     <None Include="src\golf\shaders\PaletteSwap.inl" />
     <None Include="src\golf\shaders\PointLightShader.inl" />
     <None Include="src\golf\shaders\PostProcess.inl" />
+    <None Include="src\golf\shaders\RoidShader.inl" />
     <None Include="src\golf\shaders\ShaderIncludes.inl" />
     <None Include="src\golf\shaders\ShadowMapping.inl" />
     <None Include="src\golf\shaders\TerrainShader.inl" />
@@ -919,6 +952,7 @@
     <None Include="src\golf\shaders\WaterShader.inl" />
     <None Include="src\golf\shaders\Weather.inl" />
     <None Include="src\golf\shaders\WireframeShader.inl" />
+    <None Include="src\scrub\Shaders.inl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="golf.rc" />

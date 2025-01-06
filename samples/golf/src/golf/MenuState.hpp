@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "TimeOfDay.hpp"
 #include "SharedCourseData.hpp"
 #include "CommonConsts.hpp"
 #include "GameConsts.hpp"
@@ -98,7 +99,7 @@ public:
         Dummy, 
         Main, Avatar, Join, Lobby,
         ProfileFlyout, ConfirmQuit,
-        Scorecard,
+        Scorecard, Weather, CareerSelect,
 
         Count
     };
@@ -120,6 +121,9 @@ private:
     VoiceChat m_voiceChat;
     MatchMaking m_matchMaking;
     cro::ResourceCollection m_resources;
+
+    TimeOfDay m_tod;
+    cro::RenderTexture m_lightProjectionMap;
 
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
@@ -146,8 +150,11 @@ private:
         enum
         {
             Ball,
+            BallSkinned,
             Cel,
             CelTextured,
+            CelTexturedMasked,
+            CelTexturedMaskedLightMap,
             CelTexturedSkinned,
             Hair,
             HairReflect,
@@ -155,6 +162,7 @@ private:
             BillboardShadow,
             Ground,
             Trophy,
+            Lantern,
 
             Count
         };
@@ -237,6 +245,12 @@ private:
     std::function<void(bool)> enterConfirmCallback;
     std::function<void()> quitConfirmCallback;
 
+    std::function<void()> enterWeatherCallback;
+    std::function<void()> quitWeatherCallback;
+
+    std::function<void()> enterCareerCallback;
+    std::function<void(std::int32_t)> quitCareerCallback; //-1 to close or career state ID to launch another menu
+
     struct TextEdit final
     {
         cro::String* string = nullptr;
@@ -250,9 +264,25 @@ private:
     void addSystems();
     void loadAssets();
     void createScene();
+    struct PropFileData final
+    {
+        std::string propFilePath;
+        bool spooky = false;
+        bool fireworks = false;
+        std::int32_t timeOfDay = 0;
+    };
+    PropFileData getPropPath() const;
     void createClouds();
+    void createRopes(std::int32_t, const std::vector<glm::vec3>&);
+    void createFireworks();
+    void createSnow();
     void setVoiceCallbacks();
     std::array<cro::Entity, ConstVal::MaxClients> m_voiceEntities;
+
+#ifdef USE_GNS
+    void checkBeta();
+    cro::Entity m_betaEntity;
+#endif
 
     SharedCourseData m_sharedCourseData;
     
@@ -370,6 +400,7 @@ private:
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
     void updateLobbyData(const net::NetEvent&);
+    void updateRemoteContent(const ConnectionData&);
     void updateLobbyAvatars();
     void updateLobbyList();
     void quitLobby();
@@ -387,7 +418,15 @@ private:
     void createPreviousScoreCard();
     void togglePreviousScoreCard();
 
+    void launchQuickPlay();
+    void launchTournament(std::int32_t);
     void handleNetEvent(const net::NetEvent&);
+
+    void createDebugWindows();
+    void applyTutorialConnection();
+    void applyCareerConnection();
+    void applyQuickPlayConnection();
+    void applyTournamentConnection();
 
     friend struct MainMenuContext;
 };

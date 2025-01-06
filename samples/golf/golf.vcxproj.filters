@@ -88,6 +88,18 @@
     <Filter Include="Header Files\endless">
       <UniqueIdentifier>{3a86c79e-897c-4491-86c6-22f4eb59f43d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\scrub">
+      <UniqueIdentifier>{b77f3a21-7112-4537-8b5e-77d331e1a0a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\scrub">
+      <UniqueIdentifier>{4ba8aac9-a5e8-479b-b1da-bce7d195fb06}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\golf\client\time of day">
+      <UniqueIdentifier>{53f50006-c51f-4812-b3b9-fa5904be7d82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\golf\client\time of day">
+      <UniqueIdentifier>{be9dd921-53a3-46e0-a093-6cb68606eb52}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -467,6 +479,48 @@
     </ClCompile>
     <ClCompile Include="src\golf\FireworksSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubAttractState.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubBackgroundState.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubGameState.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubPauseState.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubSoundDirector.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubPhysicsSystem.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scrub\ScrubParticleDirector.cpp">
+      <Filter>Source Files\scrub</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sunclock.cpp">
+      <Filter>Source Files\golf\client\time of day</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TimeOfDay.cpp">
+      <Filter>Source Files\golf\client\time of day</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\RopeSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\LightmapProjectionSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\Tournament.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TournamentState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ClubModels.cpp">
+      <Filter>Source Files\golf\client</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -965,6 +1019,57 @@
     <ClInclude Include="src\golf\FireworksSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\scrub\ScrubAttractState.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubBackgroundState.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubGameState.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubPauseState.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubSoundDirector.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubConsts.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubSharedData.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubPhysicsSystem.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scrub\ScrubParticleDirector.hpp">
+      <Filter>Header Files\scrub</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Sunclock.hpp">
+      <Filter>Header Files\golf\client\time of day</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LatLong.hpp">
+      <Filter>Header Files\golf\client\time of day</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TimeOfDay.hpp">
+      <Filter>Header Files\golf\client\time of day</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\RopeSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\LightmapProjectionSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Tournament.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TournamentState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ClubModels.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">
@@ -1046,6 +1151,15 @@
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\shaders\Weather.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\scrub\Shaders.inl">
+      <Filter>Header Files\scrub</Filter>
+    </None>
+    <None Include="src\golf\shaders\Lantern.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\RoidShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>

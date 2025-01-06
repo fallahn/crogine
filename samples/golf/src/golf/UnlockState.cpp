@@ -56,6 +56,7 @@ source distribution.
 
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
@@ -244,6 +245,7 @@ void UnlockState::addSystems()
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
     m_modelScene.addSystem<cro::CallbackSystem>(mb);
+    m_modelScene.addSystem<cro::SkeletalAnimator>(mb);
     m_modelScene.addSystem<cro::CameraSystem>(mb);
     m_modelScene.addSystem<cro::ModelRenderer>(mb);
     m_modelScene.addSystem<cro::ParticleSystem>(mb);
@@ -260,15 +262,30 @@ void UnlockState::addSystems()
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-    m_celShader.loadFromString(UnlockVertex, UnlockFragment);
-    m_reflectionShader.loadFromString(UnlockVertex, UnlockFragment, "#define REFLECTION\n");
+    struct ShaderID final
+    {
+        enum
+        {
+            Cel, CelSkinned, Reflection
+        };
+    };
+    
+    m_shaderResource.loadFromString(ShaderID::Cel, UnlockVertex, UnlockFragment);
+    m_shaderResource.loadFromString(ShaderID::CelSkinned, UnlockVertex, UnlockFragment, "#define SKINNED\n");
+    m_shaderResource.loadFromString(ShaderID::Reflection,UnlockVertex, UnlockFragment, "#define REFLECTION\n");
     m_cubemap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
-    m_materials[0].setShader(m_celShader);
+    
+    //these are in the order they appear on the models
+    m_materials[0].setShader(m_shaderResource.get(ShaderID::Cel));
     m_materials[0].doubleSided = true;
-    m_materials[1].setShader(m_reflectionShader);
+    m_materials[1].setShader(m_shaderResource.get(ShaderID::Reflection));
     m_materials[1].setProperty("u_reflectMap", cro::CubemapID(m_cubemap));
     m_materials[1].doubleSided = true;
+
+    //unless... it's animated
+    m_materials[2].setShader(m_shaderResource.get(ShaderID::CelSkinned));
+    m_materials[2].doubleSided = true;
 }
 
 void UnlockState::buildScene()
@@ -592,9 +609,17 @@ void UnlockState::buildUI()
         {
             md.createModel(entity);
             
-            for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+            if (md.hasSkeleton())
             {
-                entity.getComponent<cro::Model>().setMaterial(i, m_materials[i]);
+                entity.getComponent<cro::Model>().setMaterial(0, m_materials[2]);
+                entity.getComponent<cro::Skeleton>().play(0);
+            }
+            else
+            {
+                for (auto i = 0u; i < std::min(entity.getComponent<cro::Model>().getMeshData().submeshCount, std::size_t(2)); ++i)
+                {
+                    entity.getComponent<cro::Model>().setMaterial(i, m_materials[i]);
+                }
             }
 
             //scale all models to more or less the same size

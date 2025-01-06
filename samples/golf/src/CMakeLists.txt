@@ -5,4 +5,5 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/LoadingScreen.cpp
   ${PROJECT_DIR}/M3UPlaylist.cpp
   ${PROJECT_DIR}/SplashScreenState.cpp
+  ${PROJECT_DIR}/Sunclock.cpp
   ${PROJECT_DIR}/main.cpp)

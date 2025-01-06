@@ -36,6 +36,7 @@ source distribution.
 #include "Billboard.hpp"
 #include "GameConsts.hpp"
 #include "BallTrail.hpp"
+#include "ClubModels.hpp"
 
 #include <crogine/audio/DynamicAudioStream.hpp>
 
@@ -178,12 +179,13 @@ private:
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
     Avatar m_avatar;
+    ClubModels m_clubModels;
 
-    struct ClubModel final
-    {
-        enum {Wood, Iron, Count};
-    };
-    std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
+    //struct ClubModel final
+    //{
+    //    enum {Wood, Iron, Count};
+    //};
+    //std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
     std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
     std::size_t m_strokeCountIndex;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2024
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -48,6 +48,10 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_access.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
+#ifdef CRO_DEBUG_
+#include <crogine/gui/Gui.hpp>
+#endif
+
 using namespace cro;
 
 namespace
@@ -57,13 +61,28 @@ namespace
     constexpr float CascadeOverlap = 0.5f;
 }
 
-ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
+ShadowMapRenderer::ShadowMapRenderer(MessageBus& mb)
     : System(mb, typeid(ShadowMapRenderer)),
     m_interval      (1)
 {
-    requireComponent<cro::Model>();
-    requireComponent<cro::Transform>();
-    requireComponent<cro::ShadowCaster>();
+    requireComponent<Model>();
+    requireComponent<Transform>();
+    requireComponent<ShadowCaster>();
+
+#ifdef CRO_DEBUG_
+    addStats([&]()
+        {
+            for (auto i = 0u; i < m_drawLists.size(); ++i)
+            {
+                std::size_t visible = 0;
+                for (const auto& cascade : m_drawLists[i])
+                {
+                    visible += cascade.size();
+                }
+                ImGui::Text("Visisble entities in shadow map for scene %lu, to Camera %lu: %lu", getScene()->getInstanceID(), i, visible);
+            }
+        });
+#endif
 }
 
 //public
@@ -206,9 +225,6 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
 #endif
         }
-#ifdef CRO_DEBUG_
-        std::int32_t visibleCount = 0;
-#endif
 
         //use depth frusta to cull entities
         auto& entities = getEntities();
@@ -262,9 +278,6 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                     //just place them all in the same draw list
                     drawList[0].emplace_back(entity, distance);
 #endif
-#ifdef CRO_DEBUG_
-                    visibleCount++;
-#endif
                 }
             }
         }
@@ -280,8 +293,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         }
 
 #ifdef CRO_DEBUG_
-        //some objects might appear in multiple cascades
-        DPRINT("Rendered 3D shadow ents", std::to_string(visibleCount));
+        //used for debug drawing of light positions
         camera.lightPositions.swap(lightPositions);
 #endif
     }

@@ -131,6 +131,11 @@ bool OpenALImpl::init()
     bool current = false;
     /*alcCheck*/(current = alcMakeContextCurrent(m_context));
     
+    if (m_devices.empty())
+    {
+        m_devices.push_back("default");
+    }
+
     return current;
 }
 
@@ -831,6 +836,10 @@ void OpenALImpl::enumerateDevices()
             }
         }
     }
+    else
+    {
+        m_devices.push_back("default");
+    }
 }
 
 std::string OpenALImpl::getPreferencePath() const
@@ -889,7 +898,9 @@ void OpenALImpl::refreshDeviceList()
     auto enumAvailable = alcIsExtensionPresent(nullptr, "ALC_ENUMERATION_EXT");
     if (enumAvailable)
     {
-        const auto* deviceList = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
+        //ALC_DEVICE_SPECIFIER only returns basic device list (this is no good on steam deck)
+        //const auto* deviceList = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
+        const auto* deviceList = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
         if (deviceList)
         {
             auto* next = deviceList + 1;
@@ -905,7 +916,11 @@ void OpenALImpl::refreshDeviceList()
                 next += (len + 2);
             }
         }
-        m_devices.push_back("Default");
+
+        if (m_devices.empty())
+        {
+            m_devices.push_back("Default");
+        }
     }
     else
     {

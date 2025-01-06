@@ -137,6 +137,8 @@ void GolfState::handleRules(std::int32_t groupID, const GolfBallEvent& data)
             }
             else
             {
+                //force a forfeit so that no one will win if all players are OOB
+                m_playerInfo[groupID].playerInfo[0].holeScore[m_currentHole] = MaxNTPStrokes; 
                 m_playerInfo[groupID].playerInfo[0].distanceScore[m_currentHole] = NTPPenalty;
             }
             break;
@@ -369,7 +371,13 @@ bool GolfState::summariseRules()
             //this is an intentional copy
             sortData.insert(sortData.end(), group.playerInfo.begin(), group.playerInfo.end());
         }
-    }    
+    }
+
+    //players have quit to the point the minimum amount is not met
+    if (ScoreType::MinPlayerCount[m_sharedData.scoreType] > sortData.size())
+    {
+        return true;
+    }
     
     
     //check sort data to see if we have 1 remaining player
@@ -381,14 +389,44 @@ bool GolfState::summariseRules()
                 return !a.eliminated;
             });
 
-        if (sortData.size() == 1
-            || sortData[1].eliminated)
+        if (sortData[1].eliminated)
         {
-            //everyone quit or all but player 1 are eliminated
+            //all but player 1 are eliminated
             return true;
         }
         return false;
     }
+
+
+
+    //if there aren't enough NTP holes left to win, end the game
+    if (m_ntpPro)
+    {
+        std::sort(sortData.begin(), sortData.end(),
+            [](const PlayerStatus& a, const PlayerStatus& b)
+            {
+                if (a.matchWins == b.matchWins)
+                {
+                    return a.distanceScore < b.distanceScore;
+                }
+                return a.matchWins > b.matchWins;
+            });
+
+        //we should *always* have two players in this case
+        CRO_ASSERT(sortData.size() > 1, "");
+        const auto remain = (m_holeData.size() - (m_currentHole + 1));
+        const auto lead = sortData[0].matchWins - sortData[1].matchWins;
+        if (lead > remain)
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+
 
     bool gameFinished = false;
 
@@ -397,7 +435,6 @@ bool GolfState::summariseRules()
         {
             return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
         });
-
 
 
     //check if we tied the last hole in skins
@@ -436,11 +473,12 @@ bool GolfState::summariseRules()
     if (m_sharedData.scoreType == ScoreType::Skins
         || m_sharedData.scoreType == ScoreType::Match)
     {
-        if (m_playerInfo[0].playerCount == 1)
+        //if (m_playerInfo[0].playerCount == 1)
+        /*if (sortData.size() == 1)
         {
             gameFinished = true;
         }
-        else
+        else*/
         {
             //only score if no player tied
             if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
@@ -459,8 +497,13 @@ bool GolfState::summariseRules()
                     {
                         player->matchWins++;
                         player->skins += m_skinsPot;
+                        
                         m_skinsPot = 1;
 
+                        /*if (m_holeData.size() > 2)
+                        {
+                            m_skinsPot += (m_currentHole / (m_holeData.size() / 3));
+                        }*/
                         sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
 
                         //send notification packet to clients that player won the hole
@@ -476,7 +519,11 @@ bool GolfState::summariseRules()
                 if (!m_skinsFinals)
                 {
                     m_skinsPot++;
-
+                    
+                    /*if (m_holeData.size() > 2)
+                    {
+                        m_skinsPot += m_currentHole / (m_holeData.size() / 3);
+                    }*/
                     std::uint16_t data = 0xff00 | m_skinsPot;
                     m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }

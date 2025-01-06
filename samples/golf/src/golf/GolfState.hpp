@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "../sqlite/ProfileDB.hpp"
+#include "ClubModels.hpp"
 #include "HoleData.hpp"
 #include "GameConsts.hpp"
 #include "InputParser.hpp"
@@ -126,6 +127,9 @@ private:
     cro::ResourceCollection m_resources;
     cro::DynamicAudioStream m_musicStream;
 
+    bool m_hasSnow; //we hardly ever use this, but have to ttrack it anyway...
+    bool m_ntpPro; //hack to display different score in same game mode as NTP
+    bool m_hotSeat; //we're playing local hotseat
     SharedStateData& m_sharedData;
     cro::Scene m_gameScene;
     cro::Scene m_skyScene;
@@ -157,6 +161,7 @@ private:
     std::uint8_t m_serverGroup;
     bool m_allowAchievements;
     cro::Clock m_readyClock; //pings ready state until ack'd
+    std::int32_t m_deferredGameState; //a tutorial state is waiting to be pushed
 
     struct RenderTargetContext final
     {
@@ -241,6 +246,7 @@ private:
     float m_distanceToHole;
     float m_NTPDistance; //in NTP mode how far away from the pin the shot landed
     float m_strokeTimer; //reset at the beginning of the stroke to time the potential timeline clip
+    std::int32_t m_survivorXP;
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
     bool m_resumedFromSave;
@@ -275,7 +281,10 @@ private:
             HairReflect,
             Course,
             Ball,
+            BallSkinned,
             BallNight,
+            BallNightSkinned,
+            BallWasher,
             Billboard,
             Trophy,
             Beacon,
@@ -299,6 +308,7 @@ private:
             BallShadow,
             PlayerShadow,
             BullsEye,
+            PlayerFallBack,
 
             Count
         };
@@ -327,7 +337,7 @@ private:
     void loadModels();
     void loadSpectators();
     void loadMap();
-    void initAudio(bool loadTrees);
+    void initAudio(bool loadTrees, bool loadPlane);
 
     void addSystems();
     void buildScene();
@@ -336,6 +346,7 @@ private:
     void createWeather(std::int32_t);
     void setFog(float density);
     void createClouds();
+    void createRoids();
     void createFireworks();
     void buildBow();
     void handleWeatherChange(std::uint8_t);
@@ -450,6 +461,7 @@ private:
     //scoring related stuff in GolfStateScoring.cpp
     void updateHoleScore(std::uint16_t); //< diplays result of a hole win/loss
     void updateLeaderboardScore(bool&, cro::String&); //updates the params with personal best from current leaderboard
+    void updateTournament(bool); //if player won the round updates all other CPU for that round, else for the rest of the tournament
 
     //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final
@@ -500,12 +512,8 @@ private:
 
     std::array<std::array<Avatar, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar;
+    ClubModels m_clubModels;
 
-    struct ClubModel final
-    {
-        enum { Wood, Iron, Count };
-    };
-    std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
     glm::vec3 m_terrainLevel;
     float m_camRotation; //used to offset the rotation of the wind indicator
@@ -529,6 +537,8 @@ private:
     cro::Entity m_droneTextEnt;
     cro::Entity m_freecamMenuEnt;
     std::uint8_t m_readyQuitFlags;
+
+    std::unique_ptr<FriendlyPlayers> m_friendlyPlayers;
 
     void buildUI();
     void showCountdown(std::uint8_t);
@@ -566,6 +576,7 @@ private:
     std::int32_t m_courseIndex; //-1 if not an official course
     mutable std::array<std::array<PersonalBestRecord, 18>, ConstVal::MaxPlayers> m_personalBests = {};
     std::future<void> m_statResult; //stat updates are async - this makes sure to wait when quitting
+    std::future<void> m_csvResult;
     void updateProfileDB() const;
 
     void buildTrophyScene();
@@ -620,6 +631,9 @@ private:
     cro::Entity m_mapCam;
     cro::Entity m_mapRoot;
     cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
+    
+    std::int32_t m_minimapTexturePass;
+    static constexpr std::int32_t MaxMinimapPasses = 1;
     void updateMinimapTexture();
     void updateMiniMap();
 
@@ -633,6 +647,25 @@ private:
 
     //------------
 
+    //used to track average wind speed and award XP
+    struct WindTracker final
+    {
+        float totalSpeed = 0.f;
+        std::int32_t tickCount = 0;
+
+        float avg() const
+        {
+            return tickCount == 0 ? 0.f : totalSpeed / tickCount;
+        }
+
+        void reset()
+        {
+            tickCount = 0;
+            totalSpeed = 0.f;
+        }
+        static constexpr float BonusSpeed = 2.2f;
+    }m_windTracker;
+
     struct AchievementTracker final
     {
         bool hadFoul = false; //tracks 'boomerang' stat
@@ -641,6 +674,7 @@ private:
         bool hadFlop = false;
         bool hadPunch = false;
         bool wasGreen = false; //putt from fringe
+        bool plusFour = false; //has at least 4 players
 
         bool noHolesOverPar = true; //no mistake
         bool noGimmeUsed = true; //never give you up

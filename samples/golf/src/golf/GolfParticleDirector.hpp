@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -48,6 +48,9 @@ public:
     GolfParticleDirector(cro::TextureResource&, const SharedStateData&);
 
     void handleMessage(const cro::Message&) override;
+
+    //hack to prevent stall the first time particles are spawned
+    void init() { resizeEmitters(); }
 private:
 
     const SharedStateData& m_sharedData;
@@ -60,7 +63,7 @@ private:
             Sparkle, HIO, Bird,
             Drone, Explode, Blades, PowerShot,
             Puff, Star, Trail, Firework,
-
+            Bubbles,
             Count
         };
     };

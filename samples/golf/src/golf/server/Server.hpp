@@ -66,6 +66,8 @@ public:
     bool addLocalConnection(net::NetClient& client);
     bool addLocalVoiceConnection(net::NetClient& client);
     void setHostID(std::uint64_t id);
+    //this is used to know which save file to load
+    //in the case of tournaments it's set to (int32 max - tournamentID)
     void setLeagueID(std::int32_t id);
 
     //note this is not atomic!

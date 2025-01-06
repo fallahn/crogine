@@ -53,6 +53,6 @@ namespace cro
     */
     struct CRO_EXPORT_API CommandTarget final
     {
-        std::uint32_t ID = 0;
+        std::uint64_t ID = 0;
     };
 }

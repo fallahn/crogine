@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2024
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,15 +35,28 @@ source distribution.
 int main(int argc, char** argsv)
 {
     bool safeMode = false;
-    
+
     GolfGame game;
     if (argc > 1)
     {
         std::string str(argsv[1]);
         safeMode = (str == "safe_mode");
+
+#ifdef _WIN32
+        AllocConsole();
+#endif
+
     }
     game.setSafeModeEnabled(safeMode);
-    game.run();
+    game.run(safeMode);
+
+
+#ifdef _WIN32
+    if (safeMode)
+    {
+        FreeConsole();
+    }
+#endif
 
     return 0;
 }
