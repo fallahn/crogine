@@ -170,7 +170,7 @@ if(NOT TARGET crogine)
 
 
 
-  target_compile_definitions(${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG_>)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC $<$<CONFIG:Debug>:CRO_DEBUG_ PARALLEL_GLOBAL_DISABLE>)
 
   target_link_libraries(${PROJECT_NAME}
     ${SDL2_LIBRARY} 
