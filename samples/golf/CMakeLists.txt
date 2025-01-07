@@ -205,13 +205,13 @@ endif()
 
 #websockets needs this
 if (WIN32)
-  target_link_libraries(${PROJECT_NAME} PRIVATE wsock32 ws2_32 shlwapi)
+  target_link_libraries(${PROJECT_NAME} wsock32 ws2_32 shlwapi)
 endif()
 
 if (UNIX AND NOT APPLE)
   set(THREADS_PREFER_PTHREAD_FLAG TRUE)
   find_package(Threads)
-  target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+  target_link_libraries(${PROJECT_NAME} Threads::Threads)
 endif()
 #end websockets
 
