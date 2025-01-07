@@ -304,7 +304,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Debug;$(SolutionDir)extlibs\curl\debug\lib;$(SolutionDir)..\libgns\golf_workshop\lib;$(SolutionDir)extlibs\sqlite\bin;$(SolutionDir)..\libgns\x64\Debug;$(SolutionDir)extlibs\react\lib\debug</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sapi.lib;libgjs-d.lib;libcurl_debug.lib;crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;libsocial-d.lib;sqlite3.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sapi.lib;libgjs-d.lib;libcurl_debug.lib;crogine-d.lib;SDL2.lib;SDL2main.lib;BulletCollision_Debug.lib;BulletDynamics_Debug.lib;LinearMath_Debug.lib;libsocial-d.lib;sqlite3.lib;reactphysics3d.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugGNS|x64'">
@@ -524,7 +524,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release;$(SolutionDir)extlibs\curl\release\lib;$(SolutionDir)extlibs\libgns\bin;$(SolutionDir)extlibs\sqlite\bin;$(SolutionDir)..\libgns\x64\Release</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sapi.lib;libgjs.lib;libsocial.lib;libgns.lib;libcurl.lib;crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;BulletDynamics.lib;LinearMath.lib;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sapi.lib;libgjs.lib;libsocial.lib;libgns.lib;libcurl.lib;crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;BulletDynamics.lib;LinearMath.lib;sqlite3.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGNS|x64'">
@@ -733,10 +733,47 @@
     <ClCompile Include="src\scrub\ScrubPauseState.cpp" />
     <ClCompile Include="src\scrub\ScrubPhysicsSystem.cpp" />
     <ClCompile Include="src\scrub\ScrubSoundDirector.cpp" />
+    <ClCompile Include="src\sockets\IXBench.cpp" />
+    <ClCompile Include="src\sockets\IXCancellationRequest.cpp" />
+    <ClCompile Include="src\sockets\IXConnectionState.cpp" />
+    <ClCompile Include="src\sockets\IXDNSLookup.cpp" />
+    <ClCompile Include="src\sockets\IXExponentialBackoff.cpp" />
+    <ClCompile Include="src\sockets\IXGetFreePort.cpp" />
+    <ClCompile Include="src\sockets\IXGzipCodec.cpp" />
+    <ClCompile Include="src\sockets\IXHttp.cpp" />
+    <ClCompile Include="src\sockets\IXHttpClient.cpp" />
+    <ClCompile Include="src\sockets\IXHttpServer.cpp" />
+    <ClCompile Include="src\sockets\IXNetSystem.cpp" />
+    <ClCompile Include="src\sockets\IXSelectInterrupt.cpp" />
+    <ClCompile Include="src\sockets\IXSelectInterruptEvent.cpp" />
+    <ClCompile Include="src\sockets\IXSelectInterruptFactory.cpp" />
+    <ClCompile Include="src\sockets\IXSelectInterruptPipe.cpp" />
+    <ClCompile Include="src\sockets\IXSetThreadName.cpp" />
+    <ClCompile Include="src\sockets\IXSocket.cpp" />
+    <ClCompile Include="src\sockets\IXSocketConnect.cpp" />
+    <ClCompile Include="src\sockets\IXSocketFactory.cpp" />
+    <ClCompile Include="src\sockets\IXSocketServer.cpp" />
+    <ClCompile Include="src\sockets\IXSocketTLSOptions.cpp" />
+    <ClCompile Include="src\sockets\IXStrCaseCompare.cpp" />
+    <ClCompile Include="src\sockets\IXUdpSocket.cpp" />
+    <ClCompile Include="src\sockets\IXUrlParser.cpp" />
+    <ClCompile Include="src\sockets\IXUserAgent.cpp" />
+    <ClCompile Include="src\sockets\IXUuid.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocket.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocketCloseConstants.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocketHandshake.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocketHttpHeaders.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocketPerMessageDeflate.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocketPerMessageDeflateCodec.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocketPerMessageDeflateOptions.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocketProxyServer.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocketServer.cpp" />
+    <ClCompile Include="src\sockets\IXWebSocketTransport.cpp" />
     <ClCompile Include="src\SplashScreenState.cpp" />
     <ClCompile Include="src\sqlite\ProfileDB.cpp" />
     <ClCompile Include="src\sqlite\SqliteState.cpp" />
     <ClCompile Include="src\Sunclock.cpp" />
+    <ClCompile Include="src\WebsocketServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
@@ -915,11 +952,62 @@
     <ClInclude Include="src\scrub\ScrubPhysicsSystem.hpp" />
     <ClInclude Include="src\scrub\ScrubSharedData.hpp" />
     <ClInclude Include="src\scrub\ScrubSoundDirector.hpp" />
+    <ClInclude Include="src\sockets\IXBase64.h" />
+    <ClInclude Include="src\sockets\IXBench.h" />
+    <ClInclude Include="src\sockets\IXCancellationRequest.h" />
+    <ClInclude Include="src\sockets\IXConnectionState.h" />
+    <ClInclude Include="src\sockets\IXDNSLookup.h" />
+    <ClInclude Include="src\sockets\IXExponentialBackoff.h" />
+    <ClInclude Include="src\sockets\IXGetFreePort.h" />
+    <ClInclude Include="src\sockets\IXGzipCodec.h" />
+    <ClInclude Include="src\sockets\IXHttp.h" />
+    <ClInclude Include="src\sockets\IXHttpClient.h" />
+    <ClInclude Include="src\sockets\IXHttpServer.h" />
+    <ClInclude Include="src\sockets\IXNetSystem.h" />
+    <ClInclude Include="src\sockets\IXProgressCallback.h" />
+    <ClInclude Include="src\sockets\IXSelectInterrupt.h" />
+    <ClInclude Include="src\sockets\IXSelectInterruptEvent.h" />
+    <ClInclude Include="src\sockets\IXSelectInterruptFactory.h" />
+    <ClInclude Include="src\sockets\IXSelectInterruptPipe.h" />
+    <ClInclude Include="src\sockets\IXSetThreadName.h" />
+    <ClInclude Include="src\sockets\IXSocket.h" />
+    <ClInclude Include="src\sockets\IXSocketConnect.h" />
+    <ClInclude Include="src\sockets\IXSocketFactory.h" />
+    <ClInclude Include="src\sockets\IXSocketServer.h" />
+    <ClInclude Include="src\sockets\IXSocketTLSOptions.h" />
+    <ClInclude Include="src\sockets\IXStrCaseCompare.h" />
+    <ClInclude Include="src\sockets\IXUdpSocket.h" />
+    <ClInclude Include="src\sockets\IXUniquePtr.h" />
+    <ClInclude Include="src\sockets\IXUrlParser.h" />
+    <ClInclude Include="src\sockets\IXUserAgent.h" />
+    <ClInclude Include="src\sockets\IXUtf8Validator.h" />
+    <ClInclude Include="src\sockets\IXUuid.h" />
+    <ClInclude Include="src\sockets\IXWebSocket.h" />
+    <ClInclude Include="src\sockets\IXWebSocketCloseConstants.h" />
+    <ClInclude Include="src\sockets\IXWebSocketCloseInfo.h" />
+    <ClInclude Include="src\sockets\IXWebSocketErrorInfo.h" />
+    <ClInclude Include="src\sockets\IXWebSocketHandshake.h" />
+    <ClInclude Include="src\sockets\IXWebSocketHandshakeKeyGen.h" />
+    <ClInclude Include="src\sockets\IXWebSocketHttpHeaders.h" />
+    <ClInclude Include="src\sockets\IXWebSocketInitResult.h" />
+    <ClInclude Include="src\sockets\IXWebSocketMessage.h" />
+    <ClInclude Include="src\sockets\IXWebSocketMessageType.h" />
+    <ClInclude Include="src\sockets\IXWebSocketOpenInfo.h" />
+    <ClInclude Include="src\sockets\IXWebSocketPerMessageDeflate.h" />
+    <ClInclude Include="src\sockets\IXWebSocketPerMessageDeflateCodec.h" />
+    <ClInclude Include="src\sockets\IXWebSocketPerMessageDeflateOptions.h" />
+    <ClInclude Include="src\sockets\IXWebSocketProxyServer.h" />
+    <ClInclude Include="src\sockets\IXWebSocketSendData.h" />
+    <ClInclude Include="src\sockets\IXWebSocketSendInfo.h" />
+    <ClInclude Include="src\sockets\IXWebSocketServer.h" />
+    <ClInclude Include="src\sockets\IXWebSocketTransport.h" />
+    <ClInclude Include="src\sockets\IXWebSocketVersion.h" />
     <ClInclude Include="src\SplashScreenState.hpp" />
     <ClInclude Include="src\sqlite\ProfileDB.hpp" />
     <ClInclude Include="src\sqlite\SqliteState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\Sunclock.hpp" />
+    <ClInclude Include="src\WebsocketServer.hpp" />
     <ClInclude Include="VersionNumber.hpp" />
   </ItemGroup>
   <ItemGroup>
