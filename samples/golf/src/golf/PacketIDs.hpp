@@ -144,6 +144,11 @@ struct ClientGrouping final
 
 namespace PacketID
 {
+    /*
+    Do Not Change the order of these after 1.20!! They are
+    also used by the websocket API and will break existing clients.
+    */
+
     enum
     {
         //from server

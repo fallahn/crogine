@@ -48,6 +48,7 @@ namespace cl::MessageID
         BilliardsCameraMessage,
         AIMessage,
         EnviroMessage,
+        WebSocketMessage,
 
         Count
     };
@@ -222,4 +223,13 @@ struct EnviroEvent final
 {
     glm::vec3 position = glm::vec3(0.f);
     float size = 0.f;
+};
+
+struct WebSocketEvent final
+{
+    enum
+    {
+        Connected, Disconnected
+    }type = Connected;
+
 };

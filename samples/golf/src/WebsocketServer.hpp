@@ -29,4 +29,35 @@ source distribution.
 
 #pragma once
 
+#include <cstdint>
+#include <cstddef>
+#include <cstring>
+#include <vector>
+
 void websocketTest();
+
+struct SharedStateData;
+class WebSock
+{
+public:
+
+    static bool start(std::int32_t port, std::size_t maxConnections = 4);
+    static void stop();
+
+    //send to all connected clients
+    static void broadcastPacket(const std::vector<std::byte>& data);
+    
+    template <typename T>
+    static void broadcastPacket(std::uint8_t packetID, const T& data)
+    {
+        std::vector<std::byte> p(sizeof(data) + 1);
+        p[0] = packetID;
+        std::memcpy(&p[1], &data, sizeof(data));
+        broadcastPacket(p);
+    }
+
+    static void broadcastPlayers(const SharedStateData&);
+
+private:
+
+};

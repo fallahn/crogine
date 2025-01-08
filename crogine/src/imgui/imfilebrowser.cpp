@@ -883,7 +883,7 @@ std::string FileBrowser::u8StrToStr(std::string s)
 #define WIN32_LEAN_AND_MEAN
 
 #endif // #ifndef WIN32_LEAN_AND_MEAN
-
+#define _WINSOCKAPI_
 #include <windows.h>
 
 #ifdef IMGUI_FILEBROWSER_UNDEF_WIN32_LEAN_AND_MEAN

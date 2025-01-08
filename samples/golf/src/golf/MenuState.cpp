@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -49,6 +49,7 @@ source distribution.
 #include "FireworksSystem.hpp"
 #include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -1518,6 +1519,15 @@ void MenuState::handleMessage(const cro::Message& msg)
         }
     }
 #endif
+
+    else if (msg.id == MessageID::WebSocketMessage)
+    {
+        const auto& data = msg.getData<WebSocketEvent>();
+        if (data.type == WebSocketEvent::Connected)
+        {
+            WebSock::broadcastPlayers(m_sharedData);
+        }
+    }
 
     if (m_currentMenu == MenuID::Lobby)
     {

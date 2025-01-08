@@ -2,6 +2,7 @@
 
 #ifdef _WIN32
 #include <DbgHelp.h>
+#define _WINSOCKAPI_
 #include <windows.h>
 #else
 #include <cxxabi.h>

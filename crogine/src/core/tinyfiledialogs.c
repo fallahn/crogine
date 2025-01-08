@@ -108,6 +108,7 @@ misrepresented as being the original software.
   #define _WIN32_WINNT 0x0500
  #endif
  #ifndef TINYFD_NOLIB
+ #define _WINSOCKAPI_
   #include <windows.h>
   /*#define TINYFD_NOSELECTFOLDERWIN*/
   #ifndef TINYFD_NOSELECTFOLDERWIN

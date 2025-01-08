@@ -955,8 +955,10 @@ CODE
 #define NOMINMAX
 #endif
 #ifndef __MINGW32__
+#define _WINSOCKAPI_
 #include <Windows.h>        // _wfopen, OpenClipboard
 #else
+#define _WINSOCKAPI_
 #include <windows.h>
 #endif
 #if defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_APP) // UWP doesn't have all Win32 functions

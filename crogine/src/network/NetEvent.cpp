@@ -92,6 +92,16 @@ std::size_t NetEvent::Packet::getSize() const
     return m_packet->dataLength - sizeof(std::uint8_t);
 }
 
+std::vector<std::byte> NetEvent::Packet::getDataRaw() const
+{
+    CRO_ASSERT(m_packet, "Not a valid packet instance");
+    std::vector<std::byte> ret(m_packet->dataLength);
+    
+    const auto* data = reinterpret_cast<std::byte*>(m_packet->data);
+    std::copy(data, data + m_packet->dataLength, ret.data());
+    return ret;
+}
+
 //private
 void NetEvent::Packet::setPacketData(ENetPacket* packet)
 {

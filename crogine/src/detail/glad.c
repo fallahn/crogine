@@ -30,6 +30,7 @@ static void* get_proc(const char *namez);
 #ifndef _WINDOWS_
 #undef APIENTRY
 #endif
+#define _WINSOCKAPI_
 #include <windows.h>
 static HMODULE libGL;
 

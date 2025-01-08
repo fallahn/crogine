@@ -44,6 +44,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "League.hpp"
 #include "../ErrorCheck.hpp"
+#include "../WebsocketServer.hpp"
 #include "../../buildnumber.h"
 #include "../version/VersionNumber.hpp"
 #include "server/ServerPacketData.hpp"
@@ -3869,6 +3870,7 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerXP, xp, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     updateLobbyAvatars();
+    WebSock::broadcastPlayers(m_sharedData);
 }
 
 void MenuState::updateRemoteContent(const ConnectionData& cd)
