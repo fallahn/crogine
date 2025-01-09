@@ -159,11 +159,12 @@ void WebSock::broadcastPlayers(const SharedStateData& sd)
             {
                 const auto utf = sd.connectionData[i].playerData[j].name.toUtf8();
 
-                std::vector<std::byte> data(3 + utf.length());
+                std::vector<std::byte> data(4 + utf.length());
                 data[0] = std::byte(PacketID::PlayerInfo);
                 data[1] = std::byte(i);
                 data[2] = std::byte(j);
-                std::memcpy(&data[3], utf.data(), utf.length());
+                data[3] = std::byte(sd.connectionData[i].playerData[j].isCPU ? 1 : 0);
+                std::memcpy(&data[4], utf.data(), utf.length());
 
                 WebSock::broadcastPacket(data);
             }

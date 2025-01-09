@@ -63,6 +63,7 @@ source distribution.
 #include "AvatarRotationSystem.hpp"
 #include "Career.hpp"
 #include "Tournament.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -1209,6 +1210,15 @@ void GolfState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case MessageID::WebSocketMessage:
+    {
+        const auto& data = msg.getData<WebSocketEvent>();
+        if (data.type == WebSocketEvent::Connected)
+        {
+            WebSock::broadcastPlayers(m_sharedData);
+        }
+    }
+        break;
     case Social::MessageID::SocialMessage:
     {
         const auto& data = msg.getData<Social::SocialEvent>();
