@@ -7392,6 +7392,12 @@ void GolfState::sendWebsocketGameInfo() const
     mapInfo.courseIndex = static_cast<std::uint8_t>( m_sharedData.courseIndex);
     mapInfo.holeCount = m_sharedData.holeCount;
     mapInfo.gameMode = m_sharedData.scoreType;
+
+    if (m_ntpPro)
+    {
+        m_sharedData.scoreType++;
+    }
+
     mapInfo.weatherType = m_sharedData.weatherType;
     mapInfo.nightMode = m_sharedData.nightTime;
     mapInfo.currentHole = m_currentHole;
