@@ -42,6 +42,8 @@ source distribution.
 #include <crogine/core/Log.hpp>
 #include <crogine/core/String.hpp>
 
+#include <crogine/util/Network.hpp>
+
 #include <memory>
 
 namespace
@@ -172,6 +174,24 @@ void WebSock::broadcastPlayers(const SharedStateData& sd)
     }
 }
 
+std::string WebSock::getStatus()
+{
+    if (server->server)
+    {
+        std::string ret = "\n----------\nLocal addresses: \n";
+        for (const auto& add : cro::Util::Net::getLocalAddresses())
+        {
+            ret += add + "\n";
+        }
+        ret += "Selected Port: " + std::to_string(server->server->getPort());
+        ret += "\nMax Clients: " + std::to_string(server->server->getMaxConnections());
+        ret += "\nConnected Clients: " + std::to_string(server->server->getClients().size());
+        ret += "\n----------\n";
+        return ret;
+    }
+
+    return "Not Running";
+}
 
 //--------------------//
 void websocketTest()

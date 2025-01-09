@@ -34,6 +34,7 @@ source distribution.
 #include "Achievements.hpp"
 #include "ImTheme.hpp"
 #include "M3UPlaylist.hpp"
+#include "WebsocketServer.hpp"
 
 #include "golf/MenuState.hpp"
 #include "golf/GolfState.hpp"
@@ -835,6 +836,11 @@ bool GolfGame::initialise()
                 m_sharedData.voiceConnection.connectionID = ConstVal::NullValue;
                 cro::Console::print("Disconnected from voice server");
             }        
+        });
+
+    registerCommand("show_websock", [](const std::string&)
+        {
+            cro::Console::print(WebSock::getStatus());
         });
 
     registerCommand("scrub", 

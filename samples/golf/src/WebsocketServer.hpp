@@ -33,6 +33,7 @@ source distribution.
 #include <cstddef>
 #include <cstring>
 #include <vector>
+#include <string>
 
 void websocketTest();
 
@@ -57,6 +58,8 @@ public:
     }
 
     static void broadcastPlayers(const SharedStateData&);
+
+    static std::string getStatus();
 
 private:
 
