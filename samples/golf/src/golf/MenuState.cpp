@@ -3435,6 +3435,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
             postMessage<SystemEvent>(cl::MessageID::SystemMessage)->type = SystemEvent::LobbyExit;
             postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage)->type = Social::SocialEvent::LobbyUpdated;
+
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
             break;
         case PacketID::LobbyReady:

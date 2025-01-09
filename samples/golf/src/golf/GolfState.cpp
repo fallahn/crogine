@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -5171,6 +5171,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         break;
         case PacketID::ClientDisconnected:
             removeClient(evt.packet.as<std::uint8_t>());
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())

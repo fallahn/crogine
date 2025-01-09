@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -38,6 +38,7 @@ source distribution.
 #include "GolfCartSystem.hpp"
 #include "NameScrollSystem.hpp"
 #include "MessageIDs.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -1847,6 +1848,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
             m_sharedData.connectionData[client].playerCount = 0;
             m_readyState[client] = false;
             updateLobbyAvatars();
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
         break;
         case PacketID::LobbyReady:

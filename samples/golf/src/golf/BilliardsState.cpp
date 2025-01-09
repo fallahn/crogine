@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2022 - 2023
+Matt Marchant - 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,10 +40,10 @@ source distribution.
 #include "NotificationSystem.hpp"
 #include "PocketBallSystem.hpp"
 #include "BilliardsSoundDirector.hpp"
-#include "MessageIDs.hpp"
 #include "server/ServerPacketData.hpp"
 #include "server/ServerMessages.hpp"
 #include "../ErrorCheck.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -1347,6 +1347,7 @@ void BilliardsState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::ClientDisconnected:
             removeClient(evt.packet.as<std::uint8_t>());
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
             break;
         case PacketID::AchievementGet:
             LogI << "TODO: Notify Achievement" << std::endl;
