@@ -52,7 +52,7 @@ public:
     static void broadcastPacket(std::uint8_t packetID, const T& data)
     {
         std::vector<std::byte> p(sizeof(data) + 1);
-        p[0] = packetID;
+        p[0] = static_cast<std::byte>(packetID);
         std::memcpy(&p[1], &data, sizeof(data));
         broadcastPacket(p);
     }

@@ -721,6 +721,7 @@ private:
         };
     };
     void gamepadNotify(std::int32_t);
+    void sendWebsocketGameInfo() const;
 
 #ifdef PATH_TRACING
     //------------

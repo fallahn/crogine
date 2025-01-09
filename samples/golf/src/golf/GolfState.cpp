@@ -1215,7 +1215,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<WebSocketEvent>();
         if (data.type == WebSocketEvent::Connected)
         {
-            WebSock::broadcastPlayers(m_sharedData);
+            sendWebsocketGameInfo();
         }
     }
         break;
@@ -3682,6 +3682,8 @@ void GolfState::buildScene()
         setFog(m_sharedData.nightTime ? 0.45f : 0.35f);
         break;
     }
+
+    sendWebsocketGameInfo();
 }
 
 void GolfState::createDrone()
@@ -5293,6 +5295,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 }
                 updateScoreboard(false);
             }
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
         break;
         case PacketID::HoleWon:
@@ -7372,4 +7375,30 @@ void GolfState::gamepadNotify(std::int32_t type)
         }
         ent.getComponent<cro::Callback>().setUserData<CallbackData>(data);
     }
+}
+
+void GolfState::sendWebsocketGameInfo() const
+{
+    struct MapInfo final
+    {
+        std::uint8_t courseIndex = 0;
+        std::uint8_t holeCount = 0;
+        std::uint8_t gameMode = 0;
+        std::uint8_t weatherType = 0;
+        std::uint8_t nightMode = 0;
+        std::uint8_t currentHole = 0;
+    }mapInfo;
+
+    mapInfo.courseIndex = static_cast<std::uint8_t>( m_sharedData.courseIndex);
+    mapInfo.holeCount = m_sharedData.holeCount;
+    mapInfo.gameMode = m_sharedData.scoreType;
+    mapInfo.weatherType = m_sharedData.weatherType;
+    mapInfo.nightMode = m_sharedData.nightTime;
+    mapInfo.currentHole = m_currentHole;
+    WebSock::broadcastPacket(PacketID::MapInfo, mapInfo);
+
+    //player info
+    WebSock::broadcastPlayers(m_sharedData);
+
+    //TODO all player scores up to current hole
 }
