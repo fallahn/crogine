@@ -43,6 +43,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "../GolfGame.hpp"
 #include "../Colordome-32.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -443,7 +444,7 @@ void TournamentState::buildScene()
                     m_scene.setSystemActive<cro::UISystem>(true);
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
                     m_scene.getSystem<cro::UISystem>()->selectAt(CareerStart);
-                    Social::setStatus(Social::InfoID::Menu, { "Choosing a Tournament" });
+                    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Choosing a Tournament" }));
 
                     applySettingsValues(); //loadConfig() might not load anything
                     loadConfig();
@@ -2510,7 +2511,7 @@ void TournamentState::quitState()
     }
     else if (m_currentMenu == MenuID::Career)
     {
-        Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
+        WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Main Menu" }));
 
         m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
         m_scene.setSystemActive<cro::UISystem>(false);

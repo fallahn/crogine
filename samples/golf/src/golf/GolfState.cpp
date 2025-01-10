@@ -6217,8 +6217,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     const auto holeNumber = std::to_string(m_currentHole + 1);
     const auto holeTotal = std::to_string(m_holeData.size());
     //well... this is awful.
-    Social::setStatus(Social::InfoID::Course, { reinterpret_cast<const char*>(title.c_str()), holeNumber.c_str(), holeTotal.c_str() });
-
+    auto ret = Social::setStatus(Social::InfoID::Course, { reinterpret_cast<const char*>(title.c_str()), holeNumber.c_str(), holeTotal.c_str() });
+    WebSock::broadcastPacket(ret);
 
     //cue up next depth map
     auto next = m_currentHole + 1;

@@ -36,6 +36,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "MenuEnum.inl"
 #include "../ErrorCheck.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -2292,10 +2293,10 @@ void MenuState::updateLobbyAvatars()
         {
         default: break;
         case 3:
-            Social::setStatus(Social::InfoID::Menu, { "Launching a Quick Play Round" });
+            WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Launching a Quick Play Round" }));
             break;
         case 0:
-            Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
+            WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() }));
             Social::setGroup(m_sharedData.clientConnection.hostID, playerCount);
             //LogI << "Set group data to " << m_sharedData.clientConnection.hostID << ", " << playerCount << std::endl;
             break;
