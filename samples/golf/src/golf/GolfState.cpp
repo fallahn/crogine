@@ -134,6 +134,18 @@ source distribution.
 
 using namespace cl;
 
+//used for sending info over websocket
+namespace ws
+{
+    struct HoleInfo final
+    {
+        std::uint8_t index = 0;
+        std::uint8_t par = 0;
+        glm::vec3 teePos = glm::vec3(0.f);
+        glm::vec3 pinPos = glm::vec3(0.f);
+    };
+}
+
 namespace
 {
 #ifdef CRO_DEBUG_
@@ -452,6 +464,24 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //prevents the non-steam account getting multiple writes from the same profile
     //when debugging networking
     //m_allowAchievements = false;
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::int32_t>(2);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            auto& c = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+            c--;
+
+            if (c == 0)
+            {
+                sendWebsocketGameInfo();
+
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
 }
 
 GolfState::~GolfState()
@@ -1557,6 +1587,16 @@ void GolfState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::Ball;
             cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Transform>().setScale(glm::vec3(0.f)); };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+            //update anyone listening on websocket
+            //we need to do this again in case we're correcting par
+            ws::HoleInfo hi;
+            hi.index = m_currentHole;
+            hi.par = m_holeData[m_currentHole].par;
+            hi.teePos = m_holeData[m_currentHole].tee;
+            hi.pinPos = m_holeData[m_currentHole].pin;
+            WebSock::broadcastPacket(PacketID::SetHole, hi);
         }
             break;
         case SceneEvent::RequestSwitchCamera:
@@ -3682,8 +3722,6 @@ void GolfState::buildScene()
         setFog(m_sharedData.nightTime ? 0.45f : 0.35f);
         break;
     }
-
-    sendWebsocketGameInfo();
 }
 
 void GolfState::createDrone()
@@ -5558,6 +5596,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     std::uint8_t hole = (holeInfo & 0xff00) >> 8;
     m_holeData[hole].par = (holeInfo & 0x00ff);
 
+
+
     //mark all holes complete - this fudges any missing
     //scores on the scoreboard... we shouldn't really have to do this :(
     if (hole > m_currentHole)
@@ -6295,6 +6335,8 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    WebSock::broadcastPacket(PacketID::SetPlayer, player);
+
 #ifdef USE_GNS
     cro::String timelineDesc = m_sharedData.connectionData[player.client].playerData[player.player].name;
     if (!m_courseTitle.empty())
@@ -7383,6 +7425,7 @@ void GolfState::sendWebsocketGameInfo() const
     {
         std::uint8_t courseIndex = 0;
         std::uint8_t holeCount = 0;
+        std::uint8_t reverse = 0;
         std::uint8_t gameMode = 0;
         std::uint8_t weatherType = 0;
         std::uint8_t nightMode = 0;
@@ -7391,6 +7434,7 @@ void GolfState::sendWebsocketGameInfo() const
 
     mapInfo.courseIndex = static_cast<std::uint8_t>( m_sharedData.courseIndex);
     mapInfo.holeCount = m_sharedData.holeCount;
+    mapInfo.reverse = m_sharedData.reverseCourse;
     mapInfo.gameMode = m_sharedData.scoreType;
 
     if (m_ntpPro)
@@ -7402,6 +7446,26 @@ void GolfState::sendWebsocketGameInfo() const
     mapInfo.nightMode = m_sharedData.nightTime;
     mapInfo.currentHole = m_currentHole;
     WebSock::broadcastPacket(PacketID::MapInfo, mapInfo);
+
+    //hole info
+    for (auto i = 0u; i < m_holeData.size(); ++i)
+    {
+        ws::HoleInfo hi;
+        hi.index = i;
+        hi.par = m_holeData[i].par;
+        hi.teePos = m_holeData[i].tee;
+        hi.pinPos = m_holeData[i].pin;
+        WebSock::broadcastPacket(PacketID::SetHole, hi);
+    }
+
+    //make sure we set the current hole last
+    ws::HoleInfo hi;
+    hi.index = m_currentHole;
+    hi.par = m_holeData[m_currentHole].par;
+    hi.teePos = m_holeData[m_currentHole].tee;
+    hi.pinPos = m_holeData[m_currentHole].pin;
+    WebSock::broadcastPacket(PacketID::SetHole, hi);
+
 
     //player info
     WebSock::broadcastPlayers(m_sharedData);
