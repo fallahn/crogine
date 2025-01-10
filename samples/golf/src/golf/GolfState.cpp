@@ -7406,5 +7406,25 @@ void GolfState::sendWebsocketGameInfo() const
     //player info
     WebSock::broadcastPlayers(m_sharedData);
 
-    //TODO all player scores up to current hole
+    //all player scores up to current hole
+    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    {
+        for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+        {
+            for (auto k = 0u; k <= m_currentHole; ++k)
+            {
+                ScoreUpdate su;
+                su.client = i;
+                su.player = j;
+                su.hole = k;
+                su.score = m_sharedData.connectionData[i].playerData[j].score;
+                su.matchScore = m_sharedData.connectionData[i].playerData[j].matchScore;
+                su.skinsScore = m_sharedData.connectionData[i].playerData[j].skinScore;
+                su.stroke = m_sharedData.connectionData[i].playerData[j].holeScores[k];
+                su.distanceScore = m_sharedData.connectionData[i].playerData[j].distanceScores[k];
+
+                WebSock::broadcastPacket(PacketID::ScoreUpdate, su);
+            }
+        }
+    }
 }
