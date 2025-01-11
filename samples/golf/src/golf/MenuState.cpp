@@ -613,7 +613,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     }
 #endif
 
-    Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
+    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Main Menu" }));
     Social::setGroup(0);
 
     //registerWindow([&]()

@@ -191,7 +191,7 @@ public:
     static void getRandomBest() {}
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
     static void courseComplete(const std::string&, std::uint8_t);
-    static void setStatus(std::int32_t, const std::vector<const char*>&) {}
+    static std::vector<std::byte> setStatus(std::int32_t, const std::vector<const char*>&);
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
     static void takeScreenshot(const cro::String&, std::size_t);
     static constexpr std::uint32_t IconSize = 64;

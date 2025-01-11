@@ -4065,7 +4065,7 @@ void MenuState::quitLobby()
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
+    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Main Menu" }));
     Social::setGroup(0);
 
     Timeline::setGameMode(Timeline::GameMode::Menu);

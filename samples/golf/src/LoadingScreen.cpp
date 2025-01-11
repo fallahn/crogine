@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "LoadingScreen.hpp"
+#include "WebsocketServer.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/SharedStateData.hpp"
 
@@ -153,7 +154,7 @@ LoadingScreen::~LoadingScreen()
 //public
 void LoadingScreen::launch()
 {
-    Social::setStatus(Social::InfoID::Menu, { "Loading..." });
+    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Loading..." }));
 
     if (!m_vao)
     {

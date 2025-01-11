@@ -416,6 +416,72 @@ void Social::courseComplete(const std::string& mapName, std::uint8_t holeCount)
     }
 }
 
+std::vector<std::byte> Social::setStatus(std::int32_t statusType, const std::vector<const char*>& strings)
+{
+    static constexpr std::byte PacketID = std::byte(127);
+    std::vector<std::byte> ret;
+
+    switch (statusType)
+    {
+    default: break;
+    case InfoID::Billiards:
+    {
+        cro::String str("Playing ");
+        str += cro::String(strings[0]);
+
+        const auto utf = str.toUtf8();
+        ret.resize(utf.size() + 1);
+        ret[0] = PacketID;
+        std::memcpy(ret.data()+1, utf.data(), utf.size());
+    }
+    return ret;
+    case InfoID::Course:
+    {
+        cro::String str("Hole ");
+        str += strings[1];
+        str += "/";
+        str += strings[2];
+        str += " - ";
+
+        std::string s(strings[0]);
+        str += cro::String::fromUtf8(s.begin(), s.end());
+
+        const auto utf = str.toUtf8();
+        ret.resize(utf.size() + 1);
+        ret[0] = PacketID;
+        std::memcpy(ret.data() + 1, utf.data(), utf.size());
+    }
+    return ret;
+    case InfoID::Lobby:
+    {
+        cro::String str("In ");
+        str += strings[0];
+        str += " Lobby ";
+        str += strings[1];
+        str += "/";
+        str += strings[2];
+
+        const auto utf = str.toUtf8();
+        ret.resize(utf.size() + 1);
+        ret[0] = PacketID;
+        std::memcpy(ret.data() + 1, utf.data(), utf.size());
+    }
+    return ret;
+    case InfoID::Menu:
+    {
+        cro::String str(strings[0]);
+
+        const auto utf = str.toUtf8();
+        ret.resize(utf.size() + 1);
+        ret[0] = PacketID;
+        std::memcpy(ret.data() + 1, utf.data(), utf.size());
+    }
+    return ret;
+    }
+
+    return ret;
+}
+
 std::int32_t Social::getUnlockStatus(UnlockType type)
 {
     switch (type)
