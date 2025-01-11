@@ -1197,6 +1197,11 @@ void OptionsState::buildScene()
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
+    //stash this so we use the sprite from the correct texture...
+    auto tabSprite = spriteSheet.getSprite("tab_bar");
+    auto settingsBar = spriteSheet.getSprite("set_bar");
+    auto achBar = spriteSheet.getSprite("ach_bar");
+    auto statBar = spriteSheet.getSprite("stat_bar");
     spriteSheet.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
 
 
@@ -1244,9 +1249,9 @@ void OptionsState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_bar");
+    entity.addComponent<cro::Sprite>() = tabSprite;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 53.f, bgSize.y - bounds.height, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 51.f, bgSize.y - bounds.height, TabBarDepth });
     controlButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideControls = [controlEnt]() mutable
@@ -1287,9 +1292,9 @@ void OptionsState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("ach_bar");
+    entity.addComponent<cro::Sprite>() = achBar;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 51.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 49.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
     achButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideAchievements = [achEnt]() mutable
@@ -1325,9 +1330,9 @@ void OptionsState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stat_bar");
+    entity.addComponent<cro::Sprite>() = statBar;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ 51.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
+    entity.getComponent<cro::Transform>().setPosition({ 49.f + HorizontalOffset, (bgSize.y - bounds.height) + VerticalOffset, TabBarDepth });
     statsButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto hideStats = [statsEnt]() mutable
