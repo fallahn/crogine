@@ -1236,6 +1236,9 @@ void GolfGame::loadPreferences()
     //to finish it???
     //bool restoreDefaults = false;
 
+    //default this *first* before overwrite it with the stored value
+    m_sharedData.useLargePowerBar = Social::isSteamdeck();
+
     auto path = getPreferencePath() + "prefs.cfg";
     if (cro::FileSystem::fileExists(path))
     {
@@ -1398,7 +1401,8 @@ void GolfGame::loadPreferences()
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
     if (!safeMode)
     {
-        m_sharedData.useLargePowerBar = Social::isSteamdeck();
+        //don't do this - it's saved in global prefs, not user
+        //m_sharedData.useLargePowerBar = Social::isSteamdeck();
 
         path = Social::getBaseContentPath() + "user_prefs.cfg";
         if (cro::FileSystem::fileExists(path))
@@ -1633,6 +1637,8 @@ void GolfGame::savePreferences()
     cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
     cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
     cfg.save(path);
+
+
 
 
     //per-user options
