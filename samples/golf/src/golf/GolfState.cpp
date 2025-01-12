@@ -130,6 +130,7 @@ source distribution.
 #include "../ErrorCheck.hpp"
 
 #include <sstream>
+#include <fstream>
 
 using namespace cl;
 
@@ -446,6 +447,18 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         cro::GameController::applyDSTriggerEffect(i, cro::GameController::DSTriggerBoth, cro::GameController::DSEffect::createWeapon(0,1,2));
     }
 
+
+    //LogI << m_sharedData.clientConnection.eventBuffer.size() << " events were buffered " << std::endl;
+
+    //auto& cd = m_sharedData.clientConnection.eventBuffer;
+    //std::sort(cd.begin(), cd.end(), [](const net::NetEvent& a, const net::NetEvent& b) {return a.packet.getID() < b.packet.getID(); });
+
+    //std::ofstream f("packets.txt");
+    //for (const auto& e : cd)
+    //{
+    //    f << (int)e.packet.getID() << ", " << e.packet.getSize() << "\n";
+    //}
+    //f << cd.size() << " packets buffered";
 
     Club::setFixedPuttingDistance(m_sharedData.fixedPuttingRange);
     //prevents the non-steam account getting multiple writes from the same profile

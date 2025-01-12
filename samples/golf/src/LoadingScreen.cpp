@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,6 +30,7 @@ source distribution.
 #include "LoadingScreen.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/SharedStateData.hpp"
+#include "golf/PacketIDs.hpp"
 
 #include <Social.hpp>
 
@@ -205,7 +206,20 @@ void LoadingScreen::update()
             net::NetEvent evt;
             while (m_sharedData.clientConnection.netClient.pollEvent(evt))
             {
-                m_sharedData.clientConnection.eventBuffer.emplace_back(std::move(evt));
+                switch (evt.packet.getID())
+                {
+                default:
+                    m_sharedData.clientConnection.eventBuffer.emplace_back(std::move(evt));
+                    break;
+                case PacketID::ActorUpdate:
+                case PacketID::WindDirection:
+                case PacketID::DronePosition:
+                case PacketID::ClubChanged:
+                case PacketID::PingTime:
+                    //skip these while loading it just fills up the buffer
+                    break;
+                }
+                
                 evt = {}; //not strictly necessary but squashes warning about re-using a moved object
             }
         }
