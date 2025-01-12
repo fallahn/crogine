@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -72,6 +72,7 @@ namespace cro
 #endif
     {
     public:
+       
         /*!
         \brief Constructor.
         \param mb Reference to the system message bus

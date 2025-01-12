@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -103,7 +103,7 @@ void GolfState::loadAssets()
     //    {
     //        ImGui::Begin("Sun");
 
-    //        static float c[3] = { 1.f };
+    //        /*static float c[3] = { 1.f };
 
     //        if (ImGui::ColorPicker3("Sun", c))
     //        {
@@ -112,7 +112,15 @@ void GolfState::loadAssets()
     //            m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(col);
 
     //        }
-    //        ImGui::Text("R %3.2f, G %3.2f, B %3.2f", c[0], c[1], c[2]);
+    //        ImGui::Text("R %3.2f, G %3.2f, B %3.2f", c[0], c[1], c[2]);*/
+
+    //        static float multiplier = 10.f;
+    //        if (ImGui::SliderFloat("Multiplier", &multiplier, 10.f, 250.f))
+    //        {
+    //            //m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour::White * multiplier);
+    //            m_gameScene.getSystem<cro::ModelRenderer>()->setLightMultiplier(multiplier);
+    //        }
+
 
     //        ImGui::End();
     //    });
@@ -1493,7 +1501,7 @@ void GolfState::loadMap()
             std::fill(scores.begin(), scores.end(), 0);
 
             //tournament
-            for (auto i = 0; i < scores.size(); ++i)
+            for (auto i = 0u; i < scores.size(); ++i)
             {
                 scores[i] = m_sharedData.tournaments[m_sharedData.activeTournament].scores[i];
                 if (scores[i] != 0)

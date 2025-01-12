@@ -1891,6 +1891,19 @@ void MenuState::loadAssets()
 
 void MenuState::createScene()
 {
+    //registerWindow([&]()
+    //    {
+    //        ImGui::Begin("Sun");
+
+    //        static float multiplier = 1.f;
+    //        if (ImGui::SliderFloat("Multiplier", &multiplier, 1.f, 50.f))
+    //        {
+    //            m_backgroundScene.getSystem<cro::ModelRenderer>()->setLightMultiplier(multiplier);
+    //        }
+
+    //        ImGui::End();
+    //    });
+
     m_backgroundScene.enableSkybox();
 
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
@@ -2540,7 +2553,7 @@ void MenuState::createScene()
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-        cro::RenderTarget::Context ctx(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, false, true, samples);
+        cro::RenderTarget::Context ctx(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, false, false, samples);
 
         m_sharedData.antialias = 
             m_backgroundTexture.create(ctx) 

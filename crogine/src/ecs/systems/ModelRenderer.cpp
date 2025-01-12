@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -67,8 +67,10 @@ using namespace cro;
 
 namespace
 {
-
+    float lightMultiplier = 1.f;
 }
+//void ModelRenderer::setLightMultiplier(float m) { lightMultiplier = m; }
+
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
     : System        (mb, typeid(ModelRenderer)),
@@ -734,8 +736,9 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             break;
         case Material::SunlightColour:
         {
-            auto colour = scene.getSunlight().getComponent<Sunlight>().getColour();
-            glCheck(glUniform4f(material.uniforms[Material::SunlightColour], colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
+            //TODO things like sunlight ought to be in a uniform buffer
+            const glm::vec4 colour = scene.getSunlight().getComponent<Sunlight>().getColour().getVec4();
+            glCheck(glUniform4f(material.uniforms[Material::SunlightColour], colour.r/* * lightMultiplier*/, colour.g/* * lightMultiplier*/, colour.b /** lightMultiplier*/, colour.a));
         }
             break;
         case Material::SunlightDirection:

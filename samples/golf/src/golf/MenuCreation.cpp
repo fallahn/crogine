@@ -72,6 +72,7 @@ source distribution.
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/SimpleText.hpp>
@@ -89,6 +90,30 @@ namespace
 {
 #include "RandNames.hpp"
 #include "shaders/PostProcess.inl"
+
+    inline const std::string TonemapFragment =
+        R"(
+    uniform sampler2D u_texture;
+
+    VARYING_IN vec2 v_texCoord;
+    VARYING_IN vec4 v_colour;
+
+    OUTPUT
+
+    vec3 tonemap(vec3 x)
+    {
+        //return x / (x + 0.155) * 1.019;
+        return x / (1.0 + x);
+    }
+
+    void main()
+    {
+        vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+
+        FRAG_OUT = vec4(tonemap(colour.rgb), 1.0); 
+    })";
+
+
 
     const char VersionNumber[] =
     {
@@ -410,9 +435,11 @@ void MenuState::createUI()
         });
 
 
+    //m_resources.shaders.loadFromString(ShaderID::Tonemapping, cro::RenderSystem2D::getDefaultVertexShader(), TonemapFragment, "#define TEXTURED\n");
+
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>();// .setShader(&m_resources.shaders.get(ShaderID::Tonemapping));
     entity.addComponent<cro::Sprite>(m_backgroundTexture.getTexture());
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));

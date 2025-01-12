@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -269,8 +269,8 @@ void Window::setFullScreen(bool fullscreen)
         {
             SDL_DisplayMode dm;
             SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
-            if (dm.w == m_previousWindowSize.x
-                && dm.h == m_previousWindowSize.y) 
+            if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
+                && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
             {
                 m_previousWindowSize = { 640u, 480u };
             }
@@ -509,8 +509,8 @@ void Window::setWindowedSize(glm::uvec2 size)
 {
     SDL_DisplayMode dm;
     SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
-    if (dm.w == m_previousWindowSize.x
-        && dm.h == m_previousWindowSize.y)
+    if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
+        && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
     {
         m_previousWindowSize = { 640u, 480u };
     }

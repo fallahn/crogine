@@ -226,6 +226,7 @@ static inline const std::string LightColour = R"(
     vec4 getLightColour()
     {
         return vec4(clamp(u_lightColour * 1.55, 0.0, 1.0));
+        //return u_lightColour * 1.55;
     }
 )";
 

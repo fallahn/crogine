@@ -326,7 +326,8 @@ struct ShaderID final
         Firework,
         Rope,
         Lantern,
-        Roids
+        Roids,
+        Tonemapping
     };
 };
 

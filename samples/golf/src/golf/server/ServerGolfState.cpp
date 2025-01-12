@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1915,7 +1915,7 @@ void GolfState::buildWorld()
             std::fill(scores.begin(), scores.end(), 0);
 
             //tournament
-            for (auto i = 0; i < scores.size(); ++i)
+            for (auto i = 0u; i < scores.size(); ++i)
             {
                 scores[i] = t.scores[i];
                 if (scores[i] != 0)

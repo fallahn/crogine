@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -70,6 +70,7 @@ namespace
     std::array<std::vector<std::uint32_t>, CameraID::Count> DebugIndices = {};
     std::array<cro::Entity, CameraID::Count> DebugEntities = {};
 
+#ifdef CRO_DEBUG_
     void updateBufferData(std::int32_t idx, glm::vec3 start, glm::vec3 end)
     {
         //just to alternate the colour each time
@@ -113,6 +114,8 @@ namespace
         buffer.push_back(Colours[c][2]);
         buffer.push_back(1.f);
     }
+
+#endif
 }
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)

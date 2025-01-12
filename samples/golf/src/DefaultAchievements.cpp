@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -331,7 +331,7 @@ void DefaultAchievements::syncStat(const StatData& stat)
     m_statsUpdated = true;
 
     //check if this should trigger an achievement
-    if (stat.id < StatTriggers.size())
+    if (stat.id < static_cast<std::int32_t>(StatTriggers.size()))
     {
         auto& triggers = StatTriggers[stat.id];
 
@@ -370,7 +370,7 @@ void DefaultAchievements::readFile()
         stat(filePath.c_str(), &st);
 
         FILE* inFile = fopen(filePath.c_str(), "rb");
-        if (inFile && st.st_size >= (bitsize + statsize)) //needs to be >= for backwards compat
+        if (inFile && st.st_size >= static_cast<_off_t>(bitsize + statsize)) //needs to be >= for backwards compat
         {
             auto read = fread(m_bitArray.data(), bitsize, 1, inFile);
             if (read != 1)
