@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1242,6 +1242,9 @@ void GolfGame::loadPreferences()
     //to finish it???
     //bool restoreDefaults = false;
 
+    //make sure to set all defaults *before* loading any files
+    m_sharedData.useLargePowerBar = Social::isSteamdeck();
+
     auto path = getPreferencePath() + "prefs.cfg";
     if (cro::FileSystem::fileExists(path))
     {
@@ -1404,8 +1407,6 @@ void GolfGame::loadPreferences()
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
     if (!safeMode)
     {
-        m_sharedData.useLargePowerBar = Social::isSteamdeck();
-
         path = Social::getBaseContentPath() + "user_prefs.cfg";
         if (cro::FileSystem::fileExists(path))
         {

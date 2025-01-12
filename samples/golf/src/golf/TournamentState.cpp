@@ -1050,7 +1050,7 @@ void TournamentState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerOptions);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerScrollPrev, CareerWeather);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerScrollPrev, CareerStats);
     entity.getComponent<cro::UIInput>().setPrevIndex(CareerScrollNext, CareerReset);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;

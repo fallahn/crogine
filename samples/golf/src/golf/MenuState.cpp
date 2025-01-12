@@ -2540,7 +2540,7 @@ void MenuState::createScene()
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-        cro::RenderTarget::Context ctx(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, false, samples);
+        cro::RenderTarget::Context ctx(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, false, true, samples);
 
         m_sharedData.antialias = 
             m_backgroundTexture.create(ctx) 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -70,8 +70,9 @@ namespace cro
         \param width Width of the texture to create. On mobile platforms this should be pow2
         \param height Height of the texture to create. On mobile platforms this should be pow2
         \param format Graphics::Format type - valid values are RGB or RGBA
+        \param floatingPoint If set to true the texture storage is selected as 16bit floating point
         */
-        void create(std::uint32_t width, std::uint32_t height, ImageFormat::Type format = ImageFormat::RGBA);
+        void create(std::uint32_t width, std::uint32_t height, ImageFormat::Type format = ImageFormat::RGBA, bool floatingPoint = false);
 
         /*!
         \brief Attempts to load the file in the given file path.

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,16 +34,13 @@ source distribution.
 using namespace cro;
 
 RenderTexture::RenderTexture()
-    : m_samples         (0),
-    m_fboID             (0),
+    : m_fboID           (0),
     m_rboID             (0),
     m_clearBits         (0),
     m_msfboID           (0),
     m_msTextureID       (0),
     m_depthTextureID    (0),
-    m_msDepthTextureID  (0),
-    m_hasDepthBuffer    (false),
-    m_hasStencilBuffer  (false)
+    m_msDepthTextureID  (0)
 {
 
 }
@@ -82,7 +79,6 @@ RenderTexture::~RenderTexture()
 RenderTexture::RenderTexture(RenderTexture&& other) noexcept
     : RenderTexture()
 {
-    m_samples = other.m_samples;
     m_fboID = other.m_fboID;
     m_rboID = other.m_rboID;
     m_clearBits = other.m_clearBits;
@@ -95,10 +91,9 @@ RenderTexture::RenderTexture(RenderTexture&& other) noexcept
     m_texture = std::move(other.m_texture);
     setViewport(other.getViewport());
     setView(other.getView());
-    m_hasDepthBuffer = other.m_hasDepthBuffer;
-    m_hasStencilBuffer = other.m_hasStencilBuffer;
 
-    other.m_samples = 0;
+    m_creationContext = other.m_creationContext;
+
     other.m_fboID = 0;
     other.m_rboID = 0;
 
@@ -106,6 +101,8 @@ RenderTexture::RenderTexture(RenderTexture&& other) noexcept
     other.m_msTextureID = 0;
     other.m_depthTextureID = 0;
     other.m_msDepthTextureID = 0;
+
+    other.m_creationContext = {};
 
     other.setViewport({ 0, 0, 0, 0 });
     other.setView({ 0.f, 0.f });
@@ -142,7 +139,7 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
             glCheck(glDeleteRenderbuffers(1, &m_rboID));
         }
 
-        m_samples = other.m_samples;
+
         m_fboID = other.m_fboID;
         m_rboID = other.m_rboID;
         m_clearBits = other.m_clearBits;
@@ -155,10 +152,9 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
         m_texture = std::move(other.m_texture);
         setViewport(other.getViewport());
         setView(other.getView());
-        m_hasDepthBuffer = other.m_hasDepthBuffer;
-        m_hasStencilBuffer = other.m_hasStencilBuffer;
 
-        other.m_samples = 0;
+        m_creationContext = other.m_creationContext;
+
         other.m_fboID = 0;
         other.m_rboID = 0;
 
@@ -167,6 +163,8 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
         other.m_depthTextureID = 0;
         other.m_msDepthTextureID = 0;
 
+        other.m_creationContext = {};
+
         other.setViewport({ 0, 0, 0, 0 });
         other.setView({ 0.f, 0.f });
     }
@@ -174,31 +172,32 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
 }
 
 //public
-bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer, std::uint32_t samples)
+bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer, std::uint32_t samples, bool floatingPoint)
 {
-    return create({ width, height, depthBuffer, false, stencilBuffer, samples });
+    return create({ width, height, depthBuffer, false, floatingPoint, stencilBuffer, samples });
 }
 
 bool RenderTexture::create(RenderTarget::Context ctx)
 {
 #ifdef PLATFORM_MOBILE
-    return createDefault(ctx.width, ctx.height, ctx.depthBuffer, ctx.stencilBuffer);
+    return createDefault(ctx);
 #else
     if (ctx.samples)
     {
         std::int32_t samplesAvailable = 0;
         glCheck(glGetIntegerv(GL_MAX_SAMPLES, &samplesAvailable));
 
-        m_samples = std::min(ctx.samples, static_cast<std::uint32_t>(samplesAvailable));
+        const auto requestedSamples = ctx.samples;
+        ctx.samples = std::min(ctx.samples, static_cast<std::uint32_t>(samplesAvailable));
 
-        if (m_samples == 0)
+        if (ctx.samples == 0)
         {
             LogE << "Multisampled RenderTextures not supported (Max Samples returned was 0)" << std::endl;
             return false;
         }
-        else if (m_samples != ctx.samples)
+        else if (requestedSamples != ctx.samples)
         {
-            LogW << "Sample count reduced to " << m_samples << " (max available)" << std::endl;
+            LogW << "Sample count reduced to " << ctx.samples << " (max available)" << std::endl;
         }
 
         return createMultiSampled(ctx);
@@ -272,8 +271,7 @@ void RenderTexture::display()
     //restore clear colour
     glCheck(glClearColor(m_lastClearColour[0], m_lastClearColour[1], m_lastClearColour[2], m_lastClearColour[3]));
 
-    
-    if (m_samples)
+    if (m_creationContext.samples)
     {
         CRO_ASSERT(m_fboID, "Texture not created");
         
@@ -305,7 +303,7 @@ bool RenderTexture::saveToFile(const std::string& path) const
 //private
 bool RenderTexture::createDefault(RenderTarget::Context ctx)
 {
-    if (m_samples)
+    if (m_creationContext.samples)
     {
         //we previously had multisampling so tidy it up
         glCheck(glDeleteFramebuffers(1, &m_fboID));
@@ -322,7 +320,7 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
             m_msDepthTextureID = 0;
         }
 
-        m_samples = 0;
+        m_creationContext.samples = 0;
     }
 
 
@@ -332,10 +330,7 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
         //if the settings are the same and we're just
         //resizing, skip re-creation and return with a
         //resized texture
-        if (m_fboID
-            && ctx.depthBuffer == m_hasDepthBuffer
-            && ctx.stencilBuffer == m_hasStencilBuffer
-            && (ctx.depthTexture == (m_depthTextureID != 0)))
+        if (m_fboID && ctx == m_creationContext)
         {
             m_texture.create(ctx.width, ctx.height);
             if (m_rboID)
@@ -356,6 +351,7 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
             setViewport(getDefaultViewport());
             setView(FloatRect(getViewport()));
 
+            m_creationContext = ctx;
             return true;
         }
 
@@ -380,7 +376,7 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
         m_depthTextureID = 0;
     }
 
-    m_texture.create(ctx.width, ctx.height, ImageFormat::RGBA);
+    m_texture.create(ctx.width, ctx.height, ImageFormat::RGBA, ctx.floatingPointStorage);
 
     GLuint fbo;
     glCheck(glGenFramebuffers(1, &fbo));
@@ -460,8 +456,7 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
             setViewport(getDefaultViewport());
             setView(FloatRect(getViewport()));
 
-            m_hasDepthBuffer = ctx.depthBuffer;
-            m_hasStencilBuffer = ctx.stencilBuffer;
+            m_creationContext = ctx;
 
             return true;
         }
@@ -470,20 +465,21 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
 
     Texture temp;
     temp.swap(m_texture);
+    m_creationContext = {};
 
     return false;
 }
 
 bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
 {
+    GLenum internalFormat = ctx.floatingPointStorage ? GL_RGBA16F : GL_RGBA;
+
     if (m_msTextureID) //already created at least once
     {
         //if the settings are the same and we're just
         //resizing, skip re-creation and return with a
         //resized texture
-        if (ctx.depthBuffer == m_hasDepthBuffer
-            && ctx.stencilBuffer == m_hasStencilBuffer
-            && (ctx.depthTexture == (m_depthTextureID != 0)))
+        if (m_creationContext == ctx)
         {
             if (m_depthTextureID)
             {
@@ -492,11 +488,11 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
 
                 //existence of depth texture implies existence of msDepth
                 glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msDepthTextureID));
-                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_samples, GL_DEPTH_COMPONENT, ctx.width, ctx.height, GL_TRUE);
+                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, ctx.samples, GL_DEPTH_COMPONENT, ctx.width, ctx.height, GL_TRUE);
             }
             
             glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msTextureID));
-            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_samples, GL_RGBA, ctx.width, ctx.height, GL_TRUE);
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, ctx.samples, internalFormat, ctx.width, ctx.height, GL_TRUE);
             glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
 
             m_texture.create(ctx.width, ctx.height);
@@ -506,7 +502,7 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
                 std::int32_t format = ctx.stencilBuffer ? GL_DEPTH24_STENCIL8 : GL_DEPTH_COMPONENT24;
 
                 glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
-                glCheck(glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_samples, format, ctx.width, ctx.height));
+                glCheck(glRenderbufferStorageMultisample(GL_RENDERBUFFER, ctx.samples, format, ctx.width, ctx.height));
                 glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
             }
 
@@ -557,7 +553,7 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
     if (m_msTextureID)
     {
         glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msTextureID));
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_samples, GL_RGBA, ctx.width, ctx.height, GL_TRUE);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, ctx.samples, internalFormat, ctx.width, ctx.height, GL_TRUE);
         glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
     }
     else
@@ -566,7 +562,7 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
         return false;
     }
 
-    m_texture.create(ctx.width, ctx.height, ImageFormat::RGBA);
+    m_texture.create(ctx.width, ctx.height, ImageFormat::RGBA, ctx.floatingPointStorage);
 
     GLuint fbos[2] = {};
     glCheck(glGenFramebuffers(2, fbos));
@@ -613,13 +609,14 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
 
                     glCheck(glDeleteTextures(1, &m_msTextureID));
                     m_msTextureID = 0;
+                    m_creationContext = {};
 
                     return false;
                 }
                 m_rboID = rbo;
 
                 glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
-                glCheck(glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_samples, format, ctx.width, ctx.height));
+                glCheck(glRenderbufferStorageMultisample(GL_RENDERBUFFER, ctx.samples, format, ctx.width, ctx.height));
                 glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
             }
             else
@@ -652,7 +649,7 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
 
                 //ms texture
                 glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msDepthTextureID));
-                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_samples, GL_DEPTH_COMPONENT, ctx.width, ctx.height, GL_TRUE);
+                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, ctx.samples, GL_DEPTH_COMPONENT, ctx.width, ctx.height, GL_TRUE);
 
                 glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]));
                 glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, m_msDepthTextureID, 0));
@@ -667,8 +664,8 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
             setViewport(getDefaultViewport());
             setView(FloatRect(getViewport()));
 
-            m_hasDepthBuffer = ctx.depthBuffer;
-            m_hasStencilBuffer = ctx.stencilBuffer && !ctx.depthTexture; //TODO we haven't implemented stencil textures
+            m_creationContext = ctx;
+            m_creationContext.stencilBuffer = (ctx.stencilBuffer && !ctx.depthTexture); //TODO we haven't implemented stencil textures
 
             return true;
         }
@@ -678,7 +675,7 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
     //remove unused textures cos creating FBOs failed
     glCheck(glDeleteTextures(1, &m_msTextureID));
     m_msTextureID = 0;
-
+    m_creationContext = {};
 
     Texture temp;
     temp.swap(m_texture);
