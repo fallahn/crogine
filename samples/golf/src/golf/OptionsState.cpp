@@ -314,16 +314,16 @@ namespace
 }
 
 OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus(), 256/*, cro::INFO_FLAG_SYSTEMS_ACTIVE | cro::INFO_FLAG_SYSTEM_TIME*/),
-    m_sharedData        (sd),
-    m_updatingKeybind   (false),
-    m_lastMousePos      (0.f),
-    m_bindingIndex      (-1),
-    m_currentTabFunction(0),
-    m_activeToolTip     (-1),
-    m_viewScale         (2.f),
-    m_refreshControllers(false)
+    : cro::State            (ss, ctx),
+    m_scene                 (ctx.appInstance.getMessageBus(), 256/*, cro::INFO_FLAG_SYSTEMS_ACTIVE | cro::INFO_FLAG_SYSTEM_TIME*/),
+    m_sharedData            (sd),
+    m_updatingKeybind       (false),
+    m_lastMousePos          (0.f),
+    m_bindingIndex          (-1),
+    m_currentTabFunction    (0),
+    m_activeToolTip         (-1),
+    m_viewScale             (2.f),
+    m_refreshControllers    (false)
 {
     if (Social::isSteamdeck())
     {
@@ -647,6 +647,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEWHEEL)
     {
         lastInput = LastInput::Keyboard;
+        m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
         if (evt.wheel.y > 0)
         {
@@ -4463,14 +4464,16 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 
     //scroll functions (kept here to hook mouse scroll callback)
     m_scrollFunctions[ScrollID::AchUp] = 
-        [&, parent, ScrollTop](cro::Entity, const cro::ButtonEvent evt) mutable
+        [&, parent, ScrollTop, ScrollBottom](cro::Entity, const cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
                 auto& target = parent.getComponent<cro::Callback>().getUserData<float>();
-                if (target < ScrollTop)
+                //if (target < ScrollTop)
                 {
-                    target = std::min(ScrollTop, target + VerticalSpacing);
+                    const auto dst = target + VerticalSpacing;
+                    target = dst > ScrollTop ? ScrollBottom : dst;
+
                     parent.getComponent<cro::Callback>().active = true;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
@@ -4483,15 +4486,17 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
         };
 
     m_scrollFunctions[ScrollID::AchDown] = 
-        [&, parent, ScrollBottom](cro::Entity, const cro::ButtonEvent evt) mutable
+        [&, parent, ScrollBottom, ScrollTop](cro::Entity, const cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
                 auto& target = parent.getComponent<cro::Callback>().getUserData<float>();
 
-                if (target > VerticalSpacing)
+                //if (target > VerticalSpacing)
                 {
-                    target = std::max(ScrollBottom, target - VerticalSpacing);
+                    const auto dst = target - VerticalSpacing;
+                    target = dst < ScrollBottom ? ScrollTop : dst;
+
                     parent.getComponent<cro::Callback>().active = true;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
@@ -4765,14 +4770,16 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
 
     //scroll functions (kept here to hook mouse scroll callback)
     m_scrollFunctions[ScrollID::StatUp] = 
-        [&, parent, ScrollTop](cro::Entity, const cro::ButtonEvent evt) mutable
+        [&, parent, ScrollTop, ScrollBottom](cro::Entity, const cro::ButtonEvent evt) mutable
     {
         if (activated(evt))
         {
             auto& target = parent.getComponent<cro::Callback>().getUserData<float>();
-            if (target < ScrollTop)
+            //if (target < ScrollTop)
             {
-                target = std::min(ScrollTop, target + VerticalSpacing);
+                const auto dst = target + VerticalSpacing;
+                target = dst > ScrollTop ? ScrollBottom : dst;
+
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
@@ -4785,15 +4792,17 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
     };
 
     m_scrollFunctions[ScrollID::StatDown] = 
-        [&, parent, ScrollBottom](cro::Entity, const cro::ButtonEvent evt) mutable
+        [&, parent, ScrollBottom, ScrollTop](cro::Entity, const cro::ButtonEvent evt) mutable
     {
         if (activated(evt))
         {
             auto& target = parent.getComponent<cro::Callback>().getUserData<float>();
 
-            if (target > VerticalSpacing)
+            //if (target > VerticalSpacing)
             {
-                target = std::max(ScrollBottom, target - VerticalSpacing);
+                const auto dst = target - VerticalSpacing;
+                target = dst < ScrollBottom ? ScrollTop : dst;
+
                 parent.getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
