@@ -131,7 +131,8 @@ bool WebSock::start(std::int32_t port, std::size_t maxConnections)
 
 void WebSock::stop()
 {
-    if (server->server)
+    if (server &&
+        server->server)
     {
         server->server->stop();
         server.reset();
@@ -141,7 +142,8 @@ void WebSock::stop()
 
 void WebSock::broadcastPacket(const std::vector<std::byte>& packet)
 {
-    if (server->server)
+    if (server &&
+        server->server)
     {
         auto sockets = server->server->getClients();
         for (auto& socket : sockets)

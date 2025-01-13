@@ -997,6 +997,11 @@ bool GolfGame::initialise()
 
     applyImGuiStyle(m_sharedData);
 
+    if (m_sharedData.webSocket)
+    {
+        WebSock::start(m_sharedData.webPort);
+    }
+
     return true;
 }
 
@@ -1395,6 +1400,14 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.useLargePowerBar = prop.getValue<bool>();
                 }
+                else if (name == "web_socket")
+                {
+                    m_sharedData.webSocket = prop.getValue<bool>();
+                }
+                else if (name == "web_port")
+                {
+                    m_sharedData.webPort = std::clamp(prop.getValue<std::int32_t>(), WebSock::MinPort, WebSock::MaxPort);
+                }
             }
         }
         /*else
@@ -1526,6 +1539,11 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.fixedPuttingRange = prop.getValue<bool>();
                     }
+                    
+                    else if (name == "web_chat")
+                    {
+                        m_sharedData.blockChat = prop.getValue<bool>();
+                    }
                     else if (name == "remote_content")
                     {
                         m_sharedData.remoteContent = prop.getValue<bool>();
@@ -1639,6 +1657,8 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
     cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
+    cfg.addProperty("web_socket").setValue(m_sharedData.webSocket);
+    cfg.addProperty("web_port").setValue(m_sharedData.webPort);
     cfg.save(path);
 
 
@@ -1673,6 +1693,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_roster").setValue(m_sharedData.showRosterTip);
     cfg.addProperty("group_mode").setValue(m_sharedData.groupMode);
     cfg.addProperty("fixed_putting").setValue(m_sharedData.fixedPuttingRange);
+    cfg.addProperty("web_chat").setValue(m_sharedData.blockChat);
     cfg.addProperty("remote_content").setValue(m_sharedData.remoteContent);
     cfg.save(path);
 

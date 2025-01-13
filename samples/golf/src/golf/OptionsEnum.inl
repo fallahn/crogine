@@ -110,17 +110,23 @@ enum OptionsIndex
     CtrlReset,
     CtrlTab,
 
-
+    Settings = 400,
+    SettWebsockEnable,
+    SettWebPortDown,
+    SettWebPortUp,
+    SettCSVLog,
+    SettInGameChat,
+    SettRemoteContent,
 
     
-    Scroll = 400,
+    Scroll = 1000,
     ScrollUp,
     ScrollDown,
     ResetStats,
     ResetCareer,
 
 
-    Window = 1000,
+    Window = 2000,
     WindowCredits,
     WindowAdvanced,
     WindowApply,

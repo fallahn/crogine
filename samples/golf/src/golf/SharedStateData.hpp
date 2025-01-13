@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -313,6 +313,11 @@ struct SharedStateData final
     bool decimateDistance = false;
     bool showRosterTip = true;
     bool fixedPuttingRange = false;
+    
+    bool webSocket = false;
+    std::int32_t webPort = 8080;
+    bool logCSV = false;
+    bool blockChat = false;
     bool remoteContent = false;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc

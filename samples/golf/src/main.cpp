@@ -51,9 +51,10 @@ int main(int argc, char** argsv)
 #endif
 
     }
-    WebSock::start(8080);
+
     game.setSafeModeEnabled(safeMode);
     game.run(safeMode);
+
     WebSock::stop();
 
 #ifdef _WIN32

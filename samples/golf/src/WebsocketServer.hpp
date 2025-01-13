@@ -41,8 +41,10 @@ struct SharedStateData;
 class WebSock
 {
 public:
+    static constexpr std::int32_t MinPort = 8001;
+    static constexpr std::int32_t MaxPort = 8100;
 
-    static bool start(std::int32_t port, std::size_t maxConnections = 4);
+    static bool start(std::int32_t port, std::size_t maxConnections = 8);
     static void stop();
 
     //send to all connected clients

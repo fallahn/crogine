@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "../Colordome-32.hpp"
+#include "../WebsocketServer.hpp"
 
 #include "OptionsState.hpp"
 #include "SharedStateData.hpp"
@@ -1601,10 +1602,10 @@ void OptionsState::buildScene()
 
 
     entity = createTab(settingsButtonEnt, 0, MenuID::Settings, TabAV);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowCredits);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabController, SettWebsockEnable);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowCredits);
     entity = createTab(settingsButtonEnt, 1, MenuID::Settings, TabController);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, SettWebPortDown);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowAdvanced);
     entity = createTab(settingsButtonEnt, 3, MenuID::Settings, TabAchievements);
     entity.getComponent<cro::UIInput>().setNextIndex(TabStats, WindowApply);
@@ -1751,7 +1752,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::PuttingPower] = createToolTip("Decreases the difficulty when\nputting, at the cost of XP");
     m_tooltips[ToolTipID::Video] = createToolTip("Sound & Video Settings");
     m_tooltips[ToolTipID::Controls] = createToolTip("Controls");
-    m_tooltips[ToolTipID::Settings] = createToolTip("Settings");
+    m_tooltips[ToolTipID::Settings] = createToolTip("Game Settings");
     m_tooltips[ToolTipID::Achievements] = createToolTip("Achievements");
     m_tooltips[ToolTipID::Stats] = createToolTip("Stats");
     m_tooltips[ToolTipID::NeedsRestart] = createToolTip("Applied On Next Game Load");
@@ -1829,7 +1830,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     titleEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     parent.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
 
-    auto createLabel = [&](glm::vec2 pos, const std::string& str)
+    const auto createLabel = [&](glm::vec2 pos, const std::string& str)
         {
             auto entity = m_scene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, TextOffset));
@@ -4448,7 +4449,257 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
 void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
+    auto bgBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
+    //title
+    const auto& titleFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto titleEnt = m_scene.createEntity();
+    titleEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, 260.f, TextOffset });
+    titleEnt.addComponent<cro::Drawable2D>();
+    titleEnt.addComponent<cro::Text>(titleFont).setString("Game Settings");
+    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    titleEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    parent.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
+
+    //info text
+    auto helpEnt = m_scene.createEntity();
+    helpEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, -9.f, 0.1f });
+    helpEnt.addComponent<cro::Drawable2D>();
+    helpEnt.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
+    helpEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    helpEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    parent.getComponent<cro::Transform>().addChild(helpEnt.getComponent<cro::Transform>());
+
+    const auto createLabel = [&](glm::vec2 pos, const std::string& str)
+        {
+            auto ent = m_scene.createEntity();
+            ent.addComponent<cro::Transform>().setPosition(glm::vec3(pos, TextOffset));
+            ent.addComponent<cro::Drawable2D>();
+            ent.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
+            ent.getComponent<cro::Text>().setString(str);
+            ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+            return ent;
+        };
+    auto portLabel = createLabel(glm::vec2(166.f, 232.f), std::to_string(m_sharedData.webPort));
+    centreText(portLabel);
+
+    auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
+    const auto selectedID = uiSystem.addCallback([&, helpEnt](cro::Entity e) mutable
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Callback>().active = true;
+
+            const auto& str = e.getLabel();
+
+            auto pos = helpEnt.getComponent<cro::Transform>().getPosition();
+            if (str.find('\n') != std::string::npos)
+            {
+                pos.y = 17.f;
+            }
+            else
+            {
+                pos.y = 11.f;
+            }
+            helpEnt.getComponent<cro::Transform>().setPosition(pos);
+            helpEnt.getComponent<cro::Text>().setString(str);
+
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+        });
+    const auto unselectedID = uiSystem.addCallback([helpEnt](cro::Entity e) mutable
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+
+            helpEnt.getComponent<cro::Text>().setString(" ");
+        });
+
+    const auto createHighlight = [&](glm::vec2 pos)
+        {
+            auto ent = m_scene.createEntity();
+            ent.addComponent<cro::Transform>().setPosition(pos);
+            ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            ent.addComponent<cro::Drawable2D>();
+            ent.addComponent<cro::Sprite>() = spriteSheet.getSprite("square_highlight");
+            ent.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            ent.addComponent<cro::UIInput>().setGroup(MenuID::Settings);
+            auto bounds = ent.getComponent<cro::Sprite>().getTextureBounds();
+            ent.getComponent<cro::UIInput>().area = bounds;
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+
+            ent.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+            ent.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -HighlightOffset });
+            ent.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
+
+            parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+            return ent;
+        };
+
+    //port select down
+    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 56.f, 223.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettWebPortDown);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettWebPortUp, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettWebsockEnable, TabController);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&, portLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                m_sharedData.webPort = std::max(m_sharedData.webPort - 1, WebSock::MinPort);
+                portLabel.getComponent<cro::Text>().setString(std::to_string(m_sharedData.webPort));
+                centreText(portLabel);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
+    //port select up
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 223.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettWebPortUp);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettWebsockEnable, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettWebPortDown, TabController);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&, portLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                m_sharedData.webPort = std::min(m_sharedData.webPort + 1, WebSock::MaxPort);
+                portLabel.getComponent<cro::Text>().setString(std::to_string(m_sharedData.webPort));
+                centreText(portLabel);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
+
+    //enable socket
+    entity = createHighlight(glm::vec2(12.f, 223.f));
+    entity.setLabel("See https://github.com/fallahn/svs for more info");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettWebsockEnable);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettWebPortDown, SettCSVLog);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettWebPortUp, TabAV);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.webSocket = !m_sharedData.webSocket;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    //checkbox centre
+    const auto createCheckbox = [&](glm::vec2 pos)
+    {
+        auto ent = m_scene.createEntity();
+        ent.addComponent<cro::Transform>().setPosition(glm::vec3(pos, HighlightOffset));
+        ent.addComponent<cro::Drawable2D>().getVertexData() =
+        {
+            cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+        };
+        ent.getComponent<cro::Drawable2D>().updateLocalBounds();
+        ent.addComponent<cro::Callback>().active = true;
+        parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+        return ent;
+    };
+    
+    entity = createCheckbox(glm::vec2(14.f, 225.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.webSocket ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //CSV log
+    entity = createHighlight(glm::vec2(12.f, 207.f));
+    entity.setLabel("Log Stroke Play scores to a CSV file in Free Play");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettCSVLog);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettInGameChat, SettInGameChat);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettWebsockEnable, SettWebsockEnable);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.logCSV = !m_sharedData.logCSV;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 209.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.logCSV ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //chat disable
+    entity = createHighlight(glm::vec2(12.f, 191.f));
+    entity.setLabel("Disable text chat in online games");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettInGameChat);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettRemoteContent, SettRemoteContent);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettCSVLog, SettCSVLog);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.blockChat = !m_sharedData.blockChat;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 193.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.blockChat ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //remote content
+    entity = createHighlight(glm::vec2(12.f, 175.f));
+    entity.setLabel("Enable remote content in multiplayer games such as Workshop items");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettRemoteContent);
+    entity.getComponent<cro::UIInput>().setNextIndex(WindowCredits, WindowCredits);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettInGameChat, SettInGameChat);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.remoteContent = !m_sharedData.remoteContent;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 177.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.remoteContent ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
 }
 
 void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -5165,7 +5416,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         downLeftB = TabController;
         downRightA = TabAchievements;
         downRightB = TabStats;
-        upLeftA = TabAV;
+        upLeftA = SettRemoteContent;
         upLeftB = TabController;
         upRightA = TabAchievements;
         upRightB = TabStats;
