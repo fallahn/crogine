@@ -66,12 +66,18 @@ const cro::Time GolfState::DefaultIdleTime = cro::seconds(180.f);
 
 void GolfState::createCameras()
 {
-    //registerWindow([]() 
+    //registerWindow([&]() 
     //    {
     //        if (ImGui::Begin("speed"))
     //        {
-    //            ImGui::SliderFloat("Speed", &Speed, 1.f, 8.f);
-    //            ImGui::SliderFloat("Zoom Speed", &ZoomSpeed, 10.f, 50.f);
+    //            /*ImGui::SliderFloat("Speed", &Speed, 1.f, 8.f);
+    //            ImGui::SliderFloat("Zoom Speed", &ZoomSpeed, 10.f, 50.f);*/
+    //            static uint32_t prec = 0;
+    //            if (ImGui::Button("Precision"))
+    //            {
+    //                prec = prec == 0 ? 1 : 0;
+    //                m_gameSceneMRTexture.setPrecision(prec);
+    //            }
     //        }
     //        ImGui::End();
     //    });

@@ -665,6 +665,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
     glCheck(glUseProgram(0));
 
+    m_normalMap.setPrecision(cro::TexturePrecision::Low);
     m_normalMap.create(MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier, 2);
     if (m_currentHole < m_holeData.size())
     {

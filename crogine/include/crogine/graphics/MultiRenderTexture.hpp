@@ -76,8 +76,7 @@ namespace cro
         \param height Height of the texture.
         \param colourCount The number of colour buffers to create. This should be at least 1
         and less than getMaxAttachments(). For instances where only a depth buffer is required
-        use DepthTexture. When only one target is required and lower precision is acceptable,
-        use RenderTexture.
+        use DepthTexture. When only one target is required use RenderTexture.
         \param floatingPoint Create the texture at index 0 with 16bit floating point storage
         \returns true on success, else returns false
         */
@@ -153,6 +152,13 @@ namespace cro
         */
         void setBorderColour(Colour colour);
 
+        /*!
+        \brief Sets the precision of attachments 1 and upwards
+        \param precision TexturePrecision::High or TexturePrecision::Low
+        When set to low 16bit floating point attachments are created, else
+        32bit textures are used. Defaults to 32bit.
+        */
+        void setPrecision(std::uint32_t precision);
 
         /*!
         \brief Hack to enable target for rendering without clearing it
@@ -160,6 +166,8 @@ namespace cro
         void activate(bool b) { setActive(b); }
 
     private:
+        std::uint32_t m_precision;
+        
         std::uint32_t m_fboID;
         mutable std::int32_t m_maxAttachments;
         
