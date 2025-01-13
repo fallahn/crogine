@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -508,7 +508,7 @@ void NewsState::buildScene()
                     if (items.size() > 1)
                     {
                         cro::String prev("--- | Other News: ");
-                        for (auto i = 1; i < 4 && i < items.size(); ++i)
+                        for (auto i = 1u; i < 4 && i < items.size(); ++i)
                         {
                             prev += items[i].title + " | ";
                         }
