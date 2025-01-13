@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -105,7 +105,7 @@ MultiRenderTexture& MultiRenderTexture::operator=(MultiRenderTexture&& other) no
 }
 
 //public
-bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::size_t colourCount)
+bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::size_t colourCount, bool floatingPoint)
 {
 #ifdef PLATFORM_MOBILE
     LogE << "Depth Textures are not available on mobile platforms" << std::endl;
@@ -116,7 +116,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         return true;
     }
 
-    getMaxAttaments(); //just updates the attachment count if not init
+    getMaxAttachments(); //just updates the attachment count if not init
     CRO_ASSERT(colourCount > 0 && colourCount < m_maxAttachments, "Out of Range");
 
     if (m_maxAttachments == 0)
@@ -152,7 +152,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
     }
 
     //automatically resizes if already created
-    m_defaultTexture.create(width, height);
+    m_defaultTexture.create(width, height, ImageFormat::RGBA, floatingPoint);
     if (m_textureIDs.empty())
     {
         //store this so the handles align to indices correctly
@@ -311,7 +311,7 @@ TextureID MultiRenderTexture::getDepthTexture() const
     return TextureID(m_depthTextureID);
 }
 
-std::int32_t MultiRenderTexture::getMaxAttaments() const
+std::int32_t MultiRenderTexture::getMaxAttachments() const
 {
     if (m_maxAttachments == -1)
     {
