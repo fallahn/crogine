@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -517,7 +517,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 crowdDef.createModel(childEnt);
 
                 //setup material
-                std::unique_ptr<cro::ArrayTexture<float, 4u>> tex = std::make_unique<cro::ArrayTexture<float, 4u>>();
+                std::unique_ptr<cro::ArrayTexture<float, 4u, cro::TexturePrecision::Low>> tex =
+                    std::make_unique<cro::ArrayTexture<float, 4u, cro::TexturePrecision::Low>>();
                 if (!m_sharedData.vertexSnap && vatFile.fillArrayTexture(*tex))
                 {
                     auto material = resources.materials.get(crowdArrayMaterialID);
