@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -99,7 +99,7 @@ private:
     std::int32_t m_bindingIndex;
     void updateKeybind(SDL_Keycode);
 
-    std::array<std::function<void()>, 4u> m_tabFunctions = {};
+    std::array<std::function<void()>, 5u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;
 
     struct ScrollID final
@@ -139,7 +139,7 @@ private:
             VertSnap, Beacon, Units,
             BeaconColour, MouseSpeed,
             PuttingPower,
-            Video, Controls,
+            Video, Controls, Settings,
             Achievements, Stats,
             NeedsRestart,
             CustomMusic,
@@ -158,6 +158,7 @@ private:
 
     void buildAVMenu(cro::Entity, const cro::SpriteSheet&);
     void buildControlMenu(cro::Entity, cro::Entity, const cro::SpriteSheet&);
+    void buildSettingsMenu(cro::Entity, const cro::SpriteSheet&);
     void buildAchievementsMenu(cro::Entity, const cro::SpriteSheet&);
     void buildStatsMenu(cro::Entity, const cro::SpriteSheet&);
 

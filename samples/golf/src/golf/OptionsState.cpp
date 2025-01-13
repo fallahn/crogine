@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -125,7 +125,7 @@ namespace
     {
         enum
         {
-            Video, Controls, Dummy, Achievements, Stats
+            Video, Controls, Dummy, Achievements, Stats, Settings
         };
     };
 
@@ -285,7 +285,7 @@ namespace
     {
         enum
         {
-            AV, Controls, Achievements, Stats,
+            AV, Controls, Settings, Achievements, Stats,
             Count
         };
     };
@@ -1203,6 +1203,8 @@ void OptionsState::buildScene()
     auto settingsBar = spriteSheet.getSprite("set_bar");
     auto achBar = spriteSheet.getSprite("ach_bar");
     auto statBar = spriteSheet.getSprite("stat_bar");
+    auto tabHighlight = spriteSheet.getSprite("tab_highlight");
+    auto settingsBground = spriteSheet.getSprite("settings");
     spriteSheet.loadFromFile("assets/golf/sprites/options.spt", m_sharedData.sharedResources->textures);
 
 
@@ -1264,9 +1266,47 @@ void OptionsState::buildScene()
         controlEnt.getComponent<cro::Transform>().setPosition(PanelPosition);
     };
 
-    //achievements
+
+    //settings page
     static constexpr float HorizontalOffset = 42.f;
     static constexpr float VerticalOffset = 70.f; //hack for bigger background - we ought to be adding this to PanelPosition.y
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(HiddenPosition);
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 86.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = settingsBground;
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto settingsEnt = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(-PanelPosition + glm::vec3(0.f, 86.f, 0.f));  //ffs, do this properly
+    entity.addComponent<PageButtons>();
+    createButtons(entity, MenuID::Settings, selectedID, unselectedID, spriteSheet);
+    settingsEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto settingsButtonEnt = entity;
+
+    //settings tab
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = settingsBar;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setPosition({ 51.f, (bgSize.y - bounds.height), TabBarDepth });
+    settingsButtonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto hideSettings = [settingsEnt]() mutable
+        {
+            settingsEnt.getComponent<cro::Transform>().setPosition(HiddenPosition);
+        };
+    auto showSettings = [settingsEnt]() mutable
+        {
+            settingsEnt.getComponent<cro::Transform>().setPosition(PanelPosition);
+        };
+
+
+
+    //achievements
     bounds = spriteSheet.getSprite("input").getTextureBounds();
     const glm::uvec2 bufferSize(bounds.width + (HorizontalOffset * 2.f), bounds.height + VerticalOffset);
 
@@ -1380,10 +1420,11 @@ void OptionsState::buildScene()
     };
 
     //tab callback functions
-    m_tabFunctions[0] = [&, showVideo, hideControls, hideAchievements, hideStats, refreshView]() mutable
+    m_tabFunctions[0] = [&, showVideo, hideControls, hideSettings, hideAchievements, hideStats, refreshView]() mutable
     {
         //hide other tabs
         hideControls();
+        hideSettings();
         hideAchievements();
         hideStats();
 
@@ -1401,10 +1442,11 @@ void OptionsState::buildScene()
         m_currentTabFunction = 0;
     };
 
-    m_tabFunctions[1] = [&, hideVideo, showControls, hideAchievements, hideStats, refreshView]() mutable
+    m_tabFunctions[1] = [&, hideVideo, showControls, hideSettings, hideAchievements, hideStats, refreshView]() mutable
     {
         //hide other tabs
         hideVideo();
+        hideSettings();
         hideAchievements();
         hideStats();
 
@@ -1414,18 +1456,41 @@ void OptionsState::buildScene()
         refreshView();
 
         uiSystem.setActiveGroup(MenuID::Controls);
-        uiSystem.selectByIndex(TabAchievements);
+        uiSystem.selectByIndex(TabSettings);
 
         std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
         resetScroll();
         m_currentTabFunction = 1;
     };
 
-    m_tabFunctions[2] = [&, hideVideo, hideControls, showAchievements, hideStats, refreshView]() mutable
+    m_tabFunctions[2] = [&, hideVideo, hideControls, showSettings, hideAchievements, hideStats, refreshView]() mutable
+        {
+            //hide other tabs
+            hideVideo();
+            hideControls();
+            hideAchievements();
+            hideStats();
+
+            //show settings tab
+            showSettings();
+            uiSystem.setActiveGroup(MenuID::Settings);
+            uiSystem.selectByIndex(TabAchievements);
+
+            //refresh visible objects for one frame
+            refreshView();
+
+            //stop any controller input from scrolling the current page
+            std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
+            resetScroll();
+            m_currentTabFunction = 2;
+        };
+
+    m_tabFunctions[3] = [&, hideVideo, hideControls, hideSettings, showAchievements, hideStats, refreshView]() mutable
     {
         //hide other tabs
         hideVideo();
         hideControls();
+        hideSettings();
         hideStats();
 
         //show achievment tab
@@ -1438,14 +1503,15 @@ void OptionsState::buildScene()
 
         std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
         resetScroll();
-        m_currentTabFunction = 2;
+        m_currentTabFunction = 3;
     };
 
-    m_tabFunctions[3] = [&, hideVideo, hideControls, hideAchievements, showStats, refreshView]() mutable
+    m_tabFunctions[4] = [&, hideVideo, hideControls, hideSettings, hideAchievements, showStats, refreshView]() mutable
     {
         //hide other tabs
         hideVideo();
         hideControls();
+        hideSettings();
         hideAchievements();
 
         //show stats tab
@@ -1458,16 +1524,17 @@ void OptionsState::buildScene()
 
         std::fill(m_controllerScrollAxes.begin(), m_controllerScrollAxes.end(), 0);
         resetScroll();
-        m_currentTabFunction = 3;
+        m_currentTabFunction = 4;
     };
 
 
-    const std::array<glm::vec3, 4u> TabPositions =
+    const std::array<glm::vec3, TabID::Count> TabPositions =
     {
-        glm::vec3(54.f, 323.f, TabBarDepth + HighlightOffset),
-        glm::vec3(154.f, 323.f, TabBarDepth + HighlightOffset),
-        glm::vec3(254.f, 323.f, TabBarDepth + HighlightOffset),
-        glm::vec3(354.f, 323.f, TabBarDepth + HighlightOffset)
+        glm::vec3(67.f, 325.f, TabBarDepth + HighlightOffset),
+        glm::vec3(144.f, 325.f, TabBarDepth + HighlightOffset),
+        glm::vec3(221.f, 325.f, TabBarDepth + HighlightOffset),
+        glm::vec3(298.f, 325.f, TabBarDepth + HighlightOffset),
+        glm::vec3(375.f, 325.f, TabBarDepth + HighlightOffset)
     };
 
     auto createTab = [&, spriteSelectedID, spriteUnselectedID](cro::Entity parent, std::size_t index, std::int32_t menuID, std::size_t selectionIndex)
@@ -1476,7 +1543,7 @@ void OptionsState::buildScene()
         ent.addComponent<cro::Transform>().setPosition(TabPositions[index]);
         ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         ent.addComponent<cro::Drawable2D>();
-        ent.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
+        ent.addComponent<cro::Sprite>() = tabHighlight;
         ent.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         ent.addComponent<cro::UIInput>().area = ent.getComponent<cro::Sprite>().getTextureBounds();
         ent.getComponent<cro::UIInput>().setGroup(menuID);
@@ -1497,28 +1564,56 @@ void OptionsState::buildScene()
 
         return ent;
     };
+    
+
     entity = createTab(videoButtonEnt, 1, MenuID::Video, TabController);
     entity.getComponent<cro::Transform>().move(videoEnt.getComponent<cro::Transform>().getOrigin());
-    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, AVMixerRight);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabSettings, AVMixerRight);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowCredits);
-    entity = createTab(videoButtonEnt, 2, MenuID::Video, TabAchievements);
+    entity = createTab(videoButtonEnt, 2, MenuID::Video, TabSettings);
+    entity.getComponent<cro::Transform>().move(videoEnt.getComponent<cro::Transform>().getOrigin());
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, AVVolumeDown);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);    
+    entity = createTab(videoButtonEnt, 3, MenuID::Video, TabAchievements);
     entity.getComponent<cro::Transform>().move(videoEnt.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setNextIndex(TabStats, AVVolumeDown);
-    entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);
-    entity = createTab(videoButtonEnt, 3, MenuID::Video, TabStats);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabSettings, WindowApply);
+    entity = createTab(videoButtonEnt, 4, MenuID::Video, TabStats);
     entity.getComponent<cro::Transform>().move(videoEnt.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setNextIndex(TabController, AVVolumeUp);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowClose);
 
+
+
     entity = createTab(controlButtonEnt, 0, MenuID::Controls, TabAV);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, CtrlLayout);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabSettings, CtrlLayout);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowAdvanced);
-    entity = createTab(controlButtonEnt, 2, MenuID::Controls, TabAchievements);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabStats, CtrlLB);
+    entity = createTab(controlButtonEnt, 2, MenuID::Controls, TabSettings);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, CtrlLB);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowApply);
-    entity = createTab(controlButtonEnt, 3, MenuID::Controls, TabStats);
+    entity = createTab(controlButtonEnt, 3, MenuID::Controls, TabAchievements);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabStats, CtrlLB);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabSettings, WindowApply);
+    entity = createTab(controlButtonEnt, 4, MenuID::Controls, TabStats);
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, CtrlLB);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowClose);
+
+
+
+    entity = createTab(settingsButtonEnt, 0, MenuID::Settings, TabAV);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabController, WindowCredits);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowCredits);
+    entity = createTab(settingsButtonEnt, 1, MenuID::Settings, TabController);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowAdvanced);
+    entity = createTab(settingsButtonEnt, 3, MenuID::Settings, TabAchievements);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabStats, WindowApply);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);
+    entity = createTab(settingsButtonEnt, 4, MenuID::Settings, TabStats);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAV, WindowClose);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowClose);
+
+
 
     entity = createTab(achButtonEnt, 0, MenuID::Achievements, TabAV);
     entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
@@ -1526,12 +1621,18 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().setPrevIndex(TabStats, WindowAdvanced);
     entity = createTab(achButtonEnt, 1, MenuID::Achievements, TabController);
     entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
-    entity.getComponent<cro::UIInput>().setNextIndex(TabStats, WindowCredits);
-    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowCredits);
-    entity = createTab(achButtonEnt, 3, MenuID::Achievements, TabStats);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabSettings, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowAdvanced);
+    entity = createTab(achButtonEnt, 2, MenuID::Achievements, TabSettings);
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
+    entity.getComponent<cro::UIInput>().setNextIndex(TabStats, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowAdvanced);
+    entity = createTab(achButtonEnt, 4, MenuID::Achievements, TabStats);
     entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ScrollUp);
-    entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowClose);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabSettings, WindowClose);
+
+
 
     entity = createTab(statsButtonEnt, 0, MenuID::Stats, TabAV);
     entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
@@ -1539,17 +1640,21 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowCredits);
     entity = createTab(statsButtonEnt, 1, MenuID::Stats, TabController);
     entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
-    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, ResetStats);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabSettings, ResetStats);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowAdvanced);
-    entity = createTab(statsButtonEnt, 2, MenuID::Stats, TabAchievements);
+    entity = createTab(statsButtonEnt, 2, MenuID::Stats, TabSettings);
+    entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, ResetStats);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowAdvanced);
+    entity = createTab(statsButtonEnt, 3, MenuID::Stats, TabAchievements);
     entity.getComponent<cro::Transform>().move(glm::vec3(HorizontalOffset - 2.f, VerticalOffset, 0.f));
     entity.getComponent<cro::UIInput>().setNextIndex(TabAV, ResetCareer);
-    entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);
+    entity.getComponent<cro::UIInput>().setPrevIndex(TabSettings, WindowApply);
 
     
     auto createTabTip = [&](std::int32_t tipID, glm::vec3 position)
     {
-        auto bounds = spriteSheet.getSprite("tab_highlight").getTextureBounds();
+        auto bounds = tabHighlight.getTextureBounds();
 
         auto ent = m_scene.createEntity();
         ent.addComponent<cro::Transform>().setPosition(position);
@@ -1584,11 +1689,13 @@ void OptionsState::buildScene()
 
     bgEnt.getComponent<cro::Transform>().addChild(createTabTip(ToolTipID::Video, TabPositions[0]).getComponent<cro::Transform>());
     bgEnt.getComponent<cro::Transform>().addChild(createTabTip(ToolTipID::Controls, TabPositions[1]).getComponent<cro::Transform>());
-    bgEnt.getComponent<cro::Transform>().addChild(createTabTip(ToolTipID::Achievements, TabPositions[2]).getComponent<cro::Transform>());
-    bgEnt.getComponent<cro::Transform>().addChild(createTabTip(ToolTipID::Stats, TabPositions[3]).getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(createTabTip(ToolTipID::Settings, TabPositions[2]).getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(createTabTip(ToolTipID::Achievements, TabPositions[3]).getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(createTabTip(ToolTipID::Stats, TabPositions[4]).getComponent<cro::Transform>());
 
     buildAVMenu(videoEnt, spriteSheet);
     buildControlMenu(controlEnt, controlButtonEnt, spriteSheet);
+    buildSettingsMenu(settingsEnt, spriteSheet);
     buildAchievementsMenu(achEnt, spriteSheet);
     buildStatsMenu(statsEnt, spriteSheet);
 
@@ -1644,6 +1751,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::PuttingPower] = createToolTip("Decreases the difficulty when\nputting, at the cost of XP");
     m_tooltips[ToolTipID::Video] = createToolTip("Sound & Video Settings");
     m_tooltips[ToolTipID::Controls] = createToolTip("Controls");
+    m_tooltips[ToolTipID::Settings] = createToolTip("Settings");
     m_tooltips[ToolTipID::Achievements] = createToolTip("Achievements");
     m_tooltips[ToolTipID::Stats] = createToolTip("Stats");
     m_tooltips[ToolTipID::NeedsRestart] = createToolTip("Applied On Next Game Load");
@@ -4338,6 +4446,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
+void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
+{
+
+}
+
 void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
     //render details to buffer
@@ -5046,6 +5159,16 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         upLeftB = CtrlReset;
         upRightA = CtrlA;
         upRightB = CtrlA;
+        break;
+    case MenuID::Settings:
+        downLeftA = TabAV;
+        downLeftB = TabController;
+        downRightA = TabAchievements;
+        downRightB = TabStats;
+        upLeftA = TabAV;
+        upLeftB = TabController;
+        upRightA = TabAchievements;
+        upRightB = TabStats;
         break;
     case MenuID::Achievements:
         offset.x = 40.f;

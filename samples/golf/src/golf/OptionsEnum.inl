@@ -35,6 +35,7 @@ enum OptionsIndex
     Tab = 100,
     TabAV,
     TabController,
+    TabSettings,
     TabAchievements,
     TabStats,
 
