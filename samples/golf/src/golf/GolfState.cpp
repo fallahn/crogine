@@ -141,6 +141,7 @@ namespace ws
     {
         std::uint8_t index = 0;
         std::uint8_t par = 0;
+        std::int16_t padding = 0;
         glm::vec3 teePos = glm::vec3(0.f);
         glm::vec3 pinPos = glm::vec3(0.f);
     };
@@ -1596,6 +1597,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             hi.par = m_holeData[m_currentHole].par;
             hi.teePos = m_holeData[m_currentHole].tee;
             hi.pinPos = m_holeData[m_currentHole].pin;
+
             WebSock::broadcastPacket(PacketID::SetHole, hi);
         }
             break;
@@ -7227,6 +7229,23 @@ void GolfState::updateActor(const ActorInfo& update)
 
         //set the skip state so we can tell if we're allowed to skip
         m_skipState.state = (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID) ? update.state : -1;
+
+
+        struct WebSockUpdate final
+        {
+            glm::vec3 position = glm::vec3(0.f);
+            std::uint8_t clientID = 0;
+            std::uint8_t playerID = 0;
+            std::uint8_t terrainID = 0;
+            std::int32_t timestamp = 0;
+        }sockUpdate;
+
+        sockUpdate.position = update.position;
+        sockUpdate.clientID = update.clientID;
+        sockUpdate.playerID = update.playerID;
+        sockUpdate.terrainID = terrain;
+        sockUpdate.timestamp = update.timestamp;
+        WebSock::broadcastPacket(PacketID::ActorUpdate, sockUpdate);
     }
     else
     {
@@ -7461,7 +7480,7 @@ void GolfState::sendWebsocketGameInfo() const
     //make sure we set the current hole last
     ws::HoleInfo hi;
     hi.index = m_currentHole;
-    hi.par = m_holeData[m_currentHole].par;
+    hi.par = m_holeData[m_currentHole].par;    
     hi.teePos = m_holeData[m_currentHole].tee;
     hi.pinPos = m_holeData[m_currentHole].pin;
     WebSock::broadcastPacket(PacketID::SetHole, hi);
