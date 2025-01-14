@@ -729,7 +729,7 @@ void NewsState::buildScene()
             e.addComponent<cro::UIInput>().area = b;
             e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = sel;
             e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unsel;
-            e.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
+            e.getComponent<cro::Transform>().setOrigin({ std::floor(b.width / 2.f), std::floor(b.height / 2.f) });
 
             entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
             return e;
@@ -851,7 +851,7 @@ void NewsState::buildScene()
             e.addComponent<cro::UIInput>().area = b;
             e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = sel;
             e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unsel;
-            e.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
+            e.getComponent<cro::Transform>().setOrigin({ std::floor(b.width / 2.f), std::floor(b.height / 2.f) });
 
             entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
             return e;

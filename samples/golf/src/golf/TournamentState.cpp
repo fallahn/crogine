@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1902,7 +1902,7 @@ Both Tournaments are always available and can be played at any time. Completing 
 Tournament in first place will unlock a new ball for your profile. These items remain
 unlocked even if you decide to reset your Career.
 
-You can reset your Career at any time from the Stats page of the Options menu, and
+You can reset your Career at any time from the Settings page of the Options menu, and
 edit your opponent's names in the League Browser.
 
 Good Luck!
