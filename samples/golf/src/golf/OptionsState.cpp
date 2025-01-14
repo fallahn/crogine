@@ -1032,6 +1032,7 @@ void OptionsState::buildScene()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
+                applyWebsock();
                 requestStackPop();
 
                 m_currentTabFunction = 0;
@@ -4528,6 +4529,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             ent.addComponent<cro::UIInput>().setGroup(MenuID::Settings);
             auto bounds = ent.getComponent<cro::Sprite>().getTextureBounds();
             ent.getComponent<cro::UIInput>().area = bounds;
+            //ent.getComponent<cro::UIInput>().area.width *= 6.f;
             ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
             ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
@@ -4623,7 +4625,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     //CSV log
     entity = createHighlight(glm::vec2(12.f, 207.f));
-    entity.setLabel("Log Stroke Play scores to a CSV file in Free Play");
+    entity.setLabel("Log Stroke Play scores to a CSV file in Free Play\nFiles are saved to your User Directory");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettCSVLog);
     entity.getComponent<cro::UIInput>().setNextIndex(SettInGameChat, SettInGameChat);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettWebsockEnable, SettWebsockEnable);
@@ -5582,6 +5584,9 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                     cam.active = true;
                     cam.resizeCallback(cam);
                 }
+
+                applyWebsock();
+
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
@@ -5810,4 +5815,27 @@ void OptionsState::quitState()
     //m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+}
+
+void OptionsState::applyWebsock()
+{
+    if (m_sharedData.webSocket)
+    {
+        if (WebSock::getPort() && WebSock::getPort() != m_sharedData.webPort)
+        {
+            WebSock::stop();
+        }
+
+        if (!WebSock::isRunning())
+        {
+            WebSock::start(m_sharedData.webPort);
+        }
+    }
+    else
+    {
+        if (WebSock::isRunning())
+        {
+            WebSock::stop();
+        }
+    }
 }

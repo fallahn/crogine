@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -2921,7 +2921,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
     refreshUI();
 
-    if (m_hotSeat
+    if (m_sharedData.logCSV
         && m_sharedData.scoreType == ScoreType::Stroke)
     {
         m_csvResult = std::async(std::launch::async, &GolfState::logCSV, this);
@@ -4436,6 +4436,8 @@ void GolfState::logCSV() const
         std::replace(fileName.begin(), fileName.end(), '/', '-');
         std::replace(fileName.begin(), fileName.end(), ':', '-');
         fileName += "_" + courseName + ".csv";
+
+        fileName = Social::getBaseContentPath() + fileName;
 
         cro::RaiiRWops out;
         out.file = SDL_RWFromFile(fileName.c_str(), "w");

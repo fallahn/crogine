@@ -178,7 +178,8 @@ void WebSock::broadcastPlayers(const SharedStateData& sd)
 
 std::string WebSock::getStatus()
 {
-    if (server->server)
+    if (server &&
+        server->server)
     {
         std::string ret = "\n----------\nLocal addresses: \n";
         for (const auto& add : cro::Util::Net::getLocalAddresses())
@@ -193,6 +194,24 @@ std::string WebSock::getStatus()
     }
 
     return "Not Running";
+}
+
+bool WebSock::isRunning()
+{
+    if (server)
+    {
+        return server->server != nullptr;
+    }
+    return false;
+}
+
+std::int32_t WebSock::getPort()
+{
+    if (server && server->server)
+    {
+        return server->server->getPort();
+    }
+    return 0;
 }
 
 //--------------------//

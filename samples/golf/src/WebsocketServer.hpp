@@ -63,6 +63,9 @@ public:
 
     static std::string getStatus();
 
+    static bool isRunning();
+    static std::int32_t getPort();
+
 private:
 
 };

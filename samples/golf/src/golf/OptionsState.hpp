@@ -177,4 +177,5 @@ private:
     void refreshControllerList();
 
     void quitState();
+    void applyWebsock();
 };
