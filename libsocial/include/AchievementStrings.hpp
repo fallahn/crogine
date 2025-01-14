@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -412,9 +412,9 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Finish 9 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Finish 18 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Take at least one screenshot on each course using freecam", false),
-    std::make_pair("Come first in any Career round using the Novice clubs", false),
-    std::make_pair("Come first in any Career round using the Expert clubs", false),
-    std::make_pair("Come first in any Career round using the Pro clubs", false),
+    std::make_pair("Come first in any Career league round using the Novice clubs", false),
+    std::make_pair("Come first in any Career league round using the Expert clubs", false),
+    std::make_pair("Come first in any Career league round using the Pro clubs", false),
     std::make_pair("Hole out with a Punch shot", false),
     std::make_pair("Hole out with a Flop shot", false),
     std::make_pair("Sink a hole from the fringe using a putter", false),

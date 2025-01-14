@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -466,6 +466,11 @@ void TextChat::handleMessage(const cro::Message& msg)
 
 bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 {
+    if (m_sharedData.blockChat)
+    {
+        return false;
+    }
+
     const auto msg = pkt.as<TextMessage>();
 
     if (msg.client >= ConstVal::MaxClients)
@@ -516,7 +521,14 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         m_displayBuffer.pop_front();
     }
     m_scrollToEnd = true;
-    
+
+    printToScreen(outStr, chatColour);
+
+    return playSound;
+}
+
+void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
+{
     //create an entity to temporarily show the message on screen
 
     auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
@@ -629,8 +641,6 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     m_screenChatIndex = (m_screenChatIndex + 1) % m_screenChatBuffer.size();
 
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
-
-    return playSound;
 }
 
 void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckInput)
@@ -777,7 +787,14 @@ void TextChat::sendTextChat()
 
         m_inputBuffer.clear();
 
-        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ChatMessage, msg, net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+        if (!m_sharedData.blockChat)
+        {
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ChatMessage, msg, net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+        }
+        else
+        {
+            printToScreen("Chat has been disabled from the Options menu", TextHighlightColour);
+        }
 
         m_limitClock.restart();
         m_scrollToEnd = true;

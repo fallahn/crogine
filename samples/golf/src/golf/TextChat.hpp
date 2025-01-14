@@ -54,6 +54,8 @@ public:
 
     bool handlePacket(const net::NetEvent::Packet&); //returns true if a notification sound should play
 
+    void printToScreen(cro::String, cro::Colour);
+
     void toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckInput = true);
 
     bool isVisible() const { return m_visible; }
