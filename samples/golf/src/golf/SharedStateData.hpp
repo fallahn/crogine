@@ -320,6 +320,7 @@ struct SharedStateData final
     bool logCSV = false;
     bool blockChat = false;
     bool remoteContent = false;
+    std::string flagPath;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

@@ -237,6 +237,8 @@ namespace cro
             return updateTexture(image.getPixelData(), layer);
         }
 
+        std::uint32_t getLayerCount() const { return Layers; }
+
     private:
 
         std::uint32_t m_handle = 0;

@@ -1609,10 +1609,10 @@ void OptionsState::buildScene()
     entity.getComponent<cro::UIInput>().setNextIndex(TabAchievements, SettWebPortDown);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, WindowAdvanced);
     entity = createTab(settingsButtonEnt, 3, MenuID::Settings, TabAchievements);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabStats, ResetStats);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabStats, SettFlagUp);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabController, WindowApply);
     entity = createTab(settingsButtonEnt, 4, MenuID::Settings, TabStats);
-    entity.getComponent<cro::UIInput>().setNextIndex(TabAV, WindowClose);
+    entity.getComponent<cro::UIInput>().setNextIndex(TabAV, SettFlagLabelUp);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAchievements, WindowClose);
 
 
@@ -4543,7 +4543,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         };
 
     //port select down
-    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 56.f, 223.f));
+    auto entity = createHighlight(glm::vec2(140.f, 223.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettWebPortDown);
     entity.getComponent<cro::UIInput>().setNextIndex(SettWebPortUp, ResetCareer);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettWebsockEnable, TabController);
@@ -4560,9 +4560,9 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         });
 
     //port select up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 223.f));
+    entity = createHighlight(glm::vec2(182.f, 223.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettWebPortUp);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettWebsockEnable, ResetCareer);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettFlagDown, ResetCareer);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettWebPortDown, TabController);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, portLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -4582,7 +4582,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.setLabel("See https://github.com/fallahn/svs for more info");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettWebsockEnable);
     entity.getComponent<cro::UIInput>().setNextIndex(SettWebPortDown, SettCSVLog);
-    entity.getComponent<cro::UIInput>().setPrevIndex(SettWebPortUp, TabAV);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagLabelUp, TabAV);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
         {
@@ -4704,8 +4704,144 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         };
 
 
+    //available flag textures
+    const std::string flagDir = "assets/golf/images/flags/";
+    static constexpr glm::uvec2 FlagSize(336u, 240u);
+    auto flags = cro::FileSystem::listFiles(flagDir);
+    if (auto pos = std::find(flags.begin(), flags.end(), "flag.png");
+        pos != flags.end() && pos != flags.begin())
+    {
+        std::iter_swap(flags.begin(), pos);
+    }
+
+    //hmm this hasn't checked it's a valid size yet...
+    if (m_sharedData.flagPath.empty())
+    {
+        m_sharedData.flagPath = flagDir + flags[0];
+    }
+
+    std::uint32_t loadedCount = 0;
+    std::uint32_t flagIndex = 0;
+    cro::Image tmp;
+    m_flagTextures.create(FlagSize.x, FlagSize.y);
+
+    for (const auto& flag : flags)
+    {
+        if (tmp.loadFromFile(flagDir + flag)
+            && tmp.getSize() == FlagSize)
+        {
+            if (flag == cro::FileSystem::getFileName(m_sharedData.flagPath))
+            {
+                flagIndex = loadedCount;
+            }
+
+            m_flagTextures.insertLayer(tmp, loadedCount++);
+        }
+
+        if (loadedCount == m_flagTextures.getLayerCount())
+        {
+            break;
+        }
+    }
 
 
+    if (loadedCount)
+    {
+        const std::string FlagFrag =
+            R"(
+uniform sampler2DArray u_texture;
+uniform float u_textureIndex = 0.0;
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+
+OUTPUT
+
+void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_colour;}
+)";
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::FlagPreview, cro::RenderSystem2D::getDefaultVertexShader(), FlagFrag, "#define TEXTURED\n");
+
+        const glm::vec2 PreviewSize(FlagSize / 4u);
+
+        //flag preview
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 253.f, 144.f, 0.2f });
+        entity.addComponent<cro::Drawable2D>().setShader(&m_sharedData.sharedResources->shaders.get(ShaderID::FlagPreview));
+        entity.getComponent<cro::Drawable2D>().setTexture(m_flagTextures, FlagSize);
+        entity.getComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(0.f, PreviewSize.y), glm::vec2(0.f, 1.f)),
+                cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f)),
+                cro::Vertex2D(glm::vec2(PreviewSize), glm::vec2(1.f)),
+                cro::Vertex2D(glm::vec2(PreviewSize.x, 0.f), glm::vec2(1.f, 0.f))
+            });
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        //flag text
+        auto flagLabel = createLabel(glm::vec2(257.f, 232.f), "1");
+        centreText(flagLabel);
+
+        //flag print text
+        auto printLabel = createLabel({348.f, 232.f}, "None");
+        centreText(printLabel);
+
+        //flag down
+        entity = createHighlight({ 231.f, 223.f });
+        entity.getComponent<cro::UIInput>().setSelectionIndex(SettFlagDown);
+        entity.getComponent<cro::UIInput>().setNextIndex(SettFlagUp, ResetStats);
+        entity.getComponent<cro::UIInput>().setPrevIndex(SettWebPortUp, TabAchievements);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+            [&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+        //flag up
+        entity = createHighlight({ 273.f, 223.f });
+        entity.getComponent<cro::UIInput>().setSelectionIndex(SettFlagUp);
+        entity.getComponent<cro::UIInput>().setNextIndex(SettFlagLabelDown, ResetStats);
+        entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagDown, TabAchievements);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+            [&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+
+        //flag label down
+        entity = createHighlight({ 322.f, 223.f });
+        entity.getComponent<cro::UIInput>().setSelectionIndex(SettFlagLabelDown);
+        entity.getComponent<cro::UIInput>().setNextIndex(SettFlagLabelUp, WindowApply);
+        entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagUp, TabStats);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+            [&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+
+        //flag print up
+        entity = createHighlight({ 364.f, 223.f });
+        entity.getComponent<cro::UIInput>().setSelectionIndex(SettFlagLabelUp);
+        entity.getComponent<cro::UIInput>().setNextIndex(SettWebsockEnable, WindowClose);
+        entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagLabelDown, TabStats);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+            [&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    }
 
     auto createbuttonHighlight = [&](glm::vec2 pos, const std::string& sprName)
         {
@@ -4770,7 +4906,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetStats);
     entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowApply);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, TabAchievements);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, SettFlagUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -5449,7 +5585,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         upLeftA = SettRemoteContent;
         upLeftB = ResetCareer;
         upRightA = ResetStats;
-        upRightB = TabStats;
+        upRightB = SettFlagLabelUp;
         break;
     case MenuID::Achievements:
         offset.x = 40.f;

@@ -117,6 +117,10 @@ enum OptionsIndex
     SettCSVLog,
     SettInGameChat,
     SettRemoteContent,
+    SettFlagDown,
+    SettFlagUp,
+    SettFlagLabelDown,
+    SettFlagLabelUp,
 
     
     Scroll = 1000,

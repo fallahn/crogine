@@ -3065,6 +3065,13 @@ void GolfState::buildScene()
         }
     };
 
+    if (cro::FileSystem::fileExists(m_sharedData.flagPath))
+    {
+        const auto& t = m_resources.textures.get(m_sharedData.flagPath);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(t));
+    }
+
+
     auto flagEntity = entity;
 
     md.loadFromFile("assets/golf/models/beacon.cmt");

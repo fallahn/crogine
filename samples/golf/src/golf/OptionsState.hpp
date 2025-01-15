@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/graphics/ArrayTexture.hpp>
 
 struct SharedStateData;
 
@@ -130,6 +131,8 @@ private:
 
     cro::RenderTexture m_achievementBuffer;
     cro::RenderTexture m_statsBuffer;
+
+    cro::ArrayTexture<std::uint8_t, 64> m_flagTextures;
 
     struct ToolTipID final
     {

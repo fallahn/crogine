@@ -327,7 +327,8 @@ struct ShaderID final
         Rope,
         Lantern,
         Roids,
-        Tonemapping
+        Tonemapping,
+        FlagPreview
     };
 };
 

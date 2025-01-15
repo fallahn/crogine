@@ -1552,6 +1552,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.remoteContent = prop.getValue<bool>();
                     }
+                    else if (name == "flag_path")
+                    {
+                        m_sharedData.flagPath = prop.getValue<std::string>();
+                    }
                     /*else if (name == "group_mode")
                     {
                         m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
@@ -1700,6 +1704,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("fixed_putting").setValue(m_sharedData.fixedPuttingRange);
     cfg.addProperty("web_chat").setValue(m_sharedData.blockChat);
     cfg.addProperty("remote_content").setValue(m_sharedData.remoteContent);
+    cfg.addProperty("flag_path").setValue(m_sharedData.flagPath);
     cfg.save(path);
 
 

@@ -2120,7 +2120,7 @@ void TournamentState::createStatMenu(cro::Entity parent)
 
             std::string s = "Number of times completed: " + std::to_string(entered);
             s += "\nNumber of times won: " + std::to_string(won);
-            if (tier == 3)
+            if (tier >  2) //somewhere along the line tier was getting set to 5, so hack around it
             {
                 s += "\nBest rank: Winner!";
             }

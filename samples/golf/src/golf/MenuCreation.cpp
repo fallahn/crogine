@@ -5237,7 +5237,7 @@ void MenuState::updateUnlockedItems()
         {
             //the tournament has ended with a CPU victory
             Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
-            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], t.round);
+            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], std::min(t.round, 2));
         }
     }
 
