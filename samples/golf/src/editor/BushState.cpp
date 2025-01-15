@@ -1124,6 +1124,13 @@ void BushState::createThumbnails()
                 cro::FileSystem::createDirectory(path);
             }
             outPaths.push_back(path);
+
+            path += "/hires/";
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                LogI << "creating directory " << dir << "..." << std::endl;
+                cro::FileSystem::createDirectory(path);
+            }
         }
     }
 
@@ -1145,6 +1152,9 @@ void BushState::createThumbnails()
     cro::RenderTexture bufferTexture;
     bufferTexture.create(ThumbnailSize.x, ThumbnailSize.y);
     cro::SimpleQuad bufferQuad(bufferTexture.getTexture());
+
+    cro::RenderTexture bufferTextureHigh;
+    bufferTextureHigh.create(ThumbnailSize.x * 8, ThumbnailSize.y * 8);
 
     auto unlitShader = m_resources.shaders.loadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::BuiltInFlags::DiffuseMap);
     auto matID = m_resources.materials.add(m_resources.shaders.get(unlitShader));
@@ -1235,6 +1245,10 @@ void BushState::createThumbnails()
                         m_gameScene.render();
                         bufferTexture.display();
 
+                        bufferTextureHigh.clear(WaterColour);
+                        m_gameScene.render();
+                        bufferTextureHigh.display();
+
                         m_thumbnailTexture.clear(/*cro::Colour(std::uint8_t(39), 56, 153)*/cro::Colour::Transparent);
                         bufferQuad.setPosition({ 2.f, -2.f });
                         bufferQuad.setColour(DropShadowColour); //constify this - same as minimap in GolfStateUI.cpp
@@ -1248,6 +1262,8 @@ void BushState::createThumbnails()
                         auto fileName = cro::FileSystem::getFileName(hole);
                         fileName = fileName.substr(0, fileName.find_last_of('.'));
                         m_thumbnailTexture.saveToFile(outPath + "/" + fileName + ".png");
+
+                        bufferTextureHigh.saveToFile(outPath + "/hires/" + fileName + ".png");
 
                         m_gameScene.destroyEntity(entity);
                         m_gameScene.simulate(0.f);
