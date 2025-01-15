@@ -134,6 +134,9 @@ private:
 
     cro::ArrayTexture<std::uint8_t, 64> m_flagTextures;
 
+    std::vector<std::string> m_flagPaths;
+    std::uint32_t m_flagIndex;
+
     struct ToolTipID final
     {
         enum

@@ -322,6 +322,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_lastMousePos          (0.f),
     m_bindingIndex          (-1),
     m_currentTabFunction    (0),
+    m_flagIndex             (0),
     m_activeToolTip         (-1),
     m_viewScale             (2.f),
     m_refreshControllers    (false)
@@ -4721,20 +4722,20 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     }
 
     std::uint32_t loadedCount = 0;
-    std::uint32_t flagIndex = 0;
     cro::Image tmp;
     m_flagTextures.create(FlagSize.x, FlagSize.y);
 
     for (const auto& flag : flags)
     {
-        if (tmp.loadFromFile(flagDir + flag)
+        const auto fullPath = flagDir + flag;
+        if (tmp.loadFromFile(fullPath)
             && tmp.getSize() == FlagSize)
         {
             if (flag == cro::FileSystem::getFileName(m_sharedData.flagPath))
             {
-                flagIndex = loadedCount;
+                m_flagIndex = loadedCount;
             }
-
+            m_flagPaths.push_back(fullPath);
             m_flagTextures.insertLayer(tmp, loadedCount++);
         }
 
@@ -4759,13 +4760,24 @@ OUTPUT
 void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_colour;}
 )";
         m_sharedData.sharedResources->shaders.loadFromString(ShaderID::FlagPreview, cro::RenderSystem2D::getDefaultVertexShader(), FlagFrag, "#define TEXTURED\n");
+        auto& shader = m_sharedData.sharedResources->shaders.get(ShaderID::FlagPreview);
+
+        const auto shaderID = shader.getGLHandle();
+        const auto uniformID = shader.getUniformID("u_textureIndex");
+        const auto setTexture = 
+            [shaderID, uniformID](std::uint32_t idx)
+            {
+                glUseProgram(shaderID);
+                glUniform1f(uniformID, static_cast<float>(idx));
+            };
+        setTexture(m_flagIndex);
 
         const glm::vec2 PreviewSize(FlagSize / 4u);
 
         //flag preview
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 253.f, 144.f, 0.2f });
-        entity.addComponent<cro::Drawable2D>().setShader(&m_sharedData.sharedResources->shaders.get(ShaderID::FlagPreview));
+        entity.addComponent<cro::Transform>().setPosition({ 263.f, 144.f, 0.2f });
+        entity.addComponent<cro::Drawable2D>().setShader(&shader);
         entity.getComponent<cro::Drawable2D>().setTexture(m_flagTextures, FlagSize);
         entity.getComponent<cro::Drawable2D>().setVertexData(
             {
@@ -4774,15 +4786,60 @@ void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_
                 cro::Vertex2D(glm::vec2(PreviewSize), glm::vec2(1.f)),
                 cro::Vertex2D(glm::vec2(PreviewSize.x, 0.f), glm::vec2(1.f, 0.f))
             });
+        auto flagEnt = entity;
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+        //flag number
+        const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ (PreviewSize.x / 2.f) - 10.f, 40.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize * 3);
+        entity.getComponent<cro::Text>().setString("1");
+        flagEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        auto numEnt = entity;
+
         //flag text
-        auto flagLabel = createLabel(glm::vec2(257.f, 232.f), "1");
+        auto flagLabel = createLabel(glm::vec2(257.f, 232.f), std::to_string(m_flagIndex + 1));
         centreText(flagLabel);
 
         //flag print text
         auto printLabel = createLabel({348.f, 232.f}, "None");
-        centreText(printLabel);
+
+        auto setNumberColour =
+            [&, numEnt, printLabel]() mutable
+            {
+                if (m_sharedData.flagText == 0)
+                {
+                    numEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
+                else
+                {
+                    numEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    numEnt.getComponent<cro::Text>().setFillColour(m_sharedData.flagText == 1 ? CD32::Colours[CD32::Black] : CD32::Colours[CD32::BeigeLight]);
+
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+
+                switch (m_sharedData.flagText)
+                {
+                default:
+                case 0:
+                    printLabel.getComponent<cro::Text>().setString("None");
+                    break;
+                case 1: 
+                    printLabel.getComponent<cro::Text>().setString("Black");
+                    break;
+                case 2: 
+                    printLabel.getComponent<cro::Text>().setString("White");
+                    break;
+                }
+                centreText(printLabel);
+            };
+        setNumberColour();
+
+
 
         //flag down
         entity = createHighlight({ 231.f, 223.f });
@@ -4790,10 +4847,17 @@ void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_
         entity.getComponent<cro::UIInput>().setNextIndex(SettFlagUp, ResetStats);
         entity.getComponent<cro::UIInput>().setPrevIndex(SettWebPortUp, TabAchievements);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-            [&](cro::Entity e, cro::ButtonEvent evt)
+            [&, flagLabel, setTexture](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
+                    m_flagIndex = (m_flagIndex + (m_flagPaths.size() - 1)) % m_flagPaths.size();
+                    m_sharedData.flagPath = m_flagPaths[m_flagIndex];
+                    setTexture(m_flagIndex);
+
+                    flagLabel.getComponent<cro::Text>().setString(std::to_string(m_flagIndex + 1));
+                    centreText(flagLabel);
+
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -4804,10 +4868,17 @@ void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_
         entity.getComponent<cro::UIInput>().setNextIndex(SettFlagLabelDown, ResetStats);
         entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagDown, TabAchievements);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-            [&](cro::Entity e, cro::ButtonEvent evt)
+            [&, flagLabel, setTexture](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
+                    m_flagIndex = (m_flagIndex + 1) % m_flagPaths.size();
+                    m_sharedData.flagPath = m_flagPaths[m_flagIndex];
+                    setTexture(m_flagIndex);
+
+                    flagLabel.getComponent<cro::Text>().setString(std::to_string(m_flagIndex + 1));
+                    centreText(flagLabel);
+
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -4819,10 +4890,13 @@ void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_
         entity.getComponent<cro::UIInput>().setNextIndex(SettFlagLabelUp, WindowApply);
         entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagUp, TabStats);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-            [&](cro::Entity e, cro::ButtonEvent evt)
+            [&, setNumberColour, printLabel](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
+                    m_sharedData.flagText = (m_sharedData.flagText + 2) % 3;
+                    setNumberColour();
+
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -4834,10 +4908,12 @@ void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_
         entity.getComponent<cro::UIInput>().setNextIndex(SettWebsockEnable, WindowClose);
         entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagLabelDown, TabStats);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-            [&](cro::Entity e, cro::ButtonEvent evt)
+            [&, setNumberColour](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
+                    m_sharedData.flagText = (m_sharedData.flagText + 1) % 3;
+                    setNumberColour();
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });

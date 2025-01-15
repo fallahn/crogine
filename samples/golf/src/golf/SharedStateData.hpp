@@ -320,6 +320,7 @@ struct SharedStateData final
     bool logCSV = false;
     bool blockChat = false;
     bool remoteContent = false;
+    std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
