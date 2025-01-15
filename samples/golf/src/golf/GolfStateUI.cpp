@@ -1985,7 +1985,7 @@ void GolfState::buildUI()
         /*std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;*/
 
-        //m_overheadBuffer.setPrecision(cro::TexturePrecision::Low);
+        m_overheadBuffer.setPrecision(m_sharedData.lightmapQuality);
         m_overheadBuffer.create(texSize, texSize, MRTIndex::Count); //yes, it's square
         
         if (m_sharedData.nightTime)

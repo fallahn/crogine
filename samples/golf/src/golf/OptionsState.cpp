@@ -1961,7 +1961,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //remote content label
-    createLabel(glm::vec2(12.f, 57.f), "Download           Remote Content");
+    createLabel(glm::vec2(12.f, 57.f), "Low Quality        Light Mapping");
 
 
     //ball trail label
@@ -2778,7 +2778,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //lens flare highlight
     entity = createHighlight(glm::vec2(81.f, 64.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVLensFlare);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVDecPower, AVRemoteContent);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVDecPower, AVLightMap);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVDecPower, AVBeacon);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -2815,8 +2815,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //remote content highlight
     entity = createHighlight(glm::vec2(81.f, 48.f));
-    entity.setLabel("Allow downloading remote content such as Workshop items from other\nplayers when joining a network game");
-    entity.getComponent<cro::UIInput>().setSelectionIndex(AVRemoteContent);
+    entity.setLabel("Reduce lightmap VRAM usage at night, at the cost of quality");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AVLightMap);
 #ifdef _WIN32
     if (!Social::isSteamdeck())
     {
@@ -2833,7 +2833,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    m_sharedData.remoteContent = !m_sharedData.remoteContent;
+                    m_sharedData.lightmapQuality = m_sharedData.lightmapQuality == 0 ? 1 : 0;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
@@ -2854,7 +2854,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.remoteContent ? 1.f : 0.f;
+            float scale = m_sharedData.lightmapQuality ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3338,8 +3338,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity = createHighlight(glm::vec2(355.f, 48.f));
     entity.setLabel("All distances appear as decimalised values eg 0.5m instead of smaller denominations\nsuch as 50cm");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVDecDist);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVRemoteContent, AVFixedPutter);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVRemoteContent, AVDecPower);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVLightMap, AVFixedPutter);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVLightMap, AVDecPower);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -3386,8 +3386,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     else
 #endif
     {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVRemoteContent, WindowClose);
-        entity.getComponent<cro::UIInput>().setPrevIndex(AVRemoteContent, AVDecDist);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVLightMap, WindowClose);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVLightMap, AVDecDist);
     }
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -3457,7 +3457,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         entity.setLabel("Enables text-to-speech for in game text chat.\nUse the Speech option in Windows Control Panel to set advanced options.");
         entity.getComponent<cro::UIInput>().setSelectionIndex(AVTextToSpeech);
         entity.getComponent<cro::UIInput>().setNextIndex(AVFixedPutter, WindowAdvanced);
-        entity.getComponent<cro::UIInput>().setPrevIndex(AVFixedPutter, AVRemoteContent);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVFixedPutter, AVLightMap);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
@@ -5426,7 +5426,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         }
         else
 #endif
-        upLeftA = AVRemoteContent;
+        upLeftA = AVLightMap;
         upLeftB = AVBeaconL;
         upRightA = AVCrowdL;
         upRightB = AVFixedPutter;

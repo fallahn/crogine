@@ -327,12 +327,16 @@ void MultiRenderTexture::setBorderColour(Colour colour)
 
 void MultiRenderTexture::setPrecision(std::uint32_t precision)
 {
+    auto old = m_precision;
     m_precision = precision == 0 ? GL_RGBA32F : GL_RGBA16F;
 
     //update existing textures
-    for (auto id : m_textureIDs)
+    if (old != m_precision)
     {
-        glCheck(glBindTexture(GL_TEXTURE_2D, id));
-        glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, m_size.x, m_size.y, 0, GL_RGBA, GL_FLOAT, NULL));
+        for (auto id : m_textureIDs)
+        {
+            glCheck(glBindTexture(GL_TEXTURE_2D, id));
+            glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, m_size.x, m_size.y, 0, GL_RGBA, GL_FLOAT, NULL));
+        }
     }
 }

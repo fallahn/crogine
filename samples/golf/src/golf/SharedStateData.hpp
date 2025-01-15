@@ -313,6 +313,7 @@ struct SharedStateData final
     bool decimateDistance = false;
     bool showRosterTip = true;
     bool fixedPuttingRange = false;
+    std::int32_t lightmapQuality = 0;
     
     bool webSocket = false;
     std::int32_t webPort = 8080;

@@ -60,7 +60,7 @@ enum OptionsIndex
     AVBeacon,
     AVBeaconL,
     AVBeaconR,
-    AVRemoteContent,
+    AVLightMap,
     AVLensFlare,
     AVTextToSpeech,
     AVTrail,

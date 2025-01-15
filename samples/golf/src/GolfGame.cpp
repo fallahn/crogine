@@ -1408,6 +1408,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.webPort = std::clamp(prop.getValue<std::int32_t>(), WebSock::MinPort, WebSock::MaxPort);
                 }
+                else if (name == "lightmap_quality")
+                {
+                    m_sharedData.lightmapQuality = std::clamp(prop.getValue<std::int32_t>(), 0, 1);
+                }
             }
         }
         /*else
@@ -1659,6 +1663,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
     cfg.addProperty("web_socket").setValue(m_sharedData.webSocket);
     cfg.addProperty("web_port").setValue(m_sharedData.webPort);
+    cfg.addProperty("lightmap_quality").setValue(m_sharedData.lightmapQuality);
     cfg.save(path);
 
 

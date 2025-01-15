@@ -98,6 +98,8 @@ void GolfState::createCameras()
 
                 if (m_sharedData.nightTime)
                 {
+                    m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
+
                     glm::uvec2 usize(texSize);
                     m_sharedData.antialias =
                         m_gameSceneMRTexture.create(usize.x, usize.y, MRTIndex::Count)

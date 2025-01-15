@@ -2237,6 +2237,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cam.resizeCallback(cam);
 
                 Club::setFixedPuttingDistance(m_sharedData.fixedPuttingRange);
+
+                if (m_sharedData.nightTime)
+                {
+                    m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
+                }
+                m_overheadBuffer.setPrecision(m_sharedData.lightmapQuality);
             }
 
             //check if we have any deferred tutorial states pending
