@@ -79,7 +79,7 @@ bool ShaderResource::loadFromFile(std::int32_t ID, const std::string& vertex, co
 {
     if (m_shaders.count(ID) > 0)
     {
-        Logger::log("Shader with this ID already exists!", Logger::Type::Error);
+        LogE << "Shader ID " << ID << ", shader with this ID already exists" << std::endl;
         return false;
     }
     
@@ -96,7 +96,7 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
 {
     if (m_shaders.count(ID) > 0)
     {
-        Logger::log("Shader with this ID already exists!", Logger::Type::Error);
+        LogE << "Shader ID " << ID << ", shader with this ID already exists" << std::endl;
         return false;
     }
 
@@ -126,7 +126,7 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
 {
     if (m_shaders.count(ID) > 0)
     {
-        Logger::log("Shader with this ID already exists!", Logger::Type::Error);
+        LogE << "Shader ID " << ID << ", shader with this ID already exists" << std::endl;
         return false;
     }
 

@@ -328,7 +328,7 @@ struct ShaderID final
         Lantern,
         Roids,
         Tonemapping,
-        FlagPreview
+        FlagPreview = 1000 //hum this is clashing with something else because I'm getting sloppy.
     };
 };
 
