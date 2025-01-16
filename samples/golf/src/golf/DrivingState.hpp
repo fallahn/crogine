@@ -147,6 +147,7 @@ private:
             Horizon,
             Trophy,
             BallTrail,
+            Flag,
 
             Count
         };

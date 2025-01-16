@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1111,6 +1111,7 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Flag, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define USER_COLOUR\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::HairReflect, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define FADE_INPUT\n#define USER_COLOUR\n#define RX_SHADOWS\n" + wobble);
@@ -1147,6 +1148,10 @@ void DrivingState::loadAssets()
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]).setProperty("u_maskMap", m_defaultMaskMap);
+
+    shader = &m_resources.shaders.get(ShaderID::Flag);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Flag] = m_resources.materials.add(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
@@ -3045,7 +3050,10 @@ void DrivingState::createFlag()
     md.createModel(entity);
     if (md.hasSkeleton())
     {
-        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]));
+        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Flag]);
+        applyMaterialData(md, mat);
+        
+        entity.getComponent<cro::Model>().setMaterial(0, mat);
         entity.getComponent<cro::Skeleton>().play(0);
     }
     
