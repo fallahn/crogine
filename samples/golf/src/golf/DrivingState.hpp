@@ -147,6 +147,7 @@ private:
             Horizon,
             Trophy,
             BallTrail,
+            Flag,
 
             Count
         };
@@ -178,14 +179,18 @@ private:
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
+    struct TextureID final
+    {
+        enum
+        {
+            Flag,
+
+            Count
+        };
+    };
+
     Avatar m_avatar;
     ClubModels m_clubModels;
-
-    //struct ClubModel final
-    //{
-    //    enum {Wood, Iron, Count};
-    //};
-    //std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
     std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
     std::size_t m_strokeCountIndex;
