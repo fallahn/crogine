@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -236,8 +236,10 @@ public:
     {
         enum
         {
-            Ball, Hair, Course,
-            Profile, Avatar, Career
+            Ball, Hair, Course, Flag,
+            Profile, Avatar, Career,
+
+            Count
         };
     };
     static std::string getBaseContentPath();
