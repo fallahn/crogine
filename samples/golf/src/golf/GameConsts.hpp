@@ -168,6 +168,7 @@ static constexpr glm::vec3 PreviewHairScale(0.23f);
 static constexpr glm::vec3 PreviewHairOffset(0.f, -0.29f, -0.008f);
 
 static constexpr float MinMusicVolume = 0.001f;
+static constexpr glm::uvec2 FlagTextureSize(336u, 240u);
 
 class btVector3;
 glm::vec3 btToGlm(btVector3 v);
@@ -328,7 +329,7 @@ struct ShaderID final
         Lantern,
         Roids,
         Tonemapping,
-        FlagPreview = 1000 //hum this is clashing with something else because I'm getting sloppy.
+        FlagPreview
     };
 };
 

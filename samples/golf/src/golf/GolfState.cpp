@@ -2243,6 +2243,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
                 }
                 m_overheadBuffer.setPrecision(m_sharedData.lightmapQuality);
+
+                updateFlagTexture(true);
             }
 
             //check if we have any deferred tutorial states pending
@@ -3067,8 +3069,8 @@ void GolfState::buildScene()
 
     if (cro::FileSystem::fileExists(m_sharedData.flagPath))
     {
-        const auto& t = m_resources.textures.get(m_sharedData.flagPath);
-        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(t));
+        m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
+        updateFlagTexture(true);
     }
 
 
@@ -6278,6 +6280,12 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     m_sharedData.minimapData.courseName += "\nPar: " + std::to_string(m_holeData[m_currentHole].par);
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions[m_sharedData.crowdDensity]);
 
+    //if set to show hole number and texture is successfully loaded
+    if (m_sharedData.flagText)
+    {
+        updateFlagTexture(false);
+    }
+
 
     if (m_sharedData.leagueRoundID != LeagueRoundID::Club
         && (m_currentHole % 9) == 0)
@@ -7250,6 +7258,7 @@ void GolfState::updateActor(const ActorInfo& update)
             std::uint8_t clientID = 0;
             std::uint8_t playerID = 0;
             std::uint8_t terrainID = 0;
+            std::uint8_t padding = 0;
             std::int32_t timestamp = 0;
         }sockUpdate;
 

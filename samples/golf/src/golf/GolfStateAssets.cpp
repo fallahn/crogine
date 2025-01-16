@@ -51,6 +51,7 @@ source distribution.
 
 #include <Input.hpp>
 
+#include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
 
 namespace pd = thinks;
@@ -2869,6 +2870,57 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
             };
 
     }
+}
+
+void GolfState::updateFlagTexture(bool reloadTexture)
+{
+    if (!m_flagTexture.available())
+    {
+        return;
+    }
+
+    if (reloadTexture)
+    {
+        if (!m_resources.textures.loaded(TextureID::Flag))
+        {
+            m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath);
+        }
+        else
+        {
+            //overwrite existing to recycle the handle.
+            m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath);
+        }
+        m_flagQuad.setTexture(m_resources.textures.get(TextureID::Flag));
+
+        //just saves doing this every time we update the text
+        m_flagText.setFont(m_sharedData.sharedResources->fonts.get(FontID::UI));
+        m_flagText.setAlignment(cro::SimpleText::Alignment::Centre);
+        m_flagText.setPosition({ 160.f, 80.f });
+        m_flagText.setCharacterSize(UITextSize * 12);
+    }
+
+    m_flagTexture.clear(cro::Colour::Magenta);
+    m_flagQuad.draw();
+
+    if (m_sharedData.flagText)
+    {
+        m_flagText.setFillColour(m_sharedData.flagText == 1 ? CD32::Colours[CD32::Black] : CD32::Colours[CD32::BeigeLight]);
+        m_flagText.setString(std::to_string(holeNumberFromIndex()));
+        m_flagText.draw();
+    }
+
+    m_flagTexture.display();
+
+
+    cro::TextureID tid(m_flagTexture.getTexture());
+
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Flag;
+    cmd.action = [tid](cro::Entity e, float)
+        {
+            e.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", tid);
+        };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::TargetShader::update()

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,20 @@ source distribution.
 
 #include <string>
 #include <unordered_map>
+
+//flag preview in Options menu
+static inline const std::string FlagFrag =
+R"(
+uniform sampler2DArray u_texture;
+uniform float u_textureIndex = 0.0;
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+
+OUTPUT
+
+void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_colour;}
+)";
+
 
 static inline const std::string WindBuffer = R"(
     layout (std140) uniform WindValues

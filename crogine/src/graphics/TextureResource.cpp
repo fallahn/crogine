@@ -68,6 +68,11 @@ bool TextureResource::load(std::uint32_t id, const std::string& path, bool creat
     return false;
 }
 
+bool TextureResource::loaded(std::uint32_t id) const
+{
+    return m_textures.count(id) != 0;
+}
+
 Texture& TextureResource::get(std::uint32_t id)
 {
     if (m_textures.count(id) == 0)

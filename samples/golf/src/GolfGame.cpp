@@ -106,6 +106,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Network.hpp>
 #include <crogine/util/Random.hpp>
@@ -886,7 +887,7 @@ bool GolfGame::initialise()
 
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");
-
+    m_sharedData.sharedResources->shaders.loadFromString(ShaderID::FlagPreview, cro::RenderSystem2D::getDefaultVertexShader(), FlagFrag, "#define TEXTURED\n");
 
     m_sharedData.resolutions = getWindow().getAvailableResolutions();
     std::reverse(m_sharedData.resolutions.begin(), m_sharedData.resolutions.end());

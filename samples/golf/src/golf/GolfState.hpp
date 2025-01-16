@@ -316,6 +316,19 @@ private:
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
 
+    struct TextureID final
+    {
+        enum
+        {
+            Flag,
+
+            Count
+        };
+    };
+    cro::SimpleQuad m_flagQuad;
+    cro::SimpleText m_flagText;
+    cro::RenderTexture m_flagTexture;
+
     struct BallResource final
     {
         std::int32_t materialID = -1;
@@ -338,6 +351,7 @@ private:
     void loadSpectators();
     void loadMap();
     void initAudio(bool loadTrees, bool loadPlane);
+    void updateFlagTexture(bool reloadTexture);
 
     void addSystems();
     void buildScene();
@@ -672,28 +686,26 @@ private:
         bool hadBackspin = false; //tracks 'spin class' and xp award
         bool hadTopspin = false; //tracks XP award
         bool hadFlop = false;
+        
         bool hadPunch = false;
         bool wasGreen = false; //putt from fringe
         bool plusFour = false; //has at least 4 players
-
         bool noHolesOverPar = true; //no mistake
+        
         bool noGimmeUsed = true; //never give you up
         bool twoShotsSpare = true; //greens in regulation
         bool alwaysOnTheCourse = true; //consistency
-
         bool under15metres = true; //NTP total for full courses (puttFromTee sets this false)
 
-        bool underTwoPutts = true;
         std::int32_t puttCount = 0; //no more than two putts on every hole
-
         std::int32_t eagles = 0;
         std::int32_t birdies = 0; //nested achievement
         std::int32_t gimmes = 0; //gimme gimme gimme
-
         std::int32_t birdieChallenge = 0; //monthly challenge only incremented on front 9
+        
+        bool underTwoPutts = true;
         bool nearMissChallenge = false;
         bool bullseyeChallenge = false;
-
         bool leadingCareerRound = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat

@@ -4707,7 +4707,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     //available flag textures
     const std::string flagDir = "assets/golf/images/flags/";
-    static constexpr glm::uvec2 FlagSize(336u, 240u);
+
     auto flags = cro::FileSystem::listFiles(flagDir);
     if (auto pos = std::find(flags.begin(), flags.end(), "flag.png");
         pos != flags.end() && pos != flags.begin())
@@ -4723,13 +4723,13 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     std::uint32_t loadedCount = 0;
     cro::Image tmp;
-    m_flagTextures.create(FlagSize.x, FlagSize.y);
+    m_flagTextures.create(FlagTextureSize.x, FlagTextureSize.y);
 
     for (const auto& flag : flags)
     {
         const auto fullPath = flagDir + flag;
         if (tmp.loadFromFile(fullPath)
-            && tmp.getSize() == FlagSize)
+            && tmp.getSize() == FlagTextureSize)
         {
             if (flag == cro::FileSystem::getFileName(m_sharedData.flagPath))
             {
@@ -4748,18 +4748,6 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     if (loadedCount)
     {
-        const std::string FlagFrag =
-            R"(
-uniform sampler2DArray u_texture;
-uniform float u_textureIndex = 0.0;
-VARYING_IN vec2 v_texCoord;
-VARYING_IN vec4 v_colour;
-
-OUTPUT
-
-void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_colour;}
-)";
-        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::FlagPreview, cro::RenderSystem2D::getDefaultVertexShader(), FlagFrag, "#define TEXTURED\n");
         auto& shader = m_sharedData.sharedResources->shaders.get(ShaderID::FlagPreview);
 
         const auto shaderID = shader.getGLHandle();
@@ -4772,13 +4760,13 @@ void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_
             };
         setTexture(m_flagIndex);
 
-        const glm::vec2 PreviewSize(FlagSize / 4u);
+        const glm::vec2 PreviewSize(FlagTextureSize / 4u);
 
         //flag preview
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 263.f, 144.f, 0.2f });
         entity.addComponent<cro::Drawable2D>().setShader(&shader);
-        entity.getComponent<cro::Drawable2D>().setTexture(m_flagTextures, FlagSize);
+        entity.getComponent<cro::Drawable2D>().setTexture(m_flagTextures, FlagTextureSize);
         entity.getComponent<cro::Drawable2D>().setVertexData(
             {
                 cro::Vertex2D(glm::vec2(0.f, PreviewSize.y), glm::vec2(0.f, 1.f)),
