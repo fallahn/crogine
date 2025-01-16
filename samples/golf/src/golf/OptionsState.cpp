@@ -4709,6 +4709,8 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     const std::string flagDir = "assets/golf/images/flags/";
 
     auto flags = cro::FileSystem::listFiles(flagDir);
+    std::vector<std::pair<std::string, std::string>> mappedFlags;
+
     if (auto pos = std::find(flags.begin(), flags.end(), "flag.png");
         pos != flags.end() && pos != flags.begin())
     {
@@ -4721,13 +4723,36 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         m_sharedData.flagPath = flagDir + flags[0];
     }
 
+    for (const auto& flag : flags)
+    {
+        mappedFlags.emplace_back(std::make_pair(flagDir, flag));
+    }
+
+    const auto userDir = Social::getUserContentPath(Social::UserContent::Flag);
+    const auto userFlags = cro::FileSystem::listDirectories(userDir);
+    const auto MaxUser = m_flagTextures.getLayerCount() - flags.size();
+    for (auto i = 0u; i < MaxUser && i < userFlags.size(); ++i)
+    {
+        const auto files = cro::FileSystem::listFiles(userDir + userFlags[i]);
+        for (auto j = 0; j < files.size(); ++j)
+        {
+            //just grab the first png we find
+            if (cro::FileSystem::getFileExtension(files[j]) == ".png")
+            {
+                mappedFlags.emplace_back(std::make_pair(userDir + userFlags[i] + "/", files[j]));
+                break;
+            }
+        }
+    }
+
+
     std::uint32_t loadedCount = 0;
     cro::Image tmp;
     m_flagTextures.create(FlagTextureSize.x, FlagTextureSize.y);
 
-    for (const auto& flag : flags)
+    for (const auto& [path, flag] : mappedFlags)
     {
-        const auto fullPath = flagDir + flag;
+        const auto fullPath = path + flag;
         if (tmp.loadFromFile(fullPath)
             && tmp.getSize() == FlagTextureSize)
         {
@@ -4743,6 +4768,13 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         {
             break;
         }
+    }
+
+    //this just checks that the path was found, else resets it
+    //if the file from the path loaded in the config is missing
+    if (m_flagIndex == 0)
+    {
+        m_sharedData.flagPath = m_flagPaths[0];
     }
 
 
