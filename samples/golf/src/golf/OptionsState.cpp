@@ -4793,6 +4793,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         setTexture(m_flagIndex);
 
         const glm::vec2 PreviewSize(FlagTextureSize / 4u);
+        const float u = 320.f / FlagTextureSize.x;
 
         //flag preview
         entity = m_scene.createEntity();
@@ -4803,8 +4804,8 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             {
                 cro::Vertex2D(glm::vec2(0.f, PreviewSize.y), glm::vec2(0.f, 1.f)),
                 cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f)),
-                cro::Vertex2D(glm::vec2(PreviewSize), glm::vec2(1.f)),
-                cro::Vertex2D(glm::vec2(PreviewSize.x, 0.f), glm::vec2(1.f, 0.f))
+                cro::Vertex2D(glm::vec2(PreviewSize), glm::vec2(u, 1.f)),
+                cro::Vertex2D(glm::vec2(PreviewSize.x, 0.f), glm::vec2(u, 0.f))
             });
         auto flagEnt = entity;
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -4813,7 +4814,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         //flag number
         const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ (PreviewSize.x / 2.f) - 10.f, 40.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ (PreviewSize.x / 2.f) - 8.f, 40.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize * 3);
         entity.getComponent<cro::Text>().setString("1");

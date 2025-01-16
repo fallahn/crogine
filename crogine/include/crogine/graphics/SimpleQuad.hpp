@@ -114,6 +114,11 @@ namespace cro
         */
         void draw(const glm::mat4& parentTransform = glm::mat4(1.f)) override;
 
+        /*!
+        \brief Returns the current UV coordinates in normalised values
+        */
+        const cro::FloatRect& getUVRect() const { return m_uvRect; }
+
     private:
         cro::Colour m_colour;
         glm::vec2 m_size;
