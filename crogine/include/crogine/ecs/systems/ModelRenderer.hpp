@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 
 #ifdef CRO_DEBUG_
+#include <crogine/core/HiResTimer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #endif
 
@@ -159,6 +160,10 @@ namespace cro
             const float Padding = 0.f;
         };
         UniformBuffer<WorldUniformBlock> m_worldUniformBuffer;
+
+#ifdef CRO_DEBUG_
+        cro::HiResTimer m_timer;
+#endif
 
         void updateDrawListDefault(Entity);
         void updateDrawListBalancedTree(Entity);

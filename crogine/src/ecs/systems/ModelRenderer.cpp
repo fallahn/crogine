@@ -68,6 +68,7 @@ using namespace cro;
 namespace
 {
     float lightMultiplier = 1.f;
+    float debugRenderTime = 0.f;
 }
 //void ModelRenderer::setLightMultiplier(float m) { lightMultiplier = m; }
 
@@ -91,7 +92,8 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
                 const auto sceneID = getScene()->getInstanceID();
                 const auto& dList = m_drawLists[i];
                 ImGui::Text("Visisble entities in scene %lu, to Camera %lu: %lu", sceneID, i, dList[0].size());
-            }        
+            }
+            ImGui::Text("Approx Render Time: %3.3f", debugRenderTime * 1000.f);
         });
 #endif
 }
@@ -181,6 +183,9 @@ void ModelRenderer::process(float dt)
 
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
+#ifdef CRO_DEBUG_
+    m_timer.restart();
+#endif
     const auto& camComponent = camera.getComponent<Camera>();
     if (camComponent.getDrawListIndex() < m_drawLists.size())
     {
@@ -315,6 +320,9 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
     }
+#ifdef CRO_DEBUG_
+    debugRenderTime = m_timer.restart();
+#endif
 }
 
 std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex) const

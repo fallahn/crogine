@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,8 +35,10 @@ inline const std::string GlassFragment =
 R"(
 OUTPUT
 
+#include WVP_UBO
+
 uniform samplerCube u_reflectMap;
-uniform vec3 u_cameraWorldPosition;
+//uniform vec3 u_cameraWorldPosition;
 uniform vec4 u_colour;
 uniform vec4 u_maskColour;
 

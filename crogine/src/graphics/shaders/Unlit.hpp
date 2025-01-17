@@ -164,6 +164,8 @@ static inline const std::string Vertex = R"(
 
 static inline const std::string Fragment = R"(
         OUTPUT
+#include WVP_UBO
+
     #if defined (TEXTURED)
         uniform sampler2D u_diffuseMap;
     #if defined(ALPHA_CLIP)
@@ -194,7 +196,6 @@ static inline const std::string Fragment = R"(
     #if defined(RIMMING)
         uniform LOW vec4 u_rimColour;
         uniform LOW float u_rimFalloff;
-        uniform HIGH vec3 u_cameraWorldPosition;
     #endif
 
     #if defined (VERTEX_COLOUR)

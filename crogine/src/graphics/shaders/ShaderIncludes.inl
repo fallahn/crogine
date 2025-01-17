@@ -42,7 +42,7 @@ shaders via #include directives, as long as the shaders are loaded via a ShaderR
 static inline const std::string WVPMatrices =
 R"(
 #if defined(INSTANCING)
-#if !defined(USE_UBO)
+#if !defined(USE_UBO) && !defined(MOBILE)
     uniform mat4 u_viewMatrix;
 #endif
 #else
@@ -50,7 +50,7 @@ R"(
     uniform mat3 u_normalMatrix;
 #endif
     uniform mat4 u_worldMatrix;
-#if !defined(USE_UBO)
+#if !defined(USE_UBO) && !defined(MOBILE)
     uniform mat4 u_projectionMatrix;
 #endif
 )";
@@ -59,12 +59,12 @@ R"(
 static inline const std::string WorldUBO =
 R"(
 #if defined(MOBILE)
-HIGH mat4 u_viewMatrix;
-HIGH mat4 u_viewProjectionMatrix;
-HIGH mat4 u_projectionMatrix;
+uniform HIGH mat4 u_viewMatrix;
+uniform HIGH mat4 u_viewProjectionMatrix;
+uniform HIGH mat4 u_projectionMatrix;
 
-LOW vec4 u_clipPlane;
-MEDvec3 u_cameraWorldPosition;
+uniform LOW vec4 u_clipPlane;
+uniform MED vec3 u_cameraWorldPosition;
 #else
 #define USE_UBO
 layout (std140) uniform WorldUniforms
