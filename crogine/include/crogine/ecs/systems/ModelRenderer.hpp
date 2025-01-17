@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/detail/BalancedTree.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
@@ -147,6 +148,17 @@ namespace cro
 
         /*Detail::BalancedTree m_tree;
         bool m_useTreeQueries;*/
+
+        struct WorldUniformBlock final
+        {
+            glm::mat4 viewMatrix = glm::mat4(1.f);
+            glm::mat4 viewProjectionMatrix = glm::mat4(1.f);
+            glm::mat4 projectionMatrix = glm::mat4(1.f);
+            glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, 0.f);
+            glm::vec3 cameraWorldPosition = glm::vec3(0.f);
+            const float Padding = 0.f;
+        };
+        UniformBuffer<WorldUniformBlock> m_worldUniformBuffer;
 
         void updateDrawListDefault(Entity);
         void updateDrawListBalancedTree(Entity);

@@ -6,7 +6,7 @@ HDRI pre-filter shaders from https://learnopengl.com/PBR
 
 #include <string>
 
-inline const std::string PBRCubeVertex = R"(
+static inline const std::string PBRCubeVertex = R"(
         ATTRIBUTE vec4 a_position;
 
         VARYING_OUT vec3 v_worldPosition;
@@ -19,7 +19,7 @@ inline const std::string PBRCubeVertex = R"(
             gl_Position =  u_viewProjectionMatrix * a_position;
         })";
 
-inline const std::string HDRToCubeFrag = R"(
+static inline const std::string HDRToCubeFrag = R"(
         OUTPUT
 
         uniform sampler2D u_hdrMap;
@@ -43,7 +43,7 @@ inline const std::string HDRToCubeFrag = R"(
             FRAG_OUT = vec4(colour, 1.0);
         })";
 
-inline const std::string IrradianceFrag = R"(
+static inline const std::string IrradianceFrag = R"(
 
         OUTPUT
 
@@ -82,7 +82,7 @@ inline const std::string IrradianceFrag = R"(
             FRAG_OUT = vec4(irradiance, 1.0);
         })";
 
-inline const std::string PrefilterFrag = R"(
+static inline const std::string PrefilterFrag = R"(
         OUTPUT
 
         uniform samplerCube u_environmentMap;

@@ -73,9 +73,10 @@ namespace
 
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
-    : System        (mb, typeid(ModelRenderer)),
-    m_drawLists     (1),
-    m_pass          (Mesh::IndexData::Final)/*,
+    : System                (mb, typeid(ModelRenderer)),
+    m_drawLists             (1),
+    m_pass                  (Mesh::IndexData::Final),
+    m_worldUniformBuffer    ("WorldUniforms")/*,
     m_tree          (1.f),
     m_useTreeQueries(false)*/
 {
@@ -193,6 +194,19 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
         glCheck(glCullFace(pass.getCullFace()));
 
+        if (m_worldUniformBuffer.hasShaders())
+        {
+            WorldUniformBlock block;
+            block.cameraWorldPosition = cameraPosition;
+            block.clipPlane = clipPlane;
+            block.projectionMatrix = camComponent.getProjectionMatrix();
+            block.viewMatrix = pass.viewMatrix;
+            block.viewProjectionMatrix = pass.viewProjectionMatrix;
+
+            m_worldUniformBuffer.setData(block);
+            m_worldUniformBuffer.bind(UniformBuffer<WorldUniformBlock>::getMaxBindings() - 1);
+        }
+
         //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
         const auto& visibleEntities = m_drawLists[camComponent.getDrawListIndex()][camComponent.getActivePassIndex()];
         for (const auto& [entity, sortData] : visibleEntities)
@@ -221,30 +235,37 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
             for (auto i : sortData.matIDs)
             {
+                const auto& material = model.m_materials[Mesh::IndexData::Final][i];
+                const auto& uniforms = material.uniforms;
+
                 //bind shader
-                glCheck(glUseProgram(model.m_materials[Mesh::IndexData::Final][i].shader));
+                glCheck(glUseProgram(material.shader));
 
                 //apply shader uniforms from material
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-                applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), camComponent);
+                glCheck(glUniformMatrix4fv(uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+                applyProperties(material, model, *getScene(), camComponent);
 
                 //apply standard uniforms
-                glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
-                glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-                glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-                glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(normalMat)));
+                glCheck(glUniform2f(uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+                
+                if (!material.hasWorldUBO())
+                {
+                    glCheck(glUniform3f(uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+                    glCheck(glUniform4f(uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
+                    glCheck(glUniformMatrix4fv(uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+                    glCheck(glUniformMatrix4fv(uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+                    glCheck(glUniformMatrix4fv(uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+                }
+                glCheck(glUniformMatrix4fv(uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+                glCheck(glUniformMatrix3fv(uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(normalMat)));
 
-                applyBlendMode(model.m_materials[Mesh::IndexData::Final][i]/*.blendMode*/);
+                applyBlendMode(material/*.blendMode*/);
 
                 //TODO move these to custom settings list
-                glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
-                glCheck(model.m_materials[Mesh::IndexData::Final][i].enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
+                glCheck(material.doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
+                glCheck(material.enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
 
-                model.m_materials[Mesh::IndexData::Final][i].enableCustomSettings();
+                material.enableCustomSettings();
 
 #ifdef PLATFORM_DESKTOP
                 model.draw(i, Mesh::IndexData::Final);
@@ -276,7 +297,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                     glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
                 }
 #endif //PLATFORM 
-                model.m_materials[Mesh::IndexData::Final][i].disableCustomSettings();
+                material.disableCustomSettings();
             }
         }
 
@@ -353,11 +374,30 @@ void ModelRenderer::onEntityAdded(Entity entity)
     model.updateBounds();
 
     //model.m_treeID = m_tree.addToTree(entity, model.getAABB());
+
+#ifdef PLATFORM_DESKTOP
+    //iterate materials and attempt to add to uniform buffer
+    //UBO class automatically checks if this is valid for us.
+    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+    {
+        m_worldUniformBuffer.addShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+    }
+#endif
 }
 
 void ModelRenderer::onEntityRemoved(Entity entity)
 {
     //m_tree.removeFromTree(entity.getComponent<Model>().m_treeID);
+
+#ifdef PLATFORM_DESKTOP
+    //remove any materials from UBO
+    const auto& model = entity.getComponent<Model>();
+
+    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+    {
+        m_worldUniformBuffer.removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+    }
+#endif
 }
 
 //private

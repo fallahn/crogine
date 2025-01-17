@@ -404,6 +404,10 @@ void Data::setShader(const Shader& s)
             result->second.second = prop.second;
         }
     }
+
+    //mark this material as having the world UBO uniform
+    //block available if the shader supposrts it
+    m_hasWorldUBO = (glGetUniformBlockIndex(shader, "WorldUniforms") != GL_INVALID_INDEX);
 }
 
 //private

@@ -13,12 +13,13 @@ namespace cro::Shaders::PBR
     //note that this shader is not designed with mobile
     //devices in mind. It also shares a vertex shader
     //with the VertexLit type.
-    inline const std::string Fragment = 
+static inline const std::string Fragment = 
         R"(
     layout (location = 0) out vec4 FRAG_OUT;
     layout (location = 1) out vec4 NORM_OUT;
     layout (location = 2) out vec4 POS_OUT;
-uniform mat4 u_viewMatrix;
+
+#include WVP_UBO
 
         #if defined(DIFFUSE_MAP)
         uniform sampler2D u_diffuseMap;
@@ -45,7 +46,6 @@ uniform mat4 u_viewMatrix;
 
         uniform vec3 u_lightDirection;
         uniform vec4 u_lightColour;
-        uniform vec3 u_cameraWorldPosition;
 
         uniform samplerCube u_irradianceMap;
         uniform samplerCube u_prefilterMap;

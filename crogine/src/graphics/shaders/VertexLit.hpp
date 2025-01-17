@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::VertexLit
 {
-    inline const std::string Vertex = R"(
+static inline const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
     #if defined (VERTEX_COLOUR)
         ATTRIBUTE LOW vec4 a_colour;
@@ -64,9 +64,10 @@ namespace cro::Shaders::VertexLit
         uniform LOW int u_projectionMapCount; //how many to actually draw
     #endif
 
+#include WVP_UBO
 #include WVP_UNIFORMS
 
-        uniform vec4 u_clipPlane;
+        //uniform vec4 u_clipPlane;
 
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_UNIFORMS_VERT
@@ -176,8 +177,9 @@ namespace cro::Shaders::VertexLit
         #endif
         })";
 
-    inline const std::string Fragment = R"(
+ static inline const std::string Fragment = R"(
         OUTPUT
+#include WVP_UBO
     #if defined(DIFFUSE_MAP)
         uniform sampler2D u_diffuseMap;
 
@@ -205,8 +207,8 @@ namespace cro::Shaders::VertexLit
 
         uniform HIGH vec3 u_lightDirection;
         uniform LOW vec4 u_lightColour;
-        uniform HIGH vec3 u_cameraWorldPosition;
-                
+        //uniform HIGH vec3 u_cameraWorldPosition;
+      
     #if defined(COLOURED)
         uniform LOW vec4 u_colour;
     #endif

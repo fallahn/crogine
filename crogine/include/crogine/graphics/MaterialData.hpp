@@ -349,6 +349,13 @@ namespace cro
             */
             void setShader(const Shader&);
 
+            /*!
+            \brief Returns true if the material shader supports the world UBO block
+            Used internally by the ModelRenderer system
+            */
+            bool hasWorldUBO() const { return m_hasWorldUBO; }
+
+
             /*
             Here be dragons! Don't modify these variables as they are configured
             by the above function. These values should be considered read-only
@@ -369,6 +376,8 @@ namespace cro
         private:
             std::unordered_map<std::string, bool> m_warnings;
             void exists(const std::string&);
+
+            bool m_hasWorldUBO = false;
 
             static constexpr std::size_t MaxCustomSettings = 10;
             std::size_t m_customSettingsCount = 0;

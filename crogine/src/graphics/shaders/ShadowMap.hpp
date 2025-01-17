@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::ShadowMap
 {
-    inline const std::string Vertex = R"(
+static inline const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
 
     #if defined (ALPHA_CLIP)
@@ -92,7 +92,7 @@ namespace cro::Shaders::ShadowMap
 
         })";
 
-    inline const std::string FragmentMobile = R"(
+static inline const std::string FragmentMobile = R"(
         //ideally we want highp but not all mobile hardware supports it in the frag shader :(
         #if defined(MOBILE)
         #if defined (GL_FRAGMENT_PRECISION_HIGH)
@@ -124,7 +124,7 @@ namespace cro::Shaders::ShadowMap
         })";
 
 
-    inline static std::string FragmentDesktop = R"(
+static inline std::string FragmentDesktop = R"(
         #if defined(ALPHA_CLIP)
 
         uniform sampler2D u_diffuseMap;
