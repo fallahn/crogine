@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -663,10 +663,8 @@ void MessageOverlayState::buildScene()
                         resetTournament(t);
                         writeTournamentData(t);
 
-                        /*Social::setUnlockStatus(Social::UnlockType::CareerAvatar, 0);
-                        Social::setUnlockStatus(Social::UnlockType::CareerBalls, 0);
-                        Social::setUnlockStatus(Social::UnlockType::CareerHair, 0);
-                        Social::setUnlockStatus(Social::UnlockType::CareerPosition, 0);*/
+                        readTournamentData(m_sharedData.tournaments[0]);
+                        readTournamentData(m_sharedData.tournaments[1]);
 
                         requestStackClear();
                         requestStackPush(StateID::SplashScreen);

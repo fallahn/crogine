@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -113,7 +113,7 @@ private:
         const Packet& front() const
         {
             CRO_ASSERT(m_size > 0, "Invalid buffer size");
-            return front();
+            return m_data[m_front];
         }
 
         Packet& back()
@@ -125,7 +125,7 @@ private:
         const Packet& back() const
         {
             CRO_ASSERT(m_size > 0, "Invalid buffer size");
-            return back();
+            return m_data[m_back];
         }
 
         std::size_t size() const
