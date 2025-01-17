@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -114,7 +114,7 @@ void GolfState::updateHoleScore(std::uint16_t data)
                 
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::UI::ScoreTitle;
-                cmd.action = [&, player](cro::Entity e, float)
+                cmd.action = [&](cro::Entity e, float)
                     {
                         auto str = m_courseTitle + " - Skins - Pot: 1";
                         e.getComponent<cro::Text>().setString(str);

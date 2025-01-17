@@ -602,6 +602,9 @@ void MessageOverlayState::buildScene()
                         resetTournament(t);
                         writeTournamentData(t);
 
+                        readTournamentData(m_sharedData.tournaments[0]);
+                        readTournamentData(m_sharedData.tournaments[1]);
+
                         cro::App::quit();
 
                         /*requestStackClear();

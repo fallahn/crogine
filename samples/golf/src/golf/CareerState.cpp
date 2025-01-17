@@ -1612,7 +1612,7 @@ void CareerState::createInfoMenu(cro::Entity parent)
             });
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>()->addCallback(
-            [&, entity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {

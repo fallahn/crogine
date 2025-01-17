@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -73,7 +73,7 @@ source distribution.
 
 namespace
 {
-    constexpr float PadlockOffset = 58.f;
+    //constexpr float PadlockOffset = 58.f;
 
     struct MenuID final
     {

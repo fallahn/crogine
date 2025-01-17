@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -94,8 +94,8 @@ namespace
     constexpr std::size_t GroupIndex   = 104;
     constexpr std::size_t HelpIndex    = 105;
 
-    constexpr std::size_t PrevGroupID  = 106;
-    constexpr std::size_t NextGroupID  = 107;
+    //constexpr std::size_t PrevGroupID  = 106;
+    //constexpr std::size_t NextGroupID  = 107;
 
     constexpr glm::vec2 MenuNodePosition(112.f, -76.f);
     constexpr glm::vec2 MenuHiddenPosition(-10000.f);

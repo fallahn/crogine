@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -255,6 +255,7 @@ void DrivingState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerName | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.2f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -267,6 +268,7 @@ void DrivingState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PinDistance | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -279,7 +281,7 @@ void DrivingState::createUI()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::FastForward | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -UIBarHeight };
-    entity.getComponent<UIElement>().depth = 0.05f;
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::Callback>().setUserData<SkipCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
@@ -390,6 +392,7 @@ void DrivingState::createUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ClubName | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = ClubTextPosition;
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -400,6 +403,7 @@ void DrivingState::createUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::HoleNumber;
     entity.addComponent<UIElement>().relativePosition = { 0.75f, 1.f };
+    entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

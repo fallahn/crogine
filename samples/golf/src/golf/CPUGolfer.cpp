@@ -72,7 +72,7 @@ namespace
     constexpr float SearchIncrease = 10.f;
     constexpr float Epsilon = 0.005f;
     constexpr std::int32_t MaxRetargets = 6;// 12;
-    constexpr std::int32_t RetargetsPerDirection = 3;
+    //constexpr std::int32_t RetargetsPerDirection = 3;
     constexpr std::int32_t MaxPredictions = 20;
 
     template <typename T>

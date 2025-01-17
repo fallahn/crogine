@@ -53,7 +53,7 @@ using namespace cl;
 
 namespace
 {
-    constexpr float SpeedReduction = 1.4f; //bar speed is divided by this when putt assist is enabled
+    //constexpr float SpeedReduction = 1.4f; //bar speed is divided by this when putt assist is enabled
     constexpr float SideSpinReduction = 0.3f; //power is reduced p * (1.f - (SideSpinReduction * abs(sideSpin)))
 
     static constexpr float RotationSpeed = 1.2f;

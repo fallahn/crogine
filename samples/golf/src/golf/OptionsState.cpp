@@ -119,8 +119,8 @@ namespace
     constexpr glm::vec2 ScrollBarSize(9.f, 185.f);
     constexpr cro::Colour ScrollBarColour(0.f, 0.f, 0.f, 0.15f);
 
-    constexpr glm::vec2 BackgroundSize(192.f, 108.f);
-    const cro::Colour BackgroundColour = cro::Colour(std::uint8_t(26), 30, 45);
+    //constexpr glm::vec2 BackgroundSize(192.f, 108.f);
+    //constexpr cro::Colour BackgroundColour = cro::Colour(std::uint8_t(26), 30, 45);
 
     struct MenuID final
     {
@@ -901,7 +901,7 @@ void OptionsState::updateKeybind(SDL_Keycode key)
     {
         cro::Command cmd;
         cmd.targetFlags = CommandID::Menu::InfoString;
-        cmd.action = [key](cro::Entity e, float)
+        cmd.action = [](cro::Entity e, float)
             {
                 //briefly shows error message before returning to old string
                 auto oldStr = e.getComponent<cro::Text>().getString();
