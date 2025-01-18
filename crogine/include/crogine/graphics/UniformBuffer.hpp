@@ -75,12 +75,15 @@ namespace cro
 
             /*!
             \brief Binds the UniformBuffer and associated shaders ready for drawing.
-            This will bind the UBO at the specified bind point if it is valid,
-            which will also unbind any UniformBuffer that may already be bound to
-            that point.
-            Note that getMaxBindings() - 1 is reserved for the ModelRenderer system
             */
             void bind(std::uint32_t bindPoint);
+
+            /*!
+            \brief Unbinds the UBO from its binding point
+            This is called automatically in most cases (including destruction)
+            so is only here if you need to manually re-assign binding points.
+            */
+            void unbind();
 
             /*!
             \brief Returns the max number of binding points available
@@ -116,13 +119,19 @@ namespace cro
             std::string m_blockName;
             std::size_t m_bufferSize;
             std::uint32_t m_ubo;
+            std::uint32_t m_bindPoint;
 
             std::vector<std::pair<std::uint32_t, std::uint32_t>> m_shaders;
 
             std::unordered_map<std::uint32_t, std::uint32_t> m_refCount;
 
-            static std::vector<std::uint32_t> m_activeBindings;
             void reset();
+
+            //static std::vector<std::uint32_t> m_activeBindings;
+            //static std::vector<std::uint32_t> m_freeBindings;
+            //static std::size_t m_freeBindingIndex;
+            //static std::uint32_t getBindingIndex();
+            //static void releaseBindingIndex(std::uint32_t);
         };
     }
 

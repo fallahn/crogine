@@ -35,21 +35,47 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #endif
 
+#include <numeric>
 
 using namespace cro;
 
 namespace
 {
     std::int32_t maxBindings = -1;
+
+
+    std::vector<std::uint32_t> activeBindings;
+    std::vector<std::uint32_t> freeBindings;
+    std::size_t freeBindingIndex = 0;
+
+    //used to manage the next free available binding point
+    std::uint32_t getBindingIndex()
+    {
+        CRO_ASSERT(freeBindingIndex < maxBindings, "");
+        return freeBindings[freeBindingIndex++];
+    }
+
+    void releaseBindingIndex(std::uint32_t bp)
+    {
+        if (auto res = std::find(freeBindings.begin(), freeBindings.begin() + freeBindingIndex, bp);
+            res != freeBindings.begin() + freeBindingIndex)
+        {
+            freeBindingIndex--;
+            *res = freeBindings[freeBindingIndex];
+            freeBindings[freeBindingIndex] = bp;
+
+            LogI << "Freed binding point " << bp << std::endl;
+        }
+    }
 }
-
 std::int32_t Detail::UniformBufferImpl::getMaxBindings() { return maxBindings; }
-std::vector<std::uint32_t> Detail::UniformBufferImpl::m_activeBindings;
 
+//-----class proper-----//
 Detail::UniformBufferImpl::UniformBufferImpl(const std::string& blockName, std::size_t dataSize)
     : m_blockName   (blockName),
     m_bufferSize    (dataSize),
-    m_ubo           (0)
+    m_ubo           (0),
+    m_bindPoint     (GL_INVALID_INDEX)
 {
 #ifdef PLATFORM_DESKTOP
     CRO_ASSERT(!blockName.empty(), "");
@@ -64,8 +90,11 @@ Detail::UniformBufferImpl::UniformBufferImpl(const std::string& blockName, std::
     if (maxBindings == -1)
     {
         glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
-        m_activeBindings.resize(maxBindings);
-        std::fill(m_activeBindings.begin(), m_activeBindings.end(), GL_INVALID_INDEX);
+        activeBindings.resize(maxBindings);
+        std::fill(activeBindings.begin(), activeBindings.end(), GL_INVALID_INDEX);
+
+        freeBindings.resize(maxBindings);
+        std::iota(freeBindings.begin(), freeBindings.end(), 0);
     }
 
 #ifdef CRO_DEBUG_
@@ -88,11 +117,11 @@ Detail::UniformBufferImpl::UniformBufferImpl(const std::string& blockName, std::
                 }
                 ImGui::NewLine();
                 ImGui::Text("Active Binding Points:");
-                for (auto i = 0u; i < m_activeBindings.size(); ++i)
+                for (auto i = 0u; i < activeBindings.size(); ++i)
                 {
-                    if (m_activeBindings[i] != GL_INVALID_INDEX)
+                    if (activeBindings[i] != GL_INVALID_INDEX)
                     {
-                        ImGui::Text("    Binding %u: UBO: %u", i, m_activeBindings[i]);
+                        ImGui::Text("    Binding %u: UBO: %u", i, activeBindings[i]);
                     }
                 }
             }
@@ -116,13 +145,15 @@ Detail::UniformBufferImpl::~UniformBufferImpl()
 Detail::UniformBufferImpl::UniformBufferImpl(Detail::UniformBufferImpl&& other) noexcept
     : m_blockName   (other.m_blockName),
     m_bufferSize    (other.m_bufferSize),
-    m_ubo           (other.m_ubo)
+    m_ubo           (other.m_ubo),
+    m_bindPoint     (other.m_bindPoint)
 {
     m_shaders.swap(other.m_shaders);
 
     other.m_blockName.clear();
     other.m_bufferSize = 0;
     other.m_ubo = 0;
+    other.m_bindPoint = GL_INVALID_INDEX;
 
     other.m_shaders.clear();
 }
@@ -136,12 +167,14 @@ const Detail::UniformBufferImpl& Detail::UniformBufferImpl::operator = (Detail::
         m_blockName = other.m_blockName;
         m_bufferSize = other.m_bufferSize;
         m_ubo = other.m_ubo;
+        m_bindPoint = other.m_bindPoint;
 
         m_shaders.swap(other.m_shaders);
 
         other.m_blockName.clear();
         other.m_bufferSize = 0;
         other.m_ubo = 0;
+        other.m_bindPoint = GL_INVALID_INDEX;
 
         other.m_shaders.clear();
     }
@@ -203,27 +236,47 @@ void Detail::UniformBufferImpl::removeShader(std::uint32_t handle)
     }
 }
 
-void Detail::UniformBufferImpl::bind(std::uint32_t bindPoint)
+void Detail::UniformBufferImpl::bind(std::uint32_t)
 {
 #ifdef PLATFORM_DESKTOP
-    if (m_activeBindings[bindPoint] != m_ubo)
+    if (m_bindPoint == GL_INVALID_INDEX ||
+        activeBindings[m_bindPoint] != m_ubo)
     {
+        //hmmm we could check if we're bound elsewhere
+        //but the index management *should* assure we
+        //never have that happen
+
+        const auto bindPoint = getBindingIndex();
+
 #ifdef CRO_DEBUG_
-        /*std::int32_t maxBindings = 0;
-        glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);*/
         CRO_ASSERT(bindPoint < maxBindings, "");
 #endif
+
         //bind ubo to bind point
         glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, bindPoint, m_ubo));
-        m_activeBindings[bindPoint] = m_ubo;
+        activeBindings[bindPoint] = m_ubo;
 
         for (auto [shader, blockID] : m_shaders)
         {
             //bind to bind point
             glCheck(glUniformBlockBinding(shader, blockID, bindPoint));
         }
+        m_bindPoint = bindPoint;
     }
 #endif
+}
+
+void Detail::UniformBufferImpl::unbind()
+{
+    if (m_bindPoint < maxBindings)
+    {
+        if (activeBindings[m_bindPoint] == m_ubo)
+        {
+            releaseBindingIndex(m_bindPoint);
+            activeBindings[m_bindPoint] = GL_INVALID_INDEX;
+            m_bindPoint = GL_INVALID_INDEX;
+        }
+    }
 }
 
 //protected
@@ -235,7 +288,7 @@ void Detail::UniformBufferImpl::setData(const void* data)
     CRO_ASSERT(m_ubo, "");
 
     glCheck(glBindBuffer(GL_UNIFORM_BUFFER, m_ubo));
-    glCheck(glBufferData(GL_UNIFORM_BUFFER, m_bufferSize, data, GL_DYNAMIC_DRAW));
+    glCheck(glBufferSubData(GL_UNIFORM_BUFFER, 0, m_bufferSize, data));
 
 #endif // PLATFORM_DESKTOP
 }
@@ -246,6 +299,8 @@ void Detail::UniformBufferImpl::reset()
 #ifdef PLATFORM_DESKTOP
     if (m_ubo)
     {
+        unbind();
+
         glCheck(glDeleteBuffers(1, &m_ubo));
         m_ubo = 0;
     }
