@@ -794,8 +794,8 @@ void TrophyState::buildTrophyScene()
     m_trophyScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
    
-    m_scaleBuffer.bind(0);
-    m_resolutionBuffer.bind(1);
+    m_scaleBuffer.bind();
+    m_resolutionBuffer.bind();
     m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
 

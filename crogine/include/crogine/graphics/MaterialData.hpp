@@ -350,10 +350,10 @@ namespace cro
             void setShader(const Shader&);
 
             /*!
-            \brief Returns true if the material shader supports the world UBO block
+            \brief Returns true if the material shader supports the camer UBO block
             Used internally by the ModelRenderer system
             */
-            bool hasWorldUBO() const { return m_hasWorldUBO; }
+            bool hasCameraUBO() const { return m_hasCameraUBO; }
 
 
             /*
@@ -377,7 +377,7 @@ namespace cro
             std::unordered_map<std::string, bool> m_warnings;
             void exists(const std::string&);
 
-            bool m_hasWorldUBO = false;
+            bool m_hasCameraUBO = false;
 
             static constexpr std::size_t MaxCustomSettings = 10;
             std::size_t m_customSettingsCount = 0;

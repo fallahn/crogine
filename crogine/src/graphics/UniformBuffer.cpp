@@ -236,7 +236,7 @@ void Detail::UniformBufferImpl::removeShader(std::uint32_t handle)
     }
 }
 
-void Detail::UniformBufferImpl::bind(std::uint32_t)
+void Detail::UniformBufferImpl::bind()
 {
 #ifdef PLATFORM_DESKTOP
     if (m_bindPoint == GL_INVALID_INDEX ||

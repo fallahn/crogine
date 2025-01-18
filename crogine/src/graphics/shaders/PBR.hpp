@@ -19,7 +19,7 @@ static inline const std::string Fragment =
     layout (location = 1) out vec4 NORM_OUT;
     layout (location = 2) out vec4 POS_OUT;
 
-#include WVP_UBO
+#include CAMERA_UBO
 
         #if defined(DIFFUSE_MAP)
         uniform sampler2D u_diffuseMap;

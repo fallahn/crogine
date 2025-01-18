@@ -62,8 +62,10 @@ static inline const std::string Vertex = R"(
         uniform LOW int u_projectionMapCount; //how many to actually draw
     #endif
 
-#include WVP_UBO
+#include CAMERA_UBO
 #include WVP_UNIFORMS
+
+        uniform vec4 u_clipPlane;
 
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_UNIFORMS_VERT
@@ -164,7 +166,7 @@ static inline const std::string Vertex = R"(
 
 static inline const std::string Fragment = R"(
         OUTPUT
-#include WVP_UBO
+#include CAMERA_UBO
 
     #if defined (TEXTURED)
         uniform sampler2D u_diffuseMap;

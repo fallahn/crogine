@@ -1606,9 +1606,9 @@ bool MenuState::simulate(float dt)
 
 void MenuState::render()
 {
-    m_scaleBuffer.bind(0);
-    m_resolutionBuffer.bind(1);
-    m_windBuffer.bind(2);
+    m_scaleBuffer.bind();
+    m_resolutionBuffer.bind();
+    m_windBuffer.bind();
 
     //render ball preview first
     if (m_currentMenu == MenuID::Avatar)

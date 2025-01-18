@@ -35,10 +35,10 @@ inline const std::string GlassFragment =
 R"(
 OUTPUT
 
-#include WVP_UBO
+#include CAMERA_UBO
 
 uniform samplerCube u_reflectMap;
-//uniform vec3 u_cameraWorldPosition;
+
 uniform vec4 u_colour;
 uniform vec4 u_maskColour;
 

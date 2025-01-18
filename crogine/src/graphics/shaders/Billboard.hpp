@@ -41,7 +41,9 @@ static inline const std::string Vertex = R"(
         ATTRIBUTE MED vec2 a_texCoord0;
         ATTRIBUTE MED vec2 a_texCoord1; //contains the size of the billboard to which this vertex belongs
 
-#include WVP_UBO
+#include CAMERA_UBO
+
+        uniform vec4 u_clipPlane;
 
         uniform mat4 u_worldMatrix;
 
@@ -169,7 +171,7 @@ static inline const std::string Vertex = R"(
 
 static inline const std::string Fragment = R"(
         OUTPUT
-#include WVP_UBO
+#include CAMERA_UBO
 
 #if defined (TEXTURED)
     uniform sampler2D u_diffuseMap;

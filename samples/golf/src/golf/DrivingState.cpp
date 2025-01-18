@@ -1013,10 +1013,9 @@ bool DrivingState::simulate(float dt)
 
 void DrivingState::render()
 {
-    //TODO these probably only need to be bound once on start-up
-    m_scaleBuffer.bind(0);
-    m_resolutionBuffer.bind(1);
-    m_windBuffer.bind(2);
+    m_scaleBuffer.bind();
+    m_resolutionBuffer.bind();
+    m_windBuffer.bind();
 
     m_backgroundTexture.clear();
     m_skyScene.render();

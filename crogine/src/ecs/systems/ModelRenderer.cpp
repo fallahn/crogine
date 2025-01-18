@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Frustum.hpp>
 
-#ifdef CRO_DEBUG_
+#if defined(CRO_DEBUG_) || defined(BENCHMARK)
 #include <crogine/gui/Gui.hpp>
 #endif
 
@@ -68,16 +68,18 @@ using namespace cro;
 namespace
 {
     float lightMultiplier = 1.f;
-    float debugRenderTime = 0.f;
+    
+#if defined(CRO_DEBUG_) || defined(BENCHMARK)
+
+#endif
 }
 //void ModelRenderer::setLightMultiplier(float m) { lightMultiplier = m; }
 
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
     : System                (mb, typeid(ModelRenderer)),
-    m_drawLists             (1),
-    m_pass                  (Mesh::IndexData::Final),
-    m_worldUniformBuffer    ("WorldUniforms")/*,
+    m_drawLists             (),
+    m_pass                  (Mesh::IndexData::Final)/*,
     m_tree          (1.f),
     m_useTreeQueries(false)*/
 {
@@ -93,7 +95,29 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
                 const auto& dList = m_drawLists[i];
                 ImGui::Text("Visisble entities in scene %lu, to Camera %lu: %lu", sceneID, i, dList[0].size());
             }
-            ImGui::Text("Approx Render Time: %3.3f", debugRenderTime * 1000.f);
+        });
+#endif
+
+#ifdef BENCHMARK
+    registerWindow([&]()
+        {
+            const std::string title = "Frame Time, " + getScene()->getTitle();
+            
+            ImGui::Begin(title.c_str());
+            
+            if ((m_benchIdx % 10) == 0)
+            {
+                m_avgTime = 0.f;
+                for (auto f : m_benchSamples)
+                {
+                    m_avgTime += f;
+                }
+                m_avgTime /= MaxBenchSamples;
+                m_avgTime *= 1000.f;
+            }
+            ImGui::Text("Avg render time: %3.3f m/s", m_avgTime);
+
+            ImGui::End();
         });
 #endif
 }
@@ -105,6 +129,26 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     if (m_drawLists.size() <= camComponent.getDrawListIndex())
     {
         m_drawLists.resize(camComponent.getDrawListIndex() + 1);
+
+#ifdef PLATFORM_DESKTOP
+        m_cameraUBOs.resize(m_drawLists.size());
+        for (auto& ubo : m_cameraUBOs)
+        {
+            if (!ubo)
+            {
+                ubo = std::make_unique<UniformBuffer<CameraUniformBlock>>("CameraUniforms");
+
+                for (auto entity : getEntities())
+                {
+                    const auto& model = entity.getComponent<Model>();
+                    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+                    {
+                        ubo->addShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+                    }
+                }
+            }
+        }
+#endif
     }
 
     /*if (m_useTreeQueries)
@@ -115,6 +159,24 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     {
         updateDrawListDefault(cameraEnt);
     }
+
+#ifdef PLATFORM_DESKTOP
+    auto& ubo = m_cameraUBOs[camComponent.getDrawListIndex()];
+    if (ubo->hasShaders())
+    {
+        const auto& pass = camComponent.getActivePass();
+
+        CameraUniformBlock block;
+        block.cameraWorldPosition = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
+        block.projectionMatrix = camComponent.getProjectionMatrix();
+        block.viewMatrix = pass.viewMatrix;
+        block.viewProjectionMatrix = pass.viewProjectionMatrix;
+
+        ubo->setData(block);
+        ubo->bind();
+    }
+#endif
+
     
     auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
@@ -183,7 +245,7 @@ void ModelRenderer::process(float dt)
 
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
-#ifdef CRO_DEBUG_
+#ifdef BENCHMARK
     m_timer.restart();
 #endif
     const auto& camComponent = camera.getComponent<Camera>();
@@ -199,18 +261,6 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
         glCheck(glCullFace(pass.getCullFace()));
 
-        if (m_worldUniformBuffer.hasShaders())
-        {
-            WorldUniformBlock block;
-            block.cameraWorldPosition = cameraPosition;
-            block.clipPlane = clipPlane;
-            block.projectionMatrix = camComponent.getProjectionMatrix();
-            block.viewMatrix = pass.viewMatrix;
-            block.viewProjectionMatrix = pass.viewProjectionMatrix;
-
-            m_worldUniformBuffer.setData(block);
-            m_worldUniformBuffer.bind(UniformBuffer<WorldUniformBlock>::getMaxBindings() - 1);
-        }
 
         //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
         const auto& visibleEntities = m_drawLists[camComponent.getDrawListIndex()][camComponent.getActivePassIndex()];
@@ -253,16 +303,16 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 //apply standard uniforms
                 glCheck(glUniform2f(uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
                 
-                if (!material.hasWorldUBO())
+                if (!material.hasCameraUBO())
                 {
                     glCheck(glUniform3f(uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
-                    glCheck(glUniform4f(uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
                     glCheck(glUniformMatrix4fv(uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
                     glCheck(glUniformMatrix4fv(uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
                     glCheck(glUniformMatrix4fv(uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
                 }
                 glCheck(glUniformMatrix4fv(uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
                 glCheck(glUniformMatrix3fv(uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(normalMat)));
+                glCheck(glUniform4f(uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
 
                 applyBlendMode(material/*.blendMode*/);
 
@@ -320,8 +370,9 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
     }
-#ifdef CRO_DEBUG_
-    debugRenderTime = m_timer.restart();
+#ifdef BENCHMARK
+    m_benchSamples[m_benchIdx] = m_timer.restart();
+    m_benchIdx = (m_benchIdx + 1) % MaxBenchSamples;
 #endif
 }
 
@@ -384,11 +435,14 @@ void ModelRenderer::onEntityAdded(Entity entity)
     //model.m_treeID = m_tree.addToTree(entity, model.getAABB());
 
 #ifdef PLATFORM_DESKTOP
-    //iterate materials and attempt to add to uniform buffer
-    //UBO class automatically checks if this is valid for us.
-    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+    for (auto& ubo : m_cameraUBOs)
     {
-        m_worldUniformBuffer.addShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+        //iterate materials and attempt to add to uniform buffer
+        //UBO class automatically checks if this is valid for us.
+        for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+        {
+            ubo->addShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+        }
     }
 #endif
 }
@@ -398,12 +452,15 @@ void ModelRenderer::onEntityRemoved(Entity entity)
     //m_tree.removeFromTree(entity.getComponent<Model>().m_treeID);
 
 #ifdef PLATFORM_DESKTOP
-    //remove any materials from UBO
+    //remove any materials from camera UBOs
     const auto& model = entity.getComponent<Model>();
 
-    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+    for (auto& ubo : m_cameraUBOs)
     {
-        m_worldUniformBuffer.removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+        for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+        {
+            ubo->removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+        }
     }
 #endif
 }

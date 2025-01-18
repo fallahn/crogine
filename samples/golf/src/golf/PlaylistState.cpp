@@ -573,9 +573,9 @@ bool PlaylistState::simulate(float dt)
 
 void PlaylistState::render()
 {
-    m_scaleBuffer.bind(0);
-    m_windBuffer.bind(1);
-    m_resolutionBuffer.bind(2);
+    m_scaleBuffer.bind();
+    m_windBuffer.bind();
+    m_resolutionBuffer.bind();
 
     glEnable(GL_PROGRAM_POINT_SIZE);
 

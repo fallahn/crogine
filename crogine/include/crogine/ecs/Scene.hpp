@@ -437,9 +437,21 @@ namespace cro
         */
         std::size_t getInstanceID() const { return m_uid; }
 
+        /*!
+        \brief Allows setting an arbitrary string as a title for the Scene
+        Useful for debugging.
+        */
+        void setTitle(const std::string& s) { m_debugTitle = s; }
+
+        /*!
+        \brief Returns the title strign set for the Scene, if any
+        */
+        const std::string& getTitle() const { return m_debugTitle; }
+
     private:
         MessageBus& m_messageBus;
         std::size_t m_uid;
+        std::string m_debugTitle;
 
         Entity m_defaultCamera;
         Entity m_activeCamera;

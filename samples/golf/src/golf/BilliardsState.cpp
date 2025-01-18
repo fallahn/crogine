@@ -1155,8 +1155,8 @@ void BilliardsState::buildScene()
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete,
         m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-    m_scaleBuffer.bind(0);
-    m_resolutionBuffer.bind(1);
+    m_scaleBuffer.bind();
+    m_resolutionBuffer.bind();
 
 
 

@@ -76,7 +76,7 @@ namespace cro
             /*!
             \brief Binds the UniformBuffer and associated shaders ready for drawing.
             */
-            void bind(std::uint32_t bindPoint);
+            void bind();
 
             /*!
             \brief Unbinds the UBO from its binding point
@@ -126,12 +126,6 @@ namespace cro
             std::unordered_map<std::uint32_t, std::uint32_t> m_refCount;
 
             void reset();
-
-            //static std::vector<std::uint32_t> m_activeBindings;
-            //static std::vector<std::uint32_t> m_freeBindings;
-            //static std::size_t m_freeBindingIndex;
-            //static std::uint32_t getBindingIndex();
-            //static void releaseBindingIndex(std::uint32_t);
         };
     }
 

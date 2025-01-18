@@ -39,7 +39,8 @@ source distribution.
 #include <crogine/detail/BalancedTree.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-#ifdef CRO_DEBUG_
+//#define BENCHMARK
+#if defined(CRO_DEBUG_) || defined(BENCHMARK)
 #include <crogine/core/HiResTimer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #endif
@@ -69,7 +70,7 @@ namespace cro
     are rendered with RenderSystem2D.
     */
     class CRO_EXPORT_API ModelRenderer final : public System, public Renderable
-#ifdef CRO_DEBUG_
+#if defined(CRO_DEBUG_) || defined(BENCHMARK)
         , public GuiClient
 #endif
     {
@@ -150,19 +151,33 @@ namespace cro
         /*Detail::BalancedTree m_tree;
         bool m_useTreeQueries;*/
 
-        struct WorldUniformBlock final
+        struct CameraUniformBlock final
         {
             glm::mat4 viewMatrix = glm::mat4(1.f);
             glm::mat4 viewProjectionMatrix = glm::mat4(1.f);
             glm::mat4 projectionMatrix = glm::mat4(1.f);
-            glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, 0.f);
             glm::vec3 cameraWorldPosition = glm::vec3(0.f);
             const float Padding = 0.f;
         };
-        UniformBuffer<WorldUniformBlock> m_worldUniformBuffer;
+        //we need one for each draw list so we can update only when a camera is
+        //updated instead of updating every single render frame.
+        std::vector<std::shared_ptr<UniformBuffer<CameraUniformBlock>>> m_cameraUBOs;
 
-#ifdef CRO_DEBUG_
+        struct SceneUniformBlock final
+        {
+            glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, 0.f);
+            glm::vec4 lightColour = glm::vec4(1.f);
+            glm::vec3 lightDirection = glm::vec3(0.f, 0.f, 1.f);
+            float Padding = 0.f;
+        };
+
+#if defined(BENCHMARK)
         cro::HiResTimer m_timer;
+
+        std::size_t m_benchIdx = 0;
+        static constexpr std::size_t MaxBenchSamples = 60;
+        std::array<float, MaxBenchSamples> m_benchSamples = {};
+        float m_avgTime = 0.f;
 #endif
 
         void updateDrawListDefault(Entity);

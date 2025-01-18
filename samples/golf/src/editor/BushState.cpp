@@ -278,9 +278,9 @@ bool BushState::simulate(float dt)
 
 void BushState::render()
 {
-    m_windBuffer.bind(0);
-    m_resolutionBuffer.bind(1);
-    m_scaleBuffer.bind(2);
+    m_windBuffer.bind();
+    m_resolutionBuffer.bind();
+    m_scaleBuffer.bind();
 
     glEnable(GL_PROGRAM_POINT_SIZE);
 

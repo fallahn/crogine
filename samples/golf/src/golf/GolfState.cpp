@@ -2758,10 +2758,9 @@ void GolfState::render()
 {
     m_benchmark.update();
 
-    //TODO we probably only need to do this once after the scene is built
-    m_scaleBuffer.bind(0);
-    m_resolutionBuffer.bind(1);
-    m_windBuffer.bind(2);
+    m_scaleBuffer.bind();
+    m_resolutionBuffer.bind();
+    m_windBuffer.bind();
 
     //render reflections first
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -2953,7 +2952,7 @@ void GolfState::addSystems()
 
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData)->init();
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio, m_sharedData)->init();
-
+    m_gameScene.setTitle("Game Scene");
 
     if (m_sharedData.gameMode == GameMode::Tutorial)
     {
@@ -2966,6 +2965,7 @@ void GolfState::addSystems()
     m_skyScene.addSystem<cro::SkeletalAnimator>(mb);
     m_skyScene.addSystem<cro::CameraSystem>(mb);
     m_skyScene.addSystem<cro::ModelRenderer>(mb);
+    m_skyScene.setTitle("Sky Scene");
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
@@ -2977,6 +2977,7 @@ void GolfState::addSystems()
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+    m_uiScene.setTitle("UI Scene");
 
     m_trophyScene.addSystem<TrophyDisplaySystem>(mb);
     m_trophyScene.addSystem<cro::SpriteSystem3D>(mb, 300.f);
@@ -2986,6 +2987,7 @@ void GolfState::addSystems()
     m_trophyScene.addSystem<cro::CameraSystem>(mb);
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
     m_trophyScene.addSystem<cro::AudioPlayerSystem>(mb);
+    m_trophyScene.setTitle("Trophy Scene");
 }
 
 void GolfState::buildScene()
