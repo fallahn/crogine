@@ -1380,6 +1380,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                 hook /= 20.f;
                 static constexpr float  PowerShot = 0.97f;
 
+                //use this to indicate we might be playing a powershot sound
+                //so don't use the driver swing sound
+                if (power > PowerShot)
+                {
+                    msg2->travelDistance = 1.f;
+                }
 
                 if (power > 0.59f //hmm not sure why power should factor into this?
                     && std::abs(hook) < 0.05f)
@@ -1498,6 +1504,14 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             //reset the stroke timer for timeline - set this to a couple of seconds to allow for wind-up
             m_strokeTimer = 3.f;
+        }
+        else if (data.userType == SpriteAnimID::Swoosh)
+        {
+            auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg2->type = GolfEvent::ClubDraw;
+            msg2->position = m_currentPlayer.position;
+            msg2->terrain = m_currentPlayer.terrain;
+            msg2->club = static_cast<std::uint8_t>(getClub());
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {

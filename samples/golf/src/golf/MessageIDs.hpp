@@ -61,6 +61,7 @@ struct GolfEvent final
         HitBall,
         ClubChanged,
         ClubSwing,
+        ClubDraw,
         RequestNewPlayer,
         SetNewPlayer,
         HookedBall,

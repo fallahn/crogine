@@ -94,6 +94,9 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         "assets/golf/sound/ball/drive02.wav",
         "assets/golf/sound/ball/drive03.wav",
 
+        "assets/golf/sound/ball/swish01.wav",
+        "assets/golf/sound/ball/swish02.wav",
+
         "assets/golf/sound/ball/wedge01.wav",
 
         "assets/golf/sound/ball/holed.wav",
@@ -432,7 +435,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 {
                     playSound(AudioID::PowerBall, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
 
-                    //this might also play if a player quits but meh
                     if (cro::Util::Random::value(0, 2) == 0)
                     {
                         switch (Club::getModifierIndex())
@@ -453,6 +455,25 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             case GolfEvent::PlayerRemoved:
                 playSound(AudioID::PlayerQuit, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                 break;
+            case GolfEvent::ClubDraw:
+                switch (data.club)
+                {
+                default: break;
+                case ClubID::Driver:
+                case ClubID::ThreeWood:
+                case ClubID::FiveWood:
+                case ClubID::FourIron:
+                case ClubID::FiveIron:
+                case ClubID::SixIron:
+                {
+                    auto sound = playSound(cro::Util::Random::value(AudioID::Swoosh01, AudioID::Swoosh02)/*AudioID::Swoosh01*/, data.position, 0.5f);
+                    sound.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    sound.getComponent<cro::AudioEmitter>().setRolloff(0.74f);
+                    //sound.getComponent<cro::AudioEmitter>().setPitch(1.f + cro::Util::Random::value(-0.2f, 0.2f));
+                }
+                    break;
+                }
+                break;
             case GolfEvent::ClubSwing:
             {
                 switch (data.club)
@@ -460,13 +481,28 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 default:
                     playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                     break;
-                /*case ClubID::Driver:
-                    playSound(cro::Util::Random::value(AudioID::Drive01, AudioID::Drive03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                case ClubID::Driver:
+                    if (data.travelDistance == 0) //we've fudged whether or not this is a power shot in here
+                    {
+                        auto e = playSound(cro::Util::Random::value(AudioID::Drive01, AudioID::Drive03), data.position, 1.4f);
+                        e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    }
+                    else
+                    {
+                        playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    }
                     break;
                 case ClubID::FiveWood:
                 case ClubID::ThreeWood:
-                    playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Drive01), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                    break;*/
+                    if (data.travelDistance == 0) //we've fudged whether or not this is a power shot in here
+                    {
+                        playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Drive01), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    }
+                    else
+                    {
+                        playSound(cro::Util::Random::value(AudioID::Swing01, AudioID::Swing03), data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    }
+                    break;
                 case ClubID::PitchWedge:
                 case ClubID::GapWedge:
                 case ClubID::SandWedge:

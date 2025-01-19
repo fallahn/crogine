@@ -76,6 +76,9 @@ public:
             Drive02,
             Drive03,
 
+            Swoosh01,
+            Swoosh02,
+
             Wedge,
 
             Hole,

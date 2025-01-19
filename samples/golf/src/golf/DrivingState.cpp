@@ -710,6 +710,14 @@ void DrivingState::handleMessage(const cro::Message& msg)
             //enable the camera following
             m_gameScene.setSystemActive<CameraFollowSystem>(true);
         }
+        else if (data.userType == SpriteAnimID::Swoosh)
+        {
+            auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::ClubDraw;
+            msg->position = PlayerPosition;
+            msg->terrain = TerrainID::Fairway;
+            msg->club = static_cast<std::uint8_t>(m_inputParser.getClub());
+        }
     }
     break;
     case sv::MessageID::GolfMessage:
