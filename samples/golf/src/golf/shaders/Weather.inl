@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,24 +35,14 @@ static const inline std::string WeatherVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
 
+#include CAMERA_UBO
+
     uniform mat4 u_worldMatrix;
     uniform mat4 u_worldViewMatrix;
-    uniform mat4 u_projectionMatrix;
     uniform vec4 u_clipPlane;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
-
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
-
-#if defined (CULLED)
-    uniform HIGH vec3 u_cameraWorldPosition;
-#endif
+#include WIND_BUFFER
+#include SCALE_BUFFER
 
     VARYING_OUT LOW vec4 v_colour;
 
@@ -149,16 +139,13 @@ static const inline std::string RainFragment = R"(
 static const inline std::string FireworkVert = R"(
 ATTRIBUTE vec4 a_position;
 
+#include CAMERA_UBO
 #include WVP_UNIFORMS
-uniform mat4 u_viewMatrix;
 
 uniform float u_size = 1.0;
 uniform float u_progress = 0.0;
 
-layout (std140) uniform PixelScale
-{
-    float u_pixelScale;
-};
+#include SCALE_BUFFER
 
 #if !defined(GRAVITY)
 #define GRAVITY 0.06

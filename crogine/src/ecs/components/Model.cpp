@@ -245,11 +245,21 @@ void Model::setMaterial(std::size_t idx, Material::Data data)
             }), m_animations.end());
 
         //the order in which this happens is important!
+        const auto previousShader = m_materials[Mesh::IndexData::Final][idx].shader;
+
         bindMaterial(data);
         m_materials[Mesh::IndexData::Final][idx] = data;
         initMaterialAnimation(idx);
 #ifdef PLATFORM_DESKTOP
         updateVAO(idx, Mesh::IndexData::Final);
+
+        //updates any UBOs which may have this material's
+        //shader assigned in the ModelRenderer system
+        if (materialChangedCallback
+            && data.hasCameraUBO())
+        {
+            materialChangedCallback(previousShader, data.shader);
+        }
 #endif //DESKTOP
     }
     else

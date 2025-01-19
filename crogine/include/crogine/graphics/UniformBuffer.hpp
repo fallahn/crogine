@@ -35,8 +35,9 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #endif
 
-#include <vector>
+#include <typeindex>
 #include <unordered_map>
+#include <vector>
 
 namespace cro
 {
@@ -112,6 +113,7 @@ namespace cro
             const UniformBufferImpl& operator = (UniformBufferImpl&&) noexcept;
 
 
+            void setBindingPoint(std::type_index);
             void setData(const void* data);
 
 
@@ -121,8 +123,14 @@ namespace cro
             std::uint32_t m_ubo;
             std::uint32_t m_bindPoint;
 
-            std::vector<std::pair<std::uint32_t, std::uint32_t>> m_shaders;
+            //how much to adjust the instance count by.
+            //we track this so when an instance is moved
+            //it won't decrement the instance count.
+            std::int32_t m_instanceCountOffset; 
 
+            std::vector<std::pair<std::uint32_t, std::uint32_t>> m_shaders;
+            //counts the number of instances of a shader being used with this UBO
+            //so we make sure to only ever bind one instance of it at a time.
             std::unordered_map<std::uint32_t, std::uint32_t> m_refCount;
 
             void reset();
@@ -155,7 +163,7 @@ namespace cro
         explicit UniformBuffer(const std::string& blockName)
             : Detail::UniformBufferImpl(blockName, sizeof(T))
         {
-
+            setBindingPoint(typeid(T));
         }
 
         /*!

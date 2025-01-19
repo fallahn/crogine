@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -250,7 +250,7 @@ namespace cro
         /*!
         \brief Used to implement custom draw functions for the Model.
         This is used internally to set whether the Model is drawn with instancing
-        or not. Overriding this yourself probably won't do what  you expect
+        or not. Overriding this yourself probably won't do what you expect
         */
         std::function<void(std::int32_t, std::int32_t)> draw;
 #endif
@@ -302,6 +302,8 @@ namespace cro
             std::uint32_t normalBuffer = 0;
             std::uint32_t instanceCount = 0;
         }m_instanceBuffers;
+
+        std::function<void(std::uint32_t, std::uint32_t)> materialChangedCallback;
 #endif //DESKTOP
 
         glm::mat4* m_skeleton = nullptr;

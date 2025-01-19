@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,15 +30,15 @@ source distribution.
 #pragma once
 
 #include <string>
-//static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320 in 3 places");
+
 inline const std::string WaterVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
 
+#include CAMERA_UBO
+
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewMatrix;
-    uniform mat4 u_viewProjectionMatrix;
 
     uniform mat4 u_reflectionMatrix;
     uniform mat4 u_lightViewProjectionMatrix;
@@ -88,8 +88,9 @@ inline const std::string WaterFragment = R"(
 #if !defined(NO_DEPTH)
 uniform sampler2DArray u_depthMap;
 #endif
-    uniform vec3 u_cameraWorldPosition;
-    uniform float u_radius = MAX_RADIUS;
+   #include CAMERA_UBO
+
+   uniform float u_radius = MAX_RADIUS;
 
 //dirX, strength, dirZ, elapsedTime
 #include WIND_BUFFER

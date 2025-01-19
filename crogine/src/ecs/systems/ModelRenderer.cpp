@@ -68,10 +68,6 @@ using namespace cro;
 namespace
 {
     float lightMultiplier = 1.f;
-    
-#if defined(CRO_DEBUG_) || defined(BENCHMARK)
-
-#endif
 }
 //void ModelRenderer::setLightMultiplier(float m) { lightMultiplier = m; }
 
@@ -101,22 +97,25 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 #ifdef BENCHMARK
     registerWindow([&]()
         {
-            const std::string title = "Frame Time, " + getScene()->getTitle();
+            const std::string title = "Frame Time, Scene: " + std::to_string(getScene()->getInstanceID()) + " " + getScene()->getTitle();
             
-            ImGui::Begin(title.c_str());
-            
-            if ((m_benchIdx % 10) == 0)
+            if (ImGui::Begin(title.c_str()))
             {
-                m_avgTime = 0.f;
-                for (auto f : m_benchSamples)
+                for (auto i = 0u; i < m_benchmarks.size(); ++i)
                 {
-                    m_avgTime += f;
+                    if ((m_benchmarks[i].index % 10) == 0)
+                    {
+                        m_benchmarks[i].avgTime = 0.f;
+                        for (auto f : m_benchmarks[i].samples)
+                        {
+                            m_benchmarks[i].avgTime += f;
+                        }
+                        m_benchmarks[i].avgTime /= MaxBenchSamples;
+                        m_benchmarks[i].avgTime *= 1000.f;
+                    }
+                    ImGui::Text("Avg render time for camera %u: %3.3f ms", i, m_benchmarks[i].avgTime);
                 }
-                m_avgTime /= MaxBenchSamples;
-                m_avgTime *= 1000.f;
             }
-            ImGui::Text("Avg render time: %3.3f m/s", m_avgTime);
-
             ImGui::End();
         });
 #endif
@@ -126,9 +125,14 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
     const auto& camComponent = cameraEnt.getComponent<Camera>();
-    if (m_drawLists.size() <= camComponent.getDrawListIndex())
+    const auto camIndex = camComponent.getDrawListIndex();
+    if (m_drawLists.size() <= camIndex)
     {
-        m_drawLists.resize(camComponent.getDrawListIndex() + 1);
+        m_drawLists.resize(camIndex + 1);
+
+#ifdef BENCHMARK
+        m_benchmarks.resize(m_drawLists.size());
+#endif
 
 #ifdef PLATFORM_DESKTOP
         m_cameraUBOs.resize(m_drawLists.size());
@@ -143,7 +147,11 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
                     const auto& model = entity.getComponent<Model>();
                     for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
                     {
-                        ubo->addShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+                        const auto& mat = model.getMaterialData(Mesh::IndexData::Final, i);
+                        if (mat.hasCameraUBO())
+                        {
+                            ubo->addShader(mat.shader);
+                        }
                     }
                 }
             }
@@ -161,10 +169,10 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     }
 
 #ifdef PLATFORM_DESKTOP
-    auto& ubo = m_cameraUBOs[camComponent.getDrawListIndex()];
+    auto& ubo = m_cameraUBOs[camIndex];
     if (ubo->hasShaders())
     {
-        const auto& pass = camComponent.getActivePass();
+        const auto& pass = camComponent.getPass(0);
 
         CameraUniformBlock block;
         block.cameraWorldPosition = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
@@ -173,7 +181,6 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         block.viewProjectionMatrix = pass.viewProjectionMatrix;
 
         ubo->setData(block);
-        ubo->bind();
     }
 #endif
 
@@ -186,7 +193,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     //sort lists by depth
     //flag values make sure transparent materials are rendered last
     //with opaque going front to back and transparent back to front
-    auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
+    auto& drawList = m_drawLists[camIndex];
     for (auto i = 0; i < passCount; ++i)
     {
 //apparently this won't work on gcc 9/10/11 (and should be disabled on lower versions anyway)
@@ -249,8 +256,11 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     m_timer.restart();
 #endif
     const auto& camComponent = camera.getComponent<Camera>();
-    if (camComponent.getDrawListIndex() < m_drawLists.size())
+    const auto camIndex = camComponent.getDrawListIndex();
+    if (camIndex < m_drawLists.size())
     {
+        m_cameraUBOs[camIndex]->bind();
+        
         const auto& pass = camComponent.getActivePass();
 
         glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
@@ -263,7 +273,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
 
         //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-        const auto& visibleEntities = m_drawLists[camComponent.getDrawListIndex()][camComponent.getActivePassIndex()];
+        const auto& visibleEntities = m_drawLists[camIndex][camComponent.getActivePassIndex()];
         for (const auto& [entity, sortData] : visibleEntities)
         {
             //may have been marked for deletion - OK to draw but will trigger assert
@@ -371,8 +381,9 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
     }
 #ifdef BENCHMARK
-    m_benchSamples[m_benchIdx] = m_timer.restart();
-    m_benchIdx = (m_benchIdx + 1) % MaxBenchSamples;
+    if (m_benchmarks.size() <= camIndex) m_benchmarks.resize(camIndex+1); //hmmm we shouldn't need this
+    m_benchmarks[camIndex].samples[m_benchmarks[camIndex].index] = m_timer.restart();
+    m_benchmarks[camIndex].index = (m_benchmarks[camIndex].index + 1) % MaxBenchSamples;
 #endif
 }
 
@@ -441,9 +452,24 @@ void ModelRenderer::onEntityAdded(Entity entity)
         //UBO class automatically checks if this is valid for us.
         for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
         {
-            ubo->addShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+            const auto& mat = model.getMaterialData(Mesh::IndexData::Final, i);
+            if (mat.hasCameraUBO())
+            {
+                ubo->addShader(mat.shader);
+            }
         }
     }
+
+    //ofc this may all be undone if we change the material on the component...
+    model.materialChangedCallback =
+        [&](std::uint32_t oldShader, std::uint32_t newShader)
+        {
+            for (auto& ubo : m_cameraUBOs)
+            {
+                ubo->removeShader(oldShader);
+                ubo->addShader(newShader);
+            }
+        };
 #endif
 }
 

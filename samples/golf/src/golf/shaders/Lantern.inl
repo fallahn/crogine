@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -44,6 +44,7 @@ ATTRIBUTE vec4 a_position;
 ATTRIBUTE vec4 a_colour;
 ATTRIBUTE vec3 a_normal;
 
+#include CAMERA_UBO
 #include WVP_UNIFORMS
 
 VARYING_OUT vec3 v_worldPosition;
@@ -64,8 +65,9 @@ void main()
 
 static const inline std::string LanternFrag =
 R"(
+#include CAMERA_UBO
+
 uniform vec4 u_ballColour; //not a ball, but we need the name to match up (see createRopes() in MainMenu)
-uniform vec3 u_cameraWorldPosition;
 
 VARYING_IN vec3 v_worldPosition;
 VARYING_IN vec4 v_colour;

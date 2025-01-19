@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,8 +36,10 @@ inline const std::string UnlockVertex = R"(
     ATTRIBUTE vec3 a_normal;
     ATTRIBUTE vec4 a_colour;
 
+#include CAMERA_UBO
+
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
+    //uniform mat4 u_viewProjectionMatrix;
     uniform mat3 u_normalMatrix;
 
     #if defined(SKINNED)
@@ -79,7 +81,9 @@ inline const std::string UnlockFragment = R"(
     uniform samplerCube u_reflectMap;
 #endif
 
-    uniform vec3 u_cameraWorldPosition;
+#include CAMERA_UBO
+
+    //uniform vec3 u_cameraWorldPosition;
     uniform vec3 u_lightDirection = vec3(0.1, -0.5, 0.4);
 
     VARYING_IN vec3 v_normal;

@@ -173,11 +173,15 @@ namespace cro
 
 #if defined(BENCHMARK)
         cro::HiResTimer m_timer;
-
-        std::size_t m_benchIdx = 0;
         static constexpr std::size_t MaxBenchSamples = 60;
-        std::array<float, MaxBenchSamples> m_benchSamples = {};
-        float m_avgTime = 0.f;
+
+        struct BenchSamples final
+        {
+            std::size_t index = 0;
+            std::array<float, MaxBenchSamples> samples = {};
+            float avgTime = 0.f;
+        };
+        std::vector<BenchSamples> m_benchmarks;
 #endif
 
         void updateDrawListDefault(Entity);

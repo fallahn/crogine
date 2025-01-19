@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,20 +40,15 @@ inline const std::string BillboardVertexShader = R"(
 
     ATTRIBUTE MED vec2 a_texCoord0;
 
+#include CAMERA_UBO
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewMatrix;
-    uniform mat4 u_viewProjectionMatrix;
-
     uniform sampler2D u_noiseTexture;
 
 #if defined(SHADOW_MAPPING)
-    uniform mat4 u_projectionMatrix;
     uniform mat4 u_cameraViewMatrix;
 #endif
 
-
     uniform vec4 u_clipPlane;
-    uniform vec3 u_cameraWorldPosition;
 
 #include WIND_BUFFER
 #include RESOLUTION_BUFFER

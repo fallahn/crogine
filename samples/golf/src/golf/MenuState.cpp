@@ -2331,6 +2331,7 @@ void MenuState::createScene()
         noiseTex.setSmooth(true);
         billboardMat.setProperty("u_noiseTexture", noiseTex);
 
+        billboardMat.name = "billboard";
         entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
 
         billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::BillboardShadow]);

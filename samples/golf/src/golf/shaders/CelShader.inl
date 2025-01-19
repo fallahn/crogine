@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,7 +30,7 @@ source distribution.
 #pragma once
 
 #include <string>
-//static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320");
+
 inline const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -68,17 +68,14 @@ inline const std::string CelVertexShader = R"(
 #include SHADOWMAP_UNIFORMS_VERT
 #endif
 
-    uniform mat4 u_viewMatrix;
+#include CAMERA_UBO
 
 #if !defined(INSTANCING)
     uniform mat4 u_worldViewMatrix;
     uniform mat3 u_normalMatrix;
 #endif
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_projectionMatrix;
-
     uniform vec4 u_clipPlane;
-    uniform vec3 u_cameraWorldPosition;
 
     uniform sampler2D u_noiseTexture;
 
