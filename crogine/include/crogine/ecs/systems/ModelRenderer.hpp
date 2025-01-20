@@ -38,7 +38,9 @@ source distribution.
 #include <crogine/detail/BalancedTree.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-#ifdef CRO_DEBUG_
+//#define BENCHMARK
+#if defined(CRO_DEBUG_) || defined(BENCHMARK)
+#include <crogine/core/HiResTimer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #endif
 
@@ -67,7 +69,7 @@ namespace cro
     are rendered with RenderSystem2D.
     */
     class CRO_EXPORT_API ModelRenderer final : public System, public Renderable
-#ifdef CRO_DEBUG_
+#if defined(CRO_DEBUG_) || defined(BENCHMARK)
         , public GuiClient
 #endif
     {
@@ -146,6 +148,19 @@ namespace cro
 
         /*Detail::BalancedTree m_tree;
         bool m_useTreeQueries;*/
+
+#if defined(BENCHMARK)
+        cro::HiResTimer m_timer;
+        static constexpr std::size_t MaxBenchSamples = 60;
+
+        struct BenchSamples final
+        {
+            std::size_t index = 0;
+            std::array<float, MaxBenchSamples> samples = {};
+            float avgTime = 0.f;
+        };
+        std::vector<BenchSamples> m_benchmarks;
+#endif
 
         void updateDrawListDefault(Entity);
         void updateDrawListBalancedTree(Entity);

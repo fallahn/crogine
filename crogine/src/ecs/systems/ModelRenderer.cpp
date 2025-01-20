@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Frustum.hpp>
 
-#ifdef CRO_DEBUG_
+#if defined(CRO_DEBUG_) || defined(BENCHMARK)
 #include <crogine/gui/Gui.hpp>
 #endif
 
@@ -91,6 +91,32 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
             }        
         });
 #endif
+
+#ifdef BENCHMARK
+    registerWindow([&]()
+        {
+            const std::string title = "Frame Time, Scene: " + std::to_string(getScene()->getInstanceID());// +" " + getScene()->getTitle();
+
+            if (ImGui::Begin(title.c_str()))
+            {
+                for (auto i = 0u; i < m_benchmarks.size(); ++i)
+                {
+                    if ((m_benchmarks[i].index % 10) == 0)
+                    {
+                        m_benchmarks[i].avgTime = 0.f;
+                        for (auto f : m_benchmarks[i].samples)
+                        {
+                            m_benchmarks[i].avgTime += f;
+                        }
+                        m_benchmarks[i].avgTime /= MaxBenchSamples;
+                        m_benchmarks[i].avgTime *= 1000.f;
+                    }
+                    ImGui::Text("Avg render time for camera %u: %3.3f ms", i, m_benchmarks[i].avgTime);
+                }
+            }
+            ImGui::End();
+        });
+#endif
 }
 
 //public
@@ -100,6 +126,10 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     if (m_drawLists.size() <= camComponent.getDrawListIndex())
     {
         m_drawLists.resize(camComponent.getDrawListIndex() + 1);
+
+#ifdef BENCHMARK
+        m_benchmarks.resize(m_drawLists.size());
+#endif
     }
 
     /*if (m_useTreeQueries)
@@ -178,8 +208,13 @@ void ModelRenderer::process(float dt)
 
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
+#ifdef BENCHMARK
+    m_timer.restart();
+#endif
+
     const auto& camComponent = camera.getComponent<Camera>();
-    if (camComponent.getDrawListIndex() < m_drawLists.size())
+    const auto camIndex = camComponent.getDrawListIndex();
+    if (camIndex < m_drawLists.size())
     {
         const auto& pass = camComponent.getActivePass();
 
@@ -192,7 +227,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glCullFace(pass.getCullFace()));
 
         //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-        const auto& visibleEntities = m_drawLists[camComponent.getDrawListIndex()][camComponent.getActivePassIndex()];
+        const auto& visibleEntities = m_drawLists[camIndex][camComponent.getActivePassIndex()];
         for (const auto& [entity, sortData] : visibleEntities)
         {
             //may have been marked for deletion - OK to draw but will trigger assert
@@ -292,6 +327,11 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
     }
+#ifdef BENCHMARK
+    if (m_benchmarks.size() <= camIndex) m_benchmarks.resize(camIndex + 1); //hmmm we shouldn't need this
+    m_benchmarks[camIndex].samples[m_benchmarks[camIndex].index] = m_timer.restart();
+    m_benchmarks[camIndex].index = (m_benchmarks[camIndex].index + 1) % MaxBenchSamples;
+#endif
 }
 
 std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex) const
