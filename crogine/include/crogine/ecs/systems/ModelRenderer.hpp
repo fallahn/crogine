@@ -162,7 +162,8 @@ namespace cro
         };
         //we need one for each draw list so we can update only when a camera is
         //updated instead of updating every single render frame.
-        std::vector<std::shared_ptr<UniformBuffer<CameraUniformBlock>>> m_cameraUBOs;
+        using CamUBO = std::shared_ptr<UniformBuffer<CameraUniformBlock>>;
+        std::vector<std::array<CamUBO, 2u>> m_cameraUBOs; //final and reflection passes
 
         struct SceneUniformBlock final
         {

@@ -126,6 +126,8 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
     const auto& camComponent = cameraEnt.getComponent<Camera>();
     const auto camIndex = camComponent.getDrawListIndex();
+    const auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
+
     if (m_drawLists.size() <= camIndex)
     {
         m_drawLists.resize(camIndex + 1);
@@ -134,23 +136,29 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         m_benchmarks.resize(m_drawLists.size());
 #endif
 
+
 #ifdef PLATFORM_DESKTOP
         m_cameraUBOs.resize(m_drawLists.size());
-        for (auto& ubo : m_cameraUBOs)
+        for (auto& uboPair : m_cameraUBOs)
         {
-            if (!ubo)
+            //hmm the current camera might only have a single pass, though we try creating ALL
+            //currently required UBOs - without know which need a second pass, and which don't
+            for (auto i = 0; i < /*passCount*/2; ++i) 
             {
-                ubo = std::make_unique<UniformBuffer<CameraUniformBlock>>("CameraUniforms");
-
-                for (auto entity : getEntities())
+                if (!uboPair[i])
                 {
-                    const auto& model = entity.getComponent<Model>();
-                    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+                    uboPair[i] = std::make_unique<UniformBuffer<CameraUniformBlock>>("CameraUniforms");
+
+                    for (auto entity : getEntities())
                     {
-                        const auto& mat = model.getMaterialData(Mesh::IndexData::Final, i);
-                        if (mat.hasCameraUBO())
+                        const auto& model = entity.getComponent<Model>();
+                        for (auto j = 0u; j < model.getMeshData().submeshCount; ++j)
                         {
-                            ubo->addShader(mat.shader);
+                            const auto& mat = model.getMaterialData(Mesh::IndexData::Final, j);
+                            if (mat.hasCameraUBO())
+                            {
+                                uboPair[i]->addShader(mat.shader);
+                            }
                         }
                     }
                 }
@@ -168,25 +176,6 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         updateDrawListDefault(cameraEnt);
     }
 
-#ifdef PLATFORM_DESKTOP
-    auto& ubo = m_cameraUBOs[camIndex];
-    if (ubo->hasShaders())
-    {
-        const auto& pass = camComponent.getPass(0);
-
-        CameraUniformBlock block;
-        block.cameraWorldPosition = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
-        block.projectionMatrix = camComponent.getProjectionMatrix();
-        block.viewMatrix = pass.viewMatrix;
-        block.viewProjectionMatrix = pass.viewProjectionMatrix;
-        block.clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
-
-        ubo->setData(block);
-    }
-#endif
-
-    
-    auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
     //DPRINT("Visible 3D ents in Scene " + std::to_string(getScene()->getInstanceID()) 
     //    + ", Camera " + std::to_string(cameraEnt.getIndex()), std::to_string(m_drawLists[camComponent.getDrawListIndex()][0].size()));
@@ -197,6 +186,24 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     auto& drawList = m_drawLists[camIndex];
     for (auto i = 0; i < passCount; ++i)
     {
+#ifdef PLATFORM_DESKTOP
+        auto& ubo = m_cameraUBOs[camIndex][i];
+        if (ubo->hasShaders())
+        {
+            const auto& pass = camComponent.getPass(i);
+
+            CameraUniformBlock block;
+            block.cameraWorldPosition = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
+            block.projectionMatrix = camComponent.getProjectionMatrix();
+            block.viewMatrix = pass.viewMatrix;
+            block.viewProjectionMatrix = pass.viewProjectionMatrix;
+            block.clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+
+            ubo->setData(block);
+        }
+#endif
+
+
 //apparently this won't work on gcc 9/10/11 (and should be disabled on lower versions anyway)
 #ifndef _MSC_VER
 #if __GNUC__ <= 14
@@ -260,7 +267,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
     const auto camIndex = camComponent.getDrawListIndex();
     if (camIndex < m_drawLists.size())
     {
-        m_cameraUBOs[camIndex]->bind();
+        m_cameraUBOs[camIndex][camComponent.getActivePassIndex()]->bind();
         
         const auto& pass = camComponent.getActivePass();
 
@@ -447,16 +454,22 @@ void ModelRenderer::onEntityAdded(Entity entity)
     //model.m_treeID = m_tree.addToTree(entity, model.getAABB());
 
 #ifdef PLATFORM_DESKTOP
-    for (auto& ubo : m_cameraUBOs)
+    for (auto& uboPair : m_cameraUBOs)
     {
-        //iterate materials and attempt to add to uniform buffer
-        //UBO class automatically checks if this is valid for us.
-        for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+        for (auto& ubo : uboPair)
         {
-            const auto& mat = model.getMaterialData(Mesh::IndexData::Final, i);
-            if (mat.hasCameraUBO())
+            if (ubo)
             {
-                ubo->addShader(mat.shader);
+                //iterate materials and attempt to add to uniform buffer
+                //UBO class automatically checks if this is valid for us.
+                for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+                {
+                    const auto& mat = model.getMaterialData(Mesh::IndexData::Final, i);
+                    if (mat.hasCameraUBO())
+                    {
+                        ubo->addShader(mat.shader);
+                    }
+                }
             }
         }
     }
@@ -465,10 +478,16 @@ void ModelRenderer::onEntityAdded(Entity entity)
     model.materialChangedCallback =
         [&](std::uint32_t oldShader, std::uint32_t newShader)
         {
-            for (auto& ubo : m_cameraUBOs)
+            for (auto& uboPair : m_cameraUBOs)
             {
-                ubo->removeShader(oldShader);
-                ubo->addShader(newShader);
+                for (auto& ubo : uboPair)
+                {
+                    if (ubo)
+                    {
+                        ubo->removeShader(oldShader);
+                        ubo->addShader(newShader);
+                    }
+                }
             }
         };
 #endif
@@ -482,11 +501,17 @@ void ModelRenderer::onEntityRemoved(Entity entity)
     //remove any materials from camera UBOs
     const auto& model = entity.getComponent<Model>();
 
-    for (auto& ubo : m_cameraUBOs)
+    for (auto& uboPair: m_cameraUBOs)
     {
-        for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+        for (auto& ubo : uboPair)
         {
-            ubo->removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+            if (ubo)
+            {
+                for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+                {
+                    ubo->removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+                }
+            }
         }
     }
 #endif
