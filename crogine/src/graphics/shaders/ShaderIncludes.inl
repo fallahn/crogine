@@ -91,6 +91,9 @@ R"(
 uniform HIGH vec3 u_lightDirection;
 uniform LOW vec4 u_lightColour;
 #else
+//uniform vec4 u_lightColour;
+//uniform vec3 u_lightDirection;
+
 layout (std140) uniform LightUniforms
 {
     vec4 u_lightColour;

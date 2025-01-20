@@ -2652,10 +2652,14 @@ void GolfState::showCountdown(std::uint8_t seconds)
 #ifndef CRO_DEBUG_
     if (m_sharedData.gameMode == GameMode::Tournament)
     {
+        personalBest = true; //this just indicates we want to show the message
         if (!firstPlace)
         {
-            personalBest = true; //this just indicates we want to show the message
             bestString = "ELIMINATED";
+        }
+        else
+        {
+            bestString = "WINNER";
         }
     }
     else

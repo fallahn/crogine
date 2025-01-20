@@ -39,7 +39,7 @@ source distribution.
 #include <crogine/detail/BalancedTree.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-//#define BENCHMARK
+#define BENCHMARK
 #if defined(CRO_DEBUG_) || defined(BENCHMARK)
 #include <crogine/core/HiResTimer.hpp>
 #include <crogine/gui/GuiClient.hpp>
