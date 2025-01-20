@@ -303,11 +303,6 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             const auto& model = entity.getComponent<Model>();
             glCheck(glFrontFace(model.m_facing));
 
-            //calc entity transform - TODO this should be done in updateDrawlist() rather than every time it's rendered
-            const auto& tx = entity.getComponent<Transform>();
-            const glm::mat4 worldMat = tx.getWorldTransform();
-            const glm::mat4 worldView = pass.viewMatrix * worldMat;
-            const glm::mat3 normalMat = glm::inverseTranspose(glm::mat3(worldMat));
 
 #ifndef PLATFORM_DESKTOP
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
@@ -322,7 +317,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 glCheck(glUseProgram(material.shader));
 
                 //apply shader uniforms from material
-                glCheck(glUniformMatrix4fv(uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+                glCheck(glUniformMatrix4fv(uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(sortData.worldViewMatrix)));
                 applyProperties(material, model, *getScene(), camComponent);
 
                 //apply standard uniforms
@@ -336,10 +331,10 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                     glCheck(glUniformMatrix4fv(uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
                     glCheck(glUniform4f(uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
                 }
-                glCheck(glUniformMatrix4fv(uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-                glCheck(glUniformMatrix3fv(uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(normalMat)));
+                glCheck(glUniformMatrix4fv(uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(sortData.worldMatrix)));
+                glCheck(glUniformMatrix3fv(uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(sortData.normalMatrix)));
 
-                applyBlendMode(material/*.blendMode*/);
+                applyBlendMode(material);
 
                 //TODO move these to custom settings list
                 glCheck(material.doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
@@ -634,6 +629,10 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                 auto opaque = std::make_pair(entity, SortData());
                 auto transparent = std::make_pair(entity, SortData());
 
+                const glm::mat4 worldMat = tx.getWorldTransform();
+                const glm::mat4 worldView = camComponent.getPass(p).viewMatrix * worldMat;
+                const glm::mat3 normalMat = glm::inverseTranspose(glm::mat3(worldMat));
+
                 //foreach material
                 //add ent/index pair to alpha or opaque list
                 for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
@@ -643,11 +642,19 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                         transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
                         transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
+
+                        transparent.second.normalMatrix = normalMat;
+                        transparent.second.worldMatrix = worldMat;
+                        transparent.second.worldViewMatrix = worldView;
                     }
                     else
                     {
                         opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
+
+                        opaque.second.normalMatrix = normalMat;
+                        opaque.second.worldMatrix = worldMat;
+                        opaque.second.worldViewMatrix = worldView;
                     }
                 }
 
