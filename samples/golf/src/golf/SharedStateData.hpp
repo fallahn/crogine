@@ -324,7 +324,8 @@ struct SharedStateData final
     std::string flagPath;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
-    std::unique_ptr<cro::ResourceCollection> sharedResources;
+    std::unique_ptr<cro::ResourceCollection> sharedResources; //globally shared resources, eg fonts
+    cro::ResourceCollection* activeResources = nullptr; //used by cached states to share the base state resources
     
     std::vector<glm::uvec2> resolutions;
     std::vector<std::string> resolutionStrings;

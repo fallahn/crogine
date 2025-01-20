@@ -62,7 +62,7 @@ R"(
 uniform HIGH mat4 u_viewMatrix;
 uniform HIGH mat4 u_viewProjectionMatrix;
 uniform HIGH mat4 u_projectionMatrix;
-
+uniform MED vec4 u_clipPlane;
 uniform MED vec3 u_cameraWorldPosition;
 #else
 #define CAMERA_UBO

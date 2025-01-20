@@ -163,6 +163,7 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_modelScene        (ctx.appInstance.getMessageBus(), 1024), //just because someone might be daft enough to install ALL the workshop items
     m_sharedData        (sd),
     m_profileData       (sp),
+    m_resources         (*sd.activeResources),
     m_viewScale         (2.f),
     m_ballIndex         (0),
     m_ballHairIndex     (0),

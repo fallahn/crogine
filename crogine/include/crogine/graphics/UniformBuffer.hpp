@@ -145,10 +145,25 @@ namespace cro
     uniforms which are common between many shaders, for example elapsed
     game time. 
 
+    For 3D scenes there are two default UBOs available, one for scene
+    camera transforms, and another for scene lighting. These can be used
+    in custom shaders with the includes CAMERA_UBO and LIGHT_UBO
+
+    the camera UBO exposes:
+        mat4 u_viewMatrix;
+        mat4 u_viewProjectionMatrix;
+        mat4 u_projectionMatrix;
+        vec4 u_clipPlane;
+        vec3 u_cameraWorldPosition;
+
+    and the light UBO exposes:
+        vec4 u_lightColour;
+        vec3 u_lightDirection;
+
     UniformBuffer is moveable but non-copyable.
 
     Template parameter should be a type defining the data block used
-    with the buffer
+    with the buffer.
     \see setData()
     */
     template <class T>

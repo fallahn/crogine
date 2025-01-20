@@ -204,6 +204,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     checkCommandLine = false;
     sd.courseData = &m_sharedCourseData;
     sd.baseState = StateID::Menu;
+    sd.activeResources = &m_resources;
     //sd.leagueRoundID = LeagueRoundID::Club; //leave this and let selecting freeplay set it - that way the career menu can return to last league selected
     sd.preferredClubSet = std::clamp(sd.preferredClubSet, 0, 2);
     sd.clubSet = sd.preferredClubSet;
@@ -661,6 +662,7 @@ MenuState::~MenuState()
     m_profileData.profileMaterials.reset();
 
     m_sharedData.courseData = nullptr;
+    m_sharedData.activeResources = nullptr;
 }
 
 //public

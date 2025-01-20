@@ -133,6 +133,7 @@ PlayerManagementState::PlayerManagementState(cro::StateStack& ss, cro::State::Co
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
+    m_resources         (*sd.activeResources),
     m_viewScale         (2.f),
     m_confirmType       (0)
 {

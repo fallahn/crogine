@@ -149,12 +149,16 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_gameMode          (TableData::Void),
     m_readyQuitFlags    (0)
 {
+    sd.activeResources = &m_resources;
+
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     ctx.mainWindow.loadResources([&]()
         {
             loadAssets();
             addSystems();
             buildScene();
+
+            cacheState(StateID::Pause);
         });
     Timeline::setGameMode(Timeline::GameMode::Playing);
     ctx.mainWindow.setMouseCaptured(true);
@@ -219,6 +223,11 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
 #endif
 
     m_inputParser.setActive(false, false); //activates spectator cam input on start up
+}
+
+BilliardsState::~BilliardsState()
+{
+    m_sharedData.activeResources = nullptr;
 }
 
 //public

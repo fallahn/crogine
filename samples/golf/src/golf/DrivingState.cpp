@@ -265,6 +265,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     prevBillBox = false;
     noiseTable = cro::Util::Wavetable::noise(2.f, 10.f);
     
+    sd.activeResources = &m_resources;
     sd.baseState = StateID::DrivingRange;
     sd.clubSet = std::clamp(sd.preferredClubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);
@@ -362,6 +363,11 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     //        ImGui::End();
     //    });
 #endif
+}
+
+DrivingState::~DrivingState()
+{
+    m_sharedData.activeResources = nullptr;
 }
 
 //public

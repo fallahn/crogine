@@ -126,6 +126,7 @@ LeaderboardState::LeaderboardState(cro::StateStack& ss, cro::State::Context ctx,
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus(), 256/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_sharedData        (sd),
+    m_resources         (*sd.activeResources),
     m_viewScale         (2.f)
 {
     Social::updateHallOfFame();

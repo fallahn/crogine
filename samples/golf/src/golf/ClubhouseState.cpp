@@ -139,6 +139,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     
+    sd.activeResources = &m_resources;
     sd.baseState = StateID::Clubhouse;
     sd.mapDirectory = "pool";
 
@@ -335,6 +336,11 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 #endif
 
     cro::App::getInstance().resetFrameTime();
+}
+
+ClubhouseState::~ClubhouseState()
+{
+    m_sharedData.activeResources = nullptr;
 }
 
 //public

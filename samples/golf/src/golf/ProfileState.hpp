@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -98,7 +98,7 @@ private:
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;
     cro::RenderTexture m_hairEditorTexture;
-    cro::ResourceCollection m_resources;
+    cro::ResourceCollection& m_resources;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final

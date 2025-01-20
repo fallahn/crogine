@@ -229,6 +229,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_emoteWheel            (sd, m_currentPlayer, m_textChat),
     m_minimapTexturePass    (MaxMinimapPasses)
 {
+    sd.activeResources = &m_resources;
     sd.quickplayOpponents = std::clamp(sd.quickplayOpponents, 0, 3);
     if (sd.quickplayOpponents != 0)
     {
@@ -512,6 +513,8 @@ GolfState::~GolfState()
     {
         m_csvResult.wait_for(std::chrono::milliseconds(50));
     }
+
+    m_sharedData.activeResources = nullptr;
 }
 
 //public

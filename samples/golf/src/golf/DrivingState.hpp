@@ -74,6 +74,7 @@ class DrivingState final : public cro::State, public cro::GuiClient, public cro:
 {
 public:
     DrivingState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&);
+    ~DrivingState();
 
     cro::StateID getStateID() const override { return StateID::DrivingRange; }
 
