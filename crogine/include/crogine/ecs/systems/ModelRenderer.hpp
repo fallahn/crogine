@@ -156,6 +156,7 @@ namespace cro
             glm::mat4 viewMatrix = glm::mat4(1.f);
             glm::mat4 viewProjectionMatrix = glm::mat4(1.f);
             glm::mat4 projectionMatrix = glm::mat4(1.f);
+            glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, 0.f);
             glm::vec3 cameraWorldPosition = glm::vec3(0.f);
             const float Padding = 0.f;
         };
@@ -165,11 +166,10 @@ namespace cro
 
         struct SceneUniformBlock final
         {
-            glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, 0.f);
             glm::vec4 lightColour = glm::vec4(1.f);
             glm::vec3 lightDirection = glm::vec3(0.f, 0.f, 1.f);
             float Padding = 0.f;
-        };
+        }m_sceneUniforms;
 
 #if defined(BENCHMARK)
         cro::HiResTimer m_timer;

@@ -67,8 +67,6 @@ static inline const std::string Vertex = R"(
 #include CAMERA_UBO
 #include WVP_UNIFORMS
 
-        uniform vec4 u_clipPlane;
-
     #if defined(RX_SHADOWS)
 #include SHADOWMAP_UNIFORMS_VERT
     #endif

@@ -43,8 +43,6 @@ static inline const std::string Vertex = R"(
 
 #include CAMERA_UBO
 
-        uniform vec4 u_clipPlane;
-
         uniform mat4 u_worldMatrix;
 
     #if defined(SHADOW_MAPPING)
@@ -123,8 +121,6 @@ static inline const std::string Vertex = R"(
             v_worldPosition = position;
 #endif
 #endif
-
-
 
 
 //TODO: defs for scaled billboards

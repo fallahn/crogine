@@ -39,7 +39,6 @@ static const inline std::string WeatherVertex = R"(
 
     uniform mat4 u_worldMatrix;
     uniform mat4 u_worldViewMatrix;
-    uniform vec4 u_clipPlane;
 
 #include WIND_BUFFER
 #include SCALE_BUFFER

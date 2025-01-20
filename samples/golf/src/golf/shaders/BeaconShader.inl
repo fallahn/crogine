@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,10 +37,8 @@ inline const std::string BeaconVertex = R"(
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec2 a_texCoord0;
 
+#include CAMERA_UBO
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
-
-    uniform vec4 u_clipPlane;
     uniform float u_colourRotation = 1.0;
 
     VARYING_OUT vec4 v_colour;

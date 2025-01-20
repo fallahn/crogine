@@ -48,7 +48,6 @@ inline const std::string BillboardVertexShader = R"(
     uniform mat4 u_cameraViewMatrix;
 #endif
 
-    uniform vec4 u_clipPlane;
 
 #include WIND_BUFFER
 #include RESOLUTION_BUFFER

@@ -179,6 +179,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
         block.projectionMatrix = camComponent.getProjectionMatrix();
         block.viewMatrix = pass.viewMatrix;
         block.viewProjectionMatrix = pass.viewProjectionMatrix;
+        block.clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
 
         ubo->setData(block);
     }
@@ -319,10 +320,10 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                     glCheck(glUniformMatrix4fv(uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
                     glCheck(glUniformMatrix4fv(uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
                     glCheck(glUniformMatrix4fv(uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+                    glCheck(glUniform4f(uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
                 }
                 glCheck(glUniformMatrix4fv(uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
                 glCheck(glUniformMatrix3fv(uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(normalMat)));
-                glCheck(glUniform4f(uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
 
                 applyBlendMode(material/*.blendMode*/);
 

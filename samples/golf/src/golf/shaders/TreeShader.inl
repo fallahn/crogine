@@ -43,14 +43,9 @@ R"(
     uniform mat3 u_normalMatrix;
 #endif
     uniform mat4 u_worldMatrix;
-    //uniform mat4 u_viewMatrix;
-    //uniform mat4 u_viewProjectionMatrix;
-    //uniform mat4 u_projectionMatrix;
-    //uniform vec3 u_cameraWorldPosition;
 
 #include CAMERA_UBO
 
-    uniform vec4 u_clipPlane;
     uniform float u_targetHeight = 300.0; //height of the render target multiplied by its viewport, ie height of the renderable area
 
     uniform float u_leafSize = 0.25; //world units, in this case metres
@@ -419,10 +414,6 @@ inline const std::string BranchVertex = R"(
 #include CAMERA_UBO
 
     uniform mat4 u_worldMatrix;
-    //uniform mat4 u_viewProjectionMatrix;
-    //uniform vec3 u_cameraWorldPosition;
-
-    uniform vec4 u_clipPlane;
     uniform sampler2D u_noiseTexture;
 
 //dirX, strength, dirZ, elapsedTime

@@ -70,7 +70,7 @@ uniform MED vec3 u_cameraWorldPosition;
 //uniform HIGH mat4 u_viewMatrix;
 //uniform HIGH mat4 u_viewProjectionMatrix;
 //uniform HIGH mat4 u_projectionMatrix;
-//
+//uniform MED vec4 u_clipPlane;
 //uniform MED vec3 u_cameraWorldPosition;
 
 layout (std140) uniform CameraUniforms
@@ -78,6 +78,7 @@ layout (std140) uniform CameraUniforms
     mat4 u_viewMatrix;
     mat4 u_viewProjectionMatrix;
     mat4 u_projectionMatrix;
+    vec4 u_clipPlane;
     vec3 u_cameraWorldPosition;
 };
 #endif

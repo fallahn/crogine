@@ -40,8 +40,6 @@ static inline const std::string TerrainVertexShader = R"(
 
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
-    //uniform mat4 u_viewMatrix;
-    //uniform mat4 u_viewProjectionMatrix;
 
 #include CAMERA_UBO
 
@@ -49,10 +47,8 @@ static inline const std::string TerrainVertexShader = R"(
 #include SHADOWMAP_UNIFORMS_VERT
 #endif
 
-
-    uniform vec4 u_clipPlane;
     uniform float u_morphTime;
-    //uniform vec3 u_cameraWorldPosition;
+
 
 #include RESOLUTION_BUFFER
 

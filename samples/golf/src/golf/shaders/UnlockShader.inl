@@ -39,7 +39,6 @@ inline const std::string UnlockVertex = R"(
 #include CAMERA_UBO
 
     uniform mat4 u_worldMatrix;
-    //uniform mat4 u_viewProjectionMatrix;
     uniform mat3 u_normalMatrix;
 
     #if defined(SKINNED)

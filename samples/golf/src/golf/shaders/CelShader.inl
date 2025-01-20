@@ -75,7 +75,6 @@ inline const std::string CelVertexShader = R"(
     uniform mat3 u_normalMatrix;
 #endif
     uniform mat4 u_worldMatrix;
-    uniform vec4 u_clipPlane;
 
     uniform sampler2D u_noiseTexture;
 

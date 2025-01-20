@@ -43,7 +43,6 @@ static inline const std::string WireframeVertex = R"(
 
     uniform mat4 u_worldMatrix;
     uniform mat4 u_worldViewMatrix;
-    uniform vec4 u_clipPlane;
 
 #if defined (CULLED)
     #include RESOLUTION_BUFFER
