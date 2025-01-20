@@ -63,8 +63,8 @@ namespace cro
                 if constexpr (!std::is_copy_assignable_v<T>
                     || std::is_base_of_v<NonResizeable, T>)
                 {
-                    m_pool.reserve(MinFreeIDs);
-                    LOG("Reserved maximum pool size of " + std::to_string(MinFreeIDs) + " for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
+                    m_pool.reserve(MaxPoolSize<T>::value);
+                    LOG("Reserved maximum pool size of " + std::to_string(MaxPoolSize<T>::value) + " for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
                 }
             }
 
@@ -72,6 +72,7 @@ namespace cro
             std::size_t size() const { return m_pool.size(); }
             void resize(std::size_t size)
             { 
+                assert(size <= MaxPoolSize<T>::value);
                 if (size > m_pool.size())
                 {
                     m_pool.resize(size);

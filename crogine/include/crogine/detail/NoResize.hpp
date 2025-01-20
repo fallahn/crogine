@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,23 +29,47 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/Detail.hpp>
 #include <crogine/detail/Types.hpp>
 
-namespace cro::Detail
-{
-    /*!
-    \brief Declares pooled resources which inherit this not have their component
-    pools resized in cases where it will harmfully invalidate references. For 
-    example a component which contains a transform that has pointers to it should
-    not be moved during reallocation of the component pool, else those references
-    will become invalidated.
+#include <cstdint>
 
-    Classes inheriting this should be components in the ECS (else this base class
-    will have no effect), and will have the maximum memory pool size of MaxGenerations
-    components reserved for any potential pool resize events.
-    */
-    class CRO_EXPORT_API NonResizeable
+namespace cro
+{
+    class Transform;
+    namespace Detail
     {
-    public: virtual ~NonResizeable() {};
-    };
+        /*!
+        \brief Declares pooled resources which inherit this not have their component
+        pools resized in cases where it will harmfully invalidate references. For
+        example a component which contains a transform that has pointers to it should
+        not be moved during reallocation of the component pool, else those references
+        will become invalidated.
+
+        Classes inheriting this should be components in the ECS (else this base class
+        will have no effect), and will have the maximum memory pool size of MaxGenerations
+        components reserved for any potential pool resize events.
+        */
+        class CRO_EXPORT_API NonResizeable
+        {
+        public: virtual ~NonResizeable() {};
+        };
+
+
+        /*
+        \brief Allows setting the max pool size by specialising for a given type
+        else falls back to 4095 types.
+        */
+        template <typename T>
+        struct MaxPoolSize final
+        {
+            static constexpr std::int32_t value = MinFreeIDs / 2;
+        };
+
+        template <>
+        struct MaxPoolSize<cro::Transform> final
+        {
+            static constexpr std::int32_t value = MinFreeIDs;
+        };
+    }
 }
