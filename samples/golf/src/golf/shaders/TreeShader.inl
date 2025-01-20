@@ -323,10 +323,9 @@ R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
-    uniform vec3 u_lightDirection;
     uniform vec3 u_colour = vec3(1.0);
-    uniform vec4 u_lightColour;
 
+#include LIGHT_UBO
 #include SCALE_BUFFER
 
     in vData
@@ -505,9 +504,8 @@ inline const std::string BranchFragment = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
-    uniform vec3 u_lightDirection;
-    uniform vec4 u_lightColour;
 
+#include LIGHT_UBO
 #include SCALE_BUFFER
 
     VARYING_IN float v_ditherAmount;

@@ -259,8 +259,7 @@ VARYING_OUT vec4 v_menuProjection;
     })";
 
 inline const std::string CelFragmentShader = R"(
-    uniform vec3 u_lightDirection;
-    uniform vec4 u_lightColour = vec4(1.0);
+#include LIGHT_UBO
 
 #include SCALE_BUFFER
 

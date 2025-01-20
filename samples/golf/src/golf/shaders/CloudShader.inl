@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -146,8 +146,8 @@ inline const std::string CloudOverheadVertex = R"(
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
 
+#include CAMERA_UBO
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
     uniform mat3 u_normalMatrix;
 
 #include RESOLUTION_BUFFER
@@ -182,11 +182,10 @@ inline const std::string CloudOverheadFragment = R"(
     OUTPUT
 
     uniform vec2 u_worldCentre = vec2(0.0);
-    uniform vec3 u_cameraWorldPosition;
-    uniform vec3 u_lightDirection;
-    uniform vec4 u_lightColour;
     uniform vec4 u_skyColourTop;
     uniform vec4 u_skyColourBottom;
+#include CAMERA_UBO
+#include LIGHT_UBO
 
     VARYING_IN vec3 v_normal;
     VARYING_IN vec3 v_worldPosition;

@@ -2709,7 +2709,7 @@ MenuState::PropFileData MenuState::getPropPath() const
         ret.propFilePath = paths[cro::Util::Random::value(0u, paths.size() - 1)];
     }
 
-
+    
     ret.timeOfDay = m_tod.getTimeOfDay();
     m_sharedData.menuSky = Skies[ret.timeOfDay];
 

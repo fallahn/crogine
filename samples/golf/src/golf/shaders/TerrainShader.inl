@@ -113,8 +113,6 @@ R"(
 #include CAMERA_UBO
 
     uniform mat4 u_worldMatrix;
-    //uniform mat4 u_viewProjectionMatrix;
-    //uniform vec3 u_cameraWorldPosition;
     uniform vec3 u_centrePosition;
 
     VARYING_OUT vec3 v_normal;

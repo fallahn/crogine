@@ -179,16 +179,16 @@ inline const std::string BillboardVertexShader = R"(
 
 
 inline const std::string BillboardFragmentShader = R"(
-    #include OUTPUT_LOCATION
+#include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
-    uniform vec4 u_lightColour;
 
 #if defined (SKY_COLOUR)
     uniform vec4 u_skyColour = vec4(1.0);
 #endif
 
-    #include SCALE_BUFFER
+#include LIGHT_UBO
+#include SCALE_BUFFER
 
     VARYING_IN LOW vec4 v_colour;
     VARYING_IN MED vec2 v_texCoord0;
@@ -197,10 +197,10 @@ inline const std::string BillboardFragmentShader = R"(
     VARYING_IN vec3 v_normalVector;
     VARYING_IN vec3 v_worldPosition;
 
-    #include BAYER_MATRIX
-    #include LIGHT_COLOUR
+#include BAYER_MATRIX
+#include LIGHT_COLOUR
 
-    #include WATER_LEVEL
+#include WATER_LEVEL
 
     void main()
     {

@@ -82,7 +82,6 @@ inline const std::string UnlockFragment = R"(
 
 #include CAMERA_UBO
 
-    //uniform vec3 u_cameraWorldPosition;
     uniform vec3 u_lightDirection = vec3(0.1, -0.5, 0.4);
 
     VARYING_IN vec3 v_normal;
