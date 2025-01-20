@@ -405,9 +405,10 @@ void Data::setShader(const Shader& s)
         }
     }
 
-    //mark this material as having the world UBO uniform
-    //block available if the shader supposrts it
+    //mark this material as having the any uniform
+    //blocks available if the shader supposrts it
     m_hasCameraUBO = (glGetUniformBlockIndex(shader, "CameraUniforms") != GL_INVALID_INDEX);
+    m_hasLightUBO = (glGetUniformBlockIndex(shader, "LightUniforms") != GL_INVALID_INDEX);
 }
 
 //private

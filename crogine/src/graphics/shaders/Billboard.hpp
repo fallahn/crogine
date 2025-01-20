@@ -187,9 +187,7 @@ static inline const std::string Fragment = R"(
 
 #if defined(VERTEX_LIT)
     uniform samplerCube u_skybox;
-
-    uniform HIGH vec3 u_lightDirection;
-    uniform LOW vec4 u_lightColour;
+#include LIGHT_UBO
 #endif
 #if defined (RX_SHADOWS)
 #if defined (MOBILE)

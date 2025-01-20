@@ -75,7 +75,8 @@ namespace
 ModelRenderer::ModelRenderer(MessageBus& mb)
     : System                (mb, typeid(ModelRenderer)),
     m_drawLists             (),
-    m_pass                  (Mesh::IndexData::Final)/*,
+    m_pass                  (Mesh::IndexData::Final),
+    m_lightUBO              ("LightUniforms")/*,
     m_tree          (1.f),
     m_useTreeQueries(false)*/
 {
@@ -233,6 +234,10 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 
 void ModelRenderer::process(float dt)
 {
+    m_lightUniforms.lightColour = getScene()->getSunlight().getComponent<Sunlight>().getColour().getVec4();
+    m_lightUniforms.lightDirection = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
+    m_lightUBO.setData(m_lightUniforms);
+
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -263,6 +268,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 #ifdef BENCHMARK
     m_timer.restart();
 #endif
+    m_lightUBO.bind();
+    
     const auto& camComponent = camera.getComponent<Camera>();
     const auto camIndex = camComponent.getDrawListIndex();
     if (camIndex < m_drawLists.size())
@@ -296,7 +303,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             const auto& model = entity.getComponent<Model>();
             glCheck(glFrontFace(model.m_facing));
 
-            //calc entity transform
+            //calc entity transform - TODO this should be done in updateDrawlist() rather than every time it's rendered
             const auto& tx = entity.getComponent<Transform>();
             const glm::mat4 worldMat = tx.getWorldTransform();
             const glm::mat4 worldView = pass.viewMatrix * worldMat;
@@ -454,23 +461,29 @@ void ModelRenderer::onEntityAdded(Entity entity)
     //model.m_treeID = m_tree.addToTree(entity, model.getAABB());
 
 #ifdef PLATFORM_DESKTOP
-    for (auto& uboPair : m_cameraUBOs)
+    
+    //iterate materials and attempt to add to uniform buffer
+    //UBO class automatically checks if this is valid for us.
+    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
     {
-        for (auto& ubo : uboPair)
-        {
-            if (ubo)
+        const auto& mat = model.getMaterialData(Mesh::IndexData::Final, i);
+        if (mat.hasCameraUBO())
+        {    
+            for (auto& uboPair : m_cameraUBOs)
             {
-                //iterate materials and attempt to add to uniform buffer
-                //UBO class automatically checks if this is valid for us.
-                for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+                for (auto& ubo : uboPair)
                 {
-                    const auto& mat = model.getMaterialData(Mesh::IndexData::Final, i);
-                    if (mat.hasCameraUBO())
+                    if (ubo)
                     {
                         ubo->addShader(mat.shader);
                     }
                 }
             }
+        }
+
+        if (mat.hasLightUBO())
+        {
+            m_lightUBO.addShader(mat.shader);
         }
     }
 
@@ -485,10 +498,15 @@ void ModelRenderer::onEntityAdded(Entity entity)
                     if (ubo)
                     {
                         ubo->removeShader(oldShader);
-                        ubo->addShader(newShader);
+                        ubo->addShader(newShader); //hmm this might add a shader which doesn't actually support this block
                     }
                 }
             }
+
+            //plus we can't assume that just because it has a camera ubo
+            //that it also uses lighting...
+            m_lightUBO.removeShader(oldShader);
+            m_lightUBO.addShader(newShader);
         };
 #endif
 }
@@ -500,19 +518,19 @@ void ModelRenderer::onEntityRemoved(Entity entity)
 #ifdef PLATFORM_DESKTOP
     //remove any materials from camera UBOs
     const auto& model = entity.getComponent<Model>();
-
-    for (auto& uboPair: m_cameraUBOs)
+    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
     {
-        for (auto& ubo : uboPair)
+        for (auto& uboPair: m_cameraUBOs)
         {
-            if (ubo)
+            for (auto& ubo : uboPair)
             {
-                for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+                if (ubo)
                 {
                     ubo->removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
                 }
             }
         }
+        m_lightUBO.removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
     }
 #endif
 }
@@ -893,7 +911,7 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             break;
         case Material::SunlightColour:
         {
-            //TODO things like sunlight ought to be in a uniform buffer
+            //usually in a uniform buffer, here for shaders which don't have the datablock
             const glm::vec4 colour = scene.getSunlight().getComponent<Sunlight>().getColour().getVec4();
             glCheck(glUniform4f(material.uniforms[Material::SunlightColour], colour.r/* * lightMultiplier*/, colour.g/* * lightMultiplier*/, colour.b /** lightMultiplier*/, colour.a));
         }

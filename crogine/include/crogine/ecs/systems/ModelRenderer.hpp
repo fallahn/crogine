@@ -165,12 +165,13 @@ namespace cro
         using CamUBO = std::shared_ptr<UniformBuffer<CameraUniformBlock>>;
         std::vector<std::array<CamUBO, 2u>> m_cameraUBOs; //final and reflection passes
 
-        struct SceneUniformBlock final
+        struct LightUniformBlock final
         {
             glm::vec4 lightColour = glm::vec4(1.f);
             glm::vec3 lightDirection = glm::vec3(0.f, 0.f, 1.f);
             float Padding = 0.f;
-        }m_sceneUniforms;
+        }m_lightUniforms;
+        UniformBuffer<LightUniformBlock> m_lightUBO;
 
 #if defined(BENCHMARK)
         cro::HiResTimer m_timer;

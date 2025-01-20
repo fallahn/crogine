@@ -59,6 +59,7 @@ ShaderResource::ShaderResource()
     //register the default includes
     addInclude("WVP_UNIFORMS", WVPMatrices.c_str());
     addInclude("CAMERA_UBO", CameraUBO.c_str());
+    addInclude("LIGHT_UBO", LightUBO.c_str());
 
     addInclude("INSTANCE_ATTRIBS", InstanceAttribs.c_str());
     addInclude("INSTANCE_MATRICES", InstanceMatrices.c_str());

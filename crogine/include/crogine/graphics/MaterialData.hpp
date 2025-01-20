@@ -350,10 +350,16 @@ namespace cro
             void setShader(const Shader&);
 
             /*!
-            \brief Returns true if the material shader supports the camer UBO block
+            \brief Returns true if the material shader supports the camera UBO block
             Used internally by the ModelRenderer system
             */
             bool hasCameraUBO() const { return m_hasCameraUBO; }
+
+            /*!
+            \brief Returns true if the material shader supports the lighting UBO block
+            Used internally by the ModelRenderer system
+            */
+            bool hasLightUBO() const { return m_hasLightUBO; }
 
 
             /*
@@ -378,6 +384,7 @@ namespace cro
             void exists(const std::string&);
 
             bool m_hasCameraUBO = false;
+            bool m_hasLightUBO = false;
 
             static constexpr std::size_t MaxCustomSettings = 10;
             std::size_t m_customSettingsCount = 0;

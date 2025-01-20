@@ -84,6 +84,21 @@ layout (std140) uniform CameraUniforms
 #endif
 )";
 
+//#include LIGHT_UBO
+static inline const std::string LightUBO =
+R"(
+#if defined(MOBILE)
+uniform HIGH vec3 u_lightDirection;
+uniform LOW vec4 u_lightColour;
+#else
+layout (std140) uniform LightUniforms
+{
+    vec4 u_lightColour;
+    vec3 u_lightDirection;
+};
+#endif
+)";
+
 //#include INSTANCE_ATTRIBS
 static inline const std::string InstanceAttribs =
 R"(

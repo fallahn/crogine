@@ -202,10 +202,7 @@ static inline const std::string Vertex = R"(
     #endif
 
         uniform samplerCube u_skybox;
-
-        uniform HIGH vec3 u_lightDirection;
-        uniform LOW vec4 u_lightColour;
-        //uniform HIGH vec3 u_cameraWorldPosition;
+#include LIGHT_UBO
       
     #if defined(COLOURED)
         uniform LOW vec4 u_colour;

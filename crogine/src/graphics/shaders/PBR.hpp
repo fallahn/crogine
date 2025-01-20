@@ -43,9 +43,7 @@ static inline const std::string Fragment =
         #if defined (RX_SHADOWS)
 #include SHADOWMAP_UNIFORMS_FRAG
         #endif
-
-        uniform vec3 u_lightDirection;
-        uniform vec4 u_lightColour;
+#include LIGHT_UBO
 
         uniform samplerCube u_irradianceMap;
         uniform samplerCube u_prefilterMap;
