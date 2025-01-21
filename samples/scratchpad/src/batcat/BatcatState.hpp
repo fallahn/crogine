@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 
 #include "../StateIDs.hpp"
 #include "ResourceIDs.hpp"
+#include "SMAAPost.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -73,7 +74,7 @@ private:
     cro::RenderTexture m_sceneTexture;
     cro::RenderTexture m_outputTexture;
     cro::SimpleQuad m_tempQuad;
-
+    SMAAPost m_smaaPost;
 
     void addSystems();
     void loadAssets();

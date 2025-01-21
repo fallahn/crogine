@@ -79,7 +79,6 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
-#include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/ecs/components/UIElement.hpp>
 
@@ -212,10 +211,12 @@ void BatcatState::render()
     m_scene.render();
     m_sceneTexture.display();
 
-    m_outputTexture.clear();
-    m_tempQuad.draw();
-    m_outputTexture.display();
+    //m_outputTexture.clear();
+    //m_tempQuad.draw();
+    //m_outputTexture.display();
 
+    //feeds scene texture through post to output texture, which is in turn drawn by overlay
+    m_smaaPost.render(); 
     m_overlayScene.render();
 }
 
@@ -712,6 +713,7 @@ void BatcatState::updateView(cro::Camera& cam3D)
     m_tempQuad.setTexture(m_sceneTexture.getTexture());
 
     m_outputTexture.create(size.x, size.y, false);
+    m_smaaPost.create(m_sceneTexture.getTexture(), m_outputTexture);
 
     cam3D.viewport = { 0.f, 0.f, 1.f, 1.f };
 }

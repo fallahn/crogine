@@ -301,6 +301,7 @@
     <ClCompile Include="src\arc\ArcState.cpp" />
     <ClCompile Include="src\batcat\BatcatState.cpp" />
     <ClCompile Include="src\batcat\PlayerDirector.cpp" />
+    <ClCompile Include="src\batcat\SMAAPost.cpp" />
     <ClCompile Include="src\batcat\TerrainSystem.cpp" />
     <ClCompile Include="src\billiards\BilliardsState.cpp" />
     <ClCompile Include="src\billiards\BilliardsSystem.cpp" />
@@ -365,6 +366,7 @@
     <ClInclude Include="src\batcat\Messages.hpp" />
     <ClInclude Include="src\batcat\PlayerDirector.hpp" />
     <ClInclude Include="src\batcat\ResourceIDs.hpp" />
+    <ClInclude Include="src\batcat\SMAAPost.hpp" />
     <ClInclude Include="src\batcat\TerrainChunk.hpp" />
     <ClInclude Include="src\batcat\TerrainSystem.hpp" />
     <ClInclude Include="src\billiards\BilliardsState.hpp" />
@@ -432,6 +434,9 @@
     <ClInclude Include="src\voxels\VoxelState.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\batcat\smaa_shaders\blend.inl" />
+    <None Include="src\batcat\smaa_shaders\edges.inl" />
+    <None Include="src\batcat\smaa_shaders\weights.inl" />
     <None Include="src\interiormapping\IMShader.inl" />
     <None Include="src\interiormapping\ProjectionShader.inl" />
     <None Include="src\pseuthe\PseuthePostFX.inl" />
