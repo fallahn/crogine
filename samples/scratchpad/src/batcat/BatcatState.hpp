@@ -37,7 +37,6 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/MultiRenderTexture.hpp>
-#include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/audio/AudioBuffer.hpp>
@@ -73,7 +72,7 @@ private:
 
     cro::RenderTexture m_sceneTexture;
     cro::RenderTexture m_outputTexture;
-    cro::SimpleQuad m_tempQuad;
+
     SMAAPost m_smaaPost;
 
     void addSystems();

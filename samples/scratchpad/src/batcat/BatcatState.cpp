@@ -211,9 +211,6 @@ void BatcatState::render()
     m_scene.render();
     m_sceneTexture.display();
 
-    //m_outputTexture.clear();
-    //m_tempQuad.draw();
-    //m_outputTexture.display();
 
     //feeds scene texture through post to output texture, which is in turn drawn by overlay
     m_smaaPost.render(); 
@@ -574,6 +571,7 @@ void BatcatState::createUI()
     ent.addComponent<cro::Drawable2D>();
     ent.addComponent<cro::Text>(m_resources.fonts.get(1)).setString("Hallo! I am text.");
 
+    //SMAA output
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>();
     ent.addComponent<cro::Drawable2D>();
@@ -585,7 +583,23 @@ void BatcatState::createUI()
             glm::vec2 size(cro::App::getWindow().getSize());
             const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
             e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
+
+            //e.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, size.x / 2.f, size.y });
         };
+
+    //non-SMAA
+    //ent = m_overlayScene.createEntity();
+    //ent.addComponent<cro::Transform>();
+    //ent.addComponent<cro::Drawable2D>();
+    //ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture());
+    //ent.addComponent<cro::UIElement>().depth = -0.2f;
+    //ent.getComponent<cro::UIElement>().resizeCallback =
+    //    [](cro::Entity e)
+    //    {
+    //        glm::vec2 size(cro::App::getWindow().getSize());
+    //        const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
+    //        e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
+    //    };
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
@@ -710,8 +724,6 @@ void BatcatState::updateView(cro::Camera& cam3D)
     size.y = (size.x / 16) * 9;
 
     m_sceneTexture.create(size.x, size.y);
-    m_tempQuad.setTexture(m_sceneTexture.getTexture());
-
     m_outputTexture.create(size.x, size.y, false);
     m_smaaPost.create(m_sceneTexture.getTexture(), m_outputTexture);
 

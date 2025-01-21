@@ -100,26 +100,28 @@ void main()
     //Is there any blending weight with a value greater than 0.0?
     if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) <= 1e-5)
     {
-        colour = texture(u_colourTexture, v_texCoord); //LinearSampler
+        colour = texture(u_colourTexture, v_texCoord) * vec4(1.0, 0.0, 0.0, 1.0); //LinearSampler
     }
     else
     {
-        bool h = max(a.x, a.z) > max(a.y, a.w); //max(horizontal) > max(vertical)
+        //bool h = max(a.x, a.z) > max(a.y, a.w); //max(horizontal) > max(vertical)
 
-        //Calculate the blending offsets:
-        vec4 blendingOffset = vec4(0.0, a.y, 0.0, a.w);
-        vec2 blendingWeight = a.yw;
-        SMAAMovc(bvec4(h, h, h, h), blendingOffset, vec4(a.x, 0.0, a.z, 0.0));
-        SMAAMovc(bvec2(h, h), blendingWeight, a.xz);
-        blendingWeight /= dot(blendingWeight, vec2(1.0, 1.0));
+        ////Calculate the blending offsets:
+        //vec4 blendingOffset = vec4(0.0, a.y, 0.0, a.w);
+        //vec2 blendingWeight = a.yw;
+        //SMAAMovc(bvec4(h, h, h, h), blendingOffset, vec4(a.x, 0.0, a.z, 0.0));
+        //SMAAMovc(bvec2(h, h), blendingWeight, a.xz);
+        //blendingWeight /= dot(blendingWeight, vec2(1.0, 1.0));
 
-        //Calculate the texture coordinates:
-        vec4 blendingCoord = mad(blendingOffset, vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy), v_texCoord.xyxy);
+        ////Calculate the texture coordinates:
+        //vec4 blendingCoord = mad(blendingOffset, vec4(SMAA_RT_METRICS.xy, -SMAA_RT_METRICS.xy), v_texCoord.xyxy);
 
-        //We exploit bilinear filtering to mix current pixel with the chosen
-        //neighbor:
-        colour = blendingWeight.x * texture(u_colourTexture, blendingCoord.xy); //LinearSampler
-        colour += blendingWeight.y * texture(u_colourTexture, blendingCoord.zw); //LinearSampler
+        ////We exploit bilinear filtering to mix current pixel with the chosen
+        ////neighbor:
+        //colour = blendingWeight.x * texture(u_colourTexture, blendingCoord.xy); //LinearSampler
+        //colour += blendingWeight.y * texture(u_colourTexture, blendingCoord.zw); //LinearSampler
+
+colour = vec4(0.0, 1.0, 1.0 ,1.0);
     }
 
     FRAG_OUT = colour;

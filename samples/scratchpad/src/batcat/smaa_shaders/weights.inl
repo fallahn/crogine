@@ -81,8 +81,8 @@ void main()
     v_pixCoord = a_texCoord0 * SMAA_RT_METRICS.zw;
 
     //We will use these offsets for the searches later on (see @PSEUDO_GATHER4):
-    v_offset[0] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.25, -0.125,  1.25, -0.125), a_texCoord0.xyxy);
-    v_offset[1] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.125, -0.25, -0.125,  1.25), a_texCoord0.xyxy);
+    v_offset[0] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.25, -0.125,  1.25, -0.125), v_texCoord.xyxy);
+    v_offset[1] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.125, -0.25, -0.125,  1.25), v_texCoord.xyxy);
 
     //And these for the searches, they indicate the ends of the loops:
     v_offset[2] = mad(
@@ -128,6 +128,16 @@ void main()
 
     static inline const std::string Frag =
 R"(
+#if defined(SMAA_PRESET_LOW)
+#define SMAA_MAX_SEARCH_STEPS 4
+#elif defined(SMAA_PRESET_MEDIUM)
+#define SMAA_MAX_SEARCH_STEPS 8
+#elif defined(SMAA_PRESET_HIGH)
+#define SMAA_MAX_SEARCH_STEPS 16
+#elif defined(SMAA_PRESET_ULTRA)
+#define SMAA_MAX_SEARCH_STEPS 32
+#endif
+
 //Defaults
 #ifndef SMAA_THRESHOLD
 #define SMAA_THRESHOLD 0.1

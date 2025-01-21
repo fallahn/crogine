@@ -58,16 +58,38 @@ SMAAPost::SMAAPost()
 {
     std::fill(m_supportTextures.begin(), m_supportTextures.end(), 0);
 
+    static constexpr auto RowSize = AREATEX_PITCH;
+
+    std::vector<unsigned char> flipBuffer;
+    for (auto y = AREATEX_HEIGHT - 1; y >= 0; y--)
+    {
+        for (auto x = 0; x < RowSize; x++)
+        {
+            const auto idx = (RowSize * y) + x;
+            flipBuffer.push_back(areaTexBytes[idx]);
+        }
+    }
+
     glGenTextures(2, m_supportTextures.data());
     glBindTexture(GL_TEXTURE_2D, m_supportTextures[TextureID::Area]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, areaTexBytes);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, /*areaTexBytes*/flipBuffer.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
+    flipBuffer.clear();
+    for (auto y = SEARCHTEX_HEIGHT - 1; y >= 0; y--)
+    {
+        for (auto x = 0; x < SEARCHTEX_WIDTH; ++x)
+        {
+            const auto idx = (SEARCHTEX_WIDTH * y) + x;
+            flipBuffer.push_back(searchTexBytes[idx]);
+        }
+    }
+
     glBindTexture(GL_TEXTURE_2D, m_supportTextures[TextureID::Search]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, searchTexBytes);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, /*searchTexBytes*/flipBuffer.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -80,7 +102,7 @@ SMAAPost::SMAAPost()
     //define SMAA_PRESET_MEDIUM
     //define SMAA_PRESET_HIGH
     //define SMAA_PRESET_ULTRA
-    const std::string quality = "#define SMAA_PRESET_LOW\n";
+    const std::string quality = "#define SMAA_PRESET_HIGH\n";
     m_edgeShader.loadFromString(SMAA::Edge::Vert, SMAA::Edge::LumaFragment, quality);
     m_weightShader.loadFromString(SMAA::Weights::Vert, SMAA::Weights::Frag, quality);
     m_blendShader.loadFromString(SMAA::Blend::Vert, SMAA::Blend::Frag, quality);
@@ -121,11 +143,13 @@ void SMAAPost::create(const cro::Texture& input, cro::RenderTexture& output)
 
 
     m_edgeDetection.setTexture(input);
+    m_edgeDetection.setBlendMode(cro::Material::BlendMode::None);
     m_edgeDetection.setShader(m_edgeShader);
     setResolution(m_edgeShader, glm::vec2(size));
 
 
     m_blendCalc.setTexture(m_edgeTexture.getTexture());
+    m_blendCalc.setBlendMode(cro::Material::BlendMode::None);
     m_blendCalc.setShader(m_weightShader);
     setResolution(m_weightShader, glm::vec2(size));
     glUseProgram(m_weightShader.getGLHandle());
@@ -134,7 +158,8 @@ void SMAAPost::create(const cro::Texture& input, cro::RenderTexture& output)
 
 
     m_blendOutput.setTexture(m_blendTexture.getTexture());
-    m_blendOutput.setShader(m_blendShader);
+    m_blendOutput.setBlendMode(cro::Material::BlendMode::None);
+   // m_blendOutput.setShader(m_blendShader);
     setResolution(m_blendShader, size);
     glUseProgram(m_blendShader.getGLHandle());
     glUniform1i(m_blendShader.getUniformID("u_colourTexture"), TextureSlotOffset);
@@ -143,7 +168,7 @@ void SMAAPost::create(const cro::Texture& input, cro::RenderTexture& output)
 
 void SMAAPost::render()
 {
-    m_edgeTexture.clear();
+    m_edgeTexture.clear(cro::Colour::Transparent);
     m_edgeDetection.draw();
     m_edgeTexture.display();
 
@@ -153,7 +178,7 @@ void SMAAPost::render()
     glActiveTexture(GL_TEXTURE1 + TextureSlotOffset);
     glBindTexture(GL_TEXTURE_2D, m_supportTextures[1]);
 
-    m_blendTexture.clear();
+    m_blendTexture.clear(cro::Colour::Transparent);
     m_blendCalc.draw();
     m_blendTexture.display();
 
@@ -161,7 +186,7 @@ void SMAAPost::render()
     glActiveTexture(GL_TEXTURE0 + TextureSlotOffset);
     glBindTexture(GL_TEXTURE_2D, m_inputTexture);
 
-    m_output->clear();
+    m_output->clear(cro::Colour::Transparent);
     m_blendOutput.draw();
     m_output->display();
 }
