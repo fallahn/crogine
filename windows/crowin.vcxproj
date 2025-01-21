@@ -108,6 +108,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Text.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\UIDraggable.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\UIElement.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\UIInput.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Director.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Entity.hpp" />
@@ -136,6 +137,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem3D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextSystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\UIElementSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\UISystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\ArrayTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BinaryMeshBuilder.hpp" />
@@ -360,6 +362,7 @@
     <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem2D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem3D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\TextSystem.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\UIElementSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\UISystem.cpp" />
     <ClCompile Include="..\crogine\src\graphics\BinaryMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp" />

@@ -768,6 +768,12 @@
     <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp">
       <Filter>Header Files\audio</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\UIElement.hpp">
+      <Filter>Header Files\ecs\components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\UIElementSystem.hpp">
+      <Filter>Header Files\ecs\systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1309,6 +1315,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\detail\clipboard\clip_win_wic.cpp">
       <Filter>Source Files\detail\clipboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\ecs\systems\UIElementSystem.cpp">
+      <Filter>Source Files\ecs\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

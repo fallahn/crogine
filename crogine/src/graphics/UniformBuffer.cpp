@@ -88,47 +88,47 @@ Detail::UniformBufferImpl::UniformBufferImpl(const std::string& blockName, std::
 
     instanceCount += m_instanceCountOffset;
 
-#ifdef CRO_DEBUG_
-    registerWindow([&,blockName]() 
-        {
-            if (ImGui::Begin(blockName.c_str()))
-            {
-                ImGui::Text("Available Binding Points: %d", maxBindings);
-                ImGui::Text("Shader Counts:");
-                if (m_refCount.empty())
-                {
-                    ImGui::Text("No Shaders active");
-                }
-                else
-                {
-                    for (const auto [handle, count] : m_refCount)
-                    {
-                        ImGui::Text("    ShaderID: %u, Count: %u", handle, count);
-                    }
-                }
-                ImGui::NewLine();
-                ImGui::Text("Active Binding Points:");
-                for (auto i = 0u; i < activeBindings.size(); ++i)
-                {
-                    if (activeBindings[i] != GL_INVALID_INDEX)
-                    {
-                        ImGui::Text("    Binding %u: UBO: %u", i, activeBindings[i]);
-                    }
-                }
-
-                ImGui::Text("%d UBOs are currently active", instanceCount);
-                ImGui::Separator();
-
-                ImGui::Text("Bind Point Mappings");
-                for (const auto& [t, bp] : bindPointIDs)
-                {
-                    ImGui::Text("%d, %u", t, bp);
-                }
-                ImGui::Separator();
-            }
-            ImGui::End();
-        });
-#endif
+//#ifdef CRO_DEBUG_
+//    registerWindow([&,blockName]() 
+//        {
+//            if (ImGui::Begin(blockName.c_str()))
+//            {
+//                ImGui::Text("Available Binding Points: %d", maxBindings);
+//                ImGui::Text("Shader Counts:");
+//                if (m_refCount.empty())
+//                {
+//                    ImGui::Text("No Shaders active");
+//                }
+//                else
+//                {
+//                    for (const auto [handle, count] : m_refCount)
+//                    {
+//                        ImGui::Text("    ShaderID: %u, Count: %u", handle, count);
+//                    }
+//                }
+//                ImGui::NewLine();
+//                ImGui::Text("Active Binding Points:");
+//                for (auto i = 0u; i < activeBindings.size(); ++i)
+//                {
+//                    if (activeBindings[i] != GL_INVALID_INDEX)
+//                    {
+//                        ImGui::Text("    Binding %u: UBO: %u", i, activeBindings[i]);
+//                    }
+//                }
+//
+//                ImGui::Text("%d UBOs are currently active", instanceCount);
+//                ImGui::Separator();
+//
+//                ImGui::Text("Bind Point Mappings");
+//                for (const auto& [t, bp] : bindPointIDs)
+//                {
+//                    ImGui::Text("%d, %u", t, bp);
+//                }
+//                ImGui::Separator();
+//            }
+//            ImGui::End();
+//        });
+//#endif
 
 #else
     CRO_ASSERT(true, "Not available on mobile");

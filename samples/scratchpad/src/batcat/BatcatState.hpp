@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/MultiRenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <crogine/audio/AudioBuffer.hpp>
@@ -68,6 +69,11 @@ private:
     std::array<std::unique_ptr<cro::ModelDefinition>, GameModelID::Count> m_modelDefs;
 
     cro::AudioBuffer m_audioBuffer;
+
+    cro::RenderTexture m_sceneTexture;
+    cro::RenderTexture m_outputTexture;
+    cro::SimpleQuad m_tempQuad;
+
 
     void addSystems();
     void loadAssets();

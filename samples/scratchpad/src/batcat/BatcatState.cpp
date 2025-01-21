@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -62,6 +62,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
+#include <crogine/ecs/systems/UIElementSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -80,6 +81,7 @@ source distribution.
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
+#include <crogine/ecs/components/UIElement.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -206,7 +208,14 @@ bool BatcatState::simulate(float dt)
 
 void BatcatState::render()
 {
+    m_sceneTexture.clear();
     m_scene.render();
+    m_sceneTexture.display();
+
+    m_outputTexture.clear();
+    m_tempQuad.draw();
+    m_outputTexture.display();
+
     m_overlayScene.render();
 }
 
@@ -228,6 +237,7 @@ void BatcatState::addSystems()
     m_scene.addDirector<PlayerDirector>();
 
     //uiSystem = m_overlayScene.addSystem<cro::UISystem>(mb);
+    m_overlayScene.addSystem<cro::UIElementSystem>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
     m_overlayScene.addSystem<cro::SpriteSystem2D>(mb);
     m_overlayScene.addSystem<cro::TextSystem>(mb);
@@ -531,10 +541,19 @@ void BatcatState::createUI()
     auto ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>();
     auto& cam2D = ent.addComponent<cro::Camera>();
-    cam2D.setOrthographic(0.f, 1280.f, 0.f, 720.f, -0.1f, 10.f);
-    m_overlayScene.setActiveCamera(ent);
+    /*cam2D.setOrthographic(0.f, 1280.f, 0.f, 720.f, -10.f, 10.f);
     cam2D.resizeCallback = std::bind(&BatcatState::calcViewport, this, std::placeholders::_1);
-    calcViewport(cam2D);
+    calcViewport(cam2D);*/
+
+    cam2D.resizeCallback = [](cro::Camera& cam)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            cam.setOrthographic(0.f, size.x, 0.f, size.y, -10.f, 10.f);
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+        };
+    cam2D.resizeCallback(cam2D);
+
+    m_overlayScene.setActiveCamera(ent);
 
     cro::SpriteSheet targetSheet;
     targetSheet.loadFromFile("assets/batcat/sprites/target.spt", m_resources.textures);
@@ -550,9 +569,22 @@ void BatcatState::createUI()
     m_resources.fonts.get(1).setSmooth(true);
     
     ent = m_overlayScene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 200.f, 100.f });
+    ent.addComponent<cro::Transform>().setPosition({ 200.f, 100.f, 1.f });
     ent.addComponent<cro::Drawable2D>();
     ent.addComponent<cro::Text>(m_resources.fonts.get(1)).setString("Hallo! I am text.");
+
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::Drawable2D>();
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
+    ent.addComponent<cro::UIElement>().depth = -0.1f;
+    ent.getComponent<cro::UIElement>().resizeCallback =
+        [](cro::Entity e)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
+            e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
+        };
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
@@ -671,5 +703,15 @@ void BatcatState::updateView(cro::Camera& cam3D)
 {
     cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 6.f, 280.f);
     cam3D.setMaxShadowDistance(90.f);
-    calcViewport(cam3D);
+    //calcViewport(cam3D);
+
+    glm::uvec2 size = cro::App::getWindow().getSize();
+    size.y = (size.x / 16) * 9;
+
+    m_sceneTexture.create(size.x, size.y);
+    m_tempQuad.setTexture(m_sceneTexture.getTexture());
+
+    m_outputTexture.create(size.x, size.y, false);
+
+    cam3D.viewport = { 0.f, 0.f, 1.f, 1.f };
 }
