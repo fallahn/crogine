@@ -34,13 +34,15 @@ source distribution.
 
 #include <crogine/ecs/components/Sprite.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+
 using namespace cro;
 
 SimpleQuad::SimpleQuad()
     : m_colour      (cro::Colour::White),
     m_size          (0.f)
 {
-
+    setPrimitiveType(GL_TRIANGLES);
 }
 
 SimpleQuad::SimpleQuad(const cro::Texture& texture)
@@ -124,12 +126,21 @@ void SimpleQuad::updateVertexData()
     //TODO we could cache the verts locally
     //to make updating only what's changed faster
     //but probably not worth it.
+    static constexpr float Overlap = 1.02f;
+    const auto size = m_size * Overlap;
+    const auto corner = (size - m_size);
+
+    const auto UVSize = glm::vec2(m_uvRect.width, m_uvRect.height) * Overlap;
+    const auto UVCorner = UVSize - glm::vec2(m_uvRect.width, m_uvRect.height);
 
     std::vector<Vertex2D> vertexData =
     {
         Vertex2D(glm::vec2(0.f, m_size.y), glm::vec2(m_uvRect.left, m_uvRect.bottom + m_uvRect.height), m_colour),
-        Vertex2D(glm::vec2(0.f), glm::vec2(m_uvRect.left, m_uvRect.bottom), m_colour),
-        Vertex2D(m_size, glm::vec2(m_uvRect.left + m_uvRect.width, m_uvRect.bottom + m_uvRect.height), m_colour),
+        Vertex2D(glm::vec2(0.f, -corner.y), glm::vec2(m_uvRect.left, m_uvRect.bottom - UVCorner.y), m_colour),
+        Vertex2D(glm::vec2(size.x, m_size.y), glm::vec2(m_uvRect.left + UVSize.x, m_uvRect.bottom + m_uvRect.height), m_colour),
+        
+        Vertex2D(glm::vec2(m_size.x, size.y), glm::vec2(m_uvRect.left + m_uvRect.width, m_uvRect.bottom + UVSize.y), m_colour),
+        Vertex2D(glm::vec2(-corner.x, 0.f), glm::vec2(m_uvRect.left - UVCorner.x, m_uvRect.bottom), m_colour),
         Vertex2D(glm::vec2(m_size.x, 0.f), glm::vec2(m_uvRect.left + m_uvRect.width, m_uvRect.bottom), m_colour),
     };
 
