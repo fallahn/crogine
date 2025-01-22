@@ -553,7 +553,7 @@ void BatcatState::createUI()
 
     m_overlayScene.setActiveCamera(ent);
 
-    cro::SpriteSheet targetSheet;
+    /*cro::SpriteSheet targetSheet;
     targetSheet.loadFromFile("assets/batcat/sprites/target.spt", m_resources.textures);
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Sprite>() = targetSheet.getSprite("target");
@@ -561,7 +561,7 @@ void BatcatState::createUI()
     auto size = ent.getComponent<cro::Sprite>().getSize();
     ent.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
-    ent.addComponent<cro::CommandTarget>().ID = CommandID::Cursor;
+    ent.addComponent<cro::CommandTarget>().ID = CommandID::Cursor;*/
 
     m_resources.fonts.load(1, "assets/fonts/VeraMono.ttf");
     m_resources.fonts.get(1).setSmooth(true);
@@ -570,6 +570,13 @@ void BatcatState::createUI()
     ent.addComponent<cro::Transform>().setPosition({ 200.f, 100.f, 1.f });
     ent.addComponent<cro::Drawable2D>();
     ent.addComponent<cro::Text>(m_resources.fonts.get(1)).setString("Hallo! I am text.");
+
+
+
+
+    const auto& tex = m_resources.textures.get("assets/batcat/Unigine01.png");
+
+
 
     //SMAA output
     ent = m_overlayScene.createEntity();
@@ -632,7 +639,7 @@ void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     ent.addComponent<cro::Drawable2D>();
-    ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture());
+    ent.addComponent<cro::Sprite>(/*m_sceneTexture.getTexture()*/tex);
     ent.addComponent<cro::UIElement>().depth = -0.2f;
     ent.getComponent<cro::UIElement>().resizeCallback =
         [](cro::Entity e)
@@ -812,7 +819,7 @@ void BatcatState::updateView(cro::Camera& cam3D)
 
     m_sceneTexture.create(size.x, size.y);
     m_outputTexture.create(size.x, size.y, false);
-    m_smaaPost.create(m_sceneTexture.getTexture(), m_outputTexture);
+    m_smaaPost.create(/*m_sceneTexture.getTexture()*/m_resources.textures.get("assets/batcat/Unigine01.png"), m_outputTexture);
 
     cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f/9.f, 6.f, 280.f);
     cam3D.setMaxShadowDistance(90.f);

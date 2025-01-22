@@ -100,7 +100,7 @@ void main()
     //Is there any blending weight with a value greater than 0.0?
     if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) <= 1e-5)
     {
-        colour = texture(u_colourTexture, v_texCoord); //LinearSampler
+        colour = textureLod(u_colourTexture, v_texCoord, 0.0);
     }
     else
     {
@@ -118,8 +118,8 @@ void main()
 
         //We exploit bilinear filtering to mix current pixel with the chosen
         //neighbor:
-        colour = blendingWeight.x * texture(u_colourTexture, blendingCoord.xy); //LinearSampler
-        colour += blendingWeight.y * texture(u_colourTexture, blendingCoord.zw); //LinearSampler
+        colour = blendingWeight.x * textureLod(u_colourTexture, blendingCoord.xy, 0.0);
+        colour += blendingWeight.y * textureLod(u_colourTexture, blendingCoord.zw, 0.0);
 
 //colour = vec4(0.0, 1.0, 1.0 ,1.0);
     }

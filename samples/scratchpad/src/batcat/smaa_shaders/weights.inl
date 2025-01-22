@@ -443,8 +443,8 @@ void main()
     if (e.g > 0.0) //Edge at north
     {
         #if !defined(SMAA_DISABLE_DIAG_DETECTION)
-        weights.rg = SMAACalculateDiagWeights(v_texCoord, e, subsampleIndices);
-        if (weights.r == -weights.g)// weights.r + weights.g == 0.0
+        weights.gr = SMAACalculateDiagWeights(v_texCoord, e, subsampleIndices);
+        if (weights.g == -weights.r)// weights.r + weights.g == 0.0
         {        
         #endif
 
@@ -465,7 +465,7 @@ void main()
 
         float e2 = SMAASampleLevelZeroOffset(u_texture, coords.zy, ivec2(1, 0)).r;
 
-        weights.rg = SMAAArea(sqrt_d, e1, e2, subsampleIndices.y);
+        weights.gr = SMAAArea(sqrt_d, e1, e2, subsampleIndices.y);
 
         coords.y = v_texCoord.y;
         weights.rg = SMAADetectHorizontalCornerPattern(weights.rg, coords.xyzy, d);
@@ -502,6 +502,6 @@ void main()
     }
 
     FRAG_OUT = weights;// vec4(weights.rgb, 1.0);
-    //FRAG_OUT.rgb = pow(FRAG_OUT.rgb, vec3(1.0 / 2.2));
+    FRAG_OUT.rgb = pow(FRAG_OUT.rgb, vec3(1.0 / 2.2));
 })";
 }
