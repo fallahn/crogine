@@ -603,9 +603,22 @@ void BatcatState::createUI()
     m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
     auto edgeEnt = ent;
 
+    const std::string f = R"(
+uniform sampler2D u_texture;
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+OUTPUT
+
+void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1.0);}
+
+)";
+
+    m_resources.shaders.loadFromString(ShaderID::SMAAWeightPreview, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
+
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
+    ent.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::SMAAWeightPreview));
     ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
     ent.addComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e)
@@ -794,10 +807,6 @@ void BatcatState::calcViewport(cro::Camera& cam)
 
 void BatcatState::updateView(cro::Camera& cam3D)
 {
-    cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 6.f, 280.f);
-    cam3D.setMaxShadowDistance(90.f);
-    //calcViewport(cam3D);
-
     glm::uvec2 size = cro::App::getWindow().getSize();
     size.y = (size.x / 16) * 9;
 
@@ -805,5 +814,7 @@ void BatcatState::updateView(cro::Camera& cam3D)
     m_outputTexture.create(size.x, size.y, false);
     m_smaaPost.create(m_sceneTexture.getTexture(), m_outputTexture);
 
+    cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f/9.f, 6.f, 280.f);
+    cam3D.setMaxShadowDistance(90.f);
     cam3D.viewport = { 0.f, 0.f, 1.f, 1.f };
 }
