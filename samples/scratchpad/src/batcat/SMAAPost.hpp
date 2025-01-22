@@ -57,6 +57,9 @@ public:
 
     void render();
 
+    const cro::Texture& getEdgeTexture() const { return m_edgeTexture.getTexture(); }
+    const cro::Texture& getWeightTexture() const { return m_blendTexture.getTexture(); }
+
 private:
     std::int32_t m_inputTexture;
     cro::RenderTexture* m_output;

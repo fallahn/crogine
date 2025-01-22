@@ -75,6 +75,8 @@ private:
 
     SMAAPost m_smaaPost;
 
+    cro::Entity m_smaaRoot;
+
     void addSystems();
     void loadAssets();
     void createScene();

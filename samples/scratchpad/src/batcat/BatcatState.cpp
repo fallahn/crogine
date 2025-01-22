@@ -574,8 +574,6 @@ void BatcatState::createUI()
     //SMAA output
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>();
-    ent.addComponent<cro::Drawable2D>();
-    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
     ent.addComponent<cro::UIElement>().depth = -0.1f;
     ent.getComponent<cro::UIElement>().resizeCallback =
         [](cro::Entity e)
@@ -583,23 +581,103 @@ void BatcatState::createUI()
             glm::vec2 size(cro::App::getWindow().getSize());
             const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
             e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
-
-            //e.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, size.x / 2.f, size.y });
         };
+    m_smaaRoot = ent;
+
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
+    m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    auto outputEnt = ent;
+
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
+    ent.addComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setTexture(m_smaaPost.getEdgeTexture());
+        };
+    m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    auto edgeEnt = ent;
+
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
+    ent.addComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setTexture(m_smaaPost.getWeightTexture());
+        };
+    m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    auto weightEnt = ent;
 
     //non-SMAA
-    //ent = m_overlayScene.createEntity();
-    //ent.addComponent<cro::Transform>();
-    //ent.addComponent<cro::Drawable2D>();
-    //ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture());
-    //ent.addComponent<cro::UIElement>().depth = -0.2f;
-    //ent.getComponent<cro::UIElement>().resizeCallback =
-    //    [](cro::Entity e)
-    //    {
-    //        glm::vec2 size(cro::App::getWindow().getSize());
-    //        const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
-    //        e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
-    //    };
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Drawable2D>();
+    ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture());
+    ent.addComponent<cro::UIElement>().depth = -0.2f;
+    ent.getComponent<cro::UIElement>().resizeCallback =
+        [](cro::Entity e)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
+            e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
+        };
+    auto nonSmaa = ent;
+
+    registerWindow([&, nonSmaa, outputEnt, edgeEnt, weightEnt]() mutable
+        {
+            if (ImGui::Begin("SMAA"))
+            {
+                static bool showSMAA = true;
+                if (ImGui::Checkbox("SMAA", &showSMAA))
+                {
+                    const auto scale = showSMAA ? 1.f : 0.f;
+                    m_smaaRoot.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    nonSmaa.getComponent<cro::Transform>().setScale(showSMAA ? glm::vec2(0.f) : glm::vec2(1.f));
+                }
+
+                static int output = 0;
+                static std::array t =
+                {
+                    std::string("Colour"),
+                    std::string("Edges"),
+                    std::string("Weight"),
+                };
+
+                if (ImGui::InputInt("SMAA Output", &output))
+                {
+                    output %= t.size();
+                    switch (output)
+                    {
+                    default:
+                    case 0:
+                        outputEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        edgeEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        weightEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        break;
+                    case 1:
+                        outputEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        edgeEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        weightEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        break;
+                    case 2:
+                        outputEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        edgeEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        weightEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        break;
+                    }
+                }
+                ImGui::Text("%s", t[output].c_str());
+            }
+            ImGui::End();        
+        });
+
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);

@@ -72,7 +72,8 @@ SMAAPost::SMAAPost()
 
     glGenTextures(2, m_supportTextures.data());
     glBindTexture(GL_TEXTURE_2D, m_supportTextures[TextureID::Area]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, /*areaTexBytes*/flipBuffer.data());
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, flipBuffer.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, areaTexBytes);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -89,7 +90,8 @@ SMAAPost::SMAAPost()
     }
 
     glBindTexture(GL_TEXTURE_2D, m_supportTextures[TextureID::Search]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, /*searchTexBytes*/flipBuffer.data());
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, flipBuffer.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, searchTexBytes);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -138,8 +140,13 @@ void SMAAPost::create(const cro::Texture& input, cro::RenderTexture& output)
     m_output = &output;
 
     const auto size = output.getSize();
-    m_blendTexture.create(size.x, size.y, false);
     m_edgeTexture.create(size.x, size.y, false);
+    m_edgeTexture.setSmooth(true); //this MUST be true else weight calc fails
+    m_edgeTexture.setRepeated(false);
+
+    m_blendTexture.create(size.x, size.y, false);
+    m_blendTexture.setSmooth(true);
+    m_blendTexture.setRepeated(false);
 
 
     m_edgeDetection.setTexture(input);
@@ -159,7 +166,7 @@ void SMAAPost::create(const cro::Texture& input, cro::RenderTexture& output)
 
     m_blendOutput.setTexture(m_blendTexture.getTexture());
     m_blendOutput.setBlendMode(cro::Material::BlendMode::None);
-   // m_blendOutput.setShader(m_blendShader);
+    m_blendOutput.setShader(m_blendShader);
     setResolution(m_blendShader, size);
     glUseProgram(m_blendShader.getGLHandle());
     glUniform1i(m_blendShader.getUniformID("u_colourTexture"), TextureSlotOffset);
