@@ -574,7 +574,7 @@ void BatcatState::createUI()
 
 
 
-    const auto& tex = m_resources.textures.get("assets/batcat/Unigine01.png");
+    //const auto& tex = m_resources.textures.get("assets/batcat/Unigine01.png");
 
 
 
@@ -641,7 +641,7 @@ void BatcatState::createUI()
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>();
     ent.addComponent<cro::Drawable2D>();
-    ent.addComponent<cro::Sprite>(/*m_sceneTexture.getTexture()*/tex);
+    ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture()/*tex*/);
     ent.addComponent<cro::UIElement>().depth = -0.2f;
     ent.getComponent<cro::UIElement>().resizeCallback =
         [](cro::Entity e)
@@ -819,7 +819,7 @@ void BatcatState::updateView(cro::Camera& cam3D)
 
     m_sceneTexture.create(size.x, size.y);
     m_outputTexture.create(size.x, size.y, false);
-    m_smaaPost.create(/*m_sceneTexture.getTexture()*/m_resources.textures.get("assets/batcat/Unigine01.png"), m_outputTexture);
+    m_smaaPost.create(m_sceneTexture.getTexture()/*m_resources.textures.get("assets/batcat/Unigine01.png")*/, m_outputTexture);
 
     cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f/9.f, 6.f, 280.f);
     cam3D.setMaxShadowDistance(90.f);

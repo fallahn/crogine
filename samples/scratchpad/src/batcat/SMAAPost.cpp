@@ -107,7 +107,7 @@ SMAAPost::SMAAPost()
     //define SMAA_PRESET_MEDIUM
     //define SMAA_PRESET_HIGH
     //define SMAA_PRESET_ULTRA
-    const std::string quality = "#define SMAA_PRESET_HIGH\n";
+    const std::string quality = "#define SMAA_PRESET_ULTRA\n";
     m_edgeShader.loadFromString(SMAA::Edge::Vert, SMAA::Edge::LumaFragment, quality);
     m_weightShader.loadFromString(SMAA::Weights::Vert, SMAA::Weights::Frag, quality);
     m_blendShader.loadFromString(SMAA::Blend::Vert, SMAA::Blend::Frag, quality);
