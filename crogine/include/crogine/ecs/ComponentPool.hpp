@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -83,6 +83,11 @@ namespace cro
                         || !std::is_base_of_v<NonResizeable, T>)
                     {
                         LOG("Warning component pool " + std::string(typeid(T).name()) + " has been resized to " + std::to_string(m_pool.size()) + " - existing component references may be invalidated", cro::Logger::Type::Warning);
+                    }
+                    else if constexpr (size >= MaxPoolSize<T>::value)
+                    {
+                        LogE << std::string(typeid(T).name()) << " exceeded max value" << std::endl;
+                        abort();
                     }
                 }
             }
