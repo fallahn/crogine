@@ -404,7 +404,7 @@ vec2 SMAAArea(vec2 dist, float e1, float e2, float offset)
     return SMAASampleLevelZero(u_areaTexture, texcoord).rg;
 }
 
-vec2 SMAADetectHorizontalCornerPattern(vec2 weights, vec4 texcoord, vec2 d)
+void SMAADetectHorizontalCornerPattern(inout vec2 weights, vec4 texcoord, vec2 d)
 {
     #if !defined(SMAA_DISABLE_CORNER_DETECTION)
     vec2 leftRight = step(d.xy, d.yx);
@@ -418,11 +418,11 @@ vec2 SMAADetectHorizontalCornerPattern(vec2 weights, vec4 texcoord, vec2 d)
     factor.y -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2(0,  2)).r;
     factor.y -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2(1,  2)).r;
 
-    return weights * saturate(factor);
+    weights *= saturate(factor);
     #endif
 }
 
-vec2 SMAADetectVerticalCornerPattern(vec2 weights, vec4 texcoord, vec2 d)
+void SMAADetectVerticalCornerPattern(inout vec2 weights, vec4 texcoord, vec2 d)
 {
     #if !defined(SMAA_DISABLE_CORNER_DETECTION)
     vec2 leftRight = step(d.xy, d.yx);
@@ -436,7 +436,7 @@ vec2 SMAADetectVerticalCornerPattern(vec2 weights, vec4 texcoord, vec2 d)
     factor.y -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2(-2,  0)).g;
     factor.y -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2(-2, -1)).g;
 
-    return weights * saturate(factor);
+    weights *= saturate(factor);
     #endif
 }
 
@@ -445,7 +445,7 @@ OUTPUT
 void main()
 {
     vec4 subsampleIndices = vec4(0.0);
-    vec4 weights = vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 weights = vec4(0.0, 0.0, 0.0, 0.0);
     vec2 e = texture(u_texture, v_texCoord).rg;
 
     if (e.g > 0.0) //Edge at north
@@ -476,7 +476,7 @@ void main()
         weights.rg = SMAAArea(sqrt_d, e1, e2, subsampleIndices.y);
 
         coords.y = v_texCoord.y;
-        weights.rg = SMAADetectHorizontalCornerPattern(weights.rg, coords.xyzy, d);
+        SMAADetectHorizontalCornerPattern(weights.rg, coords.xyzy, d);
 
         #if !defined(SMAA_DISABLE_DIAG_DETECTION)
         } else
@@ -506,10 +506,10 @@ void main()
         weights.ba = SMAAArea(sqrt_d, e1, e2, subsampleIndices.x);
 
         coords.x = v_texCoord.x;
-        weights.ba = SMAADetectVerticalCornerPattern(weights.ba, coords.xyxz, d);
+        SMAADetectVerticalCornerPattern(weights.ba, coords.xyxz, d);
     }
 
-    FRAG_OUT = weights;// vec4(weights.rgb, 1.0);
+    FRAG_OUT = weights;// vec4(weights.rgb, 0.0);
     FRAG_OUT.rgb = pow(FRAG_OUT.rgb, vec3(1.0 / 2.2));
 })";
 }

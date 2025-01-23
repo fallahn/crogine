@@ -598,24 +598,23 @@ void BatcatState::createUI()
     m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
     auto outputEnt = ent;
 
-    const std::string f = R"(
-uniform sampler2D u_texture;
-VARYING_IN vec2 v_texCoord;
-VARYING_IN vec4 v_colour;
-OUTPUT
-
-void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1.0);}
-
-)";
-
-    m_resources.shaders.loadFromString(ShaderID::SMAAPreview, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
+//    const std::string f = R"(
+//uniform sampler2D u_texture;
+//VARYING_IN vec2 v_texCoord;
+//VARYING_IN vec4 v_colour;
+//OUTPUT
+//
+//void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1.0);}
+//
+//)";
+//
+//    m_resources.shaders.loadFromString(ShaderID::SMAAPreview, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
 
 
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
-    ent.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::SMAAPreview));
-    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
+    ent.addComponent<cro::Drawable2D>();// .setShader(&m_resources.shaders.get(ShaderID::SMAAPreview));
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture(), cro::Material::BlendMode::None);
     ent.addComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e)
         {
@@ -628,9 +627,8 @@ void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1
 
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
-    //ent.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::SMAAPreview));
-    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
+    ent.addComponent<cro::Drawable2D>();// .setShader(&m_resources.shaders.get(ShaderID::SMAAPreview));
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture(), cro::Material::BlendMode::None);
     ent.addComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e)
         {
