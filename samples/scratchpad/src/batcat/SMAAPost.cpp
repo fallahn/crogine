@@ -63,17 +63,19 @@ SMAAPost::SMAAPost()
     std::vector<unsigned char> flipBuffer;
     for (auto y = AREATEX_HEIGHT - 1; y >= 0; y--)
     {
-        for (auto x = 0; x < RowSize; x++)
+        for (auto x = 0; x < RowSize; x += 2)
+        //for (auto x = RowSize - 2; x >= 0; x -= 2)
         {
             const auto idx = (RowSize * y) + x;
             flipBuffer.push_back(areaTexBytes[idx]);
+            flipBuffer.push_back(areaTexBytes[idx+1]);
         }
     }
 
     glGenTextures(2, m_supportTextures.data());
     glBindTexture(GL_TEXTURE_2D, m_supportTextures[TextureID::Area]);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, flipBuffer.data());
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, areaTexBytes);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, flipBuffer.data());
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RG, AREATEX_WIDTH, AREATEX_HEIGHT, 0, GL_RG, GL_UNSIGNED_BYTE, areaTexBytes);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -83,6 +85,7 @@ SMAAPost::SMAAPost()
     for (auto y = SEARCHTEX_HEIGHT - 1; y >= 0; y--)
     {
         for (auto x = 0; x < SEARCHTEX_WIDTH; ++x)
+        //for (auto x = SEARCHTEX_WIDTH - 1; x >= 0; x--)
         {
             const auto idx = (SEARCHTEX_WIDTH * y) + x;
             flipBuffer.push_back(searchTexBytes[idx]);
@@ -90,8 +93,8 @@ SMAAPost::SMAAPost()
     }
 
     glBindTexture(GL_TEXTURE_2D, m_supportTextures[TextureID::Search]);
-    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, flipBuffer.data());
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, searchTexBytes);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, flipBuffer.data());
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, SEARCHTEX_WIDTH, SEARCHTEX_HEIGHT, 0, GL_RED, GL_UNSIGNED_BYTE, searchTexBytes);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

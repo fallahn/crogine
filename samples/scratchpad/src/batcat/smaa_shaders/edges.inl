@@ -24,6 +24,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ * 
+ * Includes OpenGL coordinate changes from mbechard
  */
 
 #pragma once
@@ -54,9 +56,9 @@ void main()
     v_texCoord = a_texCoord0;
     vec4 SMAA_RT_METRICS = vec4(1.0 / u_resolution.x, 1.0 / u_resolution.y, u_resolution.x, u_resolution.y);
 
-    v_offset[0] = mad(SMAA_RT_METRICS.xyxy, vec4(-1.0, 0.0, 0.0, -1.0), a_texCoord0.xyxy);
-    v_offset[1] = mad(SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0,  1.0), a_texCoord0.xyxy);
-    v_offset[2] = mad(SMAA_RT_METRICS.xyxy, vec4(-2.0, 0.0, 0.0, -2.0), a_texCoord0.xyxy);
+    v_offset[0] = mad(SMAA_RT_METRICS.xyxy, vec4(-1.0, 0.0, 0.0, 1.0), a_texCoord0.xyxy);
+    v_offset[1] = mad(SMAA_RT_METRICS.xyxy, vec4( 1.0, 0.0, 0.0, -1.0), a_texCoord0.xyxy);
+    v_offset[2] = mad(SMAA_RT_METRICS.xyxy, vec4(-2.0, 0.0, 0.0, 2.0), a_texCoord0.xyxy);
 
     gl_Position = u_projectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
 })";
@@ -109,7 +111,7 @@ void main()
 
     //Calculate lumas:
     vec3 weights = vec3(0.2126, 0.7152, 0.0722);
-    float L = dot(texture(u_texture, v_texCoord).rgb * v_colour.rgb, weights);
+    float L = dot(texture(u_texture, v_texCoord).rgb, weights);
 
     float Lleft = dot(texture(u_texture, v_offset[0].xy).rgb, weights);
     float Ltop  = dot(texture(u_texture, v_offset[0].zw).rgb, weights);

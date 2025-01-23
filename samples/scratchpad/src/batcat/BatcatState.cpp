@@ -598,18 +598,6 @@ void BatcatState::createUI()
     m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
     auto outputEnt = ent;
 
-    ent = m_overlayScene.createEntity();
-    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
-    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
-    ent.addComponent<cro::UIElement>().resizeCallback =
-        [&](cro::Entity e)
-        {
-            e.getComponent<cro::Sprite>().setTexture(m_smaaPost.getEdgeTexture());
-        };
-    m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-    auto edgeEnt = ent;
-
     const std::string f = R"(
 uniform sampler2D u_texture;
 VARYING_IN vec2 v_texCoord;
@@ -620,12 +608,28 @@ void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1
 
 )";
 
-    m_resources.shaders.loadFromString(ShaderID::SMAAWeightPreview, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
+    m_resources.shaders.loadFromString(ShaderID::SMAAPreview, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
+
 
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
-    ent.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::SMAAWeightPreview));
+    ent.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::SMAAPreview));
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
+    ent.addComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setTexture(m_smaaPost.getEdgeTexture());
+        };
+    m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    auto edgeEnt = ent;
+
+
+
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
+    //ent.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::SMAAPreview));
     ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
     ent.addComponent<cro::UIElement>().resizeCallback =
         [&](cro::Entity e)
@@ -637,7 +641,7 @@ void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1
 
     //non-SMAA
     ent = m_overlayScene.createEntity();
-    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Transform>();
     ent.addComponent<cro::Drawable2D>();
     ent.addComponent<cro::Sprite>(/*m_sceneTexture.getTexture()*/tex);
     ent.addComponent<cro::UIElement>().depth = -0.2f;
@@ -648,9 +652,8 @@ void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1
             const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
             e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
         };
-    auto nonSmaa = ent;
-
-    registerWindow([&, nonSmaa, outputEnt, edgeEnt, weightEnt]() mutable
+    
+    registerWindow([&, outputEnt, edgeEnt, weightEnt]() mutable
         {
             if (ImGui::Begin("SMAA"))
             {
@@ -659,7 +662,6 @@ void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1
                 {
                     const auto scale = showSMAA ? 1.f : 0.f;
                     m_smaaRoot.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-                    nonSmaa.getComponent<cro::Transform>().setScale(showSMAA ? glm::vec2(0.f) : glm::vec2(1.f));
                 }
 
                 static int output = 0;

@@ -24,6 +24,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ * 
+ * Includes OpenGL coordinate changes from mbechard
  */
 
 #pragma once
@@ -54,7 +56,7 @@ void main()
     v_texCoord = a_texCoord0;
     vec4 SMAA_RT_METRICS = vec4(1.0 / u_resolution.x, 1.0 / u_resolution.y, u_resolution.x, u_resolution.y);
 
-    v_offset = mad(SMAA_RT_METRICS.xyxy, vec4(1.0, 0.0, 0.0,  1.0), a_texCoord0.xyxy);
+    v_offset = mad(SMAA_RT_METRICS.xyxy, vec4(1.0, 0.0, 0.0, -1.0), a_texCoord0.xyxy);
 
     gl_Position = u_projectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
 })";
@@ -98,13 +100,13 @@ void main()
     a.wz = texture(u_texture, v_texCoord).xz; //Bottom / Left
 
     //Is there any blending weight with a value greater than 0.0?
-    if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) <= 1e-5)
+    if (dot(a, vec4(1.0, 1.0, 1.0, 1.0)) < 1e-5)
     {
         colour = textureLod(u_colourTexture, v_texCoord, 0.0);
     }
     else
     {
-        bool h = max(a.x, a.z) > max(a.y, a.w); //max(horizontal) > max(vertical)
+        bool h = max(a.x, a.z) > max(-a.y, -a.w); //max(horizontal) > max(vertical)
 
         //Calculate the blending offsets:
         vec4 blendingOffset = vec4(0.0, a.y, 0.0, a.w);
@@ -120,8 +122,6 @@ void main()
         //neighbor:
         colour = blendingWeight.x * textureLod(u_colourTexture, blendingCoord.xy, 0.0);
         colour += blendingWeight.y * textureLod(u_colourTexture, blendingCoord.zw, 0.0);
-
-//colour = vec4(0.0, 1.0, 1.0 ,1.0);
     }
 
     FRAG_OUT = colour;

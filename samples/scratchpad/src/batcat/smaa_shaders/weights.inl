@@ -24,6 +24,8 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ * 
+ * Includes OpenGL coordinate changes from mbechard
  */
 
 #pragma once
@@ -81,12 +83,12 @@ void main()
 
     vec4 SMAA_RT_METRICS = vec4(1.0 / u_resolution.x, 1.0 / u_resolution.y, u_resolution.x, u_resolution.y);
 
-    v_offset[0] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.25, -0.125,  1.25, -0.125), v_texCoord.xyxy);
-    v_offset[1] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.125, -0.25, -0.125,  1.25), v_texCoord.xyxy);
+    v_offset[0] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.25, 0.125,  1.25, 0.125), v_texCoord.xyxy);
+    v_offset[1] = mad(SMAA_RT_METRICS.xyxy, vec4(-0.125, 0.25, -0.125,  -1.25), v_texCoord.xyxy);
 
     v_offset[2] = mad(
         SMAA_RT_METRICS.xxyy,
-        vec4(-2.0, 2.0, -2.0, 2.0) * float(SMAA_MAX_SEARCH_STEPS),
+        vec4(-2.0, 2.0, 2.0, -2.0) * float(SMAA_MAX_SEARCH_STEPS),
         vec4(v_offset[0].xz, v_offset[1].yw)
     );
 
@@ -209,6 +211,7 @@ vec4 SMAADecodeDiagBilinearAccess(vec4 e)
 
 vec2 SMAASearchDiag1(vec2 texcoord, vec2 dir, out vec2 e)
 {
+    dir.y = -dir.y;
     vec4 coord = vec4(texcoord, -1.0, 1.0);
     vec3 t = vec3(SMAA_RT_METRICS.xy, 1.0);
 
@@ -224,6 +227,7 @@ vec2 SMAASearchDiag1(vec2 texcoord, vec2 dir, out vec2 e)
 
 vec2 SMAASearchDiag2(vec2 texcoord, vec2 dir, out vec2 e)
 {
+    dir.y = -dir.y;
     vec4 coord = vec4(texcoord, -1.0, 1.0);
     coord.x += 0.25 * SMAA_RT_METRICS.x;
     vec3 t = vec3(SMAA_RT_METRICS.xy, 1.0);
@@ -249,8 +253,9 @@ vec2 SMAAAreaDiag(vec2 dist, vec2 e, float offset)
     texcoord = mad(SMAA_AREATEX_PIXEL_SIZE, texcoord, 0.5 * SMAA_AREATEX_PIXEL_SIZE);
     texcoord.x += 0.5;
     texcoord.y += SMAA_AREATEX_SUBTEX_SIZE * offset;
+    texcoord.y = 1.0 - texcoord.y;
 
-    return SMAASampleLevelZero(u_areaTexture, texcoord).rg; // LinearSampler
+    return SMAASampleLevelZero(u_areaTexture, texcoord).rg;
 }
 
 vec2 SMAACalculateDiagWeights(vec2 texcoord, vec2 e, vec4 subsampleIndices)
@@ -273,8 +278,8 @@ vec2 SMAACalculateDiagWeights(vec2 texcoord, vec2 e, vec4 subsampleIndices)
     if (d.x + d.y > 2.0) 
     {
         //Fetch the crossing edges:
-        vec4 coords = mad(vec4(-d.x + 0.25, d.x, d.y, -d.y - 0.25), SMAA_RT_METRICS.xyxy, texcoord.xyxy);
-        vec4 c;
+        vec4 coords = mad(vec4(-d.x + 0.25, -d.x, d.y, d.y - 0.25), SMAA_RT_METRICS.xyxy, texcoord.xyxy);
+        vec4 c = vec4(0.0);
         c.xy = SMAASampleLevelZeroOffset(u_texture, coords.xy, ivec2(-1,  0)).rg;
         c.zw = SMAASampleLevelZeroOffset(u_texture, coords.zw, ivec2( 1,  0)).rg;
         c.yxwz = SMAADecodeDiagBilinearAccess(c.xyzw);
@@ -300,10 +305,10 @@ vec2 SMAACalculateDiagWeights(vec2 texcoord, vec2 e, vec4 subsampleIndices)
     if (d.x + d.y > 2.0)
     {
         //Fetch the crossing edges:
-        vec4 coords = mad(vec4(-d.x, -d.x, d.y, d.y), SMAA_RT_METRICS.xyxy, texcoord.xyxy);
-        vec4 c;
+        vec4 coords = mad(vec4(-d.x, d.x, d.y, -d.y), SMAA_RT_METRICS.xyxy, texcoord.xyxy);
+        vec4 c = vec4(0.0);
         c.x  = SMAASampleLevelZeroOffset(u_texture, coords.xy, ivec2(-1,  0)).g;
-        c.y  = SMAASampleLevelZeroOffset(u_texture, coords.xy, ivec2( 0, -1)).r;
+        c.y  = SMAASampleLevelZeroOffset(u_texture, coords.xy, ivec2( 0,  1)).r;
         c.zw = SMAASampleLevelZeroOffset(u_texture, coords.zw, ivec2( 1,  0)).gr;
         vec2 cc = mad(vec2(2.0, 2.0), c.xz, c.yw);
 
@@ -325,7 +330,9 @@ float SMAASearchLength(vec2 e, float offset)
     scale *= 1.0 / SMAA_SEARCHTEX_PACKED_SIZE;
     bias *= 1.0 / SMAA_SEARCHTEX_PACKED_SIZE;
 
-    return SMAASampleLevelZero(u_searchTexture, mad(scale, e, bias)).r;
+    vec2 coord = mad(scale, e, bias);
+    coord.y = 1.0 - coord.y;
+    return SMAASampleLevelZero(u_searchTexture, coord).r;
 }
 
 float SMAASearchXLeft(vec2 texcoord, float end)
@@ -362,29 +369,29 @@ float SMAASearchYUp(vec2 texcoord, float end)
 {
     vec2 e = vec2(1.0, 0.0);
 
-    while (texcoord.y > end && 
-           e.r > 0.8281 &&
-           e.g == 0.0)
-    {
-        e = SMAASampleLevelZero(u_texture, texcoord).rg;
-        texcoord = mad(-vec2(0.0, 2.0), SMAA_RT_METRICS.xy, texcoord);
-    }
-    float offset = mad(-(255.0 / 127.0), SMAASearchLength(e.gr, 0.0), 3.25);
-    return mad(SMAA_RT_METRICS.y, offset, texcoord.y);
-}
-
-float SMAASearchYDown(vec2 texcoord, float end)
-{
-    vec2 e = vec2(1.0, 0.0);
     while (texcoord.y < end && 
            e.r > 0.8281 &&
            e.g == 0.0)
     {
         e = SMAASampleLevelZero(u_texture, texcoord).rg;
-        texcoord = mad(vec2(0.0, 2.0), SMAA_RT_METRICS.xy, texcoord);
+        texcoord = mad(-vec2(0.0, -2.0), SMAA_RT_METRICS.xy, texcoord);
+    }
+    float offset = mad(-(255.0 / 127.0), SMAASearchLength(e.gr, 0.0), 3.25);
+    return mad(SMAA_RT_METRICS.y, -offset, texcoord.y);
+}
+
+float SMAASearchYDown(vec2 texcoord, float end)
+{
+    vec2 e = vec2(1.0, 0.0);
+    while (texcoord.y > end && 
+           e.r > 0.8281 &&
+           e.g == 0.0)
+    {
+        e = SMAASampleLevelZero(u_texture, texcoord).rg;
+        texcoord = mad(vec2(0.0, -2.0), SMAA_RT_METRICS.xy, texcoord);
     }
     float offset = mad(-(255.0 / 127.0), SMAASearchLength(e.gr, 0.5), 3.25);
-    return mad(-SMAA_RT_METRICS.y, offset, texcoord.y);
+    return mad(-SMAA_RT_METRICS.y, -offset, texcoord.y);
 }
 
 vec2 SMAAArea(vec2 dist, float e1, float e2, float offset)
@@ -392,8 +399,9 @@ vec2 SMAAArea(vec2 dist, float e1, float e2, float offset)
     vec2 texcoord = mad(vec2(SMAA_AREATEX_MAX_DISTANCE, SMAA_AREATEX_MAX_DISTANCE), round(4.0 * vec2(e1, e2)), dist);
     texcoord = mad(SMAA_AREATEX_PIXEL_SIZE, texcoord, 0.5 * SMAA_AREATEX_PIXEL_SIZE);
     texcoord.y = mad(SMAA_AREATEX_SUBTEX_SIZE, offset, texcoord.y);
+    texcoord.y = 1.0 - texcoord.y;
 
-    return SMAASampleLevelZero(u_areaTexture, texcoord).rg; // LinearSampler
+    return SMAASampleLevelZero(u_areaTexture, texcoord).rg;
 }
 
 vec2 SMAADetectHorizontalCornerPattern(vec2 weights, vec4 texcoord, vec2 d)
@@ -405,10 +413,10 @@ vec2 SMAADetectHorizontalCornerPattern(vec2 weights, vec4 texcoord, vec2 d)
     rounding /= leftRight.x + leftRight.y;
 
     vec2 factor = vec2(1.0, 1.0);
-    factor.x -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2(0,  1)).r;
-    factor.x -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2(1,  1)).r;
-    factor.y -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2(0, -2)).r;
-    factor.y -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2(1, -2)).r;
+    factor.x -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2(0, -1)).r;
+    factor.x -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2(1, -1)).r;
+    factor.y -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2(0,  2)).r;
+    factor.y -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2(1,  2)).r;
 
     return weights * saturate(factor);
     #endif
@@ -423,10 +431,10 @@ vec2 SMAADetectVerticalCornerPattern(vec2 weights, vec4 texcoord, vec2 d)
     rounding /= leftRight.x + leftRight.y;
 
     vec2 factor = vec2(1.0, 1.0);
-    factor.x -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2( 1, 0)).g;
-    factor.x -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2( 1, 1)).g;
-    factor.y -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2(-2, 0)).g;
-    factor.y -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2(-2, 1)).g;
+    factor.x -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2( 1,  0)).g;
+    factor.x -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2( 1, -1)).g;
+    factor.y -= rounding.x * SMAASampleLevelZeroOffset(u_texture, texcoord.xy, ivec2(-2,  0)).g;
+    factor.y -= rounding.y * SMAASampleLevelZeroOffset(u_texture, texcoord.zw, ivec2(-2, -1)).g;
 
     return weights * saturate(factor);
     #endif
@@ -443,8 +451,8 @@ void main()
     if (e.g > 0.0) //Edge at north
     {
         #if !defined(SMAA_DISABLE_DIAG_DETECTION)
-        weights.gr = SMAACalculateDiagWeights(v_texCoord, e, subsampleIndices);
-        if (weights.g == -weights.r)// weights.r + weights.g == 0.0
+        weights.rg = SMAACalculateDiagWeights(v_texCoord, e, subsampleIndices);
+        if (weights.r == -weights.g)// weights.r + weights.g == 0.0
         {        
         #endif
 
@@ -465,7 +473,7 @@ void main()
 
         float e2 = SMAASampleLevelZeroOffset(u_texture, coords.zy, ivec2(1, 0)).r;
 
-        weights.gr = SMAAArea(sqrt_d, e1, e2, subsampleIndices.y);
+        weights.rg = SMAAArea(sqrt_d, e1, e2, subsampleIndices.y);
 
         coords.y = v_texCoord.y;
         weights.rg = SMAADetectHorizontalCornerPattern(weights.rg, coords.xyzy, d);
@@ -493,7 +501,7 @@ void main()
 
         vec2 sqrt_d = sqrt(d);
 
-        float e2 = SMAASampleLevelZeroOffset(u_texture, coords.xz, ivec2(0, 1)).g;
+        float e2 = SMAASampleLevelZeroOffset(u_texture, coords.xz, ivec2(0, -1)).g;
 
         weights.ba = SMAAArea(sqrt_d, e1, e2, subsampleIndices.x);
 

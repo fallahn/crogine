@@ -79,7 +79,7 @@ namespace ShaderID
     enum
     {
         Background,
-        SMAAWeightPreview
+        SMAAPreview
     };
 }
 
