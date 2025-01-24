@@ -291,7 +291,7 @@ void ModelRenderer::process(float dt)
             std::for_each(std::execution::par, list.begin(), list.end(),
                 [&, dt](MaterialPair& pair)
 #else
-            for (auto MaterialPair& pair : list)
+            for (MaterialPair& pair : list)
 #endif
             {
                 auto& [entity, sortData] = pair;
