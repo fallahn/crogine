@@ -225,6 +225,9 @@ bool TournamentState::handleEvent(const cro::Event& evt)
                     idx = (idx + 1) % ScrollPositions.size();
                 }
                 m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = idx;
+
+                m_audioEnts[AudioID::Switch].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
+                m_audioEnts[AudioID::Switch].getComponent<cro::AudioEmitter>().play();
             }
         };
 
@@ -409,6 +412,8 @@ void TournamentState::buildScene()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+    m_audioEnts[AudioID::Switch] = m_scene.createEntity();
+    m_audioEnts[AudioID::Switch].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch02");
 
     struct RootCallbackData final
     {
@@ -482,6 +487,10 @@ void TournamentState::buildScene()
                             t.getComponent<cro::Callback>().active = true;
                         };
                     m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    auto* msg = cro::App::getInstance().getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::MenuChanged;
+                    msg->data = -1;
                 }
                 break;
             case RootCallbackData::FadeOut:

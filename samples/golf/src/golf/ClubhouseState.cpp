@@ -38,6 +38,7 @@ source distribution.
 #include "GolfCartSystem.hpp"
 #include "NameScrollSystem.hpp"
 #include "MessageIDs.hpp"
+#include "MenuSoundDirector.hpp"
 #include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
@@ -794,6 +795,8 @@ void ClubhouseState::addSystems()
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
+
+    m_uiScene.addDirector<MenuSoundDirector>(m_resources.audio, m_currentMenu);
 }
 
 void ClubhouseState::loadResources()
@@ -1542,6 +1545,22 @@ void ClubhouseState::buildScene()
 
     createTableScene();
     createUI();
+
+    //make sure to update all cameras at least once
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            m_backgroundScene.getSystem<cro::CameraSystem>()->process(0.f);
+            m_backgroundScene.getSystem<cro::ModelRenderer>()->process(0.f);
+
+            m_tableScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+            e.getComponent<cro::Callback>().active = false;
+            m_backgroundScene.destroyEntity(e);
+        };
 }
 
 void ClubhouseState::createTableScene()

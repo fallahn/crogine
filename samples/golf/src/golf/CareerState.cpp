@@ -391,6 +391,10 @@ void CareerState::buildScene()
                             t.getComponent<cro::Callback>().active = true;
                         };
                     m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    auto* msg = cro::App::getInstance().getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::MenuChanged;
+                    msg->data = -1;
                 }
                 break;
             case RootCallbackData::FadeOut:

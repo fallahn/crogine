@@ -138,7 +138,7 @@ private:
         {
             Accept, Back, Start,
             Message, Nope, Poke,
-
+            Title,
             Count
         };
     };

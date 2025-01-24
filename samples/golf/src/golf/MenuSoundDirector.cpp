@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -57,6 +57,7 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/menu/snapshot.wav",
         "assets/golf/sound/menu/lobby.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
+        "assets/golf/sound/menu/title.wav",
         "assets/golf/sound/woof.wav",
 
         "assets/golf/sound/ambience/fw01.wav",
@@ -176,6 +177,10 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
             else if (data.type == SystemEvent::LobbyExit)
             {
                 playSound(AudioID::LobbyExit, 0.5f);
+            }
+            else if (data.type == SystemEvent::MenuChanged)
+            {
+                playSound(AudioID::Title, 0.2f);
             }
         }
             break;
