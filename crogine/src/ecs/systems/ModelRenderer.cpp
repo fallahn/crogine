@@ -239,10 +239,25 @@ void ModelRenderer::process(float dt)
     m_lightUBO.setData(m_lightUniforms);
 
     auto& entities = getEntities();
+
+#ifdef USE_PARALLEL_PROCESSING
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(),
+        [&, dt](Entity entity)
+#else
     for (auto entity : entities)
+#endif
     {
+        const auto& tx = entity.getComponent<cro::Transform>();
+
         auto& model = entity.getComponent<Model>();
         model.updateMaterialAnimations(dt);
+
+        //this is used when updating the modelView mat for each
+        //draw list, below, as well as during render()
+        model.m_activeWorldMatrix = tx.getWorldTransform();
+        model.m_activeNormalMatrix = glm::inverseTranspose(glm::mat3(model.m_activeWorldMatrix));
+
+
 
         /*if (m_useTreeQueries)
         {
@@ -260,6 +275,32 @@ void ModelRenderer::process(float dt)
                 model.m_lastWorldPosition = worldPosition;
             }
         }*/
+    }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
+
+    //for each camera
+    for (auto& drawList : m_drawLists)
+    {
+        //for each pass
+        for (auto i = 0; i < 2; ++i)
+        {
+            auto& list = drawList[i];
+#ifdef USE_PARALLEL_PROCESSING
+            std::for_each(std::execution::par, list.begin(), list.end(),
+                [&, dt](MaterialPair& pair)
+#else
+            for (auto MaterialPair& pair : list)
+#endif
+            {
+                auto& [entity, sortData] = pair;
+                sortData.worldViewMatrix = sortData.viewMatrix * entity.getComponent<cro::Model>().m_activeWorldMatrix;
+            }
+#ifdef USE_PARALLEL_PROCESSING
+                );
+#endif
+        }
     }
 }
 
@@ -331,8 +372,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                     glCheck(glUniformMatrix4fv(uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
                     glCheck(glUniform4f(uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
                 }
-                glCheck(glUniformMatrix4fv(uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(sortData.worldMatrix)));
-                glCheck(glUniformMatrix3fv(uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(sortData.normalMatrix)));
+                glCheck(glUniformMatrix4fv(uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(model.m_activeWorldMatrix)));
+                glCheck(glUniformMatrix3fv(uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(model.m_activeNormalMatrix)));
 
                 applyBlendMode(material);
 
@@ -629,10 +670,6 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                 auto opaque = std::make_pair(entity, SortData());
                 auto transparent = std::make_pair(entity, SortData());
 
-                const glm::mat4 worldMat = tx.getWorldTransform();
-                const glm::mat4 worldView = camComponent.getPass(p).viewMatrix * worldMat;
-                const glm::mat3 normalMat = glm::inverseTranspose(glm::mat3(worldMat));
-
                 //foreach material
                 //add ent/index pair to alpha or opaque list
                 for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
@@ -643,18 +680,17 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                         transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
                         transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
 
-                        transparent.second.normalMatrix = normalMat;
-                        transparent.second.worldMatrix = worldMat;
-                        transparent.second.worldViewMatrix = worldView;
+                        //we have to set this here while we have a reference to
+                        //the camera - it's then used in process() to update the
+                        //worldView matrix of each visible entity
+                        transparent.second.viewMatrix = camComponent.getPass(p).viewMatrix;
                     }
                     else
                     {
                         opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
 
-                        opaque.second.normalMatrix = normalMat;
-                        opaque.second.worldMatrix = worldMat;
-                        opaque.second.worldViewMatrix = worldView;
+                        opaque.second.viewMatrix = camComponent.getPass(p).viewMatrix;
                     }
                 }
 

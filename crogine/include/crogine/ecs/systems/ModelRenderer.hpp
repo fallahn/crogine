@@ -61,9 +61,8 @@ namespace cro
         //store these here as it's more efficient
         //to calc once per draw list rather than
         //every single render frame
-        glm::mat4 worldMatrix = glm::mat4(1.f);
+        glm::mat4 viewMatrix = glm::mat4(1.f);
         glm::mat4 worldViewMatrix = glm::mat4(1.f);
-        glm::mat3 normalMatrix = glm::mat3(1.f);
     };
 
     using MaterialPair = std::pair<Entity, SortData>;

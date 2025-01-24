@@ -313,6 +313,13 @@ namespace cro
         std::int32_t m_treeID = -1;
         glm::vec3 m_lastWorldPosition = glm::vec3(0.f);
 
+        //we don't want to access this elsewhere, but we also
+        //need to make sure we only update this once per tick
+        //not every time one of the materials is rendered
+        //so these are populated in ModelRenderer::process()
+        glm::mat4 m_activeWorldMatrix = glm::mat4(1.f);
+        glm::mat3 m_activeNormalMatrix = glm::mat3(1.f);
+
         friend class ModelRenderer;
         friend class ShadowMapRenderer;
         friend class DeferredRenderSystem;
