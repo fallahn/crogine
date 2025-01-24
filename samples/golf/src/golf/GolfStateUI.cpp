@@ -71,6 +71,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -5854,6 +5855,7 @@ void GolfState::updateMinimapTexture()
 
     auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
     m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
+    m_gameScene.getSystem<cro::ModelRenderer>()->process(0.f);
     //m_gameScene.simulate(0.f);
 
     auto& model = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>();
