@@ -3689,7 +3689,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     //only tally scores if we returned from a previous game
     //rather than quitting one, or completing the tutorial
     if (m_sharedData.gameMode == GameMode::FreePlay //at this point (when the menu is built) this will be set if we're returning from a tutorial or quit menu
-        && m_sharedData.scoreType != ScoreType::NearestThePin) //don't bother scrolling these - we can still ead them from the score card if we want to
+        && m_sharedData.scoreType != ScoreType::NearestThePin) //don't bother scrolling these - we can still read them from the score card if we want to
     {
         for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
         {

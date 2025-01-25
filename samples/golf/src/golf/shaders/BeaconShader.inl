@@ -37,7 +37,11 @@ inline const std::string BeaconVertex = R"(
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec2 a_texCoord0;
 
+#if defined (SPRITE)
+    uniform mat4 u_viewProjectionMatrix;
+#else
 #include CAMERA_UBO
+#endif
     uniform mat4 u_worldMatrix;
     uniform float u_colourRotation = 1.0;
 
@@ -54,7 +58,12 @@ inline const std::string BeaconVertex = R"(
         vec4 position = a_position;
 #endif
 
-        gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
+        vec4 worldPos = u_worldMatrix * position;
+        gl_Position = u_viewProjectionMatrix * worldPos;
+
+#if !defined(SPRITE)
+        gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
+#endif
 
         v_texCoord = a_texCoord0;
 
@@ -62,8 +71,6 @@ inline const std::string BeaconVertex = R"(
         hsv.x += u_colourRotation;
         v_colour = vec4(hsv2rgb(hsv), a_colour.a);
 
-        vec4 worldPos = u_worldMatrix * position;
-        gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
     })";
 
 
