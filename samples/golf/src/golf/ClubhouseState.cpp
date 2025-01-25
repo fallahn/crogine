@@ -377,6 +377,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             quitLobby();
             break;
         case MenuID::HallOfFame:
+        case MenuID::Arcade:
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>().state = 2;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;

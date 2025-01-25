@@ -1477,7 +1477,7 @@ void ProfileState::buildScene()
 
     //ball colour button
     auto ballColour = createButton("ball_colour_highlight", glm::vec2(313.f, 75.f), ButtonBallColour);
-    ballColour.getComponent<cro::UIInput>().setNextIndex(ButtonBallColourReset, ButtonUpdateIcon);
+    ballColour.getComponent<cro::UIInput>().setNextIndex(ButtonBallColourReset, ButtonPickClubs);
     ballColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBody, ButtonBallSelect);
     ballColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
@@ -1529,8 +1529,8 @@ void ProfileState::buildScene()
 
 
     //ball colour reset button
-    auto ballColourReset = createButton("ball_reset_highlight", glm::vec2(340.f, 75.f), ButtonBallColourReset);
-    ballColourReset.getComponent<cro::UIInput>().setNextIndex(ButtonDescDown, ButtonUpdateIcon);
+    auto ballColourReset = createButton("ball_reset_highlight", glm::vec2(338.f, 76.f), ButtonBallColourReset);
+    ballColourReset.getComponent<cro::UIInput>().setNextIndex(ButtonDescDown, ButtonPickClubs);
     ballColourReset.getComponent<cro::UIInput>().setPrevIndex(ButtonBallColour, ButtonNextBall);
     ballColourReset.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -1550,8 +1550,30 @@ void ProfileState::buildScene()
     ballColourReset.setLabel("Reset Ball Tint");
 
 
+
+    //browse club models
+    auto clubs = createButton("button_highlight", glm::vec2(277.f, 61.f), ButtonPickClubs);
+    bounds = clubs.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.left += 2.f;
+    bounds.bottom += 2.f;
+    bounds.width -= 4.f;
+    bounds.height -= 4.f;
+    clubs.getComponent<cro::UIInput>().area = bounds;
+    clubs.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    clubs.getComponent<cro::UIInput>().setNextIndex(ButtonDescDown, ButtonUpdateIcon);
+    clubs.getComponent<cro::UIInput>().setPrevIndex(ButtonSouthPaw, ButtonBallColour);
+
+
+
     //updates the profile icon
-    auto profileIcon = createButton("button_highlight", glm::vec2(269.f, 55.f), ButtonUpdateIcon);
+    auto profileIcon = createButton("button_highlight", glm::vec2(277.f, 48.f), ButtonUpdateIcon);
     bounds = profileIcon.getComponent<cro::Sprite>().getTextureBounds();
     bounds.left += 2.f;
     bounds.bottom += 2.f;
@@ -1568,10 +1590,10 @@ void ProfileState::buildScene()
                 }
             });
     profileIcon.getComponent<cro::UIInput>().setNextIndex(ButtonDescDown, ButtonSaveClose);
-    profileIcon.getComponent<cro::UIInput>().setPrevIndex(ButtonSouthPaw, ButtonBallColour);
+    profileIcon.getComponent<cro::UIInput>().setPrevIndex(ButtonSouthPaw, ButtonPickClubs);
 
     //save/quit buttons
-    auto saveQuit = createButton("button_highlight", glm::vec2(269.f, 38.f), ButtonSaveClose);
+    auto saveQuit = createButton("button_highlight", glm::vec2(277.f, 35.f), ButtonSaveClose);
     bounds = saveQuit.getComponent<cro::Sprite>().getTextureBounds();
     bounds.left += 2.f;
     bounds.bottom += 2.f;
@@ -1611,7 +1633,7 @@ void ProfileState::buildScene()
     saveQuit.getComponent<cro::UIInput>().setPrevIndex(ButtonSouthPaw, ButtonUpdateIcon);
 
 
-    auto quit = createButton("button_highlight", glm::vec2(269.f, 21.f), ButtonCancel);
+    auto quit = createButton("button_highlight", glm::vec2(277.f, 22.f), ButtonCancel);
     bounds = quit.getComponent<cro::Sprite>().getTextureBounds();
     bounds.left += 2.f;
     bounds.bottom += 2.f;

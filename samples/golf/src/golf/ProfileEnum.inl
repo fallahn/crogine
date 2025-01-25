@@ -62,6 +62,7 @@ enum ProfileButton
     ButtonDescDown,
     ButtonMugshot,
 
+    ButtonPickClubs,
     ButtonUpdateIcon,
     ButtonSaveClose,
     ButtonCancel

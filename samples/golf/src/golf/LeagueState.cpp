@@ -1244,7 +1244,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
     //text scroller
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.25f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 13.f, 0.25f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("-~-");// .setString("this is a test string. nothing to see here people, move along.");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);

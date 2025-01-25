@@ -247,14 +247,6 @@ GolfGame::GolfGame()
 #ifdef _WIN32
     assertFileSystem(); //explicitly ensures the property directories are created
 #endif
-    for (auto i = 0; i < Social::UserContent::Count; ++i)
-    {
-        const auto path = Social::getUserContentPath(i);
-        if (!cro::FileSystem::directoryExists(path))
-        {
-            cro::FileSystem::createDirectory(path);
-        }
-    }
 }
 
 //public
@@ -552,6 +544,15 @@ bool GolfGame::initialise()
         //however this relies on having successfully
         //init Steam as we need the uid of the logged on user
         convertPreferences();
+        
+        for (auto i = 0; i < Social::UserContent::Count; ++i)
+        {
+            const auto path = Social::getUserContentPath(i);
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                cro::FileSystem::createDirectory(path);
+            }
+        }
     }
 
 
