@@ -40,7 +40,8 @@ source distribution.
 #include <crogine/detail/SDLResource.hpp>
 
 //#define BENCHMARK
-#if defined(CRO_DEBUG_) || defined(BENCHMARK)
+//#define DEBUG_WINDOWS
+#if defined(DEBUG_WINDOWS) || defined(BENCHMARK)
 #include <crogine/core/HiResTimer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #endif
@@ -58,16 +59,19 @@ namespace cro
         std::int64_t flags = 0;
         std::vector<std::int32_t> matIDs;
 
-        //store these here as it's more efficient
+        //store this here as it's more efficient
         //to calc once per draw list rather than
         //every single render frame
-        glm::mat4 viewMatrix = glm::mat4(1.f);
         glm::mat4 worldViewMatrix = glm::mat4(1.f);
     };
 
     using MaterialPair = std::pair<Entity, SortData>;
-    using MaterialList = std::vector<MaterialPair>;
-
+    
+    struct PassList final
+    {
+        std::vector<MaterialPair> renderables;
+        glm::mat4 viewMatrix = glm::mat4(1.f);
+    };
 
     /*!
     \brief Used to draw scene Models.
@@ -76,7 +80,7 @@ namespace cro
     are rendered with RenderSystem2D.
     */
     class CRO_EXPORT_API ModelRenderer final : public System, public Renderable
-#if defined(CRO_DEBUG_) || defined(BENCHMARK)
+#if defined(DEBUG_WINDOWS) || defined(BENCHMARK)
         , public GuiClient
 #endif
     {
@@ -149,7 +153,7 @@ namespace cro
 
     private:
 
-        using DrawList = std::array<MaterialList, 2u>;
+        using DrawList = std::array<PassList, 2u>;
         std::vector<DrawList> m_drawLists;
 
         Mesh::IndexData::Pass m_pass;

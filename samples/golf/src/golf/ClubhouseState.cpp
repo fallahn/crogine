@@ -774,16 +774,16 @@ void ClubhouseState::addSystems()
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
-    m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
     m_tableScene.addSystem<cro::CallbackSystem>(mb);
+    m_tableScene.addSystem<cro::CameraSystem>(mb);
     m_tableScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_tableScene.addSystem<cro::ModelRenderer>(mb);
-    m_tableScene.addSystem<cro::CameraSystem>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -1545,22 +1545,6 @@ void ClubhouseState::buildScene()
 
     createTableScene();
     createUI();
-
-    //make sure to update all cameras at least once
-    entity = m_backgroundScene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-        {
-            m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-            m_backgroundScene.getSystem<cro::CameraSystem>()->process(0.f);
-            m_backgroundScene.getSystem<cro::ModelRenderer>()->process(0.f);
-
-            m_tableScene.getActiveCamera().getComponent<cro::Camera>().active = true;
-
-            e.getComponent<cro::Callback>().active = false;
-            m_backgroundScene.destroyEntity(e);
-        };
 }
 
 void ClubhouseState::createTableScene()

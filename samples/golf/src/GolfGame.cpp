@@ -1001,7 +1001,7 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::Workshop);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
-    //m_stateStack.pushState(StateID::ScrubBackground);
+    //m_stateStack.pushState(StateID::Clubhouse);
 #endif
 
     applyImGuiStyle(m_sharedData);

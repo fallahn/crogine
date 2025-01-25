@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Frustum.hpp>
 
-#if defined(CRO_DEBUG_) || defined(BENCHMARK)
+#if defined(DEBUG_WINDOWS) || defined(BENCHMARK)
 #include <crogine/gui/Gui.hpp>
 #endif
 
@@ -83,15 +83,28 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
     requireComponent<Transform>();
     requireComponent<Model>();
 
-#ifdef CRO_DEBUG_
+#ifdef DEBUG_WINDOWS
     addStats([&]() 
         {
             for (auto i = 0u; i < m_drawLists.size(); ++i)
             {
                 const auto sceneID = getScene()->getInstanceID();
                 const auto& dList = m_drawLists[i];
-                ImGui::Text("Visisble entities in scene %lu, to Camera %lu: %lu", sceneID, i, dList[0].size());
+                ImGui::Text("Visisble entities in scene %lu, to Camera %lu: %lu", sceneID, i, dList[0].renderables.size());
+
+                const auto mat = dList[i].viewMatrix;
+                for (auto j = 0; j < 4; ++j)
+                {
+                    ImGui::Text("%3.3f,%3.3f,%3.3f,%3.3f", mat[j][0], mat[j][1], mat[j][2], mat[j][3]);
+                }
             }
+        });
+
+    registerWindow([&]() 
+        {
+            ImGui::Begin("sdfg");
+
+            ImGui::End();
         });
 #endif
 
@@ -216,9 +229,9 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 #endif //_MSC_VER
 
 #if defined USE_PARALLEL_PROCESSING
-        std::sort(std::execution::par, std::begin(drawList[i]), std::end(drawList[i]),
+        std::sort(std::execution::par, std::begin(drawList[i].renderables), std::end(drawList[i].renderables),
 #else
-        std::sort(std::begin(drawList[i]), std::end(drawList[i]),
+        std::sort(std::begin(drawList[i].renderables), std::end(drawList[i].renderables),
 #endif
             [](MaterialPair& a, MaterialPair& b)
             {
@@ -286,7 +299,7 @@ void ModelRenderer::process(float dt)
         //for each pass
         for (auto i = 0; i < 2; ++i)
         {
-            auto& list = drawList[i];
+            auto& list = drawList[i].renderables;
 #ifdef USE_PARALLEL_PROCESSING
             std::for_each(std::execution::par, list.begin(), list.end(),
                 [&, dt](MaterialPair& pair)
@@ -295,7 +308,7 @@ void ModelRenderer::process(float dt)
 #endif
             {
                 auto& [entity, sortData] = pair;
-                sortData.worldViewMatrix = sortData.viewMatrix * entity.getComponent<cro::Model>().m_activeWorldMatrix;
+                sortData.worldViewMatrix = drawList[i].viewMatrix * entity.getComponent<cro::Model>().m_activeWorldMatrix;
             }
 #ifdef USE_PARALLEL_PROCESSING
                 );
@@ -329,7 +342,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
 
         //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-        const auto& visibleEntities = m_drawLists[camIndex][camComponent.getActivePassIndex()];
+        const auto& visibleEntities = m_drawLists[camIndex][camComponent.getActivePassIndex()].renderables;
         for (const auto& [entity, sortData] : visibleEntities)
         {
             //may have been marked for deletion - OK to draw but will trigger assert
@@ -358,6 +371,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 glCheck(glUseProgram(material.shader));
 
                 //apply shader uniforms from material
+                //FUTURE ME: if you en up back here wondering why the matrices aren't calculated correctly
+                //remember CamerSystems need to be added to a Scene BEFORE any render systems...
                 glCheck(glUniformMatrix4fv(uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(sortData.worldViewMatrix)));
                 applyProperties(material, model, *getScene(), camComponent);
 
@@ -446,9 +461,9 @@ std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t
     default: return 0;
     case Camera::Pass::Final:
     case Camera::Pass::Refraction:
-        return m_drawLists[cameraIndex][Camera::Pass::Final].size();
+        return m_drawLists[cameraIndex][Camera::Pass::Final].renderables.size();
     case Camera::Pass::Reflection:
-        return m_drawLists[cameraIndex][Camera::Pass::Reflection].size();
+        return m_drawLists[cameraIndex][Camera::Pass::Reflection].renderables.size();
     }
     return 0;
 }
@@ -584,9 +599,11 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
 
     //cull entities by viewable into draw lists by pass
-    for (auto& list : drawList)
+    for (auto i = 0; i < passCount; ++i)
     {
-        list.clear();
+        //also store the view mat so we can update model worldView mat in process()
+        drawList[i].renderables.clear();
+        drawList[i].viewMatrix = camComponent.getPass(i).viewMatrix;
     }
 #ifdef USE_PARALLEL_PROCESSING
     std::mutex mutex;
@@ -679,18 +696,11 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
                         transparent.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         transparent.second.flags = static_cast<std::int64_t>(-distance * 1000000.f); //suitably large number to shift decimal point
                         transparent.second.flags += 0x0FFF000000000000; //gaurentees embiggenment so that sorting places transparent last
-
-                        //we have to set this here while we have a reference to
-                        //the camera - it's then used in process() to update the
-                        //worldView matrix of each visible entity
-                        transparent.second.viewMatrix = camComponent.getPass(p).viewMatrix;
                     }
                     else
                     {
                         opaque.second.matIDs.push_back(static_cast<std::int32_t>(i));
                         opaque.second.flags = static_cast<std::int64_t>(distance * 1000000.f);
-
-                        opaque.second.viewMatrix = camComponent.getPass(p).viewMatrix;
                     }
                 }
 
@@ -699,7 +709,7 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 #ifdef USE_PARALLEL_PROCESSING
                     std::scoped_lock l(mutex);
 #endif
-                    drawList[p].push_back(opaque);
+                    drawList[p].renderables.push_back(opaque);
                 }
 
                 if (!transparent.second.matIDs.empty())
@@ -707,7 +717,7 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 #ifdef USE_PARALLEL_PROCESSING
                     std::scoped_lock l(mutex);
 #endif
-                    drawList[p].push_back(transparent);
+                    drawList[p].renderables.push_back(transparent);
                 }
             }
         }
