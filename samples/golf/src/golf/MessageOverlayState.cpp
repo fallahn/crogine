@@ -694,7 +694,7 @@ void MessageOverlayState::buildScene()
         centreText(entity);
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+        m_sharedData.errorMessage = ""; //must reset this else cancelling with back/right click still deletes profile!
 
         //buttons
         entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);

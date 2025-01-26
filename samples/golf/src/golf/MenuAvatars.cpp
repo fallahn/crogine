@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -929,7 +929,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //create profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 265.f, 53.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 275.f, 46.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
@@ -998,6 +998,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     m_sharedData.errorMessage = "Maximum Profiles Reached.";
                     requestStackPush(StateID::MessageOverlay);
                 }
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1007,7 +1008,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //edit profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 265.f, 36.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 275.f, 33.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
@@ -1032,6 +1033,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             {
                 m_profileData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 requestStackPush(StateID::Profile);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1041,7 +1044,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //delete profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 265.f, 19.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 275.f, 20.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
@@ -1074,6 +1077,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     m_profileData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 }
                 requestStackPush(StateID::MessageOverlay);
+
+                //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
