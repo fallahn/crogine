@@ -689,7 +689,7 @@ void MessageOverlayState::buildScene()
         centreText(entity);
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+        m_sharedData.errorMessage = "";
 
         //buttons
         entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
