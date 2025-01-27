@@ -487,6 +487,13 @@ private:
             PowerBarInner,
             PowerBarInnerHC, //high contrast
             HookBar,
+
+            PowerBarDouble,
+            PowerBarDouble10,
+            PowerBarDoubleInner,
+            PowerBarDoubleInnerHC,
+            HookBarDouble,
+
             SlopeStrength,
             BallSpeed,
             MiniFlag,

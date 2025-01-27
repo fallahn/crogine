@@ -1200,7 +1200,7 @@ void GolfState::buildUI()
     auto camDir = m_holeData[0].target - m_currentPlayer.position;
     m_camRotation = std::atan2(-camDir.z, camDir.y);
 
-    //root used to show/hide input UI
+    //root used to show/hide power bar
     auto rootNode = m_uiScene.createEntity();
     rootNode.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     rootNode.addComponent<cro::CommandTarget>().ID = CommandID::UI::Root;
@@ -1210,13 +1210,13 @@ void GolfState::buildUI()
     {
         auto& [dir, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
 
-        const float ScaleMultiplier = m_sharedData.useLargePowerBar ? 2.f : 1.f;
+        //const float ScaleMultiplier = m_sharedData.useLargePowerBar ? 2.f : 1.f;
 
         if (dir == 0)
         {
             //grow
             currTime = std::min(1.f, currTime + dt);
-            const float scale = cro::Util::Easing::easeOutElastic(currTime) * ScaleMultiplier;
+            const float scale = cro::Util::Easing::easeOutElastic(currTime);// *ScaleMultiplier;
 
             e.getComponent<cro::Transform>().setScale({ scale, scale });
 
@@ -1230,9 +1230,9 @@ void GolfState::buildUI()
         {
             //shrink
             currTime = std::max(0.f, currTime - (dt * 2.f));
-            const float scale = cro::Util::Easing::easeOutBack(currTime) * ScaleMultiplier;
+            const float scale = cro::Util::Easing::easeOutBack(currTime);// *ScaleMultiplier;
 
-            e.getComponent<cro::Transform>().setScale({ scale, ScaleMultiplier });
+            e.getComponent<cro::Transform>().setScale({ scale, /*ScaleMultiplier*/scale });
 
             if (currTime == 0)
             {
@@ -1240,7 +1240,6 @@ void GolfState::buildUI()
                 e.getComponent<cro::Callback>().active = false;
             }
         }
-        
     };
     infoEnt.getComponent<cro::Transform>().addChild(rootNode.getComponent<cro::Transform>());
 
@@ -2068,89 +2067,10 @@ void GolfState::buildUI()
 void GolfState::createPowerBars(cro::Entity rootNode)
 {
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-
-    
-    //small power bar
-
-    //power bar frame
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::BarEnt;
-    entity.addComponent<cro::Sprite>() = m_sharedData.decimatePowerBar ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, -0.05f));
-    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto barEnt = entity;
-
-    //displays the range of the selected putter
-    const glm::vec2 posSmall = glm::vec2(bounds.width + 2.f, 12.f);
-    const glm::vec2 posLarge = glm::vec2({ -2.f, -6.f }) + posSmall;
-
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(posSmall);
-    entity.addComponent<cro::Callback>().setUserData<std::pair<glm::vec2, glm::vec2>>(posSmall, posLarge);
-    if (m_sharedData.useLargePowerBar)
-    {
-        entity.getComponent<cro::Transform>().setScale({ 0.5f, 0.5f });
-        entity.getComponent<cro::Transform>().move({ -2.f, -6.f });
-    }
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //power bar
-    const auto BarCentre = bounds.width / 2.f;
-    const auto BarWidth = bounds.width - 8.f;
-    const auto BarHeight = bounds.height;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.3f)); //TODO expell the magic number!!
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = 
-        m_sharedData.useContrastPowerBar ?
-        m_sprites[SpriteID::PowerBarInnerHC] : m_sprites[SpriteID::PowerBarInner];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PowerBarInner;
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, bounds](cro::Entity e, float)
+    const auto flagDistanceCallback = [&](cro::Entity e, float dt)
         {
-            auto crop = bounds;
-            crop.width *= m_inputParser.getPower();
-            e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
-        };
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //hook/slice indicator
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.55f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f)));
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, BarCentre](cro::Entity e, float)
-        {
-            glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 8.f, 0.55f);
-            e.getComponent<cro::Transform>().setPosition(pos);
-        };
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //flag power/distance when putting
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, -0.01f));
-    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 1.f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];
-    entity.addComponent<cro::SpriteAnimation>().play(0);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, BarWidth](cro::Entity e, float dt)
-        {
-            float vScaleTarget = m_currentPlayer.terrain == TerrainID::Green ? 1.f : 0.f;
+            const float vScaleTarget = m_currentPlayer.terrain == TerrainID::Green ? 1.f : 0.f;
+            const float BarWidth = e.getComponent<cro::Callback>().getUserData<const float>();
 
             auto scale = e.getComponent<cro::Transform>().getScale();
             if (vScaleTarget > 0)
@@ -2192,11 +2112,159 @@ void GolfState::createPowerBars(cro::Entity rootNode)
             }
             e.getComponent<cro::Transform>().setScale(scale);
         };
+    
+
+    //small power bar
+
+    //power bar frame
+    float scale = m_sharedData.useLargePowerBar ? 0.f : 1.f;
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(scale));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::BarEnt;
+    entity.addComponent<cro::Sprite>() = m_sharedData.decimatePowerBar ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, -0.05f));
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto barEnt = entity;
+
+    //displays the range of the selected putter
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width + 2.f, 12.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //power bar
+    auto BarCentre = bounds.width / 2.f;
+    auto BarWidth = bounds.width - 8.f;
+    auto BarHeight = bounds.height;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.3f)); //TODO expell the magic number!!
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = 
+        m_sharedData.useContrastPowerBar ?
+        m_sprites[SpriteID::PowerBarInnerHC] : m_sprites[SpriteID::PowerBarInner];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PowerBarInner;
+    entity.addComponent<cro::Callback>().active = !m_sharedData.useLargePowerBar;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float)
+        {
+            auto crop = bounds;
+            crop.width *= m_inputParser.getPower();
+            e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //hook/slice indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.55f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f)));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, BarCentre](cro::Entity e, float)
+        {
+            glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 8.f, 0.55f);
+            e.getComponent<cro::Transform>().setPosition(pos);
+        };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //flag power/distance when putting
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, -0.01f));
+    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 1.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<const float>(BarWidth);
+    entity.getComponent<cro::Callback>().function = flagDistanceCallback;
+        
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
 
     //large power bar
+    scale = scale == 1 ? 0.f : 1.f;
+
+     //power bar frame
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(scale));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::BarEntLarge;
+    entity.addComponent<cro::Sprite>() = m_sharedData.decimatePowerBar ? m_sprites[SpriteID::PowerBarDouble10] : m_sprites[SpriteID::PowerBarDouble];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, -0.07f));
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    barEnt = entity;
+
+    //curent selected range
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(bounds.width, 12.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //power bar
+    BarCentre = bounds.width / 2.f;
+    BarWidth = bounds.width - 16.f;
+    BarHeight = bounds.height;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(10.f, 0.f, 0.3f)); //TODO expell the magic number!!
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() =
+        m_sharedData.useContrastPowerBar ?
+        m_sprites[SpriteID::PowerBarDoubleInnerHC] : m_sprites[SpriteID::PowerBarDoubleInner];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PowerBarInnerLarge;
+    entity.addComponent<cro::Callback>().active = m_sharedData.useLargePowerBar;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float)
+        {
+            auto crop = bounds;
+            crop.width *= m_inputParser.getPower();
+            e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //hook/slice indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 16.f, 0.55f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBarDouble];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f)));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, BarCentre](cro::Entity e, float)
+        {
+            glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 16.f, 0.55f);
+            e.getComponent<cro::Transform>().setPosition(pos);
+        };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //flag power/distance when putting
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, -0.01f));
+    entity.getComponent<cro::Transform>().setOrigin({ -4.f, 1.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<const float>(BarWidth);
+    entity.getComponent<cro::Callback>().function = flagDistanceCallback;
+
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void GolfState::showCountdown(std::uint8_t seconds)

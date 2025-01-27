@@ -2016,6 +2016,13 @@ void GolfState::loadSprites()
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner_wide");
     m_sprites[SpriteID::PowerBarInnerHC] = spriteSheet.getSprite("power_bar_inner_wide_hc");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
+
+    m_sprites[SpriteID::PowerBarDouble] = spriteSheet.getSprite("power_bar_double");
+    m_sprites[SpriteID::PowerBarDouble10] = spriteSheet.getSprite("power_bar_double_10");
+    m_sprites[SpriteID::PowerBarDoubleInner] = spriteSheet.getSprite("power_bar_inner_double");
+    m_sprites[SpriteID::PowerBarDoubleInnerHC] = spriteSheet.getSprite("power_bar_inner_double_hc");
+    m_sprites[SpriteID::HookBarDouble] = spriteSheet.getSprite("hook_bar_double");
+
     m_sprites[SpriteID::SlopeStrength] = spriteSheet.getSprite("slope_indicator");
     m_sprites[SpriteID::BallSpeed] = spriteSheet.getSprite("ball_speed");
     m_sprites[SpriteID::MapFlag] = spriteSheet.getSprite("flag03");

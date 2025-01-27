@@ -2208,54 +2208,46 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
 
                 //and the power bar
-                cmd.targetFlags = CommandID::UI::Root;
-                cmd.action = [&](cro::Entity e, float)
-                    {
-                        auto [state, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
-                        if (state == 1)
-                        {
-                            //we've visible
-                            const float scale = m_sharedData.useLargePowerBar ? 2.f : 1.f;
-                            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-                        }
-                    };
-                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                cmd.targetFlags = CommandID::UI::PuttPower;
-                cmd.action = [&](cro::Entity e, float)
-                    {
-                        const auto& [posSmall, posLarge] = e.getComponent<cro::Callback>().getUserData<std::pair<glm::vec2, glm::vec2>>();
-
-                        if (m_sharedData.useLargePowerBar)
-                        {
-                            e.getComponent<cro::Transform>().setPosition(posLarge);
-                            e.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
-                        }
-                        else
-                        {
-                            e.getComponent<cro::Transform>().setPosition(posSmall);
-                            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                        }
-                    };
-                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
                 cmd.targetFlags = CommandID::UI::BarEnt;
                 cmd.action = [&](cro::Entity e, float)
                     {
                         e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
                             ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
+
+                        const float scale = m_sharedData.useLargePowerBar ? 0.f : 1.f;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::BarEntLarge;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
+                            ? m_sprites[SpriteID::PowerBarDouble10] : m_sprites[SpriteID::PowerBarDouble];
+
+                        const float scale = m_sharedData.useLargePowerBar ? 1.f : 0.f;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                 cmd.targetFlags = CommandID::UI::PowerBarInner;
                 cmd.action = [&](cro::Entity e, float)
                     {
-                        const auto textureRect = 
-                            m_sharedData.useContrastPowerBar ? 
-                            m_sprites[SpriteID::PowerBarInnerHC].getTextureRect(): 
-                            m_sprites[SpriteID::PowerBarInner].getTextureRect();
+                        e.getComponent<cro::Sprite>() = m_sharedData.useContrastPowerBar
+                            ? m_sprites[SpriteID::PowerBarInnerHC] : m_sprites[SpriteID::PowerBarInner];
 
-                        e.getComponent<cro::Sprite>().setTextureRect(textureRect);
+                        //this performs the bar animation/cropping
+                        e.getComponent<cro::Callback>().active = !m_sharedData.useLargePowerBar;
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::PowerBarInnerLarge;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.useContrastPowerBar
+                            ? m_sprites[SpriteID::PowerBarDoubleInnerHC] : m_sprites[SpriteID::PowerBarDoubleInner];
+
+                        e.getComponent<cro::Callback>().active = m_sharedData.useLargePowerBar;
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

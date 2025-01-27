@@ -88,10 +88,12 @@ struct CommandID final
             static constexpr std::uint64_t TerrainType          = 0x4000000;
             static constexpr std::uint64_t AFKWarn              = 0x8000000;
             static constexpr std::uint64_t PuttingLabel         = 0x10000000; //29
-            static constexpr std::uint64_t BarEnt               = 0x20000000;
-            static constexpr std::uint64_t ScoreTitle           = 0x40000000; //text at the bottom of the score board - used in skins games
-            static constexpr std::uint64_t PinHeight            = 0x80000000;
+            static constexpr std::uint64_t ScoreTitle           = 0x20000000; //text at the bottom of the score board - used in skins games
+            static constexpr std::uint64_t PinHeight            = 0x40000000;
+            static constexpr std::uint64_t BarEnt               = 0x80000000;
             static constexpr std::uint64_t PowerBarInner        = 0x100000000;
+            static constexpr std::uint64_t BarEntLarge          = 0x200000000;
+            static constexpr std::uint64_t PowerBarInnerLarge   = 0x400000000;
 
             static constexpr std::uint64_t GarbageCollect = 0x1; //this is the same as the first entry! we're just renaming it for use in the Scrub game
         //}
