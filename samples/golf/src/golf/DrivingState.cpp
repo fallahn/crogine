@@ -615,7 +615,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #ifdef USE_GNS
             closeLeaderboard();
 #else
-            if(m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+            if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
             {
                 pauseGame();
             }
@@ -877,26 +877,48 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                 //and the power bar
-                cmd.targetFlags = CommandID::UI::Root;
-                cmd.action = [&](cro::Entity e, float)
-                    {
-                        auto [state, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
-                        if (state == 1)
-                        {
-                            //we've visible
-                            const float scale = m_sharedData.useLargePowerBar ? 2.f : 1.f;
-                            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-                        }
-                    };
-                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
                 cmd.targetFlags = CommandID::UI::BarEnt;
                 cmd.action = [&](cro::Entity e, float)
                     {
                         e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
                             ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
+
+                        const float scale = m_sharedData.useLargePowerBar ? 0.f : 1.f;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::BarEntLarge;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
+                            ? m_sprites[SpriteID::PowerBarDouble10] : m_sprites[SpriteID::PowerBarDouble];
+
+                        const float scale = m_sharedData.useLargePowerBar ? 1.f : 0.f;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::PowerBarInner;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.useContrastPowerBar
+                            ? m_sprites[SpriteID::PowerBarInnerHC] : m_sprites[SpriteID::PowerBarInner];
+
+                        e.getComponent<cro::Callback>().active = !m_sharedData.useLargePowerBar;
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::PowerBarInnerLarge;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.useContrastPowerBar
+                            ? m_sprites[SpriteID::PowerBarDoubleInnerHC] : m_sprites[SpriteID::PowerBarDoubleInner];
+
+                        e.getComponent<cro::Callback>().active = m_sharedData.useLargePowerBar;
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
 
                 if (m_resources.textures.loaded(TextureID::Flag))
                 {
@@ -1264,7 +1286,15 @@ void DrivingState::loadAssets()
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar_wide");
     m_sprites[SpriteID::PowerBar10] = spriteSheet.getSprite("power_bar_wide_10");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner_wide");
+    m_sprites[SpriteID::PowerBarInnerHC] = spriteSheet.getSprite("power_bar_inner_wide_hc");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
+
+    m_sprites[SpriteID::PowerBarDouble] = spriteSheet.getSprite("power_bar_double");
+    m_sprites[SpriteID::PowerBarDouble10] = spriteSheet.getSprite("power_bar_double_10");
+    m_sprites[SpriteID::PowerBarDoubleInner] = spriteSheet.getSprite("power_bar_inner_double");
+    m_sprites[SpriteID::PowerBarDoubleInnerHC] = spriteSheet.getSprite("power_bar_inner_double_hc");
+    m_sprites[SpriteID::HookBarDouble] = spriteSheet.getSprite("hook_bar_double");
+
     m_sprites[SpriteID::WindTextBg] = spriteSheet.getSprite("wind_text_bg");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");

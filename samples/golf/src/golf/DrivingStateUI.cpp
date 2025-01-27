@@ -704,7 +704,7 @@ void DrivingState::createUI()
 
 
 
-    //ui is attached to this for relative scaling
+    //power bar is attached to this for relative scaling
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -715,13 +715,11 @@ void DrivingState::createUI()
     {
         auto& [dir, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
 
-        const float ScaleMultiplier = m_sharedData.useLargePowerBar ? 2.f : 1.f;
-
         if (dir == 0)
         {
             //grow
             currTime = std::min(1.f, currTime + dt);
-            const float scale = cro::Util::Easing::easeOutElastic(currTime) * ScaleMultiplier;
+            const float scale = cro::Util::Easing::easeOutElastic(currTime);
 
             e.getComponent<cro::Transform>().setScale({ scale, scale });
 
@@ -735,9 +733,9 @@ void DrivingState::createUI()
         {
             //shrink
             currTime = std::max(0.f, currTime - (dt * 2.f));
-            const float scale = cro::Util::Easing::easeOutBack(currTime) * ScaleMultiplier;
+            const float scale = cro::Util::Easing::easeOutBack(currTime);
 
-            e.getComponent<cro::Transform>().setScale({ scale, ScaleMultiplier });
+            e.getComponent<cro::Transform>().setScale({ scale, 1.f });
 
             if (currTime == 0)
             {
@@ -751,49 +749,7 @@ void DrivingState::createUI()
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto rootNode = entity;
 
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::BarEnt;
-    entity.addComponent<cro::Sprite>() = m_sharedData.decimatePowerBar ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
-    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //power bar
-    auto barEnt = entity;
-    auto barCentre = bounds.width / 2.f;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.3f)); //TODO expel the magic number!!
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, bounds](cro::Entity e, float)
-    {
-        auto crop = bounds;
-        crop.width *= m_inputParser.getPower();
-        e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
-    };
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //hook/slice indicator
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 8.f, 0.55f)); //TODO expel the magic number!!
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), bounds.height / 2.f));
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, barCentre](cro::Entity e, float)
-    {
-        glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.55f);
-        e.getComponent<cro::Transform>().setPosition(pos);
-    };
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    createPowerBars(rootNode);
 
     //camera for mini map
     auto updateMiniView = [&](cro::Camera& miniCam) mutable
@@ -1086,6 +1042,117 @@ void DrivingState::createUI()
 
     createGameOptions();
     createSummary();
+}
+
+void DrivingState::createPowerBars(cro::Entity rootNode)
+{
+    float scale = m_sharedData.useLargePowerBar ? 0.f : 1.f;
+
+    //outer frame
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::BarEnt;
+    entity.addComponent<cro::Sprite>() = 
+        m_sharedData.decimatePowerBar ?
+        m_sprites[SpriteID::PowerBar10] : 
+        m_sprites[SpriteID::PowerBar];
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //power bar
+    auto barEnt = entity;
+    auto barCentre = bounds.width / 2.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.3f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PowerBarInner;
+    entity.addComponent<cro::Sprite>() = m_sharedData.useContrastPowerBar ? 
+        m_sprites[SpriteID::PowerBarInnerHC]:
+        m_sprites[SpriteID::PowerBarInner];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::Callback>().active = !m_sharedData.useLargePowerBar;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float)
+        {
+            auto crop = bounds;
+            crop.width *= m_inputParser.getPower();
+            e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //hook/slice indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 8.f, 0.55f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), bounds.height / 2.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, barCentre](cro::Entity e, float)
+        {
+            glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.55f);
+            e.getComponent<cro::Transform>().setPosition(pos);
+        };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //large bar
+    scale = scale == 1 ? 0.f : 1.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::BarEntLarge;
+    entity.addComponent<cro::Sprite>() = 
+        m_sharedData.decimatePowerBar ? 
+        m_sprites[SpriteID::PowerBarDouble10] : 
+        m_sprites[SpriteID::PowerBarDouble];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    barEnt = entity;
+
+    //inner bar
+    barCentre = bounds.width / 2.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(10.f, 0.f, 0.3f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PowerBarInnerLarge;
+    entity.addComponent<cro::Sprite>() = m_sharedData.useContrastPowerBar ?
+        m_sprites[SpriteID::PowerBarDoubleInnerHC] :
+        m_sprites[SpriteID::PowerBarDoubleInner];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::Callback>().active = m_sharedData.useLargePowerBar;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float)
+        {
+            auto crop = bounds;
+            crop.width *= m_inputParser.getPower();
+            e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+        };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //hook/slice indicator
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 16.f, 0.55f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBarDouble];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), bounds.height / 2.f));
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, barCentre](cro::Entity e, float)
+        {
+            glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 16.f, 0.55f);
+            e.getComponent<cro::Transform>().setPosition(pos);
+        };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void DrivingState::createGameOptions()
@@ -2477,7 +2544,7 @@ void DrivingState::createSummary()
 
     spriteSheet.loadFromFile("assets/golf/sprites/large_flag.spt", m_resources.textures);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 380.f, 48.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 380.f, 48.f, 0.4f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);

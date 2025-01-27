@@ -1210,13 +1210,11 @@ void GolfState::buildUI()
     {
         auto& [dir, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
 
-        //const float ScaleMultiplier = m_sharedData.useLargePowerBar ? 2.f : 1.f;
-
         if (dir == 0)
         {
             //grow
             currTime = std::min(1.f, currTime + dt);
-            const float scale = cro::Util::Easing::easeOutElastic(currTime);// *ScaleMultiplier;
+            const float scale = cro::Util::Easing::easeOutElastic(currTime);
 
             e.getComponent<cro::Transform>().setScale({ scale, scale });
 
@@ -1230,9 +1228,9 @@ void GolfState::buildUI()
         {
             //shrink
             currTime = std::max(0.f, currTime - (dt * 2.f));
-            const float scale = cro::Util::Easing::easeOutBack(currTime);// *ScaleMultiplier;
+            const float scale = cro::Util::Easing::easeOutBack(currTime);
 
-            e.getComponent<cro::Transform>().setScale({ scale, /*ScaleMultiplier*/scale });
+            e.getComponent<cro::Transform>().setScale({ scale, 1.f });
 
             if (currTime == 0)
             {

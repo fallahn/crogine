@@ -166,7 +166,14 @@ private:
             PowerBar,
             PowerBar10,
             PowerBarInner,
+            PowerBarInnerHC,
             HookBar,
+            PowerBarDouble,
+            PowerBarDouble10,
+            PowerBarDoubleInner,
+            PowerBarDoubleInnerHC,
+            HookBarDouble,
+
             WindIndicator,
             WindTextBg,
             WindSpeed,
@@ -233,6 +240,7 @@ private:
     cro::Entity m_mapRoot;
     cro::SimpleQuad m_flagQuad;
     void createUI();
+    void createPowerBars(cro::Entity);
     void createGameOptions();
     void createSummary();
     void updateMinimap();
