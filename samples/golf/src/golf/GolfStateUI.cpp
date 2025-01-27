@@ -1634,7 +1634,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin({ 0.5f, -0.5f });
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag/*MapFlag*/];
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];
     entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -2254,9 +2254,9 @@ void GolfState::createPowerBars(cro::Entity rootNode)
     //flag power/distance when putting
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, -0.01f));
-    entity.getComponent<cro::Transform>().setOrigin({ -4.f, 1.f });
+    entity.getComponent<cro::Transform>().setOrigin({ -12.f, 4.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlagLarge];
     entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<const float>(BarWidth);
@@ -5378,10 +5378,10 @@ void GolfState::floatingMessage(const std::string& msg)
 {
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    const float offsetScale = Social::isSteamdeck() ? 2.f : 1.f;
+    const float offsetScale = m_sharedData.useLargePowerBar ? 2.f : 1.f;
 
     glm::vec2 size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    glm::vec3 position((size.x / 2.f), (UIBarHeight + (14.f * offsetScale)) * m_viewScale.y, 0.2f);
+    glm::vec3 position((size.x / 2.f), (UIBarHeight + (14.f * offsetScale)) * m_viewScale.y, 0.8f);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);

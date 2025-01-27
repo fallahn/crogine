@@ -497,6 +497,7 @@ private:
             SlopeStrength,
             BallSpeed,
             MiniFlag,
+            MiniFlagLarge,
             MapFlag,
             MapTarget,
             WindIndicator,

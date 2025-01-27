@@ -2028,6 +2028,7 @@ void GolfState::loadSprites()
     m_sprites[SpriteID::MapFlag] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::MapTarget] = spriteSheet.getSprite("multitarget");
     m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("putt_flag");
+    m_sprites[SpriteID::MiniFlagLarge] = spriteSheet.getSprite("putt_flag_large");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
     m_sprites[SpriteID::WindSpeedBg] = spriteSheet.getSprite("wind_text_bg");
