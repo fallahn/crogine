@@ -80,6 +80,7 @@ enum OptionsIndex
     AVCrowdL,
     AVCrowdR,
     AVLargePower,
+    AVContrastPower,
     AVDecPower,
     AVDecDist,
     AVFixedPutter,

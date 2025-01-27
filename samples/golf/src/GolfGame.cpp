@@ -1410,6 +1410,7 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.useLargePowerBar = prop.getValue<bool>();
                 }
+                
                 else if (name == "web_socket")
                 {
                     m_sharedData.webSocket = prop.getValue<bool>();
@@ -1536,6 +1537,10 @@ void GolfGame::loadPreferences()
                     else if (name == "large_power")
                     {
                         m_sharedData.useLargePowerBar = prop.getValue<bool>();
+                    }
+                    else if (name == "contrast_power")
+                    {
+                        m_sharedData.useContrastPowerBar = prop.getValue<bool>();
                     }
                     else if (name == "decimate_power")
                     {
@@ -1715,6 +1720,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_flare").setValue(m_sharedData.useLensFlare);
     cfg.addProperty("use_mouse_action").setValue(m_sharedData.useMouseAction);
     //cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
+    cfg.addProperty("contrast_power").setValue(m_sharedData.useContrastPowerBar);
     cfg.addProperty("decimate_power").setValue(m_sharedData.decimatePowerBar);
     cfg.addProperty("decimate_distance").setValue(m_sharedData.decimateDistance);
     cfg.addProperty("show_roster").setValue(m_sharedData.showRosterTip);

@@ -309,6 +309,7 @@ struct SharedStateData final
     bool useLensFlare = true;
     bool useMouseAction = true;
     bool useLargePowerBar = false;
+    bool useContrastPowerBar = false;
     bool decimatePowerBar = false;
     bool decimateDistance = false;
     bool showRosterTip = true;

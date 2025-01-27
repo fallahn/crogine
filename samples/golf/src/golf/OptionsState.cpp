@@ -2011,9 +2011,10 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     createLabel({ 204.f, 89.f }, "Use Larger Power Bar");
-    createLabel({ 204.f, 73.f }, "Use Decimated Power Bar");
-    createLabel({ 204.f, 57.f }, "Use Decimalised Distances");
-    createLabel({ 204.f, 41.f }, "Fixed Range Putter");
+    createLabel({ 204.f, 73.f }, "Use High Contrast Power Bar");
+    createLabel({ 204.f, 55.f }, "Use Decimated Power Bar");
+    createLabel({ 204.f, 41.f }, "Use Decimalised Distances");
+    createLabel({ 204.f, 25.f }, "Fixed Range Putter");
 
 
     auto createSlider = [&](glm::vec2 position, float width = 142.f)
@@ -2184,11 +2185,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             auto pos = helpEnt.getComponent<cro::Transform>().getPosition();
             if (str.find('\n') != std::string::npos)
             {
-                pos.y = 17.f;
+                pos.y = 9.f;
             }
             else
             {
-                pos.y = 11.f;
+                pos.y = 4.f;
             }
             helpEnt.getComponent<cro::Transform>().setPosition(pos);
             helpEnt.getComponent<cro::Text>().setString(str);
@@ -2779,8 +2780,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //lens flare highlight
     entity = createHighlight(glm::vec2(81.f, 64.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVLensFlare);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVDecPower, AVLightMap);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVDecPower, AVBeacon);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVContrastPower, AVLightMap);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVContrastPower, AVBeacon);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -2814,21 +2815,21 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
 
-    //remote content highlight
+    //lightmap highlight
     entity = createHighlight(glm::vec2(81.f, 48.f));
     entity.setLabel("Reduce lightmap VRAM usage at night, at the cost of quality");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVLightMap);
 #ifdef _WIN32
     if (!Social::isSteamdeck())
     {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVDecDist, AVTextToSpeech);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVDecPower, AVTextToSpeech);
     }
     else
 #endif
     {
-        entity.getComponent<cro::UIInput>().setNextIndex(AVDecDist, WindowCredits);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVDecPower, WindowCredits);
     }
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVDecDist, AVLensFlare);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVDecPower, AVLensFlare);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -2840,7 +2841,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
-    //remote content centre
+    //lightmap centre
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 50.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
@@ -3262,7 +3263,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     entity = createHighlight(glm::vec2(355.f, 80.f));
     entity.setLabel("Use larger power bar at the bottom of the screen.\nDefaults to ON on Steam Deck.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVLargePower);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVBeacon, AVDecPower);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVBeacon, AVContrastPower);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVBeaconR, AVCrowdR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -3295,14 +3296,52 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    
+
+
+    //highlight for high contrast bar
+    entity = createHighlight(glm::vec2(355.f, 64.f));
+    entity.setLabel("Use high contrast colours for power bar.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AVContrastPower);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVLensFlare, AVDecPower);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVLensFlare, AVLargePower);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.useContrastPowerBar = !m_sharedData.useContrastPowerBar;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+            });
+
+    //centre for high contrast bar
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(357.f, 66.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.useContrastPowerBar ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //highlight for decimated power bar
-    entity = createHighlight(glm::vec2(355.f, 64.f));
+    entity = createHighlight(glm::vec2(355.f, 48.f));
     entity.setLabel("Divide the power bar into 10 segments instead of quarters and eighths");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVDecPower);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVLensFlare, AVDecDist);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVLensFlare, AVLargePower);
+    entity.getComponent<cro::UIInput>().setNextIndex(AVLightMap, AVDecDist);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AVLightMap, AVContrastPower);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -3316,7 +3355,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //centre for decimated power bar
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(357.f, 66.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(357.f, 50.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -3336,11 +3375,22 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     
     //highlight for decimated distance
-    entity = createHighlight(glm::vec2(355.f, 48.f));
+    entity = createHighlight(glm::vec2(355.f, 32.f));
     entity.setLabel("All distances appear as decimalised values eg 0.5m instead of smaller denominations\nsuch as 50cm");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVDecDist);
-    entity.getComponent<cro::UIInput>().setNextIndex(AVLightMap, AVFixedPutter);
-    entity.getComponent<cro::UIInput>().setPrevIndex(AVLightMap, AVDecPower);
+
+#ifdef _WIN32
+    if (!Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVTextToSpeech, AVFixedPutter);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVTextToSpeech, AVDecPower);
+    }
+    else
+#endif
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(AVLightMap, AVFixedPutter);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVLightMap, AVDecPower);
+    }
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -3354,7 +3404,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //centre for decimated distance
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(357.f, 50.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(357.f, 34.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -3375,7 +3425,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //highlight for fixed putter
-    entity = createHighlight(glm::vec2(355.f, 32.f));
+    entity = createHighlight(glm::vec2(355.f, 16.f));
     entity.setLabel("Fixes the range of the putter at 10m/33ft.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVFixedPutter);
 #ifdef _WIN32
@@ -3403,7 +3453,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //centre for fixed putter
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(357.f, 34.f, HighlightOffset));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(357.f, 18.f, HighlightOffset));
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
@@ -3457,8 +3507,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         entity = createHighlight(glm::vec2(69.f, -1.f));
         entity.setLabel("Enables text-to-speech for in game text chat.\nUse the Speech option in Windows Control Panel to set advanced options.");
         entity.getComponent<cro::UIInput>().setSelectionIndex(AVTextToSpeech);
-        entity.getComponent<cro::UIInput>().setNextIndex(AVFixedPutter, WindowAdvanced);
-        entity.getComponent<cro::UIInput>().setPrevIndex(AVFixedPutter, AVLightMap);
+        entity.getComponent<cro::UIInput>().setNextIndex(AVDecDist, WindowAdvanced);
+        entity.getComponent<cro::UIInput>().setPrevIndex(AVDecDist, AVLightMap);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
             uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
@@ -3472,111 +3522,6 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 #endif
-
-    //lens flare
-    /*entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 204.f, 81.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("use_flare");
-    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto optEnt = entity;*/
-
-    //checkbox centre
-//    entity = m_scene.createEntity();
-//    entity.addComponent<cro::Transform>().setPosition(glm::vec3(61.f, 1.f, HighlightOffset));
-//    entity.addComponent<cro::Drawable2D>().getVertexData() =
-//    {
-//        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
-//        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
-//        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
-//        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
-//    };
-//    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-//    entity.addComponent<cro::Callback>().active = true;
-//    entity.getComponent<cro::Callback>().function =
-//        [&](cro::Entity e, float)
-//        {
-//            float scale = m_sharedData.useLensFlare ? 1.f : 0.f;
-//            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-//        };
-//    optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-//
-//    //highlight
-//    entity = createHighlight(glm::vec2(59.f, -1.f));
-//    entity.getComponent<cro::UIInput>().setSelectionIndex(AVLensFlare);
-////#ifdef _WIN32
-////    if (!Social::isSteamdeck())
-////    {
-////        entity.getComponent<cro::UIInput>().setNextIndex(AVLargePower, WindowApply);
-////        entity.getComponent<cro::UIInput>().setPrevIndex(AVTextToSpeech, AVCrowdL);
-////    }
-////    else
-////#endif
-//    {
-//        entity.getComponent<cro::UIInput>().setNextIndex(AVLargePower, WindowApply);
-//        entity.getComponent<cro::UIInput>().setPrevIndex(AVBeaconR, AVCrowdL);
-//    }
-//    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-//        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
-//            {
-//                if (activated(evt))
-//                {
-//                    m_sharedData.useLensFlare = !m_sharedData.useLensFlare;
-//                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-//                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
-//                }
-//            });
-//    optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-
-//    //centre for large power bar
-//    entity = m_scene.createEntity();
-//    entity.addComponent<cro::Transform>().setPosition(glm::vec3(176.f, 1.f, HighlightOffset));
-//    entity.addComponent<cro::Drawable2D>().getVertexData() =
-//    {
-//        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
-//        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
-//        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
-//        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
-//    };
-//    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-//    entity.addComponent<cro::Callback>().active = true;
-//    entity.getComponent<cro::Callback>().function =
-//        [&](cro::Entity e, float)
-//        {
-//            float scale = m_sharedData.useLargePowerBar ? 1.f : 0.f;
-//            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-//        };
-//    optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-//
-//    //highlight for large power bar
-//    entity = createHighlight(glm::vec2(174.f, -1.f));
-//    entity.setLabel("Use larger power bar at the bottom of the screen.\nDefaults to ON on Steam Deck.");
-//    entity.getComponent<cro::UIInput>().setSelectionIndex(AVLargePower);
-//#ifdef _WIN32
-//    if (!Social::isSteamdeck())
-//    {
-//        entity.getComponent<cro::UIInput>().setNextIndex(AVTextToSpeech, WindowClose);
-//        entity.getComponent<cro::UIInput>().setPrevIndex(AVLensFlare, AVCrowdR);
-//    }
-//    else
-//#endif
-//    {
-//        entity.getComponent<cro::UIInput>().setNextIndex(AVBeacon, WindowClose);
-//        entity.getComponent<cro::UIInput>().setPrevIndex(AVLensFlare, AVCrowdR);
-//    }
-//    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-//        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
-//            {
-//                if (activated(evt))
-//                {
-//                    m_sharedData.useLargePowerBar = !m_sharedData.useLargePowerBar;
-//                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-//                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
-//                }
-//            });
-//    optEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, const cro::SpriteSheet& spriteSheet)
