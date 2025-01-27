@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 #include <deque>
+#include <fstream>
 
 class TextChat final : public cro::GuiClient, public cro::ConsoleClient
 {
@@ -74,6 +75,8 @@ public:
 
 private:
 
+    std::ofstream m_logFile;
+
     cro::Scene& m_scene;
     SharedStateData& m_sharedData;
     bool m_visible;
@@ -87,14 +90,14 @@ private:
     {
         const cro::String str;
         ImVec4 colour;
-        
+
         BufferLine(const cro::String& s, ImVec4 c)
             : str(s), colour(c)
         { }
     };
 
     static constexpr std::size_t MaxLines = 24;
-    std::deque<BufferLine> m_displayBuffer;
+    static std::deque<BufferLine> m_displayBuffer;
     std::string m_inputBuffer;
 
     cro::Clock m_limitClock;

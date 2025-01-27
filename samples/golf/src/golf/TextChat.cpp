@@ -175,6 +175,8 @@ namespace
     };
 }
 
+std::deque<TextChat::BufferLine> TextChat::m_displayBuffer;
+
 TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     : m_scene               (s),
     m_sharedData            (sd),
@@ -188,6 +190,12 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_screenChatActiveCount (0),
     m_showShortcuts         (false)
 {
+    auto t = std::time(nullptr);
+    auto* tm = std::localtime(&t);
+
+    std::string filename = "ChatLog-" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
+    m_logFile.open(filename, std::ios::app);
+
     registerCommand("cl_use_tts", [&](const std::string& str)
         {
             if (str == "1" || str == "true")
@@ -641,6 +649,19 @@ void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
     m_screenChatIndex = (m_screenChatIndex + 1) % m_screenChatBuffer.size();
 
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+
+    if (m_sharedData.logChat)
+    {
+        auto t = std::time(nullptr);
+        auto* tm = std::localtime(&t);
+
+        if (m_logFile.is_open() && m_logFile.good())
+        {
+            const auto utf = outStr.toUtf8();
+            m_logFile << std::put_time(tm, "<%H:%M:%S> ") << utf.c_str() <<"\n";
+        }
+    }
 }
 
 void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckInput)

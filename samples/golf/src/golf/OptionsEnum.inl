@@ -116,6 +116,7 @@ enum OptionsIndex
     SettWebPortUp,
     SettCSVLog,
     SettInGameChat,
+    SettLogChat,
     SettRemoteContent,
     SettFlagDown,
     SettFlagUp,

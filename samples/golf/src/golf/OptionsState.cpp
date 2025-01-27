@@ -4655,7 +4655,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 191.f));
     entity.setLabel("Disable text chat in online games");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettInGameChat);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettRemoteContent, SettRemoteContent);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettRemoteContent, SettLogChat);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettCSVLog, SettCSVLog);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4678,12 +4678,39 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         };
 
 
-    //remote content
+    //chat log
     entity = createHighlight(glm::vec2(12.f, 175.f));
+    entity.setLabel("Logs in-game and lobby chat to a text file in the install directory");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettLogChat);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettRemoteContent, SettRemoteContent);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettInGameChat, SettInGameChat);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.logChat = !m_sharedData.logChat;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 177.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.logChat ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
+    //remote content
+    entity = createHighlight(glm::vec2(12.f, 159.f));
     entity.setLabel("Allow downloading remote content such as Workshop items from other\nplayers when joining a network game");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettRemoteContent);
     entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, ResetCareer);
-    entity.getComponent<cro::UIInput>().setPrevIndex(SettInGameChat, SettInGameChat);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettInGameChat, SettLogChat);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
         {

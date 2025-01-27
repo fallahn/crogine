@@ -3447,6 +3447,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::ClientDisconnected:
         {
             auto client = evt.packet.as<std::uint8_t>();
+            for (auto i = 0u; i < m_sharedData.connectionData[client].playerCount; ++i)
+            {
+                m_textChat.printToScreen(m_sharedData.connectionData[client].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]);
+            }
+            
             m_sharedData.connectionData[client].playerCount = 0;
             m_readyState[client] = false;
             updateLobbyAvatars();

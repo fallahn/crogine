@@ -5572,14 +5572,20 @@ void GolfState::removeClient(std::uint8_t clientID)
         }
     }
 
-    cro::String str = m_sharedData.connectionData[clientID].playerData[0].name;
-    for (auto i = 1u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
-    {
-        str += ", " + m_sharedData.connectionData[clientID].playerData[i].name;
-    }
-    str += " left the game";
+    //cro::String str = m_sharedData.connectionData[clientID].playerData[0].name;
+    //for (auto i = 1u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
+    //{
+    //    str += ", " + m_sharedData.connectionData[clientID].playerData[i].name;
+    //}
+    //str += " left the game";
 
-    showNotification(str);
+    //showNotification(str);
+
+    //looks neater at the top, plus gets logged if chat log is enabled.
+    for (auto i = 0u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
+    {
+        m_textChat.printToScreen(m_sharedData.connectionData[clientID].playerData[i].name + " has left the game.", CD32::Colours[CD32::BlueLight]);
+    }
 
     for (auto i = m_netStrengthIcons.size() - 1; i >= (m_netStrengthIcons.size() - m_sharedData.connectionData[clientID].playerCount); i--)
     {

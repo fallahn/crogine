@@ -319,6 +319,7 @@ struct SharedStateData final
     std::int32_t webPort = 8080;
     bool logCSV = false;
     bool blockChat = false;
+    bool logChat = false;
     bool remoteContent = false;
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;

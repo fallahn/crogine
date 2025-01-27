@@ -1558,6 +1558,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.blockChat = prop.getValue<bool>();
                     }
+                    else if (name == "log_chat")
+                    {
+                        m_sharedData.logChat = prop.getValue<bool>();
+                    }
                     else if (name == "remote_content")
                     {
                         m_sharedData.remoteContent = prop.getValue<bool>();
@@ -1717,6 +1721,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("group_mode").setValue(m_sharedData.groupMode);
     cfg.addProperty("fixed_putting").setValue(m_sharedData.fixedPuttingRange);
     cfg.addProperty("web_chat").setValue(m_sharedData.blockChat);
+    cfg.addProperty("log_chat").setValue(m_sharedData.logChat);
     cfg.addProperty("remote_content").setValue(m_sharedData.remoteContent);
     cfg.addProperty("flag_path").setValue(m_sharedData.flagPath);
     cfg.addProperty("flag_text").setValue(m_sharedData.flagText);
