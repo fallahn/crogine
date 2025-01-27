@@ -2247,6 +2247,19 @@ void GolfState::handleMessage(const cro::Message& msg)
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                cmd.targetFlags = CommandID::UI::PowerBarInner;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        const auto textureRect = 
+                            m_sharedData.useContrastPowerBar ? 
+                            m_sprites[SpriteID::PowerBarInnerHC].getTextureRect(): 
+                            m_sprites[SpriteID::PowerBarInner].getTextureRect();
+
+                        e.getComponent<cro::Sprite>().setTextureRect(textureRect);
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
                 m_minimapIndicatorEnt.getComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
 
                 //updates the position of the entities based on bar size

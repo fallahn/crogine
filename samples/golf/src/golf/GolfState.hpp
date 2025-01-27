@@ -485,6 +485,7 @@ private:
             PowerBar,
             PowerBar10,
             PowerBarInner,
+            PowerBarInnerHC, //high contrast
             HookBar,
             SlopeStrength,
             BallSpeed,
@@ -555,6 +556,7 @@ private:
     std::unique_ptr<FriendlyPlayers> m_friendlyPlayers;
 
     void buildUI();
+    void createPowerBars(cro::Entity parent);
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard(bool updatePardiff = true);

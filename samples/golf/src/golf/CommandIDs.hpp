@@ -57,43 +57,44 @@ struct CommandID final
 
     struct UI final
     {
-        enum
-        {
-            ClubName             = 0x1,
-            PlayerName           = 0x2,
-            UIElement            = 0x4, //has its position updated on UI layout
-            Root                 = 0x8,
-            ThinkBubble          = 0x10,
-            WindSock             = 0x20,
-            WindSpeed            = 0x40,
-            WindString           = 0x80,
-            HoleNumber           = 0x100,
-            PinDistance          = 0x200,
-            Scoreboard           = 0x400,
-            ScoreScroll          = 0x800,
-            ScoreboardController = 0x1000,
-            MiniMap              = 0x2000,
-            MiniBall             = 0x4000,
-            MessageBoard         = 0x8000,
-            MiniGreen            = 0x10000,
-            MiniFlag             = 0x20000,
-            DrivingBoard         = 0x40000,
-            StrengthMeter        = 0x80000,
-            PlayerIcon           = 0x100000,
-            WaitMessage          = 0x200000,
-            FastForward          = 0x400000,
-            WindHidden           = 0x800000, //I can't think of a better name - basically when the wind indicator is hidden during putting
-            WindEffect           = 0x1000000,
-            PuttPower            = 0x2000000,
-            TerrainType          = 0x4000000,
-            AFKWarn              = 0x8000000,
-            PuttingLabel         = 0x10000000, //29
-            BarEnt               = 0x20000000,
-            ScoreTitle           = 0x40000000, //text at the bottom of the score board - used in skins games
-            PinHeight            = 0x80000000, //that's all we got folks (unless we refactor to 64bit...)
+        //enum
+        //{
+            static constexpr std::uint64_t ClubName             = 0x1;
+            static constexpr std::uint64_t PlayerName           = 0x2;
+            static constexpr std::uint64_t UIElement            = 0x4; //has its position updated on UI layout
+            static constexpr std::uint64_t Root                 = 0x8;
+            static constexpr std::uint64_t ThinkBubble          = 0x10;
+            static constexpr std::uint64_t WindSock             = 0x20;
+            static constexpr std::uint64_t WindSpeed            = 0x40;
+            static constexpr std::uint64_t WindString           = 0x80;
+            static constexpr std::uint64_t HoleNumber           = 0x100;
+            static constexpr std::uint64_t PinDistance          = 0x200;
+            static constexpr std::uint64_t Scoreboard           = 0x400;
+            static constexpr std::uint64_t ScoreScroll          = 0x800;
+            static constexpr std::uint64_t ScoreboardController = 0x1000;
+            static constexpr std::uint64_t MiniMap              = 0x2000;
+            static constexpr std::uint64_t MiniBall             = 0x4000;
+            static constexpr std::uint64_t MessageBoard         = 0x8000;
+            static constexpr std::uint64_t MiniGreen            = 0x10000;
+            static constexpr std::uint64_t MiniFlag             = 0x20000;
+            static constexpr std::uint64_t DrivingBoard         = 0x40000;
+            static constexpr std::uint64_t StrengthMeter        = 0x80000;
+            static constexpr std::uint64_t PlayerIcon           = 0x100000;
+            static constexpr std::uint64_t WaitMessage          = 0x200000;
+            static constexpr std::uint64_t FastForward          = 0x400000;
+            static constexpr std::uint64_t WindHidden           = 0x800000; //I can't think of a better name - basically when the wind indicator is hidden during putting
+            static constexpr std::uint64_t WindEffect           = 0x1000000;
+            static constexpr std::uint64_t PuttPower            = 0x2000000;
+            static constexpr std::uint64_t TerrainType          = 0x4000000;
+            static constexpr std::uint64_t AFKWarn              = 0x8000000;
+            static constexpr std::uint64_t PuttingLabel         = 0x10000000; //29
+            static constexpr std::uint64_t BarEnt               = 0x20000000;
+            static constexpr std::uint64_t ScoreTitle           = 0x40000000; //text at the bottom of the score board - used in skins games
+            static constexpr std::uint64_t PinHeight            = 0x80000000;
+            static constexpr std::uint64_t PowerBarInner        = 0x100000000;
 
-            GarbageCollect       = 0x1 //this is the same as the first entry! we're just renaming it for use in the Scrub game
-        };
+            static constexpr std::uint64_t GarbageCollect = 0x1; //this is the same as the first entry! we're just renaming it for use in the Scrub game
+        //}
     };
 
     struct Menu final
