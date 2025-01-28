@@ -34,12 +34,8 @@ void EntityManager::addComponent(Entity entity, T component)
     auto entID = entity.getIndex();
 
     auto& pool = getPool<T>();
-    if (entID >= pool.size())
-    {
-        pool.resize(std::min(static_cast<std::uint32_t>(Detail::MinFreeIDs), entID + 128));
-    }
 
-    pool[entID] = std::move(component);
+    pool.insert(entID, std::move(component));
     m_componentMasks[entID].set(componentID);
 }
 

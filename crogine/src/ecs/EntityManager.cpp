@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,6 +31,8 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/core/MessageBus.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 using namespace cro;
 
 namespace
@@ -46,6 +48,23 @@ EntityManager::EntityManager(MessageBus& mb, ComponentManager& cm, std::size_t i
     m_componentManager  (cm)
 {
     CRO_ASSERT(initialPoolSize <= Detail::MinFreeIDs, "More than this is just a waste of memory");
+
+    static int temp = 0;
+    std::string title = "##" + std::to_string(temp++);
+    registerWindow([&, title]() 
+        {
+            if (ImGui::Begin(title.c_str()))
+            {
+                for (const auto& p : m_componentPools)
+                {
+                    if (p)
+                    {
+                        ImGui::Text("Pool %s, using %u/%u", p->getName().c_str(), p->used(), p->maxSize());
+                    }
+                }
+            }
+            ImGui::End();
+        });
 }
 
 //public

@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/Config.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
+
 #include <crogine/ecs/ComponentPool.hpp>
 #include <crogine/ecs/Component.hpp>
 
@@ -181,7 +183,7 @@ namespace cro
     /*!
     \brief Manages the relationship between an Entity and its components
     */
-    class CRO_EXPORT_API EntityManager final
+    class CRO_EXPORT_API EntityManager final : public GuiClient
     {
     public:
         EntityManager(MessageBus&, ComponentManager&, std::size_t = 128);
