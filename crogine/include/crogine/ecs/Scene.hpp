@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -46,6 +46,8 @@ source distribution.
 
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
+
+#include <crogine/ecs/systems/CameraSystem.hpp>
 
 #include <functional>
 

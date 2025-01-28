@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,16 @@ source distribution.
 template <typename T, typename... Args>
 T* Scene::addSystem(Args&&... args)
 {
+//#ifdef CRO_DEBUG_
+    if constexpr (std::is_same<T, CameraSystem>::value)
+    {
+        if (!m_renderables.empty())
+        {
+            LogW << "Adding CameraSystem after a Renderable system type... this may cause undesired effects." << std::endl;
+        }
+    }
+//#endif
+
     static_assert(std::is_base_of<System, T>::value, "Must be a system type");
     auto& system = m_systemManager.addSystem<T>(std::forward<Args>(args)...);
     if constexpr (std::is_base_of<Renderable, T>::value)
