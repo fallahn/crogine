@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -46,18 +46,6 @@ T& EntityManager::addComponent(Entity entity, Args&&... args)
     addComponent<T>(entity, std::move(component));
     return getComponent<T>(entity);
 }
-
-//TODO this doesn't remove the entity from active systems...
-//template <typename T>
-//void EntityManager::removeComponent(Entity entity)
-//{
-//    const auto componentID = Component::getID<T>();
-//    const auto entityID = entity.getIndex();
-//
-//    CRO_ASSERT(entityID < m_componentMasks.size(), "Entity index out of range");
-//    m_componentMasks[entityID].set(componentID, false);
-//    
-//}
 
 template <typename T>
 bool EntityManager::hasComponent(Entity entity) const

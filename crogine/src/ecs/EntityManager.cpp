@@ -49,22 +49,22 @@ EntityManager::EntityManager(MessageBus& mb, ComponentManager& cm, std::size_t i
 {
     CRO_ASSERT(initialPoolSize <= Detail::MinFreeIDs, "More than this is just a waste of memory");
 
-    static int temp = 0;
-    std::string title = "##" + std::to_string(temp++);
-    registerWindow([&, title]() 
-        {
-            if (ImGui::Begin(title.c_str()))
-            {
-                for (const auto& p : m_componentPools)
-                {
-                    if (p)
-                    {
-                        ImGui::Text("Pool %s, using %u/%u", p->getName().c_str(), p->used(), p->maxSize());
-                    }
-                }
-            }
-            ImGui::End();
-        });
+    //static int temp = 0;
+    //std::string title = "##" + std::to_string(temp++);
+    //registerWindow([&, title]() 
+    //    {
+    //        if (ImGui::Begin(title.c_str()))
+    //        {
+    //            for (const auto& p : m_componentPools)
+    //            {
+    //                if (p)
+    //                {
+    //                    ImGui::Text("Pool %s, using %u/%u", p->getName().c_str(), p->used(), p->maxSize());
+    //                }
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
 }
 
 //public

@@ -83,7 +83,7 @@ namespace cro
         \brief memory pooling for components
 
         Note: components which inherit NoResize or have no copy assignment
-        (eg move-only types such as Model or AudioEmitter) reserve MinFreeID
+        (eg move-only types such as Model or AudioEmitter) reserve MaxPoolSize<T>::value
         slots in a pool, to prevent resizing and invalidating components.
         */
         template <class T>
@@ -92,7 +92,7 @@ namespace cro
         public:
             explicit ComponentPool(std::size_t size = 128) 
                 : Pool  (typeid(T).name()),
-                m_pool  (size)
+                m_pool  (std::min(size, MaxPoolSize<T>::value))
             {
                 if constexpr (!std::is_copy_assignable_v<T>
                     || std::is_base_of_v<NonResizeable, T>)

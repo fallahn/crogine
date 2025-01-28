@@ -57,19 +57,18 @@ namespace cro
 
 
         /*
-        \brief Allows setting the max pool size by specialising for a given type
-        else falls back to 4095 types.
+        \brief Allows setting the max pool size by specialising for a given type.
         */
         template <typename T>
         struct MaxPoolSize final
         {
-            static constexpr std::int32_t value = MinFreeIDs / 2;
+            static constexpr std::size_t value = MinFreeIDs / 2;
         };
 
         template <>
         struct MaxPoolSize<cro::Transform> final
         {
-            static constexpr std::int32_t value = MinFreeIDs;
+            static constexpr std::size_t value = MinFreeIDs;
         };
     }
 }
