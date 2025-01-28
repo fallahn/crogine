@@ -5397,6 +5397,80 @@ void GolfState::floatingMessage(const std::string& msg)
 
 void GolfState::createTransition()
 {
+    const auto createWelcomeMessage =
+        [&]()
+        {
+            if (!m_courseTitle.empty())
+            {
+                struct MessageData final
+                {
+                    float timer = 2.f;
+
+                    std::int32_t state = 0;
+                };
+
+                auto entity = m_uiScene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<MessageData>();
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
+                    {
+                        static constexpr float DisplayTime = 4.f;
+                        auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<MessageData>();
+                        currTime -= dt;
+                        if (currTime < 0)
+                        {
+                            currTime += DisplayTime;
+                            switch (state)
+                            {
+                            default:
+                            case 0:
+                            {
+                                cro::String s("Welcome to ");
+                                s += m_courseTitle;
+                                m_textChat.printToScreen(s, TextGoldColour);
+                            }
+                            break;
+                            case 1:
+                            {
+                                cro::String s("You're playing ");
+                                s += ScoreTypes[m_ntpPro ? ScoreType::NearestThePinPro : m_sharedData.scoreType] + " on ";
+
+                                switch (m_sharedData.holeCount)
+                                {
+                                default:
+                                case 0:
+                                    s += "all 18 holes.";
+                                    break;
+                                case 1:
+                                    s += "the front 9.";
+                                    break;
+                                case 2:
+                                    s += "the back 9.";
+                                    break;
+                                }
+                                m_textChat.printToScreen(s, TextGoldColour);
+                            }
+                            break;
+                            case 2:
+                            {
+                                cro::String s("Happy Golfing! ");
+                                s += std::uint32_t(0x1F3CC);
+                                s += std::uint32_t(0x26F3);
+
+                                m_textChat.printToScreen(s, TextGoldColour);
+                                e.getComponent<cro::Callback>().active = false;
+                                m_uiScene.destroyEntity(e);
+                            }
+                            break;
+                            }
+                            state++;
+                        }
+                    };
+            }
+        };
+
+
     glm::vec2 screenSize(cro::App::getWindow().getSize());
     auto& shader = m_resources.shaders.get(ShaderID::Transition);
 
@@ -5416,7 +5490,7 @@ void GolfState::createTransition()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, shaderID, timeID](cro::Entity e, float dt)
+        [&, shaderID, timeID, createWelcomeMessage](cro::Entity e, float dt)
     {
         static constexpr float MaxTime = 2.f - (1.f/60.f);
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
@@ -5427,6 +5501,8 @@ void GolfState::createTransition()
 
         if (currTime == MaxTime)
         {
+            createWelcomeMessage();
+
             e.getComponent<cro::Callback>().active = false;
             m_uiScene.destroyEntity(e);
         }

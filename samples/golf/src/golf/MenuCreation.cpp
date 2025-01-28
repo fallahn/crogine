@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -3898,6 +3898,29 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
 
     updateLobbyAvatars();
     WebSock::broadcastPlayers(m_sharedData);
+
+
+    for (auto i = 0u; i < cd.playerCount; ++i)
+    {
+        cro::String s = cd.playerData[i].name + " has joined the game.";
+
+        auto ent = m_uiScene.createEntity();
+        ent.addComponent<cro::Callback>().active = true;
+        ent.getComponent<cro::Callback>().setUserData<float>(static_cast<float>(i) * 2.f);
+        ent.getComponent<cro::Callback>().function =
+            [&, s](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
+
+                if (currTime < 0)
+                {
+                    m_textChat.printToScreen(s, TextGoldColour);
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
+    }
 }
 
 void MenuState::updateRemoteContent(const ConnectionData& cd)
