@@ -37,6 +37,7 @@ source distribution.
 namespace cro
 {
     class Transform;
+    class Model;
     namespace Detail
     {
         /*!
@@ -67,6 +68,12 @@ namespace cro
 
         template <>
         struct MaxPoolSize<cro::Transform> final
+        {
+            static constexpr std::size_t value = MinFreeIDs;
+        };
+
+        template <>
+        struct MaxPoolSize<cro::Model> final
         {
             static constexpr std::size_t value = MinFreeIDs;
         };
