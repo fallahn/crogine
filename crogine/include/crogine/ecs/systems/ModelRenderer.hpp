@@ -196,6 +196,7 @@ namespace cro
         std::vector<BenchSamples> m_benchmarks;
 #endif
 
+        void flushEntity(Entity) override;
         void updateDrawListDefault(Entity);
         void updateDrawListBalancedTree(Entity);
         //std::vector<Entity> queryTree(Box) const;

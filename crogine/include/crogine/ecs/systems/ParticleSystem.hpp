@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -81,6 +81,7 @@ namespace cro
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
+        void flushEntity(Entity) override;
 
         std::vector<float> m_dataBuffer;
         std::vector<std::uint32_t> m_vboIDs;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -163,5 +163,8 @@ namespace cro
         std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
         std::array<TextureID, BufferID::Count> m_bufferIDs = {};
         std::vector<std::vector<Entity>> m_drawLists;
+
+        void onEntityRemoved(Entity) override;
+        void flushEntity(Entity) override;
     };
 }

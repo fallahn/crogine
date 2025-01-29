@@ -5428,6 +5428,7 @@ void GolfState::createTransition()
                             {
                                 cro::String s("Welcome to ");
                                 s += m_courseTitle;
+                                s += "...";
                                 m_textChat.printToScreen(s, TextGoldColour);
                             }
                             break;

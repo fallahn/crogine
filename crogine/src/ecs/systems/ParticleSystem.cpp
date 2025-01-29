@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -840,6 +840,31 @@ void ParticleSystem::onEntityRemoved(Entity entity)
     std::swap(m_vaoIDs[idx], m_vaoIDs[m_nextBuffer]);
 
     m_nextBuffer--;
+
+    //flush entity from draw lists
+    flushEntity(entity);
+}
+
+void ParticleSystem::flushEntity(Entity e)
+{
+    for (auto& list : m_drawLists)
+    {
+        for (auto& p : list)
+        {
+            if (!p.empty())
+            {
+#ifdef USE_PARALLEL_PROCESSING
+                p.erase(std::remove_if(std::execution::par, p.begin(), p.end(),
+#else
+                p.erase(std::remove_if(p.begin(), p.end(),
+#endif
+                    [e](Entity ent)
+                    {
+                        return e == ent;
+                    }));
+            }
+        }
+    }
 }
 
 void ParticleSystem::allocateBuffer()

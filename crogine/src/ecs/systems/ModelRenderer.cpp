@@ -345,12 +345,13 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         const auto& visibleEntities = m_drawLists[camIndex][camComponent.getActivePassIndex()].renderables;
         for (const auto& [entity, sortData] : visibleEntities)
         {
-            //may have been marked for deletion - OK to draw but will trigger assert
+            //may have been marked for deletion - though this should never be true
+            //as we remove entities from draw lists when they're removed from the system
 #ifdef CRO_DEBUG_
-            if (!entity.isValid())
+            /*if (!entity.isValid())
             {
                 continue;
-            }
+            }*/
 #endif
 
             //foreach submesh / material:
@@ -371,7 +372,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 glCheck(glUseProgram(material.shader));
 
                 //apply shader uniforms from material
-                //FUTURE ME: if you en up back here wondering why the matrices aren't calculated correctly
+                //FUTURE ME: if you end up back here wondering why the matrices aren't calculated correctly
                 //remember CamerSystems need to be added to a Scene BEFORE any render systems...
                 glCheck(glUniformMatrix4fv(uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(sortData.worldViewMatrix)));
                 applyProperties(material, model, *getScene(), camComponent);
@@ -571,7 +572,7 @@ void ModelRenderer::onEntityRemoved(Entity entity)
     const auto& model = entity.getComponent<Model>();
     for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
     {
-        for (auto& uboPair: m_cameraUBOs)
+        for (auto& uboPair : m_cameraUBOs)
         {
             for (auto& ubo : uboPair)
             {
@@ -584,6 +585,31 @@ void ModelRenderer::onEntityRemoved(Entity entity)
         m_lightUBO.removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
     }
 #endif
+
+    flushEntity(entity);
+}
+
+void ModelRenderer::flushEntity(Entity entity)
+{
+    //remove this from any drawlists which may otherwise be static
+    for (auto& dl : m_drawLists)
+    {
+        for (auto& pl : dl)
+        {
+            if (!pl.renderables.empty())
+            {
+#ifdef USE_PARALLEL_PROCESSING
+                pl.renderables.erase(std::remove_if(std::execution::par, pl.renderables.begin(), pl.renderables.end(),
+#else
+                pl.renderables.erase(std::remove_if(pl.renderables.begin(), pl.renderables.end(),
+#endif
+                    [entity](const MaterialPair& p)
+                    {
+                        return p.first == entity;
+                    }), pl.renderables.end());
+            }
+        }
+    }
 }
 
 //private
