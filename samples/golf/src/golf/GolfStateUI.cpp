@@ -5430,6 +5430,7 @@ void GolfState::createTransition()
                                 s += m_courseTitle;
                                 s += "...";
                                 m_textChat.printToScreen(s, TextGoldColour);
+                                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
                             }
                             break;
                             case 1:
@@ -5451,6 +5452,7 @@ void GolfState::createTransition()
                                     break;
                                 }
                                 m_textChat.printToScreen(s, TextGoldColour);
+                                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
                             }
                             break;
                             case 2:
@@ -5460,6 +5462,9 @@ void GolfState::createTransition()
                                 s += std::uint32_t(0x26F3);
 
                                 m_textChat.printToScreen(s, TextGoldColour);
+                                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
+
+
                                 e.getComponent<cro::Callback>().active = false;
                                 m_uiScene.destroyEntity(e);
                             }
