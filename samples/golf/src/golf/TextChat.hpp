@@ -73,6 +73,8 @@ public:
 
     void sendBufferedString();
 
+    void initLog();
+
 private:
 
     std::ofstream m_logFile;

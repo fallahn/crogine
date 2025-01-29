@@ -51,6 +51,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/detail/DistanceField.cpp
   #${PROJECT_DIR}/detail/glad.c
   ${PROJECT_DIR}/detail/ModelBinary.cpp
+  ${PROJECT_DIR}/detail/PoolLog.cpp
   ${PROJECT_DIR}/detail/SDLImageRead.cpp
   ${PROJECT_DIR}/detail/SDLResource.cpp
   ${PROJECT_DIR}/detail/StackDump.cpp

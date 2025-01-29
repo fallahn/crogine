@@ -1260,6 +1260,12 @@ void MenuState::handleMessage(const cro::Message& msg)
                 updateRoster();
             }
                 break;
+            case StateID::Options:
+                if (m_sharedData.logChat)
+                {
+                    m_textChat.initLog();
+                }
+                break;
             }
         }
     }

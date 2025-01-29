@@ -38,6 +38,10 @@ namespace cro
 {
     class Transform;
     class Model;
+    struct Callback;
+    class UIInput;
+    class Drawable2D;
+
     namespace Detail
     {
         /*!
@@ -62,6 +66,24 @@ namespace cro
         */
         template <typename T>
         struct MaxPoolSize final
+        {
+            static constexpr std::size_t value = MinFreeIDs / 4;
+        };
+
+        template <>
+        struct MaxPoolSize<cro::Callback> final
+        {
+            static constexpr std::size_t value = MinFreeIDs / 2;
+        };
+
+        template <>
+        struct MaxPoolSize<cro::UIInput> final
+        {
+            static constexpr std::size_t value = MinFreeIDs / 2;
+        };
+
+        template <>
+        struct MaxPoolSize<cro::Drawable2D> final
         {
             static constexpr std::size_t value = MinFreeIDs / 2;
         };

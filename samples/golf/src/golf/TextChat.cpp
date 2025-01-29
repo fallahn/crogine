@@ -190,11 +190,10 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_screenChatActiveCount (0),
     m_showShortcuts         (false)
 {
-    auto t = std::time(nullptr);
-    auto* tm = std::localtime(&t);
-
-    std::string filename = "ChatLog-" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
-    m_logFile.open(filename, std::ios::app);
+    if (sd.logChat)
+    {
+        initLog();
+    }
 
     registerCommand("cl_use_tts", [&](const std::string& str)
         {
@@ -775,6 +774,17 @@ void TextChat::sendBufferedString()
     }
 }
 
+void TextChat::initLog()
+{
+    if (!m_logFile.is_open())
+    {
+        auto t = std::time(nullptr);
+        auto* tm = std::localtime(&t);
+
+        std::string filename = "chat_log_" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
+        m_logFile.open(filename, std::ios::app);
+    }
+}
 
 //private
 void TextChat::beginChat()

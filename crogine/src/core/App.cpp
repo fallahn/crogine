@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -60,6 +60,7 @@ static void winFPE(int)
 #include <crogine/core/SysTime.hpp>
 #include <crogine/core/HiResTimer.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/PoolLog.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/String.hpp>
@@ -520,6 +521,8 @@ void App::run(bool resetSettings)
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
     m_window.close();
+
+    Detail::PoolLog::dump();
 }
 
 void App::setClearColour(Colour colour)

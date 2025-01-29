@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/detail/Detail.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/NoResize.hpp>
+#include <crogine/detail/PoolLog.hpp>
 
 #include <vector>
 #include <numeric>
@@ -121,8 +122,6 @@ namespace cro
                 }*/
                 //m_pool[idx] = std::move(component);
                 
-                
-                
                 m_indexMap[idx] = m_indexPool[m_freeIndex];
                 m_freeIndex++;
 
@@ -133,6 +132,8 @@ namespace cro
                 }
 
                 m_pool[mappedIdx] = std::move(component);
+
+                //PoolLog::log(typeid(T).name(), m_freeIndex);
             }
 
             void reset(std::uint32_t idx) override

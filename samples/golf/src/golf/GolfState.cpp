@@ -2121,6 +2121,11 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
             else if (data.id == StateID::Options)
             {
+                if (m_sharedData.logChat)
+                {
+                    m_textChat.initLog();
+                }
+
                 //update the beacon if settings changed
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::Beacon;
