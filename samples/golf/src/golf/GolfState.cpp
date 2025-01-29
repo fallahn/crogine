@@ -3102,21 +3102,6 @@ void GolfState::buildScene()
     {
         m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
         updateFlagTexture(true);
-
-        //hack around the initial text being garbled because the font
-        //isn't properly updated yet...
-        m_flagText.setString("Buns");
-
-        auto ent = m_gameScene.createEntity();
-        ent.addComponent<cro::Callback>().active = true;
-        ent.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float)
-            {
-                updateFlagTexture(true);
-
-                e.getComponent<cro::Callback>().active = false;
-                m_gameScene.destroyEntity(e);
-            };
     }
 
     md.loadFromFile("assets/golf/models/beacon.cmt");
