@@ -842,7 +842,7 @@ void ParticleSystem::onEntityRemoved(Entity entity)
     m_nextBuffer--;
 
     //flush entity from draw lists
-    flushEntity(entity);
+    //flushEntity(entity);
 }
 
 void ParticleSystem::flushEntity(Entity e)
