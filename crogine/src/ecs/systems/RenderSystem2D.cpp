@@ -39,16 +39,16 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
 
-#ifdef CRO_DEBUG_
+//#ifdef CRO_DEBUG_
 #include <crogine/gui/Gui.hpp>
-#endif
+//#endif
 
 #include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
 
 #include <string>
 
-//#define PARALLEL_DISABLE
+#define PARALLEL_DISABLE
 #ifdef PARALLEL_DISABLE
 #undef USE_PARALLEL_PROCESSING
 #endif

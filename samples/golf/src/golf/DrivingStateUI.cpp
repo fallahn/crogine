@@ -2233,11 +2233,10 @@ will be given a score based on your overall accuracy. Good Luck!
     spriteSheet.loadFromFile("assets/golf/sprites/large_flag.spt", m_resources.textures);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 380.f, 48.f, 0.01f });
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setCullingEnabled(false); //for some reason we have to disable this *on this particular sprite* to stop flickering due to failing the camera culling
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
     bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
 
     //wang this in here so we can debug easier
     /*cro::Command cmd;
@@ -2545,7 +2544,7 @@ void DrivingState::createSummary()
     spriteSheet.loadFromFile("assets/golf/sprites/large_flag.spt", m_resources.textures);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 380.f, 48.f, 0.4f });
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setCullingEnabled(false); //for some reason this sprite flickers because it fails culling on some frames
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
     bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
