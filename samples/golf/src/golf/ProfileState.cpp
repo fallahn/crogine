@@ -4730,12 +4730,14 @@ void ProfileState::generateMugshot()
     m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
     m_cameras[CameraID::Mugshot].getComponent<cro::Camera>().updateMatrices(m_cameras[CameraID::Mugshot].getComponent<cro::Transform>());
     m_modelScene.setActiveCamera(m_cameras[CameraID::Mugshot]);
+    m_modelScene.simulate(0.f); //updates all the camera/model matrices
     m_modelScene.render();
 
     cam.viewport = { 0.5f, 0.f, 0.5f, 1.f };
     m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(MugCameraPosition + glm::vec3(-MugCameraPosition.z /*+ 0.05f*/, 0.f, -MugCameraPosition.z));
     m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
     m_cameras[CameraID::Mugshot].getComponent<cro::Camera>().updateMatrices(m_cameras[CameraID::Mugshot].getComponent<cro::Transform>());
+    m_modelScene.simulate(0.f);
     m_modelScene.render();
 
     m_mugshotTexture.display();
