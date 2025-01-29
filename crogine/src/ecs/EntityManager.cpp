@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/PoolLog.hpp>
 #include <crogine/core/MessageBus.hpp>
 
 #include <crogine/gui/Gui.hpp>
@@ -98,6 +99,7 @@ Entity EntityManager::createEntity()
 
     m_entityCount++;
 
+    //Detail::PoolLog::log("Entity Count", m_entityCount);
     return e;
 }
 

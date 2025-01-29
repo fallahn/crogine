@@ -4591,7 +4591,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.logCSV ? 1.f : 0.f;
+            const float scale = m_sharedData.logCSV ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4618,7 +4618,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.blockChat ? 1.f : 0.f;
+            const float scale = m_sharedData.blockChat ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4645,7 +4645,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {
-            float scale = m_sharedData.logChat ? 1.f : 0.f;
+            const float scale = m_sharedData.logChat ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -4668,7 +4668,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             }
         });
 
-    entity = createCheckbox(glm::vec2(14.f, 177.f));
+    entity = createCheckbox(glm::vec2(14.f, 161.f));
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
         {

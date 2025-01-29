@@ -2198,7 +2198,7 @@ void GolfState::createPowerBars(cro::Entity rootNode)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::BarEntLarge;
     entity.addComponent<cro::Sprite>() = m_sharedData.decimatePowerBar ? m_sprites[SpriteID::PowerBarDouble10] : m_sprites[SpriteID::PowerBarDouble];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, -0.07f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, (bounds.height / 2.f) - 2.f, -0.07f));
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     barEnt = entity;
 
@@ -2253,8 +2253,8 @@ void GolfState::createPowerBars(cro::Entity rootNode)
 
     //flag power/distance when putting
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, -0.01f));
-    entity.getComponent<cro::Transform>().setOrigin({ -12.f, 4.f });
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, -0.05f));
+    entity.getComponent<cro::Transform>().setOrigin({ -12.f, 6.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlagLarge];
     entity.addComponent<cro::SpriteAnimation>().play(0);
