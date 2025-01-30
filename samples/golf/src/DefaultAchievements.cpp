@@ -370,7 +370,7 @@ void DefaultAchievements::readFile()
         stat(filePath.c_str(), &st);
 
         FILE* inFile = fopen(filePath.c_str(), "rb");
-        if (inFile && st.st_size >= static_cast<_off_t>(bitsize + statsize)) //needs to be >= for backwards compat
+        if (inFile && st.st_size >= static_cast<off_t>(bitsize + statsize)) //needs to be >= for backwards compat
         {
             auto read = fread(m_bitArray.data(), bitsize, 1, inFile);
             if (read != 1)
