@@ -5388,7 +5388,9 @@ void GolfState::floatingMessage(const std::string& msg)
     entity.getComponent<cro::Transform>().setScale(m_viewScale);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(msg);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    //entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    //entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     centreText(entity);
 

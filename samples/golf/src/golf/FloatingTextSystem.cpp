@@ -71,6 +71,10 @@ void FloatingTextSystem::process(float dt)
         c.setAlpha(1.f - alpha);
         e.getComponent<cro::Text>().setFillColour(c);
 
+        c = floatingText.shadowColour;
+        c.setAlpha(1.f - alpha);
+        e.getComponent<cro::Text>().setShadowColour(c);
+
         break; //only update the front entity
     }
 }
@@ -79,4 +83,5 @@ void FloatingTextSystem::process(float dt)
 void FloatingTextSystem::onEntityAdded(cro::Entity e)
 {
     e.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
+    e.getComponent<cro::Text>().setShadowColour(cro::Colour::Transparent);
 }

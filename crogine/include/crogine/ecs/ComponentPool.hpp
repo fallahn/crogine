@@ -106,22 +106,14 @@ namespace cro
             T& at(std::size_t idx)
             {
                 return m_pool.at(m_indexMap[idx]);
-                //return m_pool.at(idx);
             }
             const T& at(std::size_t idx) const
             {
                 return m_pool.at(m_indexMap[idx]);
-                //return m_pool.at(idx);
             }
 
             void insert(std::uint32_t idx, T component)
             {
-                /*if (idx >= size())
-                {
-                    resize(std::min(static_cast<std::uint32_t>(Detail::MinFreeIDs), idx + 128));
-                }*/
-                //m_pool[idx] = std::move(component);
-                
                 m_indexMap[idx] = m_indexPool[m_freeIndex];
                 m_freeIndex++;
 
@@ -138,13 +130,6 @@ namespace cro
 
             void reset(std::uint32_t idx) override
             {
-                /*if (idx < m_pool.size())
-                {
-                    m_pool[idx] = T();
-                }*/
-                
-                
-                
                 const auto mappedIdx = m_indexMap[idx];
                 
                 if (mappedIdx != nullindex)
