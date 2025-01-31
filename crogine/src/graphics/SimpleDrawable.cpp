@@ -230,15 +230,15 @@ bool SimpleDrawable::setShader(const Shader& shader)
     {
         if (name == "u_projectionMatrix")
         {
-            m_uniforms.projectionMatrix = id;
+            m_uniforms.projectionMatrix = id.first;
         }
         else if (name == "u_worldMatrix")
         {
-            m_uniforms.worldMatrix = id;
+            m_uniforms.worldMatrix = id.first;
         }
         else
         {
-            m_uniformValues.insert(std::make_pair(name, std::make_pair(id, UniformValue())));
+            m_uniformValues.insert(std::make_pair(name, std::make_pair(id.first, UniformValue())));
         }
     }
 

@@ -265,24 +265,23 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
             handle.id = shader->getGLHandle();
 
             //fetch uniforms.
-            const auto& uniforms = shader->getUniformMap();
 #ifdef PLATFORM_DESKTOP
-            handle.uniformIDs[UniformID::ClipPlane] = uniforms.find("u_clipPlane")->second;
+            handle.uniformIDs[UniformID::ClipPlane] = shader->getUniformID("u_clipPlane");
 #endif
-            handle.uniformIDs[UniformID::Projection] = uniforms.find("u_projection")->second;
+            handle.uniformIDs[UniformID::Projection] = shader->getUniformID("u_projection");
             if (i == ShaderID::Alpha)
             {
-                handle.uniformIDs[UniformID::LightColour] = uniforms.find("u_lightColour")->second;
+                handle.uniformIDs[UniformID::LightColour] = shader->getUniformID("u_lightColour");
             }
-            handle.uniformIDs[UniformID::Texture] = uniforms.find("u_texture")->second;
-            handle.uniformIDs[UniformID::ViewProjection] = uniforms.find("u_viewProjection")->second;
-            handle.uniformIDs[UniformID::Viewport] = uniforms.find("u_viewportHeight")->second;
-            handle.uniformIDs[UniformID::ParticleSize] = uniforms.find("u_particleSize")->second;
-            handle.uniformIDs[UniformID::TextureSize] = uniforms.find("u_textureSize")->second;
-            handle.uniformIDs[UniformID::FrameCount] = uniforms.find("u_frameCount")->second;
-            if (uniforms.count("u_cameraRange"))
+            handle.uniformIDs[UniformID::Texture] = shader->getUniformID("u_texture");
+            handle.uniformIDs[UniformID::ViewProjection] = shader->getUniformID("u_viewProjection");
+            handle.uniformIDs[UniformID::Viewport] = shader->getUniformID("u_viewportHeight");
+            handle.uniformIDs[UniformID::ParticleSize] = shader->getUniformID("u_particleSize");
+            handle.uniformIDs[UniformID::TextureSize] = shader->getUniformID("u_textureSize");
+            handle.uniformIDs[UniformID::FrameCount] = shader->getUniformID("u_frameCount");
+            //if (uniforms.count("u_cameraRange"))
             {
-                handle.uniformIDs[UniformID::CameraRange] = uniforms.find("u_cameraRange")->second;
+                handle.uniformIDs[UniformID::CameraRange] = shader->getUniformID("u_cameraRange");
             }
 
             //map attributes

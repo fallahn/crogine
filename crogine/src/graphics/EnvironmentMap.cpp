@@ -246,9 +246,9 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
         return false;
     }
 
-    const auto& uniforms = shader.getUniformMap();
+
     glCheck(glUseProgram(shader.getGLHandle()));
-    glCheck(glUniform1i(uniforms.at("u_hdrMap"), 0));
+    glCheck(glUniform1i(shader.getUniformID("u_hdrMap"), 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_2D, tempTexture.handle));
 
@@ -259,7 +259,7 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     for (auto i = 0u; i < 6u; ++i)
     {
         auto viewProj = projectionMatrix * viewMatrices[i];
-        glCheck(glUniformMatrix4fv(uniforms.at("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
+        glCheck(glUniformMatrix4fv(shader.getUniformID("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
         glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_textures[Skybox], 0));
 
         glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -330,7 +330,7 @@ void EnvironmentMap::renderIrradianceMap(std::uint32_t fbo, std::uint32_t rbo, S
 
     //then render each face
     glCheck(glUseProgram(shader.getGLHandle()));
-    glCheck(glUniform1i(shader.getUniformMap().at("u_environmentMap"), 0));
+    glCheck(glUniform1i(shader.getUniformID("u_environmentMap"), 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Skybox]));
     //glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
@@ -341,7 +341,7 @@ void EnvironmentMap::renderIrradianceMap(std::uint32_t fbo, std::uint32_t rbo, S
     for (auto i = 0u; i < 6u; ++i)
     {
         auto viewProj = projectionMatrix * viewMatrices[i];
-        glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
+        glCheck(glUniformMatrix4fv(shader.getUniformID("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
         glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_textures[Irradiance], 0));
 
         glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -369,7 +369,7 @@ void EnvironmentMap::renderPrefilterMap(std::uint32_t fbo, std::uint32_t rbo, Sh
 
     //read from the skybox
     glCheck(glUseProgram(shader.getGLHandle()));
-    glCheck(glUniform1i(shader.getUniformMap().at("u_environmentMap"), 0));
+    glCheck(glUniform1i(shader.getUniformID("u_environmentMap"), 0));
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_textures[Skybox]));
 
@@ -388,13 +388,13 @@ void EnvironmentMap::renderPrefilterMap(std::uint32_t fbo, std::uint32_t rbo, Sh
         glViewport(0, 0, mipSize, mipSize);
 
         float roughness = static_cast<float>(i) / static_cast<float>(MaxLevels - 1);
-        glCheck(glUniform1f(shader.getUniformMap().at("u_roughness"), roughness));
+        glCheck(glUniform1f(shader.getUniformID("u_roughness"), roughness));
 
         //render each side of this level
         for (auto j = 0; j < 6; ++j)
         {
             auto viewProj = projectionMatrix * viewMatrices[j];
-            glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
+            glCheck(glUniformMatrix4fv(shader.getUniformID("u_viewProjectionMatrix"), 1, GL_FALSE, &viewProj[0][0]));
             glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + j, m_textures[Prefilter], i));
 
             glCheck(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));

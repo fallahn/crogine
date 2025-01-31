@@ -277,121 +277,121 @@ void Data::setShader(const Shader& s)
     {
         if (uniform == "u_worldMatrix")
         {
-            uniforms[Material::World] = handle;
+            uniforms[Material::World] = handle.first;
         }
         else if (uniform == "u_viewMatrix")
         {
-            uniforms[Material::View] = handle;
+            uniforms[Material::View] = handle.first;
         }
         else if (uniform == "u_worldViewMatrix")
         {
-            uniforms[Material::WorldView] = handle;
+            uniforms[Material::WorldView] = handle.first;
         }
         else if (uniform == "u_viewProjectionMatrix")
         {
-            uniforms[Material::ViewProjection] = handle;
+            uniforms[Material::ViewProjection] = handle.first;
         }
         else if (uniform == "u_projectionMatrix")
         {
-            uniforms[Material::Projection] = handle;
+            uniforms[Material::Projection] = handle.first;
         }
         else if (uniform == "u_worldViewProjectionMatrix")
         {
-            uniforms[Material::WorldViewProjection] = handle;
+            uniforms[Material::WorldViewProjection] = handle.first;
         }
         else if (uniform == "u_normalMatrix")
         {
-            uniforms[Material::Normal] = handle;
+            uniforms[Material::Normal] = handle.first;
         }
         else if (uniform == "u_cameraWorldPosition")
         {
-            uniforms[Material::Camera] = handle;
+            uniforms[Material::Camera] = handle.first;
         }
         else if (uniform == "u_screenSize")
         {
-            uniforms[Material::ScreenSize] = handle;
+            uniforms[Material::ScreenSize] = handle.first;
         }
         else if (uniform == "u_clipPlane")
         {
-            uniforms[Material::ClipPlane] = handle;
+            uniforms[Material::ClipPlane] = handle.first;
         }
         //these are optionally standard so they are added to 'optional' list to to mark that they exist
         //but not added as a property as they are not user settable - rather they are used internally by renderers
         else if (uniform == "u_boneMatrices[0]")
         {
-            uniforms[Material::Skinning] = handle;
+            uniforms[Material::Skinning] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::Skinning;
         }
         else if (uniform == "u_projectionMapMatrix[0]")
         {
-            uniforms[Material::ProjectionMap] = handle;
+            uniforms[Material::ProjectionMap] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::ProjectionMap;
         }
         else if (uniform == "u_projectionMapCount")
         {
-            uniforms[Material::ProjectionMapCount] = handle;
+            uniforms[Material::ProjectionMapCount] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::ProjectionMapCount;
         }
         else if (uniform == "u_lightViewProjectionMatrix[0]")
         {
-            uniforms[Material::ShadowMapProjection] = handle;
+            uniforms[Material::ShadowMapProjection] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::ShadowMapProjection;
         }
         else if (uniform == "u_shadowMap")
         {
-            uniforms[Material::ShadowMapSampler] = handle;
+            uniforms[Material::ShadowMapSampler] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::ShadowMapSampler;
         }
         else if (uniform == "u_cameraViewMatrix")
         {
-            uniforms[Material::CameraView] = handle;
+            uniforms[Material::CameraView] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::CameraView;
         }
         else if (uniform == "u_frustumSplits[0]")
         {
-            uniforms[Material::CascadeSplits] = handle;
+            uniforms[Material::CascadeSplits] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::CascadeSplits;
         }
         else if (uniform == "u_cascadeCount")
         {
-            uniforms[Material::CascadeCount] = handle;
+            uniforms[Material::CascadeCount] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::CascadeCount;
         }
         else if (uniform == "u_lightDirection")
         {
-            uniforms[Material::SunlightDirection] = handle;
+            uniforms[Material::SunlightDirection] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::SunlightDirection;
         }
         else if (uniform == "u_lightColour")
         {
-            uniforms[Material::SunlightColour] = handle;
+            uniforms[Material::SunlightColour] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::SunlightColour;
         }
         else if (uniform == "u_reflectionMap")
         {
-            uniforms[Material::ReflectionMap] = handle;
+            uniforms[Material::ReflectionMap] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::ReflectionMap;
         }
         else if (uniform == "u_refractionMap")
         {
-            uniforms[Material::RefractionMap] = handle;
+            uniforms[Material::RefractionMap] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::RefractionMap;
         }
         else if (uniform == "u_reflectionMatrix")
         {
-            uniforms[Material::ReflectionMatrix] = handle;
+            uniforms[Material::ReflectionMatrix] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::ReflectionMatrix;
         }
         else if (uniform == "u_skybox")
         {
-            uniforms[Material::SkyBox] = handle;
+            uniforms[Material::SkyBox] = handle.first;
             optionalUniforms[optionalUniformCount++] = Material::SkyBox;
         }
         //else these are user settable uniforms - ie optional, but set by user such as textures
         else
         {
             //add to list of material properties
-            properties.insert(std::make_pair(uniform, std::make_pair(handle, Material::Property())));
+            properties.insert(std::make_pair(uniform, std::make_pair(handle.first, Material::Property())));
         }
     }
 

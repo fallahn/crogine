@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -105,9 +105,9 @@ namespace cro
         const std::array<std::int32_t, Shader::AttributeID::Count>& getAttribMap() const;
 
         /*!
-        \brief Returns a list of active uniforms mapped to their locations
+        \brief Returns a list of active uniforms mapped to their location and their type
         */
-        const std::unordered_map<std::string, std::int32_t>& getUniformMap() const;
+        const std::unordered_map<std::string, std::pair<std::int32_t, std::uint32_t>>& getUniformMap() const;
 
         /*!
         \brief Returns the uniform ID of the given string if it exists, else returns -1
@@ -116,6 +116,13 @@ namespace cro
         std::int32_t getUniformID(const std::string& uniformName) const;
 
 
+        /*!
+        \brief Returns the type of the uniform with the given name, if it exists, as a GL_ENUM
+        else return GL_INVALID_ENUM
+        \param uniformName A string containing the name of the uniform to query
+        */
+        std::uint32_t getUniformType(const std::string& uniformName) const;
+
     private:
         bool loadFromSource(const char* v, const char* g, const char* f, const char* d);
 
@@ -123,7 +130,7 @@ namespace cro
         std::array<std::int32_t, AttributeID::Count> m_attribMap;
         bool fillAttribMap();
         void resetAttribMap();
-        std::unordered_map<std::string, std::int32_t> m_uniformMap;
+        std::unordered_map<std::string, std::pair<std::int32_t, std::uint32_t>> m_uniformMap;
         void fillUniformMap();
         void resetUniformMap();
         std::string parseFile(const std::string&);
@@ -147,8 +154,8 @@ supplies some information to the compiler so the it is not required
 to add it to the source manually.
 
 For example mobile targets support GLES2 with glsl version 100. Desktop
-targets, on the other hand, require glsl version 150 for the provided
-OpenGL 3.3 context. This is auto detected at compilation time and means
+targets, on the other hand, require glsl version 410 for the provided
+OpenGL 4.1 context. This is auto detected at compilation time and means
 that you DO NOT need to add any version directives to your shader source
 as they will be added automatically. It also means that there are a few
 caveats, listed below:

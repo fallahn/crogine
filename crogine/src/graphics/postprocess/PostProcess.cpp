@@ -91,11 +91,10 @@ void PostProcess::drawQuad(std::size_t passIndex, FloatRect size)
     //TODO only rebuild as necessary? Else not really a need for member var
     m_transform = glm::scale(glm::mat4(1.f), { size.width, size.height, 0.f });
     m_projection = glm::ortho(0.f, size.width, 0.f, size.height, -0.1f, 10.f);
-    const auto& uniforms = shader.getUniformMap();
 
     glCheck(glUseProgram(shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(uniforms.find("u_worldMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_transform)));
-    glCheck(glUniformMatrix4fv(uniforms.find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projection)));
+    glCheck(glUniformMatrix4fv(shader.getUniformID("u_worldMatrix"), 1, GL_FALSE, glm::value_ptr(m_transform)));
+    glCheck(glUniformMatrix4fv(shader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, glm::value_ptr(m_projection)));
 
     auto vp = RenderTarget::getActiveTarget()->getDefaultViewport();
     glViewport(vp.left, vp.bottom, vp.width, vp.height);
@@ -156,7 +155,7 @@ void PostProcess::setUniform(const std::string& name, float value, const Shader&
     CRO_ASSERT(shader.getUniformMap().count(name) != 0, "Uniform doesn't exist");
     
     auto a = shader.getGLHandle();
-    auto b = shader.getUniformMap().find(name)->second;
+    auto b = shader.getUniformID(name);
     m_uniforms[a][b].type = UniformData::Number;
     m_uniforms[a][b].numberValue[0] = value;
 }
@@ -166,7 +165,7 @@ void PostProcess::setUniform(const std::string& name, glm::vec2 value, const Sha
     CRO_ASSERT(shader.getUniformMap().count(name) != 0, "Uniform doesn't exist");
     
     auto a = shader.getGLHandle();
-    auto b = shader.getUniformMap().find(name)->second;
+    auto b = shader.getUniformID(name);
     m_uniforms[a][b].type = UniformData::Number2;
     m_uniforms[a][b].numberValue[0] = value.x;
     m_uniforms[a][b].numberValue[1] = value.y;
@@ -177,7 +176,7 @@ void PostProcess::setUniform(const std::string& name, glm::vec3 value, const Sha
     CRO_ASSERT(shader.getUniformMap().count(name) != 0, "Uniform doesn't exist");
 
     auto a = shader.getGLHandle();
-    auto b = shader.getUniformMap().find(name)->second;
+    auto b = shader.getUniformID(name);
     m_uniforms[a][b].type = UniformData::Number3;
     m_uniforms[a][b].numberValue[0] = value.x;
     m_uniforms[a][b].numberValue[1] = value.y;
@@ -189,7 +188,7 @@ void PostProcess::setUniform(const std::string& name, glm::vec4 value, const Sha
     CRO_ASSERT(shader.getUniformMap().count(name) != 0, "Uniform doesn't exist");
     
     auto a = shader.getGLHandle();
-    auto b = shader.getUniformMap().find(name)->second;
+    auto b = shader.getUniformID(name);
     m_uniforms[a][b].type = UniformData::Number4;
     m_uniforms[a][b].numberValue[0] = value.x;
     m_uniforms[a][b].numberValue[1] = value.y;
@@ -202,7 +201,7 @@ void PostProcess::setUniform(const std::string& name, Colour value, const Shader
     CRO_ASSERT(shader.getUniformMap().count(name) != 0, "Uniform doesn't exist");
 
     auto a = shader.getGLHandle();
-    auto b = shader.getUniformMap().find(name)->second;
+    auto b = shader.getUniformID(name);
     m_uniforms[a][b].type = UniformData::Number4;
     m_uniforms[a][b].numberValue[0] = value.getRed();
     m_uniforms[a][b].numberValue[1] = value.getGreen();
@@ -215,7 +214,7 @@ void PostProcess::setUniform(const std::string& name, const Texture& value, cons
     CRO_ASSERT(shader.getUniformMap().count(name) != 0, "Uniform doesn't exist");
     
     auto a = shader.getGLHandle();
-    auto b = shader.getUniformMap().find(name)->second;
+    auto b = shader.getUniformID(name);
     m_uniforms[a][b].type = UniformData::Texture;
     m_uniforms[a][b].textureID = value.getGLHandle();
 }

@@ -504,8 +504,8 @@ namespace cro
             {
                 activeShader = &shader;
 
-                modelViewUniform = shader.getUniformMap().at("u_modelViewMatrix");
-                projectionUniform = shader.getUniformMap().at("u_projectionMatrix");
+                modelViewUniform = shader.getUniformID("u_modelViewMatrix");
+                projectionUniform = shader.getUniformID("u_projectionMatrix");
                 textureUniform = shader.getUniformID("u_skybox");
                 skyColourUniform = shader.getUniformID("u_skyColour");
             }

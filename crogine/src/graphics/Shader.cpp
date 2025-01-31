@@ -222,7 +222,7 @@ const std::array<std::int32_t, Shader::AttributeID::Count>& Shader::getAttribMap
     return m_attribMap;
 }
 
-const std::unordered_map<std::string, std::int32_t>& Shader::getUniformMap() const
+const std::unordered_map<std::string, std::pair<std::int32_t, std::uint32_t>>& Shader::getUniformMap() const
 {
     return m_uniformMap;
 }
@@ -231,12 +231,21 @@ std::int32_t Shader::getUniformID(const std::string& name) const
 {
     if (m_uniformMap.count(name) != 0)
     {
-        return m_uniformMap.at(name);
+        return m_uniformMap.at(name).first;
     }
 #ifdef CRO_DEBUG_
     LogW << name << ": uniform not found in shader (Shader::getUniformID())" << std::endl;
 #endif
     return - 1;
+}
+
+std::uint32_t Shader::getUniformType(const std::string& name) const
+{
+    if (m_uniformMap.count(name) != 0)
+    {
+        return m_uniformMap.at(name).second;
+    }
+    return GL_INVALID_ENUM;
 }
 
 //private
@@ -524,7 +533,7 @@ void Shader::fillUniformMap()
 
         GLuint location = 0;
         glCheck(location = glGetUniformLocation(m_handle, str));
-        m_uniformMap.insert(std::make_pair(std::string(str), location));
+        m_uniformMap.insert(std::make_pair(std::string(str), std::make_pair(location, type)));
     }
 }
 

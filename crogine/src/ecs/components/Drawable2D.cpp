@@ -296,7 +296,7 @@ void Drawable2D::applyShader()
         {
             if (m_shader->getUniformMap().count("u_texture") != 0)
             {
-                m_textureUniform = m_shader->getUniformMap().at("u_texture");
+                m_textureUniform = m_shader->getUniformID("u_texture");
             }
             else
             {
@@ -312,7 +312,7 @@ void Drawable2D::applyShader()
 
         if (m_shader->getUniformMap().count("u_worldMatrix") != 0)
         {
-            m_worldUniform = m_shader->getUniformMap().at("u_worldMatrix");
+            m_worldUniform = m_shader->getUniformID("u_worldMatrix");
         }
         else
         {
@@ -325,7 +325,7 @@ void Drawable2D::applyShader()
 
         if (m_shader->getUniformMap().count("u_viewProjectionMatrix") != 0)
         {
-            m_viewProjectionUniform = m_shader->getUniformMap().at("u_viewProjectionMatrix");
+            m_viewProjectionUniform = m_shader->getUniformID("u_viewProjectionMatrix");
         }
         else
         {
@@ -339,7 +339,7 @@ void Drawable2D::applyShader()
         //this is optional so we don't reset the shader if it's not found
         if (m_shader->getUniformMap().count("u_normalMatrix") != 0)
         {
-            m_normalMatrixUniform = m_shader->getUniformMap().at("u_normalMatrix");
+            m_normalMatrixUniform = m_shader->getUniformID("u_normalMatrix");
         }
 
         //store available attribs so we can also use this on mobile

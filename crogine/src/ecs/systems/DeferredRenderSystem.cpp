@@ -496,66 +496,66 @@ bool DeferredRenderSystem::loadPBRShader()
     {
         //load uniform mappings
         const auto& uniforms = m_pbrShader.getUniformMap();
-        m_pbrUniforms[PBRUniformIDs::WorldMat] = uniforms.at("u_worldMatrix");
-        m_pbrUniforms[PBRUniformIDs::ProjMat] = uniforms.at("u_projectionMatrix");
+        m_pbrUniforms[PBRUniformIDs::WorldMat] = m_pbrShader.getUniformID("u_worldMatrix");
+        m_pbrUniforms[PBRUniformIDs::ProjMat] = m_pbrShader.getUniformID("u_projectionMatrix");
 
         if (uniforms.count("u_diffuseMap"))
         {
-            m_pbrUniforms[PBRUniformIDs::Diffuse] = uniforms.at("u_diffuseMap");
+            m_pbrUniforms[PBRUniformIDs::Diffuse] = m_pbrShader.getUniformID("u_diffuseMap");
         }
         if (uniforms.count("u_maskMap"))
         {
-            m_pbrUniforms[PBRUniformIDs::Mask] = uniforms.at("u_maskMap");
+            m_pbrUniforms[PBRUniformIDs::Mask] = m_pbrShader.getUniformID("u_maskMap");
         }
         if (uniforms.count("u_normalMap"))
         {
-            m_pbrUniforms[PBRUniformIDs::Normal] = uniforms.at("u_normalMap");
+            m_pbrUniforms[PBRUniformIDs::Normal] = m_pbrShader.getUniformID("u_normalMap");
         }
         if (uniforms.count("u_positionMap"))
         {
-            m_pbrUniforms[PBRUniformIDs::Position] = uniforms.at("u_positionMap");
+            m_pbrUniforms[PBRUniformIDs::Position] = m_pbrShader.getUniformID("u_positionMap");
         }
 
 
 
         if (uniforms.count("u_lightDirection"))
         {
-            m_pbrUniforms[PBRUniformIDs::LightDirection] = uniforms.at("u_lightDirection");
+            m_pbrUniforms[PBRUniformIDs::LightDirection] = m_pbrShader.getUniformID("u_lightDirection");
         }
         if (uniforms.count("u_lightColour"))
         {
-            m_pbrUniforms[PBRUniformIDs::LightColour] = uniforms.at("u_lightColour");
+            m_pbrUniforms[PBRUniformIDs::LightColour] = m_pbrShader.getUniformID("u_lightColour");
         }
         if (uniforms.count("u_cameraWorldPosition"))
         {
-            m_pbrUniforms[PBRUniformIDs::CameraWorldPosition] = uniforms.at("u_cameraWorldPosition");
+            m_pbrUniforms[PBRUniformIDs::CameraWorldPosition] = m_pbrShader.getUniformID("u_cameraWorldPosition");
         }
 
 
         if (uniforms.count("u_irradianceMap"))
         {
-            m_pbrUniforms[PBRUniformIDs::IrradianceMap] = uniforms.at("u_irradianceMap");
+            m_pbrUniforms[PBRUniformIDs::IrradianceMap] = m_pbrShader.getUniformID("u_irradianceMap");
         }
         if (uniforms.count("u_prefilterMap"))
         {
-            m_pbrUniforms[PBRUniformIDs::PrefilterMap] = uniforms.at("u_prefilterMap");
+            m_pbrUniforms[PBRUniformIDs::PrefilterMap] = m_pbrShader.getUniformID("u_prefilterMap");
         }
         if (uniforms.count("u_brdfMap"))
         {
-            m_pbrUniforms[PBRUniformIDs::BRDFMap] = uniforms.at("u_brdfMap");
+            m_pbrUniforms[PBRUniformIDs::BRDFMap] = m_pbrShader.getUniformID("u_brdfMap");
         }
 
         if (uniforms.count("u_inverseViewMatrix"))
         {
-            m_pbrUniforms[PBRUniformIDs::InverseViewMat] = uniforms.at("u_inverseViewMatrix");
+            m_pbrUniforms[PBRUniformIDs::InverseViewMat] = m_pbrShader.getUniformID("u_inverseViewMatrix");
         }
         if (uniforms.count("u_lightProjectionMatrix"))
         {
-            m_pbrUniforms[PBRUniformIDs::LightProjMat] = uniforms.at("u_lightProjectionMatrix");
+            m_pbrUniforms[PBRUniformIDs::LightProjMat] = m_pbrShader.getUniformID("u_lightProjectionMatrix");
         }
         if (uniforms.count("u_shadowMap"))
         {
-            m_pbrUniforms[PBRUniformIDs::ShadowMap] = uniforms.at("u_shadowMap");
+            m_pbrUniforms[PBRUniformIDs::ShadowMap] = m_pbrShader.getUniformID("u_shadowMap");
         }
     }
 
@@ -569,11 +569,10 @@ bool DeferredRenderSystem::loadOITShader()
     auto result = m_oitShader.loadFromString(Shaders::Deferred::LightingVertex, Shaders::Deferred::OITOutputFragment);
     if (result)
     {
-        const auto& uniforms = m_oitShader.getUniformMap();
-        m_oitUniforms[OITUniformIDs::WorldMat] = uniforms.at("u_worldMatrix");
-        m_oitUniforms[OITUniformIDs::ProjMat] = uniforms.at("u_projectionMatrix");
-        m_oitUniforms[OITUniformIDs::Accum] = uniforms.at("u_accumMap");
-        m_oitUniforms[OITUniformIDs::Reveal] = uniforms.at("u_revealMap");
+        m_oitUniforms[OITUniformIDs::WorldMat] = m_oitShader.getUniformID("u_worldMatrix");
+        m_oitUniforms[OITUniformIDs::ProjMat] = m_oitShader.getUniformID("u_projectionMatrix");
+        m_oitUniforms[OITUniformIDs::Accum] = m_oitShader.getUniformID("u_accumMap");
+        m_oitUniforms[OITUniformIDs::Reveal] = m_oitShader.getUniformID("u_revealMap");
     }
 
     return result;

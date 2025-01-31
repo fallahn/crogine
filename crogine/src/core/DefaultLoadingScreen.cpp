@@ -78,13 +78,13 @@ DefaultLoadingScreen::DefaultLoadingScreen()
     
     if (m_shader.loadFromString(vertex, fragment))
     {
-        const auto& uniforms = m_shader.getUniformMap();
-        m_transformIndex = uniforms.find("u_worldMatrix")->second;
+        //const auto& uniforms = m_shader.getUniformMap();
+        m_transformIndex = m_shader.getUniformID("u_worldMatrix");
         m_transform = glm::translate(glm::mat4(1.f), { 60.f, 60.f, 0.f });
         m_transform = glm::scale(m_transform, { 60.f, 60.f, 1.f });
 
         glCheck(glUseProgram(m_shader.getGLHandle()));
-        glCheck(glUniformMatrix4fv(uniforms.find("u_projectionMatrix")->second, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
+        glCheck(glUniformMatrix4fv(m_shader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
         glCheck(glUseProgram(0));
 
         //create VBO

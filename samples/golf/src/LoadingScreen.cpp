@@ -110,13 +110,12 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
 
     if (m_shader.loadFromString(vertex, fragment))
     {
-        const auto& uniforms = m_shader.getUniformMap();
-        m_transformIndex = uniforms.find("u_worldMatrix")->second;
-        m_projectionIndex = uniforms.find("u_projectionMatrix")->second;
-        m_frameIndex = uniforms.find("u_frameNumber")->second;
+        m_transformIndex = m_shader.getUniformID("u_worldMatrix");
+        m_projectionIndex = m_shader.getUniformID("u_projectionMatrix");
+        m_frameIndex = m_shader.getUniformID("u_frameNumber");
 
         glCheck(glUseProgram(m_shader.getGLHandle()));
-        glCheck(glUniform1i(uniforms.find("u_texture")->second, 0));
+        glCheck(glUniform1i(m_shader.getUniformID("u_texture"), 0));
         glCheck(glUseProgram(0));
 
         //create VBO

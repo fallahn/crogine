@@ -174,4 +174,6 @@ private:
     //visibility calc
     std::int32_t findLeaf(glm::vec3) const;
     bool clusterVisible(std::int32_t currentCluster, std::int32_t testCluster) const;
+
+    void flushEntity(cro::Entity) override {};
 };
