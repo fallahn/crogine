@@ -2905,7 +2905,8 @@ void GolfState::updateFlagTexture(bool reloadTexture)
         m_flagText.setFont(m_sharedData.sharedResources->fonts.get(FontID::UI));
         m_flagText.setAlignment(cro::SimpleText::Alignment::Centre);
         m_flagText.setPosition({ 160.f, 80.f });
-        m_flagText.setCharacterSize(UITextSize * 12);
+        m_flagText.setScale(glm::vec2(12.f));
+        m_flagText.setCharacterSize(UITextSize);
     }
 
     m_flagTexture.clear(cro::Colour::Magenta);
