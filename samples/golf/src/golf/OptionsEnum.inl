@@ -123,6 +123,9 @@ enum OptionsIndex
     SettFlagUp,
     SettFlagLabelDown,
     SettFlagLabelUp,
+    SettPost,
+    SettPostL,
+    SettPostR,
 
     
     Scroll = 1000,

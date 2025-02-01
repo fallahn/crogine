@@ -4794,11 +4794,11 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         auto numEnt = entity;
 
         //flag text
-        auto flagLabel = createLabel(glm::vec2(257.f, 232.f), std::to_string(m_flagIndex + 1));
+        auto flagLabel = createLabel(glm::vec2(271.f, 232.f), std::to_string(m_flagIndex + 1));
         centreText(flagLabel);
 
         //flag print text
-        auto printLabel = createLabel({348.f, 232.f}, "None");
+        auto printLabel = createLabel({362.f, 232.f}, "None");
 
         auto setNumberColour =
             [&, numEnt, printLabel]() mutable
@@ -4835,9 +4835,9 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
 
         //flag down
-        entity = createHighlight({ 231.f, 223.f });
+        entity = createHighlight({ 245.f, 223.f });
         entity.getComponent<cro::UIInput>().setSelectionIndex(SettFlagDown);
-        entity.getComponent<cro::UIInput>().setNextIndex(SettFlagUp, ResetStats);
+        entity.getComponent<cro::UIInput>().setNextIndex(SettFlagUp, SettPost);
         entity.getComponent<cro::UIInput>().setPrevIndex(SettWebPortUp, TabAchievements);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
             [&, flagLabel, setTexture](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -4856,9 +4856,9 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             });
 
         //flag up
-        entity = createHighlight({ 273.f, 223.f });
+        entity = createHighlight({ 287.f, 223.f });
         entity.getComponent<cro::UIInput>().setSelectionIndex(SettFlagUp);
-        entity.getComponent<cro::UIInput>().setNextIndex(SettFlagLabelDown, ResetStats);
+        entity.getComponent<cro::UIInput>().setNextIndex(SettFlagLabelDown, SettPostL);
         entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagDown, TabAchievements);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
             [&, flagLabel, setTexture](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -4878,9 +4878,9 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
 
         //flag label down
-        entity = createHighlight({ 322.f, 223.f });
+        entity = createHighlight({ 336.f, 223.f });
         entity.getComponent<cro::UIInput>().setSelectionIndex(SettFlagLabelDown);
-        entity.getComponent<cro::UIInput>().setNextIndex(SettFlagLabelUp, WindowApply);
+        entity.getComponent<cro::UIInput>().setNextIndex(SettFlagLabelUp, SettPostL);
         entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagUp, TabStats);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
             [&, setNumberColour, printLabel](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -4896,9 +4896,9 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
 
         //flag print up
-        entity = createHighlight({ 364.f, 223.f });
+        entity = createHighlight({ 378.f, 223.f });
         entity.getComponent<cro::UIInput>().setSelectionIndex(SettFlagLabelUp);
-        entity.getComponent<cro::UIInput>().setNextIndex(SettWebsockEnable, WindowClose);
+        entity.getComponent<cro::UIInput>().setNextIndex(SettWebsockEnable, SettPostR);
         entity.getComponent<cro::UIInput>().setPrevIndex(SettFlagLabelDown, TabStats);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
             [&, setNumberColour](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -4911,6 +4911,100 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
                 }
             });
     }
+
+
+
+    //post process label
+    createLabel({ 204.f, 120.f }, "Post FX");
+
+
+    //post process checkbox
+    entity = createHighlight(glm::vec2(246.f, 111.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettPost);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPostL, ResetStats);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettFlagDown);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                    msg->type = SystemEvent::PostProcessToggled;
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+            });
+
+    //post process checkbox centre
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 113.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.usePostProcess ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto shaderLabel = createLabel(glm::vec2(325.f, 120.f), ShaderNames[m_sharedData.postProcessIndex]);
+    centreText(shaderLabel);
+
+    //prev/next post process
+    entity = createHighlight(glm::vec2(263.f, 111.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettPostL);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPostR, ResetStats);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPost, SettFlagUp);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, shaderLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.postProcessIndex = static_cast<std::int32_t>((m_sharedData.postProcessIndex + (ShaderNames.size() - 1)) % ShaderNames.size());
+                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                    msg->type = SystemEvent::PostProcessIndexChanged;
+
+                    shaderLabel.getComponent<cro::Text>().setString(ShaderNames[m_sharedData.postProcessIndex]);
+                    centreText(shaderLabel);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+    entity = createHighlight(glm::vec2(378.f, 111.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettPostR);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, WindowClose);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostL, SettFlagLabelUp);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, shaderLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.postProcessIndex = (m_sharedData.postProcessIndex + 1) % ShaderNames.size();
+                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                    msg->type = SystemEvent::PostProcessIndexChanged;
+
+                    shaderLabel.getComponent<cro::Text>().setString(ShaderNames[m_sharedData.postProcessIndex]);
+                    centreText(shaderLabel);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+
+
+
+
+
 
     auto createbuttonHighlight = [&](glm::vec2 pos, const std::string& sprName)
         {
@@ -5654,7 +5748,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         upLeftA = SettRemoteContent;
         upLeftB = ResetCareer;
         upRightA = ResetStats;
-        upRightB = SettFlagLabelUp;
+        upRightB = SettPostR;
         break;
     case MenuID::Achievements:
         offset.x = 40.f;
