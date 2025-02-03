@@ -959,7 +959,8 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
                         if (!info.modelPath.empty())
                         {
                             cro::ConfigFile modelData;
-                            if (!modelData.loadFromFile(info.modelPath, relative)) LogI << "flaps" << std::endl;
+                            //if (!modelData.loadFromFile(info.modelPath, relative)) LogI << "flaps" << std::endl;
+                            modelData.loadFromFile(info.modelPath, relative);
                             for (const auto& o : modelData.getObjects())
                             {
                                 if (o.getName() == "material")

@@ -712,6 +712,8 @@ float contour = clamp(contourX + contourY, 0.0, 1.0);
 #if defined (MASK_MAP)
     vec3 mask = TEXTURE(u_maskMap, texCoord).rgb;
 
+FRAG_OUT.rgb *= 1.0 - mask.b; //AO on player models
+
 #if !defined(REFLECTIONS)
 
     //we assume 12 LODs for a 1024 texture as textureQueryLevels() requires GLSL 4.3 :(
