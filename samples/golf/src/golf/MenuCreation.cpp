@@ -3857,9 +3857,16 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
 void MenuState::updateLobbyData(const net::NetEvent& evt)
 {
+    //this gets resent for ALL client when someone joins
+    //so this tracks whether or not this particular invokation
+    //is a new player or reiteration of an existing one
+    bool newClient = false;
+
     ConnectionData cd;
     if (cd.deserialise(evt.packet))
     {
+        newClient = m_sharedData.connectionData[cd.connectionID].playerCount == 0;
+
         //hum. this overwrites level values as they're maintained independently
         //would it be better to resend our level data when rx'ing this?
         auto lvl = m_sharedData.connectionData[cd.connectionID].level;
@@ -3899,27 +3906,29 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     updateLobbyAvatars();
     WebSock::broadcastPlayers(m_sharedData);
 
-
-    for (auto i = 0u; i < cd.playerCount; ++i)
+    if (newClient)
     {
-        cro::String s = cd.playerData[i].name + " has joined the game.";
+        for (auto i = 0u; i < cd.playerCount; ++i)
+        {
+            cro::String s = cd.playerData[i].name + " has joined the game.";
 
-        auto ent = m_uiScene.createEntity();
-        ent.addComponent<cro::Callback>().active = true;
-        ent.getComponent<cro::Callback>().setUserData<float>(static_cast<float>(i) * 2.f);
-        ent.getComponent<cro::Callback>().function =
-            [&, s](cro::Entity e, float dt)
-            {
-                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                currTime -= dt;
-
-                if (currTime < 0)
+            auto ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Callback>().active = true;
+            ent.getComponent<cro::Callback>().setUserData<float>(static_cast<float>(i) * 2.f);
+            ent.getComponent<cro::Callback>().function =
+                [&, s](cro::Entity e, float dt)
                 {
-                    m_textChat.printToScreen(s, TextGoldColour);
-                    e.getComponent<cro::Callback>().active = false;
-                    m_uiScene.destroyEntity(e);
-                }
-            };
+                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                    currTime -= dt;
+
+                    if (currTime < 0)
+                    {
+                        m_textChat.printToScreen(s, TextGoldColour);
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                    }
+                };
+        }
     }
 }
 
