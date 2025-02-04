@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -49,6 +49,7 @@ PlayerInfo& PlayerInfo::operator=(const PlayerData& pd)
     avatarFlags = pd.avatarFlags;
     ballColourIndex = pd.ballColourIndex;
     ballID = pd.ballID;
+    clubID = pd.clubID;
     hairID = pd.hairID;
     hatID = pd.hatID;
     skinID = pd.skinID;

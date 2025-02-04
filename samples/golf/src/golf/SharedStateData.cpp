@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -62,6 +62,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         sizes[i] += sizeof(playerData[i].headwearOffsets);
         sizes[i] += sizeof(playerData[i].ballColourIndex);
         sizes[i] += sizeof(playerData[i].ballID);
+        sizes[i] += sizeof(playerData[i].clubID);
         sizes[i] += sizeof(playerData[i].hairID);
         sizes[i] += sizeof(playerData[i].hatID);
         sizes[i] += sizeof(playerData[i].skinID);
@@ -89,6 +90,9 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         
         std::memcpy(&buffer[offset], &playerData[i].ballID, sizeof(playerData[i].ballID));
         offset += sizeof(playerData[i].ballID);
+
+        std::memcpy(&buffer[offset], &playerData[i].clubID, sizeof(playerData[i].clubID));
+        offset += sizeof(playerData[i].clubID);
 
         std::memcpy(&buffer[offset], &playerData[i].hairID, sizeof(playerData[i].hairID));
         offset += sizeof(playerData[i].hairID);
@@ -194,6 +198,10 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         std::memcpy(&playerData[i].ballID, ptr + offset, sizeof(playerData[i].ballID));
         offset += sizeof(playerData[i].ballID);
         stringSize -= sizeof(playerData[i].ballID);
+
+        std::memcpy(&playerData[i].clubID, ptr + offset, sizeof(playerData[i].clubID));
+        offset += sizeof(playerData[i].clubID);
+        stringSize -= sizeof(playerData[i].clubID);
 
         std::memcpy(&playerData[i].hairID, ptr + offset, sizeof(playerData[i].hairID));
         offset += sizeof(playerData[i].hairID);

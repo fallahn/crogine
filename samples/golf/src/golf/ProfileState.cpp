@@ -100,7 +100,7 @@ namespace
             BallThumb, BallColour,
 
             //browser windows
-            BallSelect, HairSelect,
+            BallSelect, HairSelect, ClubSelect,
             
             HairEditor
         };
@@ -287,6 +287,11 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             else if (groupID == MenuID::HairSelect)
             {
                 m_menuEntities[EntityID::HairBrowser].getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+            else if (groupID == MenuID::ClubSelect)
+            {
+                m_menuEntities[EntityID::ClubBrowser].getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
             else if (groupID == MenuID::HairEditor)
@@ -482,6 +487,13 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             if (evt.button.button == SDL_BUTTON_RIGHT)
             {
                 m_menuEntities[EntityID::BallBrowser].getComponent<cro::Callback>().active = true;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+            break;
+        case MenuID::ClubSelect:
+            if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                m_menuEntities[EntityID::ClubBrowser].getComponent<cro::Callback>().active = true;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
             break;
@@ -1560,10 +1572,16 @@ void ProfileState::buildScene()
     bounds.height -= 4.f;
     clubs.getComponent<cro::UIInput>().area = bounds;
     clubs.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
+                    applyTextEdit();
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                    m_menuEntities[EntityID::ClubBrowser].getComponent<cro::Callback>().active = true;
+
+                    m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
+
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -2096,6 +2114,15 @@ void ProfileState::buildScene()
             }
         };
     createBallBrowser(rootNode, ctx);
+
+
+
+    ctx.onClose = [&]()
+        {
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+            m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
+        };
+    createClubBrowser(rootNode, ctx);
 
     CallbackContext ctx2;
     ctx2.closeUnselected = ctx.closeUnselected;
@@ -3925,6 +3952,27 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
 
         buttonPos.x += 74.f;
     }
+}
+
+void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& ctx)
+{
+    auto [bgEnt, _] = createBrowserBackground(MenuID::ClubSelect, ctx);
+    m_menuEntities[EntityID::ClubBrowser] = bgEnt;
+    parent.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto bgSize = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(std::floor(bgSize.width / 2.f), bgSize.height - 38.f, 0.1f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Choose Your Clubs");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 cro::FloatRect ProfileState::getHeadwearTextureRect(std::size_t idx)

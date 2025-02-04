@@ -51,6 +51,7 @@ source distribution.
 //(player avatar data format changed 1153 -> 1160)
 //(player avatar data format changed 1170 -> 1180)
 //(course data changed 1180 -> 1181)
+//(player profile data changed 1190 -> 1200)
 static constexpr std::uint16_t CURRENT_VER = 1200;
 #ifdef __APPLE__
 static const std::string StringVer("1.20.0 (macOS beta)");

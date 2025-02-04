@@ -125,6 +125,7 @@ private:
 
             BallBrowser,
             HairBrowser,
+            ClubBrowser,
             HairEditor, HairHelp, 
             HairPreview, HairColourPreview,
 
@@ -233,6 +234,7 @@ private:
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
     void createHairEditor(cro::Entity, const CallbackContext&);
+    void createClubBrowser(cro::Entity, const CallbackContext&);
     cro::FloatRect getHeadwearTextureRect(std::size_t);
     std::size_t fetchUIIndexFromColour(std::uint8_t colourIndex, std::int32_t paletteIndex);
     std::pair<cro::Entity, cro::Entity> createBrowserBackground(std::int32_t, const CallbackContext&);
@@ -277,7 +279,7 @@ private:
     {
         enum
         {
-            Balls, Hair,
+            Balls, Hair, Clubs,
 
             Count
         };
