@@ -158,6 +158,16 @@ private:
 
     std::vector<ProfileTexture> m_profileTextures;
 
+    //TODO move to common header
+    struct ClubData final
+    {
+        std::uint32_t uid = 0;
+        std::string name;
+        std::string thumbnail;
+        bool userItem = false;
+    };
+    std::unordered_map<std::uint32_t, ClubData> m_clubData;
+
     struct PaletteID final
     {
         enum

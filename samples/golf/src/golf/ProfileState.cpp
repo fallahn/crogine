@@ -845,6 +845,107 @@ void ProfileState::loadResources()
 
 
     m_mugshotTexture.create(MugshotTexSize.x, MugshotTexSize.y);
+
+
+
+
+
+    //parse all the clubset files - these count as resources, right? :)
+    const auto processClubPath = 
+        [&](const std::string path, bool isUser)
+        {
+            ClubData data;
+            data.userItem = isUser;
+
+            bool hasModels = true;
+
+            const auto files = cro::FileSystem::listFiles(path);
+            for (const auto& f : files)
+            {
+                if (f == "list.cst")
+                {
+                    cro::ConfigFile cfg;
+                    if (cfg.loadFromFile(path + "/" + f))
+                    {
+                        const auto& props = cfg.getProperties();
+                        for (const auto& p : props)
+                        {
+                            const auto& name = p.getName();
+                            if (name == "name")
+                            {
+                                data.name = p.getValue<std::string>();
+                            }
+                            else if (name == "uid")
+                            {
+                                data.uid = p.getValue<std::uint32_t>();
+                            }
+                        }
+
+                        //make sure some models are listed and exist
+                        if (const auto* models = cfg.findObjectWithName("models");
+                            models == nullptr)
+                        {
+                            LogE << "No models were listed in " << path + "/" + f;
+                            hasModels = false;
+                        }
+                        else
+                        {
+                            for (const auto& p : models->getProperties())
+                            {
+                                if (p.getName() == "path")
+                                {
+                                    if (!cro::FileSystem::fileExists(path + "/" + p.getValue<std::string>()))
+                                    {
+                                        LogE << path << " lists model files, but they were not found on disk" << std::endl;
+                                        hasModels = false;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                else if (f == "thumb.png")
+                {
+                    data.thumbnail = path + "/" + f;
+                }
+            }
+
+            if (!data.name.empty()
+                && !data.thumbnail.empty()
+                && hasModels)
+            {
+                //make sure this ID doesn't already exist!!
+                if (m_clubData.count(data.uid) == 0)
+                {
+                    m_clubData.insert(std::make_pair(data.uid, data));
+                }
+                else
+                {
+                    LogW << "Multiple club sets with UID " << data.uid << " were found." << std::endl;
+                }
+            }
+            else
+            {
+                LogW << path << ": clubset skipped, invalid file data" << std::endl;
+            }
+        };
+
+    auto basePath = cro::FileSystem::getResourcePath() + "assets/golf/clubs/";
+    auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+    for (const auto& s : clubsets)
+    {
+        processClubPath(basePath + s, false);
+    }
+
+    //TODO workshop clubs
+    //basePath = Social::getUserContentPath(Social::UserContent::Clubs);
+    /*clubsets = cro::FileSystem::listDirectories(basePath);
+    for (const auto& s : clubsets)
+    {
+        processClubPath(basePath + s, true);
+    }*/
 }
 
 void ProfileState::buildScene()
@@ -2817,6 +2918,50 @@ void ProfileState::createItemThumbs()
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
 
     cam.viewport = { 0.f, 0.f , 1.f, 1.f };
+
+
+
+    //club thumbs - these are pre-rendered by workshop tool. Should've done this
+    //with the others really, but oh well.
+    texSize = glm::uvec2(std::min(ThumbColCount, m_clubData.size()) * BallThumbSize.x, ((m_clubData.size() / ThumbColCount) + 1) * BallThumbSize.y);
+    texSize *= ThumbTextureScale;
+
+    const glm::vec2 Stride =
+    {
+        static_cast<float>(BallThumbSize.x * ThumbTextureScale),
+        static_cast<float>(BallThumbSize.y * ThumbTextureScale)
+    };
+
+    cro::Texture tempTex;
+    cro::SimpleQuad clubQuad;
+
+    m_pageContexts[PaginationID::Clubs].thumbnailTexture.create(texSize.x, texSize.y);
+    m_pageContexts[PaginationID::Clubs].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
+
+    std::int32_t i = 0;
+    for (const auto& [_, cs] : m_clubData)
+    {
+        if (tempTex.loadFromFile(cs.thumbnail))
+        {
+            const auto x = (i % ThumbColCount);
+            const auto y = (i / ThumbColCount);
+
+            clubQuad.setTexture(tempTex);
+            clubQuad.setScale(glm::vec2(BallThumbSize * ThumbTextureScale) / glm::vec2(tempTex.getSize()));
+            clubQuad.setPosition({ x * Stride.x, y * Stride.y });
+
+            clubQuad.draw();
+
+            if (cs.userItem)
+            {
+                spannerIcon.setPosition(glm::vec2(x * BallThumbSize.x * ThumbTextureScale, y * BallThumbSize.y * ThumbTextureScale) + iconOffset);
+                spannerIcon.draw();
+            }
+        }
+        i++;
+    }
+
+    m_pageContexts[PaginationID::Clubs].thumbnailTexture.display();
 }
 
 void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::int32_t itemID)
