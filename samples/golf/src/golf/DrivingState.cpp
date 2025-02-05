@@ -1309,28 +1309,6 @@ void DrivingState::loadAssets()
     m_saturationShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), SaturationFrag, "#define TEXTURED\n");
     m_saturationUniform = m_saturationShader.getUniformID("u_amount");
 
-    //club models
-    if (!m_clubModels.loadFromFile("assets/golf/clubs/default/list.cst", m_resources, m_gameScene))
-    {
-        m_clubModels.models.push_back(m_gameScene.createEntity());
-        createFallbackModel(m_clubModels.models.back(), m_resources);
-    }
-
-    for (auto e : m_clubModels.models)
-    {
-        const auto matCount = e.getComponent<cro::Model>().getMeshData().submeshCount;
-
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
-        //applyMaterialData(md, material, 0);
-        e.getComponent<cro::Model>().setMaterial(0, material);
-
-        if (matCount > 1)
-        {
-            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-            //applyMaterialData(md, material, 1);
-            e.getComponent<cro::Model>().setMaterial(1, material);
-        }
-    }
 
     initAudio();
 }
@@ -2447,6 +2425,81 @@ void DrivingState::createPlayer()
     auto playerIndex = cro::Util::Random::value(0u, m_profileData.playerProfiles.size() - 1);
     const auto& playerData = m_profileData.playerProfiles[playerIndex];
 #endif
+
+
+    //club models - collect all search paths for club models
+    std::unordered_map<std::uint32_t, std::string> clubPaths;
+    const auto processClubPath =
+        [&](const std::string& path)
+        {
+            const std::string fileName = "/list.cst";
+            cro::ConfigFile cfg;
+            if (cfg.loadFromFile(path + fileName, false)) //resource path was already added
+            {
+                //TODO we need to do full validation, eg models exist here
+                if (const auto* uid = cfg.findProperty("uid");
+                    uid != nullptr)
+                {
+                    const auto id = uid->getValue<std::uint32_t>();
+                    if (clubPaths.count(id) == 0)
+                    {
+                        clubPaths.insert(std::make_pair(id, path + fileName));
+                    }
+                }
+            }
+        };
+
+    auto basePath = cro::FileSystem::getResourcePath() + "assets/golf/clubs/";
+    auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+    for (const auto& s : clubsets)
+    {
+        processClubPath(basePath + s);
+    }
+
+    //workshop clubs
+    basePath = Social::getUserContentPath(Social::UserContent::Clubs);
+    clubsets = cro::FileSystem::listDirectories(basePath);
+    for (const auto& s : clubsets)
+    {
+        processClubPath(basePath + s);
+    }
+
+    std::string clubPath = "assets/golf/clubs/default/list.cst";
+    if (clubPaths.count(playerData.clubID) != 0)
+    {
+        clubPath = clubPaths.at(playerData.clubID);
+    }
+
+    if (!m_clubModels.loadFromFile(clubPath, m_resources, m_gameScene))
+    {
+        m_clubModels.models.push_back(m_gameScene.createEntity());
+        createFallbackModel(m_clubModels.models.back(), m_resources);
+    }
+
+    for (auto e : m_clubModels.models)
+    {
+        const auto matCount = e.getComponent<cro::Model>().getMeshData().submeshCount;
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        //applyMaterialData(md, material, 0);
+        e.getComponent<cro::Model>().setMaterial(0, material);
+
+        if (matCount > 1)
+        {
+            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+            //applyMaterialData(md, material, 1);
+            e.getComponent<cro::Model>().setMaterial(1, material);
+        }
+    }
+
+
+
+
+
+
+
+
     auto idx = indexFromSkinID(playerData.skinID);
 
     ProfileTexture av(m_sharedData.avatarInfo[idx].texturePath);
