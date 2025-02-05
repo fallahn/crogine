@@ -2379,40 +2379,115 @@ void GolfState::loadModels()
     }
 #endif
 
-    //club models - TODO we'll eventually want to do this for each player profile?
-    if (!m_clubModels.loadFromFile("assets/golf/clubs/default/list.cst", m_resources, m_gameScene))
+    //club models
+
+    //collect all search paths for club models
+    std::unordered_map<std::uint32_t, std::string> clubPaths;
+    const auto processClubPath = 
+        [&](const std::string& path)
+        {
+            const std::string fileName = "/list.cst";
+            cro::ConfigFile cfg;
+            if (cfg.loadFromFile(path + fileName, false)) //resource path was already added
+            {
+                //TODO we need to do full validation, eg models exist here
+                if (const auto* uid = cfg.findProperty("uid");
+                    uid != nullptr)
+                {
+                    const auto id = uid->getValue<std::uint32_t>();
+                    if (clubPaths.count(id) == 0)
+                    {
+                        clubPaths.insert(std::make_pair(id, path + fileName));
+                    }
+                }
+            }
+        };
+
+    auto basePath = cro::FileSystem::getResourcePath() + "assets/golf/clubs/";
+    auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+    for (const auto& s : clubsets)
     {
-        m_clubModels.models.push_back(m_gameScene.createEntity());
-        createFallbackModel(m_clubModels.models.back(), m_resources);
+        processClubPath(basePath + s);
     }
 
-    for (auto entity : m_clubModels.models)
+    //workshop clubs
+    basePath = Social::getUserContentPath(Social::UserContent::Clubs);
+    clubsets = cro::FileSystem::listDirectories(basePath);
+    for (const auto& s : clubsets)
     {
-        const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-        //applyMaterialData(md, material, 0); //this is the wrong model def!!
-        entity.getComponent<cro::Model>().setMaterial(0, material);
-        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
+        processClubPath(basePath + s);
+    }
 
-        if (matCount > 1)
+    //for each profile in the game load the club models if not already loaded
+    for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+    {
+        for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
         {
-            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-            //applyMaterialData(md, material, 1);
-            entity.getComponent<cro::Model>().setMaterial(1, material);
-        }
-
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float)
+            const auto clubID = m_sharedData.connectionData[i].playerData[j].clubID;
+            if (clubPaths.count(clubID) == 0)
             {
-                if (m_activeAvatar)
-                {
-                    bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
-                        m_activeAvatar->hands->getModel() == e);
+                //profile has invalid model set, so use fallback
+                m_avatars[i][j].clubModelID = 0;
+            }
+            else
+            {
+                m_avatars[i][j].clubModelID = clubID;
 
-                    e.getComponent<cro::Model>().setHidden(hidden);
+                if (m_clubModels.count(clubID) == 0)
+                {
+                    m_clubModels.insert(std::make_pair(clubID, ClubModels()));
+                    auto& models = m_clubModels.at(clubID);
+
+                    if (models.loadFromFile(clubPaths.at(clubID), m_resources, m_gameScene))
+                    {
+                        for (auto entity : models.models)
+                        {
+                            const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
+                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+
+                            entity.getComponent<cro::Model>().setMaterial(0, material);
+                            entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
+
+                            if (matCount > 1)
+                            {
+                                material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+                                entity.getComponent<cro::Model>().setMaterial(1, material);
+                            }
+
+                            entity.addComponent<cro::Callback>().active = true;
+                            entity.getComponent<cro::Callback>().function =
+                                [&](cro::Entity e, float)
+                                {
+                                    if (m_activeAvatar)
+                                    {
+                                        bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
+                                            m_activeAvatar->hands->getModel() == e);
+
+                                        e.getComponent<cro::Model>().setHidden(hidden);
+                                    }
+                                };
+                        }
+                    }
                 }
-            };
+            }
+        }
+    }
+
+    //if we didn't load the default set of clubs for some reason
+    //create a fallback model so we still have something to reference
+    if (m_clubModels.count(0) == 0)
+    {
+        m_clubModels.insert(std::make_pair(0, ClubModels()));
+    }
+
+    for (auto& [_,models] : m_clubModels)
+    {
+        if (models.models.empty())
+        {
+            models.models.push_back(m_gameScene.createEntity());
+            createFallbackModel(models.models.back(), m_resources);
+        }
     }
 
 

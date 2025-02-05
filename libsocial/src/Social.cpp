@@ -591,6 +591,8 @@ std::string Social::getUserContentPath(std::int32_t contentType)
         return getBaseContentPath() + "avatars/";
     case Social::UserContent::Flag:
         return getBaseContentPath() + "flags/";
+    case Social::UserContent::Clubs:
+        return getBaseContentPath() + "clubs/";
     }
 }
 

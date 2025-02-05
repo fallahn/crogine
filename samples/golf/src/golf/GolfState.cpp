@@ -1731,7 +1731,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (m_activeAvatar
                 && m_activeAvatar->hands)
             {
-                m_activeAvatar->hands->setModel(m_clubModels.models[m_clubModels.indices[getClub()]]);
+                const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
+                m_activeAvatar->hands->setModel(models.models[models.indices[getClub()]]);
                 m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
             }
 
@@ -5297,7 +5298,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (m_activeAvatar)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
-                if (animID == AnimationID::Celebrate)
+                
+                //TBH I don't recall this having ever worked
+                /*if (animID == AnimationID::Celebrate)
                 {
                     for (auto e : m_clubModels.models)
                     {
@@ -5310,7 +5313,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     {
                         e.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
                     }
-                }
+                }*/
 
                 /*if (animID == AnimationID::Swing)
                 {
@@ -6750,7 +6753,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
         if (m_activeAvatar->hands)
         {
-            m_activeAvatar->hands->setModel(m_clubModels.models[m_clubModels.indices[getClub()]]);
+            const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
+            m_activeAvatar->hands->setModel(models.models[models.indices[getClub()]]);
             m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
         }
 

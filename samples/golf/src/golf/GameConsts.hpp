@@ -366,6 +366,7 @@ struct Avatar final
     cro::Attachment* hands = nullptr;
     std::array<std::size_t, AnimationID::Count> animationIDs = {};
     cro::Entity ballModel;
+    std::uint32_t clubModelID = 0;
 };
 
 static inline std::int32_t courseOfTheMonth()

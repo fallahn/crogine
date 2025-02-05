@@ -535,7 +535,7 @@ private:
 
     std::array<std::array<Avatar, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar;
-    ClubModels m_clubModels;
+    std::unordered_map<std::uint32_t, ClubModels> m_clubModels;
 
 
     glm::vec3 m_terrainLevel;

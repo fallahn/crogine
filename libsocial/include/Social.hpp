@@ -239,6 +239,7 @@ public:
         {
             Ball, Hair, Course, Flag,
             Profile, Avatar, Career,
+            Clubs,
 
             Count
         };

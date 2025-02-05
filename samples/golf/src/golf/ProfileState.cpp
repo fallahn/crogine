@@ -939,13 +939,13 @@ void ProfileState::loadResources()
         processClubPath(basePath + s, false);
     }
 
-    //TODO workshop clubs
-    //basePath = Social::getUserContentPath(Social::UserContent::Clubs);
-    /*clubsets = cro::FileSystem::listDirectories(basePath);
+    //workshop clubs
+    basePath = Social::getUserContentPath(Social::UserContent::Clubs);
+    clubsets = cro::FileSystem::listDirectories(basePath);
     for (const auto& s : clubsets)
     {
         processClubPath(basePath + s, true);
-    }*/
+    }
 }
 
 void ProfileState::buildScene()
@@ -2076,7 +2076,7 @@ void ProfileState::buildScene()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 399.f, 200.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont);// .setString("Cleftwhistle");
+    entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
@@ -2116,7 +2116,7 @@ void ProfileState::buildScene()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 444.f, 85.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont);// .setString("Cleftwhistle");
+    entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });

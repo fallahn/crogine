@@ -1126,7 +1126,9 @@ void GolfState::togglePuttingView(bool putt)
         else
         {
             //the hide callback will have removed the club model
-            m_activeAvatar->hands->setModel(m_clubModels.models[m_clubModels.indices[getClub()]]);
+            const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
+
+            m_activeAvatar->hands->setModel(models.models[models.indices[getClub()]]);
             m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
 
             m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;
