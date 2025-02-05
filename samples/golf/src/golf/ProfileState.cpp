@@ -916,9 +916,9 @@ void ProfileState::loadResources()
                 && hasModels)
             {
                 //make sure this ID doesn't already exist!!
-                if (m_clubData.count(data.uid) == 0)
+                if (std::find_if(m_clubData.begin(), m_clubData.end(), [&data](const ClubData& cd) { return cd.uid == data.uid;}) == m_clubData.end())
                 {
-                    m_clubData.insert(std::make_pair(data.uid, data));
+                    m_clubData.push_back(data);
                 }
                 else
                 {
@@ -1004,6 +1004,18 @@ void ProfileState::buildScene()
                 m_previousName = m_activeProfile.name;
 
                 refreshBio();
+
+
+                if (const auto& cd = std::find_if(m_clubData.begin(), m_clubData.end(), 
+                    [&](const ClubData& cd) {return cd.uid == m_profileData.playerProfiles[m_profileData.activeProfileIndex].clubID;});
+                    cd != m_clubData.end())
+                {
+                    m_clubText.getComponent<cro::Text>().setString("Clubs: " + cd->name);
+                }
+                else
+                {
+                    m_clubText.getComponent<cro::Text>().setString("Clubs: Default");
+                }
             }
             break;
         case RootCallbackData::FadeOut:
@@ -2100,6 +2112,20 @@ void ProfileState::buildScene()
     m_menuEntities[EntityID::BioText] = entity;
     setBioString(generateRandomBio());
 
+    //club style string
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 444.f, 85.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont);// .setString("Cleftwhistle");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_clubText = entity;
+
+
     //help string
     bounds = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
     entity = m_uiScene.createEntity();
@@ -2939,7 +2965,7 @@ void ProfileState::createItemThumbs()
     m_pageContexts[PaginationID::Clubs].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
 
     std::int32_t i = 0;
-    for (const auto& [_, cs] : m_clubData)
+    for (const auto& cs : m_clubData)
     {
         if (tempTex.loadFromFile(cs.thumbnail))
         {
@@ -3349,7 +3375,7 @@ void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& 
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity e, const cro::ButtonEvent& evt)
         {
-            auto quitMenu = [&]()
+            const auto quitMenu = [&]()
                 {
                     m_menuEntities[EntityID::BallBrowser].getComponent<cro::Callback>().active = true;
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
@@ -4118,6 +4144,141 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
     entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(1.f, -1.f));
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //calc clubs per page
+    static constexpr auto ClubsPerPage = ThumbColCount * ThumbRowCount;
+
+    //calc number of pages
+    const auto PageCount = (m_clubData.size() / ClubsPerPage) + std::min(std::size_t(1), m_clubData.size() % ClubsPerPage);
+
+    //add arrows
+    if (PageCount > 1)
+    {
+        //this func sets up the input callback, and stores
+        //UV data in cro::Callback::setUserData() - don't modify this!
+        auto& clubPageHandles = m_pageContexts[PaginationID::Clubs].pageHandles;
+
+        clubPageHandles.prevButton = ctx.createArrow(1);
+        clubPageHandles.prevButton.getComponent<cro::UIInput>().setGroup(MenuID::BallSelect);
+        clubPageHandles.prevButton.getComponent<cro::UIInput>().setSelectionIndex(PrevArrow);
+        clubPageHandles.prevButton.getComponent<cro::UIInput>().setNextIndex(NextArrow);
+        clubPageHandles.prevButton.getComponent<cro::UIInput>().setPrevIndex(NextArrow);
+        clubPageHandles.prevButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&](cro::Entity, const cro::ButtonEvent& evt)
+                {
+                    if (activated(evt))
+                    {
+                        prevPage(PaginationID::Clubs);
+                    }
+                });
+        clubPageHandles.prevButton.getComponent<cro::Transform>().setPosition(glm::vec2(192.f, 25.f));
+        bgEnt.getComponent<cro::Transform>().addChild(clubPageHandles.prevButton.getComponent<cro::Transform>());
+
+        clubPageHandles.nextButton = ctx.createArrow(0);
+        clubPageHandles.nextButton.getComponent<cro::UIInput>().setGroup(MenuID::BallSelect);
+        clubPageHandles.nextButton.getComponent<cro::UIInput>().setSelectionIndex(NextArrow);
+        clubPageHandles.nextButton.getComponent<cro::UIInput>().setNextIndex(PrevArrow, CloseButton);
+        clubPageHandles.nextButton.getComponent<cro::UIInput>().setPrevIndex(PrevArrow);
+        clubPageHandles.nextButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&](cro::Entity, const cro::ButtonEvent& evt)
+                {
+                    if (activated(evt))
+                    {
+                        nextPage(PaginationID::Clubs);
+                    }
+                });
+        clubPageHandles.nextButton.getComponent<cro::Transform>().setPosition(glm::vec2(bgSize.width - 192.f - 16.f, 25.f));
+        bgEnt.getComponent<cro::Transform>().addChild(clubPageHandles.nextButton.getComponent<cro::Transform>());
+
+        clubPageHandles.pageTotal = PageCount;
+        clubPageHandles.pageCount = m_uiScene.createEntity();
+        clubPageHandles.pageCount.addComponent<cro::Transform>().setPosition(glm::vec3(std::floor(bgSize.width / 2.f), 37.f, 0.1f));
+        clubPageHandles.pageCount.addComponent<cro::Drawable2D>();
+        clubPageHandles.pageCount.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        clubPageHandles.pageCount.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        clubPageHandles.pageCount.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        clubPageHandles.pageCount.getComponent<cro::Text>().setString("1/" + std::to_string(PageCount));
+        bgEnt.getComponent<cro::Transform>().addChild(clubPageHandles.pageCount.getComponent<cro::Transform>());
+    }
+
+
+    //item label
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bgSize.width / 2.f, 13.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(" ");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel = entity;
+
+    m_pageContexts[PaginationID::Clubs].itemCount = m_clubData.size();
+    m_pageContexts[PaginationID::Clubs].menuID = MenuID::ClubSelect;
+    m_pageContexts[PaginationID::Clubs].activateCallback =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                const auto quitMenu = [&]()
+                    {
+                        m_menuEntities[EntityID::ClubBrowser].getComponent<cro::Callback>().active = true;
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    };
+
+                if (activated(evt))
+                {
+                    //apply selection
+                    const auto idx = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                    m_activeProfile.clubID = m_clubData[idx].uid;
+                    m_clubText.getComponent<cro::Text>().setString("Clubs: " + m_clubData[idx].name);
+                    quitMenu();
+                }
+                else if (deactivated(evt))
+                {
+                    quitMenu();
+                }
+            });
+
+
+
+    //for each page - this tests if arrows were created (above)
+    for (auto i = 0u; i < PageCount; ++i)
+    {
+        createItemPage(bgEnt, i, PaginationID::Clubs);
+
+        //shame model arrays are unique, else we could
+        //recycle this for all paging types...
+        auto selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, i](cro::Entity e) mutable
+            {
+                m_pageContexts[PaginationID::Clubs].pageList[i].highlight.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+                m_pageContexts[PaginationID::Clubs].pageList[i].highlight.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+
+                const auto itemIndex = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                if (!m_clubData[itemIndex].name.empty())
+                {
+                    m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>().setString(m_clubData[itemIndex].name);
+                }
+                else
+                {
+                    m_pageContexts[PaginationID::Clubs].pageHandles.itemLabel.getComponent<cro::Text>().setString(" ");
+                }
+
+                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
+            });
+        for (auto& item : m_pageContexts[PaginationID::Clubs].pageList[i].items)
+        {
+            item.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectCallback;
+        }
+    }
+    activatePage(PaginationID::Clubs, m_pageContexts[PaginationID::Clubs].pageIndex, true);
 }
 
 cro::FloatRect ProfileState::getHeadwearTextureRect(std::size_t idx)

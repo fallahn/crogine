@@ -166,7 +166,8 @@ private:
         std::string thumbnail;
         bool userItem = false;
     };
-    std::unordered_map<std::uint32_t, ClubData> m_clubData;
+    std::vector<ClubData> m_clubData;
+    cro::Entity m_clubText;
 
     struct PaletteID final
     {
