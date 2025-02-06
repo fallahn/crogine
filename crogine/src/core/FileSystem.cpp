@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -99,7 +99,15 @@ std::vector<std::string> FileSystem::listFiles(std::string path)
 {
     std::vector<std::string> results;
 
-    std::filesystem::directory_iterator it(std::filesystem::u8path(path));
+    std::error_code ec;
+    std::filesystem::directory_iterator it(std::filesystem::u8path(path), ec);
+    
+    if (ec)
+    {
+        LogW << "List files: " << path << " doesn't exist" << std::endl;
+        return results;
+    }
+
     for (const auto& dir : it)
     {
         if (dir.is_regular_file())
@@ -301,7 +309,15 @@ std::vector<std::string> FileSystem::listDirectories(const std::string& path)
     if (workingPath.empty() || workingPath[0] != '/') fullPath.push_back('/');
     fullPath += workingPath;*/
 
-    std::filesystem::directory_iterator it(std::filesystem::u8path(path));
+    std::error_code ec;
+    std::filesystem::directory_iterator it(std::filesystem::u8path(path), ec);
+
+    if (ec)
+    {
+        LogW << "List directories: " << path << " doesn't exist" << std::endl;
+        return retVal;
+    }
+
     for (const auto& dir : it)
     {
         if (dir.is_directory())
@@ -393,113 +409,6 @@ std::string FileSystem::getRelativePath(std::string path, const std::string& roo
 std::string FileSystem::getConfigDirectory(const std::string&/* appName*/)
 {
     return cro::App::getPreferencePath();
-
-    //this is all deprecated.
-//
-//    if (appName.empty())
-//    {
-//        LOG("Unable to get configuration directory, app name cannot be empty", Logger::Type::Error);
-//        return{};
-//    }
-//
-//    static constexpr std::size_t maxlen = MAX_PATH;
-//    char outStr[maxlen];
-//    char* out = outStr;
-//    const char* appname = appName.c_str();
-//
-//#ifdef __linux__
-//    const char *out_orig = out;
-//    char *home = getenv("XDG_CONFIG_HOME");
-//    unsigned int config_len = 0;
-//    if (!home)
-//    {
-//        home = getenv("HOME");
-//        if (!home)
-//        {
-//            // Can't find home directory
-//            out[0] = 0;
-//            LOG("Unable to find HOME directory when creating confinguration directory", Logger::Type::Error);
-//            return {};
-//        }
-//        config_len = strlen(".config/");
-//    }
-//
-//    unsigned int home_len = strlen(home);
-//    unsigned int appname_len = strlen(appname);
-//
-//    /* first +1 is "/", second is trailing "/", third is terminating null */
-//    if (home_len + 1 + config_len + appname_len + 1 + 1 > maxlen)
-//    {
-//        out[0] = 0;
-//        return {};
-//    }
-//
-//    memcpy(out, home, home_len);
-//    out += home_len;
-//    *out = '/';
-//    out++;
-//    if (config_len) 
-//    {
-//        memcpy(out, ".config/", config_len);
-//        out += config_len;
-//        /* Make the .config folder if it doesn't already exist */
-//        *out = '\0';
-//        mkdir(out_orig, 0755);
-//    }
-//    memcpy(out, appname, appname_len);
-//    out += appname_len;
-//    /* Make the .config/appname folder if it doesn't already exist */
-//    *out = '\0';
-//    mkdir(out_orig, 0755);
-//    *out = '/';
-//    out++;
-//    *out = 0;
-//
-//#elif defined(_WIN32)
-//    if (maxlen < MAX_PATH) 
-//    {
-//        out[0] = 0;
-//        return {};
-//    }
-//    if (!SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, out)))
-//    {
-//        out[0] = 0;
-//        return {};
-//    }
-//    /* We don't try to create the AppData folder as it always exists already */
-//    auto appname_len = strlen(appname);
-//    if (strlen(out) + 1 + appname_len + 1 + 1 > maxlen) 
-//    {
-//        out[0] = 0;
-//        return {};
-//    }
-//    strcat(out, "\\");
-//    strcat(out, appname);
-//    /* Make the AppData\appname folder if it doesn't already exist */
-//    _mkdir(out);
-//    strcat(out, "\\");
-//
-//#elif defined(__APPLE__)
-//    FSRef ref;
-//    FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &ref);
-//    char home[MAX_PATH];
-//    FSRefMakePath(&ref, (UInt8 *)&home, MAX_PATH);
-//    /* first +1 is "/", second is trailing "/", third is terminating null */
-//    if (strlen(home) + 1 + strlen(appname) + 1 + 1 > maxlen)
-//    {
-//        out[0] = 0;
-//        return {};
-//    }
-//
-//    strcpy(out, home);
-//    strcat(out, PATH_SEPARATOR_STRING);
-//    strcat(out, appname);
-//    /* Make the .config/appname folder if it doesn't already exist */
-//    mkdir(out, 0755);
-//    strcat(out, PATH_SEPARATOR_STRING);
-//#endif
-//
-//    return { out };
 }
 
 std::string FileSystem::openFileDialogue(const std::string& defaultDir, const std::string& filter, bool selectMultiple)
