@@ -712,7 +712,10 @@ float contour = clamp(contourX + contourY, 0.0, 1.0);
 #if defined (MASK_MAP)
     vec3 mask = TEXTURE(u_maskMap, texCoord).rgb;
 
-FRAG_OUT.rgb *= 1.0 - mask.b; //AO on player models
+//AO on player models
+float ao = 1.0 - mask.b;
+ao = mix(ao, 1.0, step(0.05, mask.g));
+FRAG_OUT.rgb *= ao;
 
 #if !defined(REFLECTIONS)
 
