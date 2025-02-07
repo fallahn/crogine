@@ -240,12 +240,25 @@ GolfGame::GolfGame()
     m_stateStack.registerState<SqliteState>(StateID::SQLite);
 #endif
 
-#ifdef USE_WORKSHOP
-    m_stateStack.registerState<WorkshopState>(StateID::Workshop);
-#endif
-
 #ifdef _WIN32
     assertFileSystem(); //explicitly ensures the property directories are created
+#endif
+
+#ifdef USE_WORKSHOP
+    m_stateStack.registerState<WorkshopState>(StateID::Workshop);
+
+    //tidy up any stuff left over from workshop tools
+    const auto tempPath = Social::getBaseContentPath() + "temp";
+    if (cro::FileSystem::directoryExists(tempPath))
+    {
+        std::error_code ec;
+        std::filesystem::remove_all(tempPath, ec);
+
+        if (ec)
+        {
+            LogE << ec.message() << std::endl;
+        }
+    }
 #endif
 }
 
