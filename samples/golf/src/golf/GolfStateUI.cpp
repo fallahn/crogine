@@ -5460,9 +5460,14 @@ void GolfState::createTransition()
                             case 2:
                             {
                                 cro::String s("Happy Golfing! ");
+                                //fudge because the golfer faces the other way on windows
+#ifdef __linux__
+                                s += std::uint32_t(0x26F3);
+                                s += std::uint32_t(0x1F3CC);
+#else
                                 s += std::uint32_t(0x1F3CC);
                                 s += std::uint32_t(0x26F3);
-
+#endif
                                 m_textChat.printToScreen(s, TextGoldColour);
                                 postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
 

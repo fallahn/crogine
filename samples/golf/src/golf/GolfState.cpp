@@ -1842,7 +1842,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                     default: break;
                     case TerrainID::Scrub:
-                        switch (cro::Util::Random::value(0, 2))
+                        switch (cro::Util::Random::value(0, 3))
                         {
                         default:
                         case 0:
@@ -1853,6 +1853,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                             break;
                         case 2:
                             s += " took to that like a snowball to hot asphalt";
+                            break;
+                        case 3:
+                            s = "That ball hit a tree. Whack.";
                             break;
                         }
                         break;
