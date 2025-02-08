@@ -851,7 +851,17 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     auto season = league.getCurrentSeason();
     auto gamesPlayed = league.getCurrentIteration();
 
-    auto statusString = "Season " + std::to_string(season) + " - Games played: " + std::to_string(gamesPlayed) + "/" + std::to_string(league.getMaxIterations());
+
+    std::string statusString;
+    if (season > 1 && gamesPlayed == 0)
+    {
+        //show the final standings for the last round
+        statusString = "Final Standings for Season " + std::to_string(season - 1);
+    }
+    else
+    {
+        statusString = "Season " + std::to_string(season) + " - Games played: " + std::to_string(gamesPlayed) + "/" + std::to_string(league.getMaxIterations());
+    }
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 52.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();

@@ -411,6 +411,17 @@ void League::retrofitHoleScores(const std::vector<std::int32_t>& parVals)
     }
 }
 
+const std::vector<TableEntry>& League::getSortedTable() const
+{
+    if (m_currentSeason > 1 && m_currentIteration == 0)
+    {
+        //return the final standing for the last game
+        return m_previousSortedTable;
+    }
+
+    return m_sortedTable;
+}
+
 const LeaguePlayer& League::getPlayer(std::int32_t nameIndex) const
 {
     auto r = std::find_if(m_players.begin(), m_players.end(), [nameIndex](const LeaguePlayer& p) {return p.nameIndex == nameIndex; });
@@ -421,44 +432,27 @@ const LeaguePlayer& League::getPlayer(std::int32_t nameIndex) const
 
 const cro::String& League::getPreviousResults(const cro::String& playerName) const
 {
-    const auto path = getFilePath(PrevFileName);
     if ((m_currentIteration == 0 || m_previousResults.empty())
-        && cro::FileSystem::fileExists(path))
+        && !m_previousSortedTable.empty())
     {
-        cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
-        if (file.file)
+        //this assumes everything was sorted correctly when it was saved
+        m_previousResults = "Previous Season's Results";
+
+        for (auto i = 0u; i < m_previousSortedTable.size(); ++i)
         {
-            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
-            if (size % sizeof(PreviousEntry) == 0)
+            m_previousResults += " -~- ";
+            m_previousResults += std::to_string(i + 1);
+            if (m_previousSortedTable[i].name > -1)
             {
-                auto count = size / sizeof(PreviousEntry);
-                std::vector<PreviousEntry> buff(count);
-
-                SDL_RWseek(file.file, 0, RW_SEEK_SET);
-                SDL_RWread(file.file, buff.data(), sizeof(PreviousEntry), count);
-
-                //this assumes everything was sorted correctly when it was saved
-                m_previousResults = "Previous Season's Results";
-                for (auto i = 0u; i < buff.size(); ++i)
-                {
-                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(PlayerCount) - 1);
-
-                    m_previousResults += " -~- ";
-                    m_previousResults += std::to_string(i + 1);
-                    if (buff[i].nameIndex > -1)
-                    {
-                        m_previousResults += ". " + m_sharedData.leagueNames[buff[i].nameIndex];
-                    }
-                    else
-                    {
-                        m_previousResults += ". " + playerName;
-                        m_previousPosition = i + 1;
-                    }
-                    m_previousResults += " " + std::to_string(buff[i].score);
-                }
+                m_previousResults += ". " + m_sharedData.leagueNames[m_previousSortedTable[i].name];
             }
-        }
+            else
+            {
+                m_previousResults += ". " + playerName;
+                m_previousPosition = i + 1;
+            }
+            m_previousResults += " " + std::to_string(m_previousSortedTable[i].score);
+        } 
     }
 
     return m_previousResults;
@@ -861,6 +855,40 @@ void League::read()
     {
         rollPlayers(false);
         write();
+    }
+
+    readPreviousPlayers();
+}
+
+void League::readPreviousPlayers()
+{
+    //this reads the previous results into another player table
+    //so we can display them before showing the new season
+
+    const auto path = getFilePath(PrevFileName);
+    if (cro::FileSystem::fileExists(path))
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
+            if (size % sizeof(PreviousEntry) == 0)
+            {
+                auto count = size / sizeof(PreviousEntry);
+                std::vector<PreviousEntry> buff(count);
+
+                SDL_RWseek(file.file, 0, RW_SEEK_SET);
+                SDL_RWread(file.file, buff.data(), sizeof(PreviousEntry), count);
+
+                //this assumes everything was sorted correctly when it was saved
+                for (auto& entry : buff)
+                {
+                    entry.nameIndex = std::clamp(entry.nameIndex, -1, static_cast<std::int32_t>(PlayerCount) - 1);
+                    m_previousSortedTable.emplace_back(entry);
+                }
+            }
+        }
     }
 }
 

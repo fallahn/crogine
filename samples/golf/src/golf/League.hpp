@@ -66,7 +66,17 @@ struct TableEntry final
     std::int32_t name = -1;
     std::int32_t positionChange = 1; //index into animation 0 down, 1 NC, 2 up
     TableEntry(std::int32_t s, std::int32_t h, std::int32_t n, std::int32_t p)
-        :score(s), handicap(h), name(n), positionChange(p) {}
+        : score(s), handicap(h), name(n), positionChange(p) {}
+
+    TableEntry(const PreviousEntry& other)
+        : score(other.score), handicap(other.handicap), name(other.nameIndex), positionChange(1) { }
+
+    TableEntry& operator = (const PreviousEntry& other)
+    {
+        score = other.score;
+        handicap = other.handicap;
+        name = other.nameIndex;
+    }
 };
 
 struct LeagueRoundID final
@@ -116,7 +126,7 @@ public:
     std::int32_t getCurrentBest() const { return m_currentBest + 1; /*convert from index to position*/ }
 
     const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
-    const std::vector<TableEntry>& getSortedTable() const { return m_sortedTable; } //used for display
+    const std::vector<TableEntry>& getSortedTable() const; //used for display
 
     const LeaguePlayer& getPlayer(std::int32_t nameIndex) const;
 
@@ -169,9 +179,11 @@ private:
     std::string getFilePath(const std::string& fileName) const;
 
     std::vector<TableEntry> m_sortedTable = {};
+    std::vector<TableEntry> m_previousSortedTable = {};
     void createSortedTable();
 
     void read();
+    void readPreviousPlayers();
     void write();
     void assertDB();
     void updateDB();
