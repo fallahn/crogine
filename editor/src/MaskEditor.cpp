@@ -90,15 +90,14 @@ MaskEditor::MaskEditor()
     std::fill(m_quad.uniforms.begin(), m_quad.uniforms.end(), -1);
     if (m_shader.loadFromString(vertex, fragment))
     {
-        const auto& map = m_shader.getUniformMap();
-        m_quad.uniforms[Quad::MetalTex] = map.at("u_metalMap");
-        m_quad.uniforms[Quad::RoughTex] = map.at("u_roughnessMap");
-        m_quad.uniforms[Quad::AOTex] = map.at("u_aoMap");
+        m_quad.uniforms[Quad::MetalTex] = m_shader.getUniformID("u_metalMap");
+        m_quad.uniforms[Quad::RoughTex] = m_shader.getUniformID("u_roughnessMap");
+        m_quad.uniforms[Quad::AOTex] = m_shader.getUniformID("u_aoMap");
 
-        m_quad.uniforms[Quad::MetalVal] = map.at("u_metalValue");
-        m_quad.uniforms[Quad::RoughVal] = map.at("u_roughnessValue");
+        m_quad.uniforms[Quad::MetalVal] = m_shader.getUniformID("u_metalValue");
+        m_quad.uniforms[Quad::RoughVal] = m_shader.getUniformID("u_roughnessValue");
 
-        m_quad.uniforms[Quad::Projection] = map.at("u_projectionMatrix");
+        m_quad.uniforms[Quad::Projection] = m_shader.getUniformID("u_projectionMatrix");
 
         //TODO other uniforms
     }

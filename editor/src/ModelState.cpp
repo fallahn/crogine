@@ -866,8 +866,8 @@ void ModelState::bakeLightmap()
 
         const auto& shader = m_resources.shaders.get(LightmapShaderID);
         glCheck(glUseProgram(shader.getGLHandle()));
-        glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_projectionMatrix"), 1, GL_FALSE, &projMat[0][0]));
-        glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_viewMatrix"), 1, GL_FALSE, &viewMat[0][0]));
+        glCheck(glUniformMatrix4fv(shader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &projMat[0][0]));
+        glCheck(glUniformMatrix4fv(shader.getUniformID("u_viewMatrix"), 1, GL_FALSE, &viewMat[0][0]));
 
         for (auto i = 0u; i < meshData.submeshCount; ++i)
         {
