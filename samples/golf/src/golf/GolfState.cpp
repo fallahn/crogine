@@ -7521,7 +7521,7 @@ void GolfState::sendWebsocketGameInfo() const
 
     if (m_ntpPro)
     {
-        m_sharedData.scoreType++;
+        mapInfo.gameMode++;
     }
 
     mapInfo.weatherType = m_sharedData.weatherType;
