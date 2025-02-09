@@ -2962,6 +2962,7 @@ void ProfileState::createItemThumbs()
     cro::SimpleQuad clubQuad;
 
     m_pageContexts[PaginationID::Clubs].thumbnailTexture.create(texSize.x, texSize.y);
+    m_pageContexts[PaginationID::Clubs].thumbnailTexture.setSmooth(true);
     m_pageContexts[PaginationID::Clubs].thumbnailTexture.clear(CD32::Colours[CD32::BlueLight]);
 
     std::int32_t i = 0;
@@ -2969,6 +2970,8 @@ void ProfileState::createItemThumbs()
     {
         if (tempTex.loadFromFile(cs.thumbnail))
         {
+            tempTex.setSmooth(true);
+
             const auto x = (i % ThumbColCount);
             const auto y = (i / ThumbColCount);
 

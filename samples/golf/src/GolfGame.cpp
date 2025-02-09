@@ -246,19 +246,6 @@ GolfGame::GolfGame()
 
 #ifdef USE_WORKSHOP
     m_stateStack.registerState<WorkshopState>(StateID::Workshop);
-
-    //tidy up any stuff left over from workshop tools
-    const auto tempPath = Social::getBaseContentPath() + "temp";
-    if (cro::FileSystem::directoryExists(tempPath))
-    {
-        std::error_code ec;
-        std::filesystem::remove_all(tempPath, ec);
-
-        if (ec)
-        {
-            LogE << ec.message() << std::endl;
-        }
-    }
 #endif
 }
 
@@ -564,6 +551,19 @@ bool GolfGame::initialise()
             if (!cro::FileSystem::directoryExists(path))
             {
                 cro::FileSystem::createDirectory(path);
+            }
+        }
+
+        //tidy up any stuff left over from workshop tools
+        const auto tempPath = Social::getBaseContentPath() + "temp";
+        if (cro::FileSystem::directoryExists(tempPath))
+        {
+            std::error_code ec;
+            std::filesystem::remove_all(tempPath, ec);
+
+            if (ec)
+            {
+                LogE << ec.message() << std::endl;
             }
         }
     }
