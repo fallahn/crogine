@@ -683,7 +683,7 @@ void League::createSortedTable()
         {
             m_nemesis = m_sortedTable[m_currentPosition - 1].name;
         }
-        else if(m_currentPosition < m_sortedTable.size() - 1)
+        else if (m_currentPosition < m_sortedTable.size() - 1)
         {
             //check the player below
             s = m_sortedTable[m_currentPosition + 1].score;

@@ -143,7 +143,7 @@ void TerrainDepthmap::update(std::int32_t count)
         count = TextureCount;
     }
 
-    for (auto i = 0u; i < count && m_gridIndex < TextureCount; ++i, ++m_gridIndex)
+    for (auto i = 0; i < count && m_gridIndex < TextureCount; ++i, ++m_gridIndex)
     {
         auto x = m_gridIndex % ColCount;
         auto y = m_gridIndex / ColCount;

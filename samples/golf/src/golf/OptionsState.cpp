@@ -4612,7 +4612,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     for (auto i = 0u; i < MaxUser && i < userFlags.size(); ++i)
     {
         const auto files = cro::FileSystem::listFiles(userDir + userFlags[i]);
-        for (auto j = 0; j < files.size(); ++j)
+        for (auto j = 0u; j < files.size(); ++j)
         {
             //just grab the first png we find
             if (cro::FileSystem::getFileExtension(files[j]) == ".png")

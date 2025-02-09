@@ -76,6 +76,8 @@ struct TableEntry final
         score = other.score;
         handicap = other.handicap;
         name = other.nameIndex;
+
+        return *this;
     }
 };
 
