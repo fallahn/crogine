@@ -316,7 +316,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Sink a putt greater than 6m", false),
     std::make_pair("Sink a hole from outside the green", false),
     std::make_pair("Get a PAR or better after at least one foul", false),
-    std::make_pair("Play a network game with 4 clients", false),
+    std::make_pair("Play a network game with 4 or more clients", false),
     std::make_pair("Get a One Star rating on the driving range", false),
     std::make_pair("Get a Two Star rating on the driving range", false),
     std::make_pair("Get a Three Star rating on the driving range", false),

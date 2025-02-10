@@ -5116,6 +5116,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                                 Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
                                 Achievements::setActive(old);
+                                LogI << "Dropped Join The Club" << std::endl;
+                                LogI << "Holedata size is " << m_holeData.size() << std::endl;
+                                if (m_allowAchievements)
+                                {
+                                    LogI << "Allow achievements is true" << std::endl;
+                                }
+                                else
+                                {
+                                    LogI << "Allow achievements is false" << std::endl;
+                                }
                             }
 
                             if (m_sharedData.scoreType != ScoreType::Skins)
