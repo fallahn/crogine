@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1363,6 +1363,24 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         //this just updates all the textures including the newly acquired
         //avatar data - there's room for optimisation here.
         updateLobbyAvatars();
+    }
+    else if (type == Social::UserContent::Clubs)
+    {
+        /*LogI << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << " - Implement me!" << std::endl;
+
+
+        const auto ClubUserPath = Social::getUserContentPath(Social::UserContent::Clubs) + std::to_string(id) + "w/";
+
+        if (!cro::FileSystem::directoryExists(ClubUserPath))
+        {
+            LogE << "Couldn't find UGC at " << ClubUserPath << std::endl;
+            return;
+        }
+        
+        processClubPath(ClubUserPath, true);*/
+
+        //ACTUALLY - as long as this installed correctly then GolfStateAssets should just find and parse the data as needed
+
     }
     else
     {

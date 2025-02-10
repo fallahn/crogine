@@ -4625,7 +4625,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
 
     std::uint32_t loadedCount = 0;
-    cro::Image tmp;
+    cro::Image tmp(true);
     m_flagTextures.create(FlagTextureSize.x, FlagTextureSize.y);
 
     for (const auto& [path, flag] : mappedFlags)

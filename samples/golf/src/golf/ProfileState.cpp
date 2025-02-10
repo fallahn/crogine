@@ -942,6 +942,16 @@ void ProfileState::loadResources()
     //workshop clubs
     basePath = Social::getUserContentPath(Social::UserContent::Clubs);
     clubsets = cro::FileSystem::listDirectories(basePath);
+
+    //remove dirs from this list if it's not from the workshop (rather crudely)
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
+    
+    if (clubsets.size() > ConstVal::MaxClubsets)
+    {
+        clubsets.resize(ConstVal::MaxClubsets);
+        LogW << "Installed clubsets have been truncated to the maximum 64!" << std::endl;
+    }
+
     for (const auto& s : clubsets)
     {
         processClubPath(basePath + s, true);
