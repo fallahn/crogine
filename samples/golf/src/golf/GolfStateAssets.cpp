@@ -2419,6 +2419,49 @@ void GolfState::loadModels()
         processClubPath(basePath + s);
     }
 
+
+    const auto loadClubModel = 
+        [&](std::uint32_t clubID)
+        {
+            if (m_clubModels.count(clubID) == 0)
+            {
+                m_clubModels.insert(std::make_pair(clubID, ClubModels()));
+                auto& models = m_clubModels.at(clubID);
+
+                if (models.loadFromFile(clubPaths.at(clubID), m_resources, m_gameScene))
+                {
+                    for (auto entity : models.models)
+                    {
+                        const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
+                        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+
+                        entity.getComponent<cro::Model>().setMaterial(0, material);
+                        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
+
+                        if (matCount > 1)
+                        {
+                            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+                            entity.getComponent<cro::Model>().setMaterial(1, material);
+                        }
+
+                        entity.addComponent<cro::Callback>().active = true;
+                        entity.getComponent<cro::Callback>().function =
+                            [&](cro::Entity e, float)
+                            {
+                                if (m_activeAvatar)
+                                {
+                                    bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
+                                        m_activeAvatar->hands->getModel() == e);
+
+                                    e.getComponent<cro::Model>().setHidden(hidden);
+                                }
+                            };
+                    }
+                }
+            }        
+        };
+
+
     //for each profile in the game load the club models if not already loaded
     for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
     {
@@ -2433,53 +2476,14 @@ void GolfState::loadModels()
             else
             {
                 m_avatars[i][j].clubModelID = clubID;
-
-                if (m_clubModels.count(clubID) == 0)
-                {
-                    m_clubModels.insert(std::make_pair(clubID, ClubModels()));
-                    auto& models = m_clubModels.at(clubID);
-
-                    if (models.loadFromFile(clubPaths.at(clubID), m_resources, m_gameScene))
-                    {
-                        for (auto entity : models.models)
-                        {
-                            const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
-                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-
-                            entity.getComponent<cro::Model>().setMaterial(0, material);
-                            entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
-
-                            if (matCount > 1)
-                            {
-                                material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-                                entity.getComponent<cro::Model>().setMaterial(1, material);
-                            }
-
-                            entity.addComponent<cro::Callback>().active = true;
-                            entity.getComponent<cro::Callback>().function =
-                                [&](cro::Entity e, float)
-                                {
-                                    if (m_activeAvatar)
-                                    {
-                                        bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
-                                            m_activeAvatar->hands->getModel() == e);
-
-                                        e.getComponent<cro::Model>().setHidden(hidden);
-                                    }
-                                };
-                        }
-                    }
-                }
+                loadClubModel(clubID);
             }
         }
     }
 
     //if we didn't load the default set of clubs for some reason
     //create a fallback model so we still have something to reference
-    if (m_clubModels.count(0) == 0)
-    {
-        m_clubModels.insert(std::make_pair(0, ClubModels()));
-    }
+    loadClubModel(0);
 
     for (auto& [_,models] : m_clubModels)
     {
