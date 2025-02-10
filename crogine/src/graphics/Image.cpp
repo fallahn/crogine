@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -167,7 +167,7 @@ bool Image::loadFromMemory(const std::uint8_t* px, std::uint32_t width, std::uin
     size *= (width * height);
 
     m_data.resize(size);
-    if (m_flipped)
+    if (m_flipOnLoad)
     {
         flipVertically(px, m_data, height);
         m_flipped = false;
