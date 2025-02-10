@@ -313,7 +313,7 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 //------------------------------------------------------------
 
 ProfileTexture::ProfileTexture(const std::string& path)
-    : m_imageBuffer (std::make_unique<cro::Image>()),
+    : m_imageBuffer (std::make_unique<cro::Image>(true)),
     m_texture       (std::make_unique<cro::Texture>())
 {
     if (m_imageBuffer->loadFromFile(path) //MUST be RGBA for colour replace to work.
