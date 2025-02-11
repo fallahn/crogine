@@ -42,7 +42,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
-#define DEBUG_UI
+//#define DEBUG_UI
 
 namespace
 {

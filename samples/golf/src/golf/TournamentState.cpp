@@ -588,7 +588,11 @@ void TournamentState::buildScene()
     auto selectHighlight = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
-            e.getComponent<cro::Callback>().active = true;
+            //for the boink anim
+            if (e.hasComponent<cro::Callback>())
+            {
+                e.getComponent<cro::Callback>().active = true;
+            }
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
         });
