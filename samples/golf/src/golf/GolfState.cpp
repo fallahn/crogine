@@ -6288,7 +6288,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     WebSock::broadcastPacket(ret);
 
     //cue up next depth map
-    auto next = m_currentHole + 1;
+    const auto next = m_currentHole + 1;
     if (next < m_holeData.size())
     {
         m_depthMap.setModel(m_holeData[next]);
