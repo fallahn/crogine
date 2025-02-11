@@ -2145,9 +2145,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.action = [&](cro::Entity e, float)
                 {
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
-                    m_spectateGhost.getComponent<cro::Model>().setMaterialProperty(0, "u_rimColour", getBeaconColour(m_sharedData.beaconColour));
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                m_spectateGhost.getComponent<cro::Model>().setMaterialProperty(0, "u_rimColour", getBeaconColour(m_sharedData.beaconColour));
 
                 //and distance values
                 cmd.targetFlags = CommandID::UI::ClubName;

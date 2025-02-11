@@ -68,8 +68,16 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
                             md.createModel(entity);
 
                             //TODO we'll apply the models on returning from this func when
-                            //we decide if we need a fallback model or not
+                            //we decide if we need a fallback model or not - so just track
+                            //the ID of the requested materials
 
+                            auto& v = materialIDs.emplace_back();
+                            const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
+
+                            for (auto i = 0u; i < matCount; ++i)
+                            {
+                                v.push_back(md.hasTag(i, "illum") ? Emissive : Flat);
+                            }
                             models.push_back(entity);
                         }
                     }

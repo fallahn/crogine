@@ -75,6 +75,7 @@ namespace
 #include "shaders/Glass.inl"
 #include "shaders/Blur.inl"
 #include "shaders/LensFlare.inl"
+#include "shaders/EmissiveShader.inl"
 }
 
 void GolfState::loadAssets()
@@ -1556,7 +1557,7 @@ void GolfState::loadMaterials()
         wobble = "#define WOBBLE\n";
     }
     const std::string FadeDistance = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane) + "\n";
-    const std::string FadeDistanceHQ = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane *0.8f) + "\n"; //fade closer for HQ trees beforethey are culled
+    const std::string FadeDistanceHQ = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane *0.8f) + "\n"; //fade closer for HQ trees before they are culled
 
     //load materials
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
@@ -1616,6 +1617,10 @@ void GolfState::loadMaterials()
         m_materialIDs[MaterialID::BallNightSkinned] = m_resources.materials.add(*shader);
         m_resources.materials.get(m_materialIDs[MaterialID::BallNightSkinned]).setProperty("u_ballColour", cro::Colour::White);
         m_resources.materials.get(m_materialIDs[MaterialID::BallNightSkinned]).doubleSided = true;
+
+        m_resources.shaders.loadFromString(ShaderID::Emissive, CelVertexShader, EmissiveFragment, "#define VERTEX_COLOURED\n" + wobble);
+        shader = &m_resources.shaders.get(ShaderID::Emissive);
+        m_materialIDs[MaterialID::Emissive] = m_resources.materials.add(*shader);
     }
 
 
@@ -2440,19 +2445,43 @@ void GolfState::loadModels()
 
                 if (models.loadFromFile(clubPaths.at(clubID), m_resources, m_gameScene))
                 {
+                    std::int32_t i = 0;
                     for (auto entity : models.models)
                     {
-                        const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
-                        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-
-                        entity.getComponent<cro::Model>().setMaterial(0, material);
                         entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
 
-                        if (matCount > 1)
+                        const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
+
+                        for (auto j = 0u; j < matCount; ++j)
                         {
-                            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-                            entity.getComponent<cro::Model>().setMaterial(1, material);
+                            auto matID = MaterialID::Ball;
+
+                            switch (j)
+                            {
+                            default: 
+                                if (m_sharedData.nightTime
+                                    && models.materialIDs[i][j] == ClubModels::Emissive)
+                                {
+                                    matID = MaterialID::Emissive;
+                                }
+                                break;
+                            case 1:
+                                if (m_sharedData.nightTime)
+                                {
+                                    matID = models.materialIDs[i][j] == ClubModels::Emissive ? 
+                                        MaterialID::Emissive : MaterialID::Trophy;
+                                }
+                                else
+                                {
+                                    matID = MaterialID::Trophy;
+                                }
+                                break;
+                            }
+                            auto material = m_resources.materials.get(m_materialIDs[matID]);
+                            entity.getComponent<cro::Model>().setMaterial(j, material);
+
                         }
+                        i++;
 
                         entity.addComponent<cro::Callback>().active = true;
                         entity.getComponent<cro::Callback>().function =

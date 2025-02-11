@@ -123,6 +123,17 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
         entity.addComponent<cro::CommandTarget>().ID = CommandID::BeaconColour;
         entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
 
+        //entity.addComponent<cro::Callback>().active = true;
+        //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+        //entity.getComponent<cro::Callback>().function =
+        //    [](cro::Entity e, float dt)
+        //    {
+        //        auto& r = e.getComponent<cro::Callback>().getUserData<float>();
+        //        r += dt / 3.f;
+
+        //        e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", r);
+        //    };
+
         m_trails[i].meshData = &entity.getComponent<cro::Model>().getMeshData();
     }
 }

@@ -1020,6 +1020,7 @@
     <None Include="src\golf\shaders\CelShader.inl" />
     <None Include="src\golf\shaders\CloudShader.inl" />
     <None Include="src\golf\shaders\CompositeShader.inl" />
+    <None Include="src\golf\shaders\EmissiveShader.inl" />
     <None Include="src\golf\shaders\Glass.inl" />
     <None Include="src\golf\shaders\GlowShader.inl" />
     <None Include="src\golf\shaders\Lantern.inl" />

@@ -330,7 +330,8 @@ struct ShaderID final
         Lantern,
         Roids,
         Tonemapping,
-        FlagPreview
+        FlagPreview,
+        Emissive
     };
 };
 

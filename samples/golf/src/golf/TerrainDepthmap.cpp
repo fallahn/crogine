@@ -43,8 +43,6 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 
-#include <crogine/gui/Gui.hpp>
-
 #include "../ErrorCheck.hpp"
 
 namespace

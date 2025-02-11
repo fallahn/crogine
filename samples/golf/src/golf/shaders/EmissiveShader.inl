@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,37 +29,24 @@ source distribution.
 
 #pragma once
 
-#include "Clubs.hpp"
+//Used with CelVertexShader
 
-#include <crogine/ecs/Entity.hpp>
+#include <string>
 
-#include <vector>
-#include <array>
+static const inline std::string EmissiveFragment =
+R"(
 
-namespace cro
+VARYING_IN vec3 v_normal;
+VARYING_IN vec4 v_colour;
+VARYING_IN vec3 v_worldPosition;
+
+#define USE_MRT
+#include OUTPUT_LOCATION
+
+void main()
 {
-    struct ResourceCollection;
-    class Scene;
-}
-
-struct ClubModels final
-{
-    enum
-    {
-        Flat, Emissive
-    };
-
-    std::string name;
-    std::uint32_t uid = 0;
-
-    //holds the entities for each model available
-    std::vector<cro::Entity> models;
-
-    //holds the requested material types for each model
-    std::vector<std::vector<std::int32_t>> materialIDs;
-
-    //holds the indices for each club type into the models vector
-    std::array<std::int32_t, ClubID::Count> indices = {};
-
-    bool loadFromFile(const std::string& path, cro::ResourceCollection&, cro::Scene&);
-};
+    FRAG_OUT = v_colour;
+    LIGHT_OUT = v_colour;
+    NORM_OUT = vec4(normalize(v_normal), 0.0);
+    POS_OUT = vec4(v_worldPosition, 1.0);
+})";

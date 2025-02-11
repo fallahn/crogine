@@ -295,6 +295,7 @@ private:
             Glass,
             LensFlare,
             PointFlare,
+            Emissive, //self-illum for clubs
 
             Count
         };
