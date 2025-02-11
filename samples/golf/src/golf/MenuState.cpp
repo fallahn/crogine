@@ -1646,6 +1646,25 @@ void MenuState::render()
 //private
 void MenuState::addSystems()
 {
+    //const auto basePath = std::string("assets/golf/sound/avatars/");
+    //const auto files = cro::FileSystem::listFiles(basePath);
+    //for (const auto f : files)
+    //{
+    //    if (cro::FileSystem::getFileExtension(f) == ".xas")
+    //    {
+    //        const auto fullPath = basePath + f;
+    //        cro::ConfigFile cfg;
+    //        if (cfg.loadFromFile(fullPath))
+    //        {
+    //            const auto uid = SpookyHash::Hash32(fullPath.data(), fullPath.size(), 0);
+    //            cfg.addProperty("uid").setValue(uid);
+    //            cfg.save(fullPath);
+    //        }
+    //    }
+    //}
+
+
+
     auto& mb = getContext().appInstance.getMessageBus();
 
     //TODO this isn't strictly necessary to add if we're not adding any ropes

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,7 +33,8 @@ source distribution.
 using namespace cro;
 
 AudioScape::AudioScape()
-    : m_audioResource(nullptr)
+    : m_audioResource   (nullptr),
+    m_uid               (0)
 {
 
 }
@@ -41,12 +42,20 @@ AudioScape::AudioScape()
 //public
 bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResource)
 {
+    m_configs.clear();
+    m_name.clear();
+    m_audioResource = nullptr;
+    m_uid = 0;
+
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path))
     {
         m_audioResource = &audioResource;
-        m_configs.clear();
-        m_name.clear();
+
+        if (const auto* p = cfg.findProperty("uid"); p != nullptr)
+        {
+            m_uid = p->getValue<std::uint32_t>();
+        }
 
         const auto& objs = cfg.getObjects();
         for (const auto& obj : objs)
