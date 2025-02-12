@@ -48,8 +48,9 @@ PlayerData& PlayerData::operator=(const sv::PlayerInfo& pi)
     clubID = pi.clubID;
     hairID = pi.hairID;
     hatID = pi.hatID;
-    voiceID = pi.voiceID;
     skinID = pi.skinID;
+    voiceID = pi.voiceID;
+    voicePitch = pi.voicePitch;
     flipped = pi.flipped;
     isCPU = pi.isCPU;
 
@@ -81,8 +82,9 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("club_id").setValue(clubID);
     cfg.addProperty("hair_id").setValue(hairID);
     cfg.addProperty("hat_id").setValue(hatID);
-    cfg.addProperty("voice_id").setValue(voiceID);
     cfg.addProperty("skin_id").setValue(skinID);
+    cfg.addProperty("voice_id").setValue(voiceID);
+    cfg.addProperty("voice_pitch").setValue(voicePitch);
     cfg.addProperty("flipped").setValue(flipped);
     cfg.addProperty("flags0").setValue(avatarFlags[0]);
     cfg.addProperty("flags1").setValue(avatarFlags[1]);
@@ -192,14 +194,19 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
                 auto id = prop.getValue<std::uint32_t>();
                 hatID = id;
             }
-            else if (n == "voice_id")
-            {
-                voiceID = prop.getValue<std::uint32_t>();
-            }
             else if (n == "skin_id")
             {
                 auto id = prop.getValue<std::uint32_t>();
                 skinID = id;
+            }
+            else if (n == "voice_id")
+            {
+                voiceID = prop.getValue<std::uint32_t>();
+            }
+            else if (n == "voice_pitch")
+            {
+                std::int32_t pitch = std::clamp(prop.getValue<std::int32_t>(), -3, 3);
+                voicePitch = static_cast<std::int8_t>(pitch);
             }
             else if (n == "flipped")
             {

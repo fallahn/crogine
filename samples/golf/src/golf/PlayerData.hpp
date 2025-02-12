@@ -76,8 +76,9 @@ struct PlayerData final
     std::uint32_t clubID = 0;
     std::uint32_t hairID = 0;
     std::uint32_t hatID = 0;
-    std::uint32_t voiceID = 0;
     std::uint32_t skinID = 0; //uid as loaded from the avatar data file
+    std::uint32_t voiceID = 0;
+    std::int8_t voicePitch = 0;
     bool flipped = false; //whether or not avatar flipped/southpaw
     bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
 

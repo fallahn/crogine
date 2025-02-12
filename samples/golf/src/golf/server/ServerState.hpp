@@ -55,8 +55,9 @@ namespace sv
         std::uint32_t clubID = 0;
         std::uint32_t hairID = 0;
         std::uint32_t hatID = 0;
-        std::uint32_t voiceID = 0;
         std::uint32_t skinID = 0;
+        std::uint32_t voiceID = 0;
+        std::int8_t voicePitch = 0;
         bool flipped = false; //we don't really care about this on the server, but we do need to forward it to clients.
         bool isCPU = false; //only allow CPU players to request predictions
 

@@ -65,8 +65,9 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         sizes[i] += sizeof(playerData[i].clubID);
         sizes[i] += sizeof(playerData[i].hairID);
         sizes[i] += sizeof(playerData[i].hatID);
-        sizes[i] += sizeof(playerData[i].voiceID);
         sizes[i] += sizeof(playerData[i].skinID);
+        sizes[i] += sizeof(playerData[i].voiceID);
+        sizes[i] += sizeof(playerData[i].voicePitch);
         sizes[i] += sizeof(std::uint8_t); //bool flags
 
         totalSize += sizes[i];
@@ -101,11 +102,14 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         std::memcpy(&buffer[offset], &playerData[i].hatID, sizeof(playerData[i].hatID));
         offset += sizeof(playerData[i].hatID);
 
+        std::memcpy(&buffer[offset], &playerData[i].skinID, sizeof(playerData[i].skinID));
+        offset += sizeof(playerData[i].skinID);
+
         std::memcpy(&buffer[offset], &playerData[i].voiceID, sizeof(playerData[i].voiceID));
         offset += sizeof(playerData[i].voiceID);
 
-        std::memcpy(&buffer[offset], &playerData[i].skinID, sizeof(playerData[i].skinID));
-        offset += sizeof(playerData[i].skinID);
+        std::memcpy(&buffer[offset], &playerData[i].voicePitch, sizeof(playerData[i].voicePitch));
+        offset += sizeof(playerData[i].voicePitch);
 
         //buffer[offset] = playerData[i].flipped ? 1 : 0;
         buffer[offset] = 0;
@@ -216,14 +220,18 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         offset += sizeof(playerData[i].hatID);
         stringSize -= sizeof(playerData[i].hatID);
 
+        std::memcpy(&playerData[i].skinID, ptr + offset, sizeof(playerData[i].skinID));
+        offset += sizeof(playerData[i].skinID);
+        stringSize -= sizeof(playerData[i].skinID);
+
         std::memcpy(&playerData[i].voiceID, ptr + offset, sizeof(playerData[i].voiceID));
         offset += sizeof(playerData[i].voiceID);
         stringSize -= sizeof(playerData[i].voiceID);
 
-        std::memcpy(&playerData[i].skinID, ptr + offset, sizeof(playerData[i].skinID));
-        offset += sizeof(playerData[i].skinID);
-        stringSize -= sizeof(playerData[i].skinID);
-        
+        std::memcpy(&playerData[i].voicePitch, ptr + offset, sizeof(playerData[i].voicePitch));
+        offset += sizeof(playerData[i].voicePitch);
+        stringSize -= sizeof(playerData[i].voicePitch);
+
         playerData[i].flipped = (ptr[offset] & BoolFlags::Flipped) != 0;
         playerData[i].isCPU = (ptr[offset] & BoolFlags::CPUPlayer) != 0;
         offset++;
