@@ -3040,6 +3040,7 @@ void GolfState::updateFlagTexture(bool reloadTexture)
 {
     if (!m_flagTexture.available())
     {
+        LogI << "Flag Texture is unavailable for custom flags" << std::endl;
         return;
     }
 
@@ -3047,12 +3048,18 @@ void GolfState::updateFlagTexture(bool reloadTexture)
     {
         if (!m_resources.textures.loaded(TextureID::Flag))
         {
-            m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath);
+            if (m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath))
+                LogI << "loaded flag texture from " << m_sharedData.flagPath << std::endl;
+            else
+                LogI << "failed loading flag texture " << m_sharedData.flagPath << std::endl;
         }
         else
         {
             //overwrite existing to recycle the handle.
-            m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath);
+            if (m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath))
+                LogI << "reloaded flag texture from " << m_sharedData.flagPath << std::endl;
+            else
+                LogI << "failed reloading flag texture " << m_sharedData.flagPath << std::endl;
         }
         m_flagQuad.setTexture(m_resources.textures.get(TextureID::Flag));
 
@@ -3084,6 +3091,7 @@ void GolfState::updateFlagTexture(bool reloadTexture)
     cmd.action = [tid](cro::Entity e, float)
         {
             e.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", tid);
+            LogI << "Set flag texture on model" << std::endl;
         };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

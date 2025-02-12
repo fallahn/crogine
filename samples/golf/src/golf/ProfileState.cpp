@@ -1322,7 +1322,7 @@ void ProfileState::buildScene()
     //hat select button
     entity = m_uiScene.createEntity();
     entity.setLabel("Open Headwear Browser");
-    entity.addComponent<cro::Transform>().setPosition({47.f, 180.f, 0.5f});
+    entity.addComponent<cro::Transform>().setPosition({30.f, 180.f, 0.5f});
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("hat_select");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1330,7 +1330,7 @@ void ProfileState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonHairBrowse);
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonSkinTone);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonSpeechBrowse, ButtonSkinTone);
 #ifdef USE_GNS
     entity.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonWorkshop);
 #else
@@ -1356,6 +1356,48 @@ void ProfileState::buildScene()
                     m_menuEntities[EntityID::HairEditor].getComponent<cro::Callback>().active = true;
                     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().stop();
                     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Skeleton>().gotoFrame(0);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //speech select button
+    entity = m_uiScene.createEntity();
+    entity.setLabel("Select Voice");
+    entity.addComponent<cro::Transform>().setPosition({ 64.f, 180.f, 0.5f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("speech_select");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    rect = entity.getComponent<cro::Sprite>().getTextureRect();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonSpeechBrowse);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBody, ButtonSkinTone);
+#ifdef USE_GNS
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonWorkshop);
+#else
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonHairBrowse, ButtonRandomise);
+#endif
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+        uiSystem.addCallback([rect](cro::Entity e) {e.getComponent<cro::Sprite>().setTextureRect(rect); });
+    rect.bottom += rect.height;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+        uiSystem.addCallback([&, rect](cro::Entity e)
+            {
+                e.getComponent<cro::Sprite>().setTextureRect(rect);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                m_menuEntities[EntityID::TipText].getComponent<cro::Text>().setString(e.getLabel());
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }

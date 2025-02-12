@@ -35,7 +35,8 @@ enum ProfileButton
 
     ButtonWorkshop,
 
-    //ButtonHairColour,
+    ButtonHairBrowse,
+    ButtonSpeechBrowse,
     ButtonSkinTone,
     ButtonTopLight,
     ButtonTopDark,
@@ -45,9 +46,6 @@ enum ProfileButton
     ButtonSouthPaw,
     ButtonRandomise,
 
-    //ButtonPrevHair,
-    //ButtonNextHair,
-    ButtonHairBrowse,
     ButtonPrevBody,
     ButtonNextBody,
 
