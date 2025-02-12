@@ -239,7 +239,7 @@ public:
         {
             Ball, Hair, Course, Flag,
             Profile, Avatar, Career,
-            Clubs,
+            Clubs, Voice,
 
             Count
         };

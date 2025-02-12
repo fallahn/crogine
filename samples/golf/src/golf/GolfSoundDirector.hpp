@@ -54,7 +54,7 @@ public:
     void init() { resizeEmitters(); }
 
     std::size_t addAudioScape(const std::string& path, cro::AudioResource& resource);
-    void setPlayerIndex(std::size_t client, std::size_t player, std::int32_t index);
+    void setPlayerIndex(std::size_t client, std::size_t player, std::int32_t index, float pitch);
     void setActivePlayer(std::size_t client, std::size_t player, bool skipAudio);
     void setCrowdPositions(const std::vector<glm::mat4>& v) { m_crowdPositions = &v; }
 
@@ -198,7 +198,13 @@ private:
 
     const SharedStateData& m_sharedData;
 
-    std::array<std::array<std::int32_t, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_playerIndices = {};
+    struct PlayerVoice final
+    {
+        std::int32_t index = -1;
+        float pitch = 1.f;
+    };
+
+    std::array<std::array<PlayerVoice, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_playerIndices = {};
     std::vector<cro::AudioScape> m_playerVoices;
     std::size_t m_currentClient;
     std::size_t m_currentPlayer;
@@ -214,7 +220,7 @@ private:
 
     void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f, std::uint8_t = 1/*MixerChannel::Effects*/);
     cro::Entity playAvatarSound(std::int32_t, const std::string&, glm::vec3);
-    void playAvatarSoundDelayed(std::int32_t, const std::string&, glm::vec3, float);
+    void playAvatarSoundDelayed(std::int32_t, const std::string&, glm::vec3, float, float pitch);
 
     //not really sound, but we want to trigger it in sync (ish) with audio
     void applaud();

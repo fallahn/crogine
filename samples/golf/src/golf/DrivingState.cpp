@@ -2505,11 +2505,6 @@ void DrivingState::createPlayer()
 
 
 
-
-
-
-
-
     auto idx = indexFromSkinID(playerData.skinID);
 
     ProfileTexture av(m_sharedData.avatarInfo[idx].texturePath);

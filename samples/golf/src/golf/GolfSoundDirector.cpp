@@ -227,10 +227,10 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateDa
         }
     }
 
-    for (auto& a : m_playerIndices)
+    /*for (auto& a : m_playerIndices)
     {
         std::fill(a.begin(), a.end(), -1);
-    }
+    }*/
 }
 
 //public
@@ -359,12 +359,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 playSoundDelayed(AudioID::Airmail, glm::vec3(0.f), 1.2f, 1.f, MixerChannel::Voice);
                 break;
             case GolfEvent::HoleWon:
-                if (auto idx = m_playerIndices[data.client][data.player]; idx > -1)
+                if (auto idx = m_playerIndices[data.client][data.player].index; idx > -1)
                 {
                     static const std::string emitterName = "celebrate";
                     if (m_playerVoices[idx].hasEmitter(emitterName))
                     {
-                        playAvatarSound(idx, emitterName, glm::vec3(0.f));
+                        const auto pitch = m_playerIndices[data.client][data.player].pitch;
+                        playAvatarSound(idx, emitterName, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setPitch(pitch);
                     }
                 }
 
@@ -584,9 +585,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     case TerrainID::Bunker:
                         playSound(cro::Util::Random::value(AudioID::TerrainBunker01, AudioID::TerrainBunker05), glm::vec3(0.f));
 
-                        if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                        if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                         {
-                            playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.f);
+                            const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
+                            playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.f, pitch);
                         }
 
                         break;
@@ -599,9 +601,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     case TerrainID::Scrub:
                         playSound(cro::Util::Random::value(AudioID::TerrainScrub02, AudioID::TerrainScrub04), glm::vec3(0.f));
 
-                        if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                        if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                         {
-                            playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.2f);
+                            const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
+                            playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.2f, pitch);
                         }
                         break;
                     case TerrainID::Green:
@@ -652,12 +655,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         if (m_sharedData.scoreType == ScoreType::NearestThePin)
                         {
                             //this is a forfeit
-                            if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                            if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                             {
                                 std::string emitterName = cro::Util::Random::value(0, 1) == 1 ? "bunker" : "scrub";
                                 if (m_playerVoices[idx].hasEmitter(emitterName))
                                 {
-                                    playAvatarSoundDelayed(idx, emitterName, glm::vec3(0.f), 0.5f);
+                                    const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
+                                    playAvatarSoundDelayed(idx, emitterName, glm::vec3(0.f), 0.5f, pitch);
                                 }
                             }
                         }
@@ -794,12 +798,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             else if (data.type == SceneEvent::PlayerIdle)
             {
-                if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                 {
                     std::string emitterName = cro::Util::Random::value(0,1) == 1 ? "rough" : "bunker";
                     if (m_playerVoices[idx].hasEmitter(emitterName))
                     {
-                        playAvatarSound(idx, emitterName, glm::vec3(0.f));
+                        const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
+                        playAvatarSound(idx, emitterName, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setPitch(pitch);
                     }
                 }
             }
@@ -882,10 +887,11 @@ std::size_t GolfSoundDirector::addAudioScape(const std::string& path, cro::Audio
     return id;
 }
 
-void GolfSoundDirector::setPlayerIndex(std::size_t client, std::size_t player, std::int32_t index)
+void GolfSoundDirector::setPlayerIndex(std::size_t client, std::size_t player, std::int32_t index, float pitch)
 {
     CRO_ASSERT(index < m_playerVoices.size(), "load audioscapes first!");
-    m_playerIndices[client][player] = index;
+    m_playerIndices[client][player].index = index;
+    m_playerIndices[client][player].pitch = std::clamp(pitch, 0.7f, 1.3f);
 }
 
 void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player, bool skipAudio)
@@ -923,7 +929,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
 
     const auto playSpecial = [&, id, position]()
     {
-        if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+        if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
         {
             std::string emitterName;
             switch (id)
@@ -972,7 +978,10 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
 
             if (m_playerVoices[idx].hasEmitter(emitterName))
             {
-                return playAvatarSound(idx, emitterName, position);
+                const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
+                auto ent = playAvatarSound(idx, emitterName, position);
+                ent.getComponent<cro::AudioEmitter>().setPitch(pitch);
+                return ent;
             }
         }
 
@@ -1048,7 +1057,7 @@ cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::stri
     return ent;
 }
 
-void GolfSoundDirector::playAvatarSoundDelayed(std::int32_t idx, const std::string& emitterName, glm::vec3 position, float delay)
+void GolfSoundDirector::playAvatarSoundDelayed(std::int32_t idx, const std::string& emitterName, glm::vec3 position, float delay, float pitch)
 {
     if (m_playerVoices[idx].hasEmitter(emitterName))
     {
@@ -1056,14 +1065,14 @@ void GolfSoundDirector::playAvatarSoundDelayed(std::int32_t idx, const std::stri
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<float>(delay);
         entity.getComponent<cro::Callback>().function =
-            [&, idx, position, emitterName](cro::Entity e, float dt)
+            [&, idx, position, emitterName, pitch](cro::Entity e, float dt)
         {
             auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
             currTime -= dt;
 
             if (currTime < 0)
             {
-                playAvatarSound(idx, emitterName, position);
+                playAvatarSound(idx, emitterName, position).getComponent<cro::AudioEmitter>().setPitch(pitch);
 
                 e.getComponent<cro::Callback>().active = false;
                 getScene().destroyEntity(e);

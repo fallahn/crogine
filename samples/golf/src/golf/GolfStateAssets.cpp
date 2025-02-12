@@ -2118,8 +2118,12 @@ void GolfState::loadModels()
         };
     std::string baseAudioPath = "assets/golf/sound/avatars/";
     processPath(baseAudioPath);
-    //baseAudioPath = Social::getUserDirectory(Social::UserContent::Audio)
-    //processPath(baseAudioPath);
+    baseAudioPath = Social::getUserContentPath(Social::UserContent::Voice);
+    const auto voiceDirs = cro::FileSystem::listDirectories(baseAudioPath);
+    for (const auto& dir : voiceDirs)
+    {
+        processPath(baseAudioPath + dir + "/");
+    }
 
     auto defaultAudio = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape("assets/golf/sound/avatars/default.xas", m_resources.audio);
 
@@ -2181,7 +2185,8 @@ void GolfState::loadModels()
                 }
             }
 
-            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(playerVoiceIndex));
+            const float pitch = 1.f + (static_cast<float>(m_sharedData.connectionData[i].playerData[j].voicePitch) / 10.f);
+            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(playerVoiceIndex), pitch);
             m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
 
             //player avatar model
