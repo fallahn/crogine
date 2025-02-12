@@ -56,6 +56,7 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Matrix.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <cstdint>
 #include <sstream>
@@ -134,6 +135,8 @@ static constexpr float MaxTerrainHeight = 5.f;// 4.5f;
 
 static constexpr float FlagRaiseDistance = 3.f * 3.f;
 static constexpr float PlayerShadowOffset = 0.04f;
+static constexpr float PlayerFootOffset = 0.65f; //distance to AV feet from ball
+static constexpr glm::vec3 PlayerFootPos = glm::vec3(-PlayerFootOffset, 0.f, 0.f);
 
 static constexpr float MinPixelScale = 1.f;
 static constexpr float MaxPixelScale = 3.f;
@@ -372,8 +375,20 @@ struct Avatar final
 
 static inline std::int32_t courseOfTheMonth()
 {
-    return 9 + (cro::SysTime::now().months() % 3);
+    //return 9 + (cro::SysTime::now().months() % 3);
+    return cro::SysTime::now().months() - 1;
 }
+
+static inline float getOffsetRotation(float heightToGround)
+{
+    //TODO measure distance 
+    static constexpr float PlayerDist = (PlayerFootOffset*PlayerFootOffset);
+
+    float a = std::abs(heightToGround);
+    const float c = std::sqrt((a * a) + PlayerDist);
+    return std::asin(a / c) * cro::Util::Maths::sgn(heightToGround);
+}
+
 
 static inline float getWindMultiplier(float ballHeight, float distanceToPin)
 {

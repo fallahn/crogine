@@ -4792,6 +4792,32 @@ void GolfState::calcTerrainLevel()
     }
 }
 
+float GolfState::getGroundRotation(glm::vec3 pos, float yRot, bool flipped) const
+{
+    auto offset = PlayerFootPos;
+    if (flipped)
+    {
+        offset *= -1.f;
+    }
+    offset = glm::rotate(offset, yRot, cro::Transform::Y_AXIS);
+    offset.y = 1.f;
+    const auto groundHeight = m_collisionMesh.getTerrain(pos + offset).height - pos.y;
+
+    //LogI << "Ground Height: " << groundHeight << std::endl;
+
+    if (groundHeight < 0.4f)
+    {
+        float offsetRot = getOffsetRotation(groundHeight);
+        if (!flipped)
+        {
+            offsetRot *= -1.f;
+        }
+        //LogI << "Player ground rotation: " << offsetRot << std::endl;
+        return offsetRot;
+    }
+    return 0.f;
+}
+
 void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();

@@ -1562,7 +1562,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         case SceneEvent::PlayerRotate:
             if (m_activeAvatar)
             {
+                const auto pos = m_activeAvatar->model.getComponent<cro::Transform>().getPosition();
                 m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.rotation);
+                m_activeAvatar->model.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, getGroundRotation(pos ,data.rotation, m_activeAvatar->flipped));
                 m_activeAvatar->model.getComponent<AvatarRotation>().currentRotation = data.rotation;
                 m_activeAvatar->model.getComponent<AvatarRotation>().targetRotation = data.rotation;
                 
@@ -5116,16 +5118,6 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                                 Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
                                 Achievements::setActive(old);
-                                LogI << "Dropped Join The Club" << std::endl;
-                                LogI << "Holedata size is " << m_holeData.size() << std::endl;
-                                if (m_allowAchievements)
-                                {
-                                    LogI << "Allow achievements is true" << std::endl;
-                                }
-                                else
-                                {
-                                    LogI << "Allow achievements is false" << std::endl;
-                                }
                             }
 
                             if (m_sharedData.scoreType != ScoreType::Skins)
@@ -6756,8 +6748,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         auto playerRotation = m_camRotation - (cro::Util::Const::PI / 2.f);
 
+        //check if we're on a slope
+        const float offsetRot = getGroundRotation(player.position, playerRotation, m_activeAvatar->flipped);
+
         m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);
         m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, playerRotation);
+        m_activeAvatar->model.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, offsetRot);
         m_activeAvatar->model.getComponent<AvatarRotation>().currentRotation = playerRotation;
         m_activeAvatar->model.getComponent<AvatarRotation>().targetRotation = playerRotation;
         m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;

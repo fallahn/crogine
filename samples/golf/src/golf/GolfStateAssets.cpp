@@ -2366,7 +2366,9 @@ void GolfState::loadModels()
                 entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
                 m_avatars[i][j].model = entity;
 
-                entity.addComponent<AvatarRotation>();
+                auto& avRot = entity.addComponent<AvatarRotation>();
+                avRot.avatarFlipped = m_avatars[i][j].flipped;
+                avRot.groundRotation = std::bind(&GolfState::getGroundRotation, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
                 if (m_sharedData.avatarInfo[avatarIndex].workshopID
                     && i == m_sharedData.localConnectionData.connectionID)

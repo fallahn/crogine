@@ -574,6 +574,7 @@ private:
     void updateWindDisplay(glm::vec3);
     float estimatePuttPower();
     void calcTerrainLevel();
+    float getGroundRotation(glm::vec3 playerPos, float yRot, bool flipped) const;
 
     enum class MessageBoardID
     {
