@@ -891,7 +891,7 @@ void GolfSoundDirector::setPlayerIndex(std::size_t client, std::size_t player, s
 {
     CRO_ASSERT(index < m_playerVoices.size(), "load audioscapes first!");
     m_playerIndices[client][player].index = index;
-    m_playerIndices[client][player].pitch = std::clamp(pitch, 0.7f, 1.3f);
+    m_playerIndices[client][player].pitch = std::clamp(pitch, 0.8f, 1.2f);
 }
 
 void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player, bool skipAudio)
