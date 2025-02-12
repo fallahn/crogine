@@ -868,6 +868,14 @@ void GolfSoundDirector::process(float dt)
 
 std::size_t GolfSoundDirector::addAudioScape(const std::string& path, cro::AudioResource& resource)
 {
+    //check if this was already loaded and return the index
+    if (const auto result = std::find_if(m_playerVoices.cbegin(), m_playerVoices.cend(), 
+        [&path](const cro::AudioScape as) { return path == as.getPath(); });
+        result != m_playerVoices.cend())
+    {
+        return std::distance(m_playerVoices.cbegin(), result);
+    }
+
     //we emplace back even if it fails/has empty path so indices match the player indices.
     auto id = m_playerVoices.size();
     m_playerVoices.emplace_back().loadFromFile(path, resource);

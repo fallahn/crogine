@@ -2093,15 +2093,36 @@ void GolfState::loadModels()
 
 
     //load audio from avatar info
-    for (const auto& avatar : m_sharedData.avatarInfo)
-    {
-        m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(avatar.audioscape, m_resources.audio);
-    }
+    std::unordered_map<std::uint32_t, std::string> audioPaths;
+    //list all available audio and put into map
+    const auto processPath =
+        [&](const std::string path)
+        {
+            auto audioFiles = cro::FileSystem::listFiles(path);
+            for (const auto& file : audioFiles)
+            {
+                if (cro::FileSystem::getFileExtension(file) == ".xas")
+                {
+                    auto fullPath = path + file;
+                    cro::AudioScape as;
+                    as.loadFromFile(fullPath, m_resources.audio);
+
+                    const auto uid = as.getUID();
+                    if (uid != 0
+                        && audioPaths.count(uid) == 0)
+                    {
+                        audioPaths.insert(std::make_pair(uid, fullPath));
+                    }
+                }
+            }
+        };
+    std::string baseAudioPath = "assets/golf/sound/avatars/";
+    processPath(baseAudioPath);
+    //baseAudioPath = Social::getUserDirectory(Social::UserContent::Audio)
+    //processPath(baseAudioPath);
+
     auto defaultAudio = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape("assets/golf/sound/avatars/default.xas", m_resources.audio);
 
-    //TODO we don't actually need to load *every* sprite sheet, just look up the index first
-    //and load it as necessary...
-    //however: while it may load unnecessary audioscapes, it does ensure they are loaded in the correct order :S
 
     //copy into active player slots
     const auto indexFromSkinID = [&](std::uint32_t skinID, bool& isRandom)->std::size_t
@@ -2146,7 +2167,21 @@ void GolfState::loadModels()
             //if this returned a random index because the skinID wasn't found, correct the skinID
             skinID = m_sharedData.avatarInfo[avatarIndex].uid;
 
-            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, isRandom ? defaultAudio : static_cast<std::int32_t>(avatarIndex));
+            const auto voiceID = m_sharedData.connectionData[i].playerData[j].voiceID;
+            std::size_t playerVoiceIndex = defaultAudio;
+            if (audioPaths.count(voiceID) != 0)
+            {
+                playerVoiceIndex = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(audioPaths.at(voiceID), m_resources.audio);
+            }
+            else
+            {
+                if (!isRandom)
+                {
+                    playerVoiceIndex = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(m_sharedData.avatarInfo[avatarIndex].audioscape, m_resources.audio);
+                }
+            }
+
+            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(playerVoiceIndex));
             m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
 
             //player avatar model

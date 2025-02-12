@@ -65,6 +65,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         sizes[i] += sizeof(playerData[i].clubID);
         sizes[i] += sizeof(playerData[i].hairID);
         sizes[i] += sizeof(playerData[i].hatID);
+        sizes[i] += sizeof(playerData[i].voiceID);
         sizes[i] += sizeof(playerData[i].skinID);
         sizes[i] += sizeof(std::uint8_t); //bool flags
 
@@ -99,6 +100,9 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
 
         std::memcpy(&buffer[offset], &playerData[i].hatID, sizeof(playerData[i].hatID));
         offset += sizeof(playerData[i].hatID);
+
+        std::memcpy(&buffer[offset], &playerData[i].voiceID, sizeof(playerData[i].voiceID));
+        offset += sizeof(playerData[i].voiceID);
 
         std::memcpy(&buffer[offset], &playerData[i].skinID, sizeof(playerData[i].skinID));
         offset += sizeof(playerData[i].skinID);
@@ -178,6 +182,7 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
 
 
     //read player data
+    //TODO this would be far less error prone (and more readable) if it were a function
     for (auto i = 0u; i < playerCount; ++i)
     {
         auto* ptr = static_cast<const std::uint8_t*>(packet.getData());
@@ -210,6 +215,10 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         std::memcpy(&playerData[i].hatID, ptr + offset, sizeof(playerData[i].hatID));
         offset += sizeof(playerData[i].hatID);
         stringSize -= sizeof(playerData[i].hatID);
+
+        std::memcpy(&playerData[i].voiceID, ptr + offset, sizeof(playerData[i].voiceID));
+        offset += sizeof(playerData[i].voiceID);
+        stringSize -= sizeof(playerData[i].voiceID);
 
         std::memcpy(&playerData[i].skinID, ptr + offset, sizeof(playerData[i].skinID));
         offset += sizeof(playerData[i].skinID);

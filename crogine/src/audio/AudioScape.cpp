@@ -44,6 +44,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
 {
     m_configs.clear();
     m_name.clear();
+    m_path.clear();
     m_audioResource = nullptr;
     m_uid = 0;
 
@@ -51,6 +52,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
     if (cfg.loadFromFile(path))
     {
         m_audioResource = &audioResource;
+        m_path = path;
 
         if (const auto* p = cfg.findProperty("uid"); p != nullptr)
         {

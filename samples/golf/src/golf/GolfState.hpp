@@ -384,6 +384,7 @@ private:
     void hitBall();
     void updateActor(const ActorInfo&);
     void remoteRotation(std::uint32_t); //rotates the avatar based on remote player input
+    float getGroundRotation(glm::vec3 playerPos, float yRot, bool flipped) const; //rotates the player to reduce feet clipping/floating
     std::int32_t getClub() const;
 
 
@@ -574,7 +575,6 @@ private:
     void updateWindDisplay(glm::vec3);
     float estimatePuttPower();
     void calcTerrainLevel();
-    float getGroundRotation(glm::vec3 playerPos, float yRot, bool flipped) const;
 
     enum class MessageBoardID
     {

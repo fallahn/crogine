@@ -109,6 +109,11 @@ namespace cro
         const std::string& getName() const { return m_name; }
 
         /*!
+        \brief Returns the path from which the AudioScape was loaded, if available
+        */
+        const std::string& getPath() const { return m_path; }
+
+        /*!
         \brief Returns the UID loaded from the AudioScape file, or 0 if there was none
         */
         std::uint32_t getUID() const { return m_uid; }
@@ -116,6 +121,7 @@ namespace cro
     private:
         AudioResource* m_audioResource;
         std::string m_name;
+        std::string m_path;
         std::uint32_t m_uid;
 
         struct AudioConfig final

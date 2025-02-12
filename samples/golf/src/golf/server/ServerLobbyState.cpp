@@ -52,6 +52,7 @@ PlayerInfo& PlayerInfo::operator=(const PlayerData& pd)
     clubID = pd.clubID;
     hairID = pd.hairID;
     hatID = pd.hatID;
+    voiceID = pd.voiceID;
     skinID = pd.skinID;
     flipped = pd.flipped;
     isCPU = pd.isCPU;

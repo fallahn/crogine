@@ -7387,6 +7387,29 @@ void GolfState::remoteRotation(std::uint32_t data)
     }
 }
 
+float GolfState::getGroundRotation(glm::vec3 pos, float yRot, bool flipped) const
+{
+    auto offset = PlayerFootPos;
+    if (flipped)
+    {
+        offset *= -1.f;
+    }
+    offset = glm::rotate(offset, yRot, cro::Transform::Y_AXIS);
+
+    const auto groundHeight = m_collisionMesh.getTerrain(pos + offset).height - pos.y;
+
+    if (std::abs(groundHeight < 0.4f))
+    {
+        float offsetRot = getOffsetRotation(groundHeight);
+        if (!flipped)
+        {
+            offsetRot *= -1.f;
+        }
+        return offsetRot;
+    }
+    return 0.f;
+}
+
 std::int32_t GolfState::getClub() const
 {
     switch (m_currentPlayer.terrain)
