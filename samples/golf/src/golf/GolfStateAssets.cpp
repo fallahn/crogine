@@ -3049,6 +3049,7 @@ void GolfState::updateFlagTexture(bool reloadTexture)
         if (cro::FileSystem::fileExists(m_sharedData.flagPath))
         {
             m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
+            LogI << "Found " << m_sharedData.flagPath << " - creating flag texture..." << std::endl;
         }
         else
         {
