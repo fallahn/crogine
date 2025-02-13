@@ -1035,8 +1035,19 @@ void ProfileState::buildScene()
                 }
                 else
                 {
-                    m_voiceIndex = 0;
-                    m_activeProfile.voiceID = m_voices[0].getUID();
+                    //try to identify the UID assigned to the selected avatar
+                    if (const auto w = std::find_if(m_voices.begin(), m_voices.end(),
+                        [&](const cro::AudioScape& as) {return as.getUID() == m_avatarModels[m_avatarIndex].audioUID; });
+                        w != m_voices.end())
+                    {
+                        m_voiceIndex = std::distance(m_voices.begin(), w);
+                        m_activeProfile.voiceID = m_avatarModels[m_avatarIndex].audioUID;
+                    }
+                    else
+                    {
+                        m_voiceIndex = 0;
+                        m_activeProfile.voiceID = m_voices[0].getUID();
+                    }
                 }
             }
             break;
@@ -2569,6 +2580,7 @@ void ProfileState::buildPreviewScene()
             if (!m_sharedData.avatarInfo[i].audioscape.empty() &&
                 as.loadFromFile(m_sharedData.avatarInfo[i].audioscape, m_resources.audio))
             {
+                m_avatarModels[i].audioUID = as.getUID();
                 for (const auto& name : emitterNames)
                 {
                     if (as.hasEmitter(name))
@@ -4980,9 +4992,18 @@ void ProfileState::setAvatarIndex(std::size_t idx)
     m_profileTextures[idx].apply();
 
 
-    if (!m_avatarModels[m_avatarIndex].previewAudio.empty())
+    //although this should never be true as we
+    //assert the selected index when the window opens
+    if (m_activeProfile.voiceID == 0)
     {
-        m_avatarModels[m_avatarIndex].previewAudio[cro::Util::Random::value(0u, m_avatarModels[m_avatarIndex].previewAudio.size() - 1)].getComponent<cro::AudioEmitter>().play();
+        if (!m_avatarModels[m_avatarIndex].previewAudio.empty())
+        {
+            m_avatarModels[m_avatarIndex].previewAudio[cro::Util::Random::value(0u, m_avatarModels[m_avatarIndex].previewAudio.size() - 1)].getComponent<cro::AudioEmitter>().play();
+        }
+    }
+    else
+    {
+        playPreviewAudio();
     }
 }
 

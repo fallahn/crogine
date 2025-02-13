@@ -67,6 +67,7 @@ struct AvatarPreview final
     cro::Attachment* hatAttachment = nullptr;
     cro::Entity previewModel;
     std::vector<cro::Entity> previewAudio;
+    std::uint32_t audioUID = 0;
     std::size_t previewIndex = 0; //actual index may differ because of locked models
 };
 
