@@ -205,7 +205,7 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             }
             else if (n == "voice_pitch")
             {
-                std::int32_t pitch = std::clamp(prop.getValue<std::int32_t>(), -2, 2);
+                std::int32_t pitch = std::clamp(prop.getValue<std::int32_t>(), -MaxVoicePitch, std::int32_t(MaxVoicePitch));
                 voicePitch = static_cast<std::int8_t>(pitch);
             }
             else if (n == "flipped")

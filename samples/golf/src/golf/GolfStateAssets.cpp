@@ -2185,7 +2185,7 @@ void GolfState::loadModels()
                 }
             }
 
-            const float pitch = 1.f + (static_cast<float>(m_sharedData.connectionData[i].playerData[j].voicePitch) / 20.f);
+            const float pitch = 1.f + (static_cast<float>(m_sharedData.connectionData[i].playerData[j].voicePitch) / VoicePitchDivisor);
             m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(playerVoiceIndex), pitch);
             m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
 

@@ -245,6 +245,7 @@ private:
 
     std::vector<cro::AudioScape> m_voices;
     std::size_t m_voiceIndex;
+    void playPreviewAudio();
 
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);

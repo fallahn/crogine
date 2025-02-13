@@ -3350,6 +3350,35 @@ void ProfileState::updateHeadwearTransform()
     }
 }
 
+void ProfileState::playPreviewAudio()
+{
+    //I'll leave this here as an I told you so
+    //for when you come back to fix using a static var.
+    static std::size_t playCount = 0;
+
+    if (playCount < 4)
+    {
+        auto e = m_uiScene.createEntity();
+        e.addComponent<cro::Transform>();
+        e.addComponent<cro::AudioEmitter>() = m_voices[m_voiceIndex].getEmitter("celebrate");
+        e.getComponent<cro::AudioEmitter>().setPitch(1.f + (static_cast<float>(m_activeProfile.voicePitch) / VoicePitchDivisor));
+        e.getComponent<cro::AudioEmitter>().play();
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().function =
+            [&](cro::Entity f, float)
+            {
+                if (f.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                {
+                    f.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(f);
+                    playCount--;
+                }
+            };
+
+        playCount++;
+    }
+}
+
 void ProfileState::createBallBrowser(cro::Entity parent, const CallbackContext& ctx)
 {
     auto [bgEnt, _] = createBrowserBackground(MenuID::BallSelect, ctx);
@@ -4201,6 +4230,19 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
 void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext& ctx)
 {
     //parse all the available audioscapes
+    const std::array EmitterNames =
+    {
+        std::string("bunker"),
+        std::string("fairway"),
+        std::string("green"),
+        std::string("celebrate"),
+        std::string("hook"),
+        std::string("rough"),
+        std::string("scrub"),
+        std::string("slice"),
+        std::string("water")
+    };
+
     std::vector<std::string> paths;
     std::string basePath = "assets/golf/sound/avatars/";
     auto files = cro::FileSystem::listFiles(basePath);
@@ -4240,7 +4282,20 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     {
         cro::AudioScape as;
         as.loadFromFile(path, m_resources.audio);
-        if (as.getUID() != 0)
+
+        bool allEmitters = true;
+        for (const auto& emitter : EmitterNames)
+        {
+            if (!as.hasEmitter(emitter))
+            {
+                allEmitters = false;
+                LogW << "Skipping " << as.getName() << ", missing emitter " << emitter << std::endl;
+                break;
+            }
+        }
+
+        if (as.getUID() != 0
+            && allEmitters)
         {
             m_voices.push_back(as);
         }
@@ -4303,33 +4358,6 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     entity.addComponent<cro::Sprite>() = ctx.spriteSheet.getSprite("preview_controls");
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    const auto playPreviewAudio =
-        [&]()
-        {
-            static std::size_t playCount = 0;
-
-            if (playCount < 4)
-            {
-                auto e = m_uiScene.createEntity();
-                e.addComponent<cro::Transform>();
-                e.addComponent<cro::AudioEmitter>() = m_voices[m_voiceIndex].getEmitter("celebrate");
-                e.getComponent<cro::AudioEmitter>().setPitch(1.f + (static_cast<float>(m_activeProfile.voicePitch) / 20.f));
-                e.getComponent<cro::AudioEmitter>().play();
-                e.addComponent<cro::Callback>().active = true;
-                e.getComponent<cro::Callback>().function =
-                    [&](cro::Entity f, float)
-                    {
-                        if (f.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
-                        {
-                            f.getComponent<cro::Callback>().active = false;
-                            m_uiScene.destroyEntity(f);
-                            playCount--;
-                        }
-                    };
-
-                playCount++;
-            }
-        };
 
     const auto createButton = [&](glm::vec2 position, const std::string& sprite)
         {
@@ -4355,13 +4383,12 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexVoiceUp, IndexClose);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, playPreviewAudio](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     m_voiceIndex = (m_voiceIndex + (m_voices.size() - 1)) % m_voices.size();
                     m_activeProfile.voiceID = m_voices[m_voiceIndex].getUID();
-
                     playPreviewAudio();
                 }
             });
@@ -4374,13 +4401,12 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexVoiceDown, IndexClose);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, playPreviewAudio](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     m_voiceIndex = (m_voiceIndex + 1) % m_voices.size();
                     m_activeProfile.voiceID = m_voices[m_voiceIndex].getUID();
-
                     playPreviewAudio();
                 }
             });
@@ -4393,12 +4419,11 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexPitchUp, IndexVoiceDown);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, playPreviewAudio](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    m_activeProfile.voicePitch = std::max(-2, m_activeProfile.voicePitch - 1);
-
+                    m_activeProfile.voicePitch = std::max(-MaxVoicePitch, m_activeProfile.voicePitch - 1);
                     playPreviewAudio();
                 }
             });
@@ -4411,12 +4436,11 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexPitchDown, IndexVoiceUp);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, playPreviewAudio](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    m_activeProfile.voicePitch = std::min(2, m_activeProfile.voicePitch + 1);
-
+                    m_activeProfile.voicePitch = std::min(MaxVoicePitch, std::int8_t(m_activeProfile.voicePitch + 1));
                     playPreviewAudio();
                 }
             });
@@ -4429,7 +4453,7 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     buttonEnt.getComponent<cro::UIInput>().setPrevIndex(IndexVoiceDown, IndexPitchDown);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, playPreviewAudio](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {

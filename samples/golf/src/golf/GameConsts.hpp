@@ -138,6 +138,9 @@ static constexpr float PlayerShadowOffset = 0.04f;
 static constexpr float PlayerFootOffset = 0.65f; //distance to AV feet from ball
 static constexpr glm::vec3 PlayerFootPos = glm::vec3(-PlayerFootOffset, 0.f, 0.f);
 
+static constexpr std::int8_t MaxVoicePitch = 2;
+static constexpr float VoicePitchDivisor = 20.f;
+
 static constexpr float MinPixelScale = 1.f;
 static constexpr float MaxPixelScale = 3.f;
 
