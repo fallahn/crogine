@@ -3046,7 +3046,15 @@ void GolfState::updateFlagTexture(bool reloadTexture)
     if (!m_flagTexture.available())
     {
         LogI << "Flag Texture is unavailable for custom flags" << std::endl;
-        return;
+        if (cro::FileSystem::fileExists(m_sharedData.flagPath))
+        {
+            m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
+        }
+        else
+        {
+            LogI << m_sharedData.flagPath << ": file not found." << std::endl;
+            return;
+        }
     }
 
     if (reloadTexture)

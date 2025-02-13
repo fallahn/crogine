@@ -79,6 +79,23 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
                 if (propName == "path")
                 {
                     mediaPath = prop.getValue<std::string>();
+
+                    if (!FileSystem::fileExists(FileSystem::getResourcePath() + mediaPath))
+                    {
+                        //try relative path
+                        const auto relPath = FileSystem::getFilePath(path) + mediaPath;
+                        //hmm usually this is because it's in a user dir and not the resource path
+                        //but... sometimes it might be, so it won't work on macOS. (another reason to ditch it)
+                        if (FileSystem::fileExists(/*FileSystem::getResourcePath() +*/ relPath)) 
+                        {
+                            mediaPath = relPath;
+                        }
+                        else
+                        {
+                            //prevent trying to load
+                            mediaPath.clear();
+                        }
+                    }
                 }
                 else if (propName == "streaming")
                 {
@@ -110,7 +127,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
                 }
             }
 
-            if (!mediaPath.empty() && cro::FileSystem::fileExists(FileSystem::getResourcePath() + mediaPath))
+            if (!mediaPath.empty())
             {
                 if (!streaming)
                 {
@@ -135,6 +152,8 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
             {
                 LogW << obj.getId() << " found no valid media file " << mediaPath << " in " << cro::FileSystem::getFileName(path) << std::endl;
             }
+            
+            m_name = cfg.getId();
         }
 
         if (m_configs.empty())
@@ -142,7 +161,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
             LogW << "No valid AudioScape definitions were loaded from " << path << std::endl;
             return false;
         }
-        m_name = cro::FileSystem::getFileName(path);
+        //m_name = cro::FileSystem::getFileName(path);
         return true;
     }
 

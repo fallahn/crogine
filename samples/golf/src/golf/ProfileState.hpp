@@ -128,6 +128,7 @@ private:
             ClubBrowser,
             HairEditor, HairHelp, 
             HairPreview, HairColourPreview,
+            SpeechEditor,
 
             Count
         };
@@ -242,9 +243,13 @@ private:
     void updateGizmo();
     void updateHeadwearTransform();
 
+    std::vector<cro::AudioScape> m_voices;
+    std::size_t m_voiceIndex;
+
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
     void createHairEditor(cro::Entity, const CallbackContext&);
+    void createSpeechEditor(cro::Entity, const CallbackContext&);
     void createClubBrowser(cro::Entity, const CallbackContext&);
     cro::FloatRect getHeadwearTextureRect(std::size_t);
     std::size_t fetchUIIndexFromColour(std::uint8_t colourIndex, std::int32_t paletteIndex);
