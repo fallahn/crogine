@@ -1521,6 +1521,9 @@ void ProfileState::buildScene()
                     //randomise avatar
                     setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
 
+                    m_activeProfile.voiceID = m_avatarModels[m_avatarIndex].audioUID;
+                    m_activeProfile.voicePitch = 0;
+
                     //randomise colours
                     for (auto i = 0; i < PaletteID::BallThumb; ++i)
                     {

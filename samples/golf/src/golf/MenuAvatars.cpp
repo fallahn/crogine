@@ -976,13 +976,21 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     }
 
                     profile.flipped = cro::Util::Random::value(0, 1) == 0 ? false : true;
-                    profile.saveProfile();
                     m_profileData.activeProfileIndex = m_profileData.playerProfiles.size() - 1;
 
                     //create profile texture
                     auto avtIdx = indexFromAvatarID(profile.skinID);
                     m_profileTextures.emplace_back(m_sharedData.avatarInfo[avtIdx].texturePath);
                     updateProfileTextures(m_profileTextures.size() - 1, 1);
+
+                    //set the AV audio as the default voice
+                    cro::AudioScape as;
+                    if (as.loadFromFile(m_sharedData.avatarInfo[avtIdx].audioscape, m_resources.audio))
+                    {
+                        profile.voiceID = as.getUID();
+                    }
+                    profile.saveProfile();
+
 
                     //set selected roster slot to this profile and refresh view
                     m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = m_profileData.activeProfileIndex;
