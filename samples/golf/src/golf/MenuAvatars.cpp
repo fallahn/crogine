@@ -1878,20 +1878,23 @@ void MenuState::setProfileIndex(std::size_t i, bool playSound)
 
     updateRoster();
 
-    if (playSound)
-    {
-        auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
-        auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
-        if (soundSize != 0)
-        {
-            auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
-            m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
-        }
-        else
-        {
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-        }
-    }
+    //TODO this needs to play the sound assigned to the profile, not the avatar
+    //which is a substantial refactor...
+    
+    //if (playSound)
+    //{
+    //    auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
+    //    auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
+    //    if (soundSize != 0)
+    //    {
+    //        auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+    //        m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+    //    }
+    //    else
+    //    {
+    //        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+    //    }
+    //}
 }
 
 void MenuState::refreshProfileFlyout()

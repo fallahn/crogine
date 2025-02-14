@@ -301,6 +301,8 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             //LogI << "Wrote previous season to " << PrevFileName << std::endl;
         }
 
+        //TODO we could just copy this data - but I guess reading the file also verfies it
+        readPreviousPlayers(); //this needs to be up to date so displaying the final scores is correct
 
         //evaluate all players and adjust skills
 

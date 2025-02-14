@@ -2924,7 +2924,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
         };
     }
 
-    //loading the db can be choppy so spin this off in a thread
     if (m_courseIndex != -1)
     {
         switch (m_sharedData.scoreType)
@@ -2937,6 +2936,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         case ScoreType::StablefordPro:
         case ScoreType::ShortRound:
         {
+            LogI << "Fetching final score for league " << m_sharedData.leagueRoundID << std::endl;
             const auto& league = Career::instance(m_sharedData).getLeagueTables()[std::max(0, m_sharedData.leagueRoundID - LeagueRoundID::RoundOne)];
             const auto pos = league.getCurrentPosition();
             const auto lastSeason = league.getCurrentSeason();
