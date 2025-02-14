@@ -208,6 +208,7 @@ private:
         glm::vec3 closeButtonPosition = glm::vec3({ 468.f, 331.f, 0.1f });
         cro::SpriteSheet spriteSheet;
         std::function<cro::Entity(std::int32_t)> createArrow;
+        std::function<void()> onOpen;
         std::function<void()> onClose;
     };
 

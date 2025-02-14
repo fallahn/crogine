@@ -2343,6 +2343,7 @@ void ProfileState::buildScene()
 
     ctx2.closeButtonPosition = { 161.f, 69.f, 0.1f };
     ctx2.spriteSheet.loadFromFile("assets/golf/sprites/tourn_stats.spt", m_resources.textures);
+    ctx2.onOpen = [&]() { playPreviewAudio(); };
     createSpeechEditor(rootNode, ctx2);
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
@@ -4730,6 +4731,11 @@ std::pair<cro::Entity, cro::Entity> ProfileState::createBrowserBackground(std::i
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(menuID);
                     dir = 1;
                     e.getComponent<cro::Callback>().active = false;
+
+                    if (ctx.onOpen)
+                    {
+                        ctx.onOpen();
+                    }
                 }
             }
             else
