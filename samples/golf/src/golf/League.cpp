@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -460,6 +460,38 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
     return m_previousResults;
 }
 
+void League::readPreviousPlayers() const
+{
+    //this reads the previous results into another player table
+    //so we can display them before showing the new season
+
+    const auto path = getFilePath(PrevFileName);
+    if (cro::FileSystem::fileExists(path))
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
+            if (size % sizeof(PreviousEntry) == 0)
+            {
+                auto count = size / sizeof(PreviousEntry);
+                std::vector<PreviousEntry> buff(count);
+
+                SDL_RWseek(file.file, 0, RW_SEEK_SET);
+                SDL_RWread(file.file, buff.data(), sizeof(PreviousEntry), count);
+
+                //this assumes everything was sorted correctly when it was saved
+                for (auto& entry : buff)
+                {
+                    entry.nameIndex = std::clamp(entry.nameIndex, -1, static_cast<std::int32_t>(PlayerCount) - 1);
+                    m_previousSortedTable.emplace_back(entry);
+                }
+            }
+        }
+    }
+}
+
 //private
 void League::rollPlayers(bool resetScores)
 {
@@ -860,38 +892,6 @@ void League::read()
     }
 
     readPreviousPlayers();
-}
-
-void League::readPreviousPlayers()
-{
-    //this reads the previous results into another player table
-    //so we can display them before showing the new season
-
-    const auto path = getFilePath(PrevFileName);
-    if (cro::FileSystem::fileExists(path))
-    {
-        cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "rb");
-        if (file.file)
-        {
-            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
-            if (size % sizeof(PreviousEntry) == 0)
-            {
-                auto count = size / sizeof(PreviousEntry);
-                std::vector<PreviousEntry> buff(count);
-
-                SDL_RWseek(file.file, 0, RW_SEEK_SET);
-                SDL_RWread(file.file, buff.data(), sizeof(PreviousEntry), count);
-
-                //this assumes everything was sorted correctly when it was saved
-                for (auto& entry : buff)
-                {
-                    entry.nameIndex = std::clamp(entry.nameIndex, -1, static_cast<std::int32_t>(PlayerCount) - 1);
-                    m_previousSortedTable.emplace_back(entry);
-                }
-            }
-        }
-    }
 }
 
 void League::write()

@@ -2936,8 +2936,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         case ScoreType::StablefordPro:
         case ScoreType::ShortRound:
         {
-            LogI << "Fetching final score for league " << m_sharedData.leagueRoundID << std::endl;
-            const auto& league = Career::instance(m_sharedData).getLeagueTables()[std::max(0, m_sharedData.leagueRoundID - LeagueRoundID::RoundOne)];
+            auto& league = Career::instance(m_sharedData).getLeagueTables()[std::max(0, m_sharedData.leagueRoundID - LeagueRoundID::RoundOne)];
             const auto pos = league.getCurrentPosition();
             const auto lastSeason = league.getCurrentSeason();
 
@@ -2977,6 +2976,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 else
                 {
                     //we need this to update the previous position value
+                    league.readPreviousPlayers();
                     league.getPreviousResults(Social::getPlayerName());
                     const auto finalPos = league.getPreviousPosition();
                     auto posStr = std::to_string(finalPos);

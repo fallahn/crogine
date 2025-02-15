@@ -152,6 +152,7 @@ public:
     //returns the name index of our nemesis, if we have one
     std::int32_t getNemesis() const { return m_nemesis; }
 
+    void readPreviousPlayers() const;
 private:
     const std::int32_t m_id;
     const std::int32_t m_maxIterations;
@@ -181,11 +182,10 @@ private:
     std::string getFilePath(const std::string& fileName) const;
 
     std::vector<TableEntry> m_sortedTable = {};
-    std::vector<TableEntry> m_previousSortedTable = {};
+    mutable std::vector<TableEntry> m_previousSortedTable = {};
     void createSortedTable();
 
     void read();
-    void readPreviousPlayers();
     void write();
     void assertDB();
     void updateDB();
