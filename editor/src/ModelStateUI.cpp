@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -2777,6 +2777,7 @@ void ModelState::drawImageCombiner()
                 auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
                 if (!path.empty())
                 {
+                    m_combinedImages[i].second = cro::Image(true);
                     if (m_combinedImages[i].second.loadFromFile(path))
                     {
                         m_combinedImages[i].first = cro::FileSystem::getFileName(path);
