@@ -2756,7 +2756,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //course title
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 134.f, 192.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 134.f, 190.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseTitle;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
@@ -2765,7 +2765,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //course description
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 134.f, 180.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 134.f, 178.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseDesc;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);

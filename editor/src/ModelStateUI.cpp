@@ -2869,7 +2869,7 @@ void ModelState::drawImageCombiner()
                             output.setPixel(x, y, outPixel);
                         }
                     }
-                    if (output.write(path))
+                    if (output.write(path, true))
                     {
                         cro::FileSystem::showMessageBox("Success", "Wrote image successfully");
                     }

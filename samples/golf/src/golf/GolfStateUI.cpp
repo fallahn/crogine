@@ -5453,13 +5453,13 @@ void GolfState::createTransition()
                                 {
                                 default:
                                 case 0:
-                                    s += "all 18 holes.";
+                                    s += "all " + std::to_string(m_holeData.size()) + " holes.";
                                     break;
                                 case 1:
-                                    s += "the front 9.";
+                                    s += "the front " + std::to_string(m_holeData.size()) + ".";
                                     break;
                                 case 2:
-                                    s += "the back 9.";
+                                    s += "the back " + std::to_string(m_holeData.size()) + ".";
                                     break;
                                 }
                                 m_textChat.printToScreen(s, TextGoldColour);

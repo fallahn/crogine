@@ -220,7 +220,7 @@ void image_writer_func(void* context, void* data, int size)
     SDL_RWwrite(file, data, size, 1);
 }
 
-bool Image::write(const std::string& path)
+bool Image::write(const std::string& path, bool flipOnWrite)
 {
     if (cro::FileSystem::getFileExtension(path) != ".png")
     {
@@ -248,7 +248,7 @@ bool Image::write(const std::string& path)
         return false;
     }
 
-    stbi_flip_vertically_on_write(m_flipped ? 1 : 0);
+    stbi_flip_vertically_on_write((m_flipped || flipOnWrite) ? 1 : 0);
 
     RaiiRWops out;
     out.file = SDL_RWFromFile(path.c_str(), "wb");

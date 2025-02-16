@@ -548,7 +548,8 @@
       <AdditionalDependencies>sapi.lib;libgns.lib;crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;BulletDynamics.lib;LinearMath.lib;steam_api64.lib;golf_ach.lib;workshop-gns.lib;sqlite3.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>"$(ProjectDir)src/version/buildnumber.exe"</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGNS-Asan|x64'">

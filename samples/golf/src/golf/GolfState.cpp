@@ -3109,6 +3109,29 @@ void GolfState::buildScene()
         m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
         updateFlagTexture(true);
     }
+    else
+    {
+        //for some reason the deck doesn't find the image file here
+        //but will if you open/close the options menu... so let's retry with a delay
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(8.f);
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                ct -= dt;
+                if (ct < 0)
+                {
+                    LogI << "Retrying flag texture after 8 seconds" << std::endl;
+                    //m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
+                    updateFlagTexture(true);
+
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
+    }
 
     md.loadFromFile("assets/golf/models/beacon.cmt");
     entity = m_gameScene.createEntity();
