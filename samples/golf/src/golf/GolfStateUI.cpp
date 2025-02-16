@@ -3532,7 +3532,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         //hack to try and catch the weird par diff bug
                         //we *assume* - though it might not be true - s is OK as the
                         //score displays OK, so I'm currently suspecting the holedata par
-                        if (entry.parDiff < -18
+                        if (entry.parDiff < -50
                             || entry.parDiff > 20)
                         {
                             LogI << entry.parDiff << ", you should place a break point here: " << m_holeData[j].par << std::endl;
