@@ -452,6 +452,27 @@ void GolfState::registerDebugCommands()
             }
         });
 
+    registerCommand("cl_drawmesh", [&](const std::string& param)
+        {
+            if (param == "true" || param == "1")
+            {
+                /*
+                * 1 - Wireframe
+                * 1 << 13 Fast wireframe (doesn't work?)
+                * 1 << 14 normals
+                */
+                m_collisionMesh.setDebugFlags(1);
+            }
+            else if (param == "false" || param == "0")
+            {
+                m_collisionMesh.setDebugFlags(0);
+            }
+            else
+            {
+                cro::Console::print("Usage: cl_drawmesh <0|1>");
+            }
+        });
+
     registerCommand("sv_cheats", [&](const std::string&)
         {
             static std::int32_t count = 0;

@@ -2851,8 +2851,8 @@ void GolfState::render()
     glCheck(glDisable(GL_LINE_SMOOTH));
 #endif
 #ifdef CRO_DEBUG_
-    //m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
 #endif
+    m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
     m_renderTarget.display();
 
     cro::Entity nightCam;
@@ -6087,7 +6087,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
                 e.getComponent<cro::Transform>().move({ 0.f, diff, 0.f });
 
-                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.5f);
+                //e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.5f);
 
                 //and orientate to slope
                 /*auto r = glm::rotation(cro::Transform::Y_AXIS, result.normal);
