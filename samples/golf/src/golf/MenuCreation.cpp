@@ -3968,8 +3968,9 @@ void MenuState::updateRemoteContent(const ConnectionData& cd)
                 Social::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Social::UserContent::Avatar);
             }
 
-            //we don't have a list of installed clubs here, so just ask for them anyway
+            //we don't have a list of installed clubs or voices here, so just ask for them anyway
             Social::fetchRemoteContent(cd.peerID, cd.playerData[i].clubID, Social::UserContent::Clubs);
+            Social::fetchRemoteContent(cd.peerID, cd.playerData[i].voiceID, Social::UserContent::Voice);
         }
     }
 #endif

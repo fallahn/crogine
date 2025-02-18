@@ -1380,7 +1380,11 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         processClubPath(ClubUserPath, true);*/
 
         //ACTUALLY - as long as this installed correctly then GolfStateAssets should just find and parse the data as needed
-
+        LogI << "Installed remote club set" << std::endl;
+    }
+    else if (type == Social::UserContent::Voice)
+    {
+        LogI << "Installed remote player voice" << std::endl;
     }
     else
     {
