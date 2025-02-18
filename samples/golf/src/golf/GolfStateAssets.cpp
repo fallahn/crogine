@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
 Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
@@ -76,10 +76,36 @@ namespace
 #include "shaders/Blur.inl"
 #include "shaders/LensFlare.inl"
 #include "shaders/EmissiveShader.inl"
+
+    //NOTE Banner A should be rotated 180 degrees
+    constexpr cro::FloatRect PlaneBannerA = { 12.f, 86.f, 484.f, 66.f };
+    constexpr cro::FloatRect PlaneBannerB = { 12.f, 6.f, 484.f, 66.f };
+    constexpr std::uint32_t BannerTextSize = 16;
+    //colour is normal colour with dark shadow
+    const std::array BannerStrings =
+    {
+        cro::String("If you can read this you're\nflying too close"),
+        cro::String("Buy Pentworth's\nMysterious Lube"),
+        cro::String("Will You Marry Me?"),
+        cro::String("Cats are better than Dogs"),
+        cro::String("I can see my house from here"),
+        cro::String("<insert text here>"),
+        cro::String("Harding's Balls"),
+        cro::String("Claire: Have you seen my keys?\nThey're not where I left them"),
+        cro::String("To truly find yourself you must\nplay hide and seek alone."),
+        cro::String("There is no angry way to say:\nBUBBLES"),
+        cro::String("404")
+    };
+
+    //make this static so throughout the duration of the game we
+    //cycle without repetition (until we reach the end)
+    static std::int32_t BannerIndex = cro::Util::Random::value(0, static_cast<std::int32_t>(BannerStrings.size()) - 1);
 }
 
 void GolfState::loadAssets()
 {
+    BannerIndex = (BannerIndex + 1) % BannerStrings.size();
+
     std::string skyboxPath = "assets/golf/images/skybox/billiards/trophy.ccm";
     //std::string skyboxPath = "assets/golf/courses/course_10/cmap/01/d/1/cmap.ccm";
 
@@ -2805,7 +2831,40 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
 
                     auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                     applyMaterialData(md, material);
+
+                    //TODO we should be reading the texture size from the model...
+                    const auto* m = md.getMaterial(0);
+                    if (m->properties.count("u_diffuseMap"))
+                    {
+                        static constexpr std::uint32_t TexSize = 512;
+                        m_planeTexture.create(TexSize, TexSize, false);
+
+                        const auto tex = cro::TextureID(m->properties.at("u_diffuseMap").second.textureID);
+                        cro::SimpleQuad q;
+                        q.setTexture(tex, { TexSize,TexSize });
+
+                        cro::SimpleText t(m_sharedData.sharedResources->fonts.get(FontID::UI));
+                        t.setCharacterSize(BannerTextSize);
+                        t.setFillColour(TextNormalColour);
+                        t.setShadowColour(LeaderboardTextDark);
+                        t.setShadowOffset({ 2.f, -2.f });
+                        t.setString(BannerStrings[BannerIndex]);
+                        t.setAlignment(cro::SimpleText::Alignment::Centre);
+
+                        t.setPosition(glm::vec2(PlaneBannerB.left + (PlaneBannerB.width / 2.f), PlaneBannerB.bottom + (PlaneBannerB.height / 2.f)));
+
+                        m_planeTexture.clear(cro::Colour::Transparent);
+                        q.draw();
+                        t.draw();
+                        t.rotate(180.f);
+                        t.move(glm::vec2(0.f, PlaneBannerA.bottom - PlaneBannerB.bottom));
+                        t.draw();
+                        m_planeTexture.display();
+
+                        material.setProperty("u_diffuseMap", m_planeTexture.getTexture());
+                    }
                     entity.getComponent<cro::Model>().setMaterial(0, material);
+
 
                     //engine
                     entity.addComponent<cro::AudioEmitter>(); //always needs one in case audio doesn't exist

@@ -344,6 +344,8 @@ private:
     std::vector<cro::Entity> m_spectatorModels;
     std::vector<std::uint64_t> m_modelStats;
 
+    cro::RenderTexture m_planeTexture;
+
     /*GolfStateAssets.cpp*/
     void loadAssets();
     void loadMaterials();
