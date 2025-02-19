@@ -84,8 +84,8 @@ namespace
     //colour is normal colour with dark shadow
     const std::array BannerStrings =
     {
-        cro::String("If you can read this you're\nflying too close"),
-        cro::String("Buy Pentworth's\nMysterious Lube"),
+        cro::String("If you can read this\nyou're flying too close"),
+        cro::String("Buy Pentworth's\nIndispensible Lube"),
         cro::String("Will You Marry Me?"),
         cro::String("Cats are better than Dogs"),
         cro::String("I can see my house from here"),

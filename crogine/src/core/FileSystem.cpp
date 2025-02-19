@@ -184,6 +184,10 @@ bool FileSystem::fileExists(const std::string& path)
         std::error_code ec;
         if (!std::filesystem::exists(u8p, ec))
         {
+            if (ec)
+            {
+                LogI << ec.message() << std::endl;
+            }
             return false;
         }
         return true;

@@ -3276,8 +3276,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
 
 
-
-
     //confirmation background
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -3633,7 +3631,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             lobbyQuit.getComponent<cro::UIInput>().setNextIndex(LobbyStart, LobbyStart);
             lobbyQuit.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyRulesA);
 
-            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, LobbyQuit);
+            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, LobbyOptions);
             lobbyStart.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyInfoB);
             break;
         case LobbyRulesA:
@@ -3641,7 +3639,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             lobbyQuit.getComponent<cro::UIInput>().setNextIndex(LobbyStart, m_sharedData.hosting ? RulesPrevious : LobbyStart);
             lobbyQuit.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyCourseA);
 
-            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_sharedData.hosting ? RulesNext : LobbyQuit);
+            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_sharedData.hosting ? RulesNext : LobbyOptions);
             lobbyStart.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyInfoA);
             break;
         case LobbyInfoA:
@@ -3649,7 +3647,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             lobbyQuit.getComponent<cro::UIInput>().setNextIndex(LobbyStart, LobbyStart);
             lobbyQuit.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyCourseB);
 
-            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_lobbyButtonContext.hasScoreCard ? InfoScorecard : LobbyQuit);
+            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_lobbyButtonContext.hasScoreCard ? InfoScorecard : LobbyOptions);
             lobbyStart.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyRulesB);
             break;
         }
@@ -3914,7 +3912,7 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
 
             auto ent = m_uiScene.createEntity();
             ent.addComponent<cro::Callback>().active = true;
-            ent.getComponent<cro::Callback>().setUserData<float>(static_cast<float>(i) * 2.f);
+            ent.getComponent<cro::Callback>().setUserData<float>((static_cast<float>(i)/* * 2.f*/) + (cd.connectionID * ConstVal::MaxPlayers));
             ent.getComponent<cro::Callback>().function =
                 [&, s](cro::Entity e, float dt)
                 {

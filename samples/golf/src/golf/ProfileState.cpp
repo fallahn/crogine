@@ -3372,11 +3372,26 @@ void ProfileState::playPreviewAudio()
     //for when you come back to fix using a static var.
     static std::size_t playCount = 0;
 
+    static std::size_t emitterIndex = 0;
+    static const std::array<std::string,8> EmitterNames =
+    {
+        std::string("celebrate"),
+        "slice",
+        "hook",
+        "green",
+        "bunker",
+        "fairway",
+        "scrub",
+        "water"
+    };
+
     if (playCount < 4)
     {
+        emitterIndex = (emitterIndex + 1) % EmitterNames.size();
+
         auto e = m_uiScene.createEntity();
         e.addComponent<cro::Transform>();
-        e.addComponent<cro::AudioEmitter>() = m_voices[m_voiceIndex].getEmitter("celebrate");
+        e.addComponent<cro::AudioEmitter>() = m_voices[m_voiceIndex].getEmitter(EmitterNames[emitterIndex]);
         e.getComponent<cro::AudioEmitter>().setPitch(1.f + (static_cast<float>(m_activeProfile.voicePitch) / VoicePitchDivisor));
         e.getComponent<cro::AudioEmitter>().play();
         e.addComponent<cro::Callback>().active = true;

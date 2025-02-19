@@ -3104,7 +3104,7 @@ void GolfState::buildScene()
 
     auto flagEntity = entity;
 
-    if (cro::FileSystem::fileExists(m_sharedData.flagPath))
+    if (/*cro::FileSystem::fileExists*/(!m_sharedData.flagPath.empty()))
     {
         m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
         updateFlagTexture(true);

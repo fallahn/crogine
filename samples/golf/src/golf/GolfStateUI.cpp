@@ -5002,6 +5002,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             msg->travelDistance = glm::length2(playerDir);
             msg->club = getClub();
             
+            if (msg->club == ClubID::Putter
+                && m_currentPlayer.terrain != TerrainID::Green)
+            {
+                //we scored from the fringe - so fudge the distance
+                //causing the sound director to do a nice putt callout
+                msg->travelDistance = 7.f * 7.f;
+            }
+
             const float t = playerDir.x;
             playerDir.x = -playerDir.z;
             playerDir.z = t;
