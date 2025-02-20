@@ -30,6 +30,7 @@ source distribution.
 #include "../PacketIDs.hpp"
 #include "../CommonConsts.hpp"
 #include "../CoinSystem.hpp"
+#include "../Networking.hpp"
 #include "ServerLobbyState.hpp"
 #include "ServerPacketData.hpp"
 
@@ -196,7 +197,7 @@ void LobbyState::spawnCan()
     spawnInfo.serverID = entity.getIndex();
     spawnInfo.position = entity.getComponent<cro::Transform>().getPosition();
     spawnInfo.lie = ConstVal::NullValue; //use this to ignore packets in game mode
-    m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, spawnInfo, cro::NetFlag::Reliable);
+    m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, spawnInfo, net::NetFlag::Reliable);
 }
 
 void LobbyState::spawnCoin(float power, std::uint8_t client)

@@ -375,7 +375,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     {
         if (m_layoutEnt.getComponent<cro::SpriteAnimation>().id != LayoutID::Keyboard)
         {
-            std::size_t i = Social::isSteamdeck() ? LayoutID::Deck
+            std::size_t i = Social::isSteamdeck(false) ? LayoutID::Deck
                 : cro::GameController::getControllerCount() == 0 ? LayoutID::XBox :
                 hasPSLayout(controllerID) ? LayoutID::PS : LayoutID::XBox;
             m_layoutEnt.getComponent<cro::SpriteAnimation>().play(i);
@@ -2621,7 +2621,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //vsync checkbox
     entity = createHighlight(glm::vec2(81.f, 96.f));
-    if (Social::isSteamdeck())
+    if (Social::isSteamdeck(false))
     {
         entity.setLabel("Requires Disable Frame Limit set on Steam Deck.\nHigher frame rates may reduce battery life.");
     }
@@ -3451,7 +3451,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     infoEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, -74.f, TextOffset });
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(infoFont).setAlignment(cro::Text::Alignment::Centre);
-    if (!Social::isSteamdeck()) //layout ent hasn't been assigned yet...
+    if (!Social::isSteamdeck(false)) //layout ent hasn't been assigned yet...
     {
         infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
     }
@@ -3539,7 +3539,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     m_layoutEnt = layoutEnt;
 
 
-    if (!Social::isSteamdeck())
+    if (!Social::isSteamdeck(false))
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition({ 45.f, -8.f, 0.1f });
@@ -3705,7 +3705,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                     auto controllerIndex = evt.type == SDL_CONTROLLERBUTTONDOWN ?
                         cro::GameController::controllerID(evt.cbutton.which) : 0;
 
-                    std::size_t i = Social::isSteamdeck() ? LayoutID::Deck
+                    std::size_t i = Social::isSteamdeck(false) ? LayoutID::Deck
                         : cro::GameController::getControllerCount() == 0 ? LayoutID::XBox :
                         hasPSLayout(controllerIndex) ? LayoutID::PS : LayoutID::XBox;
                     m_layoutEnt.getComponent<cro::SpriteAnimation>().play(i);
@@ -3752,7 +3752,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
 
     //default to controller layout on deck
-    if (Social::isSteamdeck())
+    if (Social::isSteamdeck(false))
     {
         for (auto e : bindingEnts)
         {
@@ -4257,7 +4257,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt](cro::Entity e) mutable
         {
-            if (!Social::isSteamdeck())
+            if (!Social::isSteamdeck(false))
             {
                 infoEnt.getComponent<cro::Text>().setString("Reset All Keybinds To Their Default Values");
             }

@@ -414,7 +414,7 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
     deck is docked or using an external controller which may be hot-seat
     else the deck's internal controller overrides the input for the current player...
     */
-    if (Social::isSteamdeck() && cro::GameController::getControllerCount() > 1)
+    if (Social::isSteamdeck(false) && cro::GameController::getControllerCount() > 1)
     {
         return cro::GameController::getLastControllerID();
     }
