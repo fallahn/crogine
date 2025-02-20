@@ -548,8 +548,8 @@ void GolfState::netBroadcast()
             if (ball == group.playerInfo[0].ballEntity/* ||
                 ball.getComponent<Ball>().state != Ball::State::Idle*/)
             {
-                auto timestamp = m_serverTime.elapsed().asMilliseconds();
-                const auto ballC = ball.getComponent<Ball>();
+                const auto timestamp = m_serverTime.elapsed().asMilliseconds();
+                const auto& ballC = ball.getComponent<Ball>();
 
                 ActorInfo info;
                 info.serverID = static_cast<std::uint32_t>(ball.getIndex());

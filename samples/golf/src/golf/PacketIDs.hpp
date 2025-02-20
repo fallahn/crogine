@@ -269,6 +269,7 @@ namespace ServerCommand
         KickClient,
         PokeClient,
         ForfeitClient,
+        SpawnCan,
 
         //billiards
         SpawnBall,

@@ -621,6 +621,7 @@
     <ClCompile Include="src\golf\ClubhouseStateUI.cpp" />
     <ClCompile Include="src\golf\ClubModels.cpp" />
     <ClCompile Include="src\golf\Clubs.cpp" />
+    <ClCompile Include="src\golf\CoinSystem.cpp" />
     <ClCompile Include="src\golf\CollisionMesh.cpp" />
     <ClCompile Include="src\golf\CPUGolfer.cpp" />
     <ClCompile Include="src\golf\CreditsState.cpp" />
@@ -660,6 +661,7 @@
     <ClCompile Include="src\golf\MenuCustomisation.cpp" />
     <ClCompile Include="src\golf\MenuSoundDirector.cpp" />
     <ClCompile Include="src\golf\MenuState.cpp" />
+    <ClCompile Include="src\golf\MenuStateCan.cpp" />
     <ClCompile Include="src\golf\MessageOverlayState.cpp" />
     <ClCompile Include="src\golf\MiniBallSystem.cpp" />
     <ClCompile Include="src\golf\NameScrollSystem.cpp" />
@@ -686,6 +688,7 @@
     <ClCompile Include="src\golf\server\ServerBilliardsState.cpp" />
     <ClCompile Include="src\golf\server\ServerGolfRules.cpp" />
     <ClCompile Include="src\golf\server\ServerGolfState.cpp" />
+    <ClCompile Include="src\golf\server\ServerLobbyGame.cpp" />
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
     <ClCompile Include="src\golf\server\ServerVoice.cpp" />
     <ClCompile Include="src\golf\server\SnookerDirector.cpp" />
@@ -807,6 +810,7 @@
     <ClInclude Include="src\golf\ClubModels.hpp" />
     <ClInclude Include="src\golf\ClubModifiers.hpp" />
     <ClInclude Include="src\golf\Clubs.hpp" />
+    <ClInclude Include="src\golf\CoinSystem.hpp" />
     <ClInclude Include="src\golf\CollisionMesh.hpp" />
     <ClInclude Include="src\golf\CommandIDs.hpp" />
     <ClInclude Include="src\golf\CommonConsts.hpp" />

@@ -132,7 +132,7 @@ namespace sv
         //handle incoming network events
         virtual void netEvent(const net::NetEvent&) = 0;
         //broadcast network updates at 20Hz
-        virtual void netBroadcast() {};
+        virtual void netBroadcast() = 0;
         //update scene logic at 62.5Hz (16ms)
         virtual std::int32_t process(float) = 0;
 

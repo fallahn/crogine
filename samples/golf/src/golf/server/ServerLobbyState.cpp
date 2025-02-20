@@ -65,7 +65,9 @@ PlayerInfo& PlayerInfo::operator=(const PlayerData& pd)
 
 LobbyState::LobbyState(SharedData& sd)
     : m_returnValue (StateID::Lobby),
-    m_sharedData    (sd)
+    m_sharedData    (sd),
+    m_gameScene     (m_sharedData.messageBus, 240),
+    m_gameStarted   (true) //TODO default to false
 {
     LOG("Entered Server Lobby State", cro::Logger::Type::Info);
 
@@ -80,6 +82,10 @@ LobbyState::LobbyState(SharedData& sd)
 
     //make sure to reset this in case the players have changed
     std::fill(sd.clubLevels.begin(), sd.clubLevels.end(), 2);
+
+
+    //setup the lobby can scene
+    buildScene();
 }
 
 void LobbyState::handleMessage(const cro::Message& msg)
@@ -92,6 +98,8 @@ void LobbyState::handleMessage(const cro::Message& msg)
             m_readyState[data.clientID] = false;
         }
     }
+
+    m_gameScene.forwardMessage(msg);
 }
 
 void LobbyState::netEvent(const net::NetEvent& evt)
@@ -263,6 +271,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
 
 std::int32_t LobbyState::process(float dt)
 {
+    m_gameScene.simulate(dt);
     return m_returnValue;
 }
 
@@ -371,6 +380,10 @@ void LobbyState::doServerCommand(const net::NetEvent& evt)
                 msg->type = ConnectionEvent::Kicked;
                 msg->clientID = target;
             }
+            break;
+        case ServerCommand::SpawnCan:
+            //used to debug can game
+            spawnCan();
             break;
         }
     }

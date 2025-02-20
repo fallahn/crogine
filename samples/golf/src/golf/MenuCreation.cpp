@@ -2975,7 +2975,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
     auto bannerEnt = entity;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
-
+    m_bannerEnt = entity; //stash this to attach minigame
 
 
     //cursor

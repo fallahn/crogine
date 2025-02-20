@@ -47,9 +47,11 @@ source distribution.
 #include "RopeSystem.hpp"
 #include "LightmapProjectionSystem.hpp"
 #include "FireworksSystem.hpp"
+#include "InterpolationSystem.hpp"
 #include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
 #include "../WebsocketServer.hpp"
+#include "server/ServerPacketData.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -945,12 +947,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        /*case SDLK_PAGEUP:
+        case SDLK_PAGEUP:
         {
-            m_sharedData.useOSKBuffer = true;
-            requestStackPush(StateID::Keyboard);
+            /*m_sharedData.useOSKBuffer = true;
+            requestStackPush(StateID::Keyboard);*/
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SpawnCan), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
-            break;*/
+            break;
 #ifdef CRO_DEBUG_
 #ifdef USE_GNS
         case SDLK_PAGEUP:
@@ -1693,6 +1696,7 @@ void MenuState::addSystems()
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb);
     m_uiScene.addSystem<NameScrollSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
@@ -3308,6 +3312,16 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ActorSpawn:
+        {
+            spawnActor(evt.packet.as<ActorInfo>());
+        }
+            break;
+        case PacketID::ActorUpdate:
+        {
+            updateActor(evt.packet.as<ActorInfo>());
+        }
+            break;
         case PacketID::Poke:
             m_audioEnts[AudioID::Poke].getComponent<cro::AudioEmitter>().play();
             break;

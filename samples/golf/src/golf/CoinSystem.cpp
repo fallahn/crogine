@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2025
+Matt Marchant 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -27,46 +27,24 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "CoinSystem.hpp"
 
-#include "ServerState.hpp"
+#include <crogine/ecs/components/Transform.hpp>
 
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/core/Clock.hpp>
-
-#include <array>
-
-namespace sv
+CoinSystem::CoinSystem(cro::MessageBus& mb)
+    : cro::System(mb, typeid(CoinSystem))
 {
-    class LobbyState final : public State
+    requireComponent<cro::Transform>();
+    requireComponent<Coin>();
+}
+
+//public
+void CoinSystem::handleMessage(const cro::Message&) {}
+
+void CoinSystem::process(float dt)
+{
+    if (m_bucketEnt.isValid())
     {
-    public:
-        explicit LobbyState(SharedData&);
 
-        void handleMessage(const cro::Message&) override;
-        void netEvent(const net::NetEvent&) override;
-        std::int32_t process(float) override;
-
-        std::int32_t stateID() const override { return StateID::Lobby; }
-
-        void netBroadcast() override;
-
-    private:
-        std::int32_t m_returnValue;
-        SharedData& m_sharedData;
-
-        cro::Scene m_gameScene;
-
-        std::array<bool, ConstVal::MaxClients> m_readyState = {};
-
-        void insertPlayerInfo(const net::NetEvent&);
-        void broadcastRules();
-        void doServerCommand(const net::NetEvent&);
-
-        bool m_gameStarted;
-        cro::Clock m_serverTime;
-        void buildScene();
-        void spawnCan();
-        void spawnCoin(float, std::uint8_t);
-    };
+    }
 }

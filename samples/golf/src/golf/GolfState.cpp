@@ -3958,6 +3958,12 @@ void GolfState::createDrone()
 
 void GolfState::spawnBall(const ActorInfo& info)
 {
+    if (info.lie == ConstVal::NullValue)
+    {
+        //this is a rogue packet from the lobby game
+        return;
+    }
+
     auto ballID = m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballID;
     auto ballUserColour = m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballColour;
 

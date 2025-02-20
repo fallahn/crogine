@@ -70,6 +70,7 @@ namespace cro
     class SpriteSheet;
 }
 
+struct ActorInfo;
 class MenuState;
 struct SharedProfileData;
 struct MainMenuContext final : public MenuContext
@@ -238,6 +239,10 @@ private:
         };
     };
     std::array<cro::Entity, LobbyEntityID::Count> m_lobbyWindowEntities = {};
+
+    cro::Entity m_bannerEnt;
+    void spawnActor(const ActorInfo&);
+    void updateActor(const ActorInfo&);
 
     LobbyPager m_lobbyPager;
 

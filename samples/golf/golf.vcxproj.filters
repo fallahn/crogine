@@ -639,6 +639,15 @@
     <ClCompile Include="src\WebsocketServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\server\ServerLobbyGame.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\MenuStateCan.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\CoinSystem.cpp">
+      <Filter>Source Files\golf\server\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1339,6 +1348,9 @@
     </ClInclude>
     <ClInclude Include="src\WebsocketServer.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CoinSystem.hpp">
+      <Filter>Header Files\golf\server\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
