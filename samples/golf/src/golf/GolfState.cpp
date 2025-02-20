@@ -3104,7 +3104,7 @@ void GolfState::buildScene()
 
     auto flagEntity = entity;
 
-    if (/*cro::FileSystem::fileExists*/(!m_sharedData.flagPath.empty()))
+    if (cro::FileSystem::fileExists(m_sharedData.flagPath))
     {
         m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
         updateFlagTexture(true);
@@ -3115,7 +3115,7 @@ void GolfState::buildScene()
         //but will if you open/close the options menu... so let's retry with a delay
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(8.f);
+        entity.getComponent<cro::Callback>().setUserData<float>(10.f);
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
             {
@@ -3123,12 +3123,20 @@ void GolfState::buildScene()
                 ct -= dt;
                 if (ct < 0)
                 {
-                    LogI << "Retrying flag texture after 8 seconds" << std::endl;
+                    LogI << "Retrying flag texture after 10 seconds" << std::endl;
                     //m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
                     updateFlagTexture(true);
 
-                    e.getComponent<cro::Callback>().active = false;
-                    m_uiScene.destroyEntity(e);
+                    if (!m_flagTexture.available())
+                    {
+                        //keep trying
+                        ct += 10.f;
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(e);
+                    }
                 }
             };
     }
@@ -4678,6 +4686,17 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 auto club = (data & 0xff00) >> 8;
                 togglePuttingView(club == ClubID::Putter);
+
+                if (club != ClubID::Putter)
+                {
+                    if (m_activeAvatar
+                        && m_activeAvatar->hands)
+                    {
+                        const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
+                        m_activeAvatar->hands->setModel(models.models[models.indices[club]]);
+                        m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
+                    }
+                }
             }
         }
             break;
