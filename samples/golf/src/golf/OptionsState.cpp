@@ -3484,6 +3484,19 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     m_controllerInfoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     //m_controllerInfoEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     m_controllerInfoEnt.addComponent<cro::Callback>().setUserData<const float>(parentBounds.width / 2.f);
+    m_controllerInfoEnt.getComponent<cro::Callback>().active = true;
+    m_controllerInfoEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            if (m_layoutEnt.getComponent<cro::SpriteAnimation>().id == LayoutID::Keyboard)
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+            else
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            }
+        };
     parent.getComponent<cro::Transform>().addChild(m_controllerInfoEnt.getComponent<cro::Transform>());
     refreshControllerList();
 
@@ -3752,7 +3765,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
 
     //default to controller layout on deck
-    if (Social::isSteamdeck(false))
+    if (Social::isSteamdeck())
     {
         for (auto e : bindingEnts)
         {
@@ -3761,7 +3774,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
             e.getComponent<cro::UIInput>().setGroup(MenuID::Dummy);
         }
 
-        m_layoutEnt.getComponent<cro::SpriteAnimation>().play(LayoutID::Deck);
+        m_layoutEnt.getComponent<cro::SpriteAnimation>().play(Social::isSteamdeck(false) ? LayoutID::Deck : LayoutID::XBox);
         selectionEnt.getComponent<cro::SpriteAnimation>().play(1);
 
         entity.getComponent<cro::Transform>().setPosition(glm::vec2(-1.f));
