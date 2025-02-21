@@ -59,21 +59,25 @@ void LobbyState::netBroadcast()
 
     const auto timestamp = m_serverTime.elapsed().asMilliseconds();
     
-    ActorInfo info; //TODO only send this while moving?
-    info.serverID = static_cast<std::uint32_t>(bucketEnt.getIndex());
-    info.position = bucketEnt.getComponent<cro::Transform>().getPosition();
-    info.timestamp = timestamp;
-    info.clientID = ConstVal::NullValue;
-    info.playerID = ConstVal::NullValue;
-    info.lie = ConstVal::NullValue;
-    info.groupID = ConstVal::NullValue;
-    m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
+    const auto sendData = [&](cro::Entity e)
+        {
+            ActorInfo info;
+            info.serverID = static_cast<std::uint32_t>(e.getIndex());
+            info.position = e.getComponent<cro::Transform>().getPosition();
+            info.timestamp = timestamp;
+            info.clientID = ConstVal::NullValue;
+            info.playerID = ConstVal::NullValue;
+            info.lie = ConstVal::NullValue;
+            info.groupID = ConstVal::NullValue;
+            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
+        };
+    sendData(bucketEnt);
 
     //broadcast coins
-    auto& entities = m_gameScene.getSystem<CoinSystem>()->getEntities();
+    const auto& entities = m_gameScene.getSystem<CoinSystem>()->getEntities();
     for (auto entity : entities)
     {
-
+        sendData(entity);
     }
 }
 
@@ -83,7 +87,7 @@ void LobbyState::buildScene()
     auto& mb = m_sharedData.messageBus;
 
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
-    m_gameScene.addSystem<CoinSystem>(mb);
+    m_gameScene.addSystem<CoinSystem>(mb, m_sharedData);
     
     //counts the connected clients and spawns bucket after
     //20 seconds if more than one client
@@ -200,10 +204,22 @@ void LobbyState::spawnCan()
     m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, spawnInfo, net::NetFlag::Reliable);
 }
 
-void LobbyState::spawnCoin(float power, std::uint8_t client)
+void LobbyState::spawnCoin(float power/*, std::uint8_t client*/)
 {
     if (m_gameStarted)
     {
         //TODO track coins per client and limit number of active
+
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<Coin>().velocity = glm::normalize(Coin::InitialVelocity) * power;
+
+        //send actor spawn packet
+        ActorInfo spawnInfo;
+        spawnInfo.playerID = 1; //we'll assume as we're in the lobby 0 is can, 1 is penny.
+        spawnInfo.serverID = entity.getIndex();
+        spawnInfo.position = entity.getComponent<cro::Transform>().getPosition();
+        spawnInfo.lie = ConstVal::NullValue; //use this to ignore packets in game mode
+        m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, spawnInfo, net::NetFlag::Reliable);
     }
 }

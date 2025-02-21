@@ -246,17 +246,12 @@ private:
 
     struct CanControl final
     {
-        const float Min = 1900.f;
-        const float Max = 3900.f;
+        const float Min = 750.f;
+        const float Max = 1100.f;
         bool active = false;
 
         std::size_t idx = 0;
         std::vector<float> waveTable;
-
-        //TODO these need to match with the phys on the server
-        //here they're just used to display the arc projection
-        const glm::vec2 InitialVelocity = glm::vec2(1.f);
-        const glm::vec2 Gravity = glm::vec2(0.f, -9.5f);
 
         CanControl()
         {

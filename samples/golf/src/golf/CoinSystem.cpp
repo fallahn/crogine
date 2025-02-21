@@ -28,11 +28,16 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "CoinSystem.hpp"
+#include "PacketIDs.hpp"
+#include "server/ServerState.hpp"
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
-CoinSystem::CoinSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(CoinSystem))
+CoinSystem::CoinSystem(cro::MessageBus& mb, sv::SharedData& sd)
+    : cro::System(mb, typeid(CoinSystem)),
+    m_sharedData(sd)
 {
     requireComponent<cro::Transform>();
     requireComponent<Coin>();
@@ -45,6 +50,24 @@ void CoinSystem::process(float dt)
 {
     if (m_bucketEnt.isValid())
     {
+        auto& entities = getEntities();
+        for (auto entity : entities)
+        {
+            auto& coin = entity.getComponent<Coin>();
+            auto& tx = entity.getComponent<cro::Transform>();
 
+            tx.move(coin.velocity * dt);
+            coin.velocity += Coin::Gravity * dt;
+
+            //TODO collision with can
+
+            if (tx.getPosition().y < 0)
+            {
+                const auto id = static_cast<std::uint32_t>(entity.getIndex());
+                getScene()->destroyEntity(entity);
+
+                m_sharedData.host.broadcastPacket(PacketID::CoinRemove, id, net::NetFlag::Reliable);
+            }
+        }
     }
 }

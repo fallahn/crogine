@@ -689,15 +689,20 @@ bool MenuState::handleEvent(const cro::Event& evt)
     const auto endCan = 
         [&]()
         {
+            //TODO check this is actually active first
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::CanControl;
-            cmd.action = [](cro::Entity e, float)
+            cmd.action = [&](cro::Entity e, float)
                 {
                     auto& d = e.getComponent<cro::Callback>().getUserData<CanControl>();
+                    
+                    //send launch packet
+                    const float power = ((d.Max - d.Min) * d.waveTable[d.idx]) + d.Min;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::CoinSpawn, power, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
                     d.active = false;
                     d.idx = 0;
 
-                    //TODO send launch packet
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         };
@@ -3397,6 +3402,22 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::CoinRemove:
+        {
+            auto id = evt.packet.as<std::uint32_t>();
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::Actor;
+            cmd.action = [&,id](cro::Entity e, float)
+                {
+                    if (e.getComponent<InterpolationComponent<InterpolationType::Linear>>().id == id)
+                    {
+                        //TODO fix this
+                        m_uiScene.destroyEntity(e);
+                    }
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
         case PacketID::ActorSpawn:
         {
             spawnActor(evt.packet.as<ActorInfo>());

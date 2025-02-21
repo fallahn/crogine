@@ -31,6 +31,7 @@ source distribution.
 #include "InterpolationSystem.hpp"
 #include "Networking.hpp"
 #include "CommandIDs.hpp"
+#include "CoinSystem.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -48,7 +49,7 @@ source distribution.
 namespace
 {
     static constexpr float ActorY = 22.f; //banner height
-    static constexpr float ActorZ = 0.3f;
+    static constexpr float ActorZ = 3.f;
 }
 
 void MenuState::spawnActor(const ActorInfo& info)
@@ -60,7 +61,7 @@ void MenuState::spawnActor(const ActorInfo& info)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::Actor;
     entity.addComponent<InterpolationComponent<InterpolationType::Linear>>(
         InterpolationPoint(pos, glm::vec3(0.f), cro::Transform::QUAT_IDENTITY, info.timestamp)).id = info.serverID;
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setCullingEnabled(false);
 
     if (info.playerID == 0)
     {
@@ -68,6 +69,7 @@ void MenuState::spawnActor(const ActorInfo& info)
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Can];
 
         entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        entity.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f, 0.f, -0.2f));
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<float>(0.f);
         entity.getComponent<cro::Callback>().function =
@@ -90,7 +92,7 @@ void MenuState::spawnActor(const ActorInfo& info)
         buttonEnt.addComponent<cro::Transform>();
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::CanButton];
-        buttonEnt.addComponent<cro::SpriteAnimation>().play(0);
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(cro::GameController::getControllerCount() ? 2 : hasPSLayout(0) ? 1 : 0);
         buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CanButton;;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().function =
@@ -116,6 +118,9 @@ void MenuState::spawnActor(const ActorInfo& info)
         //coin
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Coin];
         entity.addComponent<cro::SpriteAnimation>().play(0);
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(3.f));
+
+        //TODO add a bigger sprite then set origin to centre
     }
 
     m_bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -132,7 +137,7 @@ void MenuState::spawnActor(const ActorInfo& info)
 
             m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
             
-            if (count == 3)
+            if (count == 5)
             {
                 e.getComponent<cro::Callback>().active = false;
                 m_uiScene.destroyEntity(e);
@@ -149,7 +154,7 @@ void MenuState::updateActor(const ActorInfo& info)
             auto& interp = e.getComponent<InterpolationComponent<InterpolationType::Linear>>();
             if (interp.id == info.serverID)
             {
-                glm::vec3 pos = { info.position.x, ActorY, ActorZ };
+                glm::vec3 pos = { info.position.x, info.position.y + ActorY, ActorZ };
                 interp.addPoint({ pos, glm::vec3(0.f), cro::Transform::QUAT_IDENTITY, info.timestamp });
             }
         };
@@ -160,7 +165,7 @@ void MenuState::createCanControl(cro::Entity can)
 {
     auto entity = m_uiScene.createEntity();
 
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, ActorY, ActorZ * 10.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, ActorY, ActorZ + 0.4f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CanControl;
 
@@ -176,7 +181,7 @@ void MenuState::createCanControl(cro::Entity can)
                 const float power = ((control.Max - control.Min) * control.waveTable[control.idx]) + control.Min;
 
                 //update power and build verts
-                glm::vec2 vel = control.InitialVelocity;
+                glm::vec2 vel = glm::normalize(Coin::InitialVelocity) * power;
                 glm::vec2 last = glm::vec2(0.f);
                 std::vector<cro::Vertex2D> verts;
 
@@ -184,9 +189,8 @@ void MenuState::createCanControl(cro::Entity can)
                 {
                     verts.emplace_back(last, TextNormalColour);
                     
-                    vel = glm::normalize(vel);
-                    last += vel * power * dt;
-                    vel += control.Gravity * dt;
+                    last += vel * dt;
+                    vel += Coin::Gravity * dt;
 
                 } while (last.y > 0.f);
                 verts.emplace_back(last, TextNormalColour);

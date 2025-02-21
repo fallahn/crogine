@@ -31,15 +31,24 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+static constexpr float PixelsPerMetre = 200.f;
 struct Coin final
 {
-    std::int32_t v = 0;
+    static constexpr glm::vec2 InitialVelocity = glm::vec2(1.f);
+    static constexpr glm::vec2 Gravity = glm::vec2(0.f, -9.5f * PixelsPerMetre);
+    
+    glm::vec2 velocity = InitialVelocity;
 };
+
+namespace sv
+{
+    struct SharedData;
+}
 
 class CoinSystem final : public cro::System
 {
 public:
-    explicit CoinSystem(cro::MessageBus& mb);
+    CoinSystem(cro::MessageBus& mb, sv::SharedData&);
 
     void handleMessage(const cro::Message&) override;
 
@@ -48,7 +57,8 @@ public:
     void setBucketEnt(cro::Entity e) { m_bucketEnt = e; }
 
     cro::Entity getBucketEnt() const { return m_bucketEnt; }
-private:
 
+private:
+    sv::SharedData& m_sharedData;
     cro::Entity m_bucketEnt;
 };

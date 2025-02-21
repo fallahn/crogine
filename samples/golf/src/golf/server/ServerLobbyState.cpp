@@ -109,6 +109,9 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default:break;
+        case PacketID::CoinSpawn:
+            spawnCoin(evt.packet.as<float>());
+            break;
         case PacketID::ServerCommand:
             doServerCommand(evt);
             break;
