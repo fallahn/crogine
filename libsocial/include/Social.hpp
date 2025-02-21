@@ -152,12 +152,12 @@ public:
 
     static cro::String getPlayerName();
     static void setPlayerName(const cro::String&);
-    static bool isGreyscale() { return false; }
+    static constexpr bool isGreyscale() { return false; }
     static bool isValid();
-    static bool isValid(const std::string&) { return true; }
-    static bool isAuth() { return false; }
-    static bool isAvailable() { return false; }
-    static bool isSteamdeck() { return false; }
+    static constexpr bool isValid(const std::string&) { return true; }
+    static constexpr bool isAuth() { return false; }
+    static constexpr bool isAvailable() { return false; }
+    static constexpr bool isSteamdeck(bool = false) { return false; }
     static cro::Image getUserIcon(std::uint64_t) { return userIcon; }
     static void findFriends() {}
     static void inviteFriends(std::uint64_t) {}
@@ -182,7 +182,7 @@ public:
     };
     static void findLeaderboards(std::int32_t) {}
     static void setLeaderboardsEnabled(bool) {}
-    static bool getLeaderboardsEnabled() { return false; }
+    static constexpr bool getLeaderboardsEnabled() { return false; }
     static void insertScore(const std::string&, std::uint8_t, std::int32_t, std::int32_t);
     static cro::String getTopFive(const std::string& course, std::uint8_t holeCount);
     static void invalidateTopFive(const std::string& course, std::uint8_t holeCount);
@@ -258,5 +258,5 @@ public:
     static void showWebPage(const std::string&) {}
     static void readAllStats();
 
-    static bool getLatLon() { return false; } //triggers a LocationEvent if lat/lon was found
+    static constexpr bool getLatLon() { return false; }
 };

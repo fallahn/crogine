@@ -423,6 +423,12 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 {
                     nextPage(PaginationID::Hair);
                 }
+                else if (group == MenuID::SpeechEditor)
+                {
+                    m_voiceIndex = (m_voiceIndex + 1) % m_voices.size();
+                    m_activeProfile.voiceID = m_voices[m_voiceIndex].getUID();
+                    playPreviewAudio();
+                }
             }
                 break;
             case cro::GameController::ButtonLeftShoulder:
@@ -435,6 +441,12 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 else if (group == MenuID::HairSelect)
                 {
                     prevPage(PaginationID::Hair);
+                }
+                else if (group == MenuID::SpeechEditor)
+                {
+                    m_voiceIndex = (m_voiceIndex + (m_voices.size() - 1)) % m_voices.size();
+                    m_activeProfile.voiceID = m_voices[m_voiceIndex].getUID();
+                    playPreviewAudio();
                 }
             }
                 break;

@@ -4610,7 +4610,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     //hmm this hasn't checked it's a valid size yet...
     if (m_sharedData.flagPath.empty()
-        || !cro::FileSystem::fileExists(m_sharedData.flagPath))
+        /*|| !cro::FileSystem::fileExists(m_sharedData.flagPath)*/)
     {
         m_sharedData.flagPath = flagDir + flags[0];
     }
