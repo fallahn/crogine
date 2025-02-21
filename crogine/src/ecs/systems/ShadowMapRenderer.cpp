@@ -471,7 +471,7 @@ void ShadowMapRenderer::flushEntity(Entity e)
     {
         for (auto& b : a)
         {
-            if (!b.empty())
+            //if (!b.empty())
             {
 #ifdef USE_PARALLEL_PROCESSING
                 b.erase(std::remove_if(std::execution::par, b.begin(), b.end(),

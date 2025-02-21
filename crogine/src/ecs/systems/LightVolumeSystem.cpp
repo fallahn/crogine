@@ -392,7 +392,7 @@ void LightVolumeSystem::flushEntity(Entity e)
 {
     for (auto& list : m_drawLists)
     {
-        if (!list.empty())
+        //if (!list.empty())
         {
 #ifdef USE_PARALLEL_PROCESSING
             list.erase(std::remove_if(std::execution::par, list.begin(), list.end(),
@@ -402,7 +402,7 @@ void LightVolumeSystem::flushEntity(Entity e)
                 [e](Entity ent)
                 {
                     return e == ent;
-                }));
+                }), list.end());
         }
     }
 }

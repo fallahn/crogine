@@ -4513,7 +4513,7 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
 
     //name text
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 86.f, 56.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 86.f, 56.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -4528,7 +4528,7 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
 
     //pitch text
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 102.f, 40.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 102.f, 40.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);

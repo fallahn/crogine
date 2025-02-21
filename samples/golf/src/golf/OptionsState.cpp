@@ -3490,7 +3490,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         {
             if (m_layoutEnt.getComponent<cro::SpriteAnimation>().id == LayoutID::Keyboard)
             {
-                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
             else
             {
@@ -3765,7 +3765,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
 
     //default to controller layout on deck
-    if (Social::isSteamdeck())
+    if (Social::isSteamdeck()
+        || cro::GameController::getControllerCount() != 0)
     {
         for (auto e : bindingEnts)
         {

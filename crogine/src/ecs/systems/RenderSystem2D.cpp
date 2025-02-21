@@ -48,7 +48,7 @@ source distribution.
 
 #include <string>
 
-#define PARALLEL_DISABLE
+//#define PARALLEL_DISABLE
 #ifdef PARALLEL_DISABLE
 #undef USE_PARALLEL_PROCESSING
 #endif
@@ -492,14 +492,14 @@ void RenderSystem2D::onEntityRemoved(Entity entity)
     //remove any OpenGL buffers
     resetDrawable(entity);
     //purge from draw lists
-    //flushEntity(entity);
+    flushEntity(entity);
 }
 
 void RenderSystem2D::flushEntity(Entity e)
 {
     for (auto& list : m_drawLists)
     {
-        if (!list.empty())
+        //if (!list.empty())
         {
 #ifdef USE_PARALLEL_PROCESSING
             list.erase(std::remove_if(std::execution::par, list.begin(), list.end(),
@@ -509,7 +509,7 @@ void RenderSystem2D::flushEntity(Entity e)
                 [e](Entity ent)
                 {
                     return e == ent;
-                }));
+                }), list.end());
         }
     }
 }

@@ -596,7 +596,7 @@ void ModelRenderer::flushEntity(Entity entity)
     {
         for (auto& pl : dl)
         {
-            if (!pl.renderables.empty())
+            //if (!pl.renderables.empty()) //hmm is this check even necessary?
             {
 #ifdef USE_PARALLEL_PROCESSING
                 pl.renderables.erase(std::remove_if(std::execution::par, pl.renderables.begin(), pl.renderables.end(),

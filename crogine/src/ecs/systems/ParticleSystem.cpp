@@ -841,7 +841,7 @@ void ParticleSystem::onEntityRemoved(Entity entity)
     m_nextBuffer--;
 
     //flush entity from draw lists
-    //flushEntity(entity);
+    flushEntity(entity);
 }
 
 void ParticleSystem::flushEntity(Entity e)
@@ -850,7 +850,7 @@ void ParticleSystem::flushEntity(Entity e)
     {
         for (auto& p : list)
         {
-            if (!p.empty())
+            //if (!p.empty())
             {
 #ifdef USE_PARALLEL_PROCESSING
                 p.erase(std::remove_if(std::execution::par, p.begin(), p.end(),
@@ -860,7 +860,7 @@ void ParticleSystem::flushEntity(Entity e)
                     [e](Entity ent)
                     {
                         return e == ent;
-                    }));
+                    }), p.end());
             }
         }
     }

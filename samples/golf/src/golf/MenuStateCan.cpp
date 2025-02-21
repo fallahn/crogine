@@ -106,7 +106,7 @@ void MenuState::spawnActor(const ActorInfo& info)
             };
         const auto canBounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         const auto buttonBounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
-        buttonEnt.getComponent<cro::Transform>().setPosition({ canBounds.width / 2.f, canBounds.height / 2.f, 0.1f });
+        buttonEnt.getComponent<cro::Transform>().setPosition({ canBounds.width / 2.f, canBounds.height / 2.f, 0.4f });
         buttonEnt.getComponent<cro::Transform>().setOrigin(glm::vec2(buttonBounds.width / 2.f, buttonBounds.height / 2.f));
 
         entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
@@ -118,9 +118,8 @@ void MenuState::spawnActor(const ActorInfo& info)
         //coin
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Coin];
         entity.addComponent<cro::SpriteAnimation>().play(0);
-        entity.getComponent<cro::Transform>().setScale(glm::vec2(3.f));
-
-        //TODO add a bigger sprite then set origin to centre
+        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     }
 
     m_bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
