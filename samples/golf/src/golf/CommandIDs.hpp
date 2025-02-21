@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -130,7 +130,9 @@ struct CommandID final
             ChatHint     = 0x400000,
             CourseHint   = 0x800000,
 
-            Actor        = 0x1000000
+            Actor        = 0x1000000,
+            CanButton    = 0x2000000,
+            CanControl   = 0x4000000,
         };
     };
 };

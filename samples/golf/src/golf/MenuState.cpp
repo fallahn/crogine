@@ -670,6 +670,38 @@ MenuState::~MenuState()
 //public
 bool MenuState::handleEvent(const cro::Event& evt)
 {
+    const auto startCan = 
+        [&]()
+        {
+            //TODO check current spawn count and limit this
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::CanControl;
+            cmd.action = [&](cro::Entity e, float)
+                {
+                    auto& d = e.getComponent<cro::Callback>().getUserData<CanControl>();
+                    d.active = true;
+                    d.idx = 0;
+
+                    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        };
+    const auto endCan = 
+        [&]()
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::CanControl;
+            cmd.action = [](cro::Entity e, float)
+                {
+                    auto& d = e.getComponent<cro::Callback>().getUserData<CanControl>();
+                    d.active = false;
+                    d.idx = 0;
+
+                    //TODO send launch packet
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        };
+
     const auto doNext = [&]()
         {
             if (m_sharedData.hosting
@@ -785,6 +817,21 @@ bool MenuState::handleEvent(const cro::Event& evt)
                     }
                 };
             }
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //minigame button
+            cmd.targetFlags = CommandID::Menu::CanButton;
+            cmd.action = [controller](cro::Entity e, float)
+                {
+                    if (controller)
+                    {
+                        e.getComponent<cro::SpriteAnimation>().play(hasPSLayout(0) ? 1 : 0);
+                    }
+                    else
+                    {
+                        e.getComponent<cro::SpriteAnimation>().play(2);
+                    }
+                };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             //update the hint about switching courses
@@ -1053,11 +1100,14 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
             break;
         case SDLK_TAB:
-            if (m_currentMenu == MenuID::Lobby
+            //well this was clashing with the previous score card
+            //so I guess no one will notice if I change this...
+            /*if (m_currentMenu == MenuID::Lobby
                 && m_sharedData.hosting)
             {
                 requestStackPush(StateID::PlayerManagement);
-            }
+            }*/
+            endCan();
             break;
         case SDLK_p:
             showPlayerManagement();
@@ -1086,7 +1136,11 @@ bool MenuState::handleEvent(const cro::Event& evt)
             cro::App::getWindow().setMouseCaptured(true);
             break;
         case SDLK_TAB:
-            togglePreviousScoreCard();
+            //togglePreviousScoreCard(); //let's see if anyone notices this has gone...
+            if (!evt.key.repeat)
+            {
+                startCan();
+            }
             break;
         case SDLK_F4:
             if (m_currentMenu == MenuID::Lobby)
@@ -1116,6 +1170,22 @@ bool MenuState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
 
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
+    {
+        if (m_currentMenu == MenuID::Lobby)
+        {
+            switch (evt.cbutton.button)
+            {
+            default:  break;
+            case cro::GameController::ButtonX:
+                if (cro::GameController::controllerID(evt.cbutton.which) == 0)
+                {
+                    startCan();
+                }
+                break;
+            }
+        }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
@@ -1163,6 +1233,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 break;
             case cro::GameController::ButtonTrackpad:
                 m_textChat.toggleWindow(false, false, false);
+                break;
+            case cro::GameController::ButtonX:
+                if (cro::GameController::controllerID(evt.cbutton.which) == 0)
+                {
+                    endCan();
+                }
                 break;
             }
         }
@@ -1643,7 +1719,9 @@ void MenuState::render()
     m_backgroundScene.render();
     m_backgroundTexture.display();
 
+    glLineWidth(m_viewScale.y * 2.f);
     m_uiScene.render();
+    glLineWidth(1.f);
 }
 
 //private
@@ -1904,6 +1982,13 @@ void MenuState::loadAssets()
     //network icon
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
     m_sprites[SpriteID::NetStrength] = spriteSheet.getSprite("strength_meter");
+
+    //minigame
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_can.spt", m_resources.textures);
+    m_sprites[SpriteID::Can] = spriteSheet.getSprite("can");
+    m_sprites[SpriteID::CanButton] = spriteSheet.getSprite("button");
+    m_sprites[SpriteID::Coin] = spriteSheet.getSprite("coin");
+
 
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();

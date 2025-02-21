@@ -36,10 +36,14 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/SpriteAnimation.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+
+#include <crogine/util/Easings.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 namespace
 {
@@ -49,10 +53,6 @@ namespace
 
 void MenuState::spawnActor(const ActorInfo& info)
 {
-    //TODO pre-load this
-    cro::SpriteSheet sheet;
-    sheet.loadFromFile("assets/golf/sprites/lobby_can.spt", m_resources.textures);
-
     const glm::vec3 pos = { info.position.x, ActorY, ActorZ };
 
     auto entity = m_uiScene.createEntity();
@@ -65,12 +65,57 @@ void MenuState::spawnActor(const ActorInfo& info)
     if (info.playerID == 0)
     {
         //can
-        entity.addComponent<cro::Sprite>() = sheet.getSprite("can");
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Can];
+
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+            {
+                auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                ct = std::min(1.f, ct + (dt * 2.f));
+
+                const float scale = cro::Util::Easing::easeOutElastic(ct);
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, scale));
+
+                if (ct == 1)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            };
+
+        //control icon
+        auto buttonEnt = m_uiScene.createEntity();
+        buttonEnt.addComponent<cro::Transform>();
+        buttonEnt.addComponent<cro::Drawable2D>();
+        buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::CanButton];
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(0);
+        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CanButton;;
+        buttonEnt.addComponent<cro::Callback>().active = true;
+        buttonEnt.getComponent<cro::Callback>().function =
+            [&, entity](cro::Entity e, float)
+            {
+                if (entity.destroyed())
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+            };
+        const auto canBounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        const auto buttonBounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+        buttonEnt.getComponent<cro::Transform>().setPosition({ canBounds.width / 2.f, canBounds.height / 2.f, 0.1f });
+        buttonEnt.getComponent<cro::Transform>().setOrigin(glm::vec2(buttonBounds.width / 2.f, buttonBounds.height / 2.f));
+
+        entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+        createCanControl(entity);
     }
     else
     {
         //coin
-        entity.addComponent<cro::Sprite>() = sheet.getSprite("coin");
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Coin];
+        entity.addComponent<cro::SpriteAnimation>().play(0);
     }
 
     m_bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -109,4 +154,58 @@ void MenuState::updateActor(const ActorInfo& info)
             }
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
+void MenuState::createCanControl(cro::Entity can)
+{
+    auto entity = m_uiScene.createEntity();
+
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, ActorY, ActorZ * 10.f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CanControl;
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<CanControl>();
+    entity.getComponent<cro::Callback>().function =
+        [&, can](cro::Entity e, float dt)
+        {
+            auto& control = e.getComponent<cro::Callback>().getUserData<CanControl>();
+            if (control.active)
+            {
+                control.idx = (control.idx + 1) % control.waveTable.size();
+                const float power = ((control.Max - control.Min) * control.waveTable[control.idx]) + control.Min;
+
+                //update power and build verts
+                glm::vec2 vel = control.InitialVelocity;
+                glm::vec2 last = glm::vec2(0.f);
+                std::vector<cro::Vertex2D> verts;
+
+                do
+                {
+                    verts.emplace_back(last, TextNormalColour);
+                    
+                    vel = glm::normalize(vel);
+                    last += vel * power * dt;
+                    vel += control.Gravity * dt;
+
+                } while (last.y > 0.f);
+                verts.emplace_back(last, TextNormalColour);
+                e.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+                //display arc
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+            else
+            {
+                //hide arc
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+
+            if (can.destroyed())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+        };
+    m_bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }

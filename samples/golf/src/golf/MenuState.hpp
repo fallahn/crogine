@@ -244,6 +244,32 @@ private:
     void spawnActor(const ActorInfo&);
     void updateActor(const ActorInfo&);
 
+    struct CanControl final
+    {
+        const float Min = 1900.f;
+        const float Max = 3900.f;
+        bool active = false;
+
+        std::size_t idx = 0;
+        std::vector<float> waveTable;
+
+        //TODO these need to match with the phys on the server
+        //here they're just used to display the arc projection
+        const glm::vec2 InitialVelocity = glm::vec2(1.f);
+        const glm::vec2 Gravity = glm::vec2(0.f, -9.5f);
+
+        CanControl()
+        {
+            constexpr auto fps = 100.f;
+            constexpr float step = 3.14f / fps;
+            for (auto i = 0; i < (fps * 2); ++i)
+            {
+                waveTable.push_back(1.f - ((std::cos(step * i) + 1.f) / 2.f));
+            }
+        }
+    };
+    void createCanControl(cro::Entity);
+
     LobbyPager m_lobbyPager;
 
     //hack to quit the lobby confirm menu from event input
