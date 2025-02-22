@@ -263,7 +263,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -374,13 +374,13 @@ bool MapOverviewState::simulate(float dt)
     {
         //check controller analogue
         auto x = m_thumbsticks.getValue(cro::GameController::AxisLeftX);
-        if (x > LeftThumbDeadZone || x < -LeftThumbDeadZone)
+        if (x > cro::GameController::LeftThumbDeadZone || x < -cro::GameController::LeftThumbDeadZone)
         {
             movement.x = static_cast<float>(x) / cro::GameController::AxisMax;
         }
 
         auto y = m_thumbsticks.getValue(cro::GameController::AxisLeftY);
-        if (y > LeftThumbDeadZone || y < -LeftThumbDeadZone)
+        if (y > cro::GameController::LeftThumbDeadZone || y < -cro::GameController::LeftThumbDeadZone)
         {
             movement.y = -static_cast<float>(y) / cro::GameController::AxisMax;
         }
@@ -392,7 +392,7 @@ bool MapOverviewState::simulate(float dt)
 
 
         auto zoom = -m_thumbsticks.getValue(cro::GameController::AxisRightY);
-        if (zoom < -LeftThumbDeadZone || zoom > LeftThumbDeadZone)
+        if (zoom < -cro::GameController::LeftThumbDeadZone || zoom > cro::GameController::LeftThumbDeadZone)
         {
             float zoomRatio = static_cast<float>(zoom) / cro::GameController::AxisMax;
             m_zoomScale = std::clamp(m_zoomScale + (2.f * zoomRatio * m_zoomScale * dt), MinZoom, MaxZoom);

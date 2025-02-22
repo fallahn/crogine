@@ -578,7 +578,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
 
@@ -740,12 +740,12 @@ bool ProfileState::simulate(float dt)
         }
 
         float zoom = 0.f;
-        if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > TriggerDeadZone
+        if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > cro::GameController::TriggerDeadZone
             || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
         {
             zoom -= dt;
         }
-        if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) > TriggerDeadZone
+        if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) > cro::GameController::TriggerDeadZone
             || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
         {
             zoom += dt;

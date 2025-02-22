@@ -165,11 +165,6 @@ static constexpr cro::Colour SwingputDark(std::uint8_t(40), 23, 33);
 static constexpr cro::Colour SwingputLight(std::uint8_t(236), 119, 61);
 //static constexpr cro::Colour SwingputLight(std::uint8_t(236), 153, 61);
 
-//moved to GameController but I'm too lazy to update all references
-static constexpr std::int16_t LeftThumbDeadZone = cro::GameController::LeftThumbDeadZone;
-static constexpr std::int16_t RightThumbDeadZone = cro::GameController::RightThumbDeadZone;
-static constexpr std::int16_t TriggerDeadZone = cro::GameController::TriggerDeadZone;
-
 static constexpr glm::vec3 PreviewHairScale(0.23f);
 static constexpr glm::vec3 PreviewHairOffset(0.f, -0.29f, -0.008f);
 

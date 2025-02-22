@@ -551,7 +551,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (std::abs(evt.caxis.value) > LeftThumbDeadZone)
+        if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
         {
             m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
                 SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;

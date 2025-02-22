@@ -287,14 +287,14 @@ bool TournamentState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
 
         if (evt.caxis.axis == cro::GameController::AxisRightX)
         {
-            static constexpr auto DeadZone = LeftThumbDeadZone * 2;
+            static constexpr auto DeadZone = cro::GameController::LeftThumbDeadZone * 2;
 
             if (evt.caxis.value > DeadZone
                 && m_axisPosition < DeadZone)

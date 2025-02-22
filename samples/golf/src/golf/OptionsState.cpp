@@ -536,7 +536,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (std::abs(evt.caxis.value) > LeftThumbDeadZone)
+        if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
         {
             toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
 
@@ -549,8 +549,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             const auto controllerID = cro::GameController::controllerID(evt.caxis.which);
             const auto amt = evt.caxis.value;
 
-            if (amt < -LeftThumbDeadZone
-                && m_controllerScrollAxes[controllerID] >= -LeftThumbDeadZone)
+            if (amt < -cro::GameController::LeftThumbDeadZone
+                && m_controllerScrollAxes[controllerID] >= -cro::GameController::LeftThumbDeadZone)
             {
                 cro::ButtonEvent fakeEvent;
                 fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
@@ -565,8 +565,8 @@ bool OptionsState::handleEvent(const cro::Event& evt)
                     m_scrollFunctions[ScrollID::StatUp](cro::Entity(), fakeEvent);
                 }
             }
-            else if (amt > LeftThumbDeadZone
-                && m_controllerScrollAxes[controllerID] <= LeftThumbDeadZone)
+            else if (amt > cro::GameController::LeftThumbDeadZone
+                && m_controllerScrollAxes[controllerID] <= cro::GameController::LeftThumbDeadZone)
             {
                 cro::ButtonEvent fakeEvent;
                 fakeEvent.type = SDL_CONTROLLERBUTTONDOWN;
@@ -581,11 +581,11 @@ bool OptionsState::handleEvent(const cro::Event& evt)
                     m_scrollFunctions[ScrollID::StatDown](cro::Entity(), fakeEvent);
                 }
             }
-            else if ((amt > -LeftThumbDeadZone
-                && m_controllerScrollAxes[controllerID] <= -LeftThumbDeadZone)
+            else if ((amt > -cro::GameController::LeftThumbDeadZone
+                && m_controllerScrollAxes[controllerID] <= -cro::GameController::LeftThumbDeadZone)
                 ||
-                (amt < LeftThumbDeadZone
-                    && m_controllerScrollAxes[controllerID] >= LeftThumbDeadZone))
+                (amt < cro::GameController::LeftThumbDeadZone
+                    && m_controllerScrollAxes[controllerID] >= cro::GameController::LeftThumbDeadZone))
             {
                 resetScroll();
             }
