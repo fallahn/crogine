@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -462,10 +462,12 @@ void GolfState::registerDebugCommands()
                 * 1 << 14 normals
                 */
                 m_collisionMesh.setDebugFlags(1);
+                m_drawDebugMesh = true;
             }
             else if (param == "false" || param == "0")
             {
                 m_collisionMesh.setDebugFlags(0);
+                m_drawDebugMesh = false;
             }
             else
             {

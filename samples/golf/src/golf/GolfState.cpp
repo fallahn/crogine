@@ -227,7 +227,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_readyQuitFlags        (0),
     m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel            (sd, m_currentPlayer, m_textChat),
-    m_minimapTexturePass    (MaxMinimapPasses)
+    m_minimapTexturePass    (MaxMinimapPasses),
+    m_drawDebugMesh         (false)
 {
     sd.activeResources = &m_resources;
     sd.quickplayOpponents = std::clamp(sd.quickplayOpponents, 0, 3);
@@ -5657,6 +5658,9 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 {
+    //hide old debug mesh
+    m_collisionMesh.setDebugFlags(0);
+    
     if (m_photoMode)
     {
         //hard reset the free cam if we were idle in group
@@ -6448,6 +6452,12 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    //this needs refreshing if we just switched holes
+    if (m_drawDebugMesh)
+    {
+        m_collisionMesh.setDebugFlags(1);
+    }
+
     WebSock::broadcastPacket(PacketID::SetPlayer, player);
 
 #ifdef USE_GNS

@@ -777,6 +777,8 @@ private:
     void registerDebugCommands();
     void registerDebugWindows();
 
+    bool m_drawDebugMesh;
+
     struct NetworkDebugContext final
     {
         std::size_t bitrate = 0;
