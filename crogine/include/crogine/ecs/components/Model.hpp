@@ -255,7 +255,15 @@ namespace cro
         std::function<void(std::int32_t, std::int32_t)> draw;
 #endif
 
+        /*!
+        \brief Returns the number of draw lists this model is currently added to
+        */
+        std::int32_t getDrawlistCount() const { return m_drawlistCount; }
+
     private:
+
+        mutable std::int32_t m_drawlistCount;
+        void decrementDrawlistCount() const { m_drawlistCount--; } //hax because we're supposedly const while drawing
 
         bool m_hidden;
         std::uint64_t m_renderFlags;

@@ -270,8 +270,6 @@ void ModelRenderer::process(float dt)
         model.m_activeWorldMatrix = tx.getWorldTransform();
         model.m_activeNormalMatrix = glm::inverseTranspose(glm::mat3(model.m_activeWorldMatrix));
 
-
-
         /*if (m_useTreeQueries)
         {
             if (!entity.destroyed())
@@ -401,6 +399,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
 #ifdef PLATFORM_DESKTOP
                 model.draw(i, Mesh::IndexData::Final);
+                //model.decrementDrawlistCount();
 
 #else //GLES 2 doesn't have VAO support without extensions
 
@@ -627,6 +626,12 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
     //cull entities by viewable into draw lists by pass
     for (auto i = 0; i < passCount; ++i)
     {
+        //TODO remove or parallelise
+        for (auto& [ent, _] : drawList[i].renderables)
+        {
+            ent.getComponent<cro::Model>().decrementDrawlistCount();
+        }
+
         //also store the view mat so we can update model worldView mat in process()
         drawList[i].renderables.clear();
         drawList[i].viewMatrix = camComponent.getPass(i).viewMatrix;
@@ -732,6 +737,7 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 
                 if (!opaque.second.matIDs.empty())
                 {
+                    model.m_drawlistCount++;
 #ifdef USE_PARALLEL_PROCESSING
                     std::scoped_lock l(mutex);
 #endif
@@ -740,6 +746,7 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 
                 if (!transparent.second.matIDs.empty())
                 {
+                    model.m_drawlistCount++;
 #ifdef USE_PARALLEL_PROCESSING
                     std::scoped_lock l(mutex);
 #endif

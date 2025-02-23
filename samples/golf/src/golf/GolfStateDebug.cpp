@@ -247,16 +247,49 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    /*registerWindow([&]() 
+    registerWindow([&]() 
         {
-            if (ImGui::Begin("asefsd"))
+            ImGui::SetNextWindowSize({ 436.f, 144.f });
+            if (ImGui::Begin("Club Model"))
             {
-                ImGui::Text("Server Group: %d", m_serverGroup);
+                ImGui::Text("%s", cro::Console::getLastOutput().c_str());
+                ImGui::Separator();
+
+                /*ImGui::Text("Server Group: %d", m_serverGroup);
                 ImGui::Text("Target Group: %lu", m_idleCameraIndex);
-                ImGui::Text("Target Client: %d, Target Player: %d", m_groupPlayerPositions[m_idleCameraIndex].client, m_groupPlayerPositions[m_idleCameraIndex].player);
+                ImGui::Text("Target Client: %d, Target Player: %d", m_groupPlayerPositions[m_idleCameraIndex].client, m_groupPlayerPositions[m_idleCameraIndex].player);*/
+
+                if (m_activeAvatar
+                    && m_activeAvatar->hands)
+                {
+                    const auto modelEnt = m_activeAvatar->hands->getModel();
+
+                    if (modelEnt.isValid())
+                    {
+                        const auto& model = modelEnt.getComponent<cro::Model>();
+                        const auto facing = model.getFacing() == cro::Model::Facing::Front ? "Front" : "Back";
+                        ImGui::Text("Facing: %s", facing);
+
+                        const auto hidden = model.isHidden() ? "true" : "false";
+                        ImGui::Text("Hidden: %s", hidden);
+
+                        const auto scale = modelEnt.getComponent<cro::Transform>().getScale();
+                        ImGui::Text("Scale %3.2f, %3.2f, %3.2f", scale.x, scale.y, scale.z);
+
+                        ImGui::Text("Draw list count %d <- Does this go to 0 when flickering?", model.getDrawlistCount());
+                    }
+                    else
+                    {
+                        ImGui::Text("Model Ent not valid");
+                    }                    
+                }
+                else
+                {
+                    ImGui::Text("No Model");
+                }
             }
             ImGui::End();
-        });*/
+        });
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

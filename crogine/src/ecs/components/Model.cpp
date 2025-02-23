@@ -61,11 +61,12 @@ namespace
 }
 
 Model::Model()
-    : m_hidden      (false),
-    m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
-    m_facing        (GL_CCW),
-    m_skeleton      (nullptr),
-    m_jointCount    (0)
+    : m_drawlistCount   (0),
+    m_hidden            (false),
+    m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
+    m_facing            (GL_CCW),
+    m_skeleton          (nullptr),
+    m_jointCount        (0)
 {
     for (auto& pair : m_vaos)
     {
@@ -74,14 +75,15 @@ Model::Model()
 }
 
 Model::Model(Mesh::Data data, Material::Data material)
-    : m_hidden      (false),
-    m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
-    m_facing        (GL_CCW),
-    m_boundingSphere(data.boundingSphere),
-    m_boundingBox   (data.boundingBox),
-    m_meshData      (data),
-    m_skeleton      (nullptr),
-    m_jointCount    (0)
+    : m_drawlistCount   (0),
+    m_hidden            (false),
+    m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
+    m_facing            (GL_CCW),
+    m_boundingSphere    (data.boundingSphere),
+    m_boundingBox       (data.boundingBox),
+    m_meshData          (data),
+    m_skeleton          (nullptr),
+    m_jointCount        (0)
 {
     assertAABB(m_meshData.boundingBox);
     assertAABB(m_boundingBox);

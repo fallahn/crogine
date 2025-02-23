@@ -4701,8 +4701,15 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         && m_activeAvatar->hands)
                     {
                         const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
-                        m_activeAvatar->hands->setModel(models.models[models.indices[club]]);
-                        m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
+                        if (club < models.indices.size())
+                        {
+                            m_activeAvatar->hands->setModel(models.models[models.indices[club]]);
+                            m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
+                        }
+                        else
+                        {
+                            LogI << "Index out of range, wanted club " << (int)club << ", models range: " << models.indices.size() << std::endl;
+                        }
                     }
                 }
             }
