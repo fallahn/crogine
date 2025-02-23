@@ -270,7 +270,7 @@ void UISystem::handleEvent(const Event& evt)
         if (m_activeControllerID == ActiveControllerAll ||
             evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
+            const std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
             switch (evt.caxis.axis)
             {
             default: break;

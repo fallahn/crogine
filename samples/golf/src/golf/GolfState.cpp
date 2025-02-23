@@ -4688,13 +4688,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::ClubChanged:
         {
-            std::uint16_t data = evt.packet.as<std::uint16_t>();
+            const std::uint16_t data = evt.packet.as<std::uint16_t>();
             if ((data & 0x00ff) != m_sharedData.localConnectionData.connectionID)
             {
-                auto club = (data & 0xff00) >> 8;
+                const auto club = (data & 0xff00) >> 8;
                 togglePuttingView(club == ClubID::Putter);
 
-                if (club != ClubID::Putter)
+                if (club != ClubID::Putter
+                    && (data & 0x00ff) == m_currentPlayer.client)
                 {
                     if (m_activeAvatar
                         && m_activeAvatar->hands)

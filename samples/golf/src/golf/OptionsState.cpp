@@ -3692,7 +3692,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLayout);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLB, CtrlLookL);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLB, CtrlThreshL);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, TabAV);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelectID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected]= highlightUnselectID;
@@ -3803,10 +3803,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
         return e;
     };
-    /*std::stringstream ss;
+    std::stringstream ss;
     ss.precision(2);
-    ss << "Swingput Mouse Sensitivity " << m_sharedData.swingputThreshold;
-    auto swingputText = createText(glm::vec2(20.f, 124.f), ss.str());*/
+    ss << "Thumbstick Deadzone: " << cro::GameController::LeftThumbDeadZone.getOffset();
+    auto deadzoneText = createText(glm::vec2(20.f, 128.f), ss.str());
 
 
     //createText(glm::vec2(20.f, 156.f), "Zoom Map:\nDrone View:\nFree Cam:\nRotate Camera:");
@@ -3894,25 +3894,27 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         return entity;
     };
 
-    /*auto swingputSlider = createSlider({ 35.f, 109.f });
-    swingputSlider.getComponent<cro::Callback>().getUserData<SliderData>().onActivate =
-        [&, swingputText](float distance) mutable
+    static const auto MaxDeadzone = (cro::GameController::AxisMax - cro::GameController::LeftThumbDeadZone.size);// / 2;
+
+    auto deadzoneSlider = createSlider({ 29.f, 109.f });
+    deadzoneSlider.getComponent<cro::Callback>().getUserData<SliderData>().onActivate =
+        [&, deadzoneText](float distance) mutable
     {
-        m_sharedData.swingputThreshold = ConstVal::MinSwingputThresh + ((ConstVal::MaxSwingputThresh - ConstVal::MinSwingputThresh) * distance);
+        cro::GameController::LeftThumbDeadZone.setOffset(std::int16_t(static_cast<float>(MaxDeadzone) * distance));
 
         std::stringstream ss;
         ss.precision(2);
-        ss << "Swingput Mouse Sensitivity " << m_sharedData.swingputThreshold;
-        swingputText.getComponent<cro::Text>().setString(ss.str());
+        ss << "Thumbstick Deadzone: " << cro::GameController::LeftThumbDeadZone.getOffset();
+        deadzoneText.getComponent<cro::Text>().setString(ss.str());
     };
-    swingputSlider.getComponent<cro::Callback>().function =
+    deadzoneSlider.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
         const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
-        float amount = (m_sharedData.swingputThreshold - ConstVal::MinSwingputThresh) / (ConstVal::MaxSwingputThresh - ConstVal::MinSwingputThresh);
+        const float amount = static_cast<float>(cro::GameController::LeftThumbDeadZone.getOffset()) / (MaxDeadzone);
 
         e.getComponent<cro::Transform>().setPosition({ pos.x + (width * amount), pos.y });
-    };*/
+    };
 
     //mouse speed slider
     createSlider(glm::vec2(29.f, 78.f));//77
@@ -3941,54 +3943,58 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         return ent;
     };
 
-    //swingput down
-    //entity = createSquareHighlight(glm::vec2(17.f, 103.f));
-    //entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshL);
-    //entity.getComponent<cro::UIInput>().setNextIndex(CtrlThreshR, CtrlLookL);
-    //entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, TabAV);
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-    //    [&, swingputText](cro::Entity, cro::ButtonEvent evt) mutable
-    //    {
-    //        if (activated(evt))
-    //        {
-    //            m_sharedData.swingputThreshold = std::max(ConstVal::MinSwingputThresh, m_sharedData.swingputThreshold - 0.1f);
+    static constexpr std::int16_t DeadzoneStep = 1000;
 
-    //            std::stringstream ss;
-    //            ss.precision(2);
-    //            ss << "Swingput Mouse Sensitivity " << m_sharedData.swingputThreshold;
-    //            swingputText.getComponent<cro::Text>().setString(ss.str());
+    //deadzone down
+    entity = createSquareHighlight(glm::vec2(11.f, 103.f));
+    entity.setLabel("Adjusts the minimum movement of the thumbstick before input\nis accepted by the game: larger values require more movement.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshL);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlThreshR, CtrlLookL);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, CtrlLayout);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&, deadzoneText](cro::Entity, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                cro::GameController::LeftThumbDeadZone.setOffset(std::max(0, cro::GameController::LeftThumbDeadZone.getOffset() - DeadzoneStep));
 
-    //            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-    //        }
-    //    });
+                std::stringstream ss;
+                ss.precision(2);
+                ss << "Thumbstick Deadzone: " << cro::GameController::LeftThumbDeadZone.getOffset();
+                deadzoneText.getComponent<cro::Text>().setString(ss.str());
 
-    ////swingput up
-    //entity = createSquareHighlight(glm::vec2(184.f, 103.f));
-    //entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshR);
-    //entity.getComponent<cro::UIInput>().setNextIndex(CtrlRB, CtrlLookR);
-    //entity.getComponent<cro::UIInput>().setPrevIndex(CtrlThreshL, TabAchievements);
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-    //    [&, swingputText](cro::Entity, cro::ButtonEvent evt) mutable
-    //    {
-    //        if (activated(evt))
-    //        {
-    //            m_sharedData.swingputThreshold = std::min(ConstVal::MaxSwingputThresh, m_sharedData.swingputThreshold + 0.1f);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        });
 
-    //            std::stringstream ss;
-    //            ss.precision(2);
-    //            ss << "Swingput Mouse Sensitivity " << m_sharedData.swingputThreshold;
-    //            swingputText.getComponent<cro::Text>().setString(ss.str());
+    //deadzone up
+    entity = createSquareHighlight(glm::vec2(178.f, 103.f));
+    entity.setLabel("Adjusts the minimum movement of the thumbstick before input\nis accepted by the game: larger values require more movement.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshR);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlRB, CtrlLookR);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlThreshL, CtrlLayout);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&, deadzoneText](cro::Entity, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                cro::GameController::LeftThumbDeadZone.setOffset(std::min(MaxDeadzone, cro::GameController::LeftThumbDeadZone.getOffset() + DeadzoneStep));
 
-    //            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-    //        }
-    //    });
+                std::stringstream ss;
+                ss.precision(2);
+                ss << "Thumbstick Deadzone: " << cro::GameController::LeftThumbDeadZone.getOffset();
+                deadzoneText.getComponent<cro::Text>().setString(ss.str());
+
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
 
 
     //mouse speed down
     entity = createSquareHighlight(glm::vec2(11.f, 72.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLookL);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlInvX);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, CtrlLayout);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, CtrlThreshL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, mouseText](cro::Entity, cro::ButtonEvent evt) mutable
         {
@@ -4009,7 +4015,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity = createSquareHighlight(glm::vec2(178.f, 72.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLookR);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlUp, CtrlVib);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookL, CtrlLayout);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookL, CtrlThreshR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, mouseText](cro::Entity, cro::ButtonEvent evt) mutable
         {

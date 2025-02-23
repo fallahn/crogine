@@ -294,7 +294,7 @@ bool TournamentState::handleEvent(const cro::Event& evt)
 
         if (evt.caxis.axis == cro::GameController::AxisRightX)
         {
-            static constexpr auto DeadZone = cro::GameController::LeftThumbDeadZone * 2;
+            const auto DeadZone = cro::GameController::LeftThumbDeadZone * 2;
 
             if (evt.caxis.value > DeadZone
                 && m_axisPosition < DeadZone)

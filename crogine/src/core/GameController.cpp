@@ -33,6 +33,10 @@ source distribution.
 
 using namespace cro;
 
+GameController::DeadZone<GameController::LeftThumbDeadZoneV> GameController::LeftThumbDeadZone;
+GameController::DeadZone<GameController::RightThumbDeadZoneV> GameController::RightThumbDeadZone;
+GameController::DeadZone<GameController::TriggerDeadZoneV> GameController::TriggerDeadZone;
+
 std::int32_t GameController::m_lastControllerIndex = 0;
 
 std::int32_t GameController::deviceID(std::int32_t controllerID)

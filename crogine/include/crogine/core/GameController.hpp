@@ -206,10 +206,31 @@ namespace cro
         static constexpr std::int16_t AxisMax = 32767;
         static constexpr std::int16_t AxisMin = -32768;
 
+        template <std::int16_t Size>
+        struct DeadZone final
+        {
+            static constexpr std::int16_t size = Size;
+            
+            void setOffset(std::int16_t o)
+            {
+                offset = std::clamp(o, std::int16_t(-Size), std::int16_t(AxisMax - Size));
+            }
+
+            std::int16_t getOffset() const { return offset; }
+            operator std::int16_t() const { return Size + offset; }
+            
+        private:
+            std::int16_t offset = 0;
+        };
+
         //these are the values in the DX SDK for XInput
-        static constexpr std::int16_t LeftThumbDeadZone = 8700;// 7849;
-        static constexpr std::int16_t RightThumbDeadZone = 8689;
-        static constexpr std::int16_t TriggerDeadZone = 30;
+        static constexpr std::int16_t LeftThumbDeadZoneV = 8700;// 7849;
+        static constexpr std::int16_t RightThumbDeadZoneV = 8689;
+        static constexpr std::int16_t TriggerDeadZoneV = 30;
+        
+        static DeadZone<LeftThumbDeadZoneV> LeftThumbDeadZone;
+        static DeadZone<RightThumbDeadZoneV> RightThumbDeadZone;
+        static DeadZone<TriggerDeadZoneV> TriggerDeadZone;
 
         /*!
         \brief Maximum number of game controllers which may be connected
