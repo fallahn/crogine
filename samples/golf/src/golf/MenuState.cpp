@@ -1633,7 +1633,8 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
-    if (m_printTimer.elapsed().asSeconds() > 1.f)
+    if (!m_printQueue.empty() &&
+        m_printTimer.elapsed().asSeconds() > 1.f)
     {
         m_printTimer.restart();
         m_textChat.printToScreen(m_printQueue.front(), TextGoldColour);

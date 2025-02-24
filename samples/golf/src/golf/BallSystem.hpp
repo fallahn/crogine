@@ -174,6 +174,9 @@ private:
     float m_windInterpTime;
     float m_currentWindInterpTime;
 
+    std::vector<float> m_noiseBuffer;
+    std::size_t m_noiseIndex;
+
     const HoleData* m_holeData;
     bool m_puttFromTee;
     std::uint8_t m_gimmeRadius;
