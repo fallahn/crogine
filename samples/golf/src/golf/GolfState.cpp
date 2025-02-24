@@ -4694,7 +4694,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 const auto club = (data & 0xff00) >> 8;
                 togglePuttingView(club == ClubID::Putter);
 
-                if (club != ClubID::Putter
+                /*if (club != ClubID::Putter
                     && (data & 0x00ff) == m_currentPlayer.client)
                 {
                     if (m_activeAvatar
@@ -4711,7 +4711,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             LogI << "Index out of range, wanted club " << (int)club << ", models range: " << models.indices.size() << std::endl;
                         }
                     }
-                }
+                }*/
             }
         }
             break;

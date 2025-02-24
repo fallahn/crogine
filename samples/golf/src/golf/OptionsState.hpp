@@ -188,17 +188,17 @@ private:
         {
             ThreshL,
             ThreshR,
-            Layout,
+
             LookL,
             LookR,
 
             InvX,
             InvY,
-            MouseAction,
-            Vib,
             AltPower,
+            Vib,
+            /*
             Swg,
-            Reset,
+            Reset,*/
             Count
         };
     };

@@ -3979,6 +3979,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
+    m_controlEntities[ControlButtons::ThreshL] = entity;
 
     //deadzone up
     entity = createSquareHighlight(glm::vec2(178.f, 103.f));
@@ -4001,7 +4002,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
-
+    m_controlEntities[ControlButtons::ThreshR] = entity;
 
     //mouse speed down
     entity = createSquareHighlight(glm::vec2(11.f, 72.f));
@@ -4023,6 +4024,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
+    m_controlEntities[ControlButtons::LookL] = entity;
 
     //mouse speed up
     entity = createSquareHighlight(glm::vec2(178.f, 72.f));
@@ -4044,6 +4046,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
+    m_controlEntities[ControlButtons::LookR] = entity;
+
 
     //invert X
     entity = createSquareHighlight(glm::vec2(11.f, 54.f));
@@ -4062,6 +4066,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                 m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
             }
         });
+    m_controlEntities[ControlButtons::InvX] = entity;
 
     //centre
     entity = m_scene.createEntity();
@@ -4101,6 +4106,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                 m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
             }
         });
+    m_controlEntities[ControlButtons::Vib] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(99.f, 56.f, HighlightOffset));
@@ -4139,6 +4145,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                 m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
             }
         });
+    m_controlEntities[ControlButtons::AltPower] = entity;
+    
     //y'know if we defined these first we could capture them and update them in the button callback...
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(99.f, 40.f, HighlightOffset));
@@ -4214,6 +4222,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                 m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
             }
         });
+    m_controlEntities[ControlButtons::InvY] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(13.f, 40.f, HighlightOffset));
@@ -6081,11 +6090,71 @@ void OptionsState::updateControlIndices(bool isKeyboard)
 {
     if (isKeyboard)
     {
+        auto entity = m_controlEntities[ControlButtons::ThreshL];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlThreshR, CtrlLookL);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlRight, CtrlLayout);
 
+        entity = m_controlEntities[ControlButtons::ThreshR];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlRight, CtrlLookR);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlThreshL, CtrlLayout);
+
+        entity = m_controlEntities[ControlButtons::LookL];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlInvX);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlY, CtrlThreshL);
+
+        entity = m_controlEntities[ControlButtons::LookR];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlY, CtrlVib);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookL, CtrlThreshR);
+
+        entity = m_controlEntities[ControlButtons::InvX];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlVib, CtrlInvY);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlX, CtrlLookL);
+
+        entity = m_controlEntities[ControlButtons::InvY];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlAltPower, CtrlMouseAction);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlA, CtrlInvX);
+
+        entity = m_controlEntities[ControlButtons::Vib];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlX, CtrlAltPower);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvX, CtrlLookR);
+
+        entity = m_controlEntities[ControlButtons::AltPower];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlA, CtrlSwg);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvY, CtrlVib);
     }
     else
     {
+        auto entity = m_controlEntities[ControlButtons::ThreshL];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlThreshR, CtrlLookL);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlThreshR, CtrlLayout);
 
+        entity = m_controlEntities[ControlButtons::ThreshR];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlThreshL, CtrlLookR);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlThreshL, CtrlLayout);
+
+        entity = m_controlEntities[ControlButtons::LookL];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlInvX);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookR, CtrlThreshL);
+
+        entity = m_controlEntities[ControlButtons::LookR];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, CtrlVib);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookL, CtrlThreshR);
+
+        entity = m_controlEntities[ControlButtons::InvX];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlVib, CtrlInvY);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlVib, CtrlLookL);
+
+        entity = m_controlEntities[ControlButtons::InvY];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlAltPower, CtrlMouseAction);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlAltPower, CtrlInvX);
+
+        entity = m_controlEntities[ControlButtons::Vib];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlInvX, CtrlAltPower);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvX, CtrlLookR);
+
+        entity = m_controlEntities[ControlButtons::AltPower];
+        entity.getComponent<cro::UIInput>().setNextIndex(CtrlInvY, CtrlSwg);
+        entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvY, CtrlVib);
     }
 }
 
