@@ -1633,6 +1633,13 @@ void MenuState::handleMessage(const cro::Message& msg)
 
 bool MenuState::simulate(float dt)
 {
+    if (m_printTimer.elapsed().asSeconds() > 1.f)
+    {
+        m_printTimer.restart();
+        m_textChat.printToScreen(m_printQueue.front(), TextGoldColour);
+        m_printQueue.pop_front();
+    }
+
     m_textChat.update(dt);
 
     if (cro::Keyboard::isKeyPressed(SDLK_j))

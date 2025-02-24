@@ -3908,24 +3908,24 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     {
         for (auto i = 0u; i < cd.playerCount; ++i)
         {
-            cro::String s = cd.playerData[i].name + " has joined the game.";
+            m_printQueue.emplace_back(cd.playerData[i].name + " has joined the game.");
 
-            auto ent = m_uiScene.createEntity();
-            ent.addComponent<cro::Callback>().active = true;
-            ent.getComponent<cro::Callback>().setUserData<float>((static_cast<float>(i)/* * 2.f*/) + (cd.connectionID * ConstVal::MaxPlayers));
-            ent.getComponent<cro::Callback>().function =
-                [&, s](cro::Entity e, float dt)
-                {
-                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                    currTime -= dt;
+            //auto ent = m_uiScene.createEntity();
+            //ent.addComponent<cro::Callback>().active = true;
+            //ent.getComponent<cro::Callback>().setUserData<float>((static_cast<float>(i)/* * 2.f*/) + (cd.connectionID * ConstVal::MaxPlayers));
+            //ent.getComponent<cro::Callback>().function =
+            //    [&, s](cro::Entity e, float dt)
+            //    {
+            //        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            //        currTime -= dt;
 
-                    if (currTime < 0)
-                    {
-                        m_textChat.printToScreen(s, TextGoldColour);
-                        e.getComponent<cro::Callback>().active = false;
-                        m_uiScene.destroyEntity(e);
-                    }
-                };
+            //        if (currTime < 0)
+            //        {
+            //            m_textChat.printToScreen(s, TextGoldColour);
+            //            e.getComponent<cro::Callback>().active = false;
+            //            m_uiScene.destroyEntity(e);
+            //        }
+            //    };
         }
     }
 }

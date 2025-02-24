@@ -59,6 +59,7 @@ source distribution.
 #include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
+#include <deque>
 #include <unordered_map>
 
 static const std::uint32_t BallRenderFlags = (1 << 22);
@@ -118,6 +119,8 @@ private:
         std::vector<std::uint32_t> avatars;
     }m_cosmeticIDs;
 
+    std::deque<cro::String> m_printQueue;
+    cro::Clock m_printTimer;
     TextChat m_textChat;
     VoiceChat m_voiceChat;
     MatchMaking m_matchMaking;
