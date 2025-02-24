@@ -276,6 +276,9 @@ void GolfState::registerDebugCommands()
                         const auto scale = modelEnt.getComponent<cro::Transform>().getScale();
                         ImGui::Text("Scale %3.2f, %3.2f, %3.2f", scale.x, scale.y, scale.z);
 
+                        const auto pos = modelEnt.getComponent<cro::Transform>().getPosition();
+                        ImGui::Text("Position %3.2f, %3.2f, %3.2f", pos.x, pos.y, pos.z);
+
                         ImGui::Text("Draw list count %d <- Does this go to 0 when flickering?", model.getDrawlistCount());
                     }
                     else

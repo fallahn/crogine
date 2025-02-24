@@ -3799,6 +3799,17 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
         buttonEnt.getComponent<PageButtons>().buttons[ButtonID::Apply].getComponent<cro::UIInput>().setPrevIndex(WindowAdvanced, TabAchievements);
         buttonEnt.getComponent<PageButtons>().buttons[ButtonID::Quit].getComponent<cro::UIInput>().setPrevIndex(WindowApply, TabStats);
+
+        //we haven't finished the menu yet so this needs to be delayed
+        auto te = m_scene.createEntity();
+        te.addComponent<cro::Callback>().active = true;
+        te.getComponent<cro::Callback>().function =
+            [&](cro::Entity ent, float)
+            {
+                updateControlIndices(false);
+                ent.getComponent<cro::Callback>().active = false;
+                m_scene.destroyEntity(ent);
+            };
     }
 
 
