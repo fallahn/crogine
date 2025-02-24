@@ -373,13 +373,13 @@ bool MapOverviewState::simulate(float dt)
     if (len2 == 0)
     {
         //check controller analogue
-        auto x = m_thumbsticks.getValue(cro::GameController::AxisLeftX);
+        const auto x = m_thumbsticks.getValue(cro::GameController::AxisLeftX);
         if (x > cro::GameController::LeftThumbDeadZone || x < -cro::GameController::LeftThumbDeadZone)
         {
             movement.x = static_cast<float>(x) / cro::GameController::AxisMax;
         }
 
-        auto y = m_thumbsticks.getValue(cro::GameController::AxisLeftY);
+        const auto y = m_thumbsticks.getValue(cro::GameController::AxisLeftY);
         if (y > cro::GameController::LeftThumbDeadZone || y < -cro::GameController::LeftThumbDeadZone)
         {
             movement.y = -static_cast<float>(y) / cro::GameController::AxisMax;
@@ -391,7 +391,7 @@ bool MapOverviewState::simulate(float dt)
         }
 
 
-        auto zoom = -m_thumbsticks.getValue(cro::GameController::AxisRightY);
+        const auto zoom = -m_thumbsticks.getValue(cro::GameController::AxisRightY);
         if (zoom < -cro::GameController::LeftThumbDeadZone || zoom > cro::GameController::LeftThumbDeadZone)
         {
             float zoomRatio = static_cast<float>(zoom) / cro::GameController::AxisMax;

@@ -516,8 +516,8 @@ void FpsCameraSystem::process(float dt)
             else
             {
                 //see if we have any gamepad input
-                auto controllerX = m_thumbsticks.getValue(cro::GameController::AxisRightX);
-                auto controllerY = m_thumbsticks.getValue(cro::GameController::AxisRightY);
+                const auto controllerX = m_thumbsticks.getValue(cro::GameController::AxisRightX);
+                const auto controllerY = m_thumbsticks.getValue(cro::GameController::AxisRightY);
                 glm::vec2 axisRotation = glm::vec2(0.f);
 
                 if (std::abs(controllerX) > cro::GameController::LeftThumbDeadZone)
@@ -701,7 +701,7 @@ void FpsCameraSystem::checkControllerInput(float dt)
     //left stick
     auto startInput = m_input.buttonFlags;
 
-    float xPos = m_thumbsticks.getValue(cro::GameController::AxisLeftX);
+    const auto xPos = m_thumbsticks.getValue(cro::GameController::AxisLeftX);
     if (xPos < -cro::GameController::LeftThumbDeadZone)
     {
         m_input.buttonFlags |= Input::Left;
@@ -720,7 +720,7 @@ void FpsCameraSystem::checkControllerInput(float dt)
         m_input.buttonFlags &= ~Input::Right;
     }
 
-    float yPos = m_thumbsticks.getValue(cro::GameController::AxisLeftY);
+    const auto yPos = m_thumbsticks.getValue(cro::GameController::AxisLeftY);
     if (yPos < -cro::GameController::LeftThumbDeadZone)
     {
         m_input.buttonFlags |= Input::Forward;
@@ -746,8 +746,8 @@ void FpsCameraSystem::checkControllerInput(float dt)
     if (len2 > MinLen2)
     {
         m_analogueMultiplier = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax), 5.f));
-        m_forwardAmount = std::abs(yPos / cro::GameController::AxisMax);
-        m_sideAmount = std::abs(xPos / cro::GameController::AxisMax);
+        m_forwardAmount = std::abs(static_cast<float>(yPos) / cro::GameController::AxisMax);
+        m_sideAmount = std::abs(static_cast<float>(xPos) / cro::GameController::AxisMax);
     }
 
     if (m_triggerAmount)

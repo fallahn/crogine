@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -540,7 +540,7 @@ float InputParser::getCamRotation() const
             return -1.f;
         }
 
-        auto x = -getAxisPosition(cro::GameController::AxisRightX);
+        const auto x = -getAxisPosition(cro::GameController::AxisRightX);
         const auto dz = cro::GameController::LeftThumbDeadZone / 4;
         if (x < -dz || x > dz)
         {
@@ -1406,7 +1406,7 @@ void InputParser::checkControllerInput()
 
     //left stick
     auto startInput = m_inputFlags;
-    float xPos = getAxisPosition(cro::GameController::AxisLeftX);
+    const auto xPos = getAxisPosition(cro::GameController::AxisLeftX);
 
     if (xPos < -cro::GameController::LeftThumbDeadZone)
     {
@@ -1426,7 +1426,7 @@ void InputParser::checkControllerInput()
         m_inputFlags &= ~InputFlag::Right;
     }
 
-    float yPos = getAxisPosition(cro::GameController::AxisLeftY);
+    auto yPos = getAxisPosition(cro::GameController::AxisLeftY);
     
     float len2 = (xPos * xPos) + (yPos * yPos);
     static const float MinLen2 = static_cast<float>(cro::GameController::LeftThumbDeadZone * cro::GameController::LeftThumbDeadZone);
@@ -1536,8 +1536,8 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
         }
     }
 
-    auto controllerX = getAxisPosition(xAxis);
-    auto controllerY = getAxisPosition(yAxis);
+    const auto controllerX = getAxisPosition(xAxis);
+    const auto controllerY = getAxisPosition(yAxis);
     if (std::abs(controllerX) > cro::GameController::LeftThumbDeadZone)
     {
         rotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
