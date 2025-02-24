@@ -3661,8 +3661,16 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     {
         auto h = createHighlight(highlightPos, i);
         h.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
-        h.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, selectionIndex - 1);
-        h.getComponent<cro::UIInput>().setPrevIndex(CtrlLookR, selectionIndex + 1);
+        if (selectionIndex < CtrlUp)
+        {
+            h.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, selectionIndex - 1);
+            h.getComponent<cro::UIInput>().setPrevIndex(CtrlLookR, selectionIndex + 1);
+        }
+        else
+        {
+            h.getComponent<cro::UIInput>().setNextIndex(CtrlThreshL, selectionIndex - 1);
+            h.getComponent<cro::UIInput>().setPrevIndex(CtrlThreshR, selectionIndex + 1);
+        }
 
         selectionIndex++;
         highlightPos.y += 12.f;
@@ -3692,7 +3700,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Controls);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLayout);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLB, CtrlThreshL);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLB, CtrlThreshR);
     entity.getComponent<cro::UIInput>().setPrevIndex(TabAV, TabAV);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelectID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected]= highlightUnselectID;
@@ -3725,9 +3733,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                     selectionEnt.getComponent<cro::SpriteAnimation>().play(1);
 
                     ent.getComponent<cro::Transform>().setPosition(glm::vec2(-1.f));
-                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlLookR);
+                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlLookL, CtrlLookL);
 
                     infoEnt.getComponent<cro::Text>().setString(" ");
+
+                    updateControlIndices(false);
 
                     buttonEnt.getComponent<PageButtons>().tabs[TabID::Achievements].getComponent<cro::UIInput>().setNextIndex(TabStats, WindowApply);
                     buttonEnt.getComponent<PageButtons>().tabs[TabID::Stats].getComponent<cro::UIInput>().setNextIndex(TabAV, WindowClose);
@@ -3748,10 +3758,13 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
                     selectionEnt.getComponent<cro::SpriteAnimation>().play(0);
 
                     ent.getComponent<cro::Transform>().setPosition(glm::vec2(94.f, -1.f));
-                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlLB, CtrlLookL);
+                    ent.getComponent<cro::UIInput>().setNextIndex(CtrlRight, CtrlLookR);
 
                     infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
 
+                    updateControlIndices(true);
+
+                    //TODO move these to above func
                     buttonEnt.getComponent<PageButtons>().tabs[TabID::Achievements].getComponent<cro::UIInput>().setNextIndex(TabStats, CtrlLB);
                     buttonEnt.getComponent<PageButtons>().tabs[TabID::Stats].getComponent<cro::UIInput>().setNextIndex(TabAV, CtrlLB);
 
@@ -3950,7 +3963,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity.setLabel("Adjusts the minimum movement of the thumbstick before input\nis accepted by the game: larger values require more movement.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshL);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlThreshR, CtrlLookL);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, CtrlLayout);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlRight, CtrlLayout);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, deadzoneText](cro::Entity, cro::ButtonEvent evt) mutable
         {
@@ -3971,7 +3984,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity = createSquareHighlight(glm::vec2(178.f, 103.f));
     entity.setLabel("Adjusts the minimum movement of the thumbstick before input\nis accepted by the game: larger values require more movement.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlThreshR);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlRB, CtrlLookR);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlRight, CtrlLookR);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlThreshL, CtrlLayout);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, deadzoneText](cro::Entity, cro::ButtonEvent evt) mutable
@@ -3994,7 +4007,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity = createSquareHighlight(glm::vec2(11.f, 72.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLookL);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlLookR, CtrlInvX);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLB, CtrlThreshL);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlY, CtrlThreshL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, mouseText](cro::Entity, cro::ButtonEvent evt) mutable
         {
@@ -4014,7 +4027,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     //mouse speed up
     entity = createSquareHighlight(glm::vec2(178.f, 72.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlLookR);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlUp, CtrlVib);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlY, CtrlVib);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlLookL, CtrlThreshR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&, mouseText](cro::Entity, cro::ButtonEvent evt) mutable
@@ -4037,7 +4050,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity.setLabel("Invert the controller X axis when in camera mode");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlInvX);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlVib, CtrlInvY);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlY, CtrlLookL);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlX, CtrlLookL);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity, cro::ButtonEvent evt) mutable
         {
@@ -4075,7 +4088,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity = createSquareHighlight(glm::vec2(97.f, 54.f));
     entity.setLabel("Enable or disable controller vibration");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlVib);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlUp, CtrlAltPower);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlX, CtrlAltPower);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvX, CtrlLookR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity, cro::ButtonEvent evt) mutable
@@ -4113,7 +4126,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity = createSquareHighlight(glm::vec2(97.f, 38.f));
     entity.setLabel("When enabled press and hold Action to select stroke power\nelse use the default 3-tap method when disabled");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlAltPower);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlSwg);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlA, CtrlSwg);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvY, CtrlVib);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity, cro::ButtonEvent evt) mutable
@@ -4151,7 +4164,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity = createSquareHighlight(glm::vec2(97.f, 22.f));
     entity.setLabel("With either trigger held, pull back on a thumbstick to charge the power.\nPush forward on the stick to make your shot. Timing is important!");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlSwg);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlRight, WindowAdvanced);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlMouseAction, WindowAdvanced);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlMouseAction, CtrlAltPower);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity, cro::ButtonEvent evt) mutable
@@ -4189,7 +4202,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
     entity.setLabel("Invert the controller Y axis when in camera mode");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlInvY);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlAltPower, CtrlMouseAction);
-    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlB, CtrlInvX);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlA, CtrlInvX);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -6062,6 +6075,18 @@ void OptionsState::refreshControllerList()
         m_controllerInfoEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     }
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+}
+
+void OptionsState::updateControlIndices(bool isKeyboard)
+{
+    if (isKeyboard)
+    {
+
+    }
+    else
+    {
+
+    }
 }
 
 void OptionsState::quitState()

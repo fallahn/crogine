@@ -182,6 +182,29 @@ private:
     bool m_refreshControllers;
     void refreshControllerList();
 
+    struct ControlButtons final
+    {
+        enum
+        {
+            ThreshL,
+            ThreshR,
+            Layout,
+            LookL,
+            LookR,
+
+            InvX,
+            InvY,
+            MouseAction,
+            Vib,
+            AltPower,
+            Swg,
+            Reset,
+            Count
+        };
+    };
+    std::array<cro::Entity, ControlButtons::Count> m_controlEntities = {};
+    void updateControlIndices(bool isKeyboard);
+
     void quitState();
     void applyWebsock();
 };

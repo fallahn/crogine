@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -107,6 +107,7 @@ enum OptionsIndex
     CtrlSwg,
     CtrlReset,
     CtrlTab,
+    CtrlButtonCount,
 
     Settings = 400,
     SettWebsockEnable,
