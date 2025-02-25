@@ -179,6 +179,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_profileData           (sp),
     m_connectedClientCount  (0),
     m_connectedPlayerCount  (0),
+    m_canActive             (false),
     m_textChat              (m_uiScene, sd),
     m_voiceChat             (m_sharedData),
     m_matchMaking           (context.appInstance.getMessageBus(), checkCommandLine),

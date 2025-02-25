@@ -112,6 +112,8 @@ private:
     std::int32_t m_connectedClientCount;
     std::int32_t m_connectedPlayerCount;
 
+    bool m_canActive;
+
     struct CosmeticID final
     {
         std::vector<std::uint32_t> balls;

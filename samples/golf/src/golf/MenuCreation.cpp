@@ -3037,6 +3037,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     //quit confirmation / weather selection
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
 
+    static constexpr float BackgroundDepth = 4.f; //needs to be greater than the can
+
     //weather background
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -3045,7 +3047,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().depth = 1.8f;
+    entity.getComponent<UIElement>().depth = BackgroundDepth;
     entity.addComponent<cro::Callback>().setUserData<ConfirmationData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
@@ -3284,7 +3286,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().depth = 1.8f;
+    entity.getComponent<UIElement>().depth = BackgroundDepth;
     entity.addComponent<cro::Callback>().setUserData<ConfirmationData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)

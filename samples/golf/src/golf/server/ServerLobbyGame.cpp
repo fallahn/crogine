@@ -204,15 +204,15 @@ void LobbyState::spawnCan()
     m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, spawnInfo, net::NetFlag::Reliable);
 }
 
-void LobbyState::spawnCoin(float power/*, std::uint8_t client*/)
+void LobbyState::spawnCoin(float power, std::uint64_t client)
 {
-    if (m_gameStarted)
+    if (m_gameStarted
+        && m_gameScene.getSystem<CoinSystem>()->canSpawn(client))
     {
-        //TODO track coins per client and limit number of active
-
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<Coin>().velocity = glm::normalize(Coin::InitialVelocity) * power;
+        entity.getComponent<Coin>().owner = client;
 
         //send actor spawn packet
         ActorInfo spawnInfo;

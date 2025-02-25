@@ -31,6 +31,8 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+#include <unordered_map>
+
 static constexpr float PixelsPerMetre = 200.f;
 struct Coin final
 {
@@ -38,6 +40,7 @@ struct Coin final
     static constexpr glm::vec2 Gravity = glm::vec2(0.f, -9.5f * PixelsPerMetre);
     
     glm::vec2 velocity = InitialVelocity;
+    std::uint64_t owner = 0;
 };
 
 namespace sv
@@ -58,7 +61,13 @@ public:
 
     cro::Entity getBucketEnt() const { return m_bucketEnt; }
 
+    bool canSpawn(std::uint64_t);
+
 private:
     sv::SharedData& m_sharedData;
     cro::Entity m_bucketEnt;
+
+    std::unordered_map<std::uint64_t, std::int32_t> m_coinCount;
+    void onEntityAdded(cro::Entity) override;
+    void onEntityRemoved(cro::Entity) override;
 };

@@ -71,3 +71,35 @@ void CoinSystem::process(float dt)
         }
     }
 }
+
+bool CoinSystem::canSpawn(std::uint64_t client)
+{
+    static constexpr std::int32_t MaxCoins = 5;
+
+    if (m_coinCount.count(client) == 0)
+    {
+        return true;
+    }
+
+    return m_coinCount.at(client) < MaxCoins;
+}
+
+//private
+void CoinSystem::onEntityAdded(cro::Entity e)
+{
+    auto client = e.getComponent<Coin>().owner;
+    if (m_coinCount.count(client) == 0)
+    {
+        m_coinCount.insert(std::make_pair(client, 1));
+    }
+    else
+    {
+        m_coinCount.at(client)++;
+    }
+}
+
+void CoinSystem::onEntityRemoved(cro::Entity e)
+{
+    //this should NEVER be missing from the counter...
+    m_coinCount.at(e.getComponent<Coin>().owner)--;
+}

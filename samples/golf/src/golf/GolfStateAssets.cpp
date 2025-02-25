@@ -2530,14 +2530,16 @@ void GolfState::loadModels()
                                 if (m_sharedData.nightTime
                                     && models.materialIDs[i][j] == ClubModels::Emissive)
                                 {
-                                    matID = MaterialID::Emissive;
+                                    matID = MaterialID::BallNight;
+                                    //matID = MaterialID::Emissive;
                                 }
                                 break;
                             case 1:
                                 if (m_sharedData.nightTime)
                                 {
                                     matID = models.materialIDs[i][j] == ClubModels::Emissive ? 
-                                        MaterialID::Emissive : MaterialID::Trophy;
+                                        MaterialID::BallNight : MaterialID::Trophy;
+                                        //MaterialID::Emissive : MaterialID::Trophy;
                                 }
                                 else
                                 {

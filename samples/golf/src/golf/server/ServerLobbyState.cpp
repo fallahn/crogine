@@ -31,12 +31,14 @@ source distribution.
 #include "../CommonConsts.hpp"
 #include "../SharedStateData.hpp"
 #include "../Utility.hpp"
+#include "../CoinSystem.hpp"
 
 #include "ServerLobbyState.hpp"
 #include "ServerPacketData.hpp"
 #include "ServerMessages.hpp"
 
 #include <crogine/core/Log.hpp>
+#include<crogine/ecs/components/Callback.hpp>
 #include <crogine/network/NetData.hpp>
 
 #include <cstring>
@@ -110,7 +112,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         {
         default:break;
         case PacketID::CoinSpawn:
-            spawnCoin(evt.packet.as<float>());
+            spawnCoin(evt.packet.as<float>(), evt.peer.getID());
             break;
         case PacketID::ServerCommand:
             doServerCommand(evt);
@@ -357,6 +359,36 @@ void LobbyState::broadcastRules()
     m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+
+    //check for can and do a delayed spawn
+    //TODO we should probably only send to new connection
+    //but clients with existing cans ought to ignore this anyway
+    auto e = m_gameScene.getSystem<CoinSystem>()->getBucketEnt();
+    if (e.isValid())
+    {
+        cro::Entity entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(3.f);
+        entity.getComponent<cro::Callback>().function =
+            [&, e](cro::Entity ent, float dt)
+            {
+                auto& ct = ent.getComponent<cro::Callback>().getUserData<float>();
+                ct -= dt;
+                if (ct < 0)
+                {
+                    ActorInfo spawnInfo;
+                    spawnInfo.playerID = 0;
+                    spawnInfo.serverID = e.getIndex();
+                    spawnInfo.position = e.getComponent<cro::Transform>().getPosition();
+                    spawnInfo.lie = ConstVal::NullValue; //use this to ignore packets in game mode
+                    m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, spawnInfo, net::NetFlag::Reliable);
+
+                    ent.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(ent);
+                }
+            };
+    }
 }
 
 void LobbyState::doServerCommand(const net::NetEvent& evt)

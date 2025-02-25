@@ -63,7 +63,8 @@ void MenuState::spawnActor(const ActorInfo& info)
         InterpolationPoint(pos, glm::vec3(0.f), cro::Transform::QUAT_IDENTITY, info.timestamp)).id = info.serverID;
     entity.addComponent<cro::Drawable2D>().setCullingEnabled(false);
 
-    if (info.playerID == 0)
+    if (info.playerID == 0
+        && !m_canActive)
     {
         //can
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Can];
@@ -100,20 +101,24 @@ void MenuState::spawnActor(const ActorInfo& info)
             {
                 if (entity.destroyed())
                 {
+                    //not the best place to put it, but it'll do
+                    m_canActive = false;
+
                     e.getComponent<cro::Callback>().active = false;
                     m_uiScene.destroyEntity(e);
                 }
             };
         const auto canBounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         const auto buttonBounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
-        buttonEnt.getComponent<cro::Transform>().setPosition({ canBounds.width / 2.f, canBounds.height / 2.f, 0.4f });
+        buttonEnt.getComponent<cro::Transform>().setPosition({ canBounds.width / 2.f, canBounds.height / 2.f, 0.6f });
         buttonEnt.getComponent<cro::Transform>().setOrigin(glm::vec2(buttonBounds.width / 2.f, buttonBounds.height / 2.f));
 
         entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
         createCanControl(entity);
+        m_canActive = true;
     }
-    else
+    else if(info.playerID == 1)
     {
         //coin
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Coin];
