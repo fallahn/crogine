@@ -125,6 +125,28 @@ void MenuState::spawnActor(const ActorInfo& info)
         entity.addComponent<cro::SpriteAnimation>().play(0);
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+            {
+                static constexpr float MaxVel = 240000.f;
+                
+                const float vel = glm::length2(e.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
+                const float animSpeed = std::min(1.f, vel / MaxVel);
+
+                e.getComponent<cro::SpriteAnimation>().playbackRate = animSpeed;
+
+                //initial vel is 0 so we want to wait before checking this
+                auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                ct -= dt;
+                if (ct < 0 &&
+                    animSpeed < 0.1f)
+                {
+                    e.getComponent<cro::SpriteAnimation>().stop();
+                }
+            };
     }
 
     m_bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

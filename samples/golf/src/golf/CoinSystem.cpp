@@ -42,6 +42,7 @@ namespace
     constexpr float BucketRadSqr = BucketRadius * BucketRadius;
     constexpr cro::FloatRect BucketLeft = {1.f, 0.f, 6.f, 46.f};
     constexpr cro::FloatRect BucketRight = {35.f, 0.f, 6.f, 46.f};
+    constexpr cro::FloatRect BucketBottom = { 7.f, 0.f, 26.f, 10.f };
     constexpr cro::FloatRect CoinRect = {-2.f, -2.f, 4.f, 4.f};
 
     constexpr float Dampening = 0.05f;
@@ -83,9 +84,11 @@ void CoinSystem::process(float dt)
     {
         const auto bucketLeft = BucketLeft.transform(m_bucketEnt.getComponent<cro::Transform>().getLocalTransform());
         const auto bucketRight = BucketRight.transform(m_bucketEnt.getComponent<cro::Transform>().getLocalTransform());
+        const auto bucketBottom = BucketBottom.transform(m_bucketEnt.getComponent<cro::Transform>().getLocalTransform());
 
         const auto leftCentre = glm::vec2(bucketLeft.left + (bucketLeft.width / 2.f), bucketLeft.bottom + (bucketLeft.height / 2.f));
         const auto rightCentre = glm::vec2(bucketRight.left + (bucketRight.width / 2.f), bucketRight.bottom + (bucketRight.height / 2.f));
+        const auto bottomCentre = glm::vec2(bucketBottom.left + (bucketBottom.width / 2.f), bucketBottom.bottom + (bucketBottom.height / 2.f));
 
         const auto canCentre = glm::vec2(m_bucketEnt.getComponent<cro::Transform>().getPosition()) + BucketCentre;
 
@@ -112,14 +115,14 @@ void CoinSystem::process(float dt)
 
                     cro::FloatRect overlap;
 
-                    auto testCollision = [&](const cro::FloatRect& target)
+                    const auto testCollision = [&](const cro::FloatRect& target, glm::vec2 centre)
                         {
                             if (coinRect.intersects(target, overlap))
                             {
-                                const auto normal = leftCentre - pos;
+                                const auto normal = centre - pos;
                                 const auto manifold = getManifold(overlap, normal);
 
-                                tx.setPosition(pos + (glm::vec2(manifold) * (manifold.z * 2.f)));
+                                tx.setPosition(pos + (glm::vec2(manifold) * (manifold.z * 1.5f)));
                                 coin.velocity = glm::reflect(coin.velocity, glm::vec2(manifold));
 
                                 coin.velocity *= Dampening;
@@ -128,9 +131,19 @@ void CoinSystem::process(float dt)
                             return false;
                         };
 
-                    if (testCollision(bucketLeft) || testCollision(bucketRight))
+                    if (testCollision(bucketLeft, leftCentre) || testCollision(bucketRight, rightCentre))
                     {
                         break;
+                    }
+                    else if (testCollision(bucketBottom, bottomCentre))
+                    {
+                        //TODO raise some sort of event to let the client draw points?
+
+                        const auto id = static_cast<std::uint32_t>(entity.getIndex());
+                        getScene()->destroyEntity(entity);
+
+                        m_sharedData.host.broadcastPacket(PacketID::CoinRemove, id, net::NetFlag::Reliable);
+                        return;
                     }
                     else
                     {
@@ -146,7 +159,7 @@ void CoinSystem::process(float dt)
 
             coin.velocity += Coin::Gravity * dt;
 
-            if (tx.getPosition().y < 0)
+            if (tx.getPosition().y < -22.f) //kludgy value representing the banner height
             {
                 const auto id = static_cast<std::uint32_t>(entity.getIndex());
                 getScene()->destroyEntity(entity);
