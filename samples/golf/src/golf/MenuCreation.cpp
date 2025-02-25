@@ -4923,9 +4923,9 @@ void MenuState::updateUnlockedItems()
         {
             clubFlags = ClubID::DefaultSet;
         }
-        //this is a fudge for people ho miss putters from their set...
+        //this is a fudge for people who miss putters from their set...
         clubFlags |= ClubID::Flags[ClubID::Putter];
-        auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / 5));
+        auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / Social::ClubStepLevel));
         for (auto i = 0u; i < clubCount; ++i)
         {
             auto clubID = ClubID::LockedSet[i];
@@ -5016,16 +5016,16 @@ void MenuState::updateUnlockedItems()
 
     if (genericFlags != -1)
     {
-        if (level > 14)
+        if (level > Social::ExpertLevel - 1)
         {
-            //club range is extended at level 15 and 30
+            //club range is extended at level Social::ExpertLevel and Social::ProLevel
             auto flag = (1 << 0);
             if ((genericFlags & flag) == 0)
             {
                 genericFlags |= flag;
                 m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend01;
             }
-            else if (level > 29)
+            else if (level > Social::ProLevel - 1)
             {
                 flag = (1 << (ul::UnlockID::RangeExtend02 - genericBase));
                 if ((genericFlags & flag) == 0)

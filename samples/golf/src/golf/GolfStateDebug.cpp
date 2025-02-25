@@ -247,52 +247,52 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    registerWindow([&]() 
-        {
-            ImGui::SetNextWindowSize({ 436.f, 144.f });
-            if (ImGui::Begin("Club Model"))
-            {
-                ImGui::Text("%s", cro::Console::getLastOutput().c_str());
-                ImGui::Separator();
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::SetNextWindowSize({ 436.f, 144.f });
+    //        if (ImGui::Begin("Club Model"))
+    //        {
+    //            ImGui::Text("%s", cro::Console::getLastOutput().c_str());
+    //            ImGui::Separator();
 
-                /*ImGui::Text("Server Group: %d", m_serverGroup);
-                ImGui::Text("Target Group: %lu", m_idleCameraIndex);
-                ImGui::Text("Target Client: %d, Target Player: %d", m_groupPlayerPositions[m_idleCameraIndex].client, m_groupPlayerPositions[m_idleCameraIndex].player);*/
+    //            /*ImGui::Text("Server Group: %d", m_serverGroup);
+    //            ImGui::Text("Target Group: %lu", m_idleCameraIndex);
+    //            ImGui::Text("Target Client: %d, Target Player: %d", m_groupPlayerPositions[m_idleCameraIndex].client, m_groupPlayerPositions[m_idleCameraIndex].player);*/
 
-                if (m_activeAvatar
-                    && m_activeAvatar->hands)
-                {
-                    const auto modelEnt = m_activeAvatar->hands->getModel();
+    //            if (m_activeAvatar
+    //                && m_activeAvatar->hands)
+    //            {
+    //                const auto modelEnt = m_activeAvatar->hands->getModel();
 
-                    if (modelEnt.isValid())
-                    {
-                        const auto& model = modelEnt.getComponent<cro::Model>();
-                        const auto facing = model.getFacing() == cro::Model::Facing::Front ? "Front" : "Back";
-                        ImGui::Text("Facing: %s", facing);
+    //                if (modelEnt.isValid())
+    //                {
+    //                    const auto& model = modelEnt.getComponent<cro::Model>();
+    //                    const auto facing = model.getFacing() == cro::Model::Facing::Front ? "Front" : "Back";
+    //                    ImGui::Text("Facing: %s", facing);
 
-                        const auto hidden = model.isHidden() ? "true" : "false";
-                        ImGui::Text("Hidden: %s", hidden);
+    //                    const auto hidden = model.isHidden() ? "true" : "false";
+    //                    ImGui::Text("Hidden: %s", hidden);
 
-                        const auto scale = modelEnt.getComponent<cro::Transform>().getScale();
-                        ImGui::Text("Scale %3.2f, %3.2f, %3.2f", scale.x, scale.y, scale.z);
+    //                    const auto scale = modelEnt.getComponent<cro::Transform>().getScale();
+    //                    ImGui::Text("Scale %3.2f, %3.2f, %3.2f", scale.x, scale.y, scale.z);
 
-                        const auto pos = modelEnt.getComponent<cro::Transform>().getPosition();
-                        ImGui::Text("Position %3.2f, %3.2f, %3.2f", pos.x, pos.y, pos.z);
+    //                    const auto pos = modelEnt.getComponent<cro::Transform>().getPosition();
+    //                    ImGui::Text("Position %3.2f, %3.2f, %3.2f", pos.x, pos.y, pos.z);
 
-                        ImGui::Text("Draw list count %d <- Does this go to 0 when flickering?", model.getDrawlistCount());
-                    }
-                    else
-                    {
-                        ImGui::Text("Model Ent not valid");
-                    }                    
-                }
-                else
-                {
-                    ImGui::Text("No Model");
-                }
-            }
-            ImGui::End();
-        });
+    //                    ImGui::Text("Draw list count %d <- Does this go to 0 when flickering?", model.getDrawlistCount());
+    //                }
+    //                else
+    //                {
+    //                    ImGui::Text("Model Ent not valid");
+    //                }                    
+    //            }
+    //            else
+    //            {
+    //                ImGui::Text("No Model");
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
 
     registerCommand("refresh_turn", [&](const std::string&)
         {

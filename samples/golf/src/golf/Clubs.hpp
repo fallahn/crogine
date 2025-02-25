@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,6 +28,8 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #pragma once
+
+#include <Social.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
@@ -69,7 +71,7 @@ struct ClubID final
         {
             if (LockedSet[i] == id)
             {
-                return (i + 1) * 5;
+                return (i + 1) * Social::ClubStepLevel;
             }
         }
 

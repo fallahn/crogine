@@ -72,6 +72,10 @@ struct HallEntry final
 class Social final
 {
 public:
+    static constexpr std::int32_t ExpertLevel = 10;
+    static constexpr std::int32_t ProLevel = 20;
+    static constexpr std::int32_t ClubStepLevel = 3;
+
     struct InfoID final
     {
         enum

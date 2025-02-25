@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -860,18 +860,18 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         label = ((clubFlags & ClubID::Flags[clubID]) == 0) ? "Level " + std::to_string(unlockLevel) : "|";
         label += "\n";
 
-        if ((playerLevel < 15) || (clubFlags & ClubID::Flags[clubID]) == 0)
+        if ((playerLevel < Social::ExpertLevel) || (clubFlags & ClubID::Flags[clubID]) == 0)
         {
-            auto l = std::max(15, unlockLevel);
+            auto l = std::max(Social::ExpertLevel, unlockLevel);
             label += "Level " + std::to_string(l) + "\n";
         }
         else
         {
             label += "|\n";
         }
-        if ((playerLevel < 30) || (clubFlags & ClubID::Flags[clubID]) == 0)
+        if ((playerLevel < Social::ProLevel) || (clubFlags & ClubID::Flags[clubID]) == 0)
         {
-            label += "Level 30\n";
+            label += "Level " + std::to_string(Social::ProLevel) + "\n";
         }
         else
         {

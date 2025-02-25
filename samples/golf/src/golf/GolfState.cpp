@@ -4694,6 +4694,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 const auto club = (data & 0xff00) >> 8;
                 togglePuttingView(club == ClubID::Putter);
 
+                //for some reason this makes the default clubs flicker.
                 /*if (club != ClubID::Putter
                     && (data & 0x00ff) == m_currentPlayer.client)
                 {

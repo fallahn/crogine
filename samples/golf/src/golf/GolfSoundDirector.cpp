@@ -582,8 +582,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
                         if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                         {
+                            //we want this to be a generally negative emote, but not the same as a bunker
                             const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
-                            playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.f, pitch);
+                            playAvatarSoundDelayed(idx, /*"bunker"*/"hook", glm::vec3(0.f), 2.f, pitch); 
                         }
 
                         break;
@@ -598,8 +599,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
                         if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                         {
+                            //as with bunker, above^^
                             const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
-                            playAvatarSoundDelayed(idx, "scrub", glm::vec3(0.f), 2.2f, pitch);
+                            playAvatarSoundDelayed(idx, /*"scrub"*/"slice", glm::vec3(0.f), 2.2f, pitch);
                         }
                         break;
                     case TerrainID::Green:
@@ -652,7 +654,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                             //this is a forfeit
                             if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                             {
-                                std::string emitterName = cro::Util::Random::value(0, 1) == 1 ? "bunker" : "scrub";
+                                std::string emitterName = cro::Util::Random::value(0, 1) == 1 ? "hook" : "slice";
                                 if (m_playerVoices[idx].hasEmitter(emitterName))
                                 {
                                     const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
@@ -795,7 +797,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
                 if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                 {
-                    std::string emitterName = cro::Util::Random::value(0,1) == 1 ? "rough" : "bunker";
+                    std::string emitterName = cro::Util::Random::value(0,1) == 1 ? "slice" : "hook";
                     if (m_playerVoices[idx].hasEmitter(emitterName))
                     {
                         const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
@@ -931,11 +933,17 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
             {
             default: break;
             case AudioID::TerrainBunker01:
+                emitterName = "bunker";
+                break;
             case AudioID::TerrainRough01:
+                emitterName = "rough";
+                break;
             case AudioID::TerrainScrub01:
+                emitterName = "scrub";
+                break;
             case AudioID::TerrainWater01:
 
-                {
+                /*{
                     auto r = cro::Util::Random::value(0, 3);
                     switch (r)
                     {
@@ -953,8 +961,8 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
                         emitterName = "water";
                         break;
                     }
-                }
-
+                }*/
+                emitterName = "water";
                 break;
 
             case AudioID::TerrainFairway01:

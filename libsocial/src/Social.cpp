@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -199,12 +199,12 @@ std::int32_t Social::getClubLevel()
     //check player level and return increased distance
     auto level = getLevel();
 
-    if (level > 29)
+    if (level > ProLevel - 1)
     {
         return 2;
     }
 
-    if (level > 14)
+    if (level > ExpertLevel - 1)
     {
         return 1;
     }
