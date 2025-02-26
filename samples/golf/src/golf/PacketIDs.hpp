@@ -249,6 +249,7 @@ namespace PacketID
 
         CoinSpawn, //float power - sent to server. Result comes back as actor spawn
         CoinRemove, //uint32_t server ID
+        CoinBucketed, //coin was removed because it landed in the bucket uint64_t peerID
 
         //special cases for websocket
         RichPresence = 127

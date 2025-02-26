@@ -89,6 +89,7 @@ struct ActorInfo final
     std::uint8_t state = 0;
     std::uint8_t lie = 0;
     std::uint8_t groupID = 0;
+    std::uint8_t collisionTerrain = 255;
 };
 
 static inline bool operator == (const ActorInfo& actor, const ActivePlayer& player)

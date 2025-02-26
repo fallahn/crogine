@@ -41,6 +41,8 @@ struct Coin final
     
     glm::vec2 velocity = InitialVelocity;
     std::uint64_t owner = 0;
+    bool collisionStart = false;
+    bool hadCollisionLastFrame = false;
 };
 
 namespace sv

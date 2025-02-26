@@ -69,6 +69,13 @@ void LobbyState::netBroadcast()
             info.playerID = ConstVal::NullValue;
             info.lie = ConstVal::NullValue;
             info.groupID = ConstVal::NullValue;
+
+            if (e.hasComponent<Coin>())
+            {
+                auto& coin = e.getComponent<Coin>();
+                info.collisionTerrain = coin.collisionStart ? 1 : ConstVal::NullValue;
+                coin.collisionStart = false;
+            }
             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
         };
     sendData(bucketEnt);

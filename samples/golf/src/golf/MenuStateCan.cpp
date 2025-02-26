@@ -32,6 +32,7 @@ source distribution.
 #include "Networking.hpp"
 #include "CommandIDs.hpp"
 #include "CoinSystem.hpp"
+#include "MenuSoundDirector.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -117,6 +118,8 @@ void MenuState::spawnActor(const ActorInfo& info)
 
         createCanControl(entity);
         m_canActive = true;
+
+        m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(MenuSoundDirector::AudioID::BucketSpawn, 0.25f);
     }
     else if(info.playerID == 1)
     {
@@ -147,6 +150,12 @@ void MenuState::spawnActor(const ActorInfo& info)
                     e.getComponent<cro::SpriteAnimation>().stop();
                 }
             };
+
+        auto sound = m_backgroundScene.getDirector<MenuSoundDirector>()->playSound(
+            cro::Util::Random::value(MenuSoundDirector::AudioID::Flip01, MenuSoundDirector::AudioID::Flip01 + 3), 0.55f);
+
+        const float pitchOffset = static_cast<float>(cro::Util::Random::value(-10, 10)) / 100.f;
+        sound.getComponent<cro::AudioEmitter>().setPitch(1.f + pitchOffset);
     }
 
     m_bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -181,7 +190,7 @@ void MenuState::updateActor(const ActorInfo& info)
             if (interp.id == info.serverID)
             {
                 glm::vec3 pos = { info.position.x, info.position.y + ActorY, ActorZ };
-                interp.addPoint({ pos, glm::vec3(0.f), cro::Transform::QUAT_IDENTITY, info.timestamp });
+                interp.addPoint({ pos, glm::vec3(0.f), cro::Transform::QUAT_IDENTITY, info.timestamp, info.collisionTerrain });
             }
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

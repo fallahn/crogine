@@ -133,11 +133,16 @@ void CoinSystem::process(float dt)
 
                     if (testCollision(bucketLeft, leftCentre) || testCollision(bucketRight, rightCentre))
                     {
+                        if (!coin.hadCollisionLastFrame)
+                        {
+                            coin.collisionStart = true;
+                        }
+                        coin.hadCollisionLastFrame = true;
                         break;
                     }
                     else if (testCollision(bucketBottom, bottomCentre))
                     {
-                        //TODO raise some sort of event to let the client draw points?
+                        m_sharedData.host.broadcastPacket(PacketID::CoinBucketed, coin.owner, net::NetFlag::Reliable);
 
                         const auto id = static_cast<std::uint32_t>(entity.getIndex());
                         getScene()->destroyEntity(entity);
