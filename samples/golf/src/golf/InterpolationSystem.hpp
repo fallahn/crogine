@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
+#include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -194,7 +195,7 @@ public:
 						if (interp.m_buffer.front().collisionTerrain != ConstVal::NullValue)
 						{
 							//LogI << "CollisionID: " << interp.m_buffer.front().collisionTerrain << std::endl;
-							auto* msg = getScene()->postMessage<CollisionEvent>(cl::MessageID::CollisionMessage);
+							auto* msg = cro::App::getInstance().getMessageBus().post<CollisionEvent>(cl::MessageID::CollisionMessage);
 							msg->type = CollisionEvent::Begin;
 							msg->position = interp.m_buffer.front().position;
 							msg->terrain = interp.m_buffer.front().collisionTerrain;
