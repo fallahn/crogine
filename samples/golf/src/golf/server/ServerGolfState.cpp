@@ -549,7 +549,7 @@ void GolfState::netBroadcast()
                 ball.getComponent<Ball>().state != Ball::State::Idle*/)
             {
                 const auto timestamp = m_serverTime.elapsed().asMilliseconds();
-                const auto& ballC = ball.getComponent<Ball>();
+                auto& ballC = ball.getComponent<Ball>();
 
                 ActorInfo info;
                 info.serverID = static_cast<std::uint32_t>(ball.getIndex());
@@ -562,6 +562,9 @@ void GolfState::netBroadcast()
                 info.state = static_cast<std::uint8_t>(ballC.state);
                 info.lie = ballC.lie;
                 info.groupID = m_groupAssignments[player.client];
+                //as these are only used for sound effects only send the events where we bounce on something
+                info.collisionTerrain = ballC.state == Ball::State::Flight ? ballC.lastTerrain : ConstVal::NullValue;
+                ballC.lastTerrain = ConstVal::NullValue;
                 m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
             }
         }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -171,8 +171,8 @@ void ClientCollisionSystem::process(float)
         {
             //ugh messy, but there are several edge cases (this is responsible for sound effects
             //and particle effects being raised)
-            if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
-                || collider.state == static_cast<std::uint8_t>(Ball::State::Reset) //for scrub/water
+            if (/*collider.state == static_cast<std::uint8_t>(Ball::State::Flight) //we'll let the interp events raise these
+                ||*/ collider.state == static_cast<std::uint8_t>(Ball::State::Reset) //for scrub/water
                 || collider.terrain == TerrainID::Hole
                 || collider.terrain == TerrainID::Bunker)
             {

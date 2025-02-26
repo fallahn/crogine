@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1099,6 +1099,8 @@ void BallSystem::doCollision(cro::Entity entity)
             //reduce the velocity more nearer the top as the flag is bendier (??)
             ball.velocity *= (0.5f + (0.2f * (1.f - (ballHeight / 1.9f))));
 
+            //hmm we want to set the ball terrain to the flag value
+            //of -4, but ofc the kludge bites us as the packet data is unsigned...
 
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->terrain = CollisionEvent::FlagPole;
@@ -1249,6 +1251,8 @@ void BallSystem::doCollision(cro::Entity entity)
             msg->position = pos;
             msg->type = CollisionEvent::Begin;
 
+            ball.lastTerrain = terrainResult.terrain;
+
             //this might raise an achievement for example
             //so don't do it during CPU prediction, or fast forwarding, cos that kinda cheats
             //or at least means the player misses out on seeing it happen
@@ -1265,6 +1269,7 @@ void BallSystem::doCollision(cro::Entity entity)
         //must have missed all geometry and so are in scrub or water
         auto& ball = entity.getComponent<Ball>();
         resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
+        ball.lastTerrain = TerrainID::Water;
 
         auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
         msg->terrain = TerrainID::Water;

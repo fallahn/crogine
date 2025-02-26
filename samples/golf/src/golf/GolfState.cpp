@@ -7241,7 +7241,7 @@ void GolfState::updateActor(const ActorInfo& update)
                 //}
 
                 //cro::Transform::QUAT_IDENTITY;
-                interp.addPoint({ position, glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp});
+                interp.addPoint({ position, glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp, update.collisionTerrain });
 
                 //only follow the ball with the camera if it belongs to the active group
                 if (update.groupID == m_gameScene.getSystem<CameraFollowSystem>()->getTargetGroup())
