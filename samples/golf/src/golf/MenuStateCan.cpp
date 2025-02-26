@@ -134,7 +134,7 @@ void MenuState::spawnActor(const ActorInfo& info)
         entity.getComponent<cro::Callback>().function =
             [](cro::Entity e, float dt)
             {
-                static constexpr float MaxVel = 240000.f;
+                static constexpr float MaxVel = 1200000.f;
                 
                 const float vel = glm::length2(e.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
                 const float animSpeed = std::min(1.f, vel / MaxVel);
@@ -145,7 +145,7 @@ void MenuState::spawnActor(const ActorInfo& info)
                 auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
                 ct -= dt;
                 if (ct < 0 &&
-                    animSpeed < 0.1f)
+                    animSpeed < 0.2f)
                 {
                     e.getComponent<cro::SpriteAnimation>().stop();
                 }

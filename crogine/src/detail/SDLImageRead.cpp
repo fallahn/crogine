@@ -57,7 +57,7 @@ namespace cro
             //we're at EOF or some error happened
             io->atEOF = 1;
         }
-        return ret * sizeof(char);
+        return static_cast<std::int32_t>(ret * sizeof(char));
     }
 
     void STBIMG__io_skip(void* user, std::int32_t n)

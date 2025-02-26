@@ -200,7 +200,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         else
         {
             //remove the difference
-            removeCount = m_textureIDs.size() - colourCount;
+            removeCount = static_cast<std::uint32_t>(m_textureIDs.size() - colourCount);
             //for (auto i = colourCount; i < m_textureIDs.size(); ++i)
             {
                 glCheck(glDeleteTextures(removeCount, &m_textureIDs[colourCount]));
