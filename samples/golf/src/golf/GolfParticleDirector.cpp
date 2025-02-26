@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -194,7 +194,8 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             switch (data.terrain)
             {
             default: 
-                if (m_sharedData.showBallTrail)
+                if (m_sharedData.showBallTrail
+                    && cro::Util::Random::value(0,3) == 0)
                 {
                     getEnt(ParticleID::Trail, data.position);
                 }

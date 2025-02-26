@@ -124,13 +124,14 @@ static constexpr std::array<float, TerrainID::Count> Restitution =
 //how much the spin is reduced when bouncing on the terrain
 static constexpr std::array<glm::vec2, TerrainID::Count> SpinReduction =
 {
-    glm::vec2(0.5f),
-    glm::vec2(0.8f, 0.995f),
-    glm::vec2(0.98f, 0.995f),
+    glm::vec2(0.5f), //rough
+    glm::vec2(0.8f, 0.995f), //fairways
+    glm::vec2(0.98f, 0.995f), //green
     glm::vec2(0.f),
     glm::vec2(0.f),
     glm::vec2(0.f),
-    glm::vec2(0.99f, 0.999f),
+    glm::vec2(0.98f, 0.995f), //stone
+    //glm::vec2(0.99f, 0.999f), //stone
     glm::vec2(0.f)
 };
 

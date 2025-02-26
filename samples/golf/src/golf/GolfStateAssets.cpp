@@ -3106,15 +3106,15 @@ void GolfState::updateFlagTexture(bool reloadTexture)
 {
     if (!m_flagTexture.available())
     {
-        LogI << "Flag Texture is unavailable for custom flags" << std::endl;
+        //LogI << "Flag Texture is unavailable for custom flags" << std::endl;
         if (cro::FileSystem::fileExists(m_sharedData.flagPath))
         {
             m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
-            LogI << "Found " << m_sharedData.flagPath << " - creating flag texture..." << std::endl;
+            //LogI << "Found " << m_sharedData.flagPath << " - creating flag texture..." << std::endl;
         }
         else
         {
-            LogI << m_sharedData.flagPath << ": file not found." << std::endl;
+            //LogI << m_sharedData.flagPath << ": file not found." << std::endl;
             return;
         }
     }
@@ -3123,18 +3123,20 @@ void GolfState::updateFlagTexture(bool reloadTexture)
     {
         if (!m_resources.textures.loaded(TextureID::Flag))
         {
-            if (m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath))
+            m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath);
+            /*if (m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath))
                 LogI << "loaded flag texture from " << m_sharedData.flagPath << std::endl;
             else
-                LogI << "failed loading flag texture " << m_sharedData.flagPath << std::endl;
+                LogI << "failed loading flag texture " << m_sharedData.flagPath << std::endl;*/
         }
         else
         {
             //overwrite existing to recycle the handle.
-            if (m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath))
+            m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath);
+            /*if (m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath))
                 LogI << "reloaded flag texture from " << m_sharedData.flagPath << std::endl;
             else
-                LogI << "failed reloading flag texture " << m_sharedData.flagPath << std::endl;
+                LogI << "failed reloading flag texture " << m_sharedData.flagPath << std::endl;*/
         }
         m_flagQuad.setTexture(m_resources.textures.get(TextureID::Flag));
 
