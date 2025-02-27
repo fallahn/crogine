@@ -45,6 +45,21 @@ struct Coin final
     bool hadCollisionLastFrame = false;
 };
 
+struct CanData final
+{
+    enum
+    {
+        Pause, Move
+    }state = Pause;
+
+    glm::vec3 velocity = glm::vec3(0.f);
+
+    float pauseTime = 3.f;
+
+    float target = 0.f;
+    CanData(float t) : target(t) {}
+};
+
 namespace sv
 {
     struct SharedData;

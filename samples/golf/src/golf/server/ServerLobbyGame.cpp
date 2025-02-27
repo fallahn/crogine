@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Network.hpp>
 
 using namespace sv;
 
@@ -61,22 +62,24 @@ void LobbyState::netBroadcast()
     
     const auto sendData = [&](cro::Entity e)
         {
-            ActorInfo info;
+            CanInfo info;
             info.serverID = static_cast<std::uint32_t>(e.getIndex());
             info.position = e.getComponent<cro::Transform>().getPosition();
             info.timestamp = timestamp;
-            info.clientID = ConstVal::NullValue;
-            info.playerID = ConstVal::NullValue;
-            info.lie = ConstVal::NullValue;
-            info.groupID = ConstVal::NullValue;
-
+            
             if (e.hasComponent<Coin>())
             {
                 auto& coin = e.getComponent<Coin>();
+                info.velocity = cro::Util::Net::compressVec3(glm::vec3(coin.velocity, 0.f), ConstVal::VelocityCompressionRange);
                 info.collisionTerrain = coin.collisionStart ? 1 : ConstVal::NullValue;
                 coin.collisionStart = false;
             }
-            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
+            else
+            {
+                const auto vel = e.getComponent<cro::Callback>().getUserData<CanData>().velocity;
+                info.velocity = cro::Util::Net::compressVec3(vel, ConstVal::VelocityCompressionRange);
+            }
+            m_sharedData.host.broadcastPacket(PacketID::CanUpdate, info, net::NetFlag::Unreliable);
         };
     sendData(bucketEnt);
 
@@ -147,18 +150,6 @@ void LobbyState::spawnCan()
             return MinCanPos + (((MaxCanPos - MinCanPos) / 10.f)* Offset);
         };
 
-    struct CanData final
-    {
-        enum
-        {
-            Pause, Move
-        }state = Pause;
-
-        float pauseTime = 3.f;
-
-        float target = 0.f;
-        CanData(float t) : target(t) {}
-    };
     const auto randPos = getRandomPosition();
 
     auto entity = m_gameScene.createEntity();
@@ -174,6 +165,7 @@ void LobbyState::spawnCan()
             default: break;
             case CanData::Pause:
                 data.pauseTime -= dt;
+                data.velocity = glm::vec3(0.f);
                 if (data.pauseTime < 0)
                 {
                     data.pauseTime += cro::Util::Random::value(0, 4);
@@ -186,6 +178,7 @@ void LobbyState::spawnCan()
             {
                 auto pos = e.getComponent<cro::Transform>().getPosition().x;
                 const auto movement = data.target - pos;
+                data.velocity = { movement, 0.f, 0.f };
 
                 e.getComponent<cro::Transform>().move({ movement * dt, 0.f, 0.f });
 
@@ -197,8 +190,6 @@ void LobbyState::spawnCan()
                 break;
             }
         };
-
-    //TODO add collision data
 
 
     m_gameScene.getSystem<CoinSystem>()->setBucketEnt(entity);

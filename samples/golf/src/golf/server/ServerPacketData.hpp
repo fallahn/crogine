@@ -92,6 +92,15 @@ struct ActorInfo final
     std::uint8_t collisionTerrain = 255;
 };
 
+struct CanInfo final
+{
+    glm::vec3 position = glm::vec3(0.f);
+    std::array<std::int16_t, 3u> velocity = {};
+    std::uint8_t collisionTerrain = 255;
+    std::uint32_t serverID = 0;
+    std::int32_t timestamp = 0;
+};
+
 static inline bool operator == (const ActorInfo& actor, const ActivePlayer& player)
 {
     return (player.player == actor.playerID && player.client == actor.clientID);

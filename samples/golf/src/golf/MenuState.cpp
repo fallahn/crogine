@@ -1788,7 +1788,7 @@ void MenuState::addSystems()
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
-    m_uiScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb);
+    m_uiScene.addSystem<InterpolationSystem<INTERP_TYPE>>(mb);
     m_uiScene.addSystem<NameScrollSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
@@ -3422,9 +3422,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             cmd.targetFlags = CommandID::Menu::Actor;
             cmd.action = [&,id](cro::Entity e, float)
                 {
-                    if (e.getComponent<InterpolationComponent<InterpolationType::Linear>>().id == id)
+                    if (e.getComponent<InterpolationComponent<INTERP_TYPE>>().id == id)
                     {
-                        //TODO fix this
                         m_uiScene.destroyEntity(e);
                     }
                 };
@@ -3436,9 +3435,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             spawnActor(evt.packet.as<ActorInfo>());
         }
             break;
-        case PacketID::ActorUpdate:
+        case PacketID::CanUpdate:
         {
-            updateActor(evt.packet.as<ActorInfo>());
+            updateActor(evt.packet.as<CanInfo>());
         }
             break;
         case PacketID::Poke:

@@ -64,6 +64,8 @@ source distribution.
 
 static const std::uint32_t BallRenderFlags = (1 << 22);
 
+#define INTERP_TYPE InterpolationType::Hermite
+
 namespace cro
 {
     struct NetEvent;
@@ -72,6 +74,7 @@ namespace cro
 }
 
 struct ActorInfo;
+struct CanInfo;
 class MenuState;
 struct SharedProfileData;
 struct MainMenuContext final : public MenuContext
@@ -247,7 +250,7 @@ private:
 
     cro::Entity m_bannerEnt;
     void spawnActor(const ActorInfo&);
-    void updateActor(const ActorInfo&);
+    void updateActor(const CanInfo&);
 
     struct CanControl final
     {

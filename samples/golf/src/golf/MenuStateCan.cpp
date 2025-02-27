@@ -45,6 +45,7 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Network.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
 namespace
@@ -60,7 +61,7 @@ void MenuState::spawnActor(const ActorInfo& info)
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::Actor;
-    entity.addComponent<InterpolationComponent<InterpolationType::Linear>>(
+    entity.addComponent<InterpolationComponent<INTERP_TYPE>>(
         InterpolationPoint(pos, glm::vec3(0.f), cro::Transform::QUAT_IDENTITY, info.timestamp)).id = info.serverID;
     entity.addComponent<cro::Drawable2D>().setCullingEnabled(false);
 
@@ -136,7 +137,7 @@ void MenuState::spawnActor(const ActorInfo& info)
             {
                 static constexpr float MaxVel = 1200000.f;
                 
-                const float vel = glm::length2(e.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
+                const float vel = glm::length2(e.getComponent<InterpolationComponent<INTERP_TYPE>>().getVelocity());
                 const float animSpeed = std::min(1.f, vel / MaxVel);
 
                 e.getComponent<cro::SpriteAnimation>().playbackRate = animSpeed;
@@ -180,17 +181,18 @@ void MenuState::spawnActor(const ActorInfo& info)
         };
 }
 
-void MenuState::updateActor(const ActorInfo& info)
+void MenuState::updateActor(const CanInfo& info)
 {
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::Actor;
     cmd.action = [info](cro::Entity e, float)
         {
-            auto& interp = e.getComponent<InterpolationComponent<InterpolationType::Linear>>();
+            auto& interp = e.getComponent<InterpolationComponent<INTERP_TYPE>>();
             if (interp.id == info.serverID)
             {
-                glm::vec3 pos = { info.position.x, info.position.y + ActorY, ActorZ };
-                interp.addPoint({ pos, glm::vec3(0.f), cro::Transform::QUAT_IDENTITY, info.timestamp, info.collisionTerrain });
+                const glm::vec3 pos = { info.position.x, info.position.y + ActorY, ActorZ };
+                const auto vel = cro::Util::Net::decompressVec3(info.velocity, ConstVal::VelocityCompressionRange);
+                interp.addPoint({ pos, /*glm::vec3(0.f)*/vel, cro::Transform::QUAT_IDENTITY, info.timestamp, info.collisionTerrain });
             }
         };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

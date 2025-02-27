@@ -138,7 +138,7 @@ private:
 
 	CircularBuffer<InterpolationPoint, 8u> m_buffer;
 
-	std::size_t m_bufferSize = 3;
+	std::size_t m_bufferSize = 5;
 	bool m_wantsBuffer = true;
 
 	glm::vec3 m_interpVelocity = glm::vec3(0.f);
