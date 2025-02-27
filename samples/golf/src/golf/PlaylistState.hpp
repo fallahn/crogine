@@ -113,6 +113,47 @@ private:
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
     std::array<cro::Entity, MenuID::Count> m_tabEntities = {};
 
+    enum //button indices
+    {
+        Quit = 10,
+        Help = 20,
+        
+        SkyboxUp = 100,
+        SkyboxDown,
+        SkyboxList,
+        
+        ShrubberyUp = 200,
+        ShrubberyDown,
+        ShrubberyLeft,
+        ShrubberyRight,
+        ShrubberyList,
+
+        Holes = 300,
+        HolesCourseUp,
+        HolesCourseDown,
+        HolesLeft,
+        HolesRight,
+        HolesPlusPriority,
+        HolesMinusPriority,
+        HolesAdd,
+        HolesRemove,
+        HolesClear,
+        HolesCourseList,
+        HolesList = HolesCourseList + 20,
+
+        FileSystemSave = 400,
+        FileSystemExport,
+        FileSystemDown,
+        FileSystemUp,
+        FileSystemShow,
+        FileSystemList,
+
+        TabSkyBox = 500,
+        TabShrub,
+        TabHoles,
+        TabFileSystem
+    };
+
     struct MaterialID final
     {
         enum

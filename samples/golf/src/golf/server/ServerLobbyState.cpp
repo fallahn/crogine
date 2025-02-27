@@ -138,9 +138,10 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             if (evt.peer.getID() == m_sharedData.hostID)
             {
                 m_sharedData.mapDir = deserialiseString(evt.packet);
-                //forward to all clients
-                m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
             }
+
+            //forward to all clients (this may have been a request from someone not hosting)
+            m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
             break;
         case PacketID::ScoreType:

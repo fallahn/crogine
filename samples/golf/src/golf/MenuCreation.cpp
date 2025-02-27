@@ -3614,6 +3614,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         else
                         {
                             LogI << "Shared Data Map Directory Is Empty" << std::endl;
+                            //send a map info packet with 0 to request server resend current info
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                         }
                     }
                 }
