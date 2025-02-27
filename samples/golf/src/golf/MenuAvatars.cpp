@@ -2339,6 +2339,12 @@ void MenuState::updateLobbyAvatars()
         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
 
+        if (m_sharedData.hosting)
+        {
+            m_matchMaking.setGamePlayerCount(m_connectedPlayerCount);
+            m_matchMaking.setGameConnectionCount(m_connectedClientCount);
+        }
+
         //delayed entities to refresh/redraw the UI
         auto temp = m_uiScene.createEntity();
         temp.addComponent<cro::Callback>().active = true;

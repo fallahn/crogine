@@ -432,6 +432,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         m_hotSeat = true;
     }
 
+    Social::setGroup(m_sharedData.clientConnection.hostID, playerCount);
 
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     context.mainWindow.loadResources([this]() {
@@ -5663,6 +5664,14 @@ void GolfState::removeClient(std::uint8_t clientID)
     auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClientDisconnect;
     msg->client = clientID;
+
+    //update the rich presence string
+    auto playerCount = 0;
+    for (const auto& client : m_sharedData.connectionData)
+    {
+        playerCount += client.playerCount;
+    }
+    Social::setGroup(m_sharedData.clientConnection.hostID, playerCount);
 }
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)

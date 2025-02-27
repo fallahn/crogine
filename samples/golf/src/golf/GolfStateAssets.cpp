@@ -3168,7 +3168,7 @@ void GolfState::updateFlagTexture(bool reloadTexture)
     cmd.action = [tid](cro::Entity e, float)
         {
             e.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", tid);
-            LogI << "Set flag texture on model" << std::endl;
+            //LogI << "Set flag texture on model" << std::endl;
         };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

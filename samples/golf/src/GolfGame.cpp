@@ -1675,6 +1675,7 @@ void GolfGame::loadPreferences()
     }
     loadMusic();
 
+    LogI << m_sharedData.flagPath << std::endl;
 
     //do this last so we're saving any settings which were loaded successfully too
     savePreferences();

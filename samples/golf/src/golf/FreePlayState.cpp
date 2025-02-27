@@ -666,7 +666,9 @@ and All Time best scores.)";
 
 void FreePlayState::menuShownCallback()
 {
-    const std::string s = m_sharedData.nightTime ? "Night Time: On" : "Night Time: Off";
+    m_sharedData.nightTime = false;
+
+    const std::string s = /*m_sharedData.nightTime ? "Night Time: On" :*/ "Night Time: Off";
     m_callbackEntities[CallbackEntID::NightButton].getComponent<cro::Text>().setString(s);
 }
 

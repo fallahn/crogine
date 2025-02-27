@@ -57,7 +57,7 @@ public:
     void setGamePlayerCount(std::int32_t) {};
     void setGameConnectionCount(std::int32_t) {};
     void setFriendsOnly(bool) {};
-    bool getFriendsOnly() const { return false; }
+    constexpr bool getFriendsOnly() const { return false; }
     void createLobby(std::int32_t, std::int32_t) {}
 
     void joinGame(std::uint64_t lobbyID, std::int32_t gameType);
@@ -77,7 +77,7 @@ public:
 
     void leaveLobby() {}
 
-    const char* getUserName() const { return nullptr; }
+    constexpr const char* getUserName() const { return nullptr; }
 
     //use the message bus to relay callback events
     static constexpr std::int32_t MessageID = std::numeric_limits<std::int32_t>::max() / 2;

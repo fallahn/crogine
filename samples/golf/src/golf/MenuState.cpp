@@ -1399,8 +1399,13 @@ void MenuState::handleMessage(const cro::Message& msg)
             {
                 //restore the lobby publicity setting
                 m_matchMaking.setFriendsOnly(m_matchMaking.getFriendsOnly());
-                m_matchMaking.setGamePlayerCount(m_sharedData.localConnectionData.playerCount); //assume we're the only client at this point
-                m_matchMaking.setGameConnectionCount(1);
+                //m_matchMaking.setGamePlayerCount(m_sharedData.localConnectionData.playerCount); //assume we're the only client at this point
+                //m_matchMaking.setGameConnectionCount(1);
+
+                //refeshing the avatar data will have counted connected clients (we may have returned from a previous game)
+                m_matchMaking.setGamePlayerCount(m_connectedPlayerCount);
+                m_matchMaking.setGameConnectionCount(m_connectedClientCount);
+
 
                 //and trigger packets to update lobby info
                 auto data = serialiseString(m_sharedData.mapDirectory);
