@@ -394,10 +394,11 @@ void LobbyState::broadcastRules()
 
 void LobbyState::doServerCommand(const net::NetEvent& evt)
 {
+    const auto data = evt.packet.as<std::uint16_t>();
+    const std::uint8_t command = (data & 0xff);
+    
     if (evt.peer.getID() == m_sharedData.hostID)
     {
-        const auto data = evt.packet.as<std::uint16_t>();
-        const std::uint8_t command = (data & 0xff);
         const std::uint8_t target = ((data >> 8) & 0xff);
 
         switch (command)
@@ -417,10 +418,17 @@ void LobbyState::doServerCommand(const net::NetEvent& evt)
                 msg->clientID = target;
             }
             break;
-        case ServerCommand::SpawnCan:
-            //used to debug can game
+        //case ServerCommand::SpawnCan:
+        //    //used to debug can game
+        //    spawnCan();
+        //    break;
+        }
+    }
+    //else
+    {
+        if (command == ServerCommand::SpawnCan)
+        {
             spawnCan();
-            break;
         }
     }
 }

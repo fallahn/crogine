@@ -674,7 +674,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
     const auto startCan = 
         [&]()
         {
-            //TODO check current spawn count and limit this
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::CanControl;
             cmd.action = [&](cro::Entity e, float)
@@ -1001,11 +1000,18 @@ bool MenuState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_PAGEUP:
-        {
             /*m_sharedData.useOSKBuffer = true;
             requestStackPush(StateID::Keyboard);*/
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SpawnCan), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
+            break;
+        case SDLK_PAUSE:
+            if (evt.key.keysym.mod & KMOD_SHIFT)
+            {
+                if (Social::isAuth())
+                {
+                    m_sharedData.clientConnection.netClient.sendPacket(
+                        PacketID::ServerCommand, std::uint16_t(ServerCommand::SpawnCan), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
+            }
             break;
 #ifdef CRO_DEBUG_
 #ifdef USE_GNS

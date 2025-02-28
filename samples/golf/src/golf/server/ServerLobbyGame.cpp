@@ -143,6 +143,12 @@ void LobbyState::spawnCan()
 {
     m_gameStarted = true;
 
+    if (m_gameScene.getSystem<CoinSystem>()->getBucketEnt().isValid())
+    {
+        //already created
+        return;
+    }
+
     const auto getRandomPosition =
         []() 
         {

@@ -95,7 +95,8 @@ void MenuState::spawnActor(const ActorInfo& info)
         buttonEnt.addComponent<cro::Transform>();
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::CanButton];
-        buttonEnt.addComponent<cro::SpriteAnimation>().play(cro::GameController::getControllerCount() ? 2 : hasPSLayout(0) ? 1 : 0);
+        const auto anim = (cro::GameController::getControllerCount() || Social::isSteamdeck()) ? hasPSLayout(0) ? 1 : 0 : 2;
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(anim);
         buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CanButton;;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().function =
