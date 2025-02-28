@@ -583,8 +583,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                         {
                             //we want this to be a generally negative emote, but not the same as a bunker
+                            //as the playsound() call above will play the avatar's bunker voice for TerrainBunker01
                             const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
-                            playAvatarSoundDelayed(idx, /*"bunker"*/"hook", glm::vec3(0.f), 2.f, pitch); 
+                            playAvatarSoundDelayed(idx, "hook", glm::vec3(0.f), 2.f, pitch); 
                         }
 
                         break;
@@ -595,13 +596,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     }
                         break;
                     case TerrainID::Scrub:
-                        playSound(cro::Util::Random::value(AudioID::TerrainScrub02, AudioID::TerrainScrub04), glm::vec3(0.f));
+                        playSound(cro::Util::Random::value(AudioID::TerrainScrub01, AudioID::TerrainScrub04), glm::vec3(0.f));
 
                         if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer].index; idx > -1)
                         {
                             //as with bunker, above^^
                             const auto pitch = m_playerIndices[m_currentClient][m_currentPlayer].pitch;
-                            playAvatarSoundDelayed(idx, /*"scrub"*/"slice", glm::vec3(0.f), 2.2f, pitch);
+                            playAvatarSoundDelayed(idx, "slice", glm::vec3(0.f), 2.2f, pitch);
                         }
                         break;
                     case TerrainID::Green:
@@ -942,29 +943,8 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
                 emitterName = "scrub";
                 break;
             case AudioID::TerrainWater01:
-
-                /*{
-                    auto r = cro::Util::Random::value(0, 3);
-                    switch (r)
-                    {
-                    default:
-                    case 0:
-                        emitterName = "bunker";
-                        break;
-                    case 1:
-                        emitterName = "rough";
-                        break;
-                    case 2:
-                        emitterName = "scrub";
-                        break;
-                    case 3:
-                        emitterName = "water";
-                        break;
-                    }
-                }*/
                 emitterName = "water";
                 break;
-
             case AudioID::TerrainFairway01:
                 emitterName = "fairway";
                 break;
