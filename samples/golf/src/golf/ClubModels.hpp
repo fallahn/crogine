@@ -50,7 +50,6 @@ struct ClubModels final
     };
 
     std::string name;
-    std::uint32_t uid = 0;
 
     //holds the entities for each model available
     std::vector<cro::Entity> models;
@@ -60,6 +59,8 @@ struct ClubModels final
 
     //holds the indices for each club type into the models vector
     std::array<std::int32_t, ClubID::Count> indices = {};
+    std::uint32_t uid = 0;
 
+    std::uint64_t workshopID = 0;
     bool loadFromFile(const std::string& path, cro::ResourceCollection&, cro::Scene&);
 };

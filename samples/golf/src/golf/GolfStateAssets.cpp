@@ -2445,12 +2445,7 @@ void GolfState::loadModels()
         }
     }
     //m_activeAvatar = &m_avatars[0][0]; //DON'T DO THIS! WE MUST BE NULL WHEN THE MAP LOADS
-#ifdef USE_GNS
-    if (!m_modelStats.empty())
-    {
-        Social::beginStats(m_modelStats);
-    }
-#endif
+
 
     //club models
 
@@ -2586,6 +2581,17 @@ void GolfState::loadModels()
             {
                 m_avatars[i][j].clubModelID = clubID;
                 loadClubModel(clubID);
+
+#ifdef USE_GNS
+                if (i == m_sharedData.localConnectionData.connectionID)
+                {
+                    if (m_clubModels.count(clubID) != 0
+                        && m_clubModels.at(clubID).workshopID != 0)
+                    {
+                        m_modelStats.push_back(m_clubModels.at(clubID).workshopID);
+                    }
+                }
+#endif
             }
         }
     }
@@ -2602,6 +2608,16 @@ void GolfState::loadModels()
             createFallbackModel(models.models.back(), m_resources);
         }
     }
+
+
+
+#ifdef USE_GNS
+    if (!m_modelStats.empty())
+    {
+        Social::beginStats(m_modelStats);
+    }
+#endif
+
 
 
     //ball resources - ball is rendered as a single point

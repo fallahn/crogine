@@ -47,7 +47,7 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
     if (cfg.loadFromFile(path))
     {
         //load the models first so we can clamp the indices
-        const auto rootPath = cro::FileSystem::getFilePath(path);
+        auto rootPath = cro::FileSystem::getFilePath(path);
         cro::ModelDefinition md(resources);
 
         const auto& objs = cfg.getObjects();
@@ -156,6 +156,37 @@ bool ClubModels::loadFromFile(const std::string& path, cro::ResourceCollection& 
                 indices[ClubID::SandWedge] = std::clamp(p.getValue<std::int32_t>(), 0, ModelCount);
             }
         }
+
+#ifdef USE_GNS
+        //check to see if we can get a workshop ID from the path
+        if (rootPath.back() == '/')
+        {
+            rootPath.pop_back();
+        }
+
+        if (rootPath.back() == 'w')
+        {
+            //LogI << "Processing: " << rootPath << std::endl;
+            if (auto res = rootPath.find_last_of('/'); res != std::string::npos)
+            {
+                try
+                {
+                    const auto d = rootPath.substr(res + 1, rootPath.length() - 1);
+                    workshopID = std::stoull(d);
+                    //LogI << "Got workshop ID of " << workshopID << std::endl;
+                }
+                catch (...)
+                {
+                    LogW << "could not get workshop ID for " << rootPath << std::endl;
+                }
+            }
+        }
+        /*else
+        {
+            LogI << "Rootpath: " << rootPath << std::endl;
+        }*/
+#endif
+
 
         return true;
     }
