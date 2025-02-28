@@ -777,6 +777,7 @@ private:
     void registerDebugCommands();
     void registerDebugWindows();
 
+    bool m_drawDepthMaps = false; //TODO remove me when done
     bool m_drawDebugMesh;
 
     struct NetworkDebugContext final
