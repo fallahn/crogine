@@ -1099,8 +1099,7 @@ void BallSystem::doCollision(cro::Entity entity)
             //reduce the velocity more nearer the top as the flag is bendier (??)
             ball.velocity *= (0.5f + (0.2f * (1.f - (ballHeight / 1.9f))));
 
-            //hmm we want to set the ball terrain to the flag value
-            //of -4, but ofc the kludge bites us as the packet data is unsigned...
+            ball.lastTerrain = TriggerID::FlagStick;
 
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->terrain = CollisionEvent::FlagPole;

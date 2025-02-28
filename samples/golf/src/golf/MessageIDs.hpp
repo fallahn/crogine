@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "Terrain.hpp"
+
 #include <crogine/core/Message.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
@@ -143,7 +145,7 @@ struct CollisionEvent final
         Timeout = -4,
         Billboard,
         Firework,
-        FlagPole
+        FlagPole = TriggerID::FlagStick
     };
 
     glm::vec3 position = glm::vec3(0.f);

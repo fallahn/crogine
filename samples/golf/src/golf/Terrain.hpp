@@ -86,7 +86,8 @@ struct TriggerID final
         TennisCourt,
         BackWall, //hole 12-15
 
-        Count
+        Count,
+        FlagStick
     };
 };
 static_assert(TriggerID::Count < 25, "MAX VALUE REACHED");

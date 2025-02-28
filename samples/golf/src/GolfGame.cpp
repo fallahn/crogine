@@ -1675,6 +1675,11 @@ void GolfGame::loadPreferences()
     }
     loadMusic();
 
+    //somewhere the preceding '/' is removed from the linux user path - but I'm
+    //finding it impossible to debug, so I'll hack on an extra one here...
+#ifdef __linux__
+    m_sharedData.flagPath = "/" + m_sharedData.flagPath;
+#endif
     LogI << m_sharedData.flagPath << std::endl;
 
     //do this last so we're saving any settings which were loaded successfully too
