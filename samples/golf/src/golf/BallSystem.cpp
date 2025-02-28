@@ -1403,7 +1403,7 @@ void BallSystem::updateWind()
         m_windStrengthClock.restart();
         m_windStrengthTime = cro::seconds(static_cast<float>(cro::Util::Random::value(80, 180)) / 10.f);
 
-        static constexpr float MinStrength = 0.05f;
+        static constexpr float MinStrength = 0.1f;
         m_windStrengthTarget = MinStrength + (m_noiseBuffer[m_noiseIndex] - MinStrength);
         m_noiseIndex = (m_noiseIndex + 1) % m_noiseBuffer.size();
 

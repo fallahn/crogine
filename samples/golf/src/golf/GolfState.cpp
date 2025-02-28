@@ -5201,6 +5201,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             {
                                 Achievements::awardAchievement(AchievementStrings[AchievementID::FringeBenefit]);
                             }
+
+                            if (!m_sharedData.showPuttingPower)
+                            {
+                                Social::awardXP(25, XPStringID::NoPuttAssist);
+                            }
                         }
                         else
                         {

@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/detail/glm/vec2.hpp>
 
+#include <cstdint>
 #include <array>
 #include <string>
 #include <limits>
@@ -87,9 +88,10 @@ struct TriggerID final
         BackWall, //hole 12-15
 
         Count,
-        FlagStick
+        FlagStick //TODO we MUST update Messages.hpp if this value changes
     };
 };
+static_assert(TriggerID::FlagStick == 18, "Update MessageIDs with correct value");
 static_assert(TriggerID::Count < 25, "MAX VALUE REACHED");
 
 static const std::array<std::string, TerrainID::Count> TerrainStrings =

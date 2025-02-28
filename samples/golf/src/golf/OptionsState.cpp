@@ -5029,7 +5029,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetStats);
     entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, WindowApply);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, SettFlagUp);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetCareer, SettPost);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
