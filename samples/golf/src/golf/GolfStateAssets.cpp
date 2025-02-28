@@ -2202,6 +2202,37 @@ void GolfState::loadModels()
             if (audioPaths.count(voiceID) != 0)
             {
                 playerVoiceIndex = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(audioPaths.at(voiceID), m_resources.audio);
+
+#ifdef USE_GNS
+                //track stats if this is a workshop item
+                if (i == m_sharedData.localConnectionData.connectionID)
+                {
+                    auto temp = cro::FileSystem::getFilePath(audioPaths.at(voiceID));
+                    temp.pop_back(); //remove trailing '/'
+
+                    if (temp.back() == 'w')
+                    {
+                        std::uint64_t workshopID = 0;
+                        if (auto res = temp.find_last_of('/'); res != std::string::npos)
+                        {
+                            try
+                            {
+                                const auto d = temp.substr(res + 1, temp.length() - 1);
+                                workshopID = std::stoull(d);
+                            }
+                            catch (...)
+                            {
+                                LogW << "could not get workshop ID for " << temp << std::endl;
+                            }
+                        }
+
+                        if (workshopID != 0)
+                        {
+                            m_modelStats.push_back(workshopID);
+                        }
+                    }
+                }
+#endif
             }
             else
             {
