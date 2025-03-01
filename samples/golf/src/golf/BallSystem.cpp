@@ -54,6 +54,8 @@ using namespace cl;
 
 namespace
 {
+    static constexpr float MinWindStrength = 0.1f;
+
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
@@ -184,8 +186,8 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
         x2 += x1;
     }
     m_noiseIndex = cro::Util::Random::value(0, NoiseSampleCount - 1);
-    m_windStrengthTarget = m_noiseBuffer[cro::Util::Random::value(0, NoiseSampleCount - 1)];
-
+    m_windStrengthTarget = MinWindStrength + (m_noiseBuffer[cro::Util::Random::value(0, NoiseSampleCount - 1)] - MinWindStrength);
+    m_windStrengthTarget *= m_maxStrengthMultiplier;
 
     m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10));
     m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10));
@@ -1403,8 +1405,7 @@ void BallSystem::updateWind()
         m_windStrengthClock.restart();
         m_windStrengthTime = cro::seconds(static_cast<float>(cro::Util::Random::value(80, 180)) / 10.f);
 
-        static constexpr float MinStrength = 0.1f;
-        m_windStrengthTarget = MinStrength + (m_noiseBuffer[m_noiseIndex] - MinStrength);
+        m_windStrengthTarget = MinWindStrength + (m_noiseBuffer[m_noiseIndex] - MinWindStrength);
         m_noiseIndex = (m_noiseIndex + 1) % m_noiseBuffer.size();
 
         m_windStrengthTarget *= m_maxStrengthMultiplier;
