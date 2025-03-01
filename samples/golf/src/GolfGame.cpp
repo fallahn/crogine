@@ -1678,7 +1678,10 @@ void GolfGame::loadPreferences()
     //somewhere the preceding '/' is removed from the linux user path - but I'm
     //finding it impossible to debug, so I'll hack on an extra one here...
 #ifdef __linux__
-    m_sharedData.flagPath = "/" + m_sharedData.flagPath;
+    if (m_sharedData.flagPath.find("home") == 0)
+    {
+        m_sharedData.flagPath = "/" + m_sharedData.flagPath;
+    }
 #endif
     LogI << m_sharedData.flagPath << std::endl;
 
@@ -1752,6 +1755,8 @@ void GolfGame::savePreferences()
     cfg.addProperty("flag_text").setValue(m_sharedData.flagText);
     cfg.save(path);
 
+
+    LogI << "Saved flag path as " << m_sharedData.flagPath << std::endl;
 
     //keybinds
     path = Social::getBaseContentPath() + "keys.bind";

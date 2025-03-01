@@ -213,11 +213,15 @@ namespace cro
             
             void setOffset(std::int16_t o)
             {
-                offset = std::clamp(o, std::int16_t(-Size), std::int16_t(AxisMax - Size));
+                offset = std::clamp(o, std::int16_t(-Size), std::int16_t((AxisMax - 100) - Size));
             }
 
             std::int16_t getOffset() const { return offset; }
-            operator std::int16_t() const { return Size + offset; }
+            operator std::int32_t() const { return Size + offset; }
+
+            //delete these so that the type conversion operator is the only one available
+            DeadZone& operator = (const DeadZone&) = delete;
+            DeadZone& operator = (DeadZone&&) = delete;
             
         private:
             std::int16_t offset = 0;

@@ -115,6 +115,18 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
 {
     m_bunkerWavetable = cro::Util::Wavetable::sine(0.25f, 0.035f);
     m_roughWavetable = cro::Util::Wavetable::sine(0.25f, 0.025f);
+
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("Controller");
+    //        const auto xPos = getAxisPosition(cro::GameController::AxisLeftX);
+    //        const std::int32_t deadzone = cro::GameController::LeftThumbDeadZone;
+
+    //        ImGui::Text("Position : %d, Deadzones: %d, %d", xPos, -deadzone, deadzone);
+    //        ImGui::Text("Offset: %d", cro::GameController::LeftThumbDeadZone.getOffset());
+
+    //        ImGui::End();
+    //    });
 }
 
 //public

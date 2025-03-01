@@ -37,13 +37,15 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
+//#include <crogine/gui/GuiClient.hpp>
+
 namespace cro
 {
     class Scene;
 }
 
 struct SharedStateData;
-class InputParser final
+class InputParser final //: public cro::GuiClient
 {
 public:
        

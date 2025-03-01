@@ -3814,7 +3814,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
 
 
 
-    //mouse input controls
+    //contronller sliders
     auto createText = [&](glm::vec2 position, const std::string& str)
     {
         auto e = m_scene.createEntity();
@@ -3918,7 +3918,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         return entity;
     };
 
-    static const auto MaxDeadzone = (cro::GameController::AxisMax - cro::GameController::LeftThumbDeadZone.size);// / 2;
+    static const auto MaxDeadzone = ((cro::GameController::AxisMax - 100) - cro::GameController::LeftThumbDeadZone.size);// / 2;
 
     auto deadzoneSlider = createSlider({ 29.f, 109.f });
     deadzoneSlider.getComponent<cro::Callback>().getUserData<SliderData>().onActivate =
