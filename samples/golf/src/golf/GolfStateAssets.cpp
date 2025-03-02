@@ -93,7 +93,7 @@ namespace
         cro::String("Harding's Balls"),
         cro::String("Claire: Have you seen my keys?\nThey're not where I left them"),
         cro::String("To truly find yourself you must\nplay hide and seek alone."),
-        cro::String("There is no angry way to say:\nBUBBLES"),
+        cro::String("There is no angry way to say\nBUBBLES"),
         cro::String("404")
     };
 

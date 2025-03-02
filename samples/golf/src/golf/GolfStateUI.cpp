@@ -5412,7 +5412,7 @@ void GolfState::floatingMessage(const std::string& msg)
     centreText(entity);
 
     entity.addComponent<FloatingText>().basePos = position;
-    entity.getComponent<FloatingText>().colour = TextGoldColour; //CD32::Colours[CD32::BlueLight];// 
+    entity.getComponent<FloatingText>().colour = CD32::Colours[CD32::BlueLight];//TextGoldColour; // 
 }
 
 void GolfState::createTransition()

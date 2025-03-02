@@ -1683,7 +1683,7 @@ void GolfGame::loadPreferences()
         m_sharedData.flagPath = "/" + m_sharedData.flagPath;
     }
 #endif
-    LogI << m_sharedData.flagPath << std::endl;
+
 
     //do this last so we're saving any settings which were loaded successfully too
     savePreferences();
@@ -1756,7 +1756,6 @@ void GolfGame::savePreferences()
     cfg.save(path);
 
 
-    LogI << "Saved flag path as " << m_sharedData.flagPath << std::endl;
 
     //keybinds
     path = Social::getBaseContentPath() + "keys.bind";
