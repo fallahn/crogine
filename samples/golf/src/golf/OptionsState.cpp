@@ -3918,13 +3918,14 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         return entity;
     };
 
-    static const auto MaxDeadzone = ((cro::GameController::AxisMax - 100) - cro::GameController::LeftThumbDeadZone.size);// / 2;
+    static const auto MinDeadZone = -3000;// -(cro::GameController::LeftThumbDeadZone / 2);
+    static const auto MaxDeadzone = 24000;// ((cro::GameController::AxisMax - 100) - cro::GameController::LeftThumbDeadZone.size);// / 2;
 
     auto deadzoneSlider = createSlider({ 29.f, 109.f });
     deadzoneSlider.getComponent<cro::Callback>().getUserData<SliderData>().onActivate =
         [&, deadzoneText](float distance) mutable
     {
-        cro::GameController::LeftThumbDeadZone.setOffset(std::int16_t(static_cast<float>(MaxDeadzone) * distance));
+        cro::GameController::LeftThumbDeadZone.setOffset(MinDeadZone + std::int16_t(static_cast<float>(MaxDeadzone - MinDeadZone) * distance));
 
         std::stringstream ss;
         ss.precision(2);
@@ -3935,7 +3936,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         [&](cro::Entity e, float)
     {
         const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
-        const float amount = static_cast<float>(cro::GameController::LeftThumbDeadZone.getOffset()) / (MaxDeadzone);
+        const float amount = static_cast<float>(cro::GameController::LeftThumbDeadZone.getOffset() - MinDeadZone) / (MaxDeadzone - MinDeadZone);
 
         e.getComponent<cro::Transform>().setPosition({ pos.x + (width * amount), pos.y });
     };
@@ -3980,7 +3981,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         {
             if (activated(evt))
             {
-                cro::GameController::LeftThumbDeadZone.setOffset(std::max(0, cro::GameController::LeftThumbDeadZone.getOffset() - DeadzoneStep));
+                auto val = std::max(MinDeadZone, cro::GameController::LeftThumbDeadZone.getOffset() - DeadzoneStep);
+                val /= DeadzoneStep;
+                val *= DeadzoneStep;
+                cro::GameController::LeftThumbDeadZone.setOffset(val);
 
                 std::stringstream ss;
                 ss.precision(2);
@@ -4003,7 +4007,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, cro::Entity buttonEnt, c
         {
             if (activated(evt))
             {
-                cro::GameController::LeftThumbDeadZone.setOffset(std::min(MaxDeadzone, cro::GameController::LeftThumbDeadZone.getOffset() + DeadzoneStep));
+                auto val = std::min(MaxDeadzone, cro::GameController::LeftThumbDeadZone.getOffset() + DeadzoneStep);
+                val /= DeadzoneStep;
+                val *= DeadzoneStep;
+                cro::GameController::LeftThumbDeadZone.setOffset(val);
 
                 std::stringstream ss;
                 ss.precision(2);
