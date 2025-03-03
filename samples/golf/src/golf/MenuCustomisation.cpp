@@ -1284,7 +1284,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         }
         
         auto files = cro::FileSystem::listFiles(BallUserPath);
-        LogI << "installed remote ball" << std::endl;
+        LogI << "Installed remote ball" << std::endl;
         for (const auto& file : files)
         {
             if (cro::FileSystem::getFileExtension(file) == ".ball")
@@ -1315,7 +1315,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         }
         auto files = cro::FileSystem::listFiles(HairUserPath);
 
-        LogI << "installed remote hair" << std::endl;
+        LogI << "Installed remote hair" << std::endl;
         for (const auto& file : files)
         {
             if (cro::FileSystem::getFileExtension(file) == ".hct")

@@ -1031,11 +1031,11 @@ void ProfileState::buildScene()
                     [&](const ClubData& cd) {return cd.uid == m_profileData.playerProfiles[m_profileData.activeProfileIndex].clubID;});
                     cd != m_clubData.end())
                 {
-                    m_clubText.getComponent<cro::Text>().setString("Clubs: " + cd->name);
+                    m_clubText.setLabel("Selected: " + cd->name);
                 }
                 else
                 {
-                    m_clubText.getComponent<cro::Text>().setString("Clubs: Default");
+                    m_clubText.setLabel("Selected: Default Clubs");
                 }
 
                 //get selected voice index
@@ -1790,7 +1790,7 @@ void ProfileState::buildScene()
             });
     clubs.getComponent<cro::UIInput>().setNextIndex(ButtonDescDown, ButtonUpdateIcon);
     clubs.getComponent<cro::UIInput>().setPrevIndex(ButtonSouthPaw, ButtonBallColour);
-
+    m_clubText = clubs;
 
 
     //updates the profile icon
@@ -2202,10 +2202,10 @@ void ProfileState::buildScene()
     m_menuEntities[EntityID::BioText] = entity;
     setBioString(generateRandomBio());
 
-    //club style string
-    entity = m_uiScene.createEntity();
+    //club style string - we stick this in the button label instead so it displays at the bottom of the window
+    /*entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 444.f, 85.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ -48.f, -10.f, 96.f, 10.f });
     entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -2213,7 +2213,7 @@ void ProfileState::buildScene()
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_clubText = entity;
+    m_clubText = entity;*/
 
 
     //help string
@@ -4514,7 +4514,7 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     //name text
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 86.f, 56.f, 0.2f });
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ -44.f, -10.f, 88.f, 10.f });
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
@@ -4661,7 +4661,7 @@ void ProfileState::createClubBrowser(cro::Entity parent, const CallbackContext& 
                     //apply selection
                     const auto idx = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
                     m_activeProfile.clubID = m_clubData[idx].uid;
-                    m_clubText.getComponent<cro::Text>().setString("Clubs: " + m_clubData[idx].name);
+                    m_clubText.setLabel("Selected: " + m_clubData[idx].name);
                     quitMenu();
                 }
                 else if (deactivated(evt))
