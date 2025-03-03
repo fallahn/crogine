@@ -1236,6 +1236,7 @@ void PlaylistState::buildUI()
         entity.getComponent<cro::Callback>().setUserData<std::int32_t>(i); //use this with button activated callback to know which index we we are
 
         entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setSelectionIndex(TabSkybox + i);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Enter] = showTip;
@@ -1342,6 +1343,7 @@ void PlaylistState::buildUI()
 
         e.addComponent<cro::UIInput>().area = e.getComponent<cro::Sprite>().getTextureBounds();
         e.getComponent<cro::UIInput>().setGroup(menuID);
+        e.getComponent<cro::UIInput>().setSelectionIndex(QuitSkybox + menuID);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = quitID;
@@ -1370,7 +1372,7 @@ void PlaylistState::buildUI()
         e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
 
         e.addComponent<cro::UIInput>().area = e.getComponent<cro::Sprite>().getTextureBounds();
-        e.getComponent<cro::UIInput>().setGroup(menuID);
+        e.getComponent<cro::UIInput>().setGroup(HelpSkybox + menuID);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = helpID;
@@ -1474,6 +1476,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SkyboxUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1497,6 +1500,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SkyboxDown);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1568,6 +1572,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
 
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(SkyboxList + i);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&,i, scrollNode](cro::Entity e) mutable
@@ -1751,6 +1756,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1774,6 +1780,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyDown);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1822,6 +1829,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
 
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyList + i);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&, i, scrollNode](cro::Entity e) mutable
@@ -1933,6 +1941,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyLeft);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1967,6 +1976,7 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyRight);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2164,6 +2174,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
 
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(HolesCourseList + i);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&, i, scrollNode](cro::Entity e) mutable
@@ -2270,6 +2281,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(HolesCourseUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2293,6 +2305,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(HolesCourseDown);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2331,6 +2344,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(HolesLeft);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2370,6 +2384,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(HolesRight);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2464,6 +2479,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     highlight.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
     highlight.addComponent<cro::UIInput>().area = bounds;
     highlight.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    highlight.getComponent<cro::UIInput>().setSelectionIndex(HolesPlusPriority);
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2487,6 +2503,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                             auto pos = m_playlist[i].uiNode.getComponent<cro::Transform>().getPosition();
                             pos.y = i * -ItemSpacing;
                             m_playlist[i].uiNode.getComponent<cro::Transform>().setPosition(pos);
+                            m_playlist[i].uiNode.getComponent<cro::UIInput>().setSelectionIndex(HolesList + i);
                             m_playlist[i].currentIndex = i;
                         }
                     }
@@ -2558,6 +2575,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     highlight.getComponent<cro::Transform>().setPosition({ 4.f, 7.f });
     highlight.addComponent<cro::UIInput>().area = bounds;
     highlight.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    highlight.getComponent<cro::UIInput>().setSelectionIndex(HolesAdd);
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2594,6 +2612,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                         
                         entry.uiNode.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entry.uiNode);
                         entry.uiNode.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+                        entry.uiNode.getComponent<cro::UIInput>().setSelectionIndex(HolesList + m_playlistIndex);
                         entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_playlistActivatedCallback;
                         entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_playlistSelectedCallback;
                         entry.uiNode.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_playlistUnselectedCallback;
@@ -2644,6 +2663,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     highlight.getComponent<cro::Transform>().setPosition({ 4.f, 7.f });
     highlight.addComponent<cro::UIInput>().area = bounds;
     highlight.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    highlight.getComponent<cro::UIInput>().setSelectionIndex(HolesRemove);
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2676,6 +2696,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                             auto pos = m_playlist[i].uiNode.getComponent<cro::Transform>().getPosition();
                             pos.y = i * -ItemSpacing;
                             m_playlist[i].uiNode.getComponent<cro::Transform>().setPosition(pos);
+                            m_playlist[i].uiNode.getComponent<cro::UIInput>().setSelectionIndex(HolesList + i);
                             m_playlist[i].currentIndex = i;
                         }
 
@@ -2704,6 +2725,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     highlight.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
     highlight.addComponent<cro::UIInput>().area = bounds;
     highlight.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    highlight.getComponent<cro::UIInput>().setSelectionIndex(HolesMinusPriority);
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2727,6 +2749,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                             auto pos = m_playlist[i].uiNode.getComponent<cro::Transform>().getPosition();
                             pos.y = i * -ItemSpacing;
                             m_playlist[i].uiNode.getComponent<cro::Transform>().setPosition(pos);
+                            m_playlist[i].uiNode.getComponent<cro::UIInput>().setSelectionIndex(HolesList + i);
                             m_playlist[i].currentIndex = i;
                         }
                     }
@@ -2750,6 +2773,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     highlight.getComponent<cro::Transform>().setPosition({ 4.f, 4.f });
     highlight.addComponent<cro::UIInput>().area = bounds;
     highlight.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    highlight.getComponent<cro::UIInput>().setSelectionIndex(HolesClear);
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     highlight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2791,6 +2815,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(HolesListUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2814,6 +2839,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Holes);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(HolesListDown);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2956,6 +2982,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(FileSystemUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2979,6 +3006,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(FileSystemDown);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -3056,6 +3084,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 28.f + ItemSpacing };
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(FileSystemSave);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.textSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -3086,6 +3115,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     entity.getComponent<UIElement>().absolutePosition = { -RootOffset, 28.f + ItemSpacing };
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(FileSystemExport);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.textSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -3119,6 +3149,7 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
         entity.getComponent<UIElement>().absolutePosition = { -bounds.width - 18.f, ItemSpacing + 2.f };
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(FileSystemShow);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.textSelected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -3190,6 +3221,7 @@ void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
 
     entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(FileSystemList + i);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, i](cro::Entity e) mutable

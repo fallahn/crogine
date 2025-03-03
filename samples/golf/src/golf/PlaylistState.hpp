@@ -115,9 +115,6 @@ private:
 
     enum //button indices
     {
-        Quit = 10,
-        Help = 20,
-        
         SkyboxUp = 100,
         SkyboxDown,
         SkyboxList,
@@ -138,6 +135,8 @@ private:
         HolesAdd,
         HolesRemove,
         HolesClear,
+        HolesListUp,
+        HolesListDown,
         HolesCourseList,
         HolesList = HolesCourseList + 20,
 
@@ -148,10 +147,20 @@ private:
         FileSystemShow,
         FileSystemList,
 
-        TabSkyBox = 500,
+        TabSkybox = 500,
         TabShrub,
         TabHoles,
-        TabFileSystem
+        TabFileSystem,
+
+        QuitSkybox = 600,
+        QuitShrubbery,
+        QuitHoles,
+        QuitFileSystem,
+
+        HelpSkybox = 700,
+        HelpShrubbery,
+        HelpHoles,
+        HelpFileSystem
     };
 
     struct MaterialID final
