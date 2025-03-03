@@ -113,6 +113,8 @@ private:
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
     std::array<cro::Entity, MenuID::Count> m_tabEntities = {};
 
+    void updateTabIndices();
+
     enum //button indices
     {
         SkyboxUp = 100,

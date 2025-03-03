@@ -302,6 +302,13 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
 
     Social::setStatus(Social::InfoID::Menu, { "Editing a Course" });
 
+    registerWindow([&]() 
+        {
+            ImGui::Begin("asdf");
+            ImGui::Text("Current Menu %d", m_currentTab);
+            ImGui::End();
+        });
+
 #ifdef CRO_DEBUG_
     registerWindow([&]()
         {
@@ -345,16 +352,16 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         case SDLK_1:
-            setActiveTab(0);
+            setActiveTab(MenuID::Skybox);
             break;
         case SDLK_2:
-            setActiveTab(1);
+            setActiveTab(MenuID::Shrubbery);
             break;
         case SDLK_3:
-            setActiveTab(2);
+            setActiveTab(MenuID::Holes);
             break;
         case SDLK_4:
-            setActiveTab(3);
+            setActiveTab(MenuID::FileSystem);
             break;
         case SDLK_p:
         case SDLK_PAUSE:
@@ -1348,6 +1355,27 @@ void PlaylistState::buildUI()
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = quitID;
 
+        switch (menuID)
+        {
+        default: break;
+        case MenuID::Skybox:
+            e.getComponent<cro::UIInput>().setNextIndex(HelpSkybox + menuID, TabFileSystem);
+            e.getComponent<cro::UIInput>().setPrevIndex(HelpSkybox + menuID, TabFileSystem);
+            break;
+        case MenuID::Shrubbery:
+            e.getComponent<cro::UIInput>().setNextIndex(HelpSkybox + menuID, TabFileSystem);
+            e.getComponent<cro::UIInput>().setPrevIndex(HelpSkybox + menuID, TabFileSystem);
+            break;
+        case MenuID::Holes:
+            e.getComponent<cro::UIInput>().setNextIndex(HelpSkybox + menuID, TabFileSystem);
+            e.getComponent<cro::UIInput>().setPrevIndex(HelpSkybox + menuID, TabFileSystem);
+            break;
+        case MenuID::FileSystem:
+            e.getComponent<cro::UIInput>().setNextIndex(HelpSkybox + menuID, FileSystemUp);
+            e.getComponent<cro::UIInput>().setPrevIndex(HelpSkybox + menuID, FileSystemDown);
+            break;
+        }
+
         entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
     };
     createQuit(MenuID::Skybox);
@@ -1376,6 +1404,27 @@ void PlaylistState::buildUI()
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = highlightSelected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = highlightUnselected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = helpID;
+
+        switch (menuID)
+        {
+        default: break;
+        case MenuID::Skybox:
+            e.getComponent<cro::UIInput>().setNextIndex(QuitSkybox + menuID, SkyboxUp);
+            e.getComponent<cro::UIInput>().setPrevIndex(QuitSkybox + menuID, SkyboxDown);
+            break;
+        case MenuID::Shrubbery:
+            e.getComponent<cro::UIInput>().setNextIndex(QuitSkybox + menuID, ShrubberyUp);
+            e.getComponent<cro::UIInput>().setPrevIndex(QuitSkybox + menuID, ShrubberyDown);
+            break;
+        case MenuID::Holes:
+            e.getComponent<cro::UIInput>().setNextIndex(QuitSkybox + menuID, TabFileSystem);
+            e.getComponent<cro::UIInput>().setPrevIndex(QuitSkybox + menuID, TabFileSystem);
+            break;
+        case MenuID::FileSystem:
+            e.getComponent<cro::UIInput>().setNextIndex(QuitSkybox + menuID, FileSystemUp);
+            e.getComponent<cro::UIInput>().setPrevIndex(QuitSkybox + menuID, FileSystemDown);
+            break;
+        }
 
         entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
     };
@@ -1477,6 +1526,8 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
     entity.getComponent<cro::UIInput>().setSelectionIndex(SkyboxUp);
+    entity.getComponent<cro::UIInput>().setNextIndex(SkyboxList, SkyboxDown);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SkyboxList, HelpSkybox);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1501,6 +1552,8 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
     entity.getComponent<cro::UIInput>().setSelectionIndex(SkyboxDown);
+    entity.getComponent<cro::UIInput>().setNextIndex(SkyboxList, HelpSkybox);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SkyboxList, SkyboxUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1557,6 +1610,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     //list of skybox items
     auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     glm::vec2 position(0.f);
+    std::vector<cro::Entity> temp; //for index correction, below
     for (auto i = 0u; i < m_skyboxes.size(); ++i)
     {
         entity = m_uiScene.createEntity();
@@ -1573,6 +1627,10 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Skybox);
         entity.getComponent<cro::UIInput>().setSelectionIndex(SkyboxList + i);
+
+        entity.getComponent<cro::UIInput>().setNextIndex(SkyboxUp, (SkyboxList + i) + 1);
+        entity.getComponent<cro::UIInput>().setPrevIndex(SkyboxUp, (SkyboxList + i) - 1);
+
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&,i, scrollNode](cro::Entity e) mutable
@@ -1635,6 +1693,8 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
                     }
                 });
 
+        temp.push_back(entity);
+
         position.y -= ItemSpacing;
         scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
@@ -1643,6 +1703,16 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     cro::Entity cloudEnt;
     if (!m_skyboxes.empty())
     {
+        //correct item indices
+        entity = temp[0];
+        entity.getComponent<cro::UIInput>().setPrevIndex(SkyboxUp, TabShrub);
+
+        if (temp.size() > 1)
+        {
+            entity = temp.back();
+            entity.getComponent<cro::UIInput>().setNextIndex(SkyboxUp, TabShrub);
+        }
+
         m_skyboxIndex = 0;
 
         SkyboxMaterials materials;
@@ -1757,6 +1827,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyUp);
+    entity.getComponent<cro::UIInput>().setNextIndex(ShrubberyList, ShrubberyDown);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ShrubberyList, HelpShrubbery);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1781,6 +1853,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyDown);
+    entity.getComponent<cro::UIInput>().setNextIndex(ShrubberyLeft, HelpShrubbery);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ShrubberyRight, ShrubberyUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1812,7 +1886,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
 
 
     //list of shrub items
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    std::vector<cro::Entity> temp; //to re-index items
     glm::vec2 position(0.f);
     for (auto i = 0u; i < m_shrubs.size(); ++i)
     {
@@ -1830,6 +1905,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
         entity.addComponent<cro::UIInput>().area = cro::Text::getLocalBounds(entity);
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
         entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyList + i);
+        entity.getComponent<cro::UIInput>().setNextIndex(ShrubberyUp, (ShrubberyList + i) + 1);
+        entity.getComponent<cro::UIInput>().setPrevIndex(ShrubberyUp, (ShrubberyList + i) - 1);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
             m_uiScene.getSystem<cro::UISystem>()->addCallback(
                 [&, i, scrollNode](cro::Entity e) mutable
@@ -1876,6 +1953,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
                     }
                 });
 
+        temp.push_back(entity);
+
         position.y -= ItemSpacing;
         scrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1886,6 +1965,16 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     //load default shrub if found
     if (!m_shrubs.empty())
     {
+        //fix up indices
+        entity = temp[0];
+        entity.getComponent<cro::UIInput>().setPrevIndex(ShrubberyUp, TabSkybox);
+
+        if (temp.size() > 1)
+        {
+            entity = temp.back();
+            entity.getComponent<cro::UIInput>().setNextIndex(ShrubberyUp, TabSkybox);
+        }
+
         m_shrubIndex = 0;
         m_courseData.shrubPath = ShrubPath + m_shrubs[m_shrubIndex];
 
@@ -1942,6 +2031,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyLeft);
+    entity.getComponent<cro::UIInput>().setNextIndex(ShrubberyRight, TabHoles);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ShrubberyList, TabHoles);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1977,6 +2068,8 @@ void PlaylistState::createShrubberyMenu(cro::Entity rootNode, const MenuData& me
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Shrubbery);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ShrubberyRight);
+    entity.getComponent<cro::UIInput>().setNextIndex(ShrubberyDown, QuitFileSystem);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ShrubberyLeft, TabFileSystem);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.scrollSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.scrollUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -3260,6 +3353,8 @@ void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
 
     m_saveFileScrollNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_saveFileScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().itemCount = static_cast<std::int32_t>(m_saveFiles.size());
+
+    //updateTabIndices(); //accounts for new list size (if any)
 }
 
 void PlaylistState::setActiveTab(std::int32_t index)
@@ -3302,6 +3397,76 @@ void PlaylistState::setActiveTab(std::int32_t index)
 
     //we've stashed the tab graphic entity in here.
     m_tabEntities[MenuID::Dummy].getComponent<cro::SpriteAnimation>().play(m_animationIDs[index]);
+
+    updateTabIndices();
+}
+
+void PlaylistState::updateTabIndices()
+{
+    switch (m_currentTab)
+    {
+    default: break;
+    case MenuID::Skybox:
+    {
+        auto ent = m_tabEntities[MenuID::Shrubbery];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabHoles, SkyboxList);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabFileSystem, SkyboxList + m_skyboxes.size());
+
+        ent = m_tabEntities[MenuID::Holes];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabFileSystem, SkyboxList);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabShrub, SkyboxList + m_skyboxes.size());
+
+        ent = m_tabEntities[MenuID::FileSystem];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabShrub, QuitSkybox);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabHoles), QuitSkybox;
+    }
+        break;
+    case MenuID::Shrubbery:
+    {
+        auto ent = m_tabEntities[MenuID::Skybox];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabHoles, ShrubberyList);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabFileSystem, ShrubberyList + m_shrubs.size());
+
+        ent = m_tabEntities[MenuID::Holes];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabFileSystem, ShrubberyLeft);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabSkybox, ShrubberyLeft);
+
+        ent = m_tabEntities[MenuID::FileSystem];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabSkybox, ShrubberyRight);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabHoles, QuitShrubbery);
+    }
+        break;
+    case MenuID::Holes:
+    {
+        auto ent = m_tabEntities[MenuID::Skybox];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabShrub, HolesCourseList);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabFileSystem, HolesCourseList + m_holeDirs.size());
+
+        ent = m_tabEntities[MenuID::Shrubbery];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabFileSystem, HolesCourseUp);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabSkybox, HolesCourseDown);
+
+        ent = m_tabEntities[MenuID::FileSystem];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabSkybox, HolesRight);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabShrub, QuitHoles);
+    }
+        break;
+    case MenuID::FileSystem:
+    {
+        auto ent = m_tabEntities[MenuID::Skybox];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabShrub, FileSystemList);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabHoles, FileSystemList + m_saveFiles.size());
+
+        ent = m_tabEntities[MenuID::Shrubbery];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabHoles, FileSystemSave);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabSkybox, FileSystemSave);
+
+        ent = m_tabEntities[MenuID::Holes];
+        ent.getComponent<cro::UIInput>().setNextIndex(TabSkybox, FileSystemSave);
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabShrub, FileSystemSave);
+    }
+        break;
+    }
 }
 
 void PlaylistState::loadShrubbery(const std::string& path)
