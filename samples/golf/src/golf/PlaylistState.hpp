@@ -40,7 +40,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
-#include <crogine/gui/GuiClient.hpp>
+//#include <crogine/gui/GuiClient.hpp>
 
 struct SharedStateData;
 
@@ -49,7 +49,7 @@ namespace cro
     class SpriteSheet;
 }
 
-class PlaylistState final : public cro::State, public cro::GuiClient
+class PlaylistState final : public cro::State//, public cro::GuiClient
 {
 public:
     PlaylistState(cro::StateStack&, cro::State::Context, SharedStateData&);
