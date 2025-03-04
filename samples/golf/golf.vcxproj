@@ -835,6 +835,7 @@
     <ClInclude Include="src\golf\InputBinding.hpp" />
     <ClInclude Include="src\golf\InputParser.hpp" />
     <ClInclude Include="src\golf\InterpolationSystem.hpp" />
+    <ClInclude Include="src\golf\Inventory.hpp" />
     <ClInclude Include="src\golf\KeyboardState.hpp" />
     <ClInclude Include="src\golf\LeaderboardState.hpp" />
     <ClInclude Include="src\golf\LeaderboardTexture.hpp" />

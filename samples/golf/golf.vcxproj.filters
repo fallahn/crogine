@@ -1352,6 +1352,9 @@
     <ClInclude Include="src\golf\CoinSystem.hpp">
       <Filter>Header Files\golf\server\systems</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\Inventory.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">
