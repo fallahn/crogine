@@ -1083,13 +1083,15 @@ void GolfGame::initFonts()
     {
         std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", cro::CodePointRange::Cyrillic),
         std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", cro::CodePointRange::Greek),
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0102, 0x0103})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0110, 0x0111})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0128, 0x0129})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0168, 0x0169})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01A0, 0x01A1})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01AF, 0x01B0})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x1EA0, 0x1EF9})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0102, 0x0103})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0110, 0x0111})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0128, 0x0129})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0168, 0x0169})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0100, 0x017F})), //extended latin-a
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0180, 0x024F})), //extended latin-b
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01A0, 0x01A1})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01AF, 0x01B0})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x1EA0, 0x1EF9})), //VT
 
         std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x2010, 0x205E})),
         std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x0E00, 0x0E7F})),
