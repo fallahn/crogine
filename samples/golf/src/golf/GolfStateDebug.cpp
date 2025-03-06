@@ -145,36 +145,36 @@ void GolfState::endBallDebug()
 
 void GolfState::addCameraDebugging()
 {
-    registerWindow([&]() 
-        {
-            //ImGui::SetNextWindowSize({640.f, -1.f});
-            if (m_drawDepthMaps)
-            {
-                if (ImGui::Begin("Depth Maps", &m_drawDepthMaps, ImGuiWindowFlags_AlwaysHorizontalScrollbar))
-                {
-                    auto size = cro::App::getWindow().getSize().x;
-                    size /= CameraID::Count;
+    //registerWindow([&]() 
+    //    {
+    //        //ImGui::SetNextWindowSize({640.f, -1.f});
+    //        if (m_drawDepthMaps)
+    //        {
+    //            if (ImGui::Begin("Depth Maps", &m_drawDepthMaps, ImGuiWindowFlags_AlwaysHorizontalScrollbar))
+    //            {
+    //                auto size = cro::App::getWindow().getSize().x;
+    //                size /= CameraID::Count;
 
-                    for (auto i = 0; i < CameraID::Count; ++i)
-                    {
-                        const auto& cam = m_cameras[i].getComponent<cro::Camera>();
-                        if (cam.shadowMapBuffer.available())
-                        {
-                            const auto dim = static_cast<float>(size);
-                            const auto label = "##" + std::to_string(i);
-                            ImGui::BeginChild(label.c_str(), { dim, dim + 20.f });
-                            ImGui::Text("%s", CameraStrings[i].c_str());
-                            ImGui::Image(cam.shadowMapBuffer.getTexture(0), { dim,dim }, { 0.f,1.f }, { 1.f, 0.f });
-                            ImGui::EndChild();
-                            ImGui::SameLine();
-                        }
-                    }
-                    ImGui::NewLine();
-                    ImGui::Text("Current: %s", CameraStrings[m_currentCamera].c_str());
-                }
-                ImGui::End();
-            }
-        });
+    //                for (auto i = 0; i < CameraID::Count; ++i)
+    //                {
+    //                    const auto& cam = m_cameras[i].getComponent<cro::Camera>();
+    //                    if (cam.shadowMapBuffer.available())
+    //                    {
+    //                        const auto dim = static_cast<float>(size);
+    //                        const auto label = "##" + std::to_string(i);
+    //                        ImGui::BeginChild(label.c_str(), { dim, dim + 20.f });
+    //                        ImGui::Text("%s", CameraStrings[i].c_str());
+    //                        ImGui::Image(cam.shadowMapBuffer.getTexture(0), { dim,dim }, { 0.f,1.f }, { 1.f, 0.f });
+    //                        ImGui::EndChild();
+    //                        ImGui::SameLine();
+    //                    }
+    //                }
+    //                ImGui::NewLine();
+    //                ImGui::Text("Current: %s", CameraStrings[m_currentCamera].c_str());
+    //            }
+    //            ImGui::End();
+    //        }
+    //    });
 
 #ifdef CAMERA_TRACK
     auto materialID = m_materialIDs[MaterialID::WireFrame];
