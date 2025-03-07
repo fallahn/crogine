@@ -6057,8 +6057,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     }
 
 
-    //map collision data
-    m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
+    //map collision data - not used any more (moved to terrain builder)
+    //m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
 
     //make sure we have the correct target position
     m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight = m_holeData[m_currentHole].puttFromTee ? CameraPuttHeight : CameraStrokeHeight;

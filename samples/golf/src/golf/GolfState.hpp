@@ -239,7 +239,7 @@ private:
     };
     std::array<PostProcess, PostID::Count> m_postProcesses = {};
 
-    cro::Image m_currentMap;
+    //cro::Image m_currentMap;
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;

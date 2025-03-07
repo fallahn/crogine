@@ -534,6 +534,8 @@ void GolfState::loadMap()
     cro::AudioScape propAudio;
     propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio);
 
+    cro::Image currentMap(true);
+
     for (const auto& hole : holeStrings)
     {
         if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + hole))
@@ -562,8 +564,8 @@ void GolfState::loadMap()
             if (name == "map")
             {
                 auto path = holeProp.getValue<std::string>();
-                if (!m_currentMap.loadFromFile(path)
-                    || m_currentMap.getFormat() != cro::ImageFormat::RGBA)
+                if (!currentMap.loadFromFile(path)
+                    || currentMap.getFormat() != cro::ImageFormat::RGBA)
                 {
                     LogE << path << ": image file not RGBA" << std::endl;
                     error = true;
