@@ -4415,7 +4415,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //miniball for player
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.01f * depthOffset });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, (0.01f * depthOffset) / 2.f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-2.f, 2.f), miniBallColour),
@@ -5823,7 +5823,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
     m_gameScene.getSystem<ChunkVisSystem>()->setWorldHeight(height);
 
     //create hole model transition
-    bool rescale = (hole == 0) || (m_holeData[hole - 1].modelPath != m_holeData[hole].modelPath) || forceTransition;
+    bool rescale = (hole == 0) || (m_holeData[/*hole - 1*/m_currentHole].modelPath != m_holeData[hole].modelPath) || forceTransition;
     auto* propModels = &m_holeData[m_currentHole].propEntities;
     auto* particles = &m_holeData[m_currentHole].particleEntities;
     auto* audio = &m_holeData[m_currentHole].audioEntities;
