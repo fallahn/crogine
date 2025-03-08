@@ -310,6 +310,12 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         allocateBuffer();
     }
 
+    m_randomColours[0] = cro::Colour::Red;
+    m_randomColours[1] = cro::Colour::Green;
+    m_randomColours[2] = cro::Colour::Blue;
+    m_randomColours[3] = cro::Colour::Yellow;
+    m_randomColours[4] = cro::Colour::Magenta;
+    m_randomColours[5] = cro::Colour::Cyan;
 
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
@@ -445,7 +451,7 @@ void ParticleSystem::process(float dt)
     const auto& entities = getEntities();
     const auto fallbackTextureID = m_fallbackTexture.getGLHandle();
 #ifdef USE_PARALLEL_PROCESSING
-    std::for_each(std::execution::par, entities.begin(), entities.end(), [dt, fallbackTextureID](Entity e)
+    std::for_each(std::execution::par, entities.begin(), entities.end(), [&, dt, fallbackTextureID](Entity e)
 #else
     for (auto e : entities/*m_potentiallyVisible*/)
 #endif
@@ -501,7 +507,7 @@ void ParticleSystem::process(float dt)
                         CRO_ASSERT(settings.emitRate > 0, "Emit rate must be grater than 0");
                         CRO_ASSERT(settings.lifetime > 0, "Lifetime must be greater than 0");
                         auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
-                        p.colour = settings.colour;
+                        p.colour = settings.useRandomColour ? m_randomColours[Util::Random::value(0u, MaxRandomColours - 1)] : settings.colour;
                         p.gravity = settings.gravity;
                         p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
                         //p.lifetime -= (emitter.m_currentTimestamp - emitter.m_emissionTimestamp);

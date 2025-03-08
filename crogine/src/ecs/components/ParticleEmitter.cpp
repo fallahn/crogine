@@ -226,6 +226,10 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                     framerate = 1.f;
                 }
             }
+            else if (name == "random_colour")
+            {
+                useRandomColour = p.getValue<bool>();
+            }
         }
 
         const auto& objects = cfg.getObjects();
@@ -317,6 +321,7 @@ bool EmitterSettings::saveToFile(const std::string& path)
     cfg.addProperty("animate").setValue(animate);
     cfg.addProperty("random_frame").setValue(useRandomFrame);
     cfg.addProperty("framerate").setValue(framerate);
+    cfg.addProperty("random_colour").setValue(useRandomColour);
 
     auto forceObj = cfg.addObject("forces");
     for (const auto& f : forces)

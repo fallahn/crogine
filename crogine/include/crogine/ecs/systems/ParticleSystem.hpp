@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
 
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/Texture.hpp>
 
@@ -93,6 +94,9 @@ namespace cro
         //probably not less optimal than switching between
         //textured and untextured shaders.
         cro::Texture m_fallbackTexture;
+
+        static constexpr std::size_t MaxRandomColours = 6;
+        std::array<cro::Colour, MaxRandomColours> m_randomColours = {};
 
         void allocateBuffer();
 

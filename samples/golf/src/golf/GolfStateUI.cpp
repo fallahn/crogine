@@ -5826,6 +5826,7 @@ void GolfState::buildTrophyScene()
     cro::EmitterSettings emitterSettings;
     emitterSettings.loadFromFile("assets/golf/particles/firework.cps", m_resources.textures);
     emitterSettings.blendmode = cro::EmitterSettings::BlendMode::Add;
+    //emitterSettings.useRandomColour = true;
 
     if (emitterSettings.releaseCount == 0)
     {
