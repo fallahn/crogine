@@ -108,7 +108,7 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
                 && data.terrain == 1)
             {
                 //coin collision from interpolation
-                const auto pitchOffset = static_cast<float>(-10, 10) / 100.f;
+                const auto pitchOffset = static_cast<float>(cro::Util::Random::value( -10, 10)) / 100.f;
                 auto ent = playSound(AudioID::Bounce01 + cro::Util::Random::value(0, 2), 0.45f);
                 ent.getComponent<cro::AudioEmitter>().setPitch(1 + pitchOffset);
             }

@@ -3464,7 +3464,7 @@ void PlaylistState::updateTabIndices()
 
         ent = m_tabEntities[MenuID::FileSystem];
         ent.getComponent<cro::UIInput>().setNextIndex(TabShrub, QuitSkybox);
-        ent.getComponent<cro::UIInput>().setPrevIndex(TabHoles), QuitSkybox;
+        ent.getComponent<cro::UIInput>().setPrevIndex(TabHoles, QuitSkybox);
     }
         break;
     case MenuID::Shrubbery:
