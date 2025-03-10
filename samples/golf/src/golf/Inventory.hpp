@@ -90,8 +90,8 @@ namespace inv
             std::fill(inventory.begin(), inventory.end(), -1);
         }
 
-        bool read() {}
-        bool write() {}
+        bool read() { return false; }
+        bool write() { return false; }
     };
 
     static inline const std::array<std::string, 13u> Manufacturers =

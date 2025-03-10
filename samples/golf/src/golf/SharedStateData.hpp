@@ -35,6 +35,7 @@ source distribution.
 #include "PlayerData.hpp"
 #include "LeagueNames.hpp"
 #include "Tournament.hpp"
+#include "Inventory.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/audio/sound_system/Playlist.hpp>
@@ -103,6 +104,10 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
+    inv::Inventory inventory;
+    //which loadout to display in the editor, else display shop if == inv::MaxLoadouts
+    std::uint32_t activeLoadout = inv::Inventory::MaxLoadouts;
+
     //used to set background colour in main menu and clubhouse
     MenuSky menuSky;
 

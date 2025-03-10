@@ -73,5 +73,9 @@ namespace cro
         //for example switching a sprite texture to a higher resolution
         //image depending on the current screen scale
         std::function<void(cro::Entity)> resizeCallback;
+
+        UIElement() = default;
+        UIElement(Type t, bool scale)
+            : type(t), screenScale(scale) {}
     };
 }

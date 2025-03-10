@@ -1686,6 +1686,7 @@ void GolfGame::loadPreferences()
     }
 #endif
 
+    m_sharedData.inventory.read();
 
     //do this last so we're saving any settings which were loaded successfully too
     savePreferences();
@@ -1767,6 +1768,8 @@ void GolfGame::savePreferences()
     {
         SDL_RWwrite(file.file, &m_sharedData.inputBinding, sizeof(InputBinding), 1);
     }
+
+    m_sharedData.inventory.write();
 }
 
 void GolfGame::loadAvatars()
