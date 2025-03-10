@@ -41,20 +41,37 @@ namespace cro
     /*!
     \brief Updates the entity's position on screen when the
     active window is resized.
-    Allow placing entities such as sprites or text in a relative
+    Allows placing entities such as sprites or text in a relative
     position on the screen in normalised coords, plus an optional,
     specific offset in screen units.
     */
     struct CRO_EXPORT_API UIElement final
     {
-        //!absolute in units offset from relative position
+        //<!Node type. This affects how the entity layout is applied
+        enum Type
+        {
+            Default, //<! compatibility for existing projects.
+            Position, //<! Parent-only nodes which are set to the relative position + scaled pixel offset
+            Sprite, //<! parented to a position element, sprites are offset by absolute position and scaled if scaling is active
+            Text //<! parented to a position element, text is not scaled, but the character size is, based on the default character size
+        }type = Default;
+
+        //<! if true then sprite nodes and text character size is scaled according to UIElementSystem::getViewScale()
+        bool screenScale = false;
+
+        //<! base character size for Text type elements
+        std::uint32_t characterSize = 10u;
+
+        //<!absolute in units offset from relative position
         glm::vec2 absolutePosition = glm::vec2(0.f); 
-        //!normalised relative to screen size
+        //<!normalised relative to screen size (ignored by Sprite and Text types)
         glm::vec2 relativePosition = glm::vec2(0.f); 
-        //!z depth
+        //<!z depth
         float depth = 0.f; 
-        //!optional callback. This is called before the component
+        //<!optional callback. This is called before the component
         //is updated so that placement vars may be modified first
+        //for example switching a sprite texture to a higher resolution
+        //image depending on the current screen scale
         std::function<void(cro::Entity)> resizeCallback;
     };
 }

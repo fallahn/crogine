@@ -44,6 +44,11 @@ namespace cro
 
         void handleMessage(const Message&) override;
 
+        /*!
+        \brief returns a rounded scale value basedon the given view size
+        */
+        static float getViewScale(glm::vec2 viewSize = App::getWindow().getSize());
+
     private:
         void onEntityAdded(Entity) override;
 

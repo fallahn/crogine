@@ -34,8 +34,20 @@ source distribution.
 
 #include <crogine/ecs/components/UIElement.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/Text.hpp>
 
 using namespace cro;
+
+namespace
+{
+    auto roundPos(glm::vec2 p)
+    {
+        p.x = std::round(p.x);
+        p.y = std::round(p.y);
+        return p;
+    }
+}
 
 UIElementSystem::UIElementSystem(MessageBus& mb)
     : System(mb, typeid(UIElementSystem))
@@ -63,23 +75,99 @@ void UIElementSystem::handleMessage(const Message& msg)
     }
 }
 
+float UIElementSystem::getViewScale(glm::vec2 size)
+{
+    const float ratio = size.x / size.y;
+
+    if (ratio < 1.7f)
+    {
+        //4:3
+        return std::min(8.f, std::floor(size.x / 512.f));
+    }
+
+    if (ratio < 2.37f)
+    {
+        //widescreen - clamp at 6x for 4k
+        return std::min(6.f, std::floor(size.x / 540.f));
+    }
+
+    //ultrawide
+    return std::min(6.f, std::floor(size.y / 360.f));
+}
 
 //private
 void UIElementSystem::onEntityAdded(Entity entity)
 {
+    //hmm this is a bit of a supposition, but we want to be consistent
+    auto& element = entity.getComponent<UIElement>();
+    element.absolutePosition = roundPos(element.absolutePosition);
+
     updateEntity(entity, cro::App::getWindow().getSize());
 }
 
 void UIElementSystem::updateEntity(Entity entity, glm::vec2 size)
 {
-    auto& element = entity.getComponent<UIElement>();
+    const auto& element = entity.getComponent<UIElement>();
     if (element.resizeCallback)
     {
         element.resizeCallback(entity);
     }
+
     
-    auto finalPos = (element.relativePosition * size) + element.absolutePosition;
-    finalPos.x = std::round(finalPos.x);
-    finalPos.y = std::round(finalPos.y);
-    entity.getComponent<cro::Transform>().setPosition(glm::vec3(finalPos, element.depth));
+    switch (element.type)
+    {
+    default:
+    {
+        auto finalPos = (element.relativePosition * size) + element.absolutePosition;
+        entity.getComponent<cro::Transform>().setPosition(glm::vec3(roundPos(finalPos), element.depth));
+    }
+        break;
+    case UIElement::Position:
+    {
+        auto finalPos = (element.relativePosition * size);
+        if (element.screenScale)
+        {
+            const auto screenScale = getViewScale(size);
+            finalPos += (screenScale * element.absolutePosition);
+        }
+        else
+        {
+            finalPos += element.absolutePosition;
+        }
+
+        entity.getComponent<cro::Transform>().setPosition(glm::vec3(roundPos(finalPos), element.depth));
+    }
+        break;
+    case UIElement::Sprite:
+    {
+        if (element.screenScale)
+        {
+            const auto screenScale = getViewScale(size);
+            entity.getComponent<cro::Transform>().setPosition(glm::vec3(roundPos(element.absolutePosition * screenScale), element.depth));
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(screenScale));
+        }
+        else
+        {
+            entity.getComponent<cro::Transform>().setPosition(glm::vec3(element.absolutePosition, element.depth));
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        }
+    }
+        break;
+    case UIElement::Text:
+    {
+        CRO_ASSERT(element.characterSize != 0, "");
+        if (element.screenScale)
+        {
+            const auto screenScale = getViewScale(size);
+            entity.getComponent<cro::Transform>().setPosition(glm::vec3(roundPos(element.absolutePosition * screenScale), element.depth));
+            entity.getComponent<cro::Text>().setCharacterSize(element.characterSize * screenScale);
+        }
+        else
+        {
+            entity.getComponent<cro::Transform>().setPosition(glm::vec3(element.absolutePosition, element.depth));
+            entity.getComponent<cro::Text>().setCharacterSize(element.characterSize);
+        }
+    }
+        break;
+    }
 }
