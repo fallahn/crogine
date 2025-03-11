@@ -69,7 +69,10 @@ ConfigProperty::ConfigProperty(const std::string& name, const std::string& value
 #else
     m_boolValue(false)
 {
-
+    if (!value.empty())
+    {
+        setValue(value);
+    }
 }
 #endif
 
@@ -216,7 +219,7 @@ void ConfigProperty::resetValue()
     m_floatValues.clear();
     m_boolValue = false;
 }
-#endif
+#else
 
 std::vector<float> ConfigProperty::valueAsArray() const
 {
@@ -245,6 +248,7 @@ std::vector<float> ConfigProperty::valueAsArray() const
 
     return retval;
 }
+#endif
 
 //-------------------------------------
 
@@ -666,7 +670,12 @@ bool ConfigObject::parseAsJson(SDL_RWops* file)
 bool ConfigObject::save(const std::string& path)
 {
     RaiiRWops out;
+#ifdef OLD_PARSER
     out.file = SDL_RWFromFile(path.c_str(), "w");
+#else
+    out.file = SDL_RWFromFile(path.c_str(), "wb");
+#endif
+
     if (out.file)
     {
         auto written = write(out.file);
@@ -687,6 +696,9 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
         indent += indentBlock;
     }
 
+    std::size_t written = 0;
+
+#ifdef OLD_PARSER
     std::stringstream stream;
     stream.precision(3);
     stream << indent << getName() << " " << getId() << std::endl;
@@ -713,10 +725,10 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
 
             stream << std::endl;
         }
+
     }
     stream << "\n";
 
-    std::size_t written = 0;
     std::string str = stream.str();
     written += SDL_RWwrite(file, str.data(), sizeof(char), str.size());
 
@@ -729,7 +741,93 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     stream << indent << "}" << std::endl;
     str = stream.str();
     written += SDL_RWwrite(file, str.data(), sizeof(char), str.size());
+#else
+    //write object header
+    constexpr char space = ' ';
+    constexpr char openBracket[] = "{\n";
+    constexpr char closeBracket[] = "}\n";
+    constexpr char newline = '\n';
 
+    written += SDL_RWwrite(file, indent.data(), 1, indent.size());
+    written += SDL_RWwrite(file, getName().data(), 1, getName().size());
+    written += SDL_RWwrite(file, &space, 1, 1);
+    written += SDL_RWwrite(file, getId().data(), 1, getId().size());
+    written += SDL_RWwrite(file, &newline, 1, 1);
+    written += SDL_RWwrite(file, indent.data(), 1, indent.size());
+    written += SDL_RWwrite(file, openBracket, 1, sizeof(openBracket) - 1);
+
+    constexpr char trueString[] = "true";
+    constexpr char falseString[] = "false";
+    constexpr char equals[] = " = ";
+    constexpr char separator[] = ", ";
+    constexpr char quote = '"';
+    
+    //write out properties
+    for (const auto& p : m_properties)
+    {
+        written += SDL_RWwrite(file, indent.data(), 1, indent.size());
+        written += SDL_RWwrite(file, indentBlock.data(), 1, indentBlock.size());
+
+        written += SDL_RWwrite(file, p.getName().data(), 1, p.getName().size());
+        written += SDL_RWwrite(file, equals, 1, sizeof(equals) - 1);
+
+        if (!p.m_utf8Values.empty())
+        {
+            for (auto i = 0u; i < p.m_utf8Values.size(); ++i)
+            {
+                const auto& v = p.m_utf8Values[i];
+
+                //always write enclosing quotes
+                written += SDL_RWwrite(file, &quote, 1, 1);
+                written += SDL_RWwrite(file, v.data(), 1, v.size());
+                written += SDL_RWwrite(file, &quote, 1, 1);
+
+                if (i < p.m_utf8Values.size() - 1)
+                {
+                    written += SDL_RWwrite(file, separator, 1, sizeof(separator) - 1);
+                }
+            }
+        }
+        else if (!p.m_floatValues.empty())
+        {
+            for (auto i = 0u; i < p.m_floatValues.size(); ++i)
+            {
+                const std::string str = std::to_string(p.m_floatValues[i]);
+                written += SDL_RWwrite(file, str.data(), 1, str.size());
+
+                if (i < p.m_floatValues.size() - 1)
+                {
+                    written += SDL_RWwrite(file, separator, 1, sizeof(separator) - 1);
+                }
+            }
+        }
+        else
+        {
+            //fall back to the bool value
+            if (p.m_boolValue)
+            {
+                written += SDL_RWwrite(file, trueString, 1, sizeof(trueString) - 1);
+            }
+            else
+            {
+                written += SDL_RWwrite(file, falseString, 1, sizeof(falseString) - 1);
+            }
+        }
+
+        written += SDL_RWwrite(file, &newline, 1, 1);
+    }
+
+    //write nested objects
+    for (auto& o : m_objects)
+    {
+        written += SDL_RWwrite(file, &newline, 1, 1);
+        written += o.write(file, depth + 1);
+    }
+
+    //close current object
+    written += SDL_RWwrite(file, indent.data(), 1, indent.size());
+    written += SDL_RWwrite(file, closeBracket, 1, sizeof(closeBracket) - 1);
+#endif
     return written;
 }
 

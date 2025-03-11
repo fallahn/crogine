@@ -112,7 +112,7 @@ inline glm::vec2 ConfigProperty::getValue<glm::vec2>() const
     glm::vec2 retval(0.f); //loop allows for values to be the wrong size
     for (auto i = 0u; i < values.size() && i < 2u; ++i)
     {
-        retval[i] = values[i];
+        retval[i] = static_cast<float>(values[i]);
     }
 
     return retval;
@@ -130,7 +130,7 @@ inline glm::vec3 ConfigProperty::getValue<glm::vec3>() const
     glm::vec3 retval(0.f);
     for (auto i = 0u; i < values.size() && i < 3u; ++i)
     {
-        retval[i] = values[i];
+        retval[i] = static_cast<float>(values[i]);
     }
 
     return retval;
@@ -148,7 +148,7 @@ inline glm::vec4 ConfigProperty::getValue<glm::vec4>() const
     glm::vec4 retval(0.f);
     for (auto i = 0u; i < values.size() && i < 4u; ++i)
     {
-        retval[i] = values[i];
+        retval[i] = static_cast<float>(values[i]);
     }
 
     return retval;

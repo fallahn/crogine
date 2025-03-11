@@ -143,6 +143,18 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
             }
             ImGui::End();        
         });
+
+    //cro::ConfigFile outFile("test_object", "test_id");
+    //outFile.addProperty("test_string", "this is a test string");
+    //outFile.addProperty("utf_string").setValue(cro::String(std::uint32_t(0x1F602)));
+    //outFile.addProperty("test_colour").setValue(cro::Colour::Magenta);
+    //auto* obj = outFile.addObject("some_object");
+    //obj->addProperty("test_vector").setValue(glm::vec4(1.f));
+    //obj->setId("this_is_an_id");
+    //auto* subObj = obj->addObject("another_obj");
+    //subObj->addProperty("bool_prop").setValue(false);
+    //subObj->addProperty("bool_prop_02").setValue(true);
+    //outFile.save("test.cfg");
 }
 
 //public

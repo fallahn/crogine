@@ -45,7 +45,7 @@ source distribution.
 #include <vector>
 #include <sstream>
 
-#define OLD_PARSER 1
+//#define OLD_PARSER 1
 
 namespace cro
 {
