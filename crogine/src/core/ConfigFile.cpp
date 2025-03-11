@@ -192,7 +192,7 @@ void ConfigProperty::setValue(const glm::vec4& v)
 #endif
 }
 
-void ConfigProperty::setValue(const cro::FloatRect& r)
+void ConfigProperty::setValue(const FloatRect& r)
 {
 #ifdef OLD_PARSER
     m_value = std::to_string(r.left) + "," + std::to_string(r.bottom) + "," + std::to_string(r.width) + "," + std::to_string(r.height);
@@ -207,7 +207,7 @@ void ConfigProperty::setValue(const cro::FloatRect& r)
 #endif
 }
 
-void ConfigProperty::setValue(const cro::Colour& v)
+void ConfigProperty::setValue(const Colour& v)
 {
     setValue(v.getVec4());
 }
@@ -262,10 +262,18 @@ ConfigObject::ConfigObject(const std::string& name, const std::string& id)
 
 bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
 {
+    currentLine = 0; //well this has code smell to it...
+
+    m_id = "";
+    setName("");
+    m_properties.clear();
+    m_objects.clear();
+
+
 #ifdef OLD_PARSER
-    return loadFromFile1(filePath, relative);
+    return loadFromFile1(relative ? FileSystem::getResourcePath() + filePath : filePath);
 #else
-    return loadFromFile2(filePath, relative);
+    return loadFromFile2(relative ? FileSystem::getResourcePath() + filePath : filePath);
 #endif
 }
 
@@ -279,7 +287,7 @@ void ConfigObject::setId(const std::string& id)
     m_id = id;
 
     //replace spaces with underscore and remove non-alphanum
-    cro::Util::String::replace(m_id, " ", "_");
+    Util::String::replace(m_id, " ", "_");
 
     m_id.erase(std::remove_if(m_id.begin(), m_id.end(),
         [](char c)
@@ -850,16 +858,9 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     return written;
 }
 
-bool ConfigObject::loadFromFile1(const std::string& filePath, bool relative)
+#ifdef OLD_PARSER
+bool ConfigObject::loadFromFile1(const std::string& path)
 {
-    auto path = relative ? FileSystem::getResourcePath() + filePath : filePath;
-    currentLine = 0;
-
-    m_id = "";
-    setName("");
-    m_properties.clear();
-    m_objects.clear();
-
     RaiiRWops rr;
     rr.file = SDL_RWFromFile(path.c_str(), "r");
 
@@ -870,7 +871,7 @@ bool ConfigObject::loadFromFile1(const std::string& filePath, bool relative)
     }
 
     //fetch file size
-    auto fileSize = SDL_RWsize(rr.file);
+    const auto fileSize = SDL_RWsize(rr.file);
     if (fileSize == 0)
     {
         LOG(path + ": file empty", Logger::Type::Warning);
@@ -879,7 +880,7 @@ bool ConfigObject::loadFromFile1(const std::string& filePath, bool relative)
 
     if (rr.file)
     {
-        if (cro::FileSystem::getFileExtension(path) == ".json")
+        if (FileSystem::getFileExtension(path) == ".json")
         {
             return parseAsJson(rr.file);
         }
@@ -1042,18 +1043,293 @@ bool ConfigObject::loadFromFile1(const std::string& filePath, bool relative)
         }
         return true;
     }
-
-    Logger::log(filePath + " file invalid or not found.", Logger::Type::Error);
     return false;
 }
-
-bool ConfigObject::loadFromFile2(const std::string& filePath, bool relative)
+#else
+bool ConfigObject::loadFromFile2(const std::string& path)
 {
+    RaiiRWops rr;
+    rr.file = SDL_RWFromFile(path.c_str(), "rb");
 
+    if (!rr.file)
+    {
+        Logger::log(path + " file invalid or not found.", Logger::Type::Warning);
+        return false;
+    }
+
+    //fetch file size
+    const auto fileSize = SDL_RWsize(rr.file);
+    if (fileSize < 1)
+    {
+        LOG(path + ": file empty", Logger::Type::Warning);
+        return false;
+    }
+
+    if (rr.file)
+    {
+        if (FileSystem::getFileExtension(path) == ".json")
+        {
+            return parseAsJson(rr.file);
+        }
+
+        std::int64_t readCount = 0;
+
+        std::vector<ConfigObject*> objectStack;
+
+        std::basic_string<std::uint8_t> currentLine;
+        std::uint8_t currentByte = 0;
+
+        std::int32_t lineNumber = 1;
+        std::string objectName;
+        std::string objectID;
+
+        while (readCount != fileSize)
+        {
+            readCount += SDL_RWread(rr.file, &currentByte, 1, 1);
+            if (currentByte != '\n')
+            {
+                currentLine.push_back(currentByte);
+            }
+            else
+            {
+                //line is complete, so parse it
+                std::size_t lineStart = 0;
+                while (currentLine[lineStart] == ' ' || currentLine[lineStart] == '\t')
+                {
+                    //skip indentation
+                    lineStart++;
+                }
+
+                //split into tokens
+                std::vector<std::basic_string<std::uint8_t>> tokens;
+                //std::vector<std::vector<char>> tokens; //use this for debugging as it makes strings visible in the debugger
+                tokens.emplace_back();
+                auto tokenIndex = 0;
+
+                bool stringOpen = false; //tracks if the token is part of a string value
+
+                for (auto i = lineStart; i < currentLine.size(); ++i)
+                {
+                    //if this is a comment then quit here
+                    if (currentLine[i] == '/'
+                        && i < currentLine.size() - 1
+                        && currentLine[i + 1] == '/')
+                    {
+                        break;
+                    }
+
+                    //if we hit a space start a new token
+                    if (currentLine[i] == ' '
+                        && !stringOpen)
+                    {
+                        tokens.emplace_back();
+                        tokenIndex++;
+                    }
+
+                    //if we hit an assignment and current token not empty
+                    //start a new token because the spaces are missing
+                    else if (currentLine[i] == '=')
+                    {
+                        if (!tokens[tokenIndex].empty())
+                        {
+                            //there was no preceding space to start a new one
+                            tokens.emplace_back();
+                            tokenIndex++;
+                        }
+
+                        //store the assignment in its own token so we know
+                        //we have a property, and then create a new token
+                        //if the next char isn't a space
+                        tokens[tokenIndex].push_back(currentLine[i]);
+
+                        if (i < currentLine.size() - 1
+                            && currentLine[i + 1] != ' ')
+                        {
+                            tokens.emplace_back();
+                            tokenIndex++;
+                        }
+                    }
+
+                    //check to see if we open or close a string
+                    else if (currentLine[i] == '"')
+                    {
+                        stringOpen = !stringOpen;
+                        
+                        //we need to store these so we can identify the value as a string
+                        tokens[tokenIndex].push_back(currentLine[i]);
+                    }
+
+                    //else push back current char
+                    else
+                    {
+                        //make sure this isn't whitespace like \t or \r
+                        if (currentLine[i] != '\t'
+                            && currentLine[i] != '\r')
+                        {
+                            tokens[tokenIndex].push_back(currentLine[i]);
+                        }
+                    }
+                }
+
+                //examine our list of tokens and decide what to do with them
+                //we may have an array here where spaces were placed between
+                //components... or we may have single/mixed tokens with comma
+                //separated values.....
+                if (tokens.size() < 3)
+                {
+                    //this is an object name/id pair
+                    //or an opening/closing brace
+                    if (!tokens[0].empty())
+                    {
+                        //hm, empty lines create an empty token...
+
+                        if (tokens[0][0] == '{')
+                        {
+                            //this is the first object
+                            if (objectStack.empty())
+                            {
+                                objectStack.push_back(this);
+                                setName(objectName);
+                                setId(objectID);
+                            }
+                            else
+                            {
+                                auto* o = objectStack.back();
+                                objectStack.push_back(o->addObject(objectName, objectID));
+                            }
+
+                            objectName.clear();
+                            objectID.clear();
+                        }
+                        else if (tokens[0][0] == '}')
+                        {
+                            objectStack.pop_back();
+                        }
+                        else
+                        {
+                            //stash name/id strings so we can add them when creating a new object
+                            objectName = { tokens[0].begin(), tokens[0].end() };
+                            
+                            if (tokens.size() > 1 &&
+                                !tokens[1].empty())
+                            {
+                                objectID = { tokens[1].begin(), tokens[1].end() };
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (tokens[1][0] == '=')
+                    {
+                        //this is a property
+                        auto& prop = objectStack.back()->addProperty(std::string(tokens[0].begin(), tokens[0].end()));
+                        
+                        if (tokens[2].size() > 1
+                            && tokens[2][0] == '"')
+                        {
+                            //this is a string
+                            auto tokenEnd = tokens[2].size() - 1;
+                            if (tokens[2].back() != '"')
+                            {
+                                //we're malformed but attempt to copy anyway
+                                tokenEnd++;
+                            }
+
+                            //TODO we should be further splitting this if it's a string array
+                            //but we don't support getter/setter yet
+                            auto& utf = prop.m_utf8Values.emplace_back();
+                            for (auto i = 1u; i < tokenEnd; ++i)
+                            {
+                                utf.push_back(tokens[2][i]);
+                            }                            
+                        }
+
+                        else
+                        {
+                            //try parsing tokens[2] as a CSV of floats
+                            std::string tmp;
+                            const auto parseFloat = [&]()
+                                {
+                                    Util::String::removeChar(tmp, ' ');
+
+                                    if (prop.m_floatValues.empty())
+                                    {
+                                        if (tmp == "true")
+                                        {
+                                            prop.setValue(true);
+                                            return;
+                                        }
+                                        else if (tmp == "false")
+                                        {
+                                            prop.setValue(false);
+                                            return;
+                                        }
+                                    }
+                                    
+
+                                    try
+                                    {
+                                        prop.m_floatValues.push_back(std::stod(tmp));
+                                    }
+                                    catch (...)
+                                    {
+                                        //if (tmp != "true"
+                                        //    && tmp != "false")
+                                        {
+                                            LogW << FileSystem::getFileName(path) << " " << lineNumber << " - " << tmp << ": potential unquoted string value" << std::endl;
+                                        }
+                                    };
+
+                                    tmp.clear();
+                                };
+
+                            for (auto c : tokens[2])
+                            {
+                                if (c != ',')
+                                {
+                                    tmp.push_back(c);
+                                }
+                                else
+                                {
+                                    //attempt to parse to double. 
+                                    parseFloat();
+                                }
+                            }
+                            //don't forget the fnal value!
+                            if (!tmp.empty())
+                            {
+                                parseFloat();
+                            }
+                        }
+                    }
+                }
+
+                if (stringOpen)
+                {
+                    LogW << FileSystem::getFileName(path) << " - Missing \" on line: " << lineNumber << std::endl;
+                }
+
+                stringOpen = false;
+                currentLine.clear();
+                lineNumber++;
+            }
+        }
+
+        if (!objectStack.empty()
+            && objectStack.back() != this) //*sigh* if there's no newline at the end of the file the very last } won't get read...
+        {
+            //we were missing a closing brace somewhere
+            //TODO find the line it was missing from (approx) based on indent??
+            LogW << FileSystem::getFileName(path) << ": at least one closing brace is missing" << std::endl;
+        }
+
+        return readCount == fileSize;
+    }
 
     return false;
 }
-
+#endif
 
 
 //--------------------//
@@ -1062,7 +1338,7 @@ ConfigItem::ConfigItem(const std::string& name)
     m_name      (name)
 {
     //replace spaces with underscore and remove non-alphanum
-    cro::Util::String::replace(m_name, " ", "_");
+    Util::String::replace(m_name, " ", "_");
     
     m_name.erase(std::remove_if(m_name.begin(), m_name.end(), 
         [](char c)

@@ -111,6 +111,22 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
 
     m_musicName = "No File";
 
+
+    auto* fonts = ImGui::GetIO().Fonts;
+    static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
+    ImFontConfig config;
+    config.MergeMode = true;
+    config.FontBuilderFlags |= (1 << 8) | (1 << 9);
+
+
+
+    const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    if (cro::FileSystem::fileExists(winPath))
+    {
+        fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());// ->Scale = 0.5f;
+    }
+
+
     static bool loaded = testFile.loadFromFile("goodfile.cfg");
     registerWindow([]() 
         {
@@ -118,6 +134,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
             {
                 if (loaded)
                 {
+                    ImGui::Text("Name: %s, ID: %s", testFile.getName().c_str(), testFile.getId().c_str());
+
                     const auto& objs = testFile.getObjects();
                     for (const auto& obj : objs)
                     {
@@ -126,6 +144,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
                         for (const auto& prop : props)
                         {
                             ImGui::Text("Property %s: %s", prop.getName().c_str(), prop.getValue<std::string>().c_str());
+
+                            const auto v = prop.getValue<glm::vec4>();
+                            ImGui::Text("Property %s: %3.2f, %3.2f, %3.2f, %3.2f", prop.getName().c_str(), v.x,v.y,v.z,v.w);
                         }
                         ImGui::NewLine();
                     }

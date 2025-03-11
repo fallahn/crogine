@@ -45,7 +45,7 @@ source distribution.
 #include <vector>
 #include <sstream>
 
-//#define OLD_PARSER 1
+#define OLD_PARSER 1
 
 namespace cro
 {
@@ -281,12 +281,14 @@ namespace cro
 
         std::size_t write(SDL_RWops* file, std::uint16_t depth = 0u);
 
+#ifdef OLD_PARSER
         //old version
-        bool loadFromFile1(const std::string& path, bool relative = true);
-
+        bool loadFromFile1(const std::string& path);
+#else
         //new version
-        bool loadFromFile2(const std::string& path, bool relative = true);
+        bool loadFromFile2(const std::string& path);
+#endif
     };
 
-    using ConfigFile = cro::ConfigObject;
+    using ConfigFile = ConfigObject;
 }
