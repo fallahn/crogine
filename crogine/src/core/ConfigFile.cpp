@@ -59,78 +59,164 @@ namespace
 //--------------------//
 ConfigProperty::ConfigProperty(const std::string& name, const std::string& value)
     : ConfigItem(name),
+#ifdef OLD_PARSER
     m_value(value), m_isStringValue(false)
 {
     m_isStringValue = !value.empty()
         && ((value.front() == '\"' && value.back() == '\"')
         || value.find(' ') != std::string::npos);
 }
+#else
+    m_boolValue(false)
+{
+
+}
+#endif
 
 void ConfigProperty::setValue(const std::string& value)
 {
+#ifdef OLD_PARSER
     m_value = value;
     m_isStringValue = true;
+#else
+    //new version
+    resetValue();
+    auto& v = m_utf8Values.emplace_back();
+    v.resize(value.size());
+    std::memcpy(v.data(), value.data(), value.size());
+#endif
 }
 void ConfigProperty::setValue(const cro::String& value)
 {
     auto utf = value.toUtf8();
+#ifdef OLD_PARSER
     m_value = std::string(utf.begin(), utf.end());
     m_isStringValue = true;
+#else
+    //new version
+    resetValue();
+    m_utf8Values.emplace_back(std::move(utf));
+#endif
 }
 
 void ConfigProperty::setValue(std::int32_t value)
 {
+#ifdef OLD_PARSER
     m_value = std::to_string(value);
     m_isStringValue = false;
+#else
+    //new version
+    resetValue();
+    m_floatValues.emplace_back(static_cast<double>(value));
+#endif
 }
 
 void ConfigProperty::setValue(std::uint32_t value)
 {
+#ifdef OLD_PARSER
     m_value = std::to_string(value);
     m_isStringValue = false;
+#else
+    //new version
+    resetValue();
+    m_floatValues.emplace_back(static_cast<double>(value));
+#endif
 }
 
 void ConfigProperty::setValue(float value)
 {
+#ifdef OLD_PARSER
     m_value = std::to_string(value);
     m_isStringValue = false;
+#else
+    //new version
+    resetValue();
+    m_floatValues.push_back(value);
+#endif
 }
 
 void ConfigProperty::setValue(bool value)
 {
+#ifdef OLD_PARSER
     m_value = (value) ? "true" : "false";
     m_isStringValue = false;
+#else
+    //new version
+    resetValue();
+    m_boolValue = value;
+#endif
 }
 
 void ConfigProperty::setValue(const glm::vec2& v)
 {
+#ifdef OLD_PARSER
     m_value = std::to_string(v.x) + "," + std::to_string(v.y);
     m_isStringValue = false;
+#else
+    //new version
+    resetValue();
+    m_floatValues.push_back(v.x);
+    m_floatValues.push_back(v.y);
+#endif
 }
 
 void ConfigProperty::setValue(const glm::vec3& v)
 {
+#ifdef OLD_PARSER
     m_value = std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z);
     m_isStringValue = false;
+#else
+    //new version
+    resetValue();
+    m_floatValues.push_back(v.x);
+    m_floatValues.push_back(v.y);
+    m_floatValues.push_back(v.z);
+#endif
 }
 
 void ConfigProperty::setValue(const glm::vec4& v)
 {
+#ifdef OLD_PARSER
     m_value = std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z) + "," + std::to_string(v.w);
     m_isStringValue = false;
+#else
+    //new version
+    resetValue();
+    m_floatValues.push_back(v.x);
+    m_floatValues.push_back(v.y);
+    m_floatValues.push_back(v.z);
+    m_floatValues.push_back(v.w);
+#endif
 }
 
 void ConfigProperty::setValue(const cro::FloatRect& r)
 {
+#ifdef OLD_PARSER
     m_value = std::to_string(r.left) + "," + std::to_string(r.bottom) + "," + std::to_string(r.width) + "," + std::to_string(r.height);
     m_isStringValue = false;
+#else
+    //new version
+    resetValue();
+    m_floatValues.push_back(r.left);
+    m_floatValues.push_back(r.bottom);
+    m_floatValues.push_back(r.width);
+    m_floatValues.push_back(r.height);
+#endif
 }
 
 void ConfigProperty::setValue(const cro::Colour& v)
 {
     setValue(v.getVec4());
-    m_isStringValue = false;
 }
+
+#ifndef OLD_PARSER
+void ConfigProperty::resetValue()
+{
+    m_utf8Values.clear();
+    m_floatValues.clear();
+    m_boolValue = false;
+}
+#endif
 
 std::vector<float> ConfigProperty::valueAsArray() const
 {
@@ -167,199 +253,11 @@ ConfigObject::ConfigObject(const std::string& name, const std::string& id)
 
 bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
 {
-    auto path = relative ? FileSystem::getResourcePath() + filePath : filePath;
-    currentLine = 0;
-
-    m_id = "";
-    setName("");
-    m_properties.clear();
-    m_objects.clear();
-
-    RaiiRWops rr;
-    rr.file = SDL_RWFromFile(path.c_str(), "r");
-
-    if (!rr.file)
-    {
-        Logger::log(path + " file invalid or not found.", Logger::Type::Warning);
-        return false;
-    }
-    
-    //fetch file size
-    auto fileSize = SDL_RWsize(rr.file);
-    if (fileSize == 0)
-    {
-        LOG(path + ": file empty", Logger::Type::Warning);
-        return false;
-    }
-
-    if (rr.file)
-    {
-        if (cro::FileSystem::getFileExtension(path) == ".json")
-        {
-            return parseAsJson(rr.file);
-        }
-
-        //remove any opening comments
-        std::string data;
-        char* temp = nullptr;
-        std::int64_t readTotal = 0;
-        static constexpr std::int32_t DEST_SIZE = 1024;// 256;
-        char dest[DEST_SIZE];
-        while (data.empty() && readTotal < fileSize)
-        {
-            temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
-
-            if (temp)
-            {
-                data = std::string(temp);
-                removeComment(data);
-            }
-            else
-            {
-                LogE << path << ": unexpected EOF" << std::endl;
-                return false;
-            }
-        }
-        //check config is not opened with a property
-        if (isProperty(data))
-        {
-            Logger::log(path + ": Cannot start configuration file with a property", Logger::Type::Error);
-            return false;
-        }
-        
-        //make sure next line is a brace to ensure we have an object
-        std::string lastLine = data;
-
-        temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
-        if (temp)
-        {
-            data = std::string(temp);
-            removeComment(data);
-        }
-        else
-        {
-            LogE << path << ": unexpected EOF" << std::endl;
-            return false;
-        }
-
-        //tracks brace balance
-        std::vector<ConfigObject*> objStack;
-
-        if (data[0] == '{')
-        {
-            //we have our opening object
-            auto objectName = getObjectName(lastLine);
-            setName(objectName.first);
-            m_id = objectName.second;
-            
-            objStack.push_back(this);
-        }
-        else
-        {
-            Logger::log(path + " Invalid configuration header (missing '{' ?)", Logger::Type::Error);
-            return false;
-        }
-
-
-        while (readTotal < fileSize)
-        {
-            temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
-            if (temp)
-            {
-                data = std::string(temp);
-                removeComment(data);
-            }
-            else
-            {
-                LogE << path << ": unexpected EOF" << std::endl;
-                return false;
-            }
-
-            if (!data.empty())
-            {
-                if (data[0] == '}')
-                {
-                    //close current object and move to parent
-                    objStack.pop_back();
-                }
-                else if (isProperty(data))
-                {           
-                    //insert name / value property into current object
-                    auto prop = getPropertyName(data);
-                    //TODO need to reinstate this and create a property
-                    //capable of storing arrays
-                    /*if (currentObject->findProperty(prop.first))
-                    {
-                        Logger::log("Property \'" + prop.first + "\' already exists in \'" + currentObject->getName() + "\', skipping entry...", Logger::Type::Warning);
-                        continue;
-                    }*/
-
-                    if (prop.second.empty())
-                    {
-                        Logger::log("\'" + objStack.back()->getName() + "\' property \'" + prop.first + "\' has no valid value", Logger::Type::Warning);
-                        continue;
-                    }
-                    objStack.back()->addProperty(prop.first, prop.second);
-                }
-                else
-                {
-                    //add a new object and make it current
-                    std::string prevLine = data;
-
-                    temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
-                    if (temp)
-                    {
-                        data = std::string(temp);
-                        removeComment(data);
-                    }
-                    else
-                    {
-                        LogE << path << ": unexpected EOF" << std::endl;
-                        return false;
-                    }
-
-                    if (data[0] == '{')
-                    {
-                        //TODO we have to allow mutliple objects with the same name in this instance
-                        //as a model may have multiple material defs.
-                        auto name = getObjectName(prevLine);
-                        //if (name.second.empty() || objStack.back()->findObjectWithId(name.second) == nullptr)
-                        //{
-                        //    //safe to add new object as the name doesn't exist
-                        //    objStack.push_back(objStack.back()->addObject(name.first, name.second));
-                        //}
-                        //else
-                        //{
-                        //    Logger::log("Object with ID " + name.second + " has already been added, duplicate is skipped...", Logger::Type::Warning);
-
-                        //    //fast forward to closing brace
-                        //    while (data[0] != '}')
-                        //    {
-                        //        data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
-                        //        removeComment(data);
-                        //    }
-                        //}
-
-                        objStack.push_back(objStack.back()->addObject(name.first, name.second));
-                    }
-                    else //last line was probably garbage or nothing but spaces
-                    {
-                        //LogW << filePath << ": Missing line or incorrect syntax at " << currentLine << std::endl;
-                        continue;
-                    }
-                }
-            }       
-        }
-
-        if (!objStack.empty())
-        {
-            Logger::log("Brace count not at 0 after parsing \'" + path + "\'. Config data may not be correct.", Logger::Type::Warning);
-        }
-        return true;
-    }
-    
-    Logger::log(filePath + " file invalid or not found.", Logger::Type::Error);
-    return false;
+#ifdef OLD_PARSER
+    return loadFromFile1(filePath, relative);
+#else
+    return loadFromFile2(filePath, relative);
+#endif
 }
 
 const std::string& ConfigObject::getId() const
@@ -834,6 +732,212 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
 
     return written;
 }
+
+bool ConfigObject::loadFromFile1(const std::string& filePath, bool relative)
+{
+    auto path = relative ? FileSystem::getResourcePath() + filePath : filePath;
+    currentLine = 0;
+
+    m_id = "";
+    setName("");
+    m_properties.clear();
+    m_objects.clear();
+
+    RaiiRWops rr;
+    rr.file = SDL_RWFromFile(path.c_str(), "r");
+
+    if (!rr.file)
+    {
+        Logger::log(path + " file invalid or not found.", Logger::Type::Warning);
+        return false;
+    }
+
+    //fetch file size
+    auto fileSize = SDL_RWsize(rr.file);
+    if (fileSize == 0)
+    {
+        LOG(path + ": file empty", Logger::Type::Warning);
+        return false;
+    }
+
+    if (rr.file)
+    {
+        if (cro::FileSystem::getFileExtension(path) == ".json")
+        {
+            return parseAsJson(rr.file);
+        }
+
+        //remove any opening comments
+        std::string data;
+        char* temp = nullptr;
+        std::int64_t readTotal = 0;
+        static constexpr std::int32_t DEST_SIZE = 1024;// 256;
+        char dest[DEST_SIZE];
+        while (data.empty() && readTotal < fileSize)
+        {
+            temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
+
+            if (temp)
+            {
+                data = std::string(temp);
+                removeComment(data);
+            }
+            else
+            {
+                LogE << path << ": unexpected EOF" << std::endl;
+                return false;
+            }
+        }
+        //check config is not opened with a property
+        if (isProperty(data))
+        {
+            Logger::log(path + ": Cannot start configuration file with a property", Logger::Type::Error);
+            return false;
+        }
+
+        //make sure next line is a brace to ensure we have an object
+        std::string lastLine = data;
+
+        temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
+        if (temp)
+        {
+            data = std::string(temp);
+            removeComment(data);
+        }
+        else
+        {
+            LogE << path << ": unexpected EOF" << std::endl;
+            return false;
+        }
+
+        //tracks brace balance
+        std::vector<ConfigObject*> objStack;
+
+        if (data[0] == '{')
+        {
+            //we have our opening object
+            auto objectName = getObjectName(lastLine);
+            setName(objectName.first);
+            m_id = objectName.second;
+
+            objStack.push_back(this);
+        }
+        else
+        {
+            Logger::log(path + " Invalid configuration header (missing '{' ?)", Logger::Type::Error);
+            return false;
+        }
+
+
+        while (readTotal < fileSize)
+        {
+            temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
+            if (temp)
+            {
+                data = std::string(temp);
+                removeComment(data);
+            }
+            else
+            {
+                LogE << path << ": unexpected EOF" << std::endl;
+                return false;
+            }
+
+            if (!data.empty())
+            {
+                if (data[0] == '}')
+                {
+                    //close current object and move to parent
+                    objStack.pop_back();
+                }
+                else if (isProperty(data))
+                {
+                    //insert name / value property into current object
+                    auto prop = getPropertyName(data);
+                    //TODO need to reinstate this and create a property
+                    //capable of storing arrays
+                    /*if (currentObject->findProperty(prop.first))
+                    {
+                        Logger::log("Property \'" + prop.first + "\' already exists in \'" + currentObject->getName() + "\', skipping entry...", Logger::Type::Warning);
+                        continue;
+                    }*/
+
+                    if (prop.second.empty())
+                    {
+                        Logger::log("\'" + objStack.back()->getName() + "\' property \'" + prop.first + "\' has no valid value", Logger::Type::Warning);
+                        continue;
+                    }
+                    objStack.back()->addProperty(prop.first, prop.second);
+                }
+                else
+                {
+                    //add a new object and make it current
+                    std::string prevLine = data;
+
+                    temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
+                    if (temp)
+                    {
+                        data = std::string(temp);
+                        removeComment(data);
+                    }
+                    else
+                    {
+                        LogE << path << ": unexpected EOF" << std::endl;
+                        return false;
+                    }
+
+                    if (data[0] == '{')
+                    {
+                        //TODO we have to allow mutliple objects with the same name in this instance
+                        //as a model may have multiple material defs.
+                        auto name = getObjectName(prevLine);
+                        //if (name.second.empty() || objStack.back()->findObjectWithId(name.second) == nullptr)
+                        //{
+                        //    //safe to add new object as the name doesn't exist
+                        //    objStack.push_back(objStack.back()->addObject(name.first, name.second));
+                        //}
+                        //else
+                        //{
+                        //    Logger::log("Object with ID " + name.second + " has already been added, duplicate is skipped...", Logger::Type::Warning);
+
+                        //    //fast forward to closing brace
+                        //    while (data[0] != '}')
+                        //    {
+                        //        data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
+                        //        removeComment(data);
+                        //    }
+                        //}
+
+                        objStack.push_back(objStack.back()->addObject(name.first, name.second));
+                    }
+                    else //last line was probably garbage or nothing but spaces
+                    {
+                        //LogW << filePath << ": Missing line or incorrect syntax at " << currentLine << std::endl;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        if (!objStack.empty())
+        {
+            Logger::log("Brace count not at 0 after parsing \'" + path + "\'. Config data may not be correct.", Logger::Type::Warning);
+        }
+        return true;
+    }
+
+    Logger::log(filePath + " file invalid or not found.", Logger::Type::Error);
+    return false;
+}
+
+bool ConfigObject::loadFromFile2(const std::string& filePath, bool relative)
+{
+
+
+    return false;
+}
+
+
 
 //--------------------//
 ConfigItem::ConfigItem(const std::string& name)

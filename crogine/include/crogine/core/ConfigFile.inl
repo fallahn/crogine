@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,60 +30,87 @@ source distribution.
 template <>
 inline std::string ConfigProperty::getValue<std::string>() const
 {
+#ifdef OLD_PARSER
     return m_value;
+#else
+    return m_utf8Values.empty() ? std::string("null") : std::string(m_utf8Values[0].begin(), m_utf8Values[0].end());
+#endif
 }
 
 template<>
 inline cro::String ConfigProperty::getValue<cro::String>() const
 {
+#ifdef OLD_PARSER
     if (!m_isStringValue)
     {
         return m_value;
     }
-
-    //auto cp = cro::Util::String::getCodepoints(m_value);
     return cro::String::fromUtf8(m_value.begin(), m_value.end());
+#else
+    return m_utf8Values.empty() ? cro::String("null") : cro::String::fromUtf8(m_utf8Values[0].begin(), m_utf8Values[0].end());
+#endif
 }
 
 template <>
 inline std::int32_t ConfigProperty::getValue<std::int32_t>() const
 {
+#ifdef OLD_PARSER
     std::int32_t retVal;
     std::istringstream is(m_value);
     if (is >> retVal) return retVal;
     return 0;
+#else
+    return m_floatValues.empty() ? 0 : static_cast<std::int32_t>(m_floatValues[0]);
+#endif
 }
 
 template <>
 inline std::uint32_t ConfigProperty::getValue<std::uint32_t>() const
 {
+#ifdef OLD_PARSER
     std::uint32_t retVal;
     std::istringstream is(m_value);
     if (is >> retVal) return retVal;
-    return 0;
+    return 0u;
+#else
+    return m_floatValues.empty() ? 0u : static_cast<std::uint32_t>(m_floatValues[0]);
+#endif
 }
 
 template <>
 inline float ConfigProperty::getValue<float>() const
 {
+#ifdef OLD_PARSER
     float retVal;
     std::istringstream is(m_value);
     if (is >> retVal) return retVal;
     return 0.f;
+#else
+    return m_floatValues.empty() ? 0.f : static_cast<float>(m_floatValues[0]);
+#endif
 }
 
 template <>
 inline bool ConfigProperty::getValue<bool>() const
 {
+#ifdef OLD_PARSER
     return (m_value == "true");
+#else
+    return m_boolValue;
+#endif
 }
 
 template <>
 inline glm::vec2 ConfigProperty::getValue<glm::vec2>() const
 {
+#ifdef OLD_PARSER
     auto values = valueAsArray();
+#else
+    const auto& values = m_floatValues;
+#endif
+
     glm::vec2 retval(0.f); //loop allows for values to be the wrong size
-    for (auto i = 0u; i < values.size() && i < 2; ++i)
+    for (auto i = 0u; i < values.size() && i < 2u; ++i)
     {
         retval[i] = values[i];
     }
@@ -94,9 +121,14 @@ inline glm::vec2 ConfigProperty::getValue<glm::vec2>() const
 template <>
 inline glm::vec3 ConfigProperty::getValue<glm::vec3>() const
 {
+#ifdef OLD_PARSER
     auto values = valueAsArray();
+#else
+    const auto& values = m_floatValues;
+#endif
+
     glm::vec3 retval(0.f);
-    for (auto i = 0u; i < values.size() && i < 3; ++i)
+    for (auto i = 0u; i < values.size() && i < 3u; ++i)
     {
         retval[i] = values[i];
     }
@@ -107,9 +139,14 @@ inline glm::vec3 ConfigProperty::getValue<glm::vec3>() const
 template <>
 inline glm::vec4 ConfigProperty::getValue<glm::vec4>() const
 {
+#ifdef OLD_PARSER
     auto values = valueAsArray();
+#else
+    const auto& values = m_floatValues;
+#endif
+
     glm::vec4 retval(0.f);
-    for (auto i = 0u; i < values.size() && i < 4; ++i)
+    for (auto i = 0u; i < values.size() && i < 4u; ++i)
     {
         retval[i] = values[i];
     }
@@ -120,14 +157,15 @@ inline glm::vec4 ConfigProperty::getValue<glm::vec4>() const
 template <>
 inline FloatRect ConfigProperty::getValue<FloatRect>() const
 {
-    auto values = valueAsArray();
+    //ensures the array is in range and that we use the correct source regardless of parser define
+    auto values = getValue<glm::vec4>();
     return { values[0], values[1], values[2], values[3] };
 }
 
 template <>
 inline Colour ConfigProperty::getValue<Colour>() const
 {
-    auto values = valueAsArray();
+    auto values = getValue<glm::vec4>();//ensures the array is in range
     auto clamp = [](float v)
     {
         return std::max(0.f, std::min(1.f, v));

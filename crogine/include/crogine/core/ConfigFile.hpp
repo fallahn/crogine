@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -45,6 +45,8 @@ source distribution.
 #include <vector>
 #include <sstream>
 
+#define OLD_PARSER 1
+
 namespace cro
 {
     class Colour;
@@ -88,8 +90,8 @@ namespace cro
 
         /*!
         \brief Attempts to retrieve the value as the requested type.
-        Valid types are: std::string, std::int32_t, std::uint32_t, float, bool, glm::vec2,
-        glm::vec3, glm::vec4, cro::FloatRect, cro::Colour
+        Valid types are: std::string, cro::String, std::int32_t, std::uint32_t, float, 
+        bool, glm::vec2, glm::vec3, glm::vec4, cro::FloatRect, cro::Colour
         */
         template <typename T>
         T getValue() const;
@@ -108,9 +110,17 @@ namespace cro
         void setValue(const cro::Colour& v);
         
     private:
+#ifdef OLD_PARSER
         std::string m_value;
         bool m_isStringValue;
         std::vector<float> valueAsArray() const;
+#else
+        std::vector<std::basic_string<std::uint8_t>> m_utf8Values;
+        std::vector<double> m_floatValues; //max size is uint32_t so we don't want to truncate on cast
+        bool m_boolValue;
+
+        void resetValue(); //clears existing values before setting a new one
+#endif
     };
 
 #include "ConfigFile.inl"
@@ -270,6 +280,12 @@ namespace cro
         bool parseAsJson(SDL_RWops*);
 
         std::size_t write(SDL_RWops* file, std::uint16_t depth = 0u);
+
+        //old version
+        bool loadFromFile1(const std::string& path, bool relative = true);
+
+        //new version
+        bool loadFromFile2(const std::string& path, bool relative = true);
     };
 
     using ConfigFile = cro::ConfigObject;

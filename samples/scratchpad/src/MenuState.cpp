@@ -86,6 +86,8 @@ namespace
     bool showVideoPlayer = false;
     bool showMusicPlayer = false;
     bool showBoilerplate = false;
+
+    cro::ConfigFile testFile;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
@@ -108,6 +110,39 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
     });
 
     m_musicName = "No File";
+
+    static bool loaded = testFile.loadFromFile("goodfile.cfg");
+    registerWindow([]() 
+        {
+            if (ImGui::Begin("Config File"))
+            {
+                if (loaded)
+                {
+                    const auto& objs = testFile.getObjects();
+                    for (const auto& obj : objs)
+                    {
+                        ImGui::Text("Object: %s, ID: %s", obj.getName().c_str(), obj.getId().c_str());
+                        const auto& props = obj.getProperties();
+                        for (const auto& prop : props)
+                        {
+                            ImGui::Text("Property %s: %s", prop.getName().c_str(), prop.getValue<std::string>().c_str());
+                        }
+                        ImGui::NewLine();
+                    }
+                    ImGui::Separator();
+                    const auto& props = testFile.getProperties();
+                    for (const auto& prop : props)
+                    {
+                        ImGui::Text("Property %s: %s", prop.getName().c_str(), prop.getValue<std::string>().c_str());
+                    }
+                }
+                else
+                {
+                    ImGui::Text("Failed to parse config file");
+                }
+            }
+            ImGui::End();        
+        });
 }
 
 //public
