@@ -144,7 +144,7 @@ namespace cro
         /*!
         \brief Sets the ID of this object
         */
-        void setId(const std::string id) { m_id = id; }
+        void setId(const std::string& id);
 
         /*!
         \brief Returns a pointer to the property if found, else nullptr

@@ -144,7 +144,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
             ImGui::End();        
         });
 
-    //cro::ConfigFile outFile("test_object", "test_id");
+    //cro::ConfigFile outFile("test object", "test_id");
     //outFile.addProperty("test_string", "this is a test string");
     //outFile.addProperty("utf_string").setValue(cro::String(std::uint32_t(0x1F602)));
     //outFile.addProperty("test_colour").setValue(cro::Colour::Magenta);

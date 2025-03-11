@@ -253,7 +253,12 @@ std::vector<float> ConfigProperty::valueAsArray() const
 //-------------------------------------
 
 ConfigObject::ConfigObject(const std::string& name, const std::string& id)
-    : ConfigItem    (name), m_id(id){}
+    : ConfigItem    (name)
+{
+    //use this rather than the init list as
+    //it performs some sanity checks on the string
+    setId(id);
+}
 
 bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
 {
@@ -267,6 +272,20 @@ bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
 const std::string& ConfigObject::getId() const
 {
     return m_id;
+}
+
+void ConfigObject::setId(const std::string& id)
+{
+    m_id = id;
+
+    //replace spaces with underscore and remove non-alphanum
+    cro::Util::String::replace(m_id, " ", "_");
+
+    m_id.erase(std::remove_if(m_id.begin(), m_id.end(),
+        [](char c)
+        {
+            return !std::isalnum(c) && c != '_';
+        }), m_id.end());
 }
 
 ConfigProperty* ConfigObject::findProperty(const std::string& name) const
@@ -1040,7 +1059,17 @@ bool ConfigObject::loadFromFile2(const std::string& filePath, bool relative)
 //--------------------//
 ConfigItem::ConfigItem(const std::string& name)
     : m_parent  (nullptr),
-    m_name      (name){}
+    m_name      (name)
+{
+    //replace spaces with underscore and remove non-alphanum
+    cro::Util::String::replace(m_name, " ", "_");
+    
+    m_name.erase(std::remove_if(m_name.begin(), m_name.end(), 
+        [](char c)
+        {
+            return !std::isalnum(c) && c != '_';
+        }), m_name.end());
+}
 
 ConfigItem* ConfigItem::getParent() const
 {
