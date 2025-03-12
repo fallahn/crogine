@@ -7487,6 +7487,7 @@ float GolfState::getGroundRotation(glm::vec3 pos, float yRot, bool flipped) cons
         {
             offsetRot *= -1.f;
         }
+        LogI << "Offset rotation: " << offsetRot << std::endl;
         return offsetRot;
     }
     return 0.f;
