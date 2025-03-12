@@ -38,6 +38,7 @@ source distribution.
 #include <SDL_rwops.h>
 
 #include <sstream>
+#include <fstream>
 #include <algorithm>
 
 using namespace cro;
@@ -1242,7 +1243,7 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                             for (auto i = 1u; i < tokenEnd; ++i)
                             {
                                 utf.push_back(tokens[2][i]);
-                            }                            
+                            }
                         }
 
                         else
@@ -1274,10 +1275,20 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                                     }
                                     catch (...)
                                     {
-                                        //if (tmp != "true"
-                                        //    && tmp != "false")
+                                        //for backwards compat stash this as a string
+                                        auto& utf = prop.m_utf8Values.emplace_back();
+                                        for (auto i = 0u; i < tokens[2].size(); ++i)
                                         {
-                                            LogW << FileSystem::getFileName(path) << " " << lineNumber << " - " << tmp << ": potential unquoted string value" << std::endl;
+                                            utf.push_back(tokens[2][i]);
+                                        }
+                                        //but we don't want to encourage this so nag with a warning
+                                        LogW << FileSystem::getFileName(path) << " " << lineNumber << " - " << tmp << ": potential unquoted string value" << std::endl;
+
+                                        //for now log these so we know what to edit MUST REMOVE IT THOUGH
+                                        std::ofstream f("cfg_corrections.txt", std::ios::app);
+                                        if (f.is_open() && f.good())
+                                        {
+                                            f << path << " - line: " << lineNumber << "\n";
                                         }
                                     };
 
@@ -1296,7 +1307,7 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                                     parseFloat();
                                 }
                             }
-                            //don't forget the fnal value!
+                            //don't forget the final value!
                             if (!tmp.empty())
                             {
                                 parseFloat();

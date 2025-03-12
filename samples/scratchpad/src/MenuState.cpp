@@ -123,7 +123,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
     if (cro::FileSystem::fileExists(winPath))
     {
-        fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());// ->Scale = 0.5f;
+        fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());
     }
 
 
