@@ -1285,6 +1285,7 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                                         LogW << FileSystem::getFileName(path) << " " << lineNumber << " - " << tmp << ": potential unquoted string value" << std::endl;
 
                                         //for now log these so we know what to edit MUST REMOVE IT THOUGH
+                                        //also below for missing quotes
                                         std::ofstream f("cfg_corrections.txt", std::ios::app);
                                         if (f.is_open() && f.good())
                                         {
@@ -1319,6 +1320,11 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                 if (stringOpen)
                 {
                     LogW << FileSystem::getFileName(path) << " - Missing \" on line: " << lineNumber << std::endl;
+                    std::ofstream f("cfg_corrections.txt", std::ios::app);
+                    if (f.is_open() && f.good())
+                    {
+                        f << path << "(missing \") - line: " << lineNumber << "\n";
+                    }
                 }
 
                 stringOpen = false;
