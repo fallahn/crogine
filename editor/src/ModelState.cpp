@@ -611,8 +611,8 @@ void ModelState::savePrefs()
     };
 
     cro::ConfigFile prefsOut;
-    prefsOut.addProperty("show_groundplane", m_showGroundPlane ? "true" : "false");
-    prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
+    prefsOut.addProperty("show_groundplane").setValue(m_showGroundPlane);
+    prefsOut.addProperty("show_skybox").setValue(m_showSkybox);
     prefsOut.addProperty("show_material").setValue(m_showMaterialWindow);
     prefsOut.addProperty("sky_colour").setValue(getContext().appInstance.getClearColour());
 

@@ -1062,9 +1062,9 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
             for (auto i = 0u; i < m_importedHeader.arrayCount; ++i)
             {
                 auto material = cfg.addObject("material", "PBR");
-                material->addProperty("colour", "1,0,1,1");
-                material->addProperty("skinned", animated ? "true" : "false");
-                material->addProperty("mask_colour", "0,1,1,1");
+                material->addProperty("colour").setValue(cro::Colour::Magenta);
+                material->addProperty("skinned").setValue(animated);
+                material->addProperty("mask_colour").setValue(cro::Colour::Cyan);
             }
 
             path.back() = 't';

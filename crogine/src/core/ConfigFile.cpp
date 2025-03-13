@@ -1310,11 +1310,11 @@ bool ConfigObject::loadFromFile2(const std::string& path)
 
                                         //for now log these so we know what to edit MUST REMOVE IT THOUGH
                                         //also below for missing quotes
-                                        std::ofstream f("cfg_corrections.txt", std::ios::app);
+                                        /*std::ofstream f("cfg_corrections.txt", std::ios::app);
                                         if (f.is_open() && f.good())
                                         {
                                             f << path << " - line: " << lineNumber << "\n";
-                                        }
+                                        }*/
                                     };
 
                                     tmp.clear();
@@ -1365,11 +1365,11 @@ bool ConfigObject::loadFromFile2(const std::string& path)
             //TODO find the line it was missing from (approx) based on indent??
             LogW << FileSystem::getFileName(path) << ": at least one closing brace is missing" << std::endl;
 
-            std::ofstream f("cfg_corrections.txt", std::ios::app);
+            /*std::ofstream f("cfg_corrections.txt", std::ios::app);
             if (f.is_open() && f.good())
             {
                 f << path << " at least one closing brace is missing" << "\n";
-            }
+            }*/
         }
 
         return readCount == fileSize;
