@@ -1111,8 +1111,10 @@ bool ConfigObject::loadFromFile2(const std::string& path)
 
                 for (auto i = lineStart; i < currentLine.size(); ++i)
                 {
+
                     //if this is a comment then quit here
-                    if (currentLine[i] == '/'
+                    if (!stringOpen
+                        && currentLine[i] == '/'
                         && i < currentLine.size() - 1
                         && currentLine[i + 1] == '/')
                     {
@@ -1120,8 +1122,8 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                     }
 
                     //if we hit a space start a new token
-                    if (currentLine[i] == ' '
-                        && !stringOpen)
+                    if (!stringOpen &&
+                        currentLine[i] == ' ')
                     {
                         tokens.emplace_back();
                         tokenIndex++;
@@ -1129,7 +1131,8 @@ bool ConfigObject::loadFromFile2(const std::string& path)
 
                     //if we hit an assignment and current token not empty
                     //start a new token because the spaces are missing
-                    else if (currentLine[i] == '=')
+                    else if (!stringOpen &&
+                        currentLine[i] == '=')
                     {
                         if (!tokens[tokenIndex].empty())
                         {
@@ -1151,6 +1154,7 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                         }
                     }
 
+
                     //check to see if we open or close a string
                     else if (currentLine[i] == '"')
                     {
@@ -1171,6 +1175,15 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                         }
                     }
                 }
+
+                //if there was any white space at the end of a line we'll have created
+                //empty tokens, which throws off the token count, so remove them
+                tokens.erase(std::remove_if(tokens.begin(), tokens.end(), 
+                    [](const std::basic_string<std::uint8_t>& s)
+                    {
+                        return s.empty();
+                    }), tokens.end());
+
 
                 //examine our list of tokens and decide what to do with them
                 //we may have an array here where spaces were placed between
@@ -1339,6 +1352,12 @@ bool ConfigObject::loadFromFile2(const std::string& path)
             //we were missing a closing brace somewhere
             //TODO find the line it was missing from (approx) based on indent??
             LogW << FileSystem::getFileName(path) << ": at least one closing brace is missing" << std::endl;
+
+            std::ofstream f("cfg_corrections.txt", std::ios::app);
+            if (f.is_open() && f.good())
+            {
+                f << path << " at least one closing brace is missing" << "\n";
+            }
         }
 
         return readCount == fileSize;
