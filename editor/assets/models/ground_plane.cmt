@@ -1,6 +1,6 @@
 model ground_plane
 {
-    mesh = quad
+    mesh = "quad"
     size = 3,3
     uv=0,0,1,1
 

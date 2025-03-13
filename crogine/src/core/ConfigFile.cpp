@@ -1108,6 +1108,7 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                 auto tokenIndex = 0;
 
                 bool stringOpen = false; //tracks if the token is part of a string value
+                bool foundProperty = false; //once we found an assignment allow spaces in property values, eg float arrays
 
                 for (auto i = lineStart; i < currentLine.size(); ++i)
                 {
@@ -1122,7 +1123,10 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                     }
 
                     //if we hit a space start a new token
+                    //as long as it's not part of a string literal
+                    //or property array value
                     if (!stringOpen &&
+                        !foundProperty &&
                         currentLine[i] == ' ')
                     {
                         tokens.emplace_back();
@@ -1143,15 +1147,22 @@ bool ConfigObject::loadFromFile2(const std::string& path)
 
                         //store the assignment in its own token so we know
                         //we have a property, and then create a new token
-                        //if the next char isn't a space
+                        //skipping possible space
                         tokens[tokenIndex].push_back(currentLine[i]);
 
                         if (i < currentLine.size() - 1
-                            && currentLine[i + 1] != ' ')
+                            /*&& currentLine[i + 1] != ' '*/)
                         {
                             tokens.emplace_back();
                             tokenIndex++;
+
+                            if (currentLine[i + 1] == ' ')
+                            {
+                                i++;
+                            }
                         }
+
+                        foundProperty = true;
                     }
 
 
@@ -1333,14 +1344,15 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                 if (stringOpen)
                 {
                     LogW << FileSystem::getFileName(path) << " - Missing \" on line: " << lineNumber << std::endl;
-                    std::ofstream f("cfg_corrections.txt", std::ios::app);
+                    /*std::ofstream f("cfg_corrections.txt", std::ios::app);
                     if (f.is_open() && f.good())
                     {
                         f << path << "(missing \") - line: " << lineNumber << "\n";
-                    }
+                    }*/
                 }
 
                 stringOpen = false;
+                foundProperty = false;
                 currentLine.clear();
                 lineNumber++;
             }

@@ -1137,8 +1137,8 @@ void App::saveSettings()
     auto size = m_window.getSize();
 
     ConfigFile saveSettings;
-    saveSettings.addProperty("width", std::to_string(size.x));
-    saveSettings.addProperty("height", std::to_string(size.y));
+    saveSettings.addProperty("width").setValue(size.x);
+    saveSettings.addProperty("height").setValue(size.y);
     saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
     saveSettings.addProperty("exclusive").setValue(m_window.getExclusiveFullscreen());
     saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
@@ -1149,10 +1149,10 @@ void App::saveSettings()
     saveSettings.addProperty("trigger_deadzone").setValue(cro::GameController::TriggerDeadZone.getOffset());
 
     auto* aObj = saveSettings.addObject("audio");
-    aObj->addProperty("master", std::to_string(AudioMixer::getMasterVolume()));
+    aObj->addProperty("master").setValue(AudioMixer::getMasterVolume());
     for (auto i = 0u; i < AudioMixer::MaxChannels; ++i)
     {
-        aObj->addProperty("channel" + std::to_string(i), std::to_string(AudioMixer::getVolume(i)));
+        aObj->addProperty("channel" + std::to_string(i)).setValue(AudioMixer::getVolume(i));
     }
 
     saveSettings.save(m_prefPath + cfgName);

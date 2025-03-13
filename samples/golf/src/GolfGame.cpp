@@ -1680,10 +1680,10 @@ void GolfGame::loadPreferences()
     //somewhere the preceding '/' is removed from the linux user path - but I'm
     //finding it impossible to debug, so I'll hack on an extra one here...
 #ifdef __linux__
-    if (m_sharedData.flagPath.find("home") == 0)
-    {
-        m_sharedData.flagPath = "/" + m_sharedData.flagPath;
-    }
+    //if (m_sharedData.flagPath.find("home") == 0)
+    //{
+    //    m_sharedData.flagPath = "/" + m_sharedData.flagPath;
+    //}
 #endif
 
     m_sharedData.inventory.read();

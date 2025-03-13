@@ -1,6 +1,6 @@
 model gizmoo
 {
-    mesh = assets/models/gizmoo.cmb
+    mesh = "assets/models/gizmoo.cmb"
     cast_shadows = false
 
     material Unlit
@@ -12,7 +12,7 @@ model gizmoo
         depth_test = true
         double_sided = false
         vertex_coloured = true
-        blendmode = none
+        blendmode = "none"
 
     }
 }
