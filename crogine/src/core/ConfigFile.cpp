@@ -1173,6 +1173,14 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                         
                         //we need to store these so we can identify the value as a string
                         tokens[tokenIndex].push_back(currentLine[i]);
+
+                        //if this is the closing quotes, end the line here
+                        //to skip potential trailing white space 
+                        //(TODO this is no good for string arrays if we ever implement them)
+                        if (!stringOpen)
+                        {
+                            break;
+                        }
                     }
 
                     //else push back current char
@@ -1255,6 +1263,9 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                         {
                             //this is a string
                             auto tokenEnd = tokens[2].size() - 1;
+                            
+                            //this assumes we stripped trailing whitespace (above)
+                            //really we should be reverse iterating to the final "
                             if (tokens[2].back() != '"')
                             {
                                 //we're malformed but attempt to copy anyway
@@ -1306,7 +1317,7 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                                             utf.push_back(tokens[2][i]);
                                         }
                                         //but we don't want to encourage this so nag with a warning
-                                        LogW << FileSystem::getFileName(path) << " " << lineNumber << " - " << tmp << ": potential unquoted string value" << std::endl;
+                                        LogW << FileSystem::getFileName(path) << " line:" << lineNumber << ", value: " << tmp << ": potential unquoted string value" << std::endl;
 
                                         //for now log these so we know what to edit MUST REMOVE IT THOUGH
                                         //also below for missing quotes

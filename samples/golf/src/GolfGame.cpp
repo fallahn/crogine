@@ -568,7 +568,6 @@ bool GolfGame::initialise()
         }
     }
 
-
     //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
     loadPreferences();
 
