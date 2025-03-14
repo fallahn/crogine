@@ -196,7 +196,7 @@ bool SpriteSheet::saveToFile(const std::string& path)
     sheetName = sheetName.substr(0, sheetName.find_last_of('.'));
 
     ConfigFile sheetFile("spritesheet", sheetName);
-    sheetFile.addProperty("src", "\"" + m_texturePath + "\"");
+    sheetFile.addProperty("src").setValue(m_texturePath);// ("\"" + m_texturePath + "\"");
 
     if (m_texture)
     {

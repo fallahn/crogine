@@ -70,8 +70,8 @@ bool PlayerData::saveProfile() const
 
     if (!name.empty())
     {
-        const auto s = name.toUtf8();
-        cfg.addProperty("name", std::string(s.c_str(), s.c_str() + s.length()));
+        //const auto s = name.toUtf8();
+        cfg.addProperty("name").setValue(/*std::string(s.c_str(), s.c_str() + s.length())*/name);
 
 #ifdef USE_GNS
         isCustomName = (name != Social::getPlayerName());

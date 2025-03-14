@@ -86,7 +86,7 @@ namespace cro
     {
         friend class ConfigObject;
     public:
-        ConfigProperty(const std::string& name, const std::string& value);
+        ConfigProperty(const std::string& name);
 
         /*!
         \brief Attempts to retrieve the value as the requested type.
@@ -108,6 +108,9 @@ namespace cro
         void setValue(const glm::vec4& v);
         void setValue(const cro::FloatRect& v);
         void setValue(const cro::Colour& v);
+
+        //prevents implicit conversion to bool and calls std::string overload
+        void setValue(const char*);
         
     private:
 #ifdef OLD_PARSER
@@ -189,7 +192,7 @@ namespace cro
         WARNING this will most likely invalidate any pointers retrieved
         with findProperty()
         */
-        ConfigProperty& addProperty(const std::string& name, const std::string& value = "");
+        ConfigProperty& addProperty(const std::string& name/*, const std::string& value = ""*/);
 
         /*!
         \brief Adds a name / value property pair to this object
@@ -274,8 +277,8 @@ namespace cro
 
         static NameValue getObjectName(const std::string& line);
         static NameValue getPropertyName(const std::string& line);
-        static bool isProperty(const std::string& line);
-        static void removeComment(std::string& line);
+        //static bool isProperty(const std::string& line);
+        //static void removeComment(std::string& line);
 
         bool parseAsJson(SDL_RWops*);
 

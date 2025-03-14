@@ -58,7 +58,7 @@ namespace
 }
 
 //--------------------//
-ConfigProperty::ConfigProperty(const std::string& name, const std::string& value)
+ConfigProperty::ConfigProperty(const std::string& name)
     : ConfigItem(name),
 #ifdef OLD_PARSER
     m_value(value), m_isStringValue(false)
@@ -70,10 +70,10 @@ ConfigProperty::ConfigProperty(const std::string& name, const std::string& value
 #else
     m_boolValue(false)
 {
-    if (!value.empty())
+    /*if (!value.empty())
     {
         setValue(value);
-    }
+    }*/
 }
 #endif
 
@@ -90,6 +90,7 @@ void ConfigProperty::setValue(const std::string& value)
     std::memcpy(v.data(), value.data(), value.size());
 #endif
 }
+
 void ConfigProperty::setValue(const cro::String& value)
 {
     auto utf = value.toUtf8();
@@ -211,6 +212,14 @@ void ConfigProperty::setValue(const FloatRect& r)
 void ConfigProperty::setValue(const Colour& v)
 {
     setValue(v.getVec4());
+}
+
+void ConfigProperty::setValue(const char* v)
+{
+    if (v)
+    {
+        setValue(std::string(v));
+    }
 }
 
 #ifndef OLD_PARSER
@@ -391,9 +400,9 @@ std::vector<ConfigObject>& ConfigObject::getObjects()
     return m_objects;
 }
 
-ConfigProperty& ConfigObject::addProperty(const std::string& name, const std::string& value)
+ConfigProperty& ConfigObject::addProperty(const std::string& name/*, const std::string& value*/)
 {
-    m_properties.emplace_back(name, value);
+    m_properties.emplace_back(name/*, value*/);
     m_properties.back().setParent(this);
     return m_properties.back();
 }
@@ -534,44 +543,44 @@ ConfigObject::NameValue ConfigObject::getPropertyName(const std::string& line)
     return std::make_pair(first, second);
 }
 
-bool ConfigObject::isProperty(const std::string& line)
-{
-    auto pos = line.find('=');
-    return(pos != std::string::npos && pos > 1 && line.length() > 5);
-}
+//bool ConfigObject::isProperty(const std::string& line)
+//{
+//    auto pos = line.find('=');
+//    return(pos != std::string::npos && pos > 1 && line.length() > 5);
+//}
 
-void ConfigObject::removeComment(std::string& line)
-{
-    auto result = line.find_first_of("//");
-
-    //make sure to only crop comments outside of string literals
-    //for some reason it appears result also matches '/' so unquoted paths get truncated
-    if (result < line.size() - 1 && line[result + 1] == '/')
-    {
-        auto otherResult = line.find_last_of('\"');
-        if (result != std::string::npos && (result > otherResult || otherResult == std::string::npos))
-        {
-            line = line.substr(0, result);
-        }
-    }
-
-    //remove any tabs while we're at it
-    Util::String::removeChar(line, '\t');
-    //Util::String::removeChar(line, ' ');
-
-    //and preceding spaces
-    auto start = line.find_first_not_of(' ');
-    if (start != std::string::npos)
-    {
-        line = line.substr(start);
-    }
-
-    if (line.find(';') != std::string::npos)
-    {
-        LogW << "Line " << currentLine << " contains semi-colon, is this intentional?" << std::endl;
-    }
-    currentLine++;
-}
+//void ConfigObject::removeComment(std::string& line)
+//{
+//    auto result = line.find_first_of("//");
+//
+//    //make sure to only crop comments outside of string literals
+//    //for some reason it appears result also matches '/' so unquoted paths get truncated
+//    if (result < line.size() - 1 && line[result + 1] == '/')
+//    {
+//        auto otherResult = line.find_last_of('\"');
+//        if (result != std::string::npos && (result > otherResult || otherResult == std::string::npos))
+//        {
+//            line = line.substr(0, result);
+//        }
+//    }
+//
+//    //remove any tabs while we're at it
+//    Util::String::removeChar(line, '\t');
+//    //Util::String::removeChar(line, ' ');
+//
+//    //and preceding spaces
+//    auto start = line.find_first_not_of(' ');
+//    if (start != std::string::npos)
+//    {
+//        line = line.substr(start);
+//    }
+//
+//    if (line.find(';') != std::string::npos)
+//    {
+//        LogW << "Line " << currentLine << " contains semi-colon, is this intentional?" << std::endl;
+//    }
+//    currentLine++;
+//}
 
 bool ConfigObject::parseAsJson(SDL_RWops* file)
 {

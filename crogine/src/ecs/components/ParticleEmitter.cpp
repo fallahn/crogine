@@ -281,22 +281,22 @@ bool EmitterSettings::saveToFile(const std::string& path)
         {
             texPath = texPath.substr(1);
         }
-        cfg.addProperty("src", texPath);
+        cfg.addProperty("src").setValue(texPath);
     }
     //hmm shame we don't have access to the texture here to read the property
     cfg.addProperty("texture_smoothing").setValue(textureSmoothing);
 
     if (blendmode == Add)
     {
-        cfg.addProperty("blendmode", "add");
+        cfg.addProperty("blendmode").setValue("add");
     }
     else if (blendmode == Multiply)
     {
-        cfg.addProperty("blendmode", "multiply");
+        cfg.addProperty("blendmode").setValue("multiply");
     }
     else
     {
-        cfg.addProperty("blendmode", "alpha");
+        cfg.addProperty("blendmode").setValue("alpha");
     }
 
     cfg.addProperty("acceleration").setValue(acceleration);

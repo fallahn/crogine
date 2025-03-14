@@ -350,9 +350,6 @@ void GolfState::loadMap()
                     else if (shrubName == "treeset")
                     {
                         Treeset ts;
-
-                        LogI << "Tree set " << sp.getValue<std::string>() << std::endl;
-
                         if (theme.treesets.size() < ThemeSettings::MaxTreeSets
                             && ts.loadFromFile(sp.getValue<std::string>()))
                         {

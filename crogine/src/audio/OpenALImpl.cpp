@@ -639,7 +639,7 @@ void OpenALImpl::setActiveDevice(const std::string& str)
     m_preferredDevice = m_deviceName;
     
     ConfigFile cfg;
-    cfg.addProperty("preferred_device", m_preferredDevice);
+    cfg.addProperty("preferred_device").setValue(m_preferredDevice);
     cfg.save(getPreferencePath());
 }
 
@@ -812,7 +812,7 @@ void OpenALImpl::enumerateDevices()
                             m_preferredDevice = m_devices[idx];
 
                             ConfigFile cfg;
-                            cfg.addProperty("preferred_device", m_preferredDevice);
+                            cfg.addProperty("preferred_device").setValue(m_preferredDevice);
                             cfg.save(prefPath);
 
                             reconnect(m_preferredDevice.c_str());

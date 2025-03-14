@@ -329,8 +329,8 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         m_cameraUBOs[camIndex][camComponent.getActivePassIndex()]->bind();
         
         const auto& pass = camComponent.getActivePass();
-
-        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+        //why did we have this offset here??
+        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() /*+ (0.08f * pass.getClipPlaneMultiplier())*/) * pass.getClipPlaneMultiplier();
 
         const auto& camTx = camera.getComponent<Transform>();
         auto cameraPosition = camTx.getWorldPosition();

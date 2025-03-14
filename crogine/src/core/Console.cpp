@@ -200,8 +200,8 @@ void Console::addConvar(const std::string& name, const std::string& defaultValue
     if (!convars.findObjectWithName(name))
     {
         auto* obj = convars.addObject(name);
-        obj->addProperty("value", defaultValue);
-        obj->addProperty("help", helpStr);
+        obj->addProperty("value").setValue(defaultValue);
+        obj->addProperty("help").setValue(helpStr);
     }
 }
 
