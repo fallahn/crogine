@@ -27,9 +27,10 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/core/Console.hpp>
-#include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/Console.hpp>
+#include <crogine/core/FileSystem.hpp>
+#include <crogine/core/Log.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -229,13 +230,24 @@ void Console::dumpBuffer(const std::string& str)
     }
     fileName += ".txt";
 
+    std::string s;
+    for (const auto& [b, _] : buffer)
+    {
+        s += b;
+        if (s.back() != '\n')
+        {
+            s += '\n';
+        }
+    }
+
+#ifdef _MSC_VER
+    FileSystem::showMessageBox("Console Output", s);
+#endif
+
     std::ofstream ofile(fileName);
     if (ofile.is_open() && ofile.good())
     {
-        for (const auto& [b, _] : buffer)
-        {
-            ofile << b << "\n";
-        }
+        ofile << s;
     }
 }
 

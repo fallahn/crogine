@@ -35,10 +35,12 @@ source distribution.
 #include "ust.hpp"
 
 #include <crogine/core/Console.hpp>
+#include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/StackDump.hpp>
 
 #include <iostream>
 #include <ctime>
+#include <sstream>
 
 using namespace cro;
 
@@ -70,6 +72,12 @@ void StackDump::dump(int type)
 
     Console::dumpBuffer(str);
 
+    std::stringstream ss;
+    ss << ust::generate();
+#ifdef _MSC_VER
+    FileSystem::showMessageBox("Stack Trace", ss.str());
+#endif
+
     std::ofstream file("stack_dump" + str + ".txt");
     switch (type)
     {
@@ -92,6 +100,8 @@ void StackDump::dump(int type)
         file << "Segment Fault\n";
         break;
     }
-    file << "Call Stack:\n" << ust::generate() << std::endl;
+
+
+    file << "Call Stack:\n" << ss.str() << std::endl;
 //#endif
 }
