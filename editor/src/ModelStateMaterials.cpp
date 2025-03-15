@@ -358,22 +358,22 @@ void ModelState::exportMaterial() const
 
         if (matDef.textureIDs[MaterialDefinition::Diffuse] != 0)
         {
-            file.addProperty("diffuse", getTextureName(matDef.textureIDs[MaterialDefinition::Diffuse]));
+            file.addProperty("diffuse").setValue(getTextureName(matDef.textureIDs[MaterialDefinition::Diffuse]));
         }
 
         if (matDef.textureIDs[MaterialDefinition::Mask] != 0)
         {
-            file.addProperty("mask", getTextureName(matDef.textureIDs[MaterialDefinition::Mask]));
+            file.addProperty("mask").setValue(getTextureName(matDef.textureIDs[MaterialDefinition::Mask]));
         }
 
         if (matDef.textureIDs[MaterialDefinition::Normal] != 0)
         {
-            file.addProperty("normal", getTextureName(matDef.textureIDs[MaterialDefinition::Normal]));
+            file.addProperty("normal").setValue(getTextureName(matDef.textureIDs[MaterialDefinition::Normal]));
         }
 
         if (matDef.textureIDs[MaterialDefinition::Lightmap] != 0)
         {
-            file.addProperty("lightmap", getTextureName(matDef.textureIDs[MaterialDefinition::Lightmap]));
+            file.addProperty("lightmap").setValue(getTextureName(matDef.textureIDs[MaterialDefinition::Lightmap]));
         }
 
         if(!matDef.tags.empty())

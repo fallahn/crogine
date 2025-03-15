@@ -330,25 +330,25 @@ void ModelState::saveModel(const std::string& path)
     }
     break;
     case ModelProperties::Billboard:
-        newCfg.addProperty("mesh", "billboard");
+        newCfg.addProperty("mesh").setValue("billboard");
         newCfg.addProperty("lock_rotation").setValue(m_modelProperties.lockRotation);
         newCfg.addProperty("lock_scale").setValue(m_modelProperties.lockScale);
         break;
     case ModelProperties::Cube:
-        newCfg.addProperty("mesh", "cube");
+        newCfg.addProperty("mesh").setValue("cube");
         newCfg.addProperty("size").setValue(m_modelProperties.size);
         break;
     case ModelProperties::Quad:
-        newCfg.addProperty("mesh", "quad");
+        newCfg.addProperty("mesh").setValue("quad");
         newCfg.addProperty("size").setValue(glm::vec2(m_modelProperties.size.x, m_modelProperties.size.y));
         newCfg.addProperty("uv").setValue(m_modelProperties.uv);
         break;
     case ModelProperties::Sphere:
-        newCfg.addProperty("mesh", "sphere");
+        newCfg.addProperty("mesh").setValue("sphere");
         newCfg.addProperty("radius").setValue(m_modelProperties.radius);
         break;
     case ModelProperties::Circle:
-        newCfg.addProperty("mesh", "circle");
+        newCfg.addProperty("mesh").setValue("circle");
         newCfg.addProperty("radius").setValue(m_modelProperties.radius);
         newCfg.addProperty("point_count").setValue(m_modelProperties.pointCount);
         break;
@@ -437,16 +437,16 @@ void ModelState::saveModel(const std::string& path)
         {
         default:
         case cro::Material::BlendMode::None:
-            obj->addProperty("blendmode", "none");
+            obj->addProperty("blendmode").setValue("none");
             break;
         case cro::Material::BlendMode::Additive:
-            obj->addProperty("blendmode", "add");
+            obj->addProperty("blendmode").setValue("add");
             break;
         case cro::Material::BlendMode::Alpha:
-            obj->addProperty("blendmode", "alpha");
+            obj->addProperty("blendmode").setValue("alpha");
             break;
         case cro::Material::BlendMode::Multiply:
-            obj->addProperty("blendmode", "multiply");
+            obj->addProperty("blendmode").setValue("multiply");
             break;
         }
 
@@ -1056,7 +1056,7 @@ void ModelState::exportModel(bool modelOnly, bool openOnSave)
             std::replace(meshPath.begin(), meshPath.end(), '\\', '/');
 
             cro::ConfigFile cfg("model", modelName);
-            cfg.addProperty("mesh", meshPath);
+            cfg.addProperty("mesh").setValue(meshPath);
 
             //material placeholder for each sub mesh
             for (auto i = 0u; i < m_importedHeader.arrayCount; ++i)
