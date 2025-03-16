@@ -541,6 +541,8 @@ void App::quit()
     //properly quit the application
     if (m_instance)
     {
+        cro::StackDump::dump(cro::StackDump::ABRT);
+
         m_instance->m_running = false;
     }
 }
