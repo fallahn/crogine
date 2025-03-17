@@ -99,7 +99,7 @@ bool OpenALImpl::init()
 
         if (!m_device)
         {
-            LogW << "Unable to open preferred device " << m_preferredDevice << ". Trying default device." << std::endl;
+            LogW << "OpenAL: Unable to open preferred device " << m_preferredDevice << ". Trying default device." << std::endl;
         }
     }
 
@@ -108,7 +108,7 @@ bool OpenALImpl::init()
         /*alcCheck*/(m_device = alcOpenDevice(nullptr));
         if (!m_device)
         {
-            LOG("Failed opening valid OpenAL device", Logger::Type::Error);
+            LOG("OpenAL: Failed opening valid OpenAL device", Logger::Type::Error);
             return false;
         }
     }
@@ -124,7 +124,7 @@ bool OpenALImpl::init()
     /*alcCheck*/(m_context = alcCreateContext(m_device, nullptr));
     if (!m_context)
     {
-        LOG("Failed creating OpenAL context", Logger::Type::Error);
+        LOG("OpenAL: Failed creating OpenAL context", Logger::Type::Error);
         return false;
     }
 
@@ -268,7 +268,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     //check we have available streams
     if (m_nextFreeStream >= m_streams.size())
     {
-        Logger::log("Maximum number of streams has been reached!", Logger::Type::Warning);
+        Logger::log("OpenAL: Maximum number of streams has been reached!", Logger::Type::Warning);
         return -1;
     }
 
@@ -326,7 +326,7 @@ std::int32_t OpenALImpl::requestNewBufferableStream(BufferedStreamLoader** dstPt
 {
     if (m_nextFreeStream >= m_streams.size())
     {
-        Logger::log("Maximum number of streams has been reached!", Logger::Type::Warning);
+        Logger::log("OpenAL: Maximum number of streams has been reached!", Logger::Type::Warning);
         return -1;
     }
 
@@ -735,7 +735,7 @@ void OpenALImpl::resizeSourcePool()
         m_sourcePool.resize(m_sourcePool.size() + SourceResizeCount);
 
         alCheck(alGenSources(SourceResizeCount, &m_sourcePool[startIndex]));
-        LogI << "Resized Audio Source Pool to " << m_sourcePool.size() << std::endl;
+        LogI << "OpenAL: Resized Audio Source Pool to " << m_sourcePool.size() << std::endl;
     }
 }
 
@@ -934,7 +934,7 @@ void OpenALImpl::reconnect(const char* deviceStr)
     if (device == nullptr)
     {
         m_device = nullptr;
-        LogE << "Could not connect to new audio device: None were available" << std::endl;
+        LogE << "OpenAL: Could not connect to new audio device: None were available" << std::endl;
         return;
     }
 
@@ -950,11 +950,11 @@ void OpenALImpl::reconnect(const char* deviceStr)
 
             if (deviceStr)
             {
-                LogI << "Reconnected audio output to " << deviceStr << std::endl;
+                LogI << "OpenAL: Reconnected audio output to " << deviceStr << std::endl;
             }
             else
             {
-                LogI << "Connected audio output to default device" << std::endl;
+                LogI << "OpenAL: Connected audio output to default device" << std::endl;
             }
 
             //update the device name as it may have changed
@@ -963,11 +963,11 @@ void OpenALImpl::reconnect(const char* deviceStr)
             return;
         }
 
-        LogE << "Failed reopening default audio device" << std::endl;
+        LogE << "OpenAL: Failed reopening default audio device" << std::endl;
     }
     else
     {
-        LogW << "Unable to re-open audio device, extension not present" << std::endl;
+        LogW << "OpenAL: Unable to re-open audio device, extension not present" << std::endl;
     }
 }
 
