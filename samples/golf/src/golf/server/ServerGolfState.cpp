@@ -1903,6 +1903,7 @@ void GolfState::buildWorld()
     {
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(m_holeData.size());
+        std::fill(scores.begin(), scores.end(), 0);
 
         //this is a fudge to let the server know we're
         //actually on a tournament

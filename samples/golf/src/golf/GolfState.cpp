@@ -4941,9 +4941,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::SetPar:
         {
-            std::uint16_t holeInfo = evt.packet.as<std::uint16_t>();
-            std::uint8_t hole = (holeInfo & 0xff00) >> 8;
-            m_holeData[hole].par = (holeInfo & 0x00ff);
+            const std::uint16_t holeInfo = evt.packet.as<std::uint16_t>();
+            const std::uint8_t hole = std::clamp((holeInfo & 0xff00) >> 8, 0, 18);
+            m_holeData[hole].par = std::clamp((holeInfo & 0x00ff), 2, 6);
 
             if (hole == m_currentHole)
             {

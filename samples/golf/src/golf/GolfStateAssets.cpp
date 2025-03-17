@@ -1524,6 +1524,7 @@ void GolfState::loadMap()
 
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(scoreSize);
+        std::fill(scores.begin(), scores.end(), 0);
         std::int32_t mulliganCount = 0;
 
         if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
