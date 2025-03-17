@@ -71,7 +71,7 @@ EntityManager::EntityManager(MessageBus& mb, ComponentManager& cm, std::size_t i
 //public
 Entity EntityManager::createEntity()
 {
-    Entity::ID idx;
+    std::uint32_t idx = 0;
     if (m_generations.size() == Detail::MinFreeIDs)
     {
         idx = m_freeIDs.front();
@@ -80,7 +80,7 @@ Entity EntityManager::createEntity()
     else
     {
         m_generations.push_back(0);
-        idx = static_cast<Entity::ID>(m_generations.size() - 1);
+        idx = static_cast<std::uint32_t>(m_generations.size() - 1);
         
         CRO_ASSERT(idx < (1 << Detail::IndexBits), "Index out of range");
         if (idx >= m_componentMasks.size())
@@ -153,7 +153,7 @@ bool EntityManager::entityValid(Entity entity) const
     return (m_generations[id] == entity.getGeneration());
 }
 
-Entity EntityManager::getEntity(Entity::ID id) const
+Entity EntityManager::getEntity(std::uint32_t id) const
 {
     CRO_ASSERT(id < m_generations.size(), "Invalid Entity ID");
     Entity ent(id, m_generations[id]);

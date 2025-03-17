@@ -116,7 +116,7 @@ namespace cro
         /*|
         \brief Returns the entity with the given ID if it exists
         */
-        Entity getEntity(Entity::ID) const;
+        Entity getEntity(std::uint32_t) const;
 
 
         /*!

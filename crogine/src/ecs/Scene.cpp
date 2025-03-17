@@ -275,7 +275,7 @@ void Scene::destroyEntity(Entity entity)
     m_entityManager.markDestroyed(entity);
 }
 
-Entity Scene::getEntity(Entity::ID id) const
+Entity Scene::getEntity(std::uint32_t id) const
 {
     return m_entityManager.getEntity(id);
 }

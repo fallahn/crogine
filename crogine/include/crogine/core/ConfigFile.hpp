@@ -275,8 +275,8 @@ namespace cro
         std::vector<ConfigProperty> m_properties;
         std::vector<ConfigObject> m_objects;
 
-        static NameValue getObjectName(const std::string& line);
-        static NameValue getPropertyName(const std::string& line);
+        //static NameValue getObjectName(const std::string& line);
+        //static NameValue getPropertyName(const std::string& line);
         //static bool isProperty(const std::string& line);
         //static void removeComment(std::string& line);
 
