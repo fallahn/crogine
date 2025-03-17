@@ -108,7 +108,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 
     if (!m_window)
     {
-        std::string err = SDL_GetError();
+        const std::string err = std::string("SDL:") +  SDL_GetError();
         cro::Logger::log(err, Logger::Type::Error, Logger::Output::All);
         cro::FileSystem::showMessageBox("Error", err);
         return false;
@@ -153,7 +153,7 @@ void Window::setVsyncEnabled(bool enabled)
     {
         if (SDL_GL_SetSwapInterval(enabled ? 1 : 0) != 0)
         {
-            LogE << SDL_GetError() << std::endl;
+            LogE << "SDL: " << FileSystem::getFileName(__FILE__) << SDL_GetError() << std::endl;
         }
     }
 }
@@ -284,7 +284,7 @@ void Window::setFullScreen(bool fullscreen)
     }
     else
     {
-        LogE << SDL_GetError() << std::endl;
+        LogE << "SDL: " << FileSystem::getFileName(__FILE__) << SDL_GetError() << std::endl;
     }
 
     setViewport(getDefaultViewport());
@@ -346,7 +346,7 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
         }
         else
         {
-            std::string err(SDL_GetError());
+            const std::string err = SDL_GetError();
             Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
         }
     }

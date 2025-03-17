@@ -275,7 +275,7 @@ App::App(std::uint32_t styleFlags)
 #endif
     if (SDL_Init(INIT_FLAGS) < 0)
     {
-        const std::string err(SDL_GetError());
+        const std::string err = std::string("SDL:") + SDL_GetError();
         Logger::log("Failed init: " + err, Logger::Type::Error, cro::Logger::Output::All);
     }
     else
@@ -288,7 +288,7 @@ App::App(std::uint32_t styleFlags)
         //auto mapResult = SDL_GameControllerAddMapping("03000000de2800000512000010010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
         if (mapResult == -1)
         {
-            LogE << SDL_GetError() << std::endl;
+            LogE << "SDL: " << FileSystem::getFileName(__FILE__) << SDL_GetError() << std::endl;
         }
 
         std::fill(m_controllers.begin(), m_controllers.end(), ControllerInfo());
@@ -673,7 +673,7 @@ void App::saveScreenshot()
         }
         else
         {
-            LogE << SDL_GetError() << std::endl;
+            LogE << "SDL: " << FileSystem::getFileName(__FILE__) << ", " << SDL_GetError() << std::endl;
         }
     });
 }

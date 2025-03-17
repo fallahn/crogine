@@ -46,8 +46,8 @@ Cursor::Cursor(SystemCursor type)
 
     if (!m_cursor)
     {
-        std::string error = SDL_GetError();
-        LogE << "Failed to create system cursor, reason: " << error << std::endl;
+        const std::string error = SDL_GetError();
+        LogE << "SDL: Failed to create system cursor, reason: " << error << std::endl;
     }
 }
 
@@ -92,8 +92,8 @@ Cursor::Cursor(const std::string& path, std::int32_t x, std::int32_t y)
                 m_cursor = SDL_CreateColorCursor(m_surface, x, y);
                 if (!m_cursor)
                 {
-                    std::string error = SDL_GetError();
-                    LogE << "Failed creating colour cursor: " << error << std::endl;
+                    const std::string error = SDL_GetError();
+                    LogE << "SDL: Failed creating colour cursor: " << error << std::endl;
 
                     SDL_FreeSurface(m_surface);
                     m_surface = nullptr;
@@ -101,8 +101,8 @@ Cursor::Cursor(const std::string& path, std::int32_t x, std::int32_t y)
             }
             else
             {
-                std::string error = SDL_GetError();
-                LogE << "Failed creating surface for cursor: " << error << std::endl;
+                const std::string error = SDL_GetError();
+                LogE << "SDL: Failed creating surface for cursor: " << error << std::endl;
             }
         }
         else

@@ -149,8 +149,8 @@ HapticEffect GameController::registerHapticEffect(std::int32_t controllerIndex, 
     retVal.effectID = SDL_HapticNewEffect(controller.haptic, &effect);
     if (retVal.effectID < 0)
     {
-        auto* error = SDL_GetError();
-        LogE << error << " for controller " << controllerIndex << std::endl;
+        const auto* error = SDL_GetError();
+        LogE << "SDL: " << error << " for controller " << controllerIndex << std::endl;
         return retVal;
     }
 
@@ -167,8 +167,8 @@ void GameController::startHapticEffect(HapticEffect effect, std::uint32_t repeat
     {
         if (auto result = SDL_HapticRunEffect(App::m_instance->m_controllers[effect.controllerIndex].haptic, effect.effectID, repeat); result < 0)
         {
-            auto* error = SDL_GetError();
-            LogE << error << " on controller " << effect.controllerIndex << std::endl;
+            const auto* error = SDL_GetError();
+            LogE << "SDL: " << error << " on controller " << effect.controllerIndex << std::endl;
         }
     }
     else
@@ -186,8 +186,8 @@ void GameController::stopHapticEffect(HapticEffect effect)
     {
         if (auto result = SDL_HapticStopEffect(App::m_instance->m_controllers.at(effect.controllerIndex).haptic, effect.effectID); result < 0)
         {
-            auto* error = SDL_GetError();
-            LogE << error << " on controller " << effect.controllerIndex << std::endl;
+            const auto* error = SDL_GetError();
+            LogE << "SDL: " << error << " on controller " << effect.controllerIndex << std::endl;
         }
     }
     else
@@ -206,8 +206,8 @@ bool GameController::isHapticActive(HapticEffect effect)
         auto result = SDL_HapticGetEffectStatus(App::m_instance->m_controllers.at(effect.controllerIndex).haptic, effect.effectID);
         if (result < 0)
         {
-            auto* error = SDL_GetError();
-            LogE << error << " on controller " << effect.controllerIndex << std::endl;
+            const auto* error = SDL_GetError();
+            LogE << "SDL: " << error << " on controller " << effect.controllerIndex << std::endl;
         }
 
         return result == 1;
@@ -230,8 +230,8 @@ void GameController::rumbleStart(std::int32_t controllerIndex, std::uint16_t str
     {
         if (SDL_GameControllerRumble(App::m_instance->m_controllers[controllerIndex].controller, strengthLow, strengthHigh, duration) != 0)
         {
-            auto* error = SDL_GetError();
-            LogE << error << " on controller " << controllerIndex << ": rumbleStart()" << std::endl;
+            const auto* error = SDL_GetError();
+            LogE << "SDL: " << error << " on controller " << controllerIndex << ": rumbleStart()" << std::endl;
         }
     }
 }
@@ -245,8 +245,8 @@ void GameController::rumbleStop(std::int32_t controllerIndex)
     {
         if (SDL_GameControllerRumble(App::m_instance->m_controllers[controllerIndex].controller, 0, 0, 0) != 0)
         {
-            auto* error = SDL_GetError();
-            LogE << error << " on controller " << controllerIndex << ": rumbleEnd()" << std::endl;
+            const auto* error = SDL_GetError();
+            LogE << "SDL: " << error << " on controller " << controllerIndex << ": rumbleEnd()" << std::endl;
         }
     }
 }
