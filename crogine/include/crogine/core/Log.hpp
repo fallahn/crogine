@@ -48,7 +48,7 @@ source distribution.
 #include <Windows.h>
 #endif //_MSC_VER
 
-#define FILE_LINE cro::FileSystem::getFileName(__FILE__) << ", line " << __LINE__
+#define FILE_LINE cro::FileSystem::getFileName(__FILE__) << ", line " << __LINE__ << " "
 
 namespace cro
 {

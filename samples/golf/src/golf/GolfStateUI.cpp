@@ -3537,6 +3537,10 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         {
                             LogI << entry.parDiff << ", you should place a break point here: " << m_holeData[j].par << std::endl;
                         }
+
+                        //OK - on the surface this looks like it's recreating the bug, however it's not
+                        //sorting the score into last position... the entry total must therefore also be wrong
+                        //entry.parDiff = 32424324;
                     }
                 }
 
@@ -3638,6 +3642,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
                 entry.total = entry.frontNine + entry.backNine;
+                //more debug hackery
+                if (entry.total < -216
+                    || entry.total > 216)
+                {
+                    LogW << "Entry total is " << entry.total << ", front: " << entry.frontNine << ", back:" << entry.backNine << std::endl;
+                }
                 break;
             case ScoreType::Skins:
                 entry.total = client.playerData[i].skinScore;

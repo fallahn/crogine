@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2024
+Matt Marchant - 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -104,14 +104,14 @@ namespace Progress
         return basePath + "progr.ess";
     }
 
-    static inline void write(std::int32_t leagueID, std::size_t holeIndex, const std::vector<std::uint8_t>& holeScores, std::int32_t mulliganCount)
+    static inline void write(std::int32_t leagueID, std::uint64_t holeIndex, const std::vector<std::uint8_t>& holeScores, std::int32_t mulliganCount)
     {
         auto path = getFilePath(leagueID);
         cro::RaiiRWops file;
         file.file = SDL_RWFromFile(path.c_str(), "wb");
         if (file.file)
         {
-            static constexpr std::size_t MaxBytes = 26; //size of holeIndex + 18 scores. TODO this will make files INCOMPATIBLE cross platform if size_t is defined as a different size...
+            static constexpr std::uint64_t MaxBytes = sizeof(holeIndex) + 18;// 26; //size of holeIndex + 18 scores.
 
             auto written = file.file->write(file.file, &holeIndex, sizeof(holeIndex), 1);
 
@@ -123,13 +123,10 @@ namespace Progress
             //for (auto i = scoreSize; i < 18; ++i)
             while (written < MaxBytes)
             {
-                std::uint8_t packing = 0;
+                const std::uint8_t packing = 0;
                 written += file.file->write(file.file, &packing, 1, 1);
             }
         }
-
-
-
 
 
         //MaxMulligans here being the max number of leagues (or greater than)
@@ -193,6 +190,7 @@ namespace Progress
 
                 std::memcpy(holeScores.data(), &buffer[sizeof(holeIndex)], holeSize);
 
+                std::fill(holeScores.begin() + holeIndex, holeScores.end(), 0);
 
                 //read whether or not we have a mulligan remaining
                 std::array<std::int32_t, MaxMulligans> values = {};

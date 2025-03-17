@@ -4618,7 +4618,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
 
     //remote content
     entity = createHighlight(glm::vec2(12.f, 159.f));
-    entity.setLabel("Allow downloading remote content such as Workshop items from other\nplayers when joining a network game");
+    entity.setLabel("Allow downloading remote content such as Workshop items from other\nplayers when (re)connecting to a network game");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettRemoteContent);
     entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, ResetCareer);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettInGameChat, SettLogChat);
