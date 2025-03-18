@@ -1217,145 +1217,148 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                 //we may have an array here where spaces were placed between
                 //components... or we may have single/mixed tokens with comma
                 //separated values.....
-                if (tokens.size() < 3)
+                if (!tokens.empty())
                 {
-                    //this is an object name/id pair
-                    //or an opening/closing brace
-                    if (!tokens[0].empty())
+                    if (tokens.size() < 3)
                     {
-                        //hm, empty lines create an empty token...
+                        //this is an object name/id pair
+                        //or an opening/closing brace
+                        if (!tokens[0].empty())
+                        {
+                            //hm, empty lines create an empty token...
 
-                        if (tokens[0][0] == '{')
-                        {
-                            //this is the first object
-                            if (objectStack.empty())
+                            if (tokens[0][0] == '{')
                             {
-                                objectStack.push_back(this);
-                                setName(objectName);
-                                setId(objectID);
-                            }
-                            else
-                            {
-                                auto* o = objectStack.back();
-                                objectStack.push_back(o->addObject(objectName, objectID));
-                            }
-
-                            objectName.clear();
-                            objectID.clear();
-                        }
-                        else if (tokens[0][0] == '}')
-                        {
-                            objectStack.pop_back();
-                        }
-                        else
-                        {
-                            //stash name/id strings so we can add them when creating a new object
-                            objectName = { tokens[0].begin(), tokens[0].end() };
-                            
-                            if (tokens.size() > 1 &&
-                                !tokens[1].empty())
-                            {
-                                objectID = { tokens[1].begin(), tokens[1].end() };
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if (tokens[1][0] == '=')
-                    {
-                        //this is a property
-                        auto& prop = objectStack.back()->addProperty(std::string(tokens[0].begin(), tokens[0].end()));
-                        
-                        if (tokens[2].size() > 1
-                            && tokens[2][0] == '"')
-                        {
-                            //this is a string
-                            auto tokenEnd = tokens[2].size() - 1;
-                            
-                            //this assumes we stripped trailing whitespace (above)
-                            //really we should be reverse iterating to the final "
-                            if (tokens[2].back() != '"')
-                            {
-                                //we're malformed but attempt to copy anyway
-                                tokenEnd++;
-                            }
-
-                            //TODO we should be further splitting this if it's a string array
-                            //but we don't support getter/setter yet
-                            auto& utf = prop.m_utf8Values.emplace_back();
-                            for (auto i = 1u; i < tokenEnd; ++i)
-                            {
-                                utf.push_back(tokens[2][i]);
-                            }
-                        }
-
-                        else
-                        {
-                            //try parsing tokens[2] as a CSV of floats
-                            std::string tmp;
-                            const auto parseFloat = [&]()
+                                //this is the first object
+                                if (objectStack.empty())
                                 {
-                                    Util::String::removeChar(tmp, ' ');
-
-                                    if (prop.m_floatValues.empty())
-                                    {
-                                        if (tmp == "true")
-                                        {
-                                            prop.setValue(true);
-                                            return;
-                                        }
-                                        else if (tmp == "false")
-                                        {
-                                            prop.setValue(false);
-                                            return;
-                                        }
-                                    }
-                                    
-
-                                    try
-                                    {
-                                        prop.m_floatValues.push_back(std::stod(tmp));
-                                    }
-                                    catch (...)
-                                    {
-                                        //for backwards compat stash this as a string
-                                        auto& utf = prop.m_utf8Values.emplace_back();
-                                        for (auto i = 0u; i < tokens[2].size(); ++i)
-                                        {
-                                            utf.push_back(tokens[2][i]);
-                                        }
-                                        //but we don't want to encourage this so nag with a warning
-                                        LogW << FileSystem::getFileName(path) << " line:" << lineNumber << ", value: " << tmp << ": potential unquoted string value" << std::endl;
-
-                                        //for now log these so we know what to edit MUST REMOVE IT THOUGH
-                                        //also below for missing quotes
-                                        /*std::ofstream f("cfg_corrections.txt", std::ios::app);
-                                        if (f.is_open() && f.good())
-                                        {
-                                            f << path << " - line: " << lineNumber << "\n";
-                                        }*/
-                                    };
-
-                                    tmp.clear();
-                                };
-
-                            for (auto c : tokens[2])
-                            {
-                                if (c != ',')
-                                {
-                                    tmp.push_back(c);
+                                    objectStack.push_back(this);
+                                    setName(objectName);
+                                    setId(objectID);
                                 }
                                 else
                                 {
-                                    //attempt to parse to double. 
-                                    parseFloat();
+                                    auto* o = objectStack.back();
+                                    objectStack.push_back(o->addObject(objectName, objectID));
+                                }
+
+                                objectName.clear();
+                                objectID.clear();
+                            }
+                            else if (tokens[0][0] == '}')
+                            {
+                                objectStack.pop_back();
+                            }
+                            else
+                            {
+                                //stash name/id strings so we can add them when creating a new object
+                                objectName = { tokens[0].begin(), tokens[0].end() };
+
+                                if (tokens.size() > 1 &&
+                                    !tokens[1].empty())
+                                {
+                                    objectID = { tokens[1].begin(), tokens[1].end() };
                                 }
                             }
-                            //don't forget the final value!
-                            if (!tmp.empty())
+                        }
+                    }
+                    else
+                    {
+                        if (tokens[1][0] == '=')
+                        {
+                            //this is a property
+                            auto& prop = objectStack.back()->addProperty(std::string(tokens[0].begin(), tokens[0].end()));
+
+                            if (tokens[2].size() > 1
+                                && tokens[2][0] == '"')
                             {
-                                parseFloat();
+                                //this is a string
+                                auto tokenEnd = tokens[2].size() - 1;
+
+                                //this assumes we stripped trailing whitespace (above)
+                                //really we should be reverse iterating to the final "
+                                if (tokens[2].back() != '"')
+                                {
+                                    //we're malformed but attempt to copy anyway
+                                    tokenEnd++;
+                                }
+
+                                //TODO we should be further splitting this if it's a string array
+                                //but we don't support getter/setter yet
+                                auto& utf = prop.m_utf8Values.emplace_back();
+                                for (auto i = 1u; i < tokenEnd; ++i)
+                                {
+                                    utf.push_back(tokens[2][i]);
+                                }
+                            }
+
+                            else
+                            {
+                                //try parsing tokens[2] as a CSV of floats
+                                std::string tmp;
+                                const auto parseFloat = [&]()
+                                    {
+                                        Util::String::removeChar(tmp, ' ');
+
+                                        if (prop.m_floatValues.empty())
+                                        {
+                                            if (tmp == "true")
+                                            {
+                                                prop.setValue(true);
+                                                return;
+                                            }
+                                            else if (tmp == "false")
+                                            {
+                                                prop.setValue(false);
+                                                return;
+                                            }
+                                        }
+
+
+                                        try
+                                        {
+                                            prop.m_floatValues.push_back(std::stod(tmp));
+                                        }
+                                        catch (...)
+                                        {
+                                            //for backwards compat stash this as a string
+                                            auto& utf = prop.m_utf8Values.emplace_back();
+                                            for (auto i = 0u; i < tokens[2].size(); ++i)
+                                            {
+                                                utf.push_back(tokens[2][i]);
+                                            }
+                                            //but we don't want to encourage this so nag with a warning
+                                            LogW << FileSystem::getFileName(path) << " line:" << lineNumber << ", value: " << tmp << ": potential unquoted string value" << std::endl;
+
+                                            //for now log these so we know what to edit MUST REMOVE IT THOUGH
+                                            //also below for missing quotes
+                                            /*std::ofstream f("cfg_corrections.txt", std::ios::app);
+                                            if (f.is_open() && f.good())
+                                            {
+                                                f << path << " - line: " << lineNumber << "\n";
+                                            }*/
+                                        };
+
+                                        tmp.clear();
+                                    };
+
+                                for (auto c : tokens[2])
+                                {
+                                    if (c != ',')
+                                    {
+                                        tmp.push_back(c);
+                                    }
+                                    else
+                                    {
+                                        //attempt to parse to double. 
+                                        parseFloat();
+                                    }
+                                }
+                                //don't forget the final value!
+                                if (!tmp.empty())
+                                {
+                                    parseFloat();
+                                }
                             }
                         }
                     }

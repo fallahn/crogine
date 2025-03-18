@@ -112,7 +112,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
     m_musicName = "No File";
 
 
-    auto* fonts = ImGui::GetIO().Fonts;
+    /*auto* fonts = ImGui::GetIO().Fonts;
     static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
     ImFontConfig config;
     config.MergeMode = true;
@@ -163,7 +163,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
                 }
             }
             ImGui::End();        
-        });
+        });*/
 
     //cro::ConfigFile outFile("test object", "test_id");
     //outFile.addProperty("test_string", "this is a test string");
