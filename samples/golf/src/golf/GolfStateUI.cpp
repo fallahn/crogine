@@ -3503,7 +3503,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
             bool overPar = false;
 
-            for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
+            //stupid bug in league play meant that holescores size could be too big when playing 9 holes...
+            for (auto j = 0u; j < /*client.playerData[i].holeScores*/m_holeData.size(); ++j)
             {
                 auto s = client.playerData[i].holeScores[j];
                 entry.holes.push_back(s);
@@ -3532,15 +3533,13 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         //hack to try and catch the weird par diff bug
                         //we *assume* - though it might not be true - s is OK as the
                         //score displays OK, so I'm currently suspecting the holedata par
-                        if (entry.parDiff < -50
+                        /*if (entry.parDiff < -50
                             || entry.parDiff > 20)
                         {
                             LogI << entry.parDiff << ", you should place a break point here: " << m_holeData[j].par << std::endl;
-                        }
+                        }*/
 
-                        //OK - on the surface this looks like it's recreating the bug, however it's not
-                        //sorting the score into last position... the entry total must therefore also be wrong
-                        //entry.parDiff = 32424324;
+                        //TODO remove this once we assert bug has gone
                     }
                 }
 
@@ -3642,12 +3641,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
                 entry.total = entry.frontNine + entry.backNine;
-                //more debug hackery
-                if (entry.total < -216
-                    || entry.total > 216)
-                {
-                    LogW << "Entry total is " << entry.total << ", front: " << entry.frontNine << ", back:" << entry.backNine << std::endl;
-                }
                 break;
             case ScoreType::Skins:
                 entry.total = client.playerData[i].skinScore;
