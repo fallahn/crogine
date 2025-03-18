@@ -5885,7 +5885,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
                 if (m_lightVolumeDefinition.isLoaded())
                 {
-                    for (const auto& lightData : m_holeData[m_currentHole].lightData)
+                    for (auto& lightData : m_holeData[m_currentHole].lightData)
                     {
                         //create a light entity and parent it to the hole model
                         //these will already exist if we're not rescaling
@@ -5903,7 +5903,15 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
 
                         m_lightVolumeDefinition.createModel(lightEnt);
                         lightEnt.getComponent<cro::Model>().setHidden(true);
-                        entity.getComponent<cro::Transform>().addChild(lightEnt.getComponent<cro::Transform>());
+
+                        if (lightData.parent.isValid())
+                        {
+                            lightData.parent.getComponent<cro::Transform>().addChild(lightEnt.getComponent<cro::Transform>());
+                        }
+                        else
+                        {
+                            entity.getComponent<cro::Transform>().addChild(lightEnt.getComponent<cro::Transform>());
+                        }
                     }
                 }
             }

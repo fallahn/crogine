@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -71,6 +71,7 @@ struct LightData final
     glm::vec3 position = glm::vec3(0.f);
     cro::Colour colour = cro::Colour::White;
     std::string animation;
+    cro::Entity parent;
 };
 
 struct HoleData final

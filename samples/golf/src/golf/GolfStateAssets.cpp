@@ -676,6 +676,57 @@ void GolfState::loadMap()
         {
             if (!duplicate) //this hole wasn't a duplicate of the previous
             {
+                const auto parseLightData = [&](const cro::ConfigObject& obj, cro::Entity parent = {})
+                    {
+                        if (m_sharedData.nightTime)
+                        {
+                            auto& lightData = holeData.lightData.emplace_back();
+                            std::string preset;
+
+                            const auto& lightProps = obj.getProperties();
+                            for (const auto& lightProp : lightProps)
+                            {
+                                const auto& propName = lightProp.getName();
+                                if (propName == "radius")
+                                {
+                                    lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
+                                }
+                                else if (propName == "colour")
+                                {
+                                    lightData.colour = lightProp.getValue<cro::Colour>();
+                                }
+                                else if (propName == "position")
+                                {
+                                    lightData.position = lightProp.getValue<glm::vec3>();
+                                    lightData.position.y += 0.01f;
+                                }
+                                else if (propName == "animation")
+                                {
+                                    auto str = lightProp.getValue<std::string>();
+                                    auto len = std::min(std::size_t(20), str.length());
+                                    lightData.animation = str.substr(0, len);
+                                }
+                                else if (propName == "preset")
+                                {
+                                    preset = lightProp.getValue<std::string>();
+                                }
+                            }
+
+                            if (!preset.empty() && lightPresets.count(preset) != 0)
+                            {
+                                const auto& p = lightPresets.at(preset);
+                                //presets take precedence, except for animation
+                                lightData.colour = p.colour;
+                                lightData.radius = p.radius;
+                                if (lightData.animation.empty())
+                                {
+                                    lightData.animation = p.animation;
+                                }
+                            }
+                            lightData.parent = parent;
+                        }
+                    };
+
                 //look for prop models (are optional and can fail to load no problem)
                 const auto parseProps = [&](const std::vector<cro::ConfigObject>& propObjs)
                     {
@@ -697,6 +748,8 @@ void GolfState::loadMap()
 
                                 std::string particlePath;
                                 std::string emitterName;
+
+                                const cro::ConfigObject* childLight = nullptr;
 
                                 for (const auto& modelProp : modelProps)
                                 {
@@ -741,12 +794,12 @@ void GolfState::loadMap()
                                     }
                                 }
 
-                                const auto modelObjs = obj.getObjects();
+                                const auto& modelObjs = obj.getObjects();
                                 for (const auto& o : modelObjs)
                                 {
                                     if (o.getName() == "path")
                                     {
-                                        const auto points = o.getProperties();
+                                        const auto& points = o.getProperties();
                                         for (const auto& p : points)
                                         {
                                             if (p.getName() == "point")
@@ -767,7 +820,12 @@ void GolfState::loadMap()
                                             }
                                         }
 
-                                        break;
+                                        //break;
+                                    }
+                                    else if (o.getName() == "light"
+                                        && !childLight) //only add the first one
+                                    {
+                                        childLight = &o;
                                     }
                                 }
 
@@ -892,6 +950,12 @@ void GolfState::loadMap()
                                                 ent.getComponent<cro::Transform>().addChild(pEnt.getComponent<cro::Transform>());
                                                 holeData.particleEntities.push_back(pEnt);
                                             }
+                                        }
+
+                                        //and child light
+                                        if (childLight)
+                                        {
+                                            parseLightData(*childLight, ent);
                                         }
 
                                         //and child audio
@@ -1126,52 +1190,53 @@ void GolfState::loadMap()
                             }
                             else if (name == "light")
                             {
-                                if (m_sharedData.nightTime)
-                                {
-                                    auto& lightData = holeData.lightData.emplace_back();
-                                    std::string preset;
+                                parseLightData(obj);
+                                //if (m_sharedData.nightTime)
+                                //{
+                                //    auto& lightData = holeData.lightData.emplace_back();
+                                //    std::string preset;
 
-                                    const auto& lightProps = obj.getProperties();
-                                    for (const auto& lightProp : lightProps)
-                                    {
-                                        const auto& propName = lightProp.getName();
-                                        if (propName == "radius")
-                                        {
-                                            lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
-                                        }
-                                        else if (propName == "colour")
-                                        {
-                                            lightData.colour = lightProp.getValue<cro::Colour>();
-                                        }
-                                        else if (propName == "position")
-                                        {
-                                            lightData.position = lightProp.getValue<glm::vec3>();
-                                            lightData.position.y += 0.01f;
-                                        }
-                                        else if (propName == "animation")
-                                        {
-                                            auto str = lightProp.getValue<std::string>();
-                                            auto len = std::min(std::size_t(20), str.length());
-                                            lightData.animation = str.substr(0, len);
-                                        }
-                                        else if (propName == "preset")
-                                        {
-                                            preset = lightProp.getValue<std::string>();
-                                        }
-                                    }
+                                //    const auto& lightProps = obj.getProperties();
+                                //    for (const auto& lightProp : lightProps)
+                                //    {
+                                //        const auto& propName = lightProp.getName();
+                                //        if (propName == "radius")
+                                //        {
+                                //            lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
+                                //        }
+                                //        else if (propName == "colour")
+                                //        {
+                                //            lightData.colour = lightProp.getValue<cro::Colour>();
+                                //        }
+                                //        else if (propName == "position")
+                                //        {
+                                //            lightData.position = lightProp.getValue<glm::vec3>();
+                                //            lightData.position.y += 0.01f;
+                                //        }
+                                //        else if (propName == "animation")
+                                //        {
+                                //            auto str = lightProp.getValue<std::string>();
+                                //            auto len = std::min(std::size_t(20), str.length());
+                                //            lightData.animation = str.substr(0, len);
+                                //        }
+                                //        else if (propName == "preset")
+                                //        {
+                                //            preset = lightProp.getValue<std::string>();
+                                //        }
+                                //    }
 
-                                    if (!preset.empty() && lightPresets.count(preset) != 0)
-                                    {
-                                        const auto& p = lightPresets.at(preset);
-                                        //presets take precedence, except for animation
-                                        lightData.colour = p.colour;
-                                        lightData.radius = p.radius;
-                                        if (lightData.animation.empty())
-                                        {
-                                            lightData.animation = p.animation;
-                                        }
-                                    }
-                                }
+                                //    if (!preset.empty() && lightPresets.count(preset) != 0)
+                                //    {
+                                //        const auto& p = lightPresets.at(preset);
+                                //        //presets take precedence, except for animation
+                                //        lightData.colour = p.colour;
+                                //        lightData.radius = p.radius;
+                                //        if (lightData.animation.empty())
+                                //        {
+                                //            lightData.animation = p.animation;
+                                //        }
+                                //    }
+                                //}
                             }
                         }
                     };
