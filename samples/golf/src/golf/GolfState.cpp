@@ -5894,7 +5894,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
                         lightEnt.getComponent<cro::Transform>().setScale(glm::vec3(lightData.radius));
                         lightEnt.addComponent<cro::LightVolume>().colour = lightData.colour;
                         lightEnt.getComponent<cro::LightVolume>().radius = lightData.radius;
-                        lightEnt.getComponent<cro::LightVolume>().maxVisibilityDistance = static_cast<float>((MapSize.x / 2) * (MapSize.x / 2)); //this is sqr!!
+                        lightEnt.getComponent<cro::LightVolume>().maxVisibilityDistance = 160.f * 160.f; //this is sqr!!
                         //add any light animation property
                         if (!lightData.animation.empty())
                         {
@@ -5912,6 +5912,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo, bool forceTransition)
                         {
                             entity.getComponent<cro::Transform>().addChild(lightEnt.getComponent<cro::Transform>());
                         }
+                        //make sure to store this so it gets removed on hole change
+                        m_holeData[m_currentHole].lights.push_back(lightEnt);
                     }
                 }
             }
