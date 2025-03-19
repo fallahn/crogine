@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string BushVertex =
+static inline const std::string BushVertex =
 R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -243,7 +243,7 @@ v_data.ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 
         gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
 
-inline const std::string BushGeom = R"(
+static inline const std::string BushGeom = R"(
 
 #if defined (POINTS)
     layout (points) in;
@@ -318,7 +318,7 @@ inline const std::string BushGeom = R"(
 #endif
     })";
 
-inline const std::string BushFragment =
+static inline const std::string BushFragment =
 R"(
 #include OUTPUT_LOCATION
 
@@ -398,7 +398,7 @@ R"(
         FRAG_OUT = vec4(colour, 1.0) * textureColour * getLightColour();
     })";
 
-inline const std::string BranchVertex = R"(
+static inline const std::string BranchVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -500,7 +500,7 @@ v_ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 0.0, 
         gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
 
-inline const std::string BranchFragment = R"(
+static inline const std::string BranchFragment = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;

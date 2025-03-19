@@ -45,11 +45,11 @@ OUTPUT
 void main(){FRAG_OUT = texture(u_texture, vec3(v_texCoord, u_textureIndex)) * v_colour;}
 )";
 
-
+//dirX, strength, dirZ, elapsedTime
 static inline const std::string WindBuffer = R"(
     layout (std140) uniform WindValues
     {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+        vec4 u_windData;
     };)";
 
 static inline const std::string ResolutionBuffer = R"(

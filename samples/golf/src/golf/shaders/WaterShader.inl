@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string WaterVertex = R"(
+static inline const std::string WaterVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
 
@@ -75,7 +75,7 @@ inline const std::string WaterVertex = R"(
         v_scale = u_worldMatrix[0][0];
     })";
 
-inline const std::string WaterFragment = R"(
+static inline const std::string WaterFragment = R"(
 #include OUTPUT_LOCATION
     #define MAX_RADIUS 239.9
 
@@ -226,7 +226,7 @@ uniform sampler2DArray u_depthMap;
         FRAG_OUT = vec4(blendedColour, 1.0);
     })";
 
-    inline const std::string HorizonVert = 
+    static inline const std::string HorizonVert = 
         R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -246,7 +246,7 @@ uniform sampler2DArray u_depthMap;
         v_texCoord = a_texCoord0;
     })";
 
-    inline const std::string HorizonFrag = 
+    static inline const std::string HorizonFrag = 
         R"(
     OUTPUT
 

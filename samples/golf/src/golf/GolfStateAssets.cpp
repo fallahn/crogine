@@ -892,11 +892,25 @@ void GolfState::loadMap()
                                                     texMatID = MaterialID::Glass;
                                                 }
 
+                                                else if (modelDef.hasTag(i, "wake"))
+                                                {
+                                                    texMatID = MaterialID::Wake;
+                                                }
+
                                                 else if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
                                                 {
                                                     texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
                                                 }
                                                 auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
+
+                                                //if this is a wake material we need to set the animation speed
+                                                //based on the speed of the path if the model has one.
+                                                if (texMatID == MaterialID::Wake &&
+                                                    !curve.empty())
+                                                {
+                                                    texturedMat.setProperty("u_speed", std::clamp(loopSpeed, 0.f, 1.f));
+                                                }
+
                                                 applyMaterialData(modelDef, texturedMat, i);
                                                 ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
 
@@ -928,6 +942,11 @@ void GolfState::loadMap()
                                             const float turnSpeed = std::min(6.f / (ent.getComponent<cro::Model>().getBoundingSphere().radius + 0.001f), 2.f);
                                             //LogI << cro::FileSystem::getFileName(path) << " needs model updating" << std::endl;
                                             
+                                            if (loopCurve)
+                                            {
+                                                curve.back() = curve.front();
+                                            }
+
                                             ent.addComponent<PropFollower>().path = curve;
                                             ent.getComponent<PropFollower>().loop = loopCurve;
                                             ent.getComponent<PropFollower>().idleTime = loopDelay;
@@ -1818,6 +1837,18 @@ void GolfState::loadMaterials()
     glassMat.setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
     glassMat.doubleSided = true;
     glassMat.blendMode = cro::Material::BlendMode::Alpha;
+
+
+    m_resources.shaders.loadFromString(ShaderID::Wake, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), WakeFragment, "#define TEXTURED\n");
+    shader = &m_resources.shaders.get(ShaderID::Wake);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Wake] = m_resources.materials.add(*shader);
+    auto& wakeMat = m_resources.materials.get(m_materialIDs[MaterialID::Wake]);
+    wakeMat.setProperty("u_texture", m_resources.textures.get("assets/golf/images/wake.png"));
+    wakeMat.setProperty("u_speed", 0.f); //default to zero so if the prop has no path the wake isn't visible
+    wakeMat.doubleSided = true;
+    wakeMat.blendMode = cro::Material::BlendMode::Alpha;
+
 
 
     m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);

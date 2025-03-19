@@ -193,7 +193,7 @@ R"(
     }
 )";
 
-inline const std::string NormalMapVertexShader = R"(
+static inline const std::string NormalMapVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
 
@@ -210,7 +210,7 @@ inline const std::string NormalMapVertexShader = R"(
     }
 )";
 
-inline const std::string NormalMapFragmentShader = R"(
+static inline const std::string NormalMapFragmentShader = R"(
     layout (location = 0) out vec4 FRAG_OUT;
     layout (location = 1) out vec4 POS_OUT;
 

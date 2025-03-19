@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string BeaconVertex = R"(
+static inline const std::string BeaconVertex = R"(
 #line 1
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -74,7 +74,7 @@ inline const std::string BeaconVertex = R"(
     })";
 
 
-inline const std::string BeaconFragment = R"(
+static inline const std::string BeaconFragment = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;

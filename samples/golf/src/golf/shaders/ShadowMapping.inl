@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,7 +33,7 @@ source distribution.
 
 //modified shadow mapping shader for wind animated models
 //and models with VATs
-inline const std::string ShadowVertex = R"(
+static inline const std::string ShadowVertex = R"(
         ATTRIBUTE vec4 a_position;
         ATTRIBUTE vec4 a_colour;
         ATTRIBUTE vec3 a_normal;
@@ -282,7 +282,7 @@ worldPosition.z += windResult.lowFreq.y;
 
         })";
 
-inline const std::string ShadowGeom = R"(
+static inline const std::string ShadowGeom = R"(
 
 #if defined (POINTS)
     layout (points) in;
@@ -321,7 +321,7 @@ inline const std::string ShadowGeom = R"(
 #endif
     })";
 
-inline const std::string ShadowFragment = R"(
+static inline const std::string ShadowFragment = R"(
         
 #if defined (DITHERED)
         in float v_ditherAmount;

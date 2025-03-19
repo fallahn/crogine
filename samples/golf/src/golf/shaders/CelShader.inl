@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string CelVertexShader = R"(
+static inline const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -258,7 +258,7 @@ VARYING_OUT vec4 v_menuProjection;
         //v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
     })";
 
-inline const std::string CelFragmentShader = R"(
+static inline const std::string CelFragmentShader = R"(
 #include LIGHT_UBO
 
 #include SCALE_BUFFER

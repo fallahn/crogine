@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string UnlockVertex = R"(
+static inline const std::string UnlockVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
     ATTRIBUTE vec4 a_colour;
@@ -73,7 +73,7 @@ inline const std::string UnlockVertex = R"(
         v_colour = a_colour;
     })";
 
-inline const std::string UnlockFragment = R"(
+static inline const std::string UnlockFragment = R"(
     OUTPUT
 
 #if defined(REFLECTION)

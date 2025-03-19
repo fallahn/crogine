@@ -324,6 +324,7 @@ struct ShaderID final
         TV,
         PointLight,
         Glass,
+        Wake,
         LensFlare,
         PointFlare,
         Firework,
@@ -835,7 +836,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         //skip over materials with alpha blend as they are
         //probably shadow materials if not explicitly glass
         if (m->blendMode == cro::Material::BlendMode::Alpha
-            && !modelDef.hasTag(matID, "glass"))
+            && (!modelDef.hasTag(matID, "glass") && !modelDef.hasTag(matID, "wake")))
         {
             dest = *m;
             return;

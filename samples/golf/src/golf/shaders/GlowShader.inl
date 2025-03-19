@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string GlowVertex = 
+static inline const std::string GlowVertex = 
 R"(
 ATTRIBUTE vec4 a_position;
 ATTRIBUTE vec3 a_normal;
@@ -68,7 +68,7 @@ void main()
 
 )";
 
-inline const std::string GlowFragment =
+static inline const std::string GlowFragment =
 R"(
 #define USE_MRT
 #include OUTPUT_LOCATION

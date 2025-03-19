@@ -293,6 +293,7 @@ private:
             Flag,
             PointLight,
             Glass,
+            Wake,
             LensFlare,
             PointFlare,
             Emissive, //self-illum for clubs
