@@ -76,9 +76,9 @@ void main()
     float positionAlpha = clamp(1.0 - v_texCoord0.x, 0.0, 1.0);
     positionAlpha *= smoothstep(0.03, 0.1, v_texCoord0.x);
         
-    vec4 colour = TEXTURE(u_texture, v_texCoord0 - vec2(u_windData.w * 1.2, 0.0));
+    vec4 colour = TEXTURE(u_texture, v_texCoord0 - vec2(u_windData.w * u_speed, 0.0));
     colour.rgb *= getLightColour().rgb;
-    colour.a *= positionAlpha * u_speed;
+    colour.a *= positionAlpha * clamp(u_speed, 0.0, 1.0);
 
     FRAG_OUT = colour;
 })";

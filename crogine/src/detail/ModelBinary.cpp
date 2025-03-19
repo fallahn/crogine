@@ -346,7 +346,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 
             if (SDL_RWclose(file))
             {
-                LogE << "SDL: " << FileSystem::getFileName(__FILE__) << SDL_GetError() << std::endl;
+                LogE << "SDL: Failed writing model binary - " << SDL_GetError() << std::endl;
             }
         }
     }

@@ -745,6 +745,7 @@ void GolfState::loadMap()
                                 bool loopCurve = true;
                                 float loopDelay = 4.f;
                                 float loopSpeed = 6.f;
+                                float radiusMultiplier = 1.f; //hack because models with a wake eg boats push the bounding radius too far
 
                                 std::string particlePath;
                                 std::string emitterName;
@@ -895,6 +896,7 @@ void GolfState::loadMap()
                                                 else if (modelDef.hasTag(i, "wake"))
                                                 {
                                                     texMatID = MaterialID::Wake;
+                                                    radiusMultiplier = 0.5f;
                                                 }
 
                                                 else if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
@@ -908,7 +910,7 @@ void GolfState::loadMap()
                                                 if (texMatID == MaterialID::Wake &&
                                                     !curve.empty())
                                                 {
-                                                    texturedMat.setProperty("u_speed", std::clamp(loopSpeed, 0.f, 1.f));
+                                                    texturedMat.setProperty("u_speed", loopSpeed / 2.f/*std::clamp(loopSpeed, 0.f, 1.f)*/);
                                                 }
 
                                                 applyMaterialData(modelDef, texturedMat, i);
@@ -939,7 +941,7 @@ void GolfState::loadMap()
                                         if (curve.size() > 3)
                                         {
                                             //we need to slow the rotation of big models such as the blimp
-                                            const float turnSpeed = std::min(6.f / (ent.getComponent<cro::Model>().getBoundingSphere().radius + 0.001f), 2.f);
+                                            const float turnSpeed = std::min(6.f / ((ent.getComponent<cro::Model>().getBoundingSphere().radius * radiusMultiplier) + 0.001f), 2.f);
                                             //LogI << cro::FileSystem::getFileName(path) << " needs model updating" << std::endl;
                                             
                                             if (loopCurve)

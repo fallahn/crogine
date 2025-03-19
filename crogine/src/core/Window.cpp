@@ -153,7 +153,8 @@ void Window::setVsyncEnabled(bool enabled)
     {
         if (SDL_GL_SetSwapInterval(enabled ? 1 : 0) != 0)
         {
-            LogE << "SDL: " << FileSystem::getFileName(__FILE__) << SDL_GetError() << std::endl;
+            std::string e = enabled ? "Enabled - " : "Disabled - ";
+            LogE << "SDL: Failed to set VSync to " << e << SDL_GetError() << std::endl;
         }
     }
 }
@@ -284,7 +285,8 @@ void Window::setFullScreen(bool fullscreen)
     }
     else
     {
-        LogE << "SDL: " << FileSystem::getFileName(__FILE__) << SDL_GetError() << std::endl;
+        const std::string e = fullscreen ? "fullscreen - " : "windowed - ";
+        LogE << "SDL: Failed setting window to " << e << SDL_GetError() << std::endl;
     }
 
     setViewport(getDefaultViewport());
