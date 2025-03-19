@@ -910,7 +910,7 @@ void GolfState::loadMap()
                                                 if (texMatID == MaterialID::Wake &&
                                                     !curve.empty())
                                                 {
-                                                    texturedMat.setProperty("u_speed", loopSpeed / 2.f/*std::clamp(loopSpeed, 0.f, 1.f)*/);
+                                                    texturedMat.setProperty("u_speed", loopSpeed / 4.f/*std::clamp(loopSpeed, 0.f, 1.f)*/);
                                                 }
 
                                                 applyMaterialData(modelDef, texturedMat, i);
