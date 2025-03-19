@@ -38,6 +38,7 @@ source distribution.
 #include "MenuEnum.inl"
 
 #include <Social.hpp>
+#include <Content.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -243,7 +244,19 @@ void MenuState::createBallScene()
 
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
-    auto ballFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + "assets/golf/balls");
+    const auto ContentDirs = Content::getInstallPaths();
+    const std::string BallDir = "balls/";
+    std::vector<std::string> ballFiles;
+
+    for (const auto& c : ContentDirs)
+    {
+        auto b = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + c + BallDir);
+        for (const auto f : b)
+        {
+            ballFiles.push_back(c + BallDir + f);
+        }
+    }
+
     if (ballFiles.empty())
     {
         LogE << "No ball files were found" << std::endl;
@@ -261,7 +274,7 @@ void MenuState::createBallScene()
     {
         cro::ConfigFile cfg;
         if (cro::FileSystem::getFileExtension(file) == ".ball"
-            && cfg.loadFromFile("assets/golf/balls/" + file))
+            && cfg.loadFromFile(file))
         {
             auto info = readBallCfg(cfg);
             info.type = SharedStateData::BallInfo::Regular;
@@ -271,7 +284,7 @@ void MenuState::createBallScene()
             {
                 info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save("assets/golf/balls/" + file);
+                cfg.save(file);
             }
 
             insertInfo(info, m_sharedData.ballInfo, true);
@@ -635,10 +648,14 @@ void MenuState::parseAvatarDirectory()
 
     m_sharedData.avatarInfo.clear();
 
-    const std::string AvatarPath = "assets/golf/avatars/";
-    auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + AvatarPath);
-    m_playerAvatars.reserve(files.size() + Leagues.size());
-    processAvatarList(false, files, AvatarPath);
+    const auto ContentDirs = Content::getInstallPaths();
+    for (const auto& c : ContentDirs)
+    {
+        const std::string AvatarPath = c + "avatars/";
+        const auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + AvatarPath);
+        processAvatarList(false, files, AvatarPath);
+    }
+    //m_playerAvatars.reserve(files.size() + Leagues.size()); //hmm can't really do this without double iterating, so not really worth the effort
 
     const std::string CareerPath = "assets/golf/career/tier2/";
     const std::array<std::string, 6u> CareerAvatars =
@@ -678,7 +695,7 @@ void MenuState::parseAvatarDirectory()
         for (const auto& dir : dirs)
         {
             auto resourceDir = avatarUserDir + dir + "/";
-            files = cro::FileSystem::listFiles(resourceDir);
+            const auto files = cro::FileSystem::listFiles(resourceDir);
             processAvatarList(false, files, resourceDir, resourceDir, false);
         }
     }
@@ -712,8 +729,18 @@ void MenuState::parseAvatarDirectory()
         avatar.hairModels.emplace_back();
     }
 
-    const std::string HairPath = "assets/golf/avatars/hair/";
-    auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
+    const std::string HairPath = "avatars/hair/";
+    std::vector<std::string> hairFiles;
+
+    for (const auto& c : ContentDirs)
+    {
+        auto h = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + c + HairPath);
+        //hairFiles.insert(hairFiles.end(), h.begin(), h.end());
+        for (const auto& f : h)
+        {
+            hairFiles.push_back(c + HairPath + f);
+        }
+    }
 
     if (hairFiles.size() > ConstVal::MaxHeadwear)
     {
@@ -728,7 +755,7 @@ void MenuState::parseAvatarDirectory()
         }
 
         cro::ConfigFile cfg;
-        if (cfg.loadFromFile(HairPath + file))
+        if (cfg.loadFromFile(file))
         {
             auto info = readHairCfg(cfg);
             info.type = SharedStateData::HairInfo::Regular;
@@ -739,7 +766,7 @@ void MenuState::parseAvatarDirectory()
             {
                 info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(HairPath + file);
+                cfg.save(file);
             }
         }
     }

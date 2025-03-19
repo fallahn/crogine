@@ -42,6 +42,8 @@ source distribution.
 #include "../GolfGame.hpp"
 #include "../Colordome-32.hpp"
 
+#include <Content.hpp>
+
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/core/Mouse.hpp>
@@ -76,7 +78,6 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
-#include <crogine/gui/Gui.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -942,17 +943,21 @@ void ProfileState::loadResources()
             }
         };
 
-    auto basePath = cro::FileSystem::getResourcePath() + "assets/golf/clubs/";
-    auto clubsets = cro::FileSystem::listDirectories(basePath);
-
-    for (const auto& s : clubsets)
+    const auto ContentDirs = Content::getInstallPaths();
+    for (const auto& c : ContentDirs)
     {
-        processClubPath(basePath + s, false);
+        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+        for (const auto& s : clubsets)
+        {
+            processClubPath(basePath + s, false);
+        }
     }
 
     //workshop clubs
-    basePath = Social::getUserContentPath(Social::UserContent::Clubs);
-    clubsets = cro::FileSystem::listDirectories(basePath);
+    const auto basePath = Social::getUserContentPath(Social::UserContent::Clubs);
+    auto clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
     clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
@@ -4287,25 +4292,32 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     };
 
     std::vector<std::string> paths;
-    std::string basePath = "assets/golf/sound/avatars/";
-    auto files = cro::FileSystem::listFiles(basePath);
-    for (const auto& f : files)
+    const auto ContentDirs = Content::getInstallPaths();
+    
+    for (const auto& c : ContentDirs)
     {
-        if (cro::FileSystem::getFileExtension(f) == ".xas")
+        std::string basePath = "sound/avatars/";
+        const auto files = cro::FileSystem::listFiles(c + basePath);
+        for (const auto& f : files)
         {
-            paths.push_back(basePath + f);
+            if (cro::FileSystem::getFileExtension(f) == ".xas")
+            {
+                paths.push_back(c + basePath + f);
+            }
         }
     }
+
+
     //we can't always gaurantee paths are read in the same order across
     //different OS so let's sort them to be sure
     std::sort(paths.begin(), paths.end());
     auto next = paths.end();
 
-    basePath = Social::getUserContentPath(Social::UserContent::Voice);
+    const auto basePath = Social::getUserContentPath(Social::UserContent::Voice);
     const auto dirs = cro::FileSystem::listDirectories(basePath);
     for (const auto& dir : dirs)
     {
-        files = cro::FileSystem::listFiles(basePath + dir);
+        const auto files = cro::FileSystem::listFiles(basePath + dir);
         for (const auto& f : files)
         {
             if (cro::FileSystem::getFileExtension(f) == ".xas")
