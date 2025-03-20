@@ -56,6 +56,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Content.hpp>
 #include <Timeline.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
@@ -2458,7 +2459,7 @@ void DrivingState::createPlayer()
     }
 
     //workshop clubs
-    basePath = Social::getUserContentPath(Social::UserContent::Clubs);
+    basePath = Content::getUserContentPath(Content::UserContent::Clubs);
     clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)

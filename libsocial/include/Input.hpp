@@ -30,6 +30,8 @@ source distribution.
 #pragma once
 
 #include "Social.hpp"
+#include "Content.hpp"
+
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/detail/Types.hpp>
 
@@ -45,7 +47,7 @@ namespace Progress
 
     static inline std::string getFilePath(std::int32_t id)
     {
-        std::string basePath = Social::getBaseContentPath();
+        std::string basePath = Content::getBaseContentPath();
 
         const auto assertPath =
             [&]()

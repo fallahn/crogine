@@ -34,6 +34,8 @@ source distribution.
 #include "server/ServerState.hpp"
 
 #include <Social.hpp>
+#include <Content.hpp>
+
 #include <crogine/core/SysTime.hpp>
 #include <crogine/core/ConfigFile.hpp>
 
@@ -118,7 +120,7 @@ bool PlayerData::saveProfile() const
         profileID = std::to_string(SpookyHash::Hash32(hashData.data(), sizeof(std::uint32_t) * hashData.size(), static_cast<std::uint32_t>(cro::SysTime::epoch())));
     }
 
-    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    auto path = Content::getUserContentPath(Content::UserContent::Profile);
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);

@@ -195,9 +195,9 @@ namespace
 
 void MenuState::createBallScene()
 {
-    if (!cro::FileSystem::directoryExists(Social::getBaseContentPath()))
+    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath()))
     {
-        cro::FileSystem::createDirectory(Social::getBaseContentPath());
+        cro::FileSystem::createDirectory(Content::getBaseContentPath());
     }
 
     static constexpr float RootPoint = 100.f;
@@ -414,7 +414,7 @@ void MenuState::createBallScene()
 
 
     //look in the user directory - only do this if the default dir is OK?
-    const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball);
+    const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball);
     if (cro::FileSystem::directoryExists(BallUserPath))
     {
         auto dirList = cro::FileSystem::listDirectories(BallUserPath);
@@ -687,7 +687,7 @@ void MenuState::parseAvatarDirectory()
     start = m_sharedData.avatarInfo.size();
 
     //custom avatars
-    auto avatarUserDir = Social::getUserContentPath(Social::UserContent::Avatar);
+    auto avatarUserDir = Content::getUserContentPath(Content::UserContent::Avatar);
     if (cro::FileSystem::directoryExists(avatarUserDir))
     {
         auto dirs = cro::FileSystem::listDirectories(avatarUserDir);
@@ -812,7 +812,7 @@ void MenuState::parseAvatarDirectory()
 
 
 
-    const auto userHairPath = Social::getUserContentPath(Social::UserContent::Hair);
+    const auto userHairPath = Content::getUserContentPath(Content::UserContent::Hair);
     if (cro::FileSystem::directoryExists(userHairPath))
     {
         auto userDirs = cro::FileSystem::listDirectories(userHairPath);
@@ -1294,13 +1294,13 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
 {
     //called when UGC such as a ball or hair model is received
     //from a remote player and downloaded locally.
-    if (type == Social::UserContent::Ball)
+    if (type == Content::UserContent::Ball)
     {
         //these won't appear as selectable until the menu is quit
         //and reloaded, but that's probably OK. They just need to
         //exist in the shared data so the main game can find the
         //models for remote players who have them.
-        const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball) + std::to_string(id) + "w/";
+        const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball) + std::to_string(id) + "w/";
 
         //this can happen sometimes when the UGC fails to install (usually linux)
         //so quit so we don't throw
@@ -1331,9 +1331,9 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             }
         }
     }
-    else if (type == Social::UserContent::Hair)
+    else if (type == Content::UserContent::Hair)
     {
-        const auto HairUserPath = Social::getUserContentPath(Social::UserContent::Hair) + std::to_string(id) + "w/";
+        const auto HairUserPath = Content::getUserContentPath(Content::UserContent::Hair) + std::to_string(id) + "w/";
 
         if (!cro::FileSystem::directoryExists(HairUserPath))
         {
@@ -1362,10 +1362,10 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             }
         }
     }
-    else if (type == Social::UserContent::Avatar)
+    else if (type == Content::UserContent::Avatar)
     {
         //insert into m_sharedData.avatarInfo so GolfState can find it
-        const auto& avatarPath = Social::getUserContentPath(Social::UserContent::Avatar) + std::to_string(id) + "w/";
+        const auto& avatarPath = Content::getUserContentPath(Content::UserContent::Avatar) + std::to_string(id) + "w/";
 
         if (!cro::FileSystem::directoryExists(avatarPath))
         {
@@ -1391,7 +1391,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         //avatar data - there's room for optimisation here.
         updateLobbyAvatars();
     }
-    else if (type == Social::UserContent::Clubs)
+    else if (type == Content::UserContent::Clubs)
     {
         /*LogI << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << " - Implement me!" << std::endl;
 
@@ -1409,7 +1409,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         //ACTUALLY - as long as this installed correctly then GolfStateAssets should just find and parse the data as needed
         LogI << "Installed remote club set" << std::endl;
     }
-    else if (type == Social::UserContent::Voice)
+    else if (type == Content::UserContent::Voice)
     {
         LogI << "Installed remote player voice" << std::endl;
     }

@@ -36,4 +36,18 @@ class Content final
 {
 public:
     static std::vector<std::string> getInstallPaths();
+
+    struct UserContent final
+    {
+        enum
+        {
+            Ball, Hair, Course, Flag,
+            Profile, Avatar, Career,
+            Clubs, Voice,
+
+            Count
+        };
+    };
+    static std::string getBaseContentPath();
+    static std::string getUserContentPath(std::int32_t);
 };

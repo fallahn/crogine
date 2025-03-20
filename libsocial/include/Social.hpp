@@ -237,20 +237,6 @@ public:
     static std::int32_t getUnlockStatus(UnlockType);
     static void setUnlockStatus(UnlockType, std::int32_t set);
 
-    struct UserContent final
-    {
-        enum
-        {
-            Ball, Hair, Course, Flag,
-            Profile, Avatar, Career,
-            Clubs, Voice,
-
-            Count
-        };
-    };
-    static std::string getBaseContentPath();
-    static std::string getUserContentPath(std::int32_t);
-
     static MonthlyChallenge& getMonthlyChallenge();
     static std::int32_t getMonth();
 

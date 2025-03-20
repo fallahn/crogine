@@ -2540,7 +2540,7 @@ void TournamentState::quitState()
 
 void TournamentState::loadConfig()
 {
-    const auto path = Social::getUserContentPath(Social::UserContent::Career) + ConfigFile;
+    const auto path = Content::getUserContentPath(Content::UserContent::Career) + ConfigFile;
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -2573,5 +2573,5 @@ void TournamentState::saveConfig() const
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
-    cfg.save(Social::getUserContentPath(Social::UserContent::Career) + ConfigFile);
+    cfg.save(Content::getUserContentPath(Content::UserContent::Career) + ConfigFile);
 }

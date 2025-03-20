@@ -2245,7 +2245,7 @@ void GolfState::loadModels()
         };
     std::string baseAudioPath = "assets/golf/sound/avatars/";
     processPath(baseAudioPath);
-    baseAudioPath = Social::getUserContentPath(Social::UserContent::Voice);
+    baseAudioPath = Content::getUserContentPath(Content::UserContent::Voice);
     const auto voiceDirs = cro::FileSystem::listDirectories(baseAudioPath);
     for (const auto& dir : voiceDirs)
     {
@@ -2612,7 +2612,7 @@ void GolfState::loadModels()
     }
 
     //workshop clubs
-    basePath = Social::getUserContentPath(Social::UserContent::Clubs);
+    basePath = Content::getUserContentPath(Content::UserContent::Clubs);
     clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)

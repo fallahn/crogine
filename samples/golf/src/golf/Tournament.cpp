@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "Tournament.hpp"
 #include "Social.hpp"
+#include "Content.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/util/Random.hpp>
@@ -153,7 +154,7 @@ void resetTournament(Tournament& src)
 
 static inline std::string getFilePath(std::int32_t index)
 {
-    auto basePath = Social::getBaseContentPath();
+    auto basePath = Content::getBaseContentPath();
     std::stringstream ss;
     ss << std::setw(2) << std::setfill('0') << index << ".tmt";
 

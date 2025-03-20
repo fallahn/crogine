@@ -95,6 +95,7 @@ source distribution.
 #ifdef USE_WORKSHOP
 #include <WorkshopState.hpp>
 #endif
+#include <Content.hpp>
 
 //#define NO_PROF
 
@@ -532,7 +533,7 @@ bool GolfGame::initialise()
 
             std::stringstream msg;
             msg << "Game loading is currently paused\nso that you may optionally remove\nor backup your profile directory.\n";
-            msg << "Your profile directory is " << Social::getUserContentPath(Social::UserContent::Profile) << "\n";
+            msg << "Your profile directory is " << Content::getUserContentPath(Content::UserContent::Profile) << "\n";
             msg << "Press OK when you are ready to continue, or Cancel to quit.";
 
             if (!cro::FileSystem::showMessageBox("SAFE MODE", msg.str(), cro::FileSystem::OKCancel))
@@ -545,9 +546,9 @@ bool GolfGame::initialise()
         //init Steam as we need the uid of the logged on user
         convertPreferences();
         
-        for (auto i = 0; i < Social::UserContent::Count; ++i)
+        for (auto i = 0; i < Content::UserContent::Count; ++i)
         {
-            const auto path = Social::getUserContentPath(i);
+            const auto path = Content::getUserContentPath(i);
             if (!cro::FileSystem::directoryExists(path))
             {
                 cro::FileSystem::createDirectory(path);
@@ -555,7 +556,7 @@ bool GolfGame::initialise()
         }
 
         //tidy up any stuff left over from workshop tools
-        const auto tempPath = Social::getBaseContentPath() + "temp";
+        const auto tempPath = Content::getBaseContentPath() + "temp";
         if (cro::FileSystem::directoryExists(tempPath))
         {
             std::error_code ec;
@@ -741,7 +742,7 @@ bool GolfGame::initialise()
         [](const std::string&)
         {
             //this assumes that the directory was successfully creates already...
-            cro::Util::String::parseURL(Social::getBaseContentPath());
+            cro::Util::String::parseURL(Content::getBaseContentPath());
         });
 
     registerCommand("reset_leagues", 
@@ -1166,7 +1167,7 @@ void GolfGame::initFonts()
 void GolfGame::convertPreferences() const
 {
     auto srcPath = cro::App::getPreferencePath();
-    const auto dstPath = Social::getBaseContentPath();
+    const auto dstPath = Content::getBaseContentPath();
 
     if (cro::FileSystem::directoryExists(dstPath))
     {
@@ -1449,7 +1450,7 @@ void GolfGame::loadPreferences()
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
     if (!safeMode)
     {
-        path = Social::getBaseContentPath() + "user_prefs.cfg";
+        path = Content::getBaseContentPath() + "user_prefs.cfg";
         if (cro::FileSystem::fileExists(path))
         {
             cro::ConfigFile cfg;
@@ -1606,7 +1607,7 @@ void GolfGame::loadPreferences()
             }*/
         }
 
-        path = Social::getBaseContentPath() + "league_names.txt";
+        path = Content::getBaseContentPath() + "league_names.txt";
         if (!cro::FileSystem::fileExists(path))
         {
             m_sharedData.leagueNames.write();
@@ -1625,7 +1626,7 @@ void GolfGame::loadPreferences()
 
 
     //read keybind bin
-    path = Social::getBaseContentPath() + "keys.bind";
+    path = Content::getBaseContentPath() + "keys.bind";
 
     if (cro::FileSystem::fileExists(path))
     {
@@ -1670,9 +1671,9 @@ void GolfGame::loadPreferences()
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
 
-    if (!cro::FileSystem::directoryExists(Social::getBaseContentPath() + u8"music"))
+    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath() + u8"music"))
     {
-        cro::FileSystem::createDirectory(Social::getBaseContentPath() + u8"music");
+        cro::FileSystem::createDirectory(Content::getBaseContentPath() + u8"music");
     }
     loadMusic();
 
@@ -1710,7 +1711,7 @@ void GolfGame::savePreferences()
 
 
     //per-user options
-    path = Social::getBaseContentPath() + "user_prefs.cfg";
+    path = Content::getBaseContentPath() + "user_prefs.cfg";
     cfg = cro::ConfigFile("user_preferences");
     cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
     cfg.addProperty("fov").setValue(m_sharedData.fov);
@@ -1751,7 +1752,7 @@ void GolfGame::savePreferences()
 
 
     //keybinds
-    path = Social::getBaseContentPath() + "keys.bind";
+    path = Content::getBaseContentPath() + "keys.bind";
     cro::RaiiRWops file;
     file.file = SDL_RWFromFile(path.c_str(), "wb");
     if (file.file)
@@ -1854,7 +1855,7 @@ void GolfGame::loadAvatars()
     }
 
     //parse profile dir and load each profile
-    path = Social::getUserContentPath(Social::UserContent::Profile);
+    path = Content::getUserContentPath(Content::UserContent::Profile);
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
@@ -2024,7 +2025,7 @@ void GolfGame::loadAvatars()
 void GolfGame::loadMusic()
 {
     //parse any music files into a playlist
-    M3UPlaylist m3uPlaylist(Social::getBaseContentPath() + u8"music/");
+    M3UPlaylist m3uPlaylist(Content::getBaseContentPath() + u8"music/");
 
     if (m3uPlaylist.getTrackCount() == 0)
     {
@@ -2043,7 +2044,7 @@ void GolfGame::loadMusic()
 
 #ifdef USE_GNS
         //see if the soundtrack is installed and prefer that
-        auto soundtrackPath = Social::getSoundTrackPath();
+        auto soundtrackPath = Content::getSoundTrackPath();
         if (!soundtrackPath.empty()
             && cro::FileSystem::directoryExists(soundtrackPath + u8"/mp3/"))
         {

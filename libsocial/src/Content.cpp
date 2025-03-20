@@ -29,8 +29,45 @@ source distribution.
 
 #include <Content.hpp>
 
+#include <crogine/core/App.hpp>
+
+#include <cassert>
+
 std::vector<std::string> Content::getInstallPaths()
 {
     //TODO check other paths exist and add them here if they do
     return {"assets/golf/"};
+}
+
+std::string Content::getBaseContentPath()
+{
+    return cro::App::getPreferencePath() + "user/1234/";
+}
+
+std::string Content::getUserContentPath(std::int32_t contentType)
+{
+    switch (contentType)
+    {
+    default:
+        assert(false);
+        return "";
+    case Content::UserContent::Ball:
+        return getBaseContentPath() + "balls/";
+    case Content::UserContent::Course:
+        return getBaseContentPath() + "course/";
+    case Content::UserContent::Hair:
+        return getBaseContentPath() + "hair/";
+    case Content::UserContent::Profile:
+        return getBaseContentPath() + "profiles/";
+    case Content::UserContent::Career:
+        return getBaseContentPath() + "career/";
+    case Content::UserContent::Avatar:
+        return getBaseContentPath() + "avatars/";
+    case Content::UserContent::Flag:
+        return getBaseContentPath() + "flags/";
+    case Content::UserContent::Clubs:
+        return getBaseContentPath() + "clubs/";
+    case Content::UserContent::Voice:
+        return getBaseContentPath() + "voice/";
+    }
 }

@@ -40,6 +40,7 @@ source distribution.
 #include "../Colordome-32.hpp"
 
 #include <Social.hpp>
+#include <Content.hpp>
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
 #include <Achievements.hpp>
@@ -672,7 +673,7 @@ void StatsState::parseProfileData()
 {
     //this assumes the startup was successful and profile paths were created - we might
     //want to do some checkin here just to prevent crashes if paths don't exist
-    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    auto path = Content::getUserContentPath(Content::UserContent::Profile);
     if (!cro::FileSystem::directoryExists(path))
     {
         return;

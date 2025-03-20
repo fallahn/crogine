@@ -29,6 +29,7 @@ source distribution.
 
 #include "League.hpp"
 #include "Social.hpp"
+#include "Content.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
 #include "XPAwardStrings.hpp"
@@ -606,7 +607,7 @@ void League::decreaseDifficulty()
 
 std::string League::getFilePath(const std::string& fn) const
 {
-    std::string basePath = Social::getBaseContentPath();
+    std::string basePath = Content::getBaseContentPath();
     
     const auto assertPath = 
         [&]()
@@ -853,7 +854,7 @@ void League::read()
 
 
         //read hole scores from DB
-        const auto dbPath = Social::getBaseContentPath() + DBName;
+        const auto dbPath = Content::getBaseContentPath() + DBName;
         constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
         cro::RaiiRWops dbFile;
         dbFile.file = SDL_RWFromFile(dbPath.c_str(), "rb");
@@ -942,7 +943,7 @@ void League::write()
 
 void League::assertDB()
 {
-    const auto path = Social::getBaseContentPath() + DBName;
+    const auto path = Content::getBaseContentPath() + DBName;
     if (!cro::FileSystem::fileExists(path))
     {
         //hmm what do if we failed creating this? I guess the read/write ops
@@ -970,7 +971,7 @@ void League::assertDB()
 
 void League::updateDB()
 {
-    const auto dbPath = Social::getBaseContentPath() + DBName;
+    const auto dbPath = Content::getBaseContentPath() + DBName;
     constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
 
     //hmm SDL doesn't let us write to arbitrary positions in the file

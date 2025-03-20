@@ -3949,30 +3949,30 @@ void MenuState::updateRemoteContent(const ConnectionData& cd)
             if (indexFromBallID(cd.playerData[i].ballID) == 0)
             {
                 //no local ball for this player
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
+                Content::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Content::UserContent::Ball);
             }
 
             if (indexFromHairID(cd.playerData[i].hairID) == 0)
             {
                 //no local hair model
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
+                Content::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Content::UserContent::Hair);
             }
 
             if (indexFromHairID(cd.playerData[i].hatID) == 0)
             {
                 //no local hat model
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Social::UserContent::Hair);
+                Content::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Content::UserContent::Hair);
             }
 
             if (indexFromAvatarID(cd.playerData[i].skinID) == 0)
             {
                 //no local avatar model
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Social::UserContent::Avatar);
+                Content::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Content::UserContent::Avatar);
             }
 
             //we don't have a list of installed clubs or voices here, so just ask for them anyway
-            Social::fetchRemoteContent(cd.peerID, cd.playerData[i].clubID, Social::UserContent::Clubs);
-            Social::fetchRemoteContent(cd.peerID, cd.playerData[i].voiceID, Social::UserContent::Voice);
+            Content::fetchRemoteContent(cd.peerID, cd.playerData[i].clubID, Content::UserContent::Clubs);
+            Content::fetchRemoteContent(cd.peerID, cd.playerData[i].voiceID, Content::UserContent::Voice);
         }
     }
 #endif

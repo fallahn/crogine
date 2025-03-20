@@ -55,6 +55,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Content.hpp>
 #include <Timeline.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
@@ -4537,7 +4538,7 @@ void GolfState::logCSV() const
         std::replace(fileName.begin(), fileName.end(), ':', '-');
         fileName += "_" + courseName + ".csv";
 
-        fileName = Social::getBaseContentPath() + fileName;
+        fileName = Content::getBaseContentPath() + fileName;
 
         cro::RaiiRWops out;
         out.file = SDL_RWFromFile(fileName.c_str(), "w");
@@ -6296,7 +6297,7 @@ void GolfState::updateProfileDB() const
         ProfileDB db;
         for (auto i = 0u; i < localCount; ++i)
         {
-            auto dbPath = Social::getUserContentPath(Social::UserContent::Profile) + localPlayers[i].profileID + "/profile.db3";
+            auto dbPath = Content::getUserContentPath(Content::UserContent::Profile) + localPlayers[i].profileID + "/profile.db3";
             if (db.open(dbPath))
             {
                 CourseRecord record;

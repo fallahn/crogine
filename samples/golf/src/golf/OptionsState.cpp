@@ -4667,7 +4667,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
         mappedFlags.emplace_back(std::make_pair(flagDir, flag));
     }
 
-    const auto userDir = Social::getUserContentPath(Social::UserContent::Flag);
+    const auto userDir = Content::getUserContentPath(Content::UserContent::Flag);
     const auto userFlags = cro::FileSystem::listDirectories(userDir);
     const auto MaxUser = m_flagTextures.getLayerCount() - flags.size();
     for (auto i = 0u; i < MaxUser && i < userFlags.size(); ++i)

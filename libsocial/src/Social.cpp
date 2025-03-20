@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "Social.hpp"
+#include "Content.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
 #include "StoredValue.hpp"
@@ -565,39 +566,6 @@ void Social::setUnlockStatus(UnlockType type, std::int32_t set)
     }    
 }
 
-std::string Social::getBaseContentPath()
-{
-    return cro::App::getPreferencePath() + "user/1234/";
-}
-
-std::string Social::getUserContentPath(std::int32_t contentType)
-{
-    switch (contentType)
-    {
-    default:
-        assert(false);
-        return "";
-    case Social::UserContent::Ball:
-        return getBaseContentPath() + "balls/";
-    case Social::UserContent::Course:
-        return getBaseContentPath() + "course/";
-    case Social::UserContent::Hair:
-        return getBaseContentPath() + "hair/";
-    case Social::UserContent::Profile:
-        return getBaseContentPath() + "profiles/";
-    case Social::UserContent::Career:
-        return getBaseContentPath() + "career/";
-    case Social::UserContent::Avatar:
-        return getBaseContentPath() + "avatars/";
-    case Social::UserContent::Flag:
-        return getBaseContentPath() + "flags/";
-    case Social::UserContent::Clubs:
-        return getBaseContentPath() + "clubs/";
-    case Social::UserContent::Voice:
-        return getBaseContentPath() + "voice/";
-    }
-}
-
 float Social::getCompletionCount(const std::string& course, bool)
 {
     return Achievements::getStat(course)->value;
@@ -613,7 +581,7 @@ void Social::refreshAwards()
     };
     std::vector<AwardData> awardData;
 
-    auto path = Social::getBaseContentPath() + "awards.awd";
+    auto path = Content::getBaseContentPath() + "awards.awd";
 
     //check for awards file and load
     if (cro::FileSystem::fileExists(path))

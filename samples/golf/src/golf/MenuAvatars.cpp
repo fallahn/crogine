@@ -38,6 +38,8 @@ source distribution.
 #include "../ErrorCheck.hpp"
 #include "../WebsocketServer.hpp"
 
+#include <Content.hpp>
+
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
@@ -1861,7 +1863,7 @@ void MenuState::eraseCurrentProfile()
     refreshProfileFlyout();
 
     //remove the data from disk
-    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    auto path = Content::getUserContentPath(Content::UserContent::Profile);
     path += profileID;
     if (cro::FileSystem::directoryExists(path))
     {

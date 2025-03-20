@@ -956,7 +956,7 @@ void ProfileState::loadResources()
     }
 
     //workshop clubs
-    const auto basePath = Social::getUserContentPath(Social::UserContent::Clubs);
+    const auto basePath = Content::getUserContentPath(Content::UserContent::Clubs);
     auto clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
@@ -1836,7 +1836,7 @@ void ProfileState::buildScene()
 
                     if (m_mugshotUpdated)
                     {
-                        auto path = Social::getUserContentPath(Social::UserContent::Profile) + m_activeProfile.profileID + "/mug.png";
+                        auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.profileID + "/mug.png";
                         m_mugshotTexture.getTexture().saveToFile(path);
 
                         m_activeProfile.mugshot = path;
@@ -2107,7 +2107,7 @@ void ProfileState::buildScene()
                 {
                     if (activated(evt))
                     {
-                        auto path = Social::getUserContentPath(Social::UserContent::Profile) + m_activeProfile.profileID;
+                        auto path = Content::getUserContentPath(Content::UserContent::Profile) + m_activeProfile.profileID;
                         if (cro::FileSystem::directoryExists(path)
                             && !cro::App::getWindow().isFullscreen())
                         {
@@ -4313,7 +4313,7 @@ void ProfileState::createSpeechEditor(cro::Entity parent, const CallbackContext&
     std::sort(paths.begin(), paths.end());
     auto next = paths.end();
 
-    const auto basePath = Social::getUserContentPath(Social::UserContent::Voice);
+    const auto basePath = Content::getUserContentPath(Content::UserContent::Voice);
     const auto dirs = cro::FileSystem::listDirectories(basePath);
     for (const auto& dir : dirs)
     {
@@ -5307,7 +5307,7 @@ void ProfileState::refreshSwatch()
 void ProfileState::refreshBio()
 {
     //look for bio file and load it if it exists
-    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    auto path = Content::getUserContentPath(Content::UserContent::Profile);
     if (cro::FileSystem::directoryExists(path))
     {
         if (m_activeProfile.profileID.empty())
