@@ -4877,6 +4877,10 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
+
+#ifdef USE_GNS
+        createLabel({ 210.f, 218.f }, "Find more flags in the Steam Workshop");
+#endif
     }
 
 
