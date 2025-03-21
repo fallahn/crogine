@@ -160,6 +160,7 @@ bool Social::isValid()
 
 void Social::awardXP(std::int32_t amount, std::int32_t reason)
 {
+    amount *= doubleXP();
     if (Achievements::getActive())
     {
         auto oldLevel = getLevelFromXP(StoredValues[ValueID::XP].value);
@@ -187,6 +188,18 @@ std::int32_t Social::getXP()
 {
     StoredValues[ValueID::XP].read();
     return StoredValues[ValueID::XP].value;
+}
+
+std::int32_t Social::doubleXP()
+{
+    auto ts = std::time(nullptr);
+    const auto* tm = std::localtime(&ts);
+    if ((tm->tm_wday == 0 && (tm->tm_mday > 7 && tm->tm_mday < 15))
+        || tm->tm_wday == 6 && (tm->tm_mday > 6 && tm->tm_mday < 14))
+    {
+        return 2;
+    }
+    return 1;
 }
 
 std::int32_t Social::getLevel()

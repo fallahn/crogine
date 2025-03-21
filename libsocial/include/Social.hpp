@@ -167,6 +167,7 @@ public:
     static void inviteFriends(std::uint64_t) {}
     static void awardXP(std::int32_t, std::int32_t = -1);
     static std::int32_t getXP();
+    static std::int32_t doubleXP(); //usually 1, or 2 if second weekend of the month
     static std::int32_t getLevel();
     static std::int32_t getClubLevel();
     static ProgressData getLevelProgress();

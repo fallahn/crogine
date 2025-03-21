@@ -2603,17 +2603,21 @@ void GolfState::loadModels()
             }
         };
 
-    auto basePath = cro::FileSystem::getResourcePath() + "assets/golf/clubs/";
-    auto clubsets = cro::FileSystem::listDirectories(basePath);
-
-    for (const auto& s : clubsets)
+    const auto ContentDirs = Content::getInstallPaths();
+    for (const auto& c : ContentDirs)
     {
-        processClubPath(basePath + s);
+        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+        for (const auto& s : clubsets)
+        {
+            processClubPath(basePath + s);
+        }
     }
 
     //workshop clubs
-    basePath = Content::getUserContentPath(Content::UserContent::Clubs);
-    clubsets = cro::FileSystem::listDirectories(basePath);
+    const auto basePath = Content::getUserContentPath(Content::UserContent::Clubs);
+    auto clubsets = cro::FileSystem::listDirectories(basePath);
 
     //remove dirs from this list if it's not from the workshop (rather crudely)
     clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());

@@ -529,7 +529,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_resources.textures);
@@ -708,9 +708,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::Callback>().function =
         [bannerEnt, textureRect](cro::Entity e, float dt)
     {
-        float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+        const float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
         auto position = e.getComponent<cro::Transform>().getPosition();
-        position.x = width / 2.f;
+        position.x = std::round(width / 2.f);
 
         if (!bannerEnt.getComponent<cro::Callback>().active)
         {
@@ -733,9 +733,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::Callback>().function =
         [bannerEnt, bounds](cro::Entity e, float dt)
     {
-        float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+        const float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
         auto position = e.getComponent<cro::Transform>().getPosition();
-        position.x = width / 2.f;
+        position.x = std::round(width / 2.f);
 
         if (!bannerEnt.getComponent<cro::Callback>().active)
         {
@@ -746,6 +746,48 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         e.getComponent<cro::Transform>().setPosition(position);
     };
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //double XP text
+    struct FlashData final
+    {
+        float currentTime = 1.f;
+        float scale = 1.f;
+    };
+    if (Social::doubleXP() == 2)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 48.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Double XP\nWeekend!");
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+        entity.getComponent<cro::Text>().setVerticalSpacing(5.f);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(2.f, -2.f));
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<FlashData>();
+        entity.getComponent<cro::Callback>().function =
+            [bannerEnt](cro::Entity e, float dt)
+            {
+                const float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+                auto position = e.getComponent<cro::Transform>().getPosition();
+                position.x = std::round(width / 2.f);
+                e.getComponent<cro::Transform>().setPosition(position);
+
+                auto& [ct, scale] = e.getComponent<cro::Callback>().getUserData<FlashData>();
+                ct -= dt;
+                if (ct < 0.f)
+                {
+                    ct += 1.f;
+                    scale = scale == 0 ? 1 : 0;
+                    ct += scale;
+
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                }
+            };
+        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
     //cursor
     entity = m_uiScene.createEntity();
