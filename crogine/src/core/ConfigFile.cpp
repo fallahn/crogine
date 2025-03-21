@@ -49,6 +49,7 @@ namespace
     const std::string indentBlock("    ");
     std::size_t currentLine = 0;
 
+    //used when parsing json files
     template <typename T>
     void addToObject(ConfigObject* dst, const std::string& key, json& value)
     {
@@ -60,22 +61,10 @@ namespace
 //--------------------//
 ConfigProperty::ConfigProperty(const std::string& name)
     : ConfigItem(name),
-#ifdef OLD_PARSER
-    m_value(value), m_isStringValue(false)
-{
-    m_isStringValue = !value.empty()
-        && ((value.front() == '\"' && value.back() == '\"')
-        || value.find(' ') != std::string::npos);
-}
-#else
     m_boolValue(false)
 {
-    /*if (!value.empty())
-    {
-        setValue(value);
-    }*/
+
 }
-#endif
 
 void ConfigProperty::setValue(const std::string& value)
 {
@@ -222,43 +211,12 @@ void ConfigProperty::setValue(const char* v)
     }
 }
 
-#ifndef OLD_PARSER
 void ConfigProperty::resetValue()
 {
     m_utf8Values.clear();
     m_floatValues.clear();
     m_boolValue = false;
 }
-#else
-
-std::vector<float> ConfigProperty::valueAsArray() const
-{
-    std::vector<float> retval;
-    std::size_t start = 0u;
-    std::size_t next = m_value.find_first_of(',');
-    std::size_t end = std::min(m_value.length(), std::size_t(200));
-
-    while (next != std::string::npos && start < end)
-    {
-        float val;
-        std::istringstream is(m_value.substr(start, next));
-        if (is >> val) retval.push_back(val);
-        else retval.push_back(0.f);
-
-        start = ++next;
-        next = m_value.find_first_of(',', start);
-        if (next > m_value.length()) next = m_value.length();
-    }
-    
-    //pack out to max supported size
-    while (retval.size() < 4)
-    {
-        retval.push_back(0.f);
-    }
-
-    return retval;
-}
-#endif
 
 //-------------------------------------
 
@@ -279,12 +237,7 @@ bool ConfigObject::loadFromFile(const std::string& filePath, bool relative)
     m_properties.clear();
     m_objects.clear();
 
-
-#ifdef OLD_PARSER
-    return loadFromFile1(relative ? FileSystem::getResourcePath() + filePath : filePath);
-#else
     return loadFromFile2(relative ? FileSystem::getResourcePath() + filePath : filePath);
-#endif
 }
 
 const std::string& ConfigObject::getId() const
@@ -400,9 +353,9 @@ std::vector<ConfigObject>& ConfigObject::getObjects()
     return m_objects;
 }
 
-ConfigProperty& ConfigObject::addProperty(const std::string& name/*, const std::string& value*/)
+ConfigProperty& ConfigObject::addProperty(const std::string& name)
 {
-    m_properties.emplace_back(name/*, value*/);
+    m_properties.emplace_back(name);
     m_properties.back().setParent(this);
     return m_properties.back();
 }
@@ -449,138 +402,6 @@ ConfigObject ConfigObject::removeObject(const std::string& name)
 
     return {};
 }
-
-//ConfigObject::NameValue ConfigObject::getObjectName(const std::string& line)
-//{
-//    auto result = line.find_first_of(' ');
-//    if (result != std::string::npos)
-//    {
-//        std::string first = line.substr(0, result);
-//        std::string second = line.substr(result + 1);
-//        //make sure id has no spaces by truncating it
-//        result = second.find_first_of(' ');
-//        if (result != std::string::npos)
-//            second = second.substr(0, result);
-//
-//        return std::make_pair(first, second);
-//    }
-//    return std::make_pair(line, "");
-//}
-
-//ConfigObject::NameValue ConfigObject::getPropertyName(const std::string& line)
-//{
-//    //cro::String cLine = cro::String::fromUtf8(line.begin(), line.end());
-//    //auto result = cLine.find("=");
-//    //auto firstArr = cLine.substr(0, result).toUtf8();
-//    //firstArr.erase(std::remove(firstArr.begin(), firstArr.end(), ' '), firstArr.end());
-//    //const std::string first = reinterpret_cast<const char*>(firstArr.c_str());
-//
-//    //auto secondArr = cLine.substr(result + 1).toUtf8();
-//    //auto r1 = std::find(secondArr.begin(), secondArr.end(), '\"');
-//    //if (r1 != secondArr.end())
-//    //{
-//    //    auto r2 = std::find(secondArr.rbegin(), secondArr.rend(), '\"');
-//    //    if (r2 != secondArr.rend())
-//    //    {
-//    //        /*auto r2Pos = secondArr.rend() - r2 - 1;
-//    //        std::basic_string<std::uint8_t> temp;
-//    //        temp.resize(r2Pos - std::distance(secondArr.begin(), r1));
-//    //        std::copy(r1, r1 + temp.size(), temp.begin());
-//    //        secondArr.swap(temp);*/
-//    //        secondArr.erase(std::remove(secondArr.begin(), secondArr.end(), '\"'), secondArr.end());
-//
-//    //    }
-//    //    else
-//    //    {
-//    //        Logger::log("String property \'" + first + "\' has missing \'\"\', value may not be as expected", Logger::Type::Warning);
-//    //    }
-//    //}
-//    //else
-//    //{
-//    //    secondArr.erase(std::remove(secondArr.begin(), secondArr.end(), ' '), secondArr.end());
-//    //}
-//    //std::string second;
-//    //if (secondArr[0] == '/')
-//    //{
-//    //    second = reinterpret_cast<const char*>(&secondArr[1]);
-//    //}
-//    //else
-//    //{
-//    //    second = reinterpret_cast<const char*>(secondArr.c_str());
-//    //}
-//
-//
-//    auto result = line.find_first_of("=");
-//    assert(result != std::string::npos);
-//
-//    std::string first = line.substr(0, result);
-//    Util::String::removeChar(first, ' ');
-//
-//    std::string second = line.substr(result + 1);
-//    
-//    //check for string literal
-//    result = second.find_first_of("\"");
-//    if (result != std::string::npos)
-//    {
-//        auto otherResult = second.find_last_of("\"");
-//        if (otherResult != std::string::npos
-//            && otherResult != result)
-//        {
-//            second = second.substr(result, otherResult);
-//            Util::String::removeChar(second, '\"');
-//            if (second[0] == '/') second = second.substr(1);
-//        }
-//        else
-//        {
-//            Logger::log("String property \'" + first + "\' has missing \'\"\', value may not be as expected", Logger::Type::Warning);
-//        }
-//    }
-//    else
-//    {
-//        Util::String::removeChar(second, ' ');
-//    }
-//
-//    return std::make_pair(first, second);
-//}
-
-//bool ConfigObject::isProperty(const std::string& line)
-//{
-//    auto pos = line.find('=');
-//    return(pos != std::string::npos && pos > 1 && line.length() > 5);
-//}
-
-//void ConfigObject::removeComment(std::string& line)
-//{
-//    auto result = line.find_first_of("//");
-//
-//    //make sure to only crop comments outside of string literals
-//    //for some reason it appears result also matches '/' so unquoted paths get truncated
-//    if (result < line.size() - 1 && line[result + 1] == '/')
-//    {
-//        auto otherResult = line.find_last_of('\"');
-//        if (result != std::string::npos && (result > otherResult || otherResult == std::string::npos))
-//        {
-//            line = line.substr(0, result);
-//        }
-//    }
-//
-//    //remove any tabs while we're at it
-//    Util::String::removeChar(line, '\t');
-//    //Util::String::removeChar(line, ' ');
-//
-//    //and preceding spaces
-//    auto start = line.find_first_not_of(' ');
-//    if (start != std::string::npos)
-//    {
-//        line = line.substr(start);
-//    }
-//
-//    if (line.find(';') != std::string::npos)
-//    {
-//        LogW << "Line " << currentLine << " contains semi-colon, is this intentional?" << std::endl;
-//    }
-//    currentLine++;
-//}
 
 bool ConfigObject::parseAsJson(SDL_RWops* file)
 {
@@ -868,194 +689,6 @@ std::size_t ConfigObject::write(SDL_RWops* file, std::uint16_t depth)
     return written;
 }
 
-#ifdef OLD_PARSER
-bool ConfigObject::loadFromFile1(const std::string& path)
-{
-    RaiiRWops rr;
-    rr.file = SDL_RWFromFile(path.c_str(), "r");
-
-    if (!rr.file)
-    {
-        Logger::log(path + " file invalid or not found.", Logger::Type::Warning);
-        return false;
-    }
-
-    //fetch file size
-    const auto fileSize = SDL_RWsize(rr.file);
-    if (fileSize == 0)
-    {
-        LOG(path + ": file empty", Logger::Type::Warning);
-        return false;
-    }
-
-    if (rr.file)
-    {
-        if (FileSystem::getFileExtension(path) == ".json")
-        {
-            return parseAsJson(rr.file);
-        }
-
-        //remove any opening comments
-        std::string data;
-        char* temp = nullptr;
-        std::int64_t readTotal = 0;
-        static constexpr std::int32_t DEST_SIZE = 1024;// 256;
-        char dest[DEST_SIZE];
-        while (data.empty() && readTotal < fileSize)
-        {
-            temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
-
-            if (temp)
-            {
-                data = std::string(temp);
-                removeComment(data);
-            }
-            else
-            {
-                LogE << path << ": unexpected EOF" << std::endl;
-                return false;
-            }
-        }
-        //check config is not opened with a property
-        if (isProperty(data))
-        {
-            Logger::log(path + ": Cannot start configuration file with a property", Logger::Type::Error);
-            return false;
-        }
-
-        //make sure next line is a brace to ensure we have an object
-        std::string lastLine = data;
-
-        temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
-        if (temp)
-        {
-            data = std::string(temp);
-            removeComment(data);
-        }
-        else
-        {
-            LogE << path << ": unexpected EOF" << std::endl;
-            return false;
-        }
-
-        //tracks brace balance
-        std::vector<ConfigObject*> objStack;
-
-        if (data[0] == '{')
-        {
-            //we have our opening object
-            auto objectName = getObjectName(lastLine);
-            setName(objectName.first);
-            m_id = objectName.second;
-
-            objStack.push_back(this);
-        }
-        else
-        {
-            Logger::log(path + " Invalid configuration header (missing '{' ?)", Logger::Type::Error);
-            return false;
-        }
-
-
-        while (readTotal < fileSize)
-        {
-            temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
-            if (temp)
-            {
-                data = std::string(temp);
-                removeComment(data);
-            }
-            else
-            {
-                LogE << path << ": unexpected EOF" << std::endl;
-                return false;
-            }
-
-            if (!data.empty())
-            {
-                if (data[0] == '}')
-                {
-                    //close current object and move to parent
-                    objStack.pop_back();
-                }
-                else if (isProperty(data))
-                {
-                    //insert name / value property into current object
-                    auto prop = getPropertyName(data);
-                    //TODO need to reinstate this and create a property
-                    //capable of storing arrays
-                    /*if (currentObject->findProperty(prop.first))
-                    {
-                        Logger::log("Property \'" + prop.first + "\' already exists in \'" + currentObject->getName() + "\', skipping entry...", Logger::Type::Warning);
-                        continue;
-                    }*/
-
-                    if (prop.second.empty())
-                    {
-                        Logger::log("\'" + objStack.back()->getName() + "\' property \'" + prop.first + "\' has no valid value", Logger::Type::Warning);
-                        continue;
-                    }
-                    objStack.back()->addProperty(prop.first, prop.second);
-                }
-                else
-                {
-                    //add a new object and make it current
-                    std::string prevLine = data;
-
-                    temp = Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal);
-                    if (temp)
-                    {
-                        data = std::string(temp);
-                        removeComment(data);
-                    }
-                    else
-                    {
-                        LogE << path << ": unexpected EOF" << std::endl;
-                        return false;
-                    }
-
-                    if (data[0] == '{')
-                    {
-                        //TODO we have to allow mutliple objects with the same name in this instance
-                        //as a model may have multiple material defs.
-                        auto name = getObjectName(prevLine);
-                        //if (name.second.empty() || objStack.back()->findObjectWithId(name.second) == nullptr)
-                        //{
-                        //    //safe to add new object as the name doesn't exist
-                        //    objStack.push_back(objStack.back()->addObject(name.first, name.second));
-                        //}
-                        //else
-                        //{
-                        //    Logger::log("Object with ID " + name.second + " has already been added, duplicate is skipped...", Logger::Type::Warning);
-
-                        //    //fast forward to closing brace
-                        //    while (data[0] != '}')
-                        //    {
-                        //        data = std::string(Util::String::rwgets(dest, DEST_SIZE, rr.file, &readTotal));
-                        //        removeComment(data);
-                        //    }
-                        //}
-
-                        objStack.push_back(objStack.back()->addObject(name.first, name.second));
-                    }
-                    else //last line was probably garbage or nothing but spaces
-                    {
-                        //LogW << filePath << ": Missing line or incorrect syntax at " << currentLine << std::endl;
-                        continue;
-                    }
-                }
-            }
-        }
-
-        if (!objStack.empty())
-        {
-            Logger::log("Brace count not at 0 after parsing \'" + path + "\'. Config data may not be correct.", Logger::Type::Warning);
-        }
-        return true;
-    }
-    return false;
-}
-#else
 bool ConfigObject::loadFromFile2(const std::string& path)
 {
     RaiiRWops rr;
@@ -1400,7 +1033,6 @@ bool ConfigObject::loadFromFile2(const std::string& path)
 
     return false;
 }
-#endif
 
 
 //--------------------//
