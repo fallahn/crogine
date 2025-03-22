@@ -84,6 +84,27 @@ namespace
 MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
+    const std::vector<std::uint8_t> holeScores = { 5,3,3,2,5,4 };
+
+    static constexpr std::uint32_t MaxBytes = 20;
+    std::array<std::int32_t, MaxBytes / sizeof(std::int32_t)> packedData = {};
+    std::fill(packedData.begin(), packedData.end(), 0);
+
+    for (auto i = 0u; i < holeScores.size() && i < MaxBytes; ++i)
+    {
+        LogI << "Packing... " << (int)holeScores[i] << std::endl;
+
+        packedData[i / sizeof(std::int32_t)] |= (holeScores[i] << ((i % sizeof(std::int32_t)) * 8));
+    }
+
+    for (auto i = 0u; i < packedData.size(); ++i)
+    {
+        for (auto j = 0u; j < sizeof(std::int32_t); ++j)
+        {
+            std::uint8_t b = ((packedData[i] >> (j * 8)) & 0xff);
+            LogI << "Unpacking... " << (int)b << std::endl;
+        }
+    }
 }
 
 //public

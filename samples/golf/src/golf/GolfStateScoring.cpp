@@ -181,7 +181,7 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
                     stableford += std::max(0, 2 - holeScore);
                 }
 
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford);
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, connectionData.playerData[k].holeScores);
                 break;
             }
         }
