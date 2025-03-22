@@ -3004,8 +3004,9 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                         t.setShadowOffset({ 2.f, -2.f });
                         t.setString(BannerStrings[BannerIndex]);
                         t.setAlignment(cro::SimpleText::Alignment::Centre);
+                        t.setVerticalSpacing(2.f);
 
-                        t.setPosition(glm::vec2(PlaneBannerB.left + (PlaneBannerB.width / 2.f), PlaneBannerB.bottom + (PlaneBannerB.height / 2.f)));
+                        t.setPosition(glm::vec2(PlaneBannerB.left + (PlaneBannerB.width / 2.f), PlaneBannerB.bottom + (PlaneBannerB.height / 2.f) + (t.getVerticalSpacing() / 2.f)));
 
                         m_planeTexture.clear(cro::Colour::Transparent);
                         q.draw();

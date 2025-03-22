@@ -181,7 +181,16 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
                     stableford += std::max(0, 2 - holeScore);
                 }
 
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, connectionData.playerData[k].holeScores);
+                
+                //as this might be displayed on a course played forwards always
+                //store the values on the leaderboards in the same direction
+                auto scoreData = connectionData.playerData[k].holeScores;
+                if (m_sharedData.reverseCourse)
+                {
+                    std::reverse(scoreData.begin(), scoreData.end());
+                }
+
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, scoreData);
                 break;
             }
         }
