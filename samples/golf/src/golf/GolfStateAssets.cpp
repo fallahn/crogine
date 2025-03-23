@@ -3013,6 +3013,7 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
                         t.draw();
                         t.rotate(180.f);
                         t.move(glm::vec2(0.f, PlaneBannerA.bottom - PlaneBannerB.bottom));
+                        t.move(glm::vec2(0.f, -t.getVerticalSpacing()));
                         t.draw();
                         m_planeTexture.display();
 
