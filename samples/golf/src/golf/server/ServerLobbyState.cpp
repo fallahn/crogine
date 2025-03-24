@@ -69,7 +69,7 @@ LobbyState::LobbyState(SharedData& sd)
     : m_returnValue (StateID::Lobby),
     m_sharedData    (sd),
     m_gameScene     (m_sharedData.messageBus, 240),
-    m_gameStarted   (true) //TODO default to false
+    m_gameStarted   (/*true*/false) //TODO default to false
 {
     LOG("Entered Server Lobby State", cro::Logger::Type::Info);
 

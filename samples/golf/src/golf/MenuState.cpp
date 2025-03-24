@@ -3439,17 +3439,36 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::CoinRemove:
         {
-            auto id = evt.packet.as<std::uint32_t>();
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::Menu::Actor;
-            cmd.action = [&,id](cro::Entity e, float)
+            //assume interp has a buffer of 5 points 1/20 second apart (roughly)
+            static constexpr float Timeout = 5.f / 20.f;
+            const auto id = evt.packet.as<std::uint32_t>();
+
+            auto ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Callback>().active = true;
+            ent.getComponent<cro::Callback>().setUserData<float>(Timeout);
+            ent.getComponent<cro::Callback>().function =
+                [&, id](cro::Entity f, float dt)
                 {
-                    if (e.getComponent<InterpolationComponent<INTERP_TYPE>>().id == id)
+                    auto& currTime = f.getComponent<cro::Callback>().getUserData<float>();
+                    currTime -= dt;
+
+                    if (currTime < 0)
                     {
-                        m_uiScene.destroyEntity(e);
+                        cro::Command cmd;
+                        cmd.targetFlags = CommandID::Menu::Actor;
+                        cmd.action = [&, id](cro::Entity e, float)
+                            {
+                                if (e.getComponent<InterpolationComponent<INTERP_TYPE>>().id == id)
+                                {
+                                    m_uiScene.destroyEntity(e);
+                                }
+                            };
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                        f.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(f);
                     }
                 };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
             break;
         case PacketID::ActorSpawn:

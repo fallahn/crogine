@@ -46,7 +46,7 @@ using namespace sv;
 
 namespace
 {
-    constexpr float GameStartTime = 20.f;
+    constexpr float GameStartTime = 60.f * 5.f;
     constexpr float MinCanPos = 320.f;
     constexpr float MaxCanPos = 640.f;
 }
@@ -100,7 +100,7 @@ void LobbyState::buildScene()
     m_gameScene.addSystem<CoinSystem>(mb, m_sharedData);
     
     //counts the connected clients and spawns bucket after
-    //20 seconds if more than one client
+    //5 minutes if more than one client
     if (!m_gameStarted) //hack just to stop this happening during debug
     {
         auto entity = m_gameScene.createEntity();
