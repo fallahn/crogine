@@ -172,6 +172,7 @@ private:
             Ground,
             Trophy,
             Lantern,
+            Glass,
 
             Count
         };

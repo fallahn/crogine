@@ -885,7 +885,8 @@ void MenuState::parseAvatarDirectory()
                     if (md.getMaterialCount() == 2)
                     {
                         //add the shiny material on the second channel
-                        material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        material = md.hasTag(1, "glass") ? m_resources.materials.get(m_materialIDs[MaterialID::Glass]) 
+                            : m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
                         applyMaterialData(md, material, 1);
 
                         modelInfo.model.getComponent<cro::Model>().setMaterial(1, material);

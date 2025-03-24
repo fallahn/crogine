@@ -115,6 +115,7 @@ namespace
 #include "shaders/CelShader.inl"
 #include "shaders/BillboardShader.inl"
 #include "shaders/CloudShader.inl"
+#include "shaders/Glass.inl"
 #include "shaders/ShaderIncludes.inl"
 #include "shaders/ShadowMapping.inl"
 #include "shaders/Lantern.inl"
@@ -1853,6 +1854,8 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define NO_SUN_COLOUR\n#define VERTEX_COLOURED\n#define REFLECTIONS\n" /*+ wobble*/);
     //m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 600.0\n");
     
+    m_resources.shaders.loadFromString(ShaderID::Glass, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment, "#define USER_COLOUR\n");
+
     //view proj matrix to project lightmap
     //this is currently a shader constant - left this here in case I need to recalculate it
     /*auto proj = glm::ortho(LightMapWorldCoords.left, LightMapWorldCoords.left + LightMapWorldCoords.width,
@@ -1969,6 +1972,14 @@ void MenuState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
     m_profileData.profileMaterials.ballReflection = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
 
+
+    shader = &m_resources.shaders.get(ShaderID::Glass);
+    m_materialIDs[MaterialID::Glass] = m_resources.materials.add(*shader);
+    auto& glassMat = m_resources.materials.get(m_materialIDs[MaterialID::Glass]);
+    glassMat.setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+    glassMat.doubleSided = true;
+    glassMat.blendMode = cro::Material::BlendMode::Alpha;
+    m_profileData.profileMaterials.hairGlass = glassMat;
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;

@@ -141,6 +141,7 @@ private:
             Course,
             Hair,
             HairReflect,
+            HairGlass,
             Wireframe,
             WireframeCulled,
             WireframeCulledPoint,

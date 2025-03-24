@@ -288,6 +288,7 @@ struct ShaderID final
         Player,
         Hair,
         HairReflect,
+        HairGlass,
         Course,
         CourseGreen,
         CourseGrid,

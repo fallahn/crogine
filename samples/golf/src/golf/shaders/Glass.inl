@@ -39,8 +39,12 @@ OUTPUT
 
 uniform samplerCube u_reflectMap;
 
+#if defined (USER_COLOUR)
+uniform vec4 u_hairColour = vec4(1.0, 0.0, 0.0, 1.0);
+#else
 uniform vec4 u_colour;
-uniform vec4 u_maskColour;
+#endif
+uniform vec4 u_maskColour = vec4(0.0, 0.0, 0.0, 0.5);
 
 VARYING_IN vec3 v_normalVector;
 VARYING_IN vec3 v_worldPosition;
@@ -50,7 +54,11 @@ void main()
     vec3 normal = normalize(v_normalVector);
     vec3 eyeDir = normalize(v_worldPosition - u_cameraWorldPosition);
 
+#if defined (USER_COLOUR)
+    vec4 colour = vec4(u_hairColour.rgb, 0.2);
+#else
     vec4 colour = u_colour;
+#endif
     vec3 reflectColour = TEXTURE_CUBE(u_reflectMap, reflect(eyeDir, normal)).rgb;
 
     colour.rgb = mix(reflectColour, colour.rgb, u_maskColour.a);

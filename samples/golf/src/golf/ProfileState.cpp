@@ -2634,7 +2634,8 @@ void ProfileState::buildPreviewScene()
 
         if (hair.getMaterialCount() == 2)
         {
-            auto material2 = m_profileData.profileMaterials.hairReflection;
+            auto material2 = hair.hasTag(1, "glass") ? m_profileData.profileMaterials.hairGlass : m_profileData.profileMaterials.hairReflection;
+
             applyMaterialData(hair, material2, 1);
             entity.getComponent<cro::Model>().setMaterial(1, material2);
         }
@@ -2653,7 +2654,8 @@ void ProfileState::buildPreviewScene()
 
         if (hair.getMaterialCount() == 2)
         {
-            auto material2 = m_profileData.profileMaterials.hairReflection;
+            auto material2 = hair.hasTag(1, "glass") ? 
+                m_profileData.profileMaterials.hairGlass : m_profileData.profileMaterials.hairReflection;
             applyMaterialData(hair, material2, 1);
             entity.getComponent<cro::Model>().setMaterial(1, material2);
             entity.getComponent<cro::Model>().setMaterialProperty(2, "u_hairColour", CD32::Colours[CD32::Orange]);
@@ -3123,6 +3125,7 @@ void ProfileState::createItemPage(cro::Entity parent, std::int32_t page, std::in
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     entity.getComponent<cro::Drawable2D>().setTexture(&m_pageContexts[itemID].thumbnailTexture.getTexture());
+    entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
 
     const glm::vec2 TexSize(m_pageContexts[itemID].thumbnailTexture.getSize());
     cro::FloatRect textureBounds = { 0.f, 0.f, static_cast<float>(BallThumbSize.x * ThumbTextureScale) / TexSize.x, static_cast<float>(BallThumbSize.y * ThumbTextureScale) / TexSize.y };
@@ -3797,7 +3800,7 @@ void ProfileState::createHairEditor(cro::Entity parent, const CallbackContext& c
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 276.f, 109.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
     entity.addComponent<cro::Sprite>(m_pageContexts[PaginationID::Hair].thumbnailTexture.getTexture());
     entity.getComponent<cro::Sprite>().setTextureRect(m_headwearPreviewRects[HeadwearID::Hair]);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

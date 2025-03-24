@@ -1841,6 +1841,16 @@ void GolfState::loadMaterials()
     glassMat.blendMode = cro::Material::BlendMode::Alpha;
 
 
+    m_resources.shaders.loadFromString(ShaderID::HairGlass,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment, "#define USER_COLOUR\n");
+    shader = &m_resources.shaders.get(ShaderID::HairGlass);
+    m_materialIDs[MaterialID::HairGlass] = m_resources.materials.add(*shader);
+    auto& glassHairMat = m_resources.materials.get(m_materialIDs[MaterialID::HairGlass]);
+    glassHairMat.setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+    glassHairMat.doubleSided = true;
+    glassHairMat.blendMode = cro::Material::BlendMode::Alpha;
+
+
     m_resources.shaders.loadFromString(ShaderID::Wake, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), WakeFragment, "#define TEXTURED\n");
     shader = &m_resources.shaders.get(ShaderID::Wake);
     m_windBuffer.addShader(*shader);
@@ -2485,7 +2495,8 @@ void GolfState::loadModels()
 
                                 if (md.getMaterialCount() == 2)
                                 {
-                                    material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                                    material = md.hasTag(1, "glass") ? m_resources.materials.get(m_materialIDs[MaterialID::HairGlass])
+                                        : m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
                                     applyMaterialData(md, material, 1);
                                     material.setProperty("u_hairColour", hairColour);
                                     ent.getComponent<cro::Model>().setMaterial(1, material);

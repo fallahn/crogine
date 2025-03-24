@@ -112,6 +112,7 @@ namespace
 #include "shaders/CloudShader.inl"
 #include "shaders/BeaconShader.inl"
 #include "shaders/WaterShader.inl"
+#include "shaders/Glass.inl"
 #include "shaders/ShaderIncludes.inl"
 
 #ifdef CRO_DEBUG_
@@ -1168,7 +1169,8 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::HairReflect, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define FADE_INPUT\n#define USER_COLOUR\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
-
+    m_resources.shaders.loadFromString(ShaderID::HairGlass,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment, "#define USER_COLOUR\n");
    
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
@@ -1234,6 +1236,15 @@ void DrivingState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+
+    shader = &m_resources.shaders.get(ShaderID::HairGlass);
+    m_materialIDs[MaterialID::HairGlass] = m_resources.materials.add(*shader);
+    auto& glassMat = m_resources.materials.get(m_materialIDs[MaterialID::HairGlass]);
+    glassMat.setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+    glassMat.doubleSided = true;
+    glassMat.blendMode = cro::Material::BlendMode::Alpha;
+
+
 
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
@@ -2629,7 +2640,9 @@ void DrivingState::createPlayer()
                     auto matCount = 1;
                     if (md.getMaterialCount() == 2)
                     {
-                        mat = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        mat = md.hasTag(1, "glass") ? 
+                            m_resources.materials.get(m_materialIDs[MaterialID::HairGlass]) : m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        
                         applyMaterialData(md, mat, 1);
                         mat.setProperty("u_hairColour", hairColour);
                         ent.getComponent<cro::Model>().setMaterial(1, mat);

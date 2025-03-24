@@ -279,6 +279,7 @@ private:
             Player,
             Hair,
             HairReflect,
+            HairGlass,
             Course,
             Ball,
             BallSkinned,
