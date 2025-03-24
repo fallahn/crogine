@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -267,7 +267,11 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
     std::string version = "#version 100\n#define MOBILE\n" + vendorDef;
     const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #else
+#if GL41
     std::string version = "#version 410 core\n" + vendorDef;
+#else
+    std::string version = "#version 460 core\n" + vendorDef;
+#endif // GL41
     const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #endif //__ANDROID__
 
@@ -285,8 +289,8 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
         std::string str;
         str.resize(resultLength + 1);
         glCheck(glGetShaderInfoLog(vertID, resultLength, nullptr, &str[0]));
-        Logger::log(vendorInfo, Logger::Type::Error);
-        Logger::log("Failed compiling vertex shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+        Logger::log(vendorInfo, Logger::Type::Error, Logger::Output::All);
+        Logger::log("Failed compiling vertex shader: " + std::to_string(result) + ", " + str, Logger::Type::Error, Logger::Output::All);
 
         glCheck(glDeleteShader(vertID));
         return false;
@@ -339,8 +343,8 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
         std::string str;
         str.resize(resultLength + 1);
         glCheck(glGetShaderInfoLog(fragID, resultLength, nullptr, &str[0]));
-        Logger::log(vendorInfo, Logger::Type::Error);
-        Logger::log("Failed compiling fragment shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+        Logger::log(vendorInfo, Logger::Type::Error, Logger::Output::All);
+        Logger::log("Failed compiling fragment shader: " + std::to_string(result) + ", " + str, Logger::Type::Error, Logger::Output::All);
 
         glCheck(glDeleteShader(vertID));
         glCheck(glDeleteShader(fragID));
@@ -373,8 +377,8 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
             std::string str;
             str.resize(resultLength + 1);
             glCheck(glGetProgramInfoLog(m_handle, resultLength, nullptr, &str[0]));
-            Logger::log(vendorInfo, Logger::Type::Error);
-            Logger::log("Failed to link shader program: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+            Logger::log(vendorInfo, Logger::Type::Error, Logger::Output::All);
+            Logger::log("Failed to link shader program: " + std::to_string(result) + ", " + str, Logger::Type::Error, Logger::Output::All);
 
             glCheck(glDetachShader(m_handle, vertID));
             if (geomID)

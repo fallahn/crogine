@@ -194,8 +194,8 @@ std::int32_t Social::doubleXP()
 {
     auto ts = std::time(nullptr);
     const auto* tm = std::localtime(&ts);
-    if ((tm->tm_wday == 0 && (tm->tm_mday > 7 && tm->tm_mday < 15))
-        || tm->tm_wday == 6 && (tm->tm_mday > 6 && tm->tm_mday < 14))
+    if ((tm->tm_wday == 0 && (tm->tm_mday > 14 && tm->tm_mday < 22))
+        || tm->tm_wday == 6 && (tm->tm_mday > 13 && tm->tm_mday < 21))
     {
         return 2;
     }
@@ -835,7 +835,7 @@ void Social::takeScreenshot(const cro::String&, std::size_t courseIndex)
     }
 }
 
-void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t)
+void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>&)
 {
 #ifdef USE_GJS
     //GJ::insertScore(course, hole, score);
