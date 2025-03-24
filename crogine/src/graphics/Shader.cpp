@@ -267,7 +267,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
     std::string version = "#version 100\n#define MOBILE\n" + vendorDef;
     const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #else
-#if GL41
+#if defined GL41 || defined __APPLE__
     std::string version = "#version 410 core\n" + vendorDef;
 #else
     std::string version = "#version 460 core\n" + vendorDef;
