@@ -1797,6 +1797,7 @@ void MenuState::addSystems()
     m_avatarScene.addSystem<cro::SkeletalAnimator>(mb);
     m_avatarScene.addSystem<cro::CameraSystem>(mb);
     m_avatarScene.addSystem<cro::ModelRenderer>(mb);
+    m_avatarScene.setTitle("Avatar Scene");
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);

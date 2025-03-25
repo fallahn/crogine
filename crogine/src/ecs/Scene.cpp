@@ -591,6 +591,12 @@ void Scene::setSkyboxOrientation(glm::quat q)
     m_skybox.modelMatrix = glm::mat4(q);
 }
 
+void Scene::setTitle(const std::string& title)
+{
+    m_debugTitle = title;
+    m_entityManager.setTitle(title);
+}
+
 //private
 void Scene::applySkyboxColours()
 {

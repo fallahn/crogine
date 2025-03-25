@@ -834,6 +834,15 @@ void MenuState::parseAvatarDirectory()
                     continue;
                 }
 
+                //TODO better manage this so we can install more hair
+                //but as it stands we're duplicating many of these and
+                //creating literally thousands of redundant entities in
+                //m_avatarScene when attaching to the preview model
+                if (m_sharedData.hairInfo.size() == 96)
+                {
+                    break;
+                }
+
                 cro::ConfigFile cfg;
                 if (cfg.loadFromFile(userPath + file, false))
                 {
@@ -845,6 +854,12 @@ void MenuState::parseAvatarDirectory()
                     insertInfo(info, m_sharedData.hairInfo, false);
                     break; //only load one...
                 }
+            }
+
+            if (m_sharedData.hairInfo.size() == 96)
+            {
+                LogW << "Maximum hair models is 96 - some workshop models may not be loaded." << std::endl;
+                break;
             }
         }
     }
@@ -970,6 +985,12 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
     //path strings must include trailing "/"!!
     for (const auto& file : fileList)
     {
+        if (m_playerAvatars.size() == 40)
+        {
+            LogW << "Maximum player avatars is 40 - some workshop avatars may not be loaded..." << std::endl;
+            return;
+        }
+
         if (cro::FileSystem::getFileExtension(file) == ".avt")
         {
             cro::ConfigFile cfg;

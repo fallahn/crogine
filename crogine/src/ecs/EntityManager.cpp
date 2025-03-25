@@ -54,15 +54,20 @@ EntityManager::EntityManager(MessageBus& mb, ComponentManager& cm, std::size_t i
     //std::string title = "##" + std::to_string(temp++);
     //registerWindow([&, title]() 
     //    {
-    //        if (ImGui::Begin(title.c_str()))
+    //        const auto& winTitle = m_debugTitle.empty() ? title : m_debugTitle;
+
+    //        if (ImGui::Begin(winTitle.c_str()))
     //        {
-    //            for (const auto& p : m_componentPools)
+    //            /*for (const auto& p : m_componentPools)
     //            {
     //                if (p)
     //                {
     //                    ImGui::Text("Pool %s, using %u/%u", p->getName().c_str(), p->used(), p->maxSize());
     //                }
-    //            }
+    //            }*/
+
+    //            ImGui::Text("Entity count: %lu", m_entityCount);
+    //            ImGui::Text("Generations Size: %lu", m_generations.size());
     //        }
     //        ImGui::End();
     //    });

@@ -275,6 +275,12 @@ namespace cro
         void markDestroyed(Entity entity);
 
 
+        /*!
+        \brief Sets a label for the current instance for debugging.
+        Automatically called by Scene::setTitle()
+        */
+        void setTitle(const std::string& s) { m_debugTitle = s; }
+
     private:
         MessageBus& m_messageBus;
         std::size_t m_initialPoolSize;
@@ -288,6 +294,8 @@ namespace cro
         std::vector<bool> m_destructionFlags;
 
         ComponentManager& m_componentManager;
+
+        std::string m_debugTitle;
 
         template <typename T>
         Detail::ComponentPool<T>& getPool();

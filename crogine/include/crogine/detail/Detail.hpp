@@ -39,6 +39,6 @@ namespace cro::Detail
         MaxComponents = 64, //this is max number of types on a single entity
         IndexBits = 24,
         GenerationBits = 8,
-        MinFreeIDs = 3072 //after this generation is incremented and we go back to zero
+        MinFreeIDs = 4096// 3072 //after this generation is incremented and we go back to zero
     };
 }

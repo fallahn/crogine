@@ -961,8 +961,9 @@ bool ConfigObject::loadFromFile2(const std::string& path)
                                                 utf.push_back(tokens[2][i]);
                                             }
                                             //but we don't want to encourage this so nag with a warning
+#ifdef CRO_DEBUG_
                                             LogW << FileSystem::getFileName(path) << " line:" << lineNumber << ", value: " << tmp << ": potential unquoted string value" << std::endl;
-
+#endif
                                             //for now log these so we know what to edit MUST REMOVE IT THOUGH
                                             //also below for missing quotes
                                             /*std::ofstream f("cfg_corrections.txt", std::ios::app);

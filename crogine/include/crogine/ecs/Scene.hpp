@@ -443,7 +443,7 @@ namespace cro
         \brief Allows setting an arbitrary string as a title for the Scene
         Useful for debugging.
         */
-        void setTitle(const std::string& s) { m_debugTitle = s; }
+        void setTitle(const std::string& s);
 
         /*!
         \brief Returns the title strign set for the Scene, if any
