@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,7 +37,12 @@ source distribution.
 
 #include <crogine/detail/glm/mat4x4.hpp>
 
+#include <crogine/graphics/Font.hpp>
+#include <crogine/graphics/SimpleText.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+
 #include <vector>
+#include <memory>
 
 struct SharedStateData;
 class LoadingScreen final : public cro::LoadingScreen
@@ -70,4 +75,7 @@ private:
     cro::Clock m_clock;
 
     cro::Texture m_texture;
+
+    cro::Font m_font;
+    std::unique_ptr<cro::SimpleText> m_tipText;
 };
