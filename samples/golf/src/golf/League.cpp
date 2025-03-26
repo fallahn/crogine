@@ -1034,7 +1034,9 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     }
 
     //CPU players exhibit better skill when playing with longer club sets
-    auto skillOffset = cro::Util::Random::value(0, 2) == 0 ? 0 : 1;
+    //smaller is better so a small chance clubset 2 has 0 variance makes them better
+    //TODO though isn't this overwriting whatever skill the CPU actually has at Pro?
+    auto skillOffset = cro::Util::Random::value(0, 4) == 0 ? 0 : cro::Util::Random::value(1,2);
     if (m_clubset == 1)
     {
         auto s = std::max(1, skill - 1);
@@ -1087,7 +1089,9 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     score -= 2.f; //average out to birdie
 
     //then use the player skill chance to decide if we got an eagle
-    if (cro::Util::Random::value(0, 10) > skill)
+    //base skill range is 2-4, so we don't want this to be too likely
+    //even when the skill is 2 (lower is better, remember)
+    if (cro::Util::Random::value(-1, 5) > skill)
     {
         score -= 1.f;
     }
@@ -1101,8 +1105,8 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     {
         //players with skill 0 (0 good, 2 bad) + good clubs have better chance of keeping the HIO
         //players with skill 2 and short clubs have worse chance of keeping the HIO
-        const auto hioSkill = (player.skill + (2 - m_clubset)) * 2;
-        if (cro::Util::Random::value(0, (3 + hioSkill)) != 0)
+        const auto hioSkill = (std::max(1, player.skill) + (2 - m_clubset)) * 2;
+        if (cro::Util::Random::value(0, (4 + hioSkill)) != 0)
         {
             holeScore += std::max(1, (par - 2));
         }
@@ -1128,13 +1132,13 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
         {
         default:
         case 0: //novice
-            if (cro::Util::Random::value(0, 2) != 0)
+            if (cro::Util::Random::value(0, 3) != 0)
             {
                 holeScore += cro::Util::Random::value(2, 4) / 2;
             }
             break;
         case 1: //expert
-            if (cro::Util::Random::value(0, 1) != 0)
+            if (cro::Util::Random::value(0, 2) != 0)
             {
                 holeScore += cro::Util::Random::value(2, 4) / 2;
             }
@@ -1142,7 +1146,7 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
         case 2: //pro
             if (cro::Util::Random::value(0, 1) != 0)
             {
-                holeScore += cro::Util::Random::value(0, 4) / 2;
+                holeScore += cro::Util::Random::value(1, 2);
             }
             break;
         }
@@ -1153,6 +1157,20 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     {
         holeScore += cro::Util::Random::value(2, 4) / 2;
     }*/
+
+
+    //special case on par 5's where eagle should be REALLY rare
+    if (par >= 5)
+    {
+        if (cro::Util::Random::value(-1, skill) != 0)
+        {
+            holeScore = std::max(holeScore, 4);
+        }
+        else
+        {
+            holeScore = std::max(holeScore, 3);
+        }
+    }
 
 
     //there's a flaw in my logic here which means the result occasionally
