@@ -1106,7 +1106,7 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
         //players with skill 0 (0 good, 2 bad) + good clubs have better chance of keeping the HIO
         //players with skill 2 and short clubs have worse chance of keeping the HIO
         const auto hioSkill = (std::max(1, player.skill) + (2 - m_clubset)) * 2;
-        if (cro::Util::Random::value(0, (4 + hioSkill)) != 0)
+        if (cro::Util::Random::value(0, (40 + hioSkill)) != 0)
         {
             holeScore += std::max(1, (par - 2));
         }

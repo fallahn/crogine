@@ -215,7 +215,7 @@ void LoadingScreen::update()
         const glm::vec2 windowSize = glm::vec2(m_viewport);
 
         const auto scale = glm::vec2(getViewScale(windowSize));
-        m_tipText->setPosition({ std::round(windowSize.x / 2.f), 26.f });
+        m_tipText->setPosition({ std::round(windowSize.x / 2.f), 36.f });
         m_tipText->setScale(scale);
 
         m_projectionMatrix = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);
