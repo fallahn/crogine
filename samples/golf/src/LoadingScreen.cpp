@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/util/Wavetable.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -62,7 +63,7 @@ namespace
         "Tip: Make sure to spend some time on the Driving Range, to really learn your clubs",
         "Did You Know: There are playable arcade games waiting to be discovered in the Clubhouse"
     };
-    std::size_t stringIndex = 7;
+    std::size_t stringIndex = cro::Util::Random::value(0, 7);
 
     constexpr std::uint32_t vertexSize = 2 * sizeof(float);
     constexpr float timestep = 1.f / 60.f;
@@ -215,7 +216,7 @@ void LoadingScreen::update()
         const glm::vec2 windowSize = glm::vec2(m_viewport);
 
         const auto scale = glm::vec2(getViewScale(windowSize));
-        m_tipText->setPosition({ std::round(windowSize.x / 2.f), 36.f });
+        m_tipText->setPosition({ std::round(windowSize.x / 2.f), 86.f });
         m_tipText->setScale(scale);
 
         m_projectionMatrix = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);

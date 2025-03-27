@@ -1106,7 +1106,7 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
         //players with skill 0 (0 good, 2 bad) + good clubs have better chance of keeping the HIO
         //players with skill 2 and short clubs have worse chance of keeping the HIO
         const auto hioSkill = (std::max(1, player.skill) + (2 - m_clubset)) * 2;
-        if (cro::Util::Random::value(0, (40 + hioSkill)) != 0)
+        if (cro::Util::Random::value(0, (400 + hioSkill)) != 0)
         {
             holeScore += std::max(1, (par - 2));
         }
@@ -1162,7 +1162,7 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     //special case on par 5's where eagle should be REALLY rare
     if (par >= 5)
     {
-        if (cro::Util::Random::value(-1, skill) != 0)
+        if (cro::Util::Random::value(-1, skill * 10) != 0)
         {
             holeScore = std::max(holeScore, 4);
         }
@@ -1177,7 +1177,7 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     //comes back as zero - rather than fix my logic I'm going to paste over the cracks.
     if (holeScore == 0)
     {
-        holeScore = std::max(2, par + cro::Util::Random::value(-1, 1));
+        holeScore = std::max(3, par + cro::Util::Random::value(-1, 1));
     }
 
 
