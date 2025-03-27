@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -42,12 +42,20 @@ source distribution.
 
 namespace cro
 {
+    struct TexturePrecision final
+    {
+        static constexpr std::uint32_t High = 0;
+        static constexpr std::uint32_t Low = 1;
+    };
+
     /*!
     \brief Template class for creating array textures
 
-    Currently only supports 4 channel image data
+    Currently only supports 4 channel image data. Precision
+    paramater only affects float textures, where low precision
+    uses 16 bit floats instead of 32 bit.
     */
-    template <class T, std::uint32_t Layers>
+    template <class T, std::uint32_t Layers, std::uint32_t Precision = TexturePrecision::High>
     class ArrayTexture final
     {
     public:
@@ -56,7 +64,14 @@ namespace cro
             if constexpr (std::is_same<T, float>::value)
             {
                 m_type = GL_FLOAT;
-                m_format = GL_RGBA32F;
+                if constexpr (Precision == TexturePrecision::High)
+                {
+                    m_format = GL_RGBA32F;
+                }
+                else
+                {
+                    m_format = GL_RGBA16F;
+                }
             }
 
             else if constexpr (std::is_same<T, std::uint16_t>::value)
@@ -221,6 +236,8 @@ namespace cro
             //bind tex and upload
             return updateTexture(image.getPixelData(), layer);
         }
+
+        std::uint32_t getLayerCount() const { return Layers; }
 
     private:
 

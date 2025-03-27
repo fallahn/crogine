@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -91,6 +91,12 @@ namespace cro
         \brief Restores the previously active viewport after a call to applyViewport()
         */
         void restorePreviousViewport();
+
+        /*!
+        \brief Implement this and call it during onEntityRemoved() to flush the removed
+        entity from any draw lists
+        */
+        virtual void flushEntity(Entity) = 0;
 
     private:
         std::array<std::int32_t, 4> m_previousViewport{};

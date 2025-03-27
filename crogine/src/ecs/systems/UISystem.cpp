@@ -42,7 +42,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
-#define DEBUG_UI
+//#define DEBUG_UI
 
 namespace
 {
@@ -270,7 +270,7 @@ void UISystem::handleEvent(const Event& evt)
         if (m_activeControllerID == ActiveControllerAll ||
             evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
+            const std::int16_t Threshold = cro::GameController::LeftThumbDeadZone * 2;// 15000;
             switch (evt.caxis.axis)
             {
             default: break;

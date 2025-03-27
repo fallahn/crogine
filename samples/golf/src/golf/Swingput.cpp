@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -54,9 +54,9 @@ namespace
 
     constexpr std::int16_t MinTriggerMove = 16000;
 
-    constexpr float MaxMouseDraw = 20.f;
+    /*constexpr float MaxMouseDraw = 20.f;
     constexpr float MaxMouseSwing = -20.f;
-    constexpr float MaxMouseHook = 120.f;
+    constexpr float MaxMouseHook = 120.f;*/
 
     constexpr std::int16_t MaxControllerDraw = (std::numeric_limits<std::int16_t>::max() / 3) * 2;
     constexpr std::int16_t MaxControllerSwing = -std::numeric_limits<std::int16_t>::max() / 2;

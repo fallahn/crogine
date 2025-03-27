@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -57,11 +57,24 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
         "assets/golf/sound/menu/snapshot.wav",
         "assets/golf/sound/menu/lobby.wav",
         "assets/golf/sound/menu/lobby_exit.wav",
+        "assets/golf/sound/menu/title.wav",
         "assets/golf/sound/woof.wav",
 
         "assets/golf/sound/ambience/fw01.wav",
         "assets/golf/sound/ambience/fw02.wav",
         "assets/golf/sound/ambience/fw03.wav",
+
+        "assets/golf/sound/menu/bucket/bounce01.wav",
+        "assets/golf/sound/menu/bucket/bounce02.wav",
+        "assets/golf/sound/menu/bucket/bounce03.wav",
+        "assets/golf/sound/menu/bucket/flip01.wav",
+        "assets/golf/sound/menu/bucket/flip02.wav",
+        "assets/golf/sound/menu/bucket/flip03.wav",
+        "assets/golf/sound/menu/bucket/flip04.wav",
+        "assets/golf/sound/menu/bucket/land01.wav",
+        "assets/golf/sound/menu/bucket/land02.wav",
+        "assets/golf/sound/menu/bucket/land03.wav",
+        "assets/golf/sound/menu/bucket/spawn.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -88,6 +101,19 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case cl::MessageID::CollisionMessage:
+        {
+            const auto& data = msg.getData<CollisionEvent>();
+            if (data.type == CollisionEvent::Begin
+                && data.terrain == 1)
+            {
+                //coin collision from interpolation
+                const auto pitchOffset = static_cast<float>(cro::Util::Random::value( -10, 10)) / 100.f;
+                auto ent = playSound(AudioID::Bounce01 + cro::Util::Random::value(0, 2), 0.45f);
+                ent.getComponent<cro::AudioEmitter>().setPitch(1 + pitchOffset);
+            }
+        }
+            break;
         case cl::MessageID::EnviroMessage:
         {
             const auto& data = msg.getData<EnviroEvent>();
@@ -177,23 +203,28 @@ void MenuSoundDirector::handleMessage(const cro::Message& msg)
             {
                 playSound(AudioID::LobbyExit, 0.5f);
             }
+            else if (data.type == SystemEvent::MenuChanged)
+            {
+                playSound(AudioID::Title, 0.2f);
+            }
         }
             break;
         }
     }
 }
 
-//private
 cro::Entity MenuSoundDirector::playSound(std::int32_t id, float vol)
 {
     auto ent = getNextEntity();
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
     ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
     ent.getComponent<cro::AudioEmitter>().setVolume(vol);
+    ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
 
     //only play if the min time since the last occurance of
     //the sound has been met. Ent is automatically recycled otherwise
-    if (m_audioTimers[id].elapsed() > MinAudioTime)
+    if (m_audioTimers[id].elapsed() > MinAudioTime
+        || id > AudioID::Fw03)
     {
         ent.getComponent<cro::AudioEmitter>().play();
         m_audioTimers[id].restart();

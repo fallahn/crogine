@@ -156,8 +156,8 @@ void MyApp::loadPrefs()
 void MyApp::savePrefs()
 {
     cro::ConfigFile prefsOut;
-    prefsOut.addProperty("working_dir", sharedData.workingDirectory);
-    prefsOut.addProperty("skybox", sharedData.skymapTexture);
+    prefsOut.addProperty("working_dir").setValue(sharedData.workingDirectory);
+    prefsOut.addProperty("skybox").setValue(sharedData.skymapTexture);
 
     prefsOut.save(cro::App::getPreferencePath() + "global.cfg");
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/Renderable.hpp>
 
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/Texture.hpp>
 
@@ -81,6 +82,7 @@ namespace cro
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
+        void flushEntity(Entity) override;
 
         std::vector<float> m_dataBuffer;
         std::vector<std::uint32_t> m_vboIDs;
@@ -92,6 +94,9 @@ namespace cro
         //probably not less optimal than switching between
         //textured and untextured shaders.
         cro::Texture m_fallbackTexture;
+
+        static constexpr std::size_t MaxRandomColours = 6;
+        std::array<cro::Colour, MaxRandomColours> m_randomColours = {};
 
         void allocateBuffer();
 

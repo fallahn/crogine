@@ -59,16 +59,19 @@ void System::addEntity(Entity entity)
 
 void System::removeEntity(Entity entity)
 {
-    m_entities.erase(std::remove_if(std::begin(m_entities), std::end(m_entities),
-        [&entity, this](const Entity& e)
+    //on the face of it this might seem weird, but it's the easiest way to
+    //know if the entity actually exists in this system and should have the
+    //removal callback invoked...
+    m_entities.erase(std::remove_if(m_entities.begin(), m_entities.end(),
+        [&, entity](const Entity& e)
     {
-        if (entity == e)
-        {
-            onEntityRemoved(e);
-            return true;
-        }
-        return false;
-    }), std::end(m_entities));
+            if (entity == e)
+            {
+                onEntityRemoved(entity);
+                return true;
+            }
+            return false;
+    }), m_entities.end());
 }
 
 const ComponentMask& System::getComponentMask() const

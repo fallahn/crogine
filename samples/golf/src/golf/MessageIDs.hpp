@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+//#include "Terrain.hpp"
+
 #include <crogine/core/Message.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
@@ -48,6 +50,7 @@ namespace cl::MessageID
         BilliardsCameraMessage,
         AIMessage,
         EnviroMessage,
+        WebSocketMessage,
 
         Count
     };
@@ -60,6 +63,7 @@ struct GolfEvent final
         HitBall,
         ClubChanged,
         ClubSwing,
+        ClubDraw,
         RequestNewPlayer,
         SetNewPlayer,
         HookedBall,
@@ -141,7 +145,7 @@ struct CollisionEvent final
         Timeout = -4,
         Billboard,
         Firework,
-        FlagPole
+        FlagPole = 18// TriggerID::FlagStick //ugh including Terrain.hpp breaks compilation
     };
 
     glm::vec3 position = glm::vec3(0.f);
@@ -222,4 +226,13 @@ struct EnviroEvent final
 {
     glm::vec3 position = glm::vec3(0.f);
     float size = 0.f;
+};
+
+struct WebSocketEvent final
+{
+    enum
+    {
+        Connected, Disconnected
+    }type = Connected;
+
 };

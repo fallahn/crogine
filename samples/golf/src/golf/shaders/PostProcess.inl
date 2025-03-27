@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string PostVertex =
+static inline const std::string PostVertex =
 R"(
     ATTRIBUTE vec2 a_position;
     ATTRIBUTE vec2 a_texCoord0;
@@ -50,7 +50,7 @@ R"(
         v_colour = a_colour;
     })";
 
-inline const std::string NoiseFragment =
+static inline const std::string NoiseFragment =
 R"(
     uniform sampler2D u_texture;
 
@@ -73,7 +73,7 @@ R"(
     }
 )";
 
-inline const std::string BWFragment =
+static inline const std::string BWFragment =
 R"(
     uniform sampler2D u_texture;
     uniform float u_time = 1.0;
@@ -95,10 +95,10 @@ R"(
         float grey = dot(colour.rgb, vec3(0.299, 0.587, 0.114));
 
         float noise = rand(floor(gl_FragCoord.xy / u_scale));
-        FRAG_OUT = vec4(mix(vec3(grey), vec3(noise), 0.07), colour.a); 
+        FRAG_OUT = vec4(mix(vec3(grey), vec3(noise), 0.07), /*colour.a*/1.0); 
     })";
 
-inline const std::string TerminalFragment =
+static inline const std::string TerminalFragment =
 R"(
     uniform sampler2D u_texture;
     uniform float u_time = 1.0;
@@ -164,6 +164,7 @@ R"(
         colour.rgb *= 0.3 + (clamp(mod(gl_FragCoord.y, lineSpacing), 0.0, 1.0) * 0.7);
 
         FRAG_OUT = colour * v_colour;
+        FRAG_OUT.a = 1.0;
     })";
 
 
@@ -180,7 +181,7 @@ R"(
 // It is an example what I personally would want as a display option for pixel art games.
 // Please take and use, change, or whatever.
 
-inline const std::string CRTFragment =
+static inline const std::string CRTFragment =
 R"(
     uniform sampler2D u_texture;
     uniform vec2 u_resolution;
@@ -339,12 +340,12 @@ R"(
     void main()
     {
       FRAG_OUT.rgb = Tri(v_texCoord) * Mask(gl_FragCoord.xy);
-      FRAG_OUT.a = 1.0;  
       FRAG_OUT.rgb = ToSrgb(FRAG_OUT.rgb);
       FRAG_OUT *= v_colour;
+      FRAG_OUT.a = 1.0;
     })";
 
-inline const std::string CinematicFragment =
+static inline const std::string CinematicFragment =
 R"(
 uniform sampler2D u_texture;
 uniform float u_time = 1.0;

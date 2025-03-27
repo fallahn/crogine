@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,16 +31,18 @@ source distribution.
 
 #include <string>
 
-inline const std::string BeaconVertex = R"(
+static inline const std::string BeaconVertex = R"(
 #line 1
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec2 a_texCoord0;
 
-    uniform mat4 u_worldMatrix;
+#if defined (SPRITE)
     uniform mat4 u_viewProjectionMatrix;
-
-    uniform vec4 u_clipPlane;
+#else
+#include CAMERA_UBO
+#endif
+    uniform mat4 u_worldMatrix;
     uniform float u_colourRotation = 1.0;
 
     VARYING_OUT vec4 v_colour;
@@ -56,7 +58,12 @@ inline const std::string BeaconVertex = R"(
         vec4 position = a_position;
 #endif
 
-        gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
+        vec4 worldPos = u_worldMatrix * position;
+        gl_Position = u_viewProjectionMatrix * worldPos;
+
+#if !defined(SPRITE)
+        gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
+#endif
 
         v_texCoord = a_texCoord0;
 
@@ -64,12 +71,10 @@ inline const std::string BeaconVertex = R"(
         hsv.x += u_colourRotation;
         v_colour = vec4(hsv2rgb(hsv), a_colour.a);
 
-        vec4 worldPos = u_worldMatrix * position;
-        gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
     })";
 
 
-inline const std::string BeaconFragment = R"(
+static inline const std::string BeaconFragment = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;

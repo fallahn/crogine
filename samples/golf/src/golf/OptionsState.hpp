@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/gui/GuiClient.hpp>
+#include <crogine/graphics/ArrayTexture.hpp>
 
 struct SharedStateData;
 
@@ -99,7 +100,7 @@ private:
     std::int32_t m_bindingIndex;
     void updateKeybind(SDL_Keycode);
 
-    std::array<std::function<void()>, 4u> m_tabFunctions = {};
+    std::array<std::function<void()>, 5u> m_tabFunctions = {};
     std::size_t m_currentTabFunction;
 
     struct ScrollID final
@@ -131,6 +132,11 @@ private:
     cro::RenderTexture m_achievementBuffer;
     cro::RenderTexture m_statsBuffer;
 
+    cro::ArrayTexture<std::uint8_t, 64> m_flagTextures;
+
+    std::vector<std::string> m_flagPaths;
+    std::uint32_t m_flagIndex;
+
     struct ToolTipID final
     {
         enum
@@ -139,7 +145,7 @@ private:
             VertSnap, Beacon, Units,
             BeaconColour, MouseSpeed,
             PuttingPower,
-            Video, Controls,
+            Video, Controls, Settings,
             Achievements, Stats,
             NeedsRestart,
             CustomMusic,
@@ -158,6 +164,7 @@ private:
 
     void buildAVMenu(cro::Entity, const cro::SpriteSheet&);
     void buildControlMenu(cro::Entity, cro::Entity, const cro::SpriteSheet&);
+    void buildSettingsMenu(cro::Entity, const cro::SpriteSheet&);
     void buildAchievementsMenu(cro::Entity, const cro::SpriteSheet&);
     void buildStatsMenu(cro::Entity, const cro::SpriteSheet&);
 
@@ -175,5 +182,29 @@ private:
     bool m_refreshControllers;
     void refreshControllerList();
 
+    struct ControlButtons final
+    {
+        enum
+        {
+            ThreshL,
+            ThreshR,
+
+            LookL,
+            LookR,
+
+            InvX,
+            InvY,
+            AltPower,
+            Vib,
+            /*
+            Swg,
+            Reset,*/
+            Count
+        };
+    };
+    std::array<cro::Entity, ControlButtons::Count> m_controlEntities = {};
+    void updateControlIndices(bool isKeyboard);
+
     void quitState();
+    void applyWebsock();
 };

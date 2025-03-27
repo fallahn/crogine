@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -222,7 +222,7 @@ const std::array<std::int32_t, Shader::AttributeID::Count>& Shader::getAttribMap
     return m_attribMap;
 }
 
-const std::unordered_map<std::string, std::int32_t>& Shader::getUniformMap() const
+const std::unordered_map<std::string, std::pair<std::int32_t, std::uint32_t>>& Shader::getUniformMap() const
 {
     return m_uniformMap;
 }
@@ -231,12 +231,21 @@ std::int32_t Shader::getUniformID(const std::string& name) const
 {
     if (m_uniformMap.count(name) != 0)
     {
-        return m_uniformMap.at(name);
+        return m_uniformMap.at(name).first;
     }
 #ifdef CRO_DEBUG_
     LogW << name << ": uniform not found in shader (Shader::getUniformID())" << std::endl;
 #endif
     return - 1;
+}
+
+std::uint32_t Shader::getUniformType(const std::string& name) const
+{
+    if (m_uniformMap.count(name) != 0)
+    {
+        return m_uniformMap.at(name).second;
+    }
+    return GL_INVALID_ENUM;
 }
 
 //private
@@ -258,7 +267,11 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
     std::string version = "#version 100\n#define MOBILE\n" + vendorDef;
     const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #else
+#if defined GL41 || defined __APPLE__
     std::string version = "#version 410 core\n" + vendorDef;
+#else
+    std::string version = "#version 460 core\n" + vendorDef;
+#endif // GL41
     const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #endif //__ANDROID__
 
@@ -276,8 +289,8 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
         std::string str;
         str.resize(resultLength + 1);
         glCheck(glGetShaderInfoLog(vertID, resultLength, nullptr, &str[0]));
-        Logger::log(vendorInfo, Logger::Type::Error);
-        Logger::log("Failed compiling vertex shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+        Logger::log(vendorInfo, Logger::Type::Error, Logger::Output::All);
+        Logger::log("Failed compiling vertex shader: " + std::to_string(result) + ", " + str, Logger::Type::Error, Logger::Output::All);
 
         glCheck(glDeleteShader(vertID));
         return false;
@@ -330,8 +343,8 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
         std::string str;
         str.resize(resultLength + 1);
         glCheck(glGetShaderInfoLog(fragID, resultLength, nullptr, &str[0]));
-        Logger::log(vendorInfo, Logger::Type::Error);
-        Logger::log("Failed compiling fragment shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+        Logger::log(vendorInfo, Logger::Type::Error, Logger::Output::All);
+        Logger::log("Failed compiling fragment shader: " + std::to_string(result) + ", " + str, Logger::Type::Error, Logger::Output::All);
 
         glCheck(glDeleteShader(vertID));
         glCheck(glDeleteShader(fragID));
@@ -364,8 +377,8 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
             std::string str;
             str.resize(resultLength + 1);
             glCheck(glGetProgramInfoLog(m_handle, resultLength, nullptr, &str[0]));
-            Logger::log(vendorInfo, Logger::Type::Error);
-            Logger::log("Failed to link shader program: " + std::to_string(result) + ", " + str, Logger::Type::Error);
+            Logger::log(vendorInfo, Logger::Type::Error, Logger::Output::All);
+            Logger::log("Failed to link shader program: " + std::to_string(result) + ", " + str, Logger::Type::Error, Logger::Output::All);
 
             glCheck(glDetachShader(m_handle, vertID));
             if (geomID)
@@ -524,7 +537,7 @@ void Shader::fillUniformMap()
 
         GLuint location = 0;
         glCheck(location = glGetUniformLocation(m_handle, str));
-        m_uniformMap.insert(std::make_pair(std::string(str), location));
+        m_uniformMap.insert(std::make_pair(std::string(str), std::make_pair(location, type)));
     }
 }
 

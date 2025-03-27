@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,29 +39,78 @@ shaders via #include directives, as long as the shaders are loaded via a ShaderR
 */
 
 //#include WVP_UNIFORMS
-inline const std::string WVPMatrices =
+static inline const std::string WVPMatrices =
 R"(
 #if defined(INSTANCING)
+#if !defined(CAMERA_UBO) && !defined(MOBILE)
     uniform mat4 u_viewMatrix;
+#endif
 #else
     uniform mat4 u_worldViewMatrix;
     uniform mat3 u_normalMatrix;
 #endif
     uniform mat4 u_worldMatrix;
+#if !defined(CAMERA_UBO) && !defined(MOBILE)
     uniform mat4 u_projectionMatrix;
+#endif
 )";
 
+//#include CAMERA_UBO
+static inline const std::string CameraUBO =
+R"(
+#if defined(MOBILE)
+uniform HIGH mat4 u_viewMatrix;
+uniform HIGH mat4 u_viewProjectionMatrix;
+uniform HIGH mat4 u_projectionMatrix;
+uniform MED vec4 u_clipPlane;
+uniform MED vec3 u_cameraWorldPosition;
+#else
+#define CAMERA_UBO
 
+//uniform HIGH mat4 u_viewMatrix;
+//uniform HIGH mat4 u_viewProjectionMatrix;
+//uniform HIGH mat4 u_projectionMatrix;
+//uniform MED vec4 u_clipPlane;
+//uniform MED vec3 u_cameraWorldPosition;
+
+layout (std140) uniform CameraUniforms
+{
+    mat4 u_viewMatrix;
+    mat4 u_viewProjectionMatrix;
+    mat4 u_projectionMatrix;
+    vec4 u_clipPlane;
+    vec3 u_cameraWorldPosition;
+};
+#endif
+)";
+
+//#include LIGHT_UBO
+static inline const std::string LightUBO =
+R"(
+#if defined(MOBILE)
+uniform HIGH vec3 u_lightDirection;
+uniform LOW vec4 u_lightColour;
+#else
+//uniform vec4 u_lightColour;
+//uniform vec3 u_lightDirection;
+
+layout (std140) uniform LightUniforms
+{
+    vec4 u_lightColour;
+    vec3 u_lightDirection;
+};
+#endif
+)";
 
 //#include INSTANCE_ATTRIBS
-inline const std::string InstanceAttribs =
+static inline const std::string InstanceAttribs =
 R"(
     ATTRIBUTE mat4 a_instanceWorldMatrix;
     ATTRIBUTE mat3 a_instanceNormalMatrix;
 )";
 
 //#include INSTANCE_MATRICES
-inline const std::string InstanceMatrices =
+static inline const std::string InstanceMatrices =
 R"(
     mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
     mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
@@ -71,7 +120,7 @@ R"(
 
 
 //#include SKIN_UNIFORMS
-inline const std::string SkinUniforms =
+static inline const std::string SkinUniforms =
 R"(
     ATTRIBUTE vec4 a_boneIndices;
     ATTRIBUTE vec4 a_boneWeights;
@@ -79,7 +128,7 @@ R"(
 )";
 
 //#include SKIN_MATRIX
-inline const std::string SkinMatrix =
+static inline const std::string SkinMatrix =
 R"(
     mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
 
@@ -91,7 +140,7 @@ R"(
 
 
 //#include SHADOWMAP_UNIFORMS_VERT
-inline const std::string ShadowmapUniformsVert =
+static inline const std::string ShadowmapUniformsVert =
 R"(
     #if !defined(MAX_CASCADES)
     #define MAX_CASCADES 3
@@ -105,14 +154,14 @@ R"(
 )";
 
 //#include SHADOWMAP_OUTPUTS
-inline const std::string ShadowmapOutputs =
+static inline const std::string ShadowmapOutputs =
 R"(
     VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
     VARYING_OUT float v_viewDepth;
 )";
 
 //#include SHADOWMAP_VERTEX_PROC
-inline const std::string ShadowmapVertProc =
+static inline const std::string ShadowmapVertProc =
 R"(
     for(int i = 0; i < u_cascadeCount; i++)
     {
@@ -122,7 +171,7 @@ R"(
 )";
 
 //#include SHADOWMAP_UNIFORMS_FRAG
-inline const std::string ShadowmapUniformsFrag =
+static inline const std::string ShadowmapUniformsFrag =
 R"(
     #if !defined(MAX_CASCADES)
     #define MAX_CASCADES 3
@@ -133,14 +182,14 @@ R"(
 )";
 
 //#include SHADOWMAP_INPUTS
-inline const std::string ShadowmapInputs =
+static inline const std::string ShadowmapInputs =
 R"(
     VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
     VARYING_IN float v_viewDepth;
 )";
 
 //#include PCF_SHADOWS
-inline const std::string PCFShadows = 
+static inline const std::string PCFShadows = 
 R"(
     int getCascadeIndex()
     {
@@ -232,7 +281,7 @@ R"(
 //WTFPL
 
 //#include FXAA
-inline const std::string FXAA = R"(
+static inline const std::string FXAA = R"(
     uniform vec2 u_resolution = vec2(640.0, 480.0);
 
     const vec3 luma = vec3(0.299, 0.587, 0.114);

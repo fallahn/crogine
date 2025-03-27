@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -43,6 +43,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "../GolfGame.hpp"
 #include "../Colordome-32.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -224,6 +225,9 @@ bool TournamentState::handleEvent(const cro::Event& evt)
                     idx = (idx + 1) % ScrollPositions.size();
                 }
                 m_treeRoot.getComponent<cro::Callback>().getUserData<ScrollCallbackData>().scrollID = idx;
+
+                m_audioEnts[AudioID::Switch].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
+                m_audioEnts[AudioID::Switch].getComponent<cro::AudioEmitter>().play();
             }
         };
 
@@ -283,14 +287,14 @@ bool TournamentState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
 
         if (evt.caxis.axis == cro::GameController::AxisRightX)
         {
-            static constexpr auto DeadZone = LeftThumbDeadZone * 2;
+            const auto DeadZone = cro::GameController::LeftThumbDeadZone * 2;
 
             if (evt.caxis.value > DeadZone
                 && m_axisPosition < DeadZone)
@@ -408,6 +412,8 @@ void TournamentState::buildScene()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+    m_audioEnts[AudioID::Switch] = m_scene.createEntity();
+    m_audioEnts[AudioID::Switch].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch02");
 
     struct RootCallbackData final
     {
@@ -443,7 +449,7 @@ void TournamentState::buildScene()
                     m_scene.setSystemActive<cro::UISystem>(true);
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
                     m_scene.getSystem<cro::UISystem>()->selectAt(CareerStart);
-                    Social::setStatus(Social::InfoID::Menu, { "Choosing a Tournament" });
+                    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Choosing a Tournament" }));
 
                     applySettingsValues(); //loadConfig() might not load anything
                     loadConfig();
@@ -481,6 +487,10 @@ void TournamentState::buildScene()
                             t.getComponent<cro::Callback>().active = true;
                         };
                     m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    auto* msg = cro::App::getInstance().getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::MenuChanged;
+                    msg->data = -1;
                 }
                 break;
             case RootCallbackData::FadeOut:
@@ -578,7 +588,11 @@ void TournamentState::buildScene()
     auto selectHighlight = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
-            e.getComponent<cro::Callback>().active = true;
+            //for the boink anim
+            if (e.hasComponent<cro::Callback>())
+            {
+                e.getComponent<cro::Callback>().active = true;
+            }
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
         });
@@ -1049,7 +1063,7 @@ void TournamentState::buildScene()
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Career);
     entity.getComponent<cro::UIInput>().setSelectionIndex(CareerOptions);
-    entity.getComponent<cro::UIInput>().setNextIndex(CareerScrollPrev, CareerWeather);
+    entity.getComponent<cro::UIInput>().setNextIndex(CareerScrollPrev, CareerStats);
     entity.getComponent<cro::UIInput>().setPrevIndex(CareerScrollNext, CareerReset);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectHighlight;
@@ -1803,7 +1817,7 @@ void TournamentState::createInfoMenu(cro::Entity parent)
             });
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>()->addCallback(
-            [&, entity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1901,7 +1915,7 @@ Both Tournaments are always available and can be played at any time. Completing 
 Tournament in first place will unlock a new ball for your profile. These items remain
 unlocked even if you decide to reset your Career.
 
-You can reset your Career at any time from the Stats page of the Options menu, and
+You can reset your Career at any time from the Settings page of the Options menu, and
 edit your opponent's names in the League Browser.
 
 Good Luck!
@@ -2037,7 +2051,7 @@ void TournamentState::createStatMenu(cro::Entity parent)
             });
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>()->addCallback(
-            [&, entity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -2119,7 +2133,7 @@ void TournamentState::createStatMenu(cro::Entity parent)
 
             std::string s = "Number of times completed: " + std::to_string(entered);
             s += "\nNumber of times won: " + std::to_string(won);
-            if (tier == 3)
+            if (tier >  2) //somewhere along the line tier was getting set to 5, so hack around it
             {
                 s += "\nBest rank: Winner!";
             }
@@ -2510,7 +2524,7 @@ void TournamentState::quitState()
     }
     else if (m_currentMenu == MenuID::Career)
     {
-        Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
+        WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Main Menu" }));
 
         m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
         m_scene.setSystemActive<cro::UISystem>(false);
@@ -2526,7 +2540,7 @@ void TournamentState::quitState()
 
 void TournamentState::loadConfig()
 {
-    const auto path = Social::getUserContentPath(Social::UserContent::Career) + ConfigFile;
+    const auto path = Content::getUserContentPath(Content::UserContent::Career) + ConfigFile;
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -2559,5 +2573,5 @@ void TournamentState::saveConfig() const
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
-    cfg.save(Social::getUserContentPath(Social::UserContent::Career) + ConfigFile);
+    cfg.save(Content::getUserContentPath(Content::UserContent::Career) + ConfigFile);
 }

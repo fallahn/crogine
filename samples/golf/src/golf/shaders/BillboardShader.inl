@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,27 +33,21 @@ source distribution.
 
 //because the billboards are based on the view direction when casting
 //shadows we need to use the game camera to set up vert positions.
-inline const std::string BillboardVertexShader = R"(
+static inline const std::string BillboardVertexShader = R"(
     ATTRIBUTE vec4 a_position; //relative to root position (below)
     ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
     ATTRIBUTE vec4 a_colour;
 
     ATTRIBUTE MED vec2 a_texCoord0;
 
+#include CAMERA_UBO
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewMatrix;
-    uniform mat4 u_viewProjectionMatrix;
-
     uniform sampler2D u_noiseTexture;
 
 #if defined(SHADOW_MAPPING)
-    uniform mat4 u_projectionMatrix;
     uniform mat4 u_cameraViewMatrix;
 #endif
 
-
-    uniform vec4 u_clipPlane;
-    uniform vec3 u_cameraWorldPosition;
 
 #include WIND_BUFFER
 #include RESOLUTION_BUFFER
@@ -184,17 +178,17 @@ inline const std::string BillboardVertexShader = R"(
     })";
 
 
-inline const std::string BillboardFragmentShader = R"(
-    #include OUTPUT_LOCATION
+static inline const std::string BillboardFragmentShader = R"(
+#include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
-    uniform vec4 u_lightColour;
 
 #if defined (SKY_COLOUR)
     uniform vec4 u_skyColour = vec4(1.0);
 #endif
 
-    #include SCALE_BUFFER
+#include LIGHT_UBO
+#include SCALE_BUFFER
 
     VARYING_IN LOW vec4 v_colour;
     VARYING_IN MED vec2 v_texCoord0;
@@ -203,10 +197,10 @@ inline const std::string BillboardFragmentShader = R"(
     VARYING_IN vec3 v_normalVector;
     VARYING_IN vec3 v_worldPosition;
 
-    #include BAYER_MATRIX
-    #include LIGHT_COLOUR
+#include BAYER_MATRIX
+#include LIGHT_COLOUR
 
-    #include WATER_LEVEL
+#include WATER_LEVEL
 
     void main()
     {

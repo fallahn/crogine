@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -47,6 +47,8 @@ source distribution.
 #define NOMINMAX
 #include <Windows.h>
 #endif //_MSC_VER
+
+#define FILE_LINE cro::FileSystem::getFileName(__FILE__) << ", line " << __LINE__ << " "
 
 namespace cro
 {
@@ -150,7 +152,7 @@ std::ostream& operator << (std::ostream& out, cro::Rectangle<T> r)
 
 #define LogI cro::Logger::log(cro::Logger::Type::Info)
 #define LogW cro::Logger::log(cro::Logger::Type::Warning)
-#define LogE cro::Logger::log(cro::Logger::Type::Error)
+#define LogE cro::Logger::log(cro::Logger::Type::Error) << FILE_LINE
 
 #ifndef CRO_DEBUG_
 #define LOG(message, type)

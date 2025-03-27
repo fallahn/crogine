@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,7 @@ source distribution.
 #include "Terrain.hpp"
 #include "DebugDraw.hpp"
 #include "RayResultCallback.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/core/Clock.hpp>
@@ -90,6 +91,7 @@ struct Ball final
     bool hadAir = false; //toggled when passing over hole
 
     std::uint8_t client = 0; //needs to be tracked when sending multiplayer messages
+    std::uint8_t lastTerrain = ConstVal::NullValue; //set on a collision begin event, reset once set to interp
 
     //used for wall collision when putting
     btPairCachingGhostObject* collisionObject = nullptr;
@@ -173,6 +175,9 @@ private:
 
     float m_windInterpTime;
     float m_currentWindInterpTime;
+
+    std::vector<float> m_noiseBuffer;
+    std::size_t m_noiseIndex;
 
     const HoleData* m_holeData;
     bool m_puttFromTee;

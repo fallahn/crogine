@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -56,12 +56,22 @@ namespace cro
             bool depthBuffer = true; //!< should this target create a depth buffer?
             bool depthTexture = false; //!< if a depth buffer is enabled so this be rendered to a texture?
             bool stencilBuffer = false; //!< should this target create a stencil buffer?
+            bool floatingPointStorage = false; //!< if true the texture is created with 16bit floating point storage, else it defaults to 8 bit signed
 
             std::uint32_t samples = 0u; //!< if not zero then attempt to create a multi-sampled texture with this many samples
 
             Context() = default;
-            Context(std::uint32_t w, std::uint32_t h, bool db, bool dt, bool s, std::uint32_t ms)
-                : width(w), height(h), depthBuffer(db), depthTexture(dt), stencilBuffer(s), samples(ms) {}
+            Context(std::uint32_t w, std::uint32_t h, bool db, bool dt, bool s, bool f, std::uint32_t ms)
+                : width(w), height(h), depthBuffer(db), depthTexture(dt), stencilBuffer(s), floatingPointStorage(f), samples(ms) {}
+
+            bool operator == (const Context& other)
+            {
+                return depthBuffer == other.depthBuffer
+                    && depthTexture == other.depthTexture
+                    && stencilBuffer == other.stencilBuffer
+                    && floatingPointStorage == other.floatingPointStorage
+                    && samples == other.samples;
+            }
         };
 
         virtual ~RenderTarget() = default;

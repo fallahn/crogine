@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -90,6 +90,7 @@ namespace
         OUTPUT
         void main(){FRAG_OUT = vec4(1.0);}
         )";
+
 }
 
 TerrainDepthmap::TerrainDepthmap()
@@ -113,10 +114,9 @@ TerrainDepthmap::TerrainDepthmap()
 void TerrainDepthmap::setModel(const HoleData& holeData)
 {
     //handle cases where images don't match map size
-    cro::Image img;
+    cro::Image img(true);
     img.loadFromFile(holeData.mapPath);
-    
-    //m_heightmap.loadFromFile(holeData.mapPath);
+
     m_heightmap.create(MapSize.x, MapSize.y, img.getFormat());
     m_heightmap.update(img.getPixelData(), false, { 0,0,std::min(img.getSize().x, MapSize.x), std::min(img.getSize().y, MapSize.y) });
     m_terrainEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_heightMap", cro::TextureID(m_heightmap));
@@ -143,7 +143,7 @@ void TerrainDepthmap::update(std::int32_t count)
         count = TextureCount;
     }
 
-    for (auto i = 0u; i < count && m_gridIndex < TextureCount; ++i, ++m_gridIndex)
+    for (auto i = 0; i < count && m_gridIndex < TextureCount; ++i, ++m_gridIndex)
     {
         auto x = m_gridIndex % ColCount;
         auto y = m_gridIndex / ColCount;

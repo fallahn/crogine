@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string ScanlineTransition =
+static inline const std::string ScanlineTransition =
 R"(
 uniform float u_time;
 uniform vec2 u_scale;

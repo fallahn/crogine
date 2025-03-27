@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -67,6 +67,7 @@ struct AvatarPreview final
     cro::Attachment* hatAttachment = nullptr;
     cro::Entity previewModel;
     std::vector<cro::Entity> previewAudio;
+    std::uint32_t audioUID = 0;
     std::size_t previewIndex = 0; //actual index may differ because of locked models
 };
 
@@ -98,7 +99,7 @@ private:
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;
     cro::RenderTexture m_hairEditorTexture;
-    cro::ResourceCollection m_resources;
+    cro::ResourceCollection& m_resources;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
@@ -125,8 +126,10 @@ private:
 
             BallBrowser,
             HairBrowser,
+            ClubBrowser,
             HairEditor, HairHelp, 
             HairPreview, HairColourPreview,
+            SpeechEditor,
 
             Count
         };
@@ -156,6 +159,17 @@ private:
     std::size_t m_lockedAvatarCount;
 
     std::vector<ProfileTexture> m_profileTextures;
+
+    //TODO move to common header
+    struct ClubData final
+    {
+        std::uint32_t uid = 0;
+        std::string name;
+        std::string thumbnail;
+        bool userItem = false;
+    };
+    std::vector<ClubData> m_clubData;
+    cro::Entity m_clubText;
 
     struct PaletteID final
     {
@@ -194,6 +208,7 @@ private:
         glm::vec3 closeButtonPosition = glm::vec3({ 468.f, 331.f, 0.1f });
         cro::SpriteSheet spriteSheet;
         std::function<cro::Entity(std::int32_t)> createArrow;
+        std::function<void()> onOpen;
         std::function<void()> onClose;
     };
 
@@ -230,9 +245,15 @@ private:
     void updateGizmo();
     void updateHeadwearTransform();
 
+    std::vector<cro::AudioScape> m_voices;
+    std::size_t m_voiceIndex;
+    void playPreviewAudio();
+
     void createBallBrowser(cro::Entity, const CallbackContext&);
     void createHairBrowser(cro::Entity, const CallbackContext&);
     void createHairEditor(cro::Entity, const CallbackContext&);
+    void createSpeechEditor(cro::Entity, const CallbackContext&);
+    void createClubBrowser(cro::Entity, const CallbackContext&);
     cro::FloatRect getHeadwearTextureRect(std::size_t);
     std::size_t fetchUIIndexFromColour(std::uint8_t colourIndex, std::int32_t paletteIndex);
     std::pair<cro::Entity, cro::Entity> createBrowserBackground(std::int32_t, const CallbackContext&);
@@ -277,7 +298,7 @@ private:
     {
         enum
         {
-            Balls, Hair,
+            Balls, Hair, Clubs,
 
             Count
         };

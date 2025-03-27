@@ -226,6 +226,10 @@ bool EmitterSettings::loadFromFile(const std::string& path, cro::TextureResource
                     framerate = 1.f;
                 }
             }
+            else if (name == "random_colour")
+            {
+                useRandomColour = p.getValue<bool>();
+            }
         }
 
         const auto& objects = cfg.getObjects();
@@ -277,22 +281,22 @@ bool EmitterSettings::saveToFile(const std::string& path)
         {
             texPath = texPath.substr(1);
         }
-        cfg.addProperty("src", texPath);
+        cfg.addProperty("src").setValue(texPath);
     }
     //hmm shame we don't have access to the texture here to read the property
     cfg.addProperty("texture_smoothing").setValue(textureSmoothing);
 
     if (blendmode == Add)
     {
-        cfg.addProperty("blendmode", "add");
+        cfg.addProperty("blendmode").setValue("add");
     }
     else if (blendmode == Multiply)
     {
-        cfg.addProperty("blendmode", "multiply");
+        cfg.addProperty("blendmode").setValue("multiply");
     }
     else
     {
-        cfg.addProperty("blendmode", "alpha");
+        cfg.addProperty("blendmode").setValue("alpha");
     }
 
     cfg.addProperty("acceleration").setValue(acceleration);
@@ -317,6 +321,7 @@ bool EmitterSettings::saveToFile(const std::string& path)
     cfg.addProperty("animate").setValue(animate);
     cfg.addProperty("random_frame").setValue(useRandomFrame);
     cfg.addProperty("framerate").setValue(framerate);
+    cfg.addProperty("random_colour").setValue(useRandomColour);
 
     auto forceObj = cfg.addObject("forces");
     for (const auto& f : forces)

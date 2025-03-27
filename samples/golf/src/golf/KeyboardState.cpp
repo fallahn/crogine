@@ -325,7 +325,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLERAXISMOTION:
             //if (evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
             {
-                static constexpr std::int16_t Threshold = cro::GameController::LeftThumbDeadZone;// 15000;
+                const std::int16_t Threshold = cro::GameController::LeftThumbDeadZone;// 15000;
 
                 if (std::abs(evt.caxis.value) > Threshold)
                 {

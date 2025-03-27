@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -387,7 +387,7 @@ bool LeagueState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -851,7 +851,17 @@ bool LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     auto season = league.getCurrentSeason();
     auto gamesPlayed = league.getCurrentIteration();
 
-    auto statusString = "Season " + std::to_string(season) + " - Games played: " + std::to_string(gamesPlayed) + "/" + std::to_string(league.getMaxIterations());
+
+    std::string statusString;
+    if (season > 1 && gamesPlayed == 0)
+    {
+        //show the final standings for the last round
+        statusString = "Final Standings for Season " + std::to_string(season - 1);
+    }
+    else
+    {
+        statusString = "Season " + std::to_string(season) + " - Games played: " + std::to_string(gamesPlayed) + "/" + std::to_string(league.getMaxIterations());
+    }
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 52.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
@@ -1244,7 +1254,7 @@ void LeagueState::createGlobalLeagueTab(cro::Entity parent, const cro::SpriteShe
 
     //text scroller
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.25f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 13.f, 0.25f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("-~-");// .setString("this is a test string. nothing to see here people, move along.");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);

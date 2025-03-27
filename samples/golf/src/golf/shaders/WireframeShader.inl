@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -39,14 +39,12 @@ static inline const std::string WireframeVertex = R"(
     ATTRIBUTE vec2 a_texCoord0;
 //#endif
 
+#include CAMERA_UBO
+
     uniform mat4 u_worldMatrix;
     uniform mat4 u_worldViewMatrix;
-    uniform mat4 u_projectionMatrix;
-    uniform vec4 u_clipPlane;
 
 #if defined (CULLED)
-    uniform HIGH vec3 u_cameraWorldPosition;
-
     #include RESOLUTION_BUFFER
 #endif
 

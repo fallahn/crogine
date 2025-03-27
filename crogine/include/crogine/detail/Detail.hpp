@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,6 +39,6 @@ namespace cro::Detail
         MaxComponents = 64, //this is max number of types on a single entity
         IndexBits = 24,
         GenerationBits = 8,
-        MinFreeIDs = std::numeric_limits<std::int16_t>::max() / 4 //after this generation is incremented and we go back to zero
+        MinFreeIDs = 4096// 3072 //after this generation is incremented and we go back to zero
     };
 }

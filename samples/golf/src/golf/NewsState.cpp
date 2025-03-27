@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -180,7 +180,7 @@ bool NewsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -508,7 +508,7 @@ void NewsState::buildScene()
                     if (items.size() > 1)
                     {
                         cro::String prev("--- | Other News: ");
-                        for (auto i = 1; i < 4 && i < items.size(); ++i)
+                        for (auto i = 1u; i < 4 && i < items.size(); ++i)
                         {
                             prev += items[i].title + " | ";
                         }
@@ -729,7 +729,7 @@ void NewsState::buildScene()
             e.addComponent<cro::UIInput>().area = b;
             e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = sel;
             e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unsel;
-            e.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
+            e.getComponent<cro::Transform>().setOrigin({ std::floor(b.width / 2.f), std::floor(b.height / 2.f) });
 
             entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
             return e;
@@ -851,7 +851,7 @@ void NewsState::buildScene()
             e.addComponent<cro::UIInput>().area = b;
             e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = sel;
             e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unsel;
-            e.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
+            e.getComponent<cro::Transform>().setOrigin({ std::floor(b.width / 2.f), std::floor(b.height / 2.f) });
 
             entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
             return e;

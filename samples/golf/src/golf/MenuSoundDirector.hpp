@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -46,8 +46,7 @@ public:
 
     void handleMessage(const cro::Message&) override;
 
-private:
-    const std::size_t& m_currentMenu;
+    cro::Entity playSound(std::int32_t, float = 1.f);
 
     struct AudioID final
     {
@@ -58,16 +57,30 @@ private:
             Snapshot,
             LobbyJoin,
             LobbyExit,
+            Title,
             Woof,
             Fw01,
             Fw02,
             Fw03,
 
+            Bounce01,
+            Bounce02,
+            Bounce03,
+            Flip01,
+            Flip02,
+            Flip03,
+            Flip04,
+            Land01,
+            Land02,
+            Land03,
+            BucketSpawn,
+
             Count
         };
     };
+
+private:
+    const std::size_t& m_currentMenu;
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
     std::array<cro::Clock, AudioID::Count> m_audioTimers = {};
-
-    cro::Entity playSound(std::int32_t, float = 1.f);
 };

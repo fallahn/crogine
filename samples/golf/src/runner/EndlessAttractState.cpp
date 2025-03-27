@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,6 +30,7 @@ source distribution.
 #include "../golf/SharedStateData.hpp"
 #include "../golf/MenuConsts.hpp"
 #include <Social.hpp>
+#include <Content.hpp>
 #include <Timeline.hpp>
 
 #ifdef USE_GNS
@@ -94,7 +95,7 @@ EndlessAttractState::EndlessAttractState(cro::StateStack& stack, cro::State::Con
     m_uiScene       (context.appInstance.getMessageBus()),
     m_cycleIndex    (0)
 {
-    const auto path = Social::getBaseContentPath() + ScoreFile;
+    const auto path = Content::getBaseContentPath() + ScoreFile;
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path, false))
     {
@@ -610,7 +611,7 @@ void EndlessAttractState::createUI()
 
 void EndlessAttractState::refreshHighScores()
 {
-    const auto path = Social::getBaseContentPath() + ScoreFile;
+    const auto path = Content::getBaseContentPath() + ScoreFile;
     cro::ConfigFile cfg;
     cfg.addProperty("best").setValue(m_sharedGameData.bestScore);
     cfg.save(path);

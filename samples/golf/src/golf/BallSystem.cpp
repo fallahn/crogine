@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -54,6 +54,8 @@ using namespace cl;
 
 namespace
 {
+    static constexpr float MinWindStrength = 0.1f;
+
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
@@ -160,6 +162,7 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     m_maxStrengthMultiplier (1.f),
     m_windInterpTime        (1.f),
     m_currentWindInterpTime (0.f),
+    m_noiseIndex            (0),
     m_holeData              (nullptr),
     m_puttFromTee           (false),
     m_gimmeRadius           (0),
@@ -168,6 +171,23 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
 {
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
+
+    //generate a white noise table for wind strength
+    static constexpr float NoiseScale = 2.f / 0xffffffff;
+    std::int32_t x1 = 0x67452301;
+    std::int32_t x2 = 0xefcdab89;
+
+    //arbitrary size
+    static constexpr std::int32_t NoiseSampleCount = 240;
+    for (auto i = 0; i < NoiseSampleCount; ++i)
+    {
+        x1 ^= x2;
+        m_noiseBuffer.push_back(((x2 * NoiseScale) + 1.f) / 2.f);
+        x2 += x1;
+    }
+    m_noiseIndex = cro::Util::Random::value(0, NoiseSampleCount - 1);
+    m_windStrengthTarget = MinWindStrength + (m_noiseBuffer[cro::Util::Random::value(0, NoiseSampleCount - 1)] - MinWindStrength);
+    m_windStrengthTarget *= m_maxStrengthMultiplier;
 
     m_windDirTarget.x = static_cast<float>(cro::Util::Random::value(-10, 10));
     m_windDirTarget.z = static_cast<float>(cro::Util::Random::value(-10, 10));
@@ -178,7 +198,6 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     CRO_ASSERT(!std::isnan(m_windDirTarget.x), "");
     CRO_ASSERT(!std::isnan(m_windDirTarget.z), "");
 
-    m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f;
 
     updateWind();
 
@@ -1031,7 +1050,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             //changed this so we force update wind change when hole changes.
             if (m_processFlags != ProcessFlags::Predicting)
             {
-                m_windStrengthTarget = std::min(cro::Util::Random::value(0.97f, 1.025f) * m_windStrengthTarget, 1.f);
+                m_windStrengthTarget = std::min(cro::Util::Random::value(0.97f, 1.025f) * m_windStrengthTarget, m_maxStrengthMultiplier);
             }
         }
     }
@@ -1082,6 +1101,7 @@ void BallSystem::doCollision(cro::Entity entity)
             //reduce the velocity more nearer the top as the flag is bendier (??)
             ball.velocity *= (0.5f + (0.2f * (1.f - (ballHeight / 1.9f))));
 
+            ball.lastTerrain = TriggerID::FlagStick;
 
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->terrain = CollisionEvent::FlagPole;
@@ -1232,6 +1252,8 @@ void BallSystem::doCollision(cro::Entity entity)
             msg->position = pos;
             msg->type = CollisionEvent::Begin;
 
+            ball.lastTerrain = terrainResult.terrain;
+
             //this might raise an achievement for example
             //so don't do it during CPU prediction, or fast forwarding, cos that kinda cheats
             //or at least means the player misses out on seeing it happen
@@ -1248,6 +1270,7 @@ void BallSystem::doCollision(cro::Entity entity)
         //must have missed all geometry and so are in scrub or water
         auto& ball = entity.getComponent<Ball>();
         resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
+        ball.lastTerrain = TerrainID::Water;
 
         auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
         msg->terrain = TerrainID::Water;
@@ -1382,7 +1405,9 @@ void BallSystem::updateWind()
         m_windStrengthClock.restart();
         m_windStrengthTime = cro::seconds(static_cast<float>(cro::Util::Random::value(80, 180)) / 10.f);
 
-        m_windStrengthTarget = static_cast<float>(cro::Util::Random::value(1, 20)) / 20.f;
+        m_windStrengthTarget = MinWindStrength + (m_noiseBuffer[m_noiseIndex] - MinWindStrength);
+        m_noiseIndex = (m_noiseIndex + 1) % m_noiseBuffer.size();
+
         m_windStrengthTarget *= m_maxStrengthMultiplier;
         resetInterp();
     }

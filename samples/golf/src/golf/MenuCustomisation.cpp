@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -38,6 +38,7 @@ source distribution.
 #include "MenuEnum.inl"
 
 #include <Social.hpp>
+#include <Content.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -194,9 +195,9 @@ namespace
 
 void MenuState::createBallScene()
 {
-    if (!cro::FileSystem::directoryExists(Social::getBaseContentPath()))
+    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath()))
     {
-        cro::FileSystem::createDirectory(Social::getBaseContentPath());
+        cro::FileSystem::createDirectory(Content::getBaseContentPath());
     }
 
     static constexpr float RootPoint = 100.f;
@@ -243,7 +244,19 @@ void MenuState::createBallScene()
 
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
-    auto ballFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + "assets/golf/balls");
+    const auto ContentDirs = Content::getInstallPaths();
+    const std::string BallDir = "balls/";
+    std::vector<std::string> ballFiles;
+
+    for (const auto& c : ContentDirs)
+    {
+        auto b = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + c + BallDir);
+        for (const auto f : b)
+        {
+            ballFiles.push_back(c + BallDir + f);
+        }
+    }
+
     if (ballFiles.empty())
     {
         LogE << "No ball files were found" << std::endl;
@@ -261,7 +274,7 @@ void MenuState::createBallScene()
     {
         cro::ConfigFile cfg;
         if (cro::FileSystem::getFileExtension(file) == ".ball"
-            && cfg.loadFromFile("assets/golf/balls/" + file))
+            && cfg.loadFromFile(file))
         {
             auto info = readBallCfg(cfg);
             info.type = SharedStateData::BallInfo::Regular;
@@ -271,7 +284,7 @@ void MenuState::createBallScene()
             {
                 info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save("assets/golf/balls/" + file);
+                cfg.save(file);
             }
 
             insertInfo(info, m_sharedData.ballInfo, true);
@@ -401,7 +414,7 @@ void MenuState::createBallScene()
 
 
     //look in the user directory - only do this if the default dir is OK?
-    const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball);
+    const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball);
     if (cro::FileSystem::directoryExists(BallUserPath))
     {
         auto dirList = cro::FileSystem::listDirectories(BallUserPath);
@@ -635,10 +648,14 @@ void MenuState::parseAvatarDirectory()
 
     m_sharedData.avatarInfo.clear();
 
-    const std::string AvatarPath = "assets/golf/avatars/";
-    auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + AvatarPath);
-    m_playerAvatars.reserve(files.size() + Leagues.size());
-    processAvatarList(false, files, AvatarPath);
+    const auto ContentDirs = Content::getInstallPaths();
+    for (const auto& c : ContentDirs)
+    {
+        const std::string AvatarPath = c + "avatars/";
+        const auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + AvatarPath);
+        processAvatarList(false, files, AvatarPath);
+    }
+    //m_playerAvatars.reserve(files.size() + Leagues.size()); //hmm can't really do this without double iterating, so not really worth the effort
 
     const std::string CareerPath = "assets/golf/career/tier2/";
     const std::array<std::string, 6u> CareerAvatars =
@@ -670,7 +687,7 @@ void MenuState::parseAvatarDirectory()
     start = m_sharedData.avatarInfo.size();
 
     //custom avatars
-    auto avatarUserDir = Social::getUserContentPath(Social::UserContent::Avatar);
+    auto avatarUserDir = Content::getUserContentPath(Content::UserContent::Avatar);
     if (cro::FileSystem::directoryExists(avatarUserDir))
     {
         auto dirs = cro::FileSystem::listDirectories(avatarUserDir);
@@ -678,7 +695,7 @@ void MenuState::parseAvatarDirectory()
         for (const auto& dir : dirs)
         {
             auto resourceDir = avatarUserDir + dir + "/";
-            files = cro::FileSystem::listFiles(resourceDir);
+            const auto files = cro::FileSystem::listFiles(resourceDir);
             processAvatarList(false, files, resourceDir, resourceDir, false);
         }
     }
@@ -712,8 +729,18 @@ void MenuState::parseAvatarDirectory()
         avatar.hairModels.emplace_back();
     }
 
-    const std::string HairPath = "assets/golf/avatars/hair/";
-    auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
+    const std::string HairPath = "avatars/hair/";
+    std::vector<std::string> hairFiles;
+
+    for (const auto& c : ContentDirs)
+    {
+        auto h = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + c + HairPath);
+        //hairFiles.insert(hairFiles.end(), h.begin(), h.end());
+        for (const auto& f : h)
+        {
+            hairFiles.push_back(c + HairPath + f);
+        }
+    }
 
     if (hairFiles.size() > ConstVal::MaxHeadwear)
     {
@@ -728,7 +755,7 @@ void MenuState::parseAvatarDirectory()
         }
 
         cro::ConfigFile cfg;
-        if (cfg.loadFromFile(HairPath + file))
+        if (cfg.loadFromFile(file))
         {
             auto info = readHairCfg(cfg);
             info.type = SharedStateData::HairInfo::Regular;
@@ -739,7 +766,7 @@ void MenuState::parseAvatarDirectory()
             {
                 info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
                 cfg.addProperty("uid").setValue(info.uid);
-                cfg.save(HairPath + file);
+                cfg.save(file);
             }
         }
     }
@@ -785,7 +812,7 @@ void MenuState::parseAvatarDirectory()
 
 
 
-    const auto userHairPath = Social::getUserContentPath(Social::UserContent::Hair);
+    const auto userHairPath = Content::getUserContentPath(Content::UserContent::Hair);
     if (cro::FileSystem::directoryExists(userHairPath))
     {
         auto userDirs = cro::FileSystem::listDirectories(userHairPath);
@@ -807,6 +834,15 @@ void MenuState::parseAvatarDirectory()
                     continue;
                 }
 
+                //TODO better manage this so we can install more hair
+                //but as it stands we're duplicating many of these and
+                //creating literally thousands of redundant entities in
+                //m_avatarScene when attaching to the preview model
+                if (m_sharedData.hairInfo.size() == 96)
+                {
+                    break;
+                }
+
                 cro::ConfigFile cfg;
                 if (cfg.loadFromFile(userPath + file, false))
                 {
@@ -818,6 +854,12 @@ void MenuState::parseAvatarDirectory()
                     insertInfo(info, m_sharedData.hairInfo, false);
                     break; //only load one...
                 }
+            }
+
+            if (m_sharedData.hairInfo.size() == 96)
+            {
+                LogW << "Maximum hair models is 96 - some workshop models may not be loaded." << std::endl;
+                break;
             }
         }
     }
@@ -858,7 +900,8 @@ void MenuState::parseAvatarDirectory()
                     if (md.getMaterialCount() == 2)
                     {
                         //add the shiny material on the second channel
-                        material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        material = md.hasTag(1, "glass") ? m_resources.materials.get(m_materialIDs[MaterialID::Glass]) 
+                            : m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
                         applyMaterialData(md, material, 1);
 
                         modelInfo.model.getComponent<cro::Model>().setMaterial(1, material);
@@ -942,6 +985,12 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
     //path strings must include trailing "/"!!
     for (const auto& file : fileList)
     {
+        if (m_playerAvatars.size() == 40)
+        {
+            LogW << "Maximum player avatars is 40 - some workshop avatars may not be loaded..." << std::endl;
+            return;
+        }
+
         if (cro::FileSystem::getFileExtension(file) == ".avt")
         {
             cro::ConfigFile cfg;
@@ -959,7 +1008,8 @@ void MenuState::processAvatarList(bool locked, const std::vector<std::string>& f
                         if (!info.modelPath.empty())
                         {
                             cro::ConfigFile modelData;
-                            if (!modelData.loadFromFile(info.modelPath, relative)) LogI << "flaps" << std::endl;
+                            //if (!modelData.loadFromFile(info.modelPath, relative)) LogI << "flaps" << std::endl;
+                            modelData.loadFromFile(info.modelPath, relative);
                             for (const auto& o : modelData.getObjects())
                             {
                                 if (o.getName() == "material")
@@ -1266,13 +1316,13 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
 {
     //called when UGC such as a ball or hair model is received
     //from a remote player and downloaded locally.
-    if (type == Social::UserContent::Ball)
+    if (type == Content::UserContent::Ball)
     {
         //these won't appear as selectable until the menu is quit
         //and reloaded, but that's probably OK. They just need to
         //exist in the shared data so the main game can find the
         //models for remote players who have them.
-        const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball) + std::to_string(id) + "w/";
+        const auto BallUserPath = Content::getUserContentPath(Content::UserContent::Ball) + std::to_string(id) + "w/";
 
         //this can happen sometimes when the UGC fails to install (usually linux)
         //so quit so we don't throw
@@ -1283,7 +1333,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         }
         
         auto files = cro::FileSystem::listFiles(BallUserPath);
-        LogI << "installed remote ball" << std::endl;
+        LogI << "Installed remote ball" << std::endl;
         for (const auto& file : files)
         {
             if (cro::FileSystem::getFileExtension(file) == ".ball")
@@ -1303,9 +1353,9 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             }
         }
     }
-    else if (type == Social::UserContent::Hair)
+    else if (type == Content::UserContent::Hair)
     {
-        const auto HairUserPath = Social::getUserContentPath(Social::UserContent::Hair) + std::to_string(id) + "w/";
+        const auto HairUserPath = Content::getUserContentPath(Content::UserContent::Hair) + std::to_string(id) + "w/";
 
         if (!cro::FileSystem::directoryExists(HairUserPath))
         {
@@ -1314,7 +1364,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         }
         auto files = cro::FileSystem::listFiles(HairUserPath);
 
-        LogI << "installed remote hair" << std::endl;
+        LogI << "Installed remote hair" << std::endl;
         for (const auto& file : files)
         {
             if (cro::FileSystem::getFileExtension(file) == ".hct")
@@ -1334,10 +1384,10 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             }
         }
     }
-    else if (type == Social::UserContent::Avatar)
+    else if (type == Content::UserContent::Avatar)
     {
         //insert into m_sharedData.avatarInfo so GolfState can find it
-        const auto& avatarPath = Social::getUserContentPath(Social::UserContent::Avatar) + std::to_string(id) + "w/";
+        const auto& avatarPath = Content::getUserContentPath(Content::UserContent::Avatar) + std::to_string(id) + "w/";
 
         if (!cro::FileSystem::directoryExists(avatarPath))
         {
@@ -1362,6 +1412,28 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         //this just updates all the textures including the newly acquired
         //avatar data - there's room for optimisation here.
         updateLobbyAvatars();
+    }
+    else if (type == Content::UserContent::Clubs)
+    {
+        /*LogI << cro::FileSystem::getFileName(__FILE__) << ", " << __LINE__ << " - Implement me!" << std::endl;
+
+
+        const auto ClubUserPath = Social::getUserContentPath(Social::UserContent::Clubs) + std::to_string(id) + "w/";
+
+        if (!cro::FileSystem::directoryExists(ClubUserPath))
+        {
+            LogE << "Couldn't find UGC at " << ClubUserPath << std::endl;
+            return;
+        }
+        
+        processClubPath(ClubUserPath, true);*/
+
+        //ACTUALLY - as long as this installed correctly then GolfStateAssets should just find and parse the data as needed
+        LogI << "Installed remote club set" << std::endl;
+    }
+    else if (type == Content::UserContent::Voice)
+    {
+        LogI << "Installed remote player voice" << std::endl;
     }
     else
     {

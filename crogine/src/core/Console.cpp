@@ -27,9 +27,10 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include <crogine/core/Console.hpp>
-#include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
+#include <crogine/core/Console.hpp>
+#include <crogine/core/FileSystem.hpp>
+#include <crogine/core/Log.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -200,8 +201,8 @@ void Console::addConvar(const std::string& name, const std::string& defaultValue
     if (!convars.findObjectWithName(name))
     {
         auto* obj = convars.addObject(name);
-        obj->addProperty("value", defaultValue);
-        obj->addProperty("help", helpStr);
+        obj->addProperty("value").setValue(defaultValue);
+        obj->addProperty("help").setValue(helpStr);
     }
 }
 
@@ -229,13 +230,24 @@ void Console::dumpBuffer(const std::string& str)
     }
     fileName += ".txt";
 
+    std::string s;
+    for (const auto& [b, _] : buffer)
+    {
+        s += b;
+        if (s.back() != '\n')
+        {
+            s += '\n';
+        }
+    }
+
+#ifdef _MSC_VER
+    FileSystem::showMessageBox("Console Output", "Something went wrong :(\nIf you'd like to help fix this crash please take a screen shot\nof this message and send it to the developer.\n\n" + s);
+#endif
+
     std::ofstream ofile(fileName);
     if (ofile.is_open() && ofile.good())
     {
-        for (const auto& [b, _] : buffer)
-        {
-            ofile << b << "\n";
-        }
+        ofile << s;
     }
 }
 

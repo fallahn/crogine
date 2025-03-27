@@ -67,6 +67,7 @@ class BilliardsState final : public cro::State , public cro::GuiClient
 {
 public:
     BilliardsState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ~BilliardsState();
 
     bool handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

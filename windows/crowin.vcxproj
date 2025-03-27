@@ -82,6 +82,7 @@
     <ClInclude Include="..\crogine\include\crogine\detail\HashCombine.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\ModelBinary.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\NoResize.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\detail\PoolLog.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\QuadTree.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\SDLResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\detail\StackDump.hpp" />
@@ -108,6 +109,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Text.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Transform.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\UIDraggable.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\UIElement.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\UIInput.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Director.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\Entity.hpp" />
@@ -136,6 +138,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem3D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextSystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\UIElementSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\UISystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\ArrayTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BinaryMeshBuilder.hpp" />
@@ -316,6 +319,7 @@
     <ClCompile Include="..\crogine\src\detail\enet\win32.c" />
     <ClCompile Include="..\crogine\src\detail\glad.c" />
     <ClCompile Include="..\crogine\src\detail\ModelBinary.cpp" />
+    <ClCompile Include="..\crogine\src\detail\PoolLog.cpp" />
     <ClCompile Include="..\crogine\src\detail\QuadTree.cpp" />
     <ClCompile Include="..\crogine\src\detail\SDLImageRead.cpp" />
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
@@ -360,6 +364,7 @@
     <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem2D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\SpriteSystem3D.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\TextSystem.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\UIElementSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\UISystem.cpp" />
     <ClCompile Include="..\crogine\src\graphics\BinaryMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\BoundingBox.cpp" />
@@ -699,7 +704,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>$(SolutionDir)extlibs\freetype\include;..\crogine\include;$(SolutionDir)extlibs\sdl2\include;$(SolutionDir)extlibs\openal\include;$(SolutionDir)extlibs\opus\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>CLIP_SCREENSHOT;_SCL_SECURE_NO_WARNINGS;GL41;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GL41;CLIP_SCREENSHOT;_SCL_SECURE_NO_WARNINGS;CRO_BUILD;USE_IMGUI;_CRT_SECURE_NO_WARNINGS;_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>

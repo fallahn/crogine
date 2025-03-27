@@ -72,6 +72,8 @@ private:
             VatsArray,
             VatsInstanced,
 
+            Wake,
+
             Count
         };
     };

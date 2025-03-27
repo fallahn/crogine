@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -46,6 +46,8 @@ source distribution.
 
 #include <crogine/detail/glm/mat4x4.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
+
+#include <crogine/ecs/systems/CameraSystem.hpp>
 
 #include <functional>
 
@@ -114,7 +116,7 @@ namespace cro
         /*|
         \brief Returns the entity with the given ID if it exists
         */
-        Entity getEntity(Entity::ID) const;
+        Entity getEntity(std::uint32_t) const;
 
 
         /*!
@@ -437,9 +439,21 @@ namespace cro
         */
         std::size_t getInstanceID() const { return m_uid; }
 
+        /*!
+        \brief Allows setting an arbitrary string as a title for the Scene
+        Useful for debugging.
+        */
+        void setTitle(const std::string& s);
+
+        /*!
+        \brief Returns the title strign set for the Scene, if any
+        */
+        const std::string& getTitle() const { return m_debugTitle; }
+
     private:
         MessageBus& m_messageBus;
         std::size_t m_uid;
+        std::string m_debugTitle;
 
         Entity m_defaultCamera;
         Entity m_activeCamera;
@@ -490,8 +504,8 @@ namespace cro
             {
                 activeShader = &shader;
 
-                modelViewUniform = shader.getUniformMap().at("u_modelViewMatrix");
-                projectionUniform = shader.getUniformMap().at("u_projectionMatrix");
+                modelViewUniform = shader.getUniformID("u_modelViewMatrix");
+                projectionUniform = shader.getUniformID("u_projectionMatrix");
                 textureUniform = shader.getUniformID("u_skybox");
                 skyColourUniform = shader.getUniformID("u_skyColour");
             }

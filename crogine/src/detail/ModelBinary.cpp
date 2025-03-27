@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -346,7 +346,7 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
 
             if (SDL_RWclose(file))
             {
-                LogE << SDL_GetError() << std::endl;
+                LogE << "SDL: Failed writing model binary - " << SDL_GetError() << std::endl;
             }
         }
     }
@@ -506,7 +506,7 @@ cro::Mesh::Data cro::Detail::ModelBinary::read(const std::string& binPath, std::
     }
     else
     {
-        LogE << binPath << ": " << SDL_GetError() << std::endl;
+        LogE << "SDL: " << binPath << ": " << SDL_GetError() << std::endl;
         return {};
     }
     return meshData;

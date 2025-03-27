@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,8 +32,10 @@ source distribution.
 #include <crogine/detail/Detail.hpp>
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/NoResize.hpp>
+#include <crogine/detail/PoolLog.hpp>
 
 #include <vector>
+#include <numeric>
 
 namespace cro
 {
@@ -42,36 +44,129 @@ namespace cro
         class Pool
         {
         public:
+            static constexpr auto nullindex = std::numeric_limits<std::uint32_t>::max();
+
+            explicit Pool(const std::string& name)
+                : m_freeIndex(0), m_indexMap(Detail::MinFreeIDs), m_indexPool(Detail::MinFreeIDs), m_name(name)
+            {
+                std::fill(m_indexMap.begin(), m_indexMap.end(), nullindex);
+                std::iota(m_indexPool.begin(), m_indexPool.end(), 0);
+            }
+            
             virtual ~Pool() = default;
             virtual void clear() = 0;
-            virtual void reset(std::size_t) = 0;
+            virtual void reset(std::uint32_t) = 0;
+
+            std::size_t maxSize() const
+            {
+                return m_indexPool.size();
+            }
+
+            std::size_t used() const
+            {
+                return m_freeIndex;
+            }
+
+            const std::string& getName() const
+            {
+                return m_name;
+            }
+
+        protected:
+            std::size_t m_freeIndex;
+            std::vector<std::uint32_t> m_indexMap;
+            std::vector<std::uint32_t> m_indexPool;
+
+            std::string m_name;
         };
 
         /*!
         \brief memory pooling for components
 
         Note: components which inherit NoResize or have no copy assignment
-        (eg move-only types such as Model or AudioEmitter) reserve MinFreeID
+        (eg move-only types such as Model or AudioEmitter) reserve MaxPoolSize<T>::value
         slots in a pool, to prevent resizing and invalidating components.
         */
         template <class T>
         class ComponentPool final : public Pool
         {
         public:
-            explicit ComponentPool(std::size_t size = 128) : m_pool(size)
+            explicit ComponentPool(std::size_t size = 128) 
+                : Pool  (typeid(T).name()),
+                m_pool  (std::min(size, MaxPoolSize<T>::value))
             {
                 if constexpr (!std::is_copy_assignable_v<T>
                     || std::is_base_of_v<NonResizeable, T>)
                 {
-                    m_pool.reserve(MinFreeIDs);
-                    LOG("Reserved maximum pool size of " + std::to_string(MinFreeIDs) + " for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
+                    m_pool.reserve(MaxPoolSize<T>::value);
+                    LOG("Reserved maximum pool size of " + std::to_string(MaxPoolSize<T>::value) + " for " + std::string(typeid(T).name()), cro::Logger::Type::Info);
                 }
             }
 
-            bool empty() const { return m_pool.empty(); }
-            std::size_t size() const { return m_pool.size(); }
+            T& at(std::size_t idx)
+            {
+                return m_pool.at(m_indexMap[idx]);
+            }
+            const T& at(std::size_t idx) const
+            {
+                return m_pool.at(m_indexMap[idx]);
+            }
+
+            void insert(std::uint32_t idx, T component)
+            {
+                m_indexMap[idx] = m_indexPool[m_freeIndex];
+                m_freeIndex++;
+
+                const auto mappedIdx = m_indexMap[idx];
+                if (mappedIdx >= size())
+                {
+                    resize(std::min(static_cast<std::uint32_t>(Detail::MinFreeIDs), mappedIdx + 128));
+                }
+
+                m_pool[mappedIdx] = std::move(component);
+
+                //PoolLog::log(typeid(T).name(), m_freeIndex);
+            }
+
+            void reset(std::uint32_t idx) override
+            {
+                const auto mappedIdx = m_indexMap[idx];
+                
+                if (mappedIdx != nullindex)
+                {
+                    m_pool[mappedIdx] = T();
+                    
+                    m_freeIndex--;
+                    m_indexPool[m_freeIndex] = mappedIdx;
+                    m_indexMap[idx] = nullindex;
+                }
+            }
+
+            void clear() override
+            {
+                m_pool.clear();
+                m_freeIndex = 0;
+
+                std::fill(m_indexMap.begin(), m_indexMap.end(), nullindex);
+                std::iota(m_indexPool.begin(), m_indexPool.end(), 0);
+            }
+
+            bool empty() const
+            {
+                return m_pool.empty();
+            }
+
+            std::size_t size() const
+            {
+                return m_pool.size();
+            }
+
+        private:
+            std::vector<T> m_pool;
+
             void resize(std::size_t size)
-            { 
+            {
+                assert(size <= MaxPoolSize<T>::value);
                 if (size > m_pool.size())
                 {
                     m_pool.resize(size);
@@ -85,18 +180,6 @@ namespace cro
                     }
                 }
             }
-            void clear() override { m_pool.clear(); }
-
-            T& at(std::size_t idx) { return m_pool.at(idx); }
-            const T& at(std::size_t idx) const { return m_pool.at(idx); }
-
-            T& operator [] (std::size_t index) { CRO_ASSERT(index < m_pool.size(), "Index out of range"); return m_pool[index]; }
-            const T& operator [] (std::size_t index) const { CRO_ASSERT(index < m_pool.size(), "Index out of range"); return m_pool[index]; }
-
-            void reset(std::size_t idx) override { if(idx < m_pool.size()) m_pool[idx] = T(); }
-
-        private:
-            std::vector<T> m_pool;
         };
     }
 }

@@ -6,7 +6,7 @@ HDRI pre-filter shaders from https://learnopengl.com/PBR
 
 #include <string>
 
-inline const std::string BRDFVert = R"(
+static inline const std::string BRDFVert = R"(
     ATTRIBUTE vec3 a_position;
     ATTRIBUTE vec2 a_texCoord0;
 
@@ -18,7 +18,7 @@ inline const std::string BRDFVert = R"(
         v_texCoord0 = a_texCoord0;
     })";
 
-inline const std::string BRDFFrag = R"(
+static inline const std::string BRDFFrag = R"(
     OUTPUT
     VARYING_IN vec2 v_texCoord0;
 

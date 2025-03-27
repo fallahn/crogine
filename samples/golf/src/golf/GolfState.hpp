@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -239,7 +239,7 @@ private:
     };
     std::array<PostProcess, PostID::Count> m_postProcesses = {};
 
-    cro::Image m_currentMap;
+    //cro::Image m_currentMap;
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
@@ -279,6 +279,7 @@ private:
             Player,
             Hair,
             HairReflect,
+            HairGlass,
             Course,
             Ball,
             BallSkinned,
@@ -293,8 +294,10 @@ private:
             Flag,
             PointLight,
             Glass,
+            Wake,
             LensFlare,
             PointFlare,
+            Emissive, //self-illum for clubs
 
             Count
         };
@@ -316,6 +319,19 @@ private:
     std::array<std::unique_ptr<cro::ModelDefinition>, ModelID::Count> m_modelDefs = {};
     std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
 
+    struct TextureID final
+    {
+        enum
+        {
+            Flag,
+
+            Count
+        };
+    };
+    cro::SimpleQuad m_flagQuad;
+    cro::SimpleText m_flagText;
+    cro::RenderTexture m_flagTexture;
+
     struct BallResource final
     {
         std::int32_t materialID = -1;
@@ -330,6 +346,8 @@ private:
     std::vector<cro::Entity> m_spectatorModels;
     std::vector<std::uint64_t> m_modelStats;
 
+    cro::RenderTexture m_planeTexture;
+
     /*GolfStateAssets.cpp*/
     void loadAssets();
     void loadMaterials();
@@ -338,6 +356,7 @@ private:
     void loadSpectators();
     void loadMap();
     void initAudio(bool loadTrees, bool loadPlane);
+    void updateFlagTexture(bool reloadTexture);
 
     void addSystems();
     void buildScene();
@@ -369,6 +388,7 @@ private:
     void hitBall();
     void updateActor(const ActorInfo&);
     void remoteRotation(std::uint32_t); //rotates the avatar based on remote player input
+    float getGroundRotation(glm::vec3 playerPos, float yRot, bool flipped) const; //rotates the player to reduce feet clipping/floating
     std::int32_t getClub() const;
 
 
@@ -471,10 +491,19 @@ private:
             PowerBar,
             PowerBar10,
             PowerBarInner,
+            PowerBarInnerHC, //high contrast
             HookBar,
+
+            PowerBarDouble,
+            PowerBarDouble10,
+            PowerBarDoubleInner,
+            PowerBarDoubleInnerHC,
+            HookBarDouble,
+
             SlopeStrength,
             BallSpeed,
             MiniFlag,
+            MiniFlagLarge,
             MapFlag,
             MapTarget,
             WindIndicator,
@@ -512,7 +541,7 @@ private:
 
     std::array<std::array<Avatar, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar;
-    ClubModels m_clubModels;
+    std::unordered_map<std::uint32_t, ClubModels> m_clubModels;
 
 
     glm::vec3 m_terrainLevel;
@@ -541,6 +570,7 @@ private:
     std::unique_ptr<FriendlyPlayers> m_friendlyPlayers;
 
     void buildUI();
+    void createPowerBars(cro::Entity parent);
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard(bool updatePardiff = true);
@@ -672,28 +702,26 @@ private:
         bool hadBackspin = false; //tracks 'spin class' and xp award
         bool hadTopspin = false; //tracks XP award
         bool hadFlop = false;
+        
         bool hadPunch = false;
         bool wasGreen = false; //putt from fringe
         bool plusFour = false; //has at least 4 players
-
         bool noHolesOverPar = true; //no mistake
+        
         bool noGimmeUsed = true; //never give you up
         bool twoShotsSpare = true; //greens in regulation
         bool alwaysOnTheCourse = true; //consistency
-
         bool under15metres = true; //NTP total for full courses (puttFromTee sets this false)
 
-        bool underTwoPutts = true;
         std::int32_t puttCount = 0; //no more than two putts on every hole
-
         std::int32_t eagles = 0;
         std::int32_t birdies = 0; //nested achievement
         std::int32_t gimmes = 0; //gimme gimme gimme
-
         std::int32_t birdieChallenge = 0; //monthly challenge only incremented on front 9
+        
+        bool underTwoPutts = true;
         bool nearMissChallenge = false;
         bool bullseyeChallenge = false;
-
         bool leadingCareerRound = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
@@ -721,6 +749,7 @@ private:
         };
     };
     void gamepadNotify(std::int32_t);
+    void sendWebsocketGameInfo() const;
 
 #ifdef PATH_TRACING
     //------------
@@ -749,6 +778,9 @@ private:
     void addCameraDebugging();
     void registerDebugCommands();
     void registerDebugWindows();
+
+    bool m_drawDepthMaps = false; //TODO remove me when done
+    bool m_drawDebugMesh;
 
     struct NetworkDebugContext final
     {

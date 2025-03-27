@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -84,12 +84,12 @@ namespace cro
     {
         friend class ConfigObject;
     public:
-        ConfigProperty(const std::string& name, const std::string& value);
+        ConfigProperty(const std::string& name);
 
         /*!
         \brief Attempts to retrieve the value as the requested type.
-        Valid types are: std::string, std::int32_t, std::uint32_t, float, bool, glm::vec2,
-        glm::vec3, glm::vec4, cro::FloatRect, cro::Colour
+        Valid types are: std::string, cro::String, std::int32_t, std::uint32_t, float, 
+        bool, glm::vec2, glm::vec3, glm::vec4, cro::FloatRect, cro::Colour
         */
         template <typename T>
         T getValue() const;
@@ -106,11 +106,16 @@ namespace cro
         void setValue(const glm::vec4& v);
         void setValue(const cro::FloatRect& v);
         void setValue(const cro::Colour& v);
+
+        //prevents implicit conversion to bool and calls std::string overload
+        void setValue(const char*);
         
     private:
-        std::string m_value;
-        bool m_isStringValue;
-        std::vector<float> valueAsArray() const;
+        std::vector<std::basic_string<std::uint8_t>> m_utf8Values;
+        std::vector<double> m_floatValues; //max size is uint32_t so we don't want to truncate on cast
+        bool m_boolValue;
+
+        void resetValue(); //clears existing values before setting a new one
     };
 
 #include "ConfigFile.inl"
@@ -134,7 +139,7 @@ namespace cro
         /*!
         \brief Sets the ID of this object
         */
-        void setId(const std::string id) { m_id = id; }
+        void setId(const std::string& id);
 
         /*!
         \brief Returns a pointer to the property if found, else nullptr
@@ -179,7 +184,7 @@ namespace cro
         WARNING this will most likely invalidate any pointers retrieved
         with findProperty()
         */
-        ConfigProperty& addProperty(const std::string& name, const std::string& value = "");
+        ConfigProperty& addProperty(const std::string& name);
 
         /*!
         \brief Adds a name / value property pair to this object
@@ -262,15 +267,12 @@ namespace cro
         std::vector<ConfigProperty> m_properties;
         std::vector<ConfigObject> m_objects;
 
-        static NameValue getObjectName(const std::string& line);
-        static NameValue getPropertyName(const std::string& line);
-        static bool isProperty(const std::string& line);
-        static void removeComment(std::string& line);
-
         bool parseAsJson(SDL_RWops*);
 
         std::size_t write(SDL_RWops* file, std::uint16_t depth = 0u);
+
+        bool loadFromFile2(const std::string& path);
     };
 
-    using ConfigFile = cro::ConfigObject;
+    using ConfigFile = ConfigObject;
 }

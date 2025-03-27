@@ -158,23 +158,23 @@ Q3BspSystem::Q3BspSystem(cro::MessageBus& mb)
         {
             if (uniform == "u_viewProjectionMatrix")
             {
-                m_uniforms[UniformLocation::ViewProjectionMatrix] = location;
+                m_uniforms[UniformLocation::ViewProjectionMatrix] = location.first;
             }
             else if (uniform == "u_normalMatrix")
             {
-                m_uniforms[UniformLocation::NormalMatrix] = location;
+                m_uniforms[UniformLocation::NormalMatrix] = location.first;
             }
             else if (uniform == "u_texture")
             {
-                m_uniforms[UniformLocation::Texture0] = location;
+                m_uniforms[UniformLocation::Texture0] = location.first;
             }
             else if (uniform == "u_worldMatrix")
             {
-                m_uniforms[UniformLocation::WorldMatrix] = location;
+                m_uniforms[UniformLocation::WorldMatrix] = location.first;
             }
             else if (uniform == "u_clipPlane")
             {
-                m_uniforms[UniformLocation::ClipPlane] = location;
+                m_uniforms[UniformLocation::ClipPlane] = location.first;
             }
         }
     }

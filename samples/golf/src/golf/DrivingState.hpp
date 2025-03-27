@@ -74,6 +74,7 @@ class DrivingState final : public cro::State, public cro::GuiClient, public cro:
 {
 public:
     DrivingState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&);
+    ~DrivingState();
 
     cro::StateID getStateID() const override { return StateID::DrivingRange; }
 
@@ -140,6 +141,7 @@ private:
             Course,
             Hair,
             HairReflect,
+            HairGlass,
             Wireframe,
             WireframeCulled,
             WireframeCulledPoint,
@@ -147,6 +149,7 @@ private:
             Horizon,
             Trophy,
             BallTrail,
+            Flag,
 
             Count
         };
@@ -164,7 +167,14 @@ private:
             PowerBar,
             PowerBar10,
             PowerBarInner,
+            PowerBarInnerHC,
             HookBar,
+            PowerBarDouble,
+            PowerBarDouble10,
+            PowerBarDoubleInner,
+            PowerBarDoubleInnerHC,
+            HookBarDouble,
+
             WindIndicator,
             WindTextBg,
             WindSpeed,
@@ -178,14 +188,18 @@ private:
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
+    struct TextureID final
+    {
+        enum
+        {
+            Flag,
+
+            Count
+        };
+    };
+
     Avatar m_avatar;
     ClubModels m_clubModels;
-
-    //struct ClubModel final
-    //{
-    //    enum {Wood, Iron, Count};
-    //};
-    //std::array<cro::Entity, ClubModel::Count> m_clubModels = {};
 
     std::array<std::int32_t, 3u> m_strokeCounts = { 5,9,18 };
     std::size_t m_strokeCountIndex;
@@ -227,6 +241,7 @@ private:
     cro::Entity m_mapRoot;
     cro::SimpleQuad m_flagQuad;
     void createUI();
+    void createPowerBars(cro::Entity);
     void createGameOptions();
     void createSummary();
     void updateMinimap();

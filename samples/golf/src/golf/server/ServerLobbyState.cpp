@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,12 +31,14 @@ source distribution.
 #include "../CommonConsts.hpp"
 #include "../SharedStateData.hpp"
 #include "../Utility.hpp"
+#include "../CoinSystem.hpp"
 
 #include "ServerLobbyState.hpp"
 #include "ServerPacketData.hpp"
 #include "ServerMessages.hpp"
 
 #include <crogine/core/Log.hpp>
+#include<crogine/ecs/components/Callback.hpp>
 #include <crogine/network/NetData.hpp>
 
 #include <cstring>
@@ -49,9 +51,12 @@ PlayerInfo& PlayerInfo::operator=(const PlayerData& pd)
     avatarFlags = pd.avatarFlags;
     ballColourIndex = pd.ballColourIndex;
     ballID = pd.ballID;
+    clubID = pd.clubID;
     hairID = pd.hairID;
     hatID = pd.hatID;
     skinID = pd.skinID;
+    voiceID = pd.voiceID;
+    voicePitch = pd.voicePitch;
     flipped = pd.flipped;
     isCPU = pd.isCPU;
 
@@ -62,7 +67,9 @@ PlayerInfo& PlayerInfo::operator=(const PlayerData& pd)
 
 LobbyState::LobbyState(SharedData& sd)
     : m_returnValue (StateID::Lobby),
-    m_sharedData    (sd)
+    m_sharedData    (sd),
+    m_gameScene     (m_sharedData.messageBus, 240),
+    m_gameStarted   (/*true*/false) //TODO default to false
 {
     LOG("Entered Server Lobby State", cro::Logger::Type::Info);
 
@@ -77,6 +84,10 @@ LobbyState::LobbyState(SharedData& sd)
 
     //make sure to reset this in case the players have changed
     std::fill(sd.clubLevels.begin(), sd.clubLevels.end(), 2);
+
+
+    //setup the lobby can scene
+    buildScene();
 }
 
 void LobbyState::handleMessage(const cro::Message& msg)
@@ -89,6 +100,8 @@ void LobbyState::handleMessage(const cro::Message& msg)
             m_readyState[data.clientID] = false;
         }
     }
+
+    m_gameScene.forwardMessage(msg);
 }
 
 void LobbyState::netEvent(const net::NetEvent& evt)
@@ -98,6 +111,9 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default:break;
+        case PacketID::CoinSpawn:
+            spawnCoin(evt.packet.as<float>(), evt.peer.getID());
+            break;
         case PacketID::ServerCommand:
             doServerCommand(evt);
             break;
@@ -122,9 +138,10 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             if (evt.peer.getID() == m_sharedData.hostID)
             {
                 m_sharedData.mapDir = deserialiseString(evt.packet);
-                //forward to all clients
-                m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
             }
+
+            //forward to all clients (this may have been a request from someone not hosting)
+            m_sharedData.host.broadcastPacket(PacketID::MapInfo, evt.packet.getData(), evt.packet.getSize(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
         }
             break;
         case PacketID::ScoreType:
@@ -260,6 +277,7 @@ void LobbyState::netEvent(const net::NetEvent& evt)
 
 std::int32_t LobbyState::process(float dt)
 {
+    m_gameScene.simulate(dt);
     return m_returnValue;
 }
 
@@ -342,14 +360,45 @@ void LobbyState::broadcastRules()
     m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+
+    //check for can and do a delayed spawn
+    //TODO we should probably only send to new connection
+    //but clients with existing cans ought to ignore this anyway
+    auto e = m_gameScene.getSystem<CoinSystem>()->getBucketEnt();
+    if (e.isValid())
+    {
+        cro::Entity entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(3.f);
+        entity.getComponent<cro::Callback>().function =
+            [&, e](cro::Entity ent, float dt)
+            {
+                auto& ct = ent.getComponent<cro::Callback>().getUserData<float>();
+                ct -= dt;
+                if (ct < 0)
+                {
+                    ActorInfo spawnInfo;
+                    spawnInfo.playerID = 0;
+                    spawnInfo.serverID = e.getIndex();
+                    spawnInfo.position = e.getComponent<cro::Transform>().getPosition();
+                    spawnInfo.lie = ConstVal::NullValue; //use this to ignore packets in game mode
+                    m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, spawnInfo, net::NetFlag::Reliable);
+
+                    ent.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(ent);
+                }
+            };
+    }
 }
 
 void LobbyState::doServerCommand(const net::NetEvent& evt)
 {
+    const auto data = evt.packet.as<std::uint16_t>();
+    const std::uint8_t command = (data & 0xff);
+    
     if (evt.peer.getID() == m_sharedData.hostID)
     {
-        const auto data = evt.packet.as<std::uint16_t>();
-        const std::uint8_t command = (data & 0xff);
         const std::uint8_t target = ((data >> 8) & 0xff);
 
         switch (command)
@@ -369,6 +418,17 @@ void LobbyState::doServerCommand(const net::NetEvent& evt)
                 msg->clientID = target;
             }
             break;
+        //case ServerCommand::SpawnCan:
+        //    //used to debug can game
+        //    spawnCan();
+        //    break;
+        }
+    }
+    //else
+    {
+        if (command == ServerCommand::SpawnCan)
+        {
+            spawnCan();
         }
     }
 }

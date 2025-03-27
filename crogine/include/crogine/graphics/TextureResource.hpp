@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -77,6 +77,11 @@ namespace cro
         when loading the texture.
         */
         bool load(std::uint32_t id, const std::string& path, bool createMipMaps = false);
+
+        /*!
+        \brief Returns true if a texture has been loaded with the given texture ID
+        */
+        bool loaded(std::uint32_t id) const;
 
         /*!
         \brief Returns a reference to the texture currently assigned to the given ID

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,7 +41,7 @@ namespace cro::Detail
 
         if (!file)
         {
-            LogE << path << ": " << SDL_GetError() << std::endl;
+            LogE << "SDL: " << path << ": " << SDL_GetError() << std::endl;
             return false;
         }
 

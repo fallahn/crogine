@@ -304,18 +304,18 @@ Material::Data SpriteSystem3D::createMaterial(const Shader& shader)
     {
         if (uniform == "u_worldMatrix")
         {
-            data.uniforms[Material::WorldView] = handle;
+            data.uniforms[Material::WorldView] = handle.first;
         }
         else if (uniform == "u_viewProjectionMatrix")
         {
-            data.uniforms[Material::Projection] = handle;
+            data.uniforms[Material::Projection] = handle.first;
         }
 
         //else these are user settable uniforms - ie optional, but set by user such as textures
         else
         {
             //add to list of material properties
-            data.properties.insert(std::make_pair(uniform, std::make_pair(handle, Material::Property())));
+            data.properties.insert(std::make_pair(uniform, std::make_pair(handle.first, Material::Property())));
         }
     }
     return data;

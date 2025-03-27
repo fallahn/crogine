@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -34,6 +34,7 @@ source distribution.
 #include "Achievements.hpp"
 #include "ImTheme.hpp"
 #include "M3UPlaylist.hpp"
+#include "WebsocketServer.hpp"
 
 #include "golf/MenuState.hpp"
 #include "golf/GolfState.hpp"
@@ -94,6 +95,7 @@ source distribution.
 #ifdef USE_WORKSHOP
 #include <WorkshopState.hpp>
 #endif
+#include <Content.hpp>
 
 //#define NO_PROF
 
@@ -105,6 +107,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Network.hpp>
 #include <crogine/util/Random.hpp>
@@ -238,12 +241,12 @@ GolfGame::GolfGame()
     m_stateStack.registerState<SqliteState>(StateID::SQLite);
 #endif
 
-#ifdef USE_WORKSHOP
-    m_stateStack.registerState<WorkshopState>(StateID::Workshop);
-#endif
-
 #ifdef _WIN32
     assertFileSystem(); //explicitly ensures the property directories are created
+#endif
+
+#ifdef USE_WORKSHOP
+    m_stateStack.registerState<WorkshopState>(StateID::Workshop);
 #endif
 }
 
@@ -530,7 +533,7 @@ bool GolfGame::initialise()
 
             std::stringstream msg;
             msg << "Game loading is currently paused\nso that you may optionally remove\nor backup your profile directory.\n";
-            msg << "Your profile directory is " << Social::getUserContentPath(Social::UserContent::Profile) << "\n";
+            msg << "Your profile directory is " << Content::getUserContentPath(Content::UserContent::Profile) << "\n";
             msg << "Press OK when you are ready to continue, or Cancel to quit.";
 
             if (!cro::FileSystem::showMessageBox("SAFE MODE", msg.str(), cro::FileSystem::OKCancel))
@@ -542,8 +545,29 @@ bool GolfGame::initialise()
         //however this relies on having successfully
         //init Steam as we need the uid of the logged on user
         convertPreferences();
-    }
+        
+        for (auto i = 0; i < Content::UserContent::Count; ++i)
+        {
+            const auto path = Content::getUserContentPath(i);
+            if (!cro::FileSystem::directoryExists(path))
+            {
+                cro::FileSystem::createDirectory(path);
+            }
+        }
 
+        //tidy up any stuff left over from workshop tools
+        const auto tempPath = Content::getBaseContentPath() + "temp";
+        if (cro::FileSystem::directoryExists(tempPath))
+        {
+            std::error_code ec;
+            std::filesystem::remove_all(tempPath, ec);
+
+            if (ec)
+            {
+                LogE << ec.message() << std::endl;
+            }
+        }
+    }
 
     //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
     loadPreferences();
@@ -718,7 +742,7 @@ bool GolfGame::initialise()
         [](const std::string&)
         {
             //this assumes that the directory was successfully creates already...
-            cro::Util::String::parseURL(Social::getBaseContentPath());
+            cro::Util::String::parseURL(Content::getBaseContentPath());
         });
 
     registerCommand("reset_leagues", 
@@ -837,6 +861,11 @@ bool GolfGame::initialise()
             }        
         });
 
+    registerCommand("show_websock", [](const std::string&)
+        {
+            cro::Console::print(WebSock::getStatus());
+        });
+
     registerCommand("scrub", 
         [&](const std::string&)
         {
@@ -880,7 +909,7 @@ bool GolfGame::initialise()
 
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");
-
+    m_sharedData.sharedResources->shaders.loadFromString(ShaderID::FlagPreview, cro::RenderSystem2D::getDefaultVertexShader(), FlagFrag, "#define TEXTURED\n");
 
     m_sharedData.resolutions = getWindow().getAvailableResolutions();
     std::reverse(m_sharedData.resolutions.begin(), m_sharedData.resolutions.end());
@@ -986,10 +1015,15 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::Workshop);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
-    //m_stateStack.pushState(StateID::ScrubBackground);
+    //m_stateStack.pushState(StateID::Clubhouse);
 #endif
 
     applyImGuiStyle(m_sharedData);
+
+    if (m_sharedData.webSocket)
+    {
+        WebSock::start(m_sharedData.webPort);
+    }
 
     return true;
 }
@@ -1049,13 +1083,15 @@ void GolfGame::initFonts()
     {
         std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", cro::CodePointRange::Cyrillic),
         std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", cro::CodePointRange::Greek),
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0102, 0x0103})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0110, 0x0111})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0128, 0x0129})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0168, 0x0169})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01A0, 0x01A1})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01AF, 0x01B0})), //VT
-        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x1EA0, 0x1EF9})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0102, 0x0103})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0110, 0x0111})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0128, 0x0129})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0168, 0x0169})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0100, 0x017F})), //extended latin-a
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0180, 0x024F})), //extended latin-b
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01A0, 0x01A1})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01AF, 0x01B0})), //VT
+        //std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x1EA0, 0x1EF9})), //VT
 
         std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x2010, 0x205E})),
         std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x0E00, 0x0E7F})),
@@ -1131,7 +1167,7 @@ void GolfGame::initFonts()
 void GolfGame::convertPreferences() const
 {
     auto srcPath = cro::App::getPreferencePath();
-    const auto dstPath = Social::getBaseContentPath();
+    const auto dstPath = Content::getBaseContentPath();
 
     if (cro::FileSystem::directoryExists(dstPath))
     {
@@ -1235,6 +1271,9 @@ void GolfGame::loadPreferences()
     //TODO I can't see where this was actually used - did I forget
     //to finish it???
     //bool restoreDefaults = false;
+
+    //make sure to set all defaults *before* loading any files
+    m_sharedData.useLargePowerBar = Social::isSteamdeck();
 
     auto path = getPreferencePath() + "prefs.cfg";
     if (cro::FileSystem::fileExists(path))
@@ -1386,6 +1425,19 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.useLargePowerBar = prop.getValue<bool>();
                 }
+                
+                else if (name == "web_socket")
+                {
+                    m_sharedData.webSocket = prop.getValue<bool>();
+                }
+                else if (name == "web_port")
+                {
+                    m_sharedData.webPort = std::clamp(prop.getValue<std::int32_t>(), WebSock::MinPort, WebSock::MaxPort);
+                }
+                else if (name == "lightmap_quality")
+                {
+                    m_sharedData.lightmapQuality = std::clamp(prop.getValue<std::int32_t>(), 0, 1);
+                }
             }
         }
         /*else
@@ -1398,9 +1450,7 @@ void GolfGame::loadPreferences()
     //read user-specific prefs. This overwrites some of the above as we might be upgrading from the old version
     if (!safeMode)
     {
-        m_sharedData.useLargePowerBar = Social::isSteamdeck();
-
-        path = Social::getBaseContentPath() + "user_prefs.cfg";
+        path = Content::getBaseContentPath() + "user_prefs.cfg";
         if (cro::FileSystem::fileExists(path))
         {
             cro::ConfigFile cfg;
@@ -1503,6 +1553,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.useLargePowerBar = prop.getValue<bool>();
                     }
+                    else if (name == "contrast_power")
+                    {
+                        m_sharedData.useContrastPowerBar = prop.getValue<bool>();
+                    }
                     else if (name == "decimate_power")
                     {
                         m_sharedData.decimatePowerBar = prop.getValue<bool>();
@@ -1519,9 +1573,26 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.fixedPuttingRange = prop.getValue<bool>();
                     }
+                    
+                    else if (name == "web_chat")
+                    {
+                        m_sharedData.blockChat = prop.getValue<bool>();
+                    }
+                    else if (name == "log_chat")
+                    {
+                        m_sharedData.logChat = prop.getValue<bool>();
+                    }
                     else if (name == "remote_content")
                     {
                         m_sharedData.remoteContent = prop.getValue<bool>();
+                    }
+                    else if (name == "flag_path")
+                    {
+                        m_sharedData.flagPath = prop.getValue<std::string>();
+                    }
+                    else if (name == "flag_text")
+                    {
+                        m_sharedData.flagText = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
                     }
                     /*else if (name == "group_mode")
                     {
@@ -1536,7 +1607,7 @@ void GolfGame::loadPreferences()
             }*/
         }
 
-        path = Social::getBaseContentPath() + "league_names.txt";
+        path = Content::getBaseContentPath() + "league_names.txt";
         if (!cro::FileSystem::fileExists(path))
         {
             m_sharedData.leagueNames.write();
@@ -1555,7 +1626,7 @@ void GolfGame::loadPreferences()
 
 
     //read keybind bin
-    path = Social::getBaseContentPath() + "keys.bind";
+    path = Content::getBaseContentPath() + "keys.bind";
 
     if (cro::FileSystem::fileExists(path))
     {
@@ -1600,12 +1671,13 @@ void GolfGame::loadPreferences()
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
 
-    if (!cro::FileSystem::directoryExists(Social::getBaseContentPath() + u8"music"))
+    if (!cro::FileSystem::directoryExists(Content::getBaseContentPath() + u8"music"))
     {
-        cro::FileSystem::createDirectory(Social::getBaseContentPath() + u8"music");
+        cro::FileSystem::createDirectory(Content::getBaseContentPath() + u8"music");
     }
     loadMusic();
 
+    m_sharedData.inventory.read();
 
     //do this last so we're saving any settings which were loaded successfully too
     savePreferences();
@@ -1632,11 +1704,14 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("crowd_density").setValue(m_sharedData.crowdDensity);
     cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
+    cfg.addProperty("web_socket").setValue(m_sharedData.webSocket);
+    cfg.addProperty("web_port").setValue(m_sharedData.webPort);
+    cfg.addProperty("lightmap_quality").setValue(m_sharedData.lightmapQuality);
     cfg.save(path);
 
 
     //per-user options
-    path = Social::getBaseContentPath() + "user_prefs.cfg";
+    path = Content::getBaseContentPath() + "user_prefs.cfg";
     cfg = cro::ConfigFile("user_preferences");
     cfg.addProperty("pixel_scale").setValue(m_sharedData.pixelScale);
     cfg.addProperty("fov").setValue(m_sharedData.fov);
@@ -1661,23 +1736,31 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_flare").setValue(m_sharedData.useLensFlare);
     cfg.addProperty("use_mouse_action").setValue(m_sharedData.useMouseAction);
     //cfg.addProperty("large_power").setValue(m_sharedData.useLargePowerBar);
+    cfg.addProperty("contrast_power").setValue(m_sharedData.useContrastPowerBar);
     cfg.addProperty("decimate_power").setValue(m_sharedData.decimatePowerBar);
     cfg.addProperty("decimate_distance").setValue(m_sharedData.decimateDistance);
     cfg.addProperty("show_roster").setValue(m_sharedData.showRosterTip);
     cfg.addProperty("group_mode").setValue(m_sharedData.groupMode);
     cfg.addProperty("fixed_putting").setValue(m_sharedData.fixedPuttingRange);
+    cfg.addProperty("web_chat").setValue(m_sharedData.blockChat);
+    cfg.addProperty("log_chat").setValue(m_sharedData.logChat);
     cfg.addProperty("remote_content").setValue(m_sharedData.remoteContent);
+    cfg.addProperty("flag_path").setValue(m_sharedData.flagPath);
+    cfg.addProperty("flag_text").setValue(m_sharedData.flagText);
     cfg.save(path);
 
 
+
     //keybinds
-    path = Social::getBaseContentPath() + "keys.bind";
+    path = Content::getBaseContentPath() + "keys.bind";
     cro::RaiiRWops file;
     file.file = SDL_RWFromFile(path.c_str(), "wb");
     if (file.file)
     {
         SDL_RWwrite(file.file, &m_sharedData.inputBinding, sizeof(InputBinding), 1);
     }
+
+    m_sharedData.inventory.write();
 }
 
 void GolfGame::loadAvatars()
@@ -1772,7 +1855,7 @@ void GolfGame::loadAvatars()
     }
 
     //parse profile dir and load each profile
-    path = Social::getUserContentPath(Social::UserContent::Profile);
+    path = Content::getUserContentPath(Content::UserContent::Profile);
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
@@ -1942,7 +2025,7 @@ void GolfGame::loadAvatars()
 void GolfGame::loadMusic()
 {
     //parse any music files into a playlist
-    M3UPlaylist m3uPlaylist(Social::getBaseContentPath() + u8"music/");
+    M3UPlaylist m3uPlaylist(Content::getBaseContentPath() + u8"music/");
 
     if (m3uPlaylist.getTrackCount() == 0)
     {
@@ -1961,7 +2044,7 @@ void GolfGame::loadMusic()
 
 #ifdef USE_GNS
         //see if the soundtrack is installed and prefer that
-        auto soundtrackPath = Social::getSoundTrackPath();
+        auto soundtrackPath = Content::getSoundTrackPath();
         if (!soundtrackPath.empty()
             && cro::FileSystem::directoryExists(soundtrackPath + u8"/mp3/"))
         {

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -62,9 +62,12 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         sizes[i] += sizeof(playerData[i].headwearOffsets);
         sizes[i] += sizeof(playerData[i].ballColourIndex);
         sizes[i] += sizeof(playerData[i].ballID);
+        sizes[i] += sizeof(playerData[i].clubID);
         sizes[i] += sizeof(playerData[i].hairID);
         sizes[i] += sizeof(playerData[i].hatID);
         sizes[i] += sizeof(playerData[i].skinID);
+        sizes[i] += sizeof(playerData[i].voiceID);
+        sizes[i] += sizeof(playerData[i].voicePitch);
         sizes[i] += sizeof(std::uint8_t); //bool flags
 
         totalSize += sizes[i];
@@ -90,6 +93,9 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         std::memcpy(&buffer[offset], &playerData[i].ballID, sizeof(playerData[i].ballID));
         offset += sizeof(playerData[i].ballID);
 
+        std::memcpy(&buffer[offset], &playerData[i].clubID, sizeof(playerData[i].clubID));
+        offset += sizeof(playerData[i].clubID);
+
         std::memcpy(&buffer[offset], &playerData[i].hairID, sizeof(playerData[i].hairID));
         offset += sizeof(playerData[i].hairID);
 
@@ -98,6 +104,12 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
 
         std::memcpy(&buffer[offset], &playerData[i].skinID, sizeof(playerData[i].skinID));
         offset += sizeof(playerData[i].skinID);
+
+        std::memcpy(&buffer[offset], &playerData[i].voiceID, sizeof(playerData[i].voiceID));
+        offset += sizeof(playerData[i].voiceID);
+
+        std::memcpy(&buffer[offset], &playerData[i].voicePitch, sizeof(playerData[i].voicePitch));
+        offset += sizeof(playerData[i].voicePitch);
 
         //buffer[offset] = playerData[i].flipped ? 1 : 0;
         buffer[offset] = 0;
@@ -174,6 +186,7 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
 
 
     //read player data
+    //TODO this would be far less error prone (and more readable) if it were a function
     for (auto i = 0u; i < playerCount; ++i)
     {
         auto* ptr = static_cast<const std::uint8_t*>(packet.getData());
@@ -195,6 +208,10 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         offset += sizeof(playerData[i].ballID);
         stringSize -= sizeof(playerData[i].ballID);
 
+        std::memcpy(&playerData[i].clubID, ptr + offset, sizeof(playerData[i].clubID));
+        offset += sizeof(playerData[i].clubID);
+        stringSize -= sizeof(playerData[i].clubID);
+
         std::memcpy(&playerData[i].hairID, ptr + offset, sizeof(playerData[i].hairID));
         offset += sizeof(playerData[i].hairID);
         stringSize -= sizeof(playerData[i].hairID);
@@ -206,7 +223,15 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         std::memcpy(&playerData[i].skinID, ptr + offset, sizeof(playerData[i].skinID));
         offset += sizeof(playerData[i].skinID);
         stringSize -= sizeof(playerData[i].skinID);
-        
+
+        std::memcpy(&playerData[i].voiceID, ptr + offset, sizeof(playerData[i].voiceID));
+        offset += sizeof(playerData[i].voiceID);
+        stringSize -= sizeof(playerData[i].voiceID);
+
+        std::memcpy(&playerData[i].voicePitch, ptr + offset, sizeof(playerData[i].voicePitch));
+        offset += sizeof(playerData[i].voicePitch);
+        stringSize -= sizeof(playerData[i].voicePitch);
+
         playerData[i].flipped = (ptr[offset] & BoolFlags::Flipped) != 0;
         playerData[i].isCPU = (ptr[offset] & BoolFlags::CPUPlayer) != 0;
         offset++;

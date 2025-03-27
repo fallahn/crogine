@@ -724,13 +724,13 @@ void ParticleState::drawRenderPreview()
                             {
                             default: break;
                             case cro::EmitterSettings::Add:
-                                cfg.addProperty("blendmode", "add");
+                                cfg.addProperty("blendmode").setValue("add");
                                 break;
                             case cro::EmitterSettings::Alpha:
-                                cfg.addProperty("blendmode", "alpha");
+                                cfg.addProperty("blendmode").setValue("alpha");
                                 break;
                             case cro::EmitterSettings::Multiply:
-                                cfg.addProperty("blendmode", "multiply");
+                                cfg.addProperty("blendmode").setValue("multiply");
                                 break;
                             }
 

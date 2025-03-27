@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -48,7 +48,6 @@ source distribution.
 #include "ClientCollisionSystem.hpp"
 #include "FloatingTextSystem.hpp"
 #include "CloudSystem.hpp"
-#include "PoissonDisk.hpp"
 #include "BeaconCallback.hpp"
 #include "server/ServerMessages.hpp"
 #include "../GolfGame.hpp"
@@ -57,6 +56,7 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Content.hpp>
 #include <Timeline.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
@@ -112,6 +112,7 @@ namespace
 #include "shaders/CloudShader.inl"
 #include "shaders/BeaconShader.inl"
 #include "shaders/WaterShader.inl"
+#include "shaders/Glass.inl"
 #include "shaders/ShaderIncludes.inl"
 
 #ifdef CRO_DEBUG_
@@ -266,6 +267,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     prevBillBox = false;
     noiseTable = cro::Util::Wavetable::noise(2.f, 10.f);
     
+    sd.activeResources = &m_resources;
     sd.baseState = StateID::DrivingRange;
     sd.clubSet = std::clamp(sd.preferredClubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);
@@ -363,6 +365,11 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     //        ImGui::End();
     //    });
 #endif
+}
+
+DrivingState::~DrivingState()
+{
+    m_sharedData.activeResources = nullptr;
 }
 
 //public
@@ -546,7 +553,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (std::abs(evt.caxis.value) > LeftThumbDeadZone)
+        if (std::abs(evt.caxis.value) > cro::GameController::LeftThumbDeadZone)
         {
             m_sharedData.activeInput = cro::GameController::hasPSLayout(cro::GameController::controllerID(evt.caxis.which)) ?
                 SharedStateData::ActiveInput::PS : SharedStateData::ActiveInput::XBox;
@@ -610,7 +617,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #ifdef USE_GNS
             closeLeaderboard();
 #else
-            if(m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+            if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
             {
                 pauseGame();
             }
@@ -710,6 +717,14 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
             //enable the camera following
             m_gameScene.setSystemActive<CameraFollowSystem>(true);
+        }
+        else if (data.userType == SpriteAnimID::Swoosh)
+        {
+            auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::ClubDraw;
+            msg->position = PlayerPosition;
+            msg->terrain = TerrainID::Fairway;
+            msg->club = static_cast<std::uint8_t>(m_inputParser.getClub());
         }
     }
     break;
@@ -864,26 +879,64 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                 //and the power bar
-                cmd.targetFlags = CommandID::UI::Root;
-                cmd.action = [&](cro::Entity e, float)
-                    {
-                        auto [state, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
-                        if (state == 1)
-                        {
-                            //we've visible
-                            const float scale = m_sharedData.useLargePowerBar ? 2.f : 1.f;
-                            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-                        }
-                    };
-                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
                 cmd.targetFlags = CommandID::UI::BarEnt;
                 cmd.action = [&](cro::Entity e, float)
                     {
                         e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
                             ? m_sprites[SpriteID::PowerBar10] : m_sprites[SpriteID::PowerBar];
+
+                        const float scale = m_sharedData.useLargePowerBar ? 0.f : 1.f;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
                     };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::BarEntLarge;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.decimatePowerBar
+                            ? m_sprites[SpriteID::PowerBarDouble10] : m_sprites[SpriteID::PowerBarDouble];
+
+                        const float scale = m_sharedData.useLargePowerBar ? 1.f : 0.f;
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::PowerBarInner;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.useContrastPowerBar
+                            ? m_sprites[SpriteID::PowerBarInnerHC] : m_sprites[SpriteID::PowerBarInner];
+
+                        e.getComponent<cro::Callback>().active = !m_sharedData.useLargePowerBar;
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::UI::PowerBarInnerLarge;
+                cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Sprite>() = m_sharedData.useContrastPowerBar
+                            ? m_sprites[SpriteID::PowerBarDoubleInnerHC] : m_sprites[SpriteID::PowerBarDoubleInner];
+
+                        e.getComponent<cro::Callback>().active = m_sharedData.useLargePowerBar;
+                    };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+                if (m_resources.textures.loaded(TextureID::Flag))
+                {
+                    if (m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath))
+                    {
+                        //actually as we're recycling the same texture we probably don't need this
+                        cro::TextureID id(m_resources.textures.get(TextureID::Flag));
+
+                        cmd.targetFlags = CommandID::Flag;
+                        cmd.action = [id](cro::Entity e, float)
+                            {
+                                e.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", id);
+                            };
+                        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    }
+                }
 
                 m_minimapIndicatorEnt.getComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts(m_sharedData.decimatePowerBar);
 
@@ -998,10 +1051,9 @@ bool DrivingState::simulate(float dt)
 
 void DrivingState::render()
 {
-    //TODO these probably only need to be bound once on start-up
-    m_scaleBuffer.bind(0);
-    m_resolutionBuffer.bind(1);
-    m_windBuffer.bind(2);
+    m_scaleBuffer.bind();
+    m_resolutionBuffer.bind();
+    m_windBuffer.bind();
 
     m_backgroundTexture.clear();
     m_skyScene.render();
@@ -1111,12 +1163,14 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Flag, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define USER_COLOUR\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::HairReflect, CelVertexShader, CelFragmentShader, "#define REFLECTIONS\n#define FADE_INPUT\n#define USER_COLOUR\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
-
+    m_resources.shaders.loadFromString(ShaderID::HairGlass,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment, "#define USER_COLOUR\n");
    
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
@@ -1148,6 +1202,10 @@ void DrivingState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]).setProperty("u_maskMap", m_defaultMaskMap);
 
+    shader = &m_resources.shaders.get(ShaderID::Flag);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Flag] = m_resources.materials.add(*shader);
+
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1178,6 +1236,15 @@ void DrivingState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+
+    shader = &m_resources.shaders.get(ShaderID::HairGlass);
+    m_materialIDs[MaterialID::HairGlass] = m_resources.materials.add(*shader);
+    auto& glassMat = m_resources.materials.get(m_materialIDs[MaterialID::HairGlass]);
+    glassMat.setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+    glassMat.doubleSided = true;
+    glassMat.blendMode = cro::Material::BlendMode::Alpha;
+
+
 
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
@@ -1231,7 +1298,15 @@ void DrivingState::loadAssets()
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar_wide");
     m_sprites[SpriteID::PowerBar10] = spriteSheet.getSprite("power_bar_wide_10");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner_wide");
+    m_sprites[SpriteID::PowerBarInnerHC] = spriteSheet.getSprite("power_bar_inner_wide_hc");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
+
+    m_sprites[SpriteID::PowerBarDouble] = spriteSheet.getSprite("power_bar_double");
+    m_sprites[SpriteID::PowerBarDouble10] = spriteSheet.getSprite("power_bar_double_10");
+    m_sprites[SpriteID::PowerBarDoubleInner] = spriteSheet.getSprite("power_bar_inner_double");
+    m_sprites[SpriteID::PowerBarDoubleInnerHC] = spriteSheet.getSprite("power_bar_inner_double_hc");
+    m_sprites[SpriteID::HookBarDouble] = spriteSheet.getSprite("hook_bar_double");
+
     m_sprites[SpriteID::WindTextBg] = spriteSheet.getSprite("wind_text_bg");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
@@ -1246,28 +1321,6 @@ void DrivingState::loadAssets()
     m_saturationShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), SaturationFrag, "#define TEXTURED\n");
     m_saturationUniform = m_saturationShader.getUniformID("u_amount");
 
-    //club models
-    if (!m_clubModels.loadFromFile("assets/golf/clubs/default/list.cst", m_resources, m_gameScene))
-    {
-        m_clubModels.models.push_back(m_gameScene.createEntity());
-        createFallbackModel(m_clubModels.models.back(), m_resources);
-    }
-
-    for (auto e : m_clubModels.models)
-    {
-        const auto matCount = e.getComponent<cro::Model>().getMeshData().submeshCount;
-
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
-        //applyMaterialData(md, material, 0);
-        e.getComponent<cro::Model>().setMaterial(0, material);
-
-        if (matCount > 1)
-        {
-            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-            //applyMaterialData(md, material, 1);
-            e.getComponent<cro::Model>().setMaterial(1, material);
-        }
-    }
 
     initAudio();
 }
@@ -2384,6 +2437,90 @@ void DrivingState::createPlayer()
     auto playerIndex = cro::Util::Random::value(0u, m_profileData.playerProfiles.size() - 1);
     const auto& playerData = m_profileData.playerProfiles[playerIndex];
 #endif
+
+
+    //club models - collect all search paths for club models
+    std::unordered_map<std::uint32_t, std::string> clubPaths;
+    const auto processClubPath =
+        [&](const std::string& path)
+        {
+            const std::string fileName = "/list.cst";
+            cro::ConfigFile cfg;
+            if (cfg.loadFromFile(path + fileName, false)) //resource path was already added
+            {
+                //TODO we need to do full validation, eg models exist here
+                if (const auto* uid = cfg.findProperty("uid");
+                    uid != nullptr)
+                {
+                    const auto id = uid->getValue<std::uint32_t>();
+                    if (clubPaths.count(id) == 0)
+                    {
+                        clubPaths.insert(std::make_pair(id, path + fileName));
+                    }
+                }
+            }
+        };
+
+    const auto ContentDirs = Content::getInstallPaths();
+    for (const auto& c : ContentDirs)
+    {
+        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+        for (const auto& s : clubsets)
+        {
+            processClubPath(basePath + s);
+        }
+    }
+
+    //workshop clubs
+    const auto basePath = Content::getUserContentPath(Content::UserContent::Clubs);
+    auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+    //remove dirs from this list if it's not from the workshop (rather crudely)
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
+
+    if (clubsets.size() > ConstVal::MaxClubsets)
+    {
+        clubsets.resize(ConstVal::MaxClubsets);
+        LogW << "Installed clubsets have been truncated to the maximum 64!" << std::endl;
+    }
+
+    for (const auto& s : clubsets)
+    {
+        processClubPath(basePath + s);
+    }
+
+    std::string clubPath = "assets/golf/clubs/default/list.cst";
+    if (clubPaths.count(playerData.clubID) != 0)
+    {
+        clubPath = clubPaths.at(playerData.clubID);
+    }
+
+    if (!m_clubModels.loadFromFile(clubPath, m_resources, m_gameScene))
+    {
+        m_clubModels.models.push_back(m_gameScene.createEntity());
+        createFallbackModel(m_clubModels.models.back(), m_resources);
+    }
+
+    for (auto e : m_clubModels.models)
+    {
+        const auto matCount = e.getComponent<cro::Model>().getMeshData().submeshCount;
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
+        //applyMaterialData(md, material, 0);
+        e.getComponent<cro::Model>().setMaterial(0, material);
+
+        if (matCount > 1)
+        {
+            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+            //applyMaterialData(md, material, 1);
+            e.getComponent<cro::Model>().setMaterial(1, material);
+        }
+    }
+
+
+
     auto idx = indexFromSkinID(playerData.skinID);
 
     ProfileTexture av(m_sharedData.avatarInfo[idx].texturePath);
@@ -2503,7 +2640,9 @@ void DrivingState::createPlayer()
                     auto matCount = 1;
                     if (md.getMaterialCount() == 2)
                     {
-                        mat = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        mat = md.hasTag(1, "glass") ? 
+                            m_resources.materials.get(m_materialIDs[MaterialID::HairGlass]) : m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                        
                         applyMaterialData(md, mat, 1);
                         mat.setProperty("u_hairColour", hairColour);
                         ent.getComponent<cro::Model>().setMaterial(1, mat);
@@ -3045,10 +3184,21 @@ void DrivingState::createFlag()
     md.createModel(entity);
     if (md.hasSkeleton())
     {
-        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]));
+        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Flag]);
+        applyMaterialData(md, mat);
+        entity.getComponent<cro::Model>().setMaterial(0, mat);
         entity.getComponent<cro::Skeleton>().play(0);
     }
     
+    if (cro::FileSystem::fileExists(m_sharedData.flagPath))
+    {
+        if (m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath))
+        {
+            cro::TextureID id(m_resources.textures.get(TextureID::Flag));
+            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", id);
+        }
+    }
+
     auto flagEntity = entity;
 
     md.loadFromFile("assets/golf/models/beacon.cmt");

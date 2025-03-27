@@ -21,6 +21,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ClubModels.cpp
   ${PROJECT_DIR}/golf/ClubhouseStateUI.cpp
   ${PROJECT_DIR}/golf/Clubs.cpp
+  ${PROJECT_DIR}/golf/CoinSystem.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
   ${PROJECT_DIR}/golf/CPUGolfer.cpp
   ${PROJECT_DIR}/golf/CreditsState.cpp
@@ -62,6 +63,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/MenuCustomisation.cpp
   ${PROJECT_DIR}/golf/MenuSoundDirector.cpp
   ${PROJECT_DIR}/golf/MenuState.cpp
+  ${PROJECT_DIR}/golf/MenuStateCan.cpp
   ${PROJECT_DIR}/golf/MessageOverlayState.cpp
   ${PROJECT_DIR}/golf/MiniBallSystem.cpp
   ${PROJECT_DIR}/golf/NameScrollSystem.cpp
@@ -118,6 +120,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/server/ServerBilliardsState.cpp
   ${PROJECT_DIR}/golf/server/ServerGolfRules.cpp
   ${PROJECT_DIR}/golf/server/ServerGolfState.cpp
+  ${PROJECT_DIR}/golf/server/ServerLobbyGame.cpp
   ${PROJECT_DIR}/golf/server/ServerLobbyState.cpp
   ${PROJECT_DIR}/golf/server/ServerVoice.cpp
   ${PROJECT_DIR}/golf/server/SnookerDirector.cpp)

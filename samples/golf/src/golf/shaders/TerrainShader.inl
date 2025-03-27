@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,22 +40,15 @@ static inline const std::string TerrainVertexShader = R"(
 
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewMatrix;
-    uniform mat4 u_viewProjectionMatrix;
+
+#include CAMERA_UBO
 
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_UNIFORMS_VERT
-//#if !defined(MAX_CASCADES)
-//#define MAX_CASCADES 3
-//#endif
-//        uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
-//        uniform int u_cascadeCount = 1;
 #endif
 
-
-    uniform vec4 u_clipPlane;
     uniform float u_morphTime;
-    uniform vec3 u_cameraWorldPosition;
+
 
 #include RESOLUTION_BUFFER
 
@@ -117,10 +110,10 @@ R"(
     ATTRIBUTE vec3 a_normal;
     ATTRIBUTE vec2 a_texCoord0;
 
+#include CAMERA_UBO
+
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
     uniform vec3 u_centrePosition;
-    uniform vec3 u_cameraWorldPosition;
 
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec2 v_texCoord;
@@ -200,7 +193,7 @@ R"(
     }
 )";
 
-inline const std::string NormalMapVertexShader = R"(
+static inline const std::string NormalMapVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
 
@@ -217,7 +210,7 @@ inline const std::string NormalMapVertexShader = R"(
     }
 )";
 
-inline const std::string NormalMapFragmentShader = R"(
+static inline const std::string NormalMapFragmentShader = R"(
     layout (location = 0) out vec4 FRAG_OUT;
     layout (location = 1) out vec4 POS_OUT;
 

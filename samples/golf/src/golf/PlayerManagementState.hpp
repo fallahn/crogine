@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -58,7 +58,7 @@ private:
 
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
-    cro::ResourceCollection m_resources;
+    cro::ResourceCollection& m_resources;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final

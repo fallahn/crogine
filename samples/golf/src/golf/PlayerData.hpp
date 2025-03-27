@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -56,7 +56,7 @@ struct PlayerData final
     parts at least) so REMEMBER if we add a new field here it probably
     needs duplicating in sv::PlayerInfo too. We'll use the assignment
     overload to try and contain this somewhat (though both structs will
-    still need updating)
+    still need updating) - See ServerState.hpp
     */
     PlayerData& operator = (const sv::PlayerInfo&);
 
@@ -73,9 +73,12 @@ struct PlayerData final
     }; //indices into colours
     std::uint8_t ballColourIndex = 255; //ignore the palette if not in range and set to white
     std::uint32_t ballID = 0;
+    std::uint32_t clubID = 0;
     std::uint32_t hairID = 0;
     std::uint32_t hatID = 0;
     std::uint32_t skinID = 0; //uid as loaded from the avatar data file
+    std::uint32_t voiceID = 0;
+    std::int8_t voicePitch = 0;
     bool flipped = false; //whether or not avatar flipped/southpaw
     bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
 

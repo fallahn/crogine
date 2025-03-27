@@ -51,6 +51,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/detail/DistanceField.cpp
   #${PROJECT_DIR}/detail/glad.c
   ${PROJECT_DIR}/detail/ModelBinary.cpp
+  ${PROJECT_DIR}/detail/PoolLog.cpp
   ${PROJECT_DIR}/detail/SDLImageRead.cpp
   ${PROJECT_DIR}/detail/SDLResource.cpp
   ${PROJECT_DIR}/detail/StackDump.cpp
@@ -106,6 +107,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/ecs/systems/SpriteSystem2D.cpp
   ${PROJECT_DIR}/ecs/systems/SpriteSystem3D.cpp
   ${PROJECT_DIR}/ecs/systems/TextSystem.cpp
+  ${PROJECT_DIR}/ecs/systems/UIElementSystem.cpp
   ${PROJECT_DIR}/ecs/systems/UISystem.cpp
 
   ${PROJECT_DIR}/graphics/BinaryMeshBuilder.cpp

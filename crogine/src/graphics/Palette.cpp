@@ -138,7 +138,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
 
     if (!file.file)
     {
-        LogE << "Failed opening " << fileName << ": " << SDL_GetError() << std::endl;
+        LogE << "SDL: Failed opening " << fileName << ": " << SDL_GetError() << std::endl;
         return false;
     }
 

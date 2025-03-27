@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -144,6 +144,11 @@ struct ClientGrouping final
 
 namespace PacketID
 {
+    /*
+    Do Not Change the order of these after 1.20!! They are
+    also used by the websocket API and will break existing clients.
+    */
+
     enum
     {
         //from server
@@ -239,7 +244,15 @@ namespace PacketID
         ChatMessage, //TextMessage struct
         DronePosition, //< compressed vec3 from host rebroadcast to clients
         ClubChanged, //< updates putt cam on remote clients: uint8 club | uint8 client
-        AvatarRotation //uin32_t client | player | finalRotation compressed as int16
+        AvatarRotation, //uin32_t client | player | finalRotation compressed as int16
+
+        CanUpdate, //CanInfo struct
+        CoinSpawn, //float power - sent to server. Result comes back as actor spawn
+        CoinRemove, //uint32_t server ID
+        CoinBucketed, //coin was removed because it landed in the bucket uint64_t peerID
+
+        //special cases for websocket
+        RichPresence = 127
     };
 }
 
@@ -258,6 +271,7 @@ namespace ServerCommand
         KickClient,
         PokeClient,
         ForfeitClient,
+        SpawnCan,
 
         //billiards
         SpawnBall,

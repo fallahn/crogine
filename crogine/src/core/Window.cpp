@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -108,7 +108,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 
     if (!m_window)
     {
-        std::string err = SDL_GetError();
+        const std::string err = std::string("SDL:") +  SDL_GetError();
         cro::Logger::log(err, Logger::Type::Error, Logger::Output::All);
         cro::FileSystem::showMessageBox("Error", err);
         return false;
@@ -153,7 +153,8 @@ void Window::setVsyncEnabled(bool enabled)
     {
         if (SDL_GL_SetSwapInterval(enabled ? 1 : 0) != 0)
         {
-            LogE << SDL_GetError() << std::endl;
+            std::string e = enabled ? "Enabled - " : "Disabled - ";
+            LogE << "SDL: Failed to set VSync to " << e << SDL_GetError() << std::endl;
         }
     }
 }
@@ -269,8 +270,8 @@ void Window::setFullScreen(bool fullscreen)
         {
             SDL_DisplayMode dm;
             SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
-            if (dm.w == m_previousWindowSize.x
-                && dm.h == m_previousWindowSize.y) 
+            if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
+                && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
             {
                 m_previousWindowSize = { 640u, 480u };
             }
@@ -284,7 +285,8 @@ void Window::setFullScreen(bool fullscreen)
     }
     else
     {
-        LogE << SDL_GetError() << std::endl;
+        const std::string e = fullscreen ? "fullscreen - " : "windowed - ";
+        LogE << "SDL: Failed setting window to " << e << SDL_GetError() << std::endl;
     }
 
     setViewport(getDefaultViewport());
@@ -346,7 +348,7 @@ const std::vector<glm::uvec2>& Window::getAvailableResolutions() const
         }
         else
         {
-            std::string err(SDL_GetError());
+            const std::string err = SDL_GetError();
             Logger::log("failed retrieving available resolutions: " + err, Logger::Type::Error, Logger::Output::All);
         }
     }
@@ -509,8 +511,8 @@ void Window::setWindowedSize(glm::uvec2 size)
 {
     SDL_DisplayMode dm;
     SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_window), &dm);
-    if (dm.w == m_previousWindowSize.x
-        && dm.h == m_previousWindowSize.y)
+    if (dm.w == static_cast<std::int32_t>(m_previousWindowSize.x)
+        && dm.h == static_cast<std::int32_t>(m_previousWindowSize.y))
     {
         m_previousWindowSize = { 640u, 480u };
     }

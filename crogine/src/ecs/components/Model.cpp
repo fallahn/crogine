@@ -61,11 +61,12 @@ namespace
 }
 
 Model::Model()
-    : m_hidden      (false),
-    m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
-    m_facing        (GL_CCW),
-    m_skeleton      (nullptr),
-    m_jointCount    (0)
+    : m_drawlistCount   (0),
+    m_hidden            (false),
+    m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
+    m_facing            (GL_CCW),
+    m_skeleton          (nullptr),
+    m_jointCount        (0)
 {
     for (auto& pair : m_vaos)
     {
@@ -74,14 +75,15 @@ Model::Model()
 }
 
 Model::Model(Mesh::Data data, Material::Data material)
-    : m_hidden      (false),
-    m_renderFlags   (std::numeric_limits<std::uint64_t>::max()),
-    m_facing        (GL_CCW),
-    m_boundingSphere(data.boundingSphere),
-    m_boundingBox   (data.boundingBox),
-    m_meshData      (data),
-    m_skeleton      (nullptr),
-    m_jointCount    (0)
+    : m_drawlistCount   (0),
+    m_hidden            (false),
+    m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
+    m_facing            (GL_CCW),
+    m_boundingSphere    (data.boundingSphere),
+    m_boundingBox       (data.boundingBox),
+    m_meshData          (data),
+    m_skeleton          (nullptr),
+    m_jointCount        (0)
 {
     assertAABB(m_meshData.boundingBox);
     assertAABB(m_boundingBox);
@@ -245,11 +247,21 @@ void Model::setMaterial(std::size_t idx, Material::Data data)
             }), m_animations.end());
 
         //the order in which this happens is important!
+        const auto previousShader = m_materials[Mesh::IndexData::Final][idx].shader;
+
         bindMaterial(data);
         m_materials[Mesh::IndexData::Final][idx] = data;
         initMaterialAnimation(idx);
 #ifdef PLATFORM_DESKTOP
         updateVAO(idx, Mesh::IndexData::Final);
+
+        //updates any UBOs which may have this material's
+        //shader assigned in the ModelRenderer system
+        if (materialChangedCallback
+            && data.hasCameraUBO())
+        {
+            materialChangedCallback(previousShader, data.shader);
+        }
 #endif //DESKTOP
     }
     else

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -62,6 +62,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/BillboardSystem.hpp>
+#include <crogine/ecs/systems/UIElementSystem.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -78,8 +79,8 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
-#include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/BillboardCollection.hpp>
+#include <crogine/ecs/components/UIElement.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -206,7 +207,13 @@ bool BatcatState::simulate(float dt)
 
 void BatcatState::render()
 {
+    m_sceneTexture.clear();
     m_scene.render();
+    m_sceneTexture.display();
+
+
+    //feeds scene texture through post to output texture, which is in turn drawn by overlay
+    m_smaaPost.render(); 
     m_overlayScene.render();
 }
 
@@ -228,6 +235,7 @@ void BatcatState::addSystems()
     m_scene.addDirector<PlayerDirector>();
 
     //uiSystem = m_overlayScene.addSystem<cro::UISystem>(mb);
+    m_overlayScene.addSystem<cro::UIElementSystem>(mb);
     m_overlayScene.addSystem<cro::CameraSystem>(mb);
     m_overlayScene.addSystem<cro::SpriteSystem2D>(mb);
     m_overlayScene.addSystem<cro::TextSystem>(mb);
@@ -531,12 +539,21 @@ void BatcatState::createUI()
     auto ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Transform>();
     auto& cam2D = ent.addComponent<cro::Camera>();
-    cam2D.setOrthographic(0.f, 1280.f, 0.f, 720.f, -0.1f, 10.f);
-    m_overlayScene.setActiveCamera(ent);
+    /*cam2D.setOrthographic(0.f, 1280.f, 0.f, 720.f, -10.f, 10.f);
     cam2D.resizeCallback = std::bind(&BatcatState::calcViewport, this, std::placeholders::_1);
-    calcViewport(cam2D);
+    calcViewport(cam2D);*/
 
-    cro::SpriteSheet targetSheet;
+    cam2D.resizeCallback = [](cro::Camera& cam)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            cam.setOrthographic(0.f, size.x, 0.f, size.y, -10.f, 10.f);
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+        };
+    cam2D.resizeCallback(cam2D);
+
+    m_overlayScene.setActiveCamera(ent);
+
+    /*cro::SpriteSheet targetSheet;
     targetSheet.loadFromFile("assets/batcat/sprites/target.spt", m_resources.textures);
     ent = m_overlayScene.createEntity();
     ent.addComponent<cro::Sprite>() = targetSheet.getSprite("target");
@@ -544,15 +561,143 @@ void BatcatState::createUI()
     auto size = ent.getComponent<cro::Sprite>().getSize();
     ent.addComponent<cro::Transform>().setOrigin({ size.x / 2.f, size.y / 2.f, 0.f });
     ent.getComponent<cro::Transform>().setScale(glm::vec3(0.5f));
-    ent.addComponent<cro::CommandTarget>().ID = CommandID::Cursor;
+    ent.addComponent<cro::CommandTarget>().ID = CommandID::Cursor;*/
 
     m_resources.fonts.load(1, "assets/fonts/VeraMono.ttf");
     m_resources.fonts.get(1).setSmooth(true);
     
     ent = m_overlayScene.createEntity();
-    ent.addComponent<cro::Transform>().setPosition({ 200.f, 100.f });
+    ent.addComponent<cro::Transform>().setPosition({ 200.f, 100.f, 1.f });
     ent.addComponent<cro::Drawable2D>();
     ent.addComponent<cro::Text>(m_resources.fonts.get(1)).setString("Hallo! I am text.");
+
+
+
+
+    //const auto& tex = m_resources.textures.get("assets/batcat/Unigine01.png");
+
+
+
+    //SMAA output
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::UIElement>().depth = -0.1f;
+    ent.getComponent<cro::UIElement>().resizeCallback =
+        [](cro::Entity e)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
+            e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
+        };
+    m_smaaRoot = ent;
+
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::None);
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture());
+    m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    auto outputEnt = ent;
+
+//    const std::string f = R"(
+//uniform sampler2D u_texture;
+//VARYING_IN vec2 v_texCoord;
+//VARYING_IN vec4 v_colour;
+//OUTPUT
+//
+//void main(){FRAG_OUT = vec4(texture(u_texture, v_texCoord).rgb * v_colour.rgb, 1.0);}
+//
+//)";
+//
+//    m_resources.shaders.loadFromString(ShaderID::SMAAPreview, cro::RenderSystem2D::getDefaultVertexShader(), f, "#define TEXTURED\n");
+
+
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Drawable2D>();// .setShader(&m_resources.shaders.get(ShaderID::SMAAPreview));
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture(), cro::Material::BlendMode::None);
+    ent.addComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setTexture(m_smaaPost.getEdgeTexture());
+        };
+    m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    auto edgeEnt = ent;
+
+
+
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    ent.addComponent<cro::Drawable2D>();// .setShader(&m_resources.shaders.get(ShaderID::SMAAPreview));
+    ent.addComponent<cro::Sprite>(m_outputTexture.getTexture(), cro::Material::BlendMode::None);
+    ent.addComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setTexture(m_smaaPost.getWeightTexture());
+        };
+    m_smaaRoot.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    auto weightEnt = ent;
+
+    //non-SMAA
+    ent = m_overlayScene.createEntity();
+    ent.addComponent<cro::Transform>();
+    ent.addComponent<cro::Drawable2D>();
+    ent.addComponent<cro::Sprite>(m_sceneTexture.getTexture()/*tex*/);
+    ent.addComponent<cro::UIElement>().depth = -0.2f;
+    ent.getComponent<cro::UIElement>().resizeCallback =
+        [](cro::Entity e)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            const auto y = (size.y - ((size.x / 16.f) * 9.f)) / 2.f;
+            e.getComponent<cro::UIElement>().relativePosition = { 0.f, y / size.y };
+        };
+    
+    registerWindow([&, outputEnt, edgeEnt, weightEnt]() mutable
+        {
+            if (ImGui::Begin("SMAA"))
+            {
+                static bool showSMAA = true;
+                if (ImGui::Checkbox("SMAA", &showSMAA))
+                {
+                    const auto scale = showSMAA ? 1.f : 0.f;
+                    m_smaaRoot.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                }
+
+                static int output = 0;
+                static std::array t =
+                {
+                    std::string("Colour"),
+                    std::string("Edges"),
+                    std::string("Weight"),
+                };
+
+                if (ImGui::InputInt("SMAA Output", &output))
+                {
+                    output %= t.size();
+                    switch (output)
+                    {
+                    default:
+                    case 0:
+                        outputEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        edgeEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        weightEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        break;
+                    case 1:
+                        outputEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        edgeEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        weightEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        break;
+                    case 2:
+                        outputEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        edgeEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        weightEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                        break;
+                    }
+                }
+                ImGui::Text("%s", t[output].c_str());
+            }
+            ImGui::End();        
+        });
+
 
 #ifdef PLATFORM_MOBILE
     m_resources.textures.get("assets/ui/ui_buttons.png", false).setSmooth(true);
@@ -669,7 +814,14 @@ void BatcatState::calcViewport(cro::Camera& cam)
 
 void BatcatState::updateView(cro::Camera& cam3D)
 {
-    cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 6.f, 280.f);
+    glm::uvec2 size = cro::App::getWindow().getSize();
+    size.y = (size.x / 16) * 9;
+
+    m_sceneTexture.create(size.x, size.y);
+    m_outputTexture.create(size.x, size.y, false);
+    m_smaaPost.create(m_sceneTexture.getTexture()/*m_resources.textures.get("assets/batcat/Unigine01.png")*/, m_outputTexture);
+
+    cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f/9.f, 6.f, 280.f);
     cam3D.setMaxShadowDistance(90.f);
-    calcViewport(cam3D);
+    cam3D.viewport = { 0.f, 0.f, 1.f, 1.f };
 }

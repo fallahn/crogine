@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,10 +30,13 @@ source distribution.
 #pragma once
 
 #include "CircularBuffer.hpp"
+#include "CommonConsts.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtc/quaternion.hpp>
 
+#include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -42,13 +45,14 @@ source distribution.
 struct InterpolationPoint final
 {
 	InterpolationPoint() = default;
-	InterpolationPoint(glm::vec3 p, glm::vec3 v, glm::quat r, std::int32_t ts)
-		: position(p), velocity(v), rotation(r), timestamp(ts) {}
+	InterpolationPoint(glm::vec3 p, glm::vec3 v, glm::quat r, std::int32_t ts, std::int32_t t = -1)
+		: position(p), velocity(v), rotation(r), timestamp(ts), collisionTerrain(t) {}
 
 	glm::vec3 position = glm::vec3(0.f);
 	glm::vec3 velocity = glm::vec3(0.f);
 	glm::quat rotation = glm::quat(1.f, 0.f, 0.f, 0.f);
 	std::int32_t timestamp = 0;
+	std::int32_t collisionTerrain = ConstVal::NullValue;
 };
 
 enum class InterpolationType
@@ -134,7 +138,7 @@ private:
 
 	CircularBuffer<InterpolationPoint, 8u> m_buffer;
 
-	std::size_t m_bufferSize = 3;
+	std::size_t m_bufferSize = 5;
 	bool m_wantsBuffer = true;
 
 	glm::vec3 m_interpVelocity = glm::vec3(0.f);
@@ -187,6 +191,16 @@ public:
 						interp.m_overflow = elapsed - difference;
 						interp.m_timer.restart();
 						interp.m_buffer.pop_front();
+
+						if (interp.m_buffer.front().collisionTerrain != ConstVal::NullValue)
+						{
+							//LogI << "CollisionID: " << interp.m_buffer.front().collisionTerrain << std::endl;
+							auto* msg = cro::App::getInstance().getMessageBus().post<CollisionEvent>(cl::MessageID::CollisionMessage);
+							msg->type = CollisionEvent::Begin;
+							msg->position = interp.m_buffer.front().position;
+							msg->terrain = interp.m_buffer.front().collisionTerrain;
+							//TODO set the client - we don't have this here though :/
+						}
 
 						//entity.template getComponent<cro::Transform>().setPosition(interp.m_buffer[0].position);
 						//entity.template getComponent<cro::Transform>().setRotation(interp.m_buffer[0].rotation);

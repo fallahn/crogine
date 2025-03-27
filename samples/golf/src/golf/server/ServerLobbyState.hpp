@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,9 @@ source distribution.
 
 #include "ServerState.hpp"
 
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/core/Clock.hpp>
+
 #include <array>
 
 namespace sv
@@ -46,14 +49,24 @@ namespace sv
 
         std::int32_t stateID() const override { return StateID::Lobby; }
 
+        void netBroadcast() override;
+
     private:
         std::int32_t m_returnValue;
         SharedData& m_sharedData;
+
+        cro::Scene m_gameScene;
 
         std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
         void insertPlayerInfo(const net::NetEvent&);
         void broadcastRules();
         void doServerCommand(const net::NetEvent&);
+
+        bool m_gameStarted;
+        cro::Clock m_serverTime;
+        void buildScene();
+        void spawnCan();
+        void spawnCoin(float, std::uint64_t);
     };
 }

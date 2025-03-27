@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2022 - 2023
+Matt Marchant - 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,10 +40,10 @@ source distribution.
 #include "NotificationSystem.hpp"
 #include "PocketBallSystem.hpp"
 #include "BilliardsSoundDirector.hpp"
-#include "MessageIDs.hpp"
 #include "server/ServerPacketData.hpp"
 #include "server/ServerMessages.hpp"
 #include "../ErrorCheck.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -149,12 +149,16 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_gameMode          (TableData::Void),
     m_readyQuitFlags    (0)
 {
+    sd.activeResources = &m_resources;
+
     Timeline::setGameMode(Timeline::GameMode::LoadingScreen);
     ctx.mainWindow.loadResources([&]()
         {
             loadAssets();
             addSystems();
             buildScene();
+
+            cacheState(StateID::Pause);
         });
     Timeline::setGameMode(Timeline::GameMode::Playing);
     ctx.mainWindow.setMouseCaptured(true);
@@ -219,6 +223,11 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
 #endif
 
     m_inputParser.setActive(false, false); //activates spectator cam input on start up
+}
+
+BilliardsState::~BilliardsState()
+{
+    m_sharedData.activeResources = nullptr;
 }
 
 //public
@@ -1155,8 +1164,8 @@ void BilliardsState::buildScene()
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete,
         m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-    m_scaleBuffer.bind(0);
-    m_resolutionBuffer.bind(1);
+    m_scaleBuffer.bind();
+    m_resolutionBuffer.bind();
 
 
 
@@ -1347,6 +1356,7 @@ void BilliardsState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::ClientDisconnected:
             removeClient(evt.packet.as<std::uint8_t>());
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
             break;
         case PacketID::AchievementGet:
             LogI << "TODO: Notify Achievement" << std::endl;

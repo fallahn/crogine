@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2024
+Matt Marchant 2024 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -368,7 +368,7 @@ bool SoundRecorder::openSelectedDevice()
 
         if (!m_captureStream)
         {
-            LogE << "Failed creating capture stream" << std::endl;
+            LogE << "Sound Recorder: Failed creating capture stream" << std::endl;
             return false;
         }
 
@@ -384,7 +384,7 @@ bool SoundRecorder::openSelectedDevice()
         if (!m_outputStream)
         {
             SDL_FreeAudioStream(m_captureStream);
-            LogE << "Failed creating output stream" << std::endl;
+            LogE << "Sound Recorder: Failed creating output stream" << std::endl;
             return false;
         }
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,7 +33,8 @@ source distribution.
 using namespace cro;
 
 AudioScape::AudioScape()
-    : m_audioResource(nullptr)
+    : m_audioResource   (nullptr),
+    m_uid               (0)
 {
 
 }
@@ -41,12 +42,22 @@ AudioScape::AudioScape()
 //public
 bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResource)
 {
+    m_configs.clear();
+    m_name.clear();
+    m_path.clear();
+    m_audioResource = nullptr;
+    m_uid = 0;
+
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path))
     {
         m_audioResource = &audioResource;
-        m_configs.clear();
-        m_name.clear();
+        m_path = path;
+
+        if (const auto* p = cfg.findProperty("uid"); p != nullptr)
+        {
+            m_uid = p->getValue<std::uint32_t>();
+        }
 
         const auto& objs = cfg.getObjects();
         for (const auto& obj : objs)
@@ -68,6 +79,23 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
                 if (propName == "path")
                 {
                     mediaPath = prop.getValue<std::string>();
+
+                    if (!FileSystem::fileExists(FileSystem::getResourcePath() + mediaPath))
+                    {
+                        //try relative path
+                        const auto relPath = FileSystem::getFilePath(path) + mediaPath;
+                        //hmm usually this is because it's in a user dir and not the resource path
+                        //but... sometimes it might be, so it won't work on macOS. (another reason to ditch it)
+                        if (FileSystem::fileExists(/*FileSystem::getResourcePath() +*/ relPath)) 
+                        {
+                            mediaPath = relPath;
+                        }
+                        else
+                        {
+                            //prevent trying to load
+                            mediaPath.clear();
+                        }
+                    }
                 }
                 else if (propName == "streaming")
                 {
@@ -99,7 +127,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
                 }
             }
 
-            if (!mediaPath.empty() && cro::FileSystem::fileExists(FileSystem::getResourcePath() + mediaPath))
+            if (!mediaPath.empty())
             {
                 if (!streaming)
                 {
@@ -124,6 +152,8 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
             {
                 LogW << obj.getId() << " found no valid media file " << mediaPath << " in " << cro::FileSystem::getFileName(path) << std::endl;
             }
+            
+            m_name = cfg.getId();
         }
 
         if (m_configs.empty())
@@ -131,7 +161,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
             LogW << "No valid AudioScape definitions were loaded from " << path << std::endl;
             return false;
         }
-        m_name = cro::FileSystem::getFileName(path);
+        //m_name = cro::FileSystem::getFileName(path);
         return true;
     }
 

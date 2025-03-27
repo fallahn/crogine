@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -123,7 +123,7 @@ Texture::~Texture()
 }
 
 //public
-void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Type format)
+void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Type format, bool floatingPoint)
 {
     CRO_ASSERT(width > 0 && height > 0, "Invalid texture size");
     CRO_ASSERT(format != ImageFormat::None, "Invalid image format");
@@ -148,17 +148,21 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
     auto smooth = m_smooth ? GL_LINEAR : GL_NEAREST;
     //GLint texFormat = GL_RGB8;
     GLint uploadFormat = GL_RGB;
+    GLint internalFormat = GL_RGB16F;
+
     std::int32_t pixelSize = 3;
     if (format == ImageFormat::RGBA)
     {
         //texFormat = GL_RGBA8;
         uploadFormat = GL_RGBA;
+        internalFormat = GL_RGBA16F;
         pixelSize = 4;
     }
     else if(format == ImageFormat::A)
     {
         //texFormat = GL_R8;
         uploadFormat = GL_RED;
+        internalFormat = GL_R16F;
         pixelSize = 1;
     }
 
@@ -169,7 +173,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
 //#ifdef GL41
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, uploadFormat, width, height, 0, uploadFormat, m_type, buffer.data()));
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, floatingPoint ? internalFormat : uploadFormat, width, height, 0, uploadFormat, m_type, buffer.data()));
 //#else
 //    glCheck(glTexStorage2D(GL_TEXTURE_2D, 1, texFormat, width, height));
 //    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));

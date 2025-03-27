@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -78,7 +78,8 @@ namespace ShaderID
 {
     enum
     {
-        Background
+        Background,
+        SMAAPreview
     };
 }
 

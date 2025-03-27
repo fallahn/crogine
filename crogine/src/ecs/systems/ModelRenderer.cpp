@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 #include <crogine/util/Frustum.hpp>
 
-#ifdef CRO_DEBUG_
+#if defined(DEBUG_WINDOWS) || defined(BENCHMARK)
 #include <crogine/gui/Gui.hpp>
 #endif
 
@@ -67,28 +67,70 @@ using namespace cro;
 
 namespace
 {
-
+    float lightMultiplier = 1.f;
 }
+//void ModelRenderer::setLightMultiplier(float m) { lightMultiplier = m; }
+
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
-    : System        (mb, typeid(ModelRenderer)),
-    m_drawLists     (1),
-    m_pass          (Mesh::IndexData::Final)/*,
+    : System                (mb, typeid(ModelRenderer)),
+    m_drawLists             (),
+    m_pass                  (Mesh::IndexData::Final),
+    m_lightUBO              ("LightUniforms")/*,
     m_tree          (1.f),
     m_useTreeQueries(false)*/
 {
     requireComponent<Transform>();
     requireComponent<Model>();
 
-#ifdef CRO_DEBUG_
+#ifdef DEBUG_WINDOWS
     addStats([&]() 
         {
             for (auto i = 0u; i < m_drawLists.size(); ++i)
             {
                 const auto sceneID = getScene()->getInstanceID();
                 const auto& dList = m_drawLists[i];
-                ImGui::Text("Visisble entities in scene %lu, to Camera %lu: %lu", sceneID, i, dList[0].size());
-            }        
+                ImGui::Text("Visisble entities in scene %lu, to Camera %lu: %lu", sceneID, i, dList[0].renderables.size());
+
+                const auto mat = dList[i].viewMatrix;
+                for (auto j = 0; j < 4; ++j)
+                {
+                    ImGui::Text("%3.3f,%3.3f,%3.3f,%3.3f", mat[j][0], mat[j][1], mat[j][2], mat[j][3]);
+                }
+            }
+        });
+
+    registerWindow([&]() 
+        {
+            ImGui::Begin("sdfg");
+
+            ImGui::End();
+        });
+#endif
+
+#ifdef BENCHMARK
+    registerWindow([&]()
+        {
+            const std::string title = "Frame Time, Scene: " + std::to_string(getScene()->getInstanceID()) + " " + getScene()->getTitle();
+            
+            if (ImGui::Begin(title.c_str()))
+            {
+                for (auto i = 0u; i < m_benchmarks.size(); ++i)
+                {
+                    if ((m_benchmarks[i].index % 10) == 0)
+                    {
+                        m_benchmarks[i].avgTime = 0.f;
+                        for (auto f : m_benchmarks[i].samples)
+                        {
+                            m_benchmarks[i].avgTime += f;
+                        }
+                        m_benchmarks[i].avgTime /= MaxBenchSamples;
+                        m_benchmarks[i].avgTime *= 1000.f;
+                    }
+                    ImGui::Text("Avg render time for camera %u: %3.3f ms", i, m_benchmarks[i].avgTime);
+                }
+            }
+            ImGui::End();
         });
 #endif
 }
@@ -97,9 +139,46 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
     const auto& camComponent = cameraEnt.getComponent<Camera>();
-    if (m_drawLists.size() <= camComponent.getDrawListIndex())
+    const auto camIndex = camComponent.getDrawListIndex();
+    const auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
+
+    if (m_drawLists.size() <= camIndex)
     {
-        m_drawLists.resize(camComponent.getDrawListIndex() + 1);
+        m_drawLists.resize(camIndex + 1);
+
+#ifdef BENCHMARK
+        m_benchmarks.resize(m_drawLists.size());
+#endif
+
+
+#ifdef PLATFORM_DESKTOP
+        m_cameraUBOs.resize(m_drawLists.size());
+        for (auto& uboPair : m_cameraUBOs)
+        {
+            //hmm the current camera might only have a single pass, though we try creating ALL
+            //currently required UBOs - without know which need a second pass, and which don't
+            for (auto i = 0; i < /*passCount*/2; ++i) 
+            {
+                if (!uboPair[i])
+                {
+                    uboPair[i] = std::make_unique<UniformBuffer<CameraUniformBlock>>("CameraUniforms");
+
+                    for (auto entity : getEntities())
+                    {
+                        const auto& model = entity.getComponent<Model>();
+                        for (auto j = 0u; j < model.getMeshData().submeshCount; ++j)
+                        {
+                            const auto& mat = model.getMaterialData(Mesh::IndexData::Final, j);
+                            if (mat.hasCameraUBO())
+                            {
+                                uboPair[i]->addShader(mat.shader);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+#endif
     }
 
     /*if (m_useTreeQueries)
@@ -110,8 +189,7 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     {
         updateDrawListDefault(cameraEnt);
     }
-    
-    auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
+
 
     //DPRINT("Visible 3D ents in Scene " + std::to_string(getScene()->getInstanceID()) 
     //    + ", Camera " + std::to_string(cameraEnt.getIndex()), std::to_string(m_drawLists[camComponent.getDrawListIndex()][0].size()));
@@ -119,9 +197,27 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     //sort lists by depth
     //flag values make sure transparent materials are rendered last
     //with opaque going front to back and transparent back to front
-    auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
+    auto& drawList = m_drawLists[camIndex];
     for (auto i = 0; i < passCount; ++i)
     {
+#ifdef PLATFORM_DESKTOP
+        auto& ubo = m_cameraUBOs[camIndex][i];
+        if (ubo->hasShaders())
+        {
+            const auto& pass = camComponent.getPass(i);
+
+            CameraUniformBlock block;
+            block.cameraWorldPosition = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
+            block.projectionMatrix = camComponent.getProjectionMatrix();
+            block.viewMatrix = pass.viewMatrix;
+            block.viewProjectionMatrix = pass.viewProjectionMatrix;
+            block.clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+
+            ubo->setData(block);
+        }
+#endif
+
+
 //apparently this won't work on gcc 9/10/11 (and should be disabled on lower versions anyway)
 #ifndef _MSC_VER
 #if __GNUC__ <= 14
@@ -133,9 +229,9 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 #endif //_MSC_VER
 
 #if defined USE_PARALLEL_PROCESSING
-        std::sort(std::execution::par, std::begin(drawList[i]), std::end(drawList[i]),
+        std::sort(std::execution::par, std::begin(drawList[i].renderables), std::end(drawList[i].renderables),
 #else
-        std::sort(std::begin(drawList[i]), std::end(drawList[i]),
+        std::sort(std::begin(drawList[i].renderables), std::end(drawList[i].renderables),
 #endif
             [](MaterialPair& a, MaterialPair& b)
             {
@@ -151,11 +247,28 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
 
 void ModelRenderer::process(float dt)
 {
+    m_lightUniforms.lightColour = getScene()->getSunlight().getComponent<Sunlight>().getColour().getVec4();
+    m_lightUniforms.lightDirection = getScene()->getSunlight().getComponent<Sunlight>().getDirection();
+    m_lightUBO.setData(m_lightUniforms);
+
     auto& entities = getEntities();
+
+#ifdef USE_PARALLEL_PROCESSING
+    std::for_each(std::execution::par, entities.cbegin(), entities.cend(),
+        [&, dt](Entity entity)
+#else
     for (auto entity : entities)
+#endif
     {
+        const auto& tx = entity.getComponent<cro::Transform>();
+
         auto& model = entity.getComponent<Model>();
         model.updateMaterialAnimations(dt);
+
+        //this is used when updating the modelView mat for each
+        //draw list, below, as well as during render()
+        model.m_activeWorldMatrix = tx.getWorldTransform();
+        model.m_activeNormalMatrix = glm::inverseTranspose(glm::mat3(model.m_activeWorldMatrix));
 
         /*if (m_useTreeQueries)
         {
@@ -174,16 +287,50 @@ void ModelRenderer::process(float dt)
             }
         }*/
     }
+#ifdef USE_PARALLEL_PROCESSING
+    );
+#endif
+
+    //for each camera
+    for (auto& drawList : m_drawLists)
+    {
+        //for each pass
+        for (auto i = 0; i < 2; ++i)
+        {
+            auto& list = drawList[i].renderables;
+#ifdef USE_PARALLEL_PROCESSING
+            std::for_each(std::execution::par, list.begin(), list.end(),
+                [&, dt](MaterialPair& pair)
+#else
+            for (MaterialPair& pair : list)
+#endif
+            {
+                auto& [entity, sortData] = pair;
+                sortData.worldViewMatrix = drawList[i].viewMatrix * entity.getComponent<cro::Model>().m_activeWorldMatrix;
+            }
+#ifdef USE_PARALLEL_PROCESSING
+                );
+#endif
+        }
+    }
 }
 
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
+#ifdef BENCHMARK
+    m_timer.restart();
+#endif
+    m_lightUBO.bind();
+    
     const auto& camComponent = camera.getComponent<Camera>();
-    if (camComponent.getDrawListIndex() < m_drawLists.size())
+    const auto camIndex = camComponent.getDrawListIndex();
+    if (camIndex < m_drawLists.size())
     {
+        m_cameraUBOs[camIndex][camComponent.getActivePassIndex()]->bind();
+        
         const auto& pass = camComponent.getActivePass();
-
-        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+        //why did we have this offset here??
+        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() /*+ (0.08f * pass.getClipPlaneMultiplier())*/) * pass.getClipPlaneMultiplier();
 
         const auto& camTx = camera.getComponent<Transform>();
         auto cameraPosition = camTx.getWorldPosition();
@@ -191,27 +338,24 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
         glCheck(glCullFace(pass.getCullFace()));
 
+
         //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-        const auto& visibleEntities = m_drawLists[camComponent.getDrawListIndex()][camComponent.getActivePassIndex()];
+        const auto& visibleEntities = m_drawLists[camIndex][camComponent.getActivePassIndex()].renderables;
         for (const auto& [entity, sortData] : visibleEntities)
         {
-            //may have been marked for deletion - OK to draw but will trigger assert
+            //may have been marked for deletion - though this should never be true
+            //as we remove entities from draw lists when they're removed from the system
 #ifdef CRO_DEBUG_
-            if (!entity.isValid())
+            /*if (!entity.isValid())
             {
                 continue;
-            }
+            }*/
 #endif
 
             //foreach submesh / material:
             const auto& model = entity.getComponent<Model>();
             glCheck(glFrontFace(model.m_facing));
 
-            //calc entity transform
-            const auto& tx = entity.getComponent<Transform>();
-            const glm::mat4 worldMat = tx.getWorldTransform();
-            const glm::mat4 worldView = pass.viewMatrix * worldMat;
-            const glm::mat3 normalMat = glm::inverseTranspose(glm::mat3(worldMat));
 
 #ifndef PLATFORM_DESKTOP
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
@@ -219,33 +363,43 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
             for (auto i : sortData.matIDs)
             {
+                const auto& material = model.m_materials[Mesh::IndexData::Final][i];
+                const auto& uniforms = material.uniforms;
+
                 //bind shader
-                glCheck(glUseProgram(model.m_materials[Mesh::IndexData::Final][i].shader));
+                glCheck(glUseProgram(material.shader));
 
                 //apply shader uniforms from material
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-                applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), camComponent);
+                //FUTURE ME: if you end up back here wondering why the matrices aren't calculated correctly
+                //remember CamerSystems need to be added to a Scene BEFORE any render systems...
+                glCheck(glUniformMatrix4fv(uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(sortData.worldViewMatrix)));
+                applyProperties(material, model, *getScene(), camComponent);
 
                 //apply standard uniforms
-                glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
-                glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-                glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
-                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-                glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(normalMat)));
+                glCheck(glUniform2f(uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+                
+                if (!material.hasCameraUBO())
+                {
+                    glCheck(glUniform3f(uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+                    glCheck(glUniformMatrix4fv(uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+                    glCheck(glUniformMatrix4fv(uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+                    glCheck(glUniformMatrix4fv(uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+                    glCheck(glUniform4f(uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
+                }
+                glCheck(glUniformMatrix4fv(uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(model.m_activeWorldMatrix)));
+                glCheck(glUniformMatrix3fv(uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(model.m_activeNormalMatrix)));
 
-                applyBlendMode(model.m_materials[Mesh::IndexData::Final][i]/*.blendMode*/);
+                applyBlendMode(material);
 
                 //TODO move these to custom settings list
-                glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
-                glCheck(model.m_materials[Mesh::IndexData::Final][i].enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
+                glCheck(material.doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
+                glCheck(material.enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
 
-                model.m_materials[Mesh::IndexData::Final][i].enableCustomSettings();
+                material.enableCustomSettings();
 
 #ifdef PLATFORM_DESKTOP
                 model.draw(i, Mesh::IndexData::Final);
+                //model.decrementDrawlistCount();
 
 #else //GLES 2 doesn't have VAO support without extensions
 
@@ -274,7 +428,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                     glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
                 }
 #endif //PLATFORM 
-                model.m_materials[Mesh::IndexData::Final][i].disableCustomSettings();
+                material.disableCustomSettings();
             }
         }
 
@@ -292,6 +446,11 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
     }
+#ifdef BENCHMARK
+    if (m_benchmarks.size() <= camIndex) m_benchmarks.resize(camIndex+1); //hmmm we shouldn't need this
+    m_benchmarks[camIndex].samples[m_benchmarks[camIndex].index] = m_timer.restart();
+    m_benchmarks[camIndex].index = (m_benchmarks[camIndex].index + 1) % MaxBenchSamples;
+#endif
 }
 
 std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex) const
@@ -302,9 +461,9 @@ std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t
     default: return 0;
     case Camera::Pass::Final:
     case Camera::Pass::Refraction:
-        return m_drawLists[cameraIndex][Camera::Pass::Final].size();
+        return m_drawLists[cameraIndex][Camera::Pass::Final].renderables.size();
     case Camera::Pass::Reflection:
-        return m_drawLists[cameraIndex][Camera::Pass::Reflection].size();
+        return m_drawLists[cameraIndex][Camera::Pass::Reflection].renderables.size();
     }
     return 0;
 }
@@ -351,11 +510,105 @@ void ModelRenderer::onEntityAdded(Entity entity)
     model.updateBounds();
 
     //model.m_treeID = m_tree.addToTree(entity, model.getAABB());
+
+#ifdef PLATFORM_DESKTOP
+    
+    //iterate materials and attempt to add to uniform buffer
+    //UBO class automatically checks if this is valid for us.
+    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+    {
+        const auto& mat = model.getMaterialData(Mesh::IndexData::Final, i);
+        if (mat.hasCameraUBO())
+        {    
+            for (auto& uboPair : m_cameraUBOs)
+            {
+                for (auto& ubo : uboPair)
+                {
+                    if (ubo)
+                    {
+                        ubo->addShader(mat.shader);
+                    }
+                }
+            }
+        }
+
+        if (mat.hasLightUBO())
+        {
+            m_lightUBO.addShader(mat.shader);
+        }
+    }
+
+    //ofc this may all be undone if we change the material on the component...
+    model.materialChangedCallback =
+        [&](std::uint32_t oldShader, std::uint32_t newShader)
+        {
+            for (auto& uboPair : m_cameraUBOs)
+            {
+                for (auto& ubo : uboPair)
+                {
+                    if (ubo)
+                    {
+                        ubo->removeShader(oldShader);
+                        ubo->addShader(newShader); //hmm this might add a shader which doesn't actually support this block
+                    }
+                }
+            }
+
+            //plus we can't assume that just because it has a camera ubo
+            //that it also uses lighting...
+            m_lightUBO.removeShader(oldShader);
+            m_lightUBO.addShader(newShader);
+        };
+#endif
 }
 
 void ModelRenderer::onEntityRemoved(Entity entity)
 {
     //m_tree.removeFromTree(entity.getComponent<Model>().m_treeID);
+
+#ifdef PLATFORM_DESKTOP
+    //remove any materials from camera UBOs
+    const auto& model = entity.getComponent<Model>();
+    for (auto i = 0u; i < model.getMeshData().submeshCount; ++i)
+    {
+        for (auto& uboPair : m_cameraUBOs)
+        {
+            for (auto& ubo : uboPair)
+            {
+                if (ubo)
+                {
+                    ubo->removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+                }
+            }
+        }
+        m_lightUBO.removeShader(model.getMaterialData(Mesh::IndexData::Final, i).shader);
+    }
+#endif
+
+    flushEntity(entity);
+}
+
+void ModelRenderer::flushEntity(Entity entity)
+{
+    //remove this from any drawlists which may otherwise be static
+    for (auto& dl : m_drawLists)
+    {
+        for (auto& pl : dl)
+        {
+            //if (!pl.renderables.empty()) //hmm is this check even necessary?
+            {
+#ifdef USE_PARALLEL_PROCESSING
+                pl.renderables.erase(std::remove_if(std::execution::par, pl.renderables.begin(), pl.renderables.end(),
+#else
+                pl.renderables.erase(std::remove_if(pl.renderables.begin(), pl.renderables.end(),
+#endif
+                    [entity](const MaterialPair& p)
+                    {
+                        return p.first == entity;
+                    }), pl.renderables.end());
+            }
+        }
+    }
 }
 
 //private
@@ -371,9 +624,17 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
 
     //cull entities by viewable into draw lists by pass
-    for (auto& list : drawList)
+    for (auto i = 0; i < passCount; ++i)
     {
-        list.clear();
+        //TODO remove or parallelise
+        for (auto& [ent, _] : drawList[i].renderables)
+        {
+            ent.getComponent<cro::Model>().decrementDrawlistCount();
+        }
+
+        //also store the view mat so we can update model worldView mat in process()
+        drawList[i].renderables.clear();
+        drawList[i].viewMatrix = camComponent.getPass(i).viewMatrix;
     }
 #ifdef USE_PARALLEL_PROCESSING
     std::mutex mutex;
@@ -476,18 +737,20 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 
                 if (!opaque.second.matIDs.empty())
                 {
+                    model.m_drawlistCount++;
 #ifdef USE_PARALLEL_PROCESSING
                     std::scoped_lock l(mutex);
 #endif
-                    drawList[p].push_back(opaque);
+                    drawList[p].renderables.push_back(opaque);
                 }
 
                 if (!transparent.second.matIDs.empty())
                 {
+                    model.m_drawlistCount++;
 #ifdef USE_PARALLEL_PROCESSING
                     std::scoped_lock l(mutex);
 #endif
-                    drawList[p].push_back(transparent);
+                    drawList[p].renderables.push_back(transparent);
                 }
             }
         }
@@ -734,8 +997,9 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             break;
         case Material::SunlightColour:
         {
-            auto colour = scene.getSunlight().getComponent<Sunlight>().getColour();
-            glCheck(glUniform4f(material.uniforms[Material::SunlightColour], colour.getRed(), colour.getGreen(), colour.getBlue(), colour.getAlpha()));
+            //usually in a uniform buffer, here for shaders which don't have the datablock
+            const glm::vec4 colour = scene.getSunlight().getComponent<Sunlight>().getColour().getVec4();
+            glCheck(glUniform4f(material.uniforms[Material::SunlightColour], colour.r/* * lightMultiplier*/, colour.g/* * lightMultiplier*/, colour.b /** lightMultiplier*/, colour.a));
         }
             break;
         case Material::SunlightDirection:

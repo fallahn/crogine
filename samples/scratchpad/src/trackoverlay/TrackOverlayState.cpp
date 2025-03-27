@@ -484,7 +484,7 @@ void TrackOverlayState::loadAlbumDirectory()
     m_textStrings.clear();
 
     std::uint32_t index = 0;
-    cro::Image thumbImage;
+    cro::Image thumbImage(true);
 
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(m_settings.albumDirectory + "/tracklist.cfg"))

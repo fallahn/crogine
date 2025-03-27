@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -54,7 +54,7 @@ public:
     //returns false if there was no array texture to create
     //model texture is layer 0, followed by position, normal
     //and optionally tangent
-    bool fillArrayTexture(cro::ArrayTexture<float, 4>&) const;
+    bool fillArrayTexture(cro::ArrayTexture<float, 4, cro::TexturePrecision::Low>&) const;
 
 private:
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -262,8 +262,8 @@ void SimpleText::updateVertices()
 
 void SimpleText::onFontUpdate()
 {
-    //m_dirtyFlags |= DirtyFlags::All;
     updateVertices();
+    m_dirtyFlags |= DirtyFlags::All;
 }
 
 void SimpleText::removeFont()

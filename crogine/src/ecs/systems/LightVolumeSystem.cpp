@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -26,8 +26,6 @@ and must not be misrepresented as being the original software.
 source distribution.
 
 -----------------------------------------------------------------------*/
-
-
 
 
 #include <crogine/core/App.hpp>
@@ -382,6 +380,31 @@ void LightVolumeSystem::setSourceBuffer(TextureID id, std::int32_t index)
 const std::vector<Entity>& LightVolumeSystem::getDrawList(std::size_t index) const
 {
     return m_drawLists[index];
+}
+
+//private
+void LightVolumeSystem::onEntityRemoved(Entity e)
+{
+    flushEntity(e);
+}
+
+void LightVolumeSystem::flushEntity(Entity e)
+{
+    for (auto& list : m_drawLists)
+    {
+        //if (!list.empty())
+        {
+#ifdef USE_PARALLEL_PROCESSING
+            list.erase(std::remove_if(std::execution::par, list.begin(), list.end(),
+#else
+            list.erase(std::remove_if(list.begin(), list.end(),
+#endif
+                [e](Entity ent)
+                {
+                    return e == ent;
+                }), list.end());
+        }
+    }
 }
 
 #ifdef PARALLEL_DISABLE

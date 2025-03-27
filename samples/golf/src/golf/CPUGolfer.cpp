@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -72,7 +72,7 @@ namespace
     constexpr float SearchIncrease = 10.f;
     constexpr float Epsilon = 0.005f;
     constexpr std::int32_t MaxRetargets = 6;// 12;
-    constexpr std::int32_t RetargetsPerDirection = 3;
+    //constexpr std::int32_t RetargetsPerDirection = 3;
     constexpr std::int32_t MaxPredictions = 20;
 
     template <typename T>
@@ -654,28 +654,28 @@ void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& shared
     if (cpuCount)
     {
         std::int32_t baseCPUIndex = 0;
-        std::int32_t stride = 1;
+        //std::int32_t stride = 1;
 
         switch (/*Social::getClubLevel()*/sharedData.clubSet)
         {
         default: break;
         case 0:
             baseCPUIndex = 12;
-            stride = 16 / cpuCount; //even distribution through 16x level 0
+            //stride = 16 / cpuCount; //even distribution through 16x level 0
             break;
         case 1:
             baseCPUIndex = 8;
-            stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
+            //stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
             break;
         case 2:
-            stride = cpuCount < 3 ? 1 :
+            /*stride = cpuCount < 3 ? 1 :
                 cpuCount < 8 ? 2 :
-                27 / cpuCount;
+                27 / cpuCount;*/
             break;
         }
 
 
-        CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
+        //CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
 
         for (auto i = 0u; i < sharedData.connectionData.size(); ++i)
         {

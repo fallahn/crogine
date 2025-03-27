@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,15 +30,15 @@ source distribution.
 #pragma once
 
 #include <string>
-//static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320 in 3 places");
-inline const std::string WaterVertex = R"(
+
+static inline const std::string WaterVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
 
+#include CAMERA_UBO
+
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewMatrix;
-    uniform mat4 u_viewProjectionMatrix;
 
     uniform mat4 u_reflectionMatrix;
     uniform mat4 u_lightViewProjectionMatrix;
@@ -75,7 +75,7 @@ inline const std::string WaterVertex = R"(
         v_scale = u_worldMatrix[0][0];
     })";
 
-inline const std::string WaterFragment = R"(
+static inline const std::string WaterFragment = R"(
 #include OUTPUT_LOCATION
     #define MAX_RADIUS 239.9
 
@@ -88,8 +88,9 @@ inline const std::string WaterFragment = R"(
 #if !defined(NO_DEPTH)
 uniform sampler2DArray u_depthMap;
 #endif
-    uniform vec3 u_cameraWorldPosition;
-    uniform float u_radius = MAX_RADIUS;
+   #include CAMERA_UBO
+
+   uniform float u_radius = MAX_RADIUS;
 
 //dirX, strength, dirZ, elapsedTime
 #include WIND_BUFFER
@@ -225,7 +226,7 @@ uniform sampler2DArray u_depthMap;
         FRAG_OUT = vec4(blendedColour, 1.0);
     })";
 
-    inline const std::string HorizonVert = 
+    static inline const std::string HorizonVert = 
         R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -245,7 +246,7 @@ uniform sampler2DArray u_depthMap;
         v_texCoord = a_texCoord0;
     })";
 
-    inline const std::string HorizonFrag = 
+    static inline const std::string HorizonFrag = 
         R"(
     OUTPUT
 

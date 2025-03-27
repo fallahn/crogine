@@ -349,6 +349,19 @@ namespace cro
             */
             void setShader(const Shader&);
 
+            /*!
+            \brief Returns true if the material shader supports the camera UBO block
+            Used internally by the ModelRenderer system
+            */
+            bool hasCameraUBO() const { return m_hasCameraUBO; }
+
+            /*!
+            \brief Returns true if the material shader supports the lighting UBO block
+            Used internally by the ModelRenderer system
+            */
+            bool hasLightUBO() const { return m_hasLightUBO; }
+
+
             /*
             Here be dragons! Don't modify these variables as they are configured
             by the above function. These values should be considered read-only
@@ -369,6 +382,9 @@ namespace cro
         private:
             std::unordered_map<std::string, bool> m_warnings;
             void exists(const std::string&);
+
+            bool m_hasCameraUBO = false;
+            bool m_hasLightUBO = false;
 
             static constexpr std::size_t MaxCustomSettings = 10;
             std::size_t m_customSettingsCount = 0;

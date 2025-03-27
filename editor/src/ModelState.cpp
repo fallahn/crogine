@@ -611,14 +611,14 @@ void ModelState::savePrefs()
     };
 
     cro::ConfigFile prefsOut;
-    prefsOut.addProperty("show_groundplane", m_showGroundPlane ? "true" : "false");
-    prefsOut.addProperty("show_skybox", m_showSkybox ? "true" : "false");
+    prefsOut.addProperty("show_groundplane").setValue(m_showGroundPlane);
+    prefsOut.addProperty("show_skybox").setValue(m_showSkybox);
     prefsOut.addProperty("show_material").setValue(m_showMaterialWindow);
     prefsOut.addProperty("sky_colour").setValue(getContext().appInstance.getClearColour());
 
-    prefsOut.addProperty("import_dir", m_preferences.lastImportDirectory);
-    prefsOut.addProperty("export_dir", m_preferences.lastExportDirectory);
-    prefsOut.addProperty("model_dir", m_preferences.lastModelDirectory);
+    prefsOut.addProperty("import_dir").setValue(m_preferences.lastImportDirectory);
+    prefsOut.addProperty("export_dir").setValue(m_preferences.lastExportDirectory);
+    prefsOut.addProperty("model_dir").setValue(m_preferences.lastModelDirectory);
 
     if (prefsOut.save(cro::App::getPreferencePath() + "model_viewer.cfg"))
     {
@@ -866,8 +866,8 @@ void ModelState::bakeLightmap()
 
         const auto& shader = m_resources.shaders.get(LightmapShaderID);
         glCheck(glUseProgram(shader.getGLHandle()));
-        glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_projectionMatrix"), 1, GL_FALSE, &projMat[0][0]));
-        glCheck(glUniformMatrix4fv(shader.getUniformMap().at("u_viewMatrix"), 1, GL_FALSE, &viewMat[0][0]));
+        glCheck(glUniformMatrix4fv(shader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &projMat[0][0]));
+        glCheck(glUniformMatrix4fv(shader.getUniformID("u_viewMatrix"), 1, GL_FALSE, &viewMat[0][0]));
 
         for (auto i = 0u; i < meshData.submeshCount; ++i)
         {

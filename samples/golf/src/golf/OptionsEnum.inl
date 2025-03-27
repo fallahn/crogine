@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,6 +35,7 @@ enum OptionsIndex
     Tab = 100,
     TabAV,
     TabController,
+    TabSettings,
     TabAchievements,
     TabStats,
 
@@ -59,16 +60,13 @@ enum OptionsIndex
     AVBeacon,
     AVBeaconL,
     AVBeaconR,
-    AVRemoteContent,
+    AVLightMap,
     AVLensFlare,
     AVTextToSpeech,
     AVTrail,
     AVTrailL,
     AVTrailR,
     AVPuttAss,
-    AVPost,
-    AVPostL,
-    AVPostR,
     AVUnits,
     AVGridL,
     AVGridR,
@@ -79,6 +77,7 @@ enum OptionsIndex
     AVCrowdL,
     AVCrowdR,
     AVLargePower,
+    AVContrastPower,
     AVDecPower,
     AVDecDist,
     AVFixedPutter,
@@ -108,18 +107,33 @@ enum OptionsIndex
     CtrlSwg,
     CtrlReset,
     CtrlTab,
+    CtrlButtonCount,
 
-
+    Settings = 400,
+    SettWebsockEnable,
+    SettWebPortDown,
+    SettWebPortUp,
+    SettCSVLog,
+    SettInGameChat,
+    SettLogChat,
+    SettRemoteContent,
+    SettFlagDown,
+    SettFlagUp,
+    SettFlagLabelDown,
+    SettFlagLabelUp,
+    SettPost,
+    SettPostL,
+    SettPostR,
 
     
-    Scroll = 400,
+    Scroll = 1000,
     ScrollUp,
     ScrollDown,
     ResetStats,
     ResetCareer,
 
 
-    Window = 1000,
+    Window = 2000,
     WindowCredits,
     WindowAdvanced,
     WindowApply,

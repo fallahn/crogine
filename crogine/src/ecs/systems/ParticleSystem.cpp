@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -265,24 +265,23 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
             handle.id = shader->getGLHandle();
 
             //fetch uniforms.
-            const auto& uniforms = shader->getUniformMap();
 #ifdef PLATFORM_DESKTOP
-            handle.uniformIDs[UniformID::ClipPlane] = uniforms.find("u_clipPlane")->second;
+            handle.uniformIDs[UniformID::ClipPlane] = shader->getUniformID("u_clipPlane");
 #endif
-            handle.uniformIDs[UniformID::Projection] = uniforms.find("u_projection")->second;
+            handle.uniformIDs[UniformID::Projection] = shader->getUniformID("u_projection");
             if (i == ShaderID::Alpha)
             {
-                handle.uniformIDs[UniformID::LightColour] = uniforms.find("u_lightColour")->second;
+                handle.uniformIDs[UniformID::LightColour] = shader->getUniformID("u_lightColour");
             }
-            handle.uniformIDs[UniformID::Texture] = uniforms.find("u_texture")->second;
-            handle.uniformIDs[UniformID::ViewProjection] = uniforms.find("u_viewProjection")->second;
-            handle.uniformIDs[UniformID::Viewport] = uniforms.find("u_viewportHeight")->second;
-            handle.uniformIDs[UniformID::ParticleSize] = uniforms.find("u_particleSize")->second;
-            handle.uniformIDs[UniformID::TextureSize] = uniforms.find("u_textureSize")->second;
-            handle.uniformIDs[UniformID::FrameCount] = uniforms.find("u_frameCount")->second;
-            if (uniforms.count("u_cameraRange"))
+            handle.uniformIDs[UniformID::Texture] = shader->getUniformID("u_texture");
+            handle.uniformIDs[UniformID::ViewProjection] = shader->getUniformID("u_viewProjection");
+            handle.uniformIDs[UniformID::Viewport] = shader->getUniformID("u_viewportHeight");
+            handle.uniformIDs[UniformID::ParticleSize] = shader->getUniformID("u_particleSize");
+            handle.uniformIDs[UniformID::TextureSize] = shader->getUniformID("u_textureSize");
+            handle.uniformIDs[UniformID::FrameCount] = shader->getUniformID("u_frameCount");
+            //if (uniforms.count("u_cameraRange"))
             {
-                handle.uniformIDs[UniformID::CameraRange] = uniforms.find("u_cameraRange")->second;
+                handle.uniformIDs[UniformID::CameraRange] = shader->getUniformID("u_cameraRange");
             }
 
             //map attributes
@@ -311,6 +310,12 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
         allocateBuffer();
     }
 
+    m_randomColours[0] = cro::Colour::Red;
+    m_randomColours[1] = cro::Colour::Green;
+    m_randomColours[2] = cro::Colour::Blue;
+    m_randomColours[3] = cro::Colour::Yellow;
+    m_randomColours[4] = cro::Colour::Magenta;
+    m_randomColours[5] = cro::Colour::Cyan;
 
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
@@ -446,7 +451,7 @@ void ParticleSystem::process(float dt)
     const auto& entities = getEntities();
     const auto fallbackTextureID = m_fallbackTexture.getGLHandle();
 #ifdef USE_PARALLEL_PROCESSING
-    std::for_each(std::execution::par, entities.begin(), entities.end(), [dt, fallbackTextureID](Entity e)
+    std::for_each(std::execution::par, entities.begin(), entities.end(), [&, dt, fallbackTextureID](Entity e)
 #else
     for (auto e : entities/*m_potentiallyVisible*/)
 #endif
@@ -502,7 +507,7 @@ void ParticleSystem::process(float dt)
                         CRO_ASSERT(settings.emitRate > 0, "Emit rate must be grater than 0");
                         CRO_ASSERT(settings.lifetime > 0, "Lifetime must be greater than 0");
                         auto& p = emitter.m_particles[emitter.m_nextFreeParticle];
-                        p.colour = settings.colour;
+                        p.colour = settings.useRandomColour ? m_randomColours[Util::Random::value(0u, MaxRandomColours - 1)] : settings.colour;
                         p.gravity = settings.gravity;
                         p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
                         //p.lifetime -= (emitter.m_currentTimestamp - emitter.m_emissionTimestamp);
@@ -840,6 +845,31 @@ void ParticleSystem::onEntityRemoved(Entity entity)
     std::swap(m_vaoIDs[idx], m_vaoIDs[m_nextBuffer]);
 
     m_nextBuffer--;
+
+    //flush entity from draw lists
+    flushEntity(entity);
+}
+
+void ParticleSystem::flushEntity(Entity e)
+{
+    for (auto& list : m_drawLists)
+    {
+        for (auto& p : list)
+        {
+            //if (!p.empty())
+            {
+#ifdef USE_PARALLEL_PROCESSING
+                p.erase(std::remove_if(std::execution::par, p.begin(), p.end(),
+#else
+                p.erase(std::remove_if(p.begin(), p.end(),
+#endif
+                    [e](Entity ent)
+                    {
+                        return e == ent;
+                    }), p.end());
+            }
+        }
+    }
 }
 
 void ParticleSystem::allocateBuffer()

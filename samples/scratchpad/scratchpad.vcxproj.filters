@@ -169,6 +169,9 @@
     <Filter Include="Header Files\groundskeeper">
       <UniqueIdentifier>{c48e3157-2496-4f39-8918-f763ddd9b1c9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\batcat\smaa shaders">
+      <UniqueIdentifier>{3fb6e4e0-c6d1-4fe8-95a9-1452a82b36b5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -341,6 +344,9 @@
     </ClCompile>
     <ClCompile Include="src\gk\GKGameState.cpp">
       <Filter>Source Files\groundskeeper</Filter>
+    </ClCompile>
+    <ClCompile Include="src\batcat\SMAAPost.cpp">
+      <Filter>Source Files\batcat</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -566,6 +572,9 @@
     <ClInclude Include="src\gk\GKGameState.hpp">
       <Filter>Header Files\groundskeeper</Filter>
     </ClInclude>
+    <ClInclude Include="src\batcat\SMAAPost.hpp">
+      <Filter>Header Files\batcat</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">
@@ -594,6 +603,15 @@
     </None>
     <None Include="src\pseuthe\PseuthePostFX.inl">
       <Filter>Header Files\pseuthe</Filter>
+    </None>
+    <None Include="src\batcat\smaa_shaders\edges.inl">
+      <Filter>Header Files\batcat\smaa shaders</Filter>
+    </None>
+    <None Include="src\batcat\smaa_shaders\weights.inl">
+      <Filter>Header Files\batcat\smaa shaders</Filter>
+    </None>
+    <None Include="src\batcat\smaa_shaders\blend.inl">
+      <Filter>Header Files\batcat\smaa shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

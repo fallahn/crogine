@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -31,12 +31,13 @@ source distribution.
 
 #include <string>
 
-inline const std::string GlowVertex = 
+static inline const std::string GlowVertex = 
 R"(
 ATTRIBUTE vec4 a_position;
 ATTRIBUTE vec3 a_normal;
 ATTRIBUTE vec4 a_colour;
 
+#include CAMERA_UBO
 #include WVP_UNIFORMS
 
 #if defined(SKINNED)
@@ -67,12 +68,13 @@ void main()
 
 )";
 
-inline const std::string GlowFragment =
+static inline const std::string GlowFragment =
 R"(
 #define USE_MRT
 #include OUTPUT_LOCATION
 
-uniform vec3 u_cameraWorldPosition;
+#include CAMERA_UBO
+
 uniform vec4 u_ballColour = vec4(1.0);
 
 VARYING_IN vec4 v_colour;
@@ -103,7 +105,7 @@ void main()
 
     colour = hsv2rgb(colour);
 
-colour += vec3((1.0 - outer) * 0.01);
+    colour += vec3((1.0 - outer) * 0.01);
 
     FRAG_OUT = vec4(colour, 1.0);
     LIGHT_OUT = vec4(FRAG_OUT.rgb * smoothstep(0.01, 12.0, dot(viewDist, viewDist)), 1.0);

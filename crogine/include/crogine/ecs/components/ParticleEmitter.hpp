@@ -110,6 +110,8 @@ namespace cro
         bool animate = false; //!< If true the particle will attempt to play through all animation frames once.
         bool useRandomFrame = false; //!< If true the particle will pick a frame at random when spawning
 
+        bool useRandomColour = false;
+
         glm::vec2 textureSize = glm::vec2(0.f);
 
         bool loadFromFile(const std::string&, TextureResource&);

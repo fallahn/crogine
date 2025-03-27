@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string MinimapVertex = R"(
+static inline const std::string MinimapVertex = R"(
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewProjectionMatrix;
 
@@ -50,7 +50,7 @@ inline const std::string MinimapVertex = R"(
         })";
 
 //minimap as in top down view of green/flight camera
-inline const std::string MinimapFragment = R"(
+static inline const std::string MinimapFragment = R"(
         
         uniform sampler2D u_texture;
         uniform sampler2D u_depthTexture;
@@ -157,7 +157,7 @@ inline const std::string MinimapFragment = R"(
 
 //minimap as in mini course view
 //well, this is a silly inconsistency...
-inline const std::string MinimapViewVertex = R"(
+static inline const std::string MinimapViewVertex = R"(
         ATTRIBUTE vec2 a_position;
         ATTRIBUTE vec2 a_texCoord0;
         ATTRIBUTE vec4 a_colour;
@@ -179,7 +179,7 @@ inline const std::string MinimapViewVertex = R"(
             v_colour = a_colour;
         })";
 
-inline const std::string MinimapViewFragment = R"(
+static inline const std::string MinimapViewFragment = R"(
         uniform sampler2D u_texture;
 
         VARYING_IN vec2 v_texCoord0;

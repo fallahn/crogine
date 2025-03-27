@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/detail/Assert.hpp>
 #include <crogine/Config.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
+
 #include <crogine/ecs/ComponentPool.hpp>
 #include <crogine/ecs/Component.hpp>
 
@@ -64,19 +66,16 @@ namespace cro
     class CRO_EXPORT_API Entity final
     {
     public:
-        using ID = std::uint32_t;
-        using Generation = std::uint8_t;
-
         Entity();
 
         /*
         \brief Returns the index of this entity
         */
-        ID getIndex() const;
+        std::uint32_t getIndex() const;
         /*!
         \brief Returns the generation of this entity
         */
-        Generation getGeneration() const;
+        std::uint8_t getGeneration() const;
 
         /*!
         \brief Returns true if the entity is marked for destruction
@@ -169,9 +168,9 @@ namespace cro
         }
     private:
 
-        explicit Entity(ID index, Generation generation);
+        explicit Entity(std::uint32_t index, std::uint8_t generation);
 
-        ID m_id;
+        std::uint32_t m_id;
         EntityManager* m_entityManager;
         friend class EntityManager;
         friend class Scene;
@@ -181,7 +180,7 @@ namespace cro
     /*!
     \brief Manages the relationship between an Entity and its components
     */
-    class CRO_EXPORT_API EntityManager final
+    class CRO_EXPORT_API EntityManager final : public GuiClient
     {
     public:
         EntityManager(MessageBus&, ComponentManager&, std::size_t = 128);
@@ -215,7 +214,7 @@ namespace cro
         /*!
         \brief Returns the entity at the given index if it exists TODO what if it doesn't?
         */
-        Entity getEntity(Entity::ID) const;
+        Entity getEntity(std::uint32_t) const;
 
         /*!
         \brief Adds a copy of the given component to the given Entity
@@ -276,11 +275,17 @@ namespace cro
         void markDestroyed(Entity entity);
 
 
+        /*!
+        \brief Sets a label for the current instance for debugging.
+        Automatically called by Scene::setTitle()
+        */
+        void setTitle(const std::string& s) { m_debugTitle = s; }
+
     private:
         MessageBus& m_messageBus;
         std::size_t m_initialPoolSize;
-        std::deque<Entity::ID> m_freeIDs;
-        std::vector<Entity::Generation> m_generations; // < indexed by entity ID
+        std::deque<std::uint32_t> m_freeIDs;
+        std::vector<std::uint8_t> m_generations; // < indexed by entity ID
         std::vector<std::unique_ptr<Detail::Pool>> m_componentPools; // < index is component ID. Pool index is entity ID.
         std::vector<ComponentMask> m_componentMasks;
 
@@ -289,6 +294,8 @@ namespace cro
         std::vector<bool> m_destructionFlags;
 
         ComponentManager& m_componentManager;
+
+        std::string m_debugTitle;
 
         template <typename T>
         Detail::ComponentPool<T>& getPool();

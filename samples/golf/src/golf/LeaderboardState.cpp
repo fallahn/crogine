@@ -126,6 +126,7 @@ LeaderboardState::LeaderboardState(cro::StateStack& ss, cro::State::Context ctx,
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus(), 256/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_sharedData        (sd),
+    m_resources         (*sd.activeResources),
     m_viewScale         (2.f)
 {
     Social::updateHallOfFame();
@@ -217,7 +218,7 @@ bool LeaderboardState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }

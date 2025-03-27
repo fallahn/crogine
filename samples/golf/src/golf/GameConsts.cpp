@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,7 +37,8 @@ source distribution.
 bool hasPSLayout(std::int32_t controllerID)
 {
 #ifdef USE_GNS
-    if (Social::isSteamdeck())
+    //big picture mode means we have native controller handles so querying SteamInput is useless
+    if (Social::isSteamdeck(false)) 
     {
         return Input::isPSController(cro::GameController::getSteamHandle(controllerID));  
     }

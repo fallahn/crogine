@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string BushVertex =
+static inline const std::string BushVertex =
 R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -43,12 +43,9 @@ R"(
     uniform mat3 u_normalMatrix;
 #endif
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewMatrix;
-    uniform mat4 u_viewProjectionMatrix;
-    uniform mat4 u_projectionMatrix;
-    uniform vec3 u_cameraWorldPosition;
 
-    uniform vec4 u_clipPlane;
+#include CAMERA_UBO
+
     uniform float u_targetHeight = 300.0; //height of the render target multiplied by its viewport, ie height of the renderable area
 
     uniform float u_leafSize = 0.25; //world units, in this case metres
@@ -246,7 +243,7 @@ v_data.ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 
         gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
 
-inline const std::string BushGeom = R"(
+static inline const std::string BushGeom = R"(
 
 #if defined (POINTS)
     layout (points) in;
@@ -321,15 +318,14 @@ inline const std::string BushGeom = R"(
 #endif
     })";
 
-inline const std::string BushFragment =
+static inline const std::string BushFragment =
 R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
-    uniform vec3 u_lightDirection;
     uniform vec3 u_colour = vec3(1.0);
-    uniform vec4 u_lightColour;
 
+#include LIGHT_UBO
 #include SCALE_BUFFER
 
     in vData
@@ -402,7 +398,7 @@ R"(
         FRAG_OUT = vec4(colour, 1.0) * textureColour * getLightColour();
     })";
 
-inline const std::string BranchVertex = R"(
+static inline const std::string BranchVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -414,11 +410,9 @@ inline const std::string BranchVertex = R"(
     uniform mat3 u_normalMatrix;
 #endif
 
-    uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
-    uniform vec4 u_clipPlane;
-    uniform vec3 u_cameraWorldPosition;
+#include CAMERA_UBO
 
+    uniform mat4 u_worldMatrix;
     uniform sampler2D u_noiseTexture;
 
 //dirX, strength, dirZ, elapsedTime
@@ -506,13 +500,12 @@ v_ditherAmount *= 1.0 - clamp((distance - FarFadeDistance) / fadeDistance, 0.0, 
         gl_ClipDistance[1] = dot(worldPosition, vec4(vec3(0.0, 1.0, 0.0), WaterLevel - 0.001));
     })";
 
-inline const std::string BranchFragment = R"(
+static inline const std::string BranchFragment = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
-    uniform vec3 u_lightDirection;
-    uniform vec4 u_lightColour;
 
+#include LIGHT_UBO
 #include SCALE_BUFFER
 
     VARYING_IN float v_ditherAmount;

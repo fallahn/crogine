@@ -44,6 +44,12 @@ if(NOT GNS_TAG)
   SET(GNS_TAG "origin/master")
 endif()
 
+#TODO websockets uses this?
+#if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+#  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+#endif()
+
+
 # We're using c++17
 SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -112,10 +118,11 @@ include(${PROJECT_DIR}/golf/CMakeLists.txt)
 include(${PROJECT_DIR}/editor/CMakeLists.txt)
 include(${PROJECT_DIR}/runner/CMakeLists.txt)
 include(${PROJECT_DIR}/scrub/CMakeLists.txt)
+include(${PROJECT_DIR}/sockets/CMakeLists.txt)
 include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
-SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SCRUB_SRC} ${SQLITE_SRC})
+SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${ENDLESS_SRC} ${SCRUB_SRC} ${SOCKETS_SRC} ${SQLITE_SRC})
 #Steam version actually uses this too now...
 #if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
@@ -182,7 +189,7 @@ target_link_libraries(${PROJECT_NAME}
   ${SQLite3_LIBRARIES}  
   ${OPENGL_LIBRARIES})
 
-if (TARGET crogine)
+if(TARGET crogine)
  target_link_libraries(${PROJECT_NAME} crogine)
 endif()
 
@@ -195,6 +202,19 @@ if(USE_STEAM)
 else()
   target_link_libraries(${PROJECT_NAME} CURL::libcurl)
 endif()
+
+#websockets needs this
+if (WIN32)
+  target_link_libraries(${PROJECT_NAME} wsock32 ws2_32 shlwapi)
+endif()
+
+if (UNIX AND NOT APPLE)
+  set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+  find_package(Threads)
+  target_link_libraries(${PROJECT_NAME} Threads::Threads)
+endif()
+#end websockets
+
 
 if(APPLE)
   # Install the app bundle to the root install folder

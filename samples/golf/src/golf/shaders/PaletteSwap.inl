@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,7 +36,7 @@ Palette swap technique based on https://gamedev.stackexchange.com/questions/8057
 
 #include <string>
 
-inline const std::string PaletteSwapVertex = 
+static inline const std::string PaletteSwapVertex = 
 R"(
 uniform mat4 u_worldMatrix;
 uniform mat4 u_viewProjectionMatrix;
@@ -55,7 +55,7 @@ void main()
     v_texCoord = a_texCoord0;
 })";
 
-inline const std::string PaletteSwapFragment = 
+static inline const std::string PaletteSwapFragment = 
 R"(
 OUTPUT
 

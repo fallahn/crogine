@@ -86,6 +86,8 @@ namespace
     bool showVideoPlayer = false;
     bool showMusicPlayer = false;
     bool showBoilerplate = false;
+
+    cro::ConfigFile testFile;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
@@ -108,6 +110,72 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
     });
 
     m_musicName = "No File";
+
+
+    /*auto* fonts = ImGui::GetIO().Fonts;
+    static const std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
+    ImFontConfig config;
+    config.MergeMode = true;
+    config.FontBuilderFlags |= (1 << 8) | (1 << 9);
+
+
+
+    const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    if (cro::FileSystem::fileExists(winPath))
+    {
+        fonts->AddFontFromFileTTF(winPath.c_str(), 10.f, &config, rangesB.data());
+    }
+
+
+    static bool loaded = testFile.loadFromFile("goodfile.cfg");
+    registerWindow([]() 
+        {
+            if (ImGui::Begin("Config File"))
+            {
+                if (loaded)
+                {
+                    ImGui::Text("Name: %s, ID: %s", testFile.getName().c_str(), testFile.getId().c_str());
+
+                    const auto& objs = testFile.getObjects();
+                    for (const auto& obj : objs)
+                    {
+                        ImGui::Text("Object: %s, ID: %s", obj.getName().c_str(), obj.getId().c_str());
+                        const auto& props = obj.getProperties();
+                        for (const auto& prop : props)
+                        {
+                            ImGui::Text("Property %s: %s", prop.getName().c_str(), prop.getValue<std::string>().c_str());
+
+                            const auto v = prop.getValue<glm::vec4>();
+                            ImGui::Text("Property %s: %3.2f, %3.2f, %3.2f, %3.2f", prop.getName().c_str(), v.x,v.y,v.z,v.w);
+                        }
+                        ImGui::NewLine();
+                    }
+                    ImGui::Separator();
+                    const auto& props = testFile.getProperties();
+                    for (const auto& prop : props)
+                    {
+                        ImGui::Text("Property %s: %s", prop.getName().c_str(), prop.getValue<std::string>().c_str());
+                    }
+                }
+                else
+                {
+                    ImGui::Text("Failed to parse config file");
+                }
+            }
+            ImGui::End();        
+        });*/
+
+    //cro::ConfigFile outFile("test object", "test_id");
+    //outFile.addProperty("test_string", "this is a test string");
+    //outFile.addProperty("utf_string").setValue(cro::String(std::uint32_t(0x1F602)));
+    //outFile.addProperty("test_colour").setValue(cro::Colour::Magenta);
+    //auto* obj = outFile.addObject("some_object");
+    //obj->addProperty("test_vector").setValue(glm::vec4(1.f));
+    //obj->setId("this_is_an_id");
+    //auto* subObj = obj->addObject("another_obj");
+    //subObj->addProperty("bool_prop").setValue(false);
+    //subObj->addProperty("bool_prop_02").setValue(true);
+    //outFile.save("test.cfg");
 }
 
 //public

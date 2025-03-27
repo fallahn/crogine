@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,7 +35,8 @@ source distribution.
 using namespace cro;
 
 MultiRenderTexture::MultiRenderTexture()
-    : m_fboID           (0),
+    : m_precision       (GL_RGBA32F),
+    m_fboID             (0),
     m_maxAttachments    (-1),
     m_depthTextureID    (0),
     m_size              (0, 0)
@@ -105,7 +106,7 @@ MultiRenderTexture& MultiRenderTexture::operator=(MultiRenderTexture&& other) no
 }
 
 //public
-bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::size_t colourCount)
+bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::size_t colourCount, bool floatingPoint)
 {
 #ifdef PLATFORM_MOBILE
     LogE << "Depth Textures are not available on mobile platforms" << std::endl;
@@ -116,7 +117,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         return true;
     }
 
-    getMaxAttaments(); //just updates the attachment count if not init
+    getMaxAttachments(); //just updates the attachment count if not init
     CRO_ASSERT(colourCount > 0 && colourCount < m_maxAttachments, "Out of Range");
 
     if (m_maxAttachments == 0)
@@ -152,7 +153,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
     }
 
     //automatically resizes if already created
-    m_defaultTexture.create(width, height);
+    m_defaultTexture.create(width, height, ImageFormat::RGBA, floatingPoint);
     if (m_textureIDs.empty())
     {
         //store this so the handles align to indices correctly
@@ -166,7 +167,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         for(auto i = 1u; i < m_textureIDs.size(); ++i)
         {
             glBindTexture(GL_TEXTURE_2D, m_textureIDs[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexImage2D(GL_TEXTURE_2D, 0, m_precision, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
         }
 
         glCheck(glBindTexture(GL_TEXTURE_2D, m_depthTextureID));
@@ -188,7 +189,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
                 std::uint32_t id = 0;
                 glCheck(glGenTextures(1, &id));
                 glCheck(glBindTexture(GL_TEXTURE_2D, id));
-                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL));
+                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, width, height, 0, GL_RGBA, GL_FLOAT, NULL));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
@@ -199,7 +200,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         else
         {
             //remove the difference
-            removeCount = m_textureIDs.size() - colourCount;
+            removeCount = static_cast<std::uint32_t>(m_textureIDs.size() - colourCount);
             //for (auto i = colourCount; i < m_textureIDs.size(); ++i)
             {
                 glCheck(glDeleteTextures(removeCount, &m_textureIDs[colourCount]));
@@ -273,7 +274,6 @@ void MultiRenderTexture::clear(const std::vector<Colour>& colours)
 #ifdef PLATFORM_DESKTOP
     CRO_ASSERT(m_fboID, "No FBO created!");
 
-
     //store active buffer and bind this one
     setActive(true);
 
@@ -311,7 +311,7 @@ TextureID MultiRenderTexture::getDepthTexture() const
     return TextureID(m_depthTextureID);
 }
 
-std::int32_t MultiRenderTexture::getMaxAttaments() const
+std::int32_t MultiRenderTexture::getMaxAttachments() const
 {
     if (m_maxAttachments == -1)
     {
@@ -323,4 +323,20 @@ std::int32_t MultiRenderTexture::getMaxAttaments() const
 void MultiRenderTexture::setBorderColour(Colour colour)
 {
     m_defaultTexture.setBorderColour(colour);
+}
+
+void MultiRenderTexture::setPrecision(std::uint32_t precision)
+{
+    auto old = m_precision;
+    m_precision = precision == 0 ? GL_RGBA32F : GL_RGBA16F;
+
+    //update existing textures
+    if (old != m_precision)
+    {
+        for (auto id : m_textureIDs)
+        {
+            glCheck(glBindTexture(GL_TEXTURE_2D, id));
+            glCheck(glTexImage2D(GL_TEXTURE_2D, 0, m_precision, m_size.x, m_size.y, 0, GL_RGBA, GL_FLOAT, NULL));
+        }
+    }
 }

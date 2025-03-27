@@ -31,6 +31,7 @@ source distribution.
 #include "RandNames.hpp"
 #include "CommonConsts.hpp"
 #include "Social.hpp"
+#include "Content.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Log.hpp>
@@ -55,7 +56,7 @@ LeagueNames::LeagueNames()
 //public
 void LeagueNames::read()
 {
-    const auto path = Social::getBaseContentPath() + FileName;
+    const auto path = Content::getBaseContentPath() + FileName;
 
     std::size_t currName = 0;
 
@@ -97,7 +98,7 @@ void LeagueNames::read()
 
 bool LeagueNames::write() const
 {
-    const auto path = Social::getBaseContentPath() + FileName;
+    const auto path = Content::getBaseContentPath() + FileName;
 
     cro::RaiiRWops rFile;
     rFile.file = SDL_RWFromFile(path.c_str(), "w");

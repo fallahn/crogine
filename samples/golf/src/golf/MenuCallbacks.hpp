@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -109,6 +109,9 @@ struct SpriteID final
         Envelope,
         LevelBadge,
         InviteHighlight,
+        Can,
+        CanButton,
+        Coin,
 
         Count
     };

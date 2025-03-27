@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -38,6 +38,8 @@ source distribution.
 #include "GolfCartSystem.hpp"
 #include "NameScrollSystem.hpp"
 #include "MessageIDs.hpp"
+#include "MenuSoundDirector.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -138,6 +140,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     
+    sd.activeResources = &m_resources;
     sd.baseState = StateID::Clubhouse;
     sd.mapDirectory = "pool";
 
@@ -336,6 +339,11 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     cro::App::getInstance().resetFrameTime();
 }
 
+ClubhouseState::~ClubhouseState()
+{
+    m_sharedData.activeResources = nullptr;
+}
+
 //public
 bool ClubhouseState::handleEvent(const cro::Event& evt)
 {
@@ -369,6 +377,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             quitLobby();
             break;
         case MenuID::HallOfFame:
+        case MenuID::Arcade:
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<SubmenuCallbackData>().state = 2;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
@@ -514,7 +523,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -726,9 +735,9 @@ bool ClubhouseState::simulate(float dt)
 
 void ClubhouseState::render()
 {
-    m_scaleBuffer.bind(0);
-    m_resolutionBuffer.bind(1);
-    m_windBuffer.bind(2);
+    m_scaleBuffer.bind();
+    m_resolutionBuffer.bind();
+    m_windBuffer.bind();
 
     m_backgroundTexture.clear(cro::Colour::CornflowerBlue);
     m_backgroundScene.render();
@@ -766,16 +775,16 @@ void ClubhouseState::addSystems()
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
     m_backgroundScene.addSystem<cro::SkeletalAnimator>(mb);
-    m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
     m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
     m_tableScene.addSystem<cro::CallbackSystem>(mb);
+    m_tableScene.addSystem<cro::CameraSystem>(mb);
     m_tableScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_tableScene.addSystem<cro::ModelRenderer>(mb);
-    m_tableScene.addSystem<cro::CameraSystem>(mb);
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
@@ -787,6 +796,8 @@ void ClubhouseState::addSystems()
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
+
+    m_uiScene.addDirector<MenuSoundDirector>(m_resources.audio, m_currentMenu);
 }
 
 void ClubhouseState::loadResources()
@@ -1847,6 +1858,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
             m_sharedData.connectionData[client].playerCount = 0;
             m_readyState[client] = false;
             updateLobbyAvatars();
+            WebSock::broadcastPacket(evt.packet.getDataRaw());
         }
         break;
         case PacketID::LobbyReady:

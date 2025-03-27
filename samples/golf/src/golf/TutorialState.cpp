@@ -226,13 +226,13 @@ bool TutorialState::handleEvent(const cro::Event& evt)
     {
         updateButtonIcon(cro::GameController::controllerID(evt.caxis.which));
         
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
             m_mouseVisible = false;
         }
 
-        if (evt.caxis.value > TriggerDeadZone)
+        if (evt.caxis.value > cro::GameController::TriggerDeadZone)
         {
             if (evt.caxis.axis == cro::GameController::TriggerLeft
                 || evt.caxis.axis == cro::GameController::TriggerRight)

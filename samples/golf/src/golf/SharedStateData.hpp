@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,6 +35,7 @@ source distribution.
 #include "PlayerData.hpp"
 #include "LeagueNames.hpp"
 #include "Tournament.hpp"
+#include "Inventory.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/audio/sound_system/Playlist.hpp>
@@ -103,6 +104,10 @@ enum class GameMode
 struct SharedCourseData;
 struct SharedStateData final
 {
+    inv::Inventory inventory;
+    //which loadout to display in the editor, else display shop if == inv::MaxLoadouts
+    std::uint32_t activeLoadout = inv::Inventory::MaxLoadouts;
+
     //used to set background colour in main menu and clubhouse
     MenuSky menuSky;
 
@@ -309,14 +314,25 @@ struct SharedStateData final
     bool useLensFlare = true;
     bool useMouseAction = true;
     bool useLargePowerBar = false;
+    bool useContrastPowerBar = false;
     bool decimatePowerBar = false;
     bool decimateDistance = false;
     bool showRosterTip = true;
     bool fixedPuttingRange = false;
+    std::int32_t lightmapQuality = 0;
+    
+    bool webSocket = false;
+    std::int32_t webPort = 8080;
+    bool logCSV = false;
+    bool blockChat = false;
+    bool logChat = false;
     bool remoteContent = false;
+    std::int32_t flagText = 0; //none, black, white
+    std::string flagPath;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
-    std::unique_ptr<cro::ResourceCollection> sharedResources;
+    std::unique_ptr<cro::ResourceCollection> sharedResources; //globally shared resources, eg fonts
+    cro::ResourceCollection* activeResources = nullptr; //used by cached states to share the base state resources
     
     std::vector<glm::uvec2> resolutions;
     std::vector<std::string> resolutionStrings;

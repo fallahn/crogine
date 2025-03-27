@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -77,9 +77,11 @@ namespace cro
         By default this value is 0, ie multisampling is disabled.
         Note that at 16x or higher the size of point sprites are affected due to the way OpenGL
         calculates alpha coverage when multisampling is enabled.
+        \param floatingPoint If true the storage mode of the texture is set to 16bit floating point
+        else it is set to 8 bit unsigned
         \returns true on success, else returns false
         */
-        bool create(std::uint32_t width, std::uint32_t height, bool depthBuffer = true, bool stencilBuffer = false, std::uint32_t samples = 0);
+        bool create(std::uint32_t width, std::uint32_t height, bool depthBuffer = true, bool stencilBuffer = false, std::uint32_t samples = 0, bool floatingPoint = false);
 
         /*!
         \brief creates (or recreates) the RenderTexture with the given context parameters.
@@ -166,7 +168,7 @@ namespace cro
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
 
     private:
-        std::uint32_t m_samples;
+
         std::uint32_t m_fboID;
         std::uint32_t m_rboID;
         std::uint32_t m_clearBits;
@@ -180,8 +182,7 @@ namespace cro
         Texture m_texture;
         std::array<float, 4u> m_lastClearColour = {};
 
-        bool m_hasDepthBuffer;
-        bool m_hasStencilBuffer;
+        RenderTarget::Context m_creationContext; //result of last creation
 
         bool createDefault(RenderTarget::Context);
         bool createMultiSampled(RenderTarget::Context);

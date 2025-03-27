@@ -56,6 +56,7 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Matrix.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <cstdint>
 #include <sstream>
@@ -134,6 +135,11 @@ static constexpr float MaxTerrainHeight = 5.f;// 4.5f;
 
 static constexpr float FlagRaiseDistance = 3.f * 3.f;
 static constexpr float PlayerShadowOffset = 0.04f;
+static constexpr float PlayerFootOffset = 0.65f; //distance to AV feet from ball
+static constexpr glm::vec3 PlayerFootPos = glm::vec3(-PlayerFootOffset, 0.f, 0.f);
+
+static constexpr std::int8_t MaxVoicePitch = 2;
+static constexpr float VoicePitchDivisor = 20.f;
 
 static constexpr float MinPixelScale = 1.f;
 static constexpr float MaxPixelScale = 3.f;
@@ -159,15 +165,11 @@ static constexpr cro::Colour SwingputDark(std::uint8_t(40), 23, 33);
 static constexpr cro::Colour SwingputLight(std::uint8_t(236), 119, 61);
 //static constexpr cro::Colour SwingputLight(std::uint8_t(236), 153, 61);
 
-//moved to GameController but I'm too lazy to update all references
-static constexpr std::int16_t LeftThumbDeadZone = cro::GameController::LeftThumbDeadZone;
-static constexpr std::int16_t RightThumbDeadZone = cro::GameController::RightThumbDeadZone;
-static constexpr std::int16_t TriggerDeadZone = cro::GameController::TriggerDeadZone;
-
 static constexpr glm::vec3 PreviewHairScale(0.23f);
 static constexpr glm::vec3 PreviewHairOffset(0.f, -0.29f, -0.008f);
 
 static constexpr float MinMusicVolume = 0.001f;
+static constexpr glm::uvec2 FlagTextureSize(336u, 240u);
 
 class btVector3;
 glm::vec3 btToGlm(btVector3 v);
@@ -234,7 +236,8 @@ struct SpriteAnimID final
         BillboardSwing,
         BillboardRewind,
         Footstep,
-        Pump
+        Pump,
+        Swoosh
     };
 };
 
@@ -285,6 +288,7 @@ struct ShaderID final
         Player,
         Hair,
         HairReflect,
+        HairGlass,
         Course,
         CourseGreen,
         CourseGrid,
@@ -321,12 +325,16 @@ struct ShaderID final
         TV,
         PointLight,
         Glass,
+        Wake,
         LensFlare,
         PointFlare,
         Firework,
         Rope,
         Lantern,
-        Roids
+        Roids,
+        Tonemapping,
+        FlagPreview,
+        Emissive
     };
 };
 
@@ -362,12 +370,25 @@ struct Avatar final
     cro::Attachment* hands = nullptr;
     std::array<std::size_t, AnimationID::Count> animationIDs = {};
     cro::Entity ballModel;
+    std::uint32_t clubModelID = 0;
 };
 
 static inline std::int32_t courseOfTheMonth()
 {
-    return 9 + (cro::SysTime::now().months() % 3);
+    //return 9 + (cro::SysTime::now().months() % 3);
+    return cro::SysTime::now().months() - 1;
 }
+
+static inline float getOffsetRotation(float heightToGround)
+{
+    //TODO measure distance 
+    static constexpr float PlayerDist = (PlayerFootOffset*PlayerFootOffset);
+
+    float a = std::abs(heightToGround);
+    const float c = std::sqrt((a * a) + PlayerDist);
+    return std::asin(a / c) * cro::Util::Maths::sgn(heightToGround);
+}
+
 
 static inline float getWindMultiplier(float ballHeight, float distanceToPin)
 {
@@ -390,7 +411,7 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
     deck is docked or using an external controller which may be hot-seat
     else the deck's internal controller overrides the input for the current player...
     */
-    if (Social::isSteamdeck() && cro::GameController::getControllerCount() > 1)
+    if (Social::isSteamdeck(false) && cro::GameController::getControllerCount() > 1)
     {
         return cro::GameController::getLastControllerID();
     }
@@ -816,7 +837,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         //skip over materials with alpha blend as they are
         //probably shadow materials if not explicitly glass
         if (m->blendMode == cro::Material::BlendMode::Alpha
-            && !modelDef.hasTag(matID, "glass"))
+            && (!modelDef.hasTag(matID, "glass") && !modelDef.hasTag(matID, "wake")))
         {
             dest = *m;
             return;

@@ -1,0 +1,23 @@
+model wake
+{
+    mesh = "wake.cmb"
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000, 1.000000, 1.000000, 0.627451
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = true
+        use_mipmaps = false
+        animated = false
+        row_count = 1.000000
+        col_count = 1.000000
+        framerate = 1.000000
+        blendmode = "alpha"
+        diffuse = "assets/wake/wake.png"
+        alpha_clip = 0.464000
+    }
+}

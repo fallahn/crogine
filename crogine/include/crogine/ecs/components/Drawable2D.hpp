@@ -383,7 +383,7 @@ namespace cro
             }
             else
             {
-                auto uniform = m_shader->getUniformMap().at(name);
+                auto uniform = m_shader->getUniformID(name);
 
                 auto result = std::find_if(dest.begin(), dest.end(),
                     [uniform](const std::pair<std::int32_t, T>& pair)
@@ -415,7 +415,7 @@ namespace cro
             }
             else
             {
-                auto uniform = m_shader->getUniformMap().at(name);
+                auto uniform = m_shader->getUniformID(name);
 
                 auto result = std::find_if(dest.begin(), dest.end(),
                     [uniform](const std::pair<std::int32_t, T>& pair)

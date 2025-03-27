@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -250,12 +250,20 @@ namespace cro
         /*!
         \brief Used to implement custom draw functions for the Model.
         This is used internally to set whether the Model is drawn with instancing
-        or not. Overriding this yourself probably won't do what  you expect
+        or not. Overriding this yourself probably won't do what you expect
         */
         std::function<void(std::int32_t, std::int32_t)> draw;
 #endif
 
+        /*!
+        \brief Returns the number of draw lists this model is currently added to
+        */
+        std::int32_t getDrawlistCount() const { return m_drawlistCount; }
+
     private:
+
+        mutable std::int32_t m_drawlistCount;
+        void decrementDrawlistCount() const { m_drawlistCount--; } //hax because we're supposedly const while drawing
 
         bool m_hidden;
         std::uint64_t m_renderFlags;
@@ -302,6 +310,8 @@ namespace cro
             std::uint32_t normalBuffer = 0;
             std::uint32_t instanceCount = 0;
         }m_instanceBuffers;
+
+        std::function<void(std::uint32_t, std::uint32_t)> materialChangedCallback;
 #endif //DESKTOP
 
         glm::mat4* m_skeleton = nullptr;
@@ -310,6 +320,13 @@ namespace cro
         //used with BalancedTree if active in frustum culling
         std::int32_t m_treeID = -1;
         glm::vec3 m_lastWorldPosition = glm::vec3(0.f);
+
+        //we don't want to access this elsewhere, but we also
+        //need to make sure we only update this once per tick
+        //not every time one of the materials is rendered
+        //so these are populated in ModelRenderer::process()
+        glm::mat4 m_activeWorldMatrix = glm::mat4(1.f);
+        glm::mat3 m_activeNormalMatrix = glm::mat3(1.f);
 
         friend class ModelRenderer;
         friend class ShadowMapRenderer;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -82,7 +82,7 @@ namespace al
                 break;
             }
             std::stringstream sts;
-            sts << "open al error - " << message << " in " << file << " line " << line << std::endl;
+            sts << "OpenAL: error - " << message << " in " << file << " line " << line << std::endl;
             LOG(sts.str(), cro::Logger::Type::Error);
 
             error = alGetError();

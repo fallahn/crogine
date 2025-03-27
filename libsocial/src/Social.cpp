@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "Social.hpp"
+#include "Content.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
 #include "StoredValue.hpp"
@@ -159,6 +160,7 @@ bool Social::isValid()
 
 void Social::awardXP(std::int32_t amount, std::int32_t reason)
 {
+    amount *= doubleXP();
     if (Achievements::getActive())
     {
         auto oldLevel = getLevelFromXP(StoredValues[ValueID::XP].value);
@@ -188,6 +190,18 @@ std::int32_t Social::getXP()
     return StoredValues[ValueID::XP].value;
 }
 
+std::int32_t Social::doubleXP()
+{
+    auto ts = std::time(nullptr);
+    const auto* tm = std::localtime(&ts);
+    if ((tm->tm_wday == 0 && (tm->tm_mday > 14 && tm->tm_mday < 22))
+        || tm->tm_wday == 6 && (tm->tm_mday > 13 && tm->tm_mday < 21))
+    {
+        return 2;
+    }
+    return 1;
+}
+
 std::int32_t Social::getLevel()
 {
     StoredValues[ValueID::XP].read();
@@ -199,12 +213,12 @@ std::int32_t Social::getClubLevel()
     //check player level and return increased distance
     auto level = getLevel();
 
-    if (level > 29)
+    if (level > ProLevel - 1)
     {
         return 2;
     }
 
-    if (level > 14)
+    if (level > ExpertLevel - 1)
     {
         return 1;
     }
@@ -416,6 +430,72 @@ void Social::courseComplete(const std::string& mapName, std::uint8_t holeCount)
     }
 }
 
+std::vector<std::byte> Social::setStatus(std::int32_t statusType, const std::vector<const char*>& strings)
+{
+    static constexpr std::byte PacketID = std::byte(127);
+    std::vector<std::byte> ret;
+
+    switch (statusType)
+    {
+    default: break;
+    case InfoID::Billiards:
+    {
+        cro::String str("Playing ");
+        str += cro::String(strings[0]);
+
+        const auto utf = str.toUtf8();
+        ret.resize(utf.size() + 1);
+        ret[0] = PacketID;
+        std::memcpy(ret.data()+1, utf.data(), utf.size());
+    }
+    return ret;
+    case InfoID::Course:
+    {
+        cro::String str("Hole ");
+        str += strings[1];
+        str += "/";
+        str += strings[2];
+        str += " - ";
+
+        std::string s(strings[0]);
+        str += cro::String::fromUtf8(s.begin(), s.end());
+
+        const auto utf = str.toUtf8();
+        ret.resize(utf.size() + 1);
+        ret[0] = PacketID;
+        std::memcpy(ret.data() + 1, utf.data(), utf.size());
+    }
+    return ret;
+    case InfoID::Lobby:
+    {
+        cro::String str("In ");
+        str += strings[0];
+        str += " Lobby ";
+        str += strings[1];
+        str += "/";
+        str += strings[2];
+
+        const auto utf = str.toUtf8();
+        ret.resize(utf.size() + 1);
+        ret[0] = PacketID;
+        std::memcpy(ret.data() + 1, utf.data(), utf.size());
+    }
+    return ret;
+    case InfoID::Menu:
+    {
+        cro::String str(strings[0]);
+
+        const auto utf = str.toUtf8();
+        ret.resize(utf.size() + 1);
+        ret[0] = PacketID;
+        std::memcpy(ret.data() + 1, utf.data(), utf.size());
+    }
+    return ret;
+    }
+
+    return ret;
+}
+
 std::int32_t Social::getUnlockStatus(UnlockType type)
 {
     switch (type)
@@ -499,33 +579,6 @@ void Social::setUnlockStatus(UnlockType type, std::int32_t set)
     }    
 }
 
-std::string Social::getBaseContentPath()
-{
-    return cro::App::getPreferencePath() + "user/1234/";
-}
-
-std::string Social::getUserContentPath(std::int32_t contentType)
-{
-    switch (contentType)
-    {
-    default:
-        assert(false);
-        return "";
-    case Social::UserContent::Ball:
-        return getBaseContentPath() + "balls/";
-    case Social::UserContent::Course:
-        return getBaseContentPath() + "course/";
-    case Social::UserContent::Hair:
-        return getBaseContentPath() + "hair/";
-    case Social::UserContent::Profile:
-        return getBaseContentPath() + "profiles/";
-    case Social::UserContent::Career:
-        return getBaseContentPath() + "career/";
-    case Social::UserContent::Avatar:
-        return getBaseContentPath() + "avatars/";
-    }
-}
-
 float Social::getCompletionCount(const std::string& course, bool)
 {
     return Achievements::getStat(course)->value;
@@ -541,7 +594,7 @@ void Social::refreshAwards()
     };
     std::vector<AwardData> awardData;
 
-    auto path = Social::getBaseContentPath() + "awards.awd";
+    auto path = Content::getBaseContentPath() + "awards.awd";
 
     //check for awards file and load
     if (cro::FileSystem::fileExists(path))
@@ -782,7 +835,7 @@ void Social::takeScreenshot(const cro::String&, std::size_t courseIndex)
     }
 }
 
-void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t)
+void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>&)
 {
 #ifdef USE_GJS
     //GJ::insertScore(course, hole, score);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -60,6 +60,7 @@ static void winFPE(int)
 #include <crogine/core/SysTime.hpp>
 #include <crogine/core/HiResTimer.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/PoolLog.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/String.hpp>
@@ -274,7 +275,7 @@ App::App(std::uint32_t styleFlags)
 #endif
     if (SDL_Init(INIT_FLAGS) < 0)
     {
-        const std::string err(SDL_GetError());
+        const std::string err = std::string("SDL:") + SDL_GetError();
         Logger::log("Failed init: " + err, Logger::Type::Error, cro::Logger::Output::All);
     }
     else
@@ -287,7 +288,7 @@ App::App(std::uint32_t styleFlags)
         //auto mapResult = SDL_GameControllerAddMapping("03000000de2800000512000010010000,Steam Deck,a:b3,b:b4,back:b11,dpdown:b17,dpleft:b18,dpright:b19,dpup:b16,guide:b13,leftshoulder:b7,leftstick:b14,lefttrigger:a9,leftx:a0,lefty:a1,rightshoulder:b8,rightstick:b15,righttrigger:a8,rightx:a2,righty:a3,start:b12,x:b5,y:b6,platform:Linux");
         if (mapResult == -1)
         {
-            LogE << SDL_GetError() << std::endl;
+            LogE << "SDL: Controller mapping failed - " << SDL_GetError() << std::endl;
         }
 
         std::fill(m_controllers.begin(), m_controllers.end(), ControllerInfo());
@@ -520,6 +521,8 @@ void App::run(bool resetSettings)
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
     m_window.close();
+
+    Detail::PoolLog::dump();
 }
 
 void App::setClearColour(Colour colour)
@@ -538,6 +541,7 @@ void App::quit()
     //properly quit the application
     if (m_instance)
     {
+        //cro::StackDump::dump(cro::StackDump::ABRT);
         m_instance->m_running = false;
     }
 }
@@ -669,7 +673,7 @@ void App::saveScreenshot()
         }
         else
         {
-            LogE << SDL_GetError() << std::endl;
+            LogE << "SDL: Writing screenshot failed - " << SDL_GetError() << std::endl;
         }
     });
 }
@@ -1072,6 +1076,18 @@ App::WindowSettings App::loadSettings() const
                 settings.windowedSize.x = std::clamp(settings.windowedSize.x, std::min(640.f, modeWidth - 1.f), modeWidth);
                 settings.windowedSize.x = std::clamp(settings.windowedSize.y, std::min(640.f, modeHeight - 1.f), modeHeight);
             }
+            else if (prop.getName() == "left_deadzone")
+            {
+                cro::GameController::LeftThumbDeadZone.setOffset(prop.getValue<std::int32_t>());
+            }
+            else if (prop.getName() == "right_deadzone")
+            {
+                cro::GameController::RightThumbDeadZone.setOffset(prop.getValue<std::int32_t>());
+            }
+            else if (prop.getName() == "trigger_deadzone")
+            {
+                cro::GameController::TriggerDeadZone.setOffset(prop.getValue<std::int32_t>());
+            }
         }
 
         //load mixer settings
@@ -1122,19 +1138,22 @@ void App::saveSettings()
     auto size = m_window.getSize();
 
     ConfigFile saveSettings;
-    saveSettings.addProperty("width", std::to_string(size.x));
-    saveSettings.addProperty("height", std::to_string(size.y));
+    saveSettings.addProperty("width").setValue(size.x);
+    saveSettings.addProperty("height").setValue(size.y);
     saveSettings.addProperty("fullscreen").setValue(m_window.isFullscreen());
     saveSettings.addProperty("exclusive").setValue(m_window.getExclusiveFullscreen());
     saveSettings.addProperty("vsync").setValue(m_window.getVsyncEnabled());
     saveSettings.addProperty("multisample").setValue(m_window.getMultisamplingEnabled());
     saveSettings.addProperty("window_size").setValue(m_window.getWindowedSize());
+    saveSettings.addProperty("left_deadzone").setValue(cro::GameController::LeftThumbDeadZone.getOffset());
+    saveSettings.addProperty("right_deadzone").setValue(cro::GameController::RightThumbDeadZone.getOffset());
+    saveSettings.addProperty("trigger_deadzone").setValue(cro::GameController::TriggerDeadZone.getOffset());
 
     auto* aObj = saveSettings.addObject("audio");
-    aObj->addProperty("master", std::to_string(AudioMixer::getMasterVolume()));
+    aObj->addProperty("master").setValue(AudioMixer::getMasterVolume());
     for (auto i = 0u; i < AudioMixer::MaxChannels; ++i)
     {
-        aObj->addProperty("channel" + std::to_string(i), std::to_string(AudioMixer::getVolume(i)));
+        aObj->addProperty("channel" + std::to_string(i)).setValue(AudioMixer::getVolume(i));
     }
 
     saveSettings.save(m_prefPath + cfgName);

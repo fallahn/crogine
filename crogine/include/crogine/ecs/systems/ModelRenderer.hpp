@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,10 +35,14 @@ source distribution.
 #include <crogine/ecs/Renderable.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/detail/BalancedTree.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
-#ifdef CRO_DEBUG_
+//#define BENCHMARK
+//#define DEBUG_WINDOWS
+#if defined(DEBUG_WINDOWS) || defined(BENCHMARK)
+#include <crogine/core/HiResTimer.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #endif
 
@@ -54,11 +58,20 @@ namespace cro
     {
         std::int64_t flags = 0;
         std::vector<std::int32_t> matIDs;
+
+        //store this here as it's more efficient
+        //to calc once per draw list rather than
+        //every single render frame
+        glm::mat4 worldViewMatrix = glm::mat4(1.f);
     };
 
     using MaterialPair = std::pair<Entity, SortData>;
-    using MaterialList = std::vector<MaterialPair>;
-
+    
+    struct PassList final
+    {
+        std::vector<MaterialPair> renderables;
+        glm::mat4 viewMatrix = glm::mat4(1.f);
+    };
 
     /*!
     \brief Used to draw scene Models.
@@ -67,11 +80,12 @@ namespace cro
     are rendered with RenderSystem2D.
     */
     class CRO_EXPORT_API ModelRenderer final : public System, public Renderable
-#ifdef CRO_DEBUG_
+#if defined(DEBUG_WINDOWS) || defined(BENCHMARK)
         , public GuiClient
 #endif
     {
     public:
+       
         /*!
         \brief Constructor.
         \param mb Reference to the system message bus
@@ -139,7 +153,7 @@ namespace cro
 
     private:
 
-        using DrawList = std::array<MaterialList, 2u>;
+        using DrawList = std::array<PassList, 2u>;
         std::vector<DrawList> m_drawLists;
 
         Mesh::IndexData::Pass m_pass;
@@ -147,6 +161,42 @@ namespace cro
         /*Detail::BalancedTree m_tree;
         bool m_useTreeQueries;*/
 
+        struct CameraUniformBlock final
+        {
+            glm::mat4 viewMatrix = glm::mat4(1.f);
+            glm::mat4 viewProjectionMatrix = glm::mat4(1.f);
+            glm::mat4 projectionMatrix = glm::mat4(1.f);
+            glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, 0.f);
+            glm::vec3 cameraWorldPosition = glm::vec3(0.f);
+            const float Padding = 0.f;
+        };
+        //we need one for each draw list so we can update only when a camera is
+        //updated instead of updating every single render frame.
+        using CamUBO = std::shared_ptr<UniformBuffer<CameraUniformBlock>>;
+        std::vector<std::array<CamUBO, 2u>> m_cameraUBOs; //final and reflection passes
+
+        struct LightUniformBlock final
+        {
+            glm::vec4 lightColour = glm::vec4(1.f);
+            glm::vec3 lightDirection = glm::vec3(0.f, 0.f, 1.f);
+            float Padding = 0.f;
+        }m_lightUniforms;
+        UniformBuffer<LightUniformBlock> m_lightUBO;
+
+#if defined(BENCHMARK)
+        cro::HiResTimer m_timer;
+        static constexpr std::size_t MaxBenchSamples = 60;
+
+        struct BenchSamples final
+        {
+            std::size_t index = 0;
+            std::array<float, MaxBenchSamples> samples = {};
+            float avgTime = 0.f;
+        };
+        std::vector<BenchSamples> m_benchmarks;
+#endif
+
+        void flushEntity(Entity) override;
         void updateDrawListDefault(Entity);
         void updateDrawListBalancedTree(Entity);
         //std::vector<Entity> queryTree(Box) const;

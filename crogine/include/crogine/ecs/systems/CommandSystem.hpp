@@ -42,7 +42,7 @@ namespace cro
     */
     struct CRO_EXPORT_API Command final
     {
-        std::uint32_t targetFlags = 0;
+        std::uint64_t targetFlags = 0;
         std::function<void(Entity, float)> action;
     };
 

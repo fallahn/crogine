@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -548,8 +548,8 @@ void GolfState::netBroadcast()
             if (ball == group.playerInfo[0].ballEntity/* ||
                 ball.getComponent<Ball>().state != Ball::State::Idle*/)
             {
-                auto timestamp = m_serverTime.elapsed().asMilliseconds();
-                const auto ballC = ball.getComponent<Ball>();
+                const auto timestamp = m_serverTime.elapsed().asMilliseconds();
+                auto& ballC = ball.getComponent<Ball>();
 
                 ActorInfo info;
                 info.serverID = static_cast<std::uint32_t>(ball.getIndex());
@@ -562,6 +562,9 @@ void GolfState::netBroadcast()
                 info.state = static_cast<std::uint8_t>(ballC.state);
                 info.lie = ballC.lie;
                 info.groupID = m_groupAssignments[player.client];
+                //as these are only used for sound effects only send the events where we bounce on something
+                info.collisionTerrain = ballC.state == Ball::State::Flight ? ballC.lastTerrain : ConstVal::NullValue;
+                ballC.lastTerrain = ConstVal::NullValue;
                 m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
             }
         }
@@ -1900,6 +1903,7 @@ void GolfState::buildWorld()
     {
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(m_holeData.size());
+        std::fill(scores.begin(), scores.end(), 0);
 
         //this is a fudge to let the server know we're
         //actually on a tournament
@@ -1915,7 +1919,7 @@ void GolfState::buildWorld()
             std::fill(scores.begin(), scores.end(), 0);
 
             //tournament
-            for (auto i = 0; i < scores.size(); ++i)
+            for (auto i = 0u; i < scores.size(); ++i)
             {
                 scores[i] = t.scores[i];
                 if (scores[i] != 0)

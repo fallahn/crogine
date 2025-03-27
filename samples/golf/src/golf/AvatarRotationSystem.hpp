@@ -36,6 +36,9 @@ source distribution.
 
 struct AvatarRotation final
 {
+    bool avatarFlipped = false;
+    std::function<float(glm::vec3, float, bool)> groundRotation;
+
     float currentRotation = 0.f;
     float targetRotation = 0.f;
     bool active = false;
@@ -70,7 +73,10 @@ public:
                 {
                     avRot.currentRotation += cro::Util::Maths::sgn(rot) * dt;
                 }
+
+                const auto position = entity.getComponent<cro::Transform>().getPosition();
                 entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, avRot.currentRotation);
+                entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, avRot.groundRotation(position, avRot.currentRotation, avRot.avatarFlipped));
             }
         }
     }

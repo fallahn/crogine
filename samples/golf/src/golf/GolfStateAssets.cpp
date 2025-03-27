@@ -1,6 +1,6 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -51,6 +51,7 @@ source distribution.
 
 #include <Input.hpp>
 
+#include "../Colordome-32.hpp"
 #include "../ErrorCheck.hpp"
 
 namespace pd = thinks;
@@ -74,10 +75,37 @@ namespace
 #include "shaders/Glass.inl"
 #include "shaders/Blur.inl"
 #include "shaders/LensFlare.inl"
+#include "shaders/EmissiveShader.inl"
+
+    //NOTE Banner A should be rotated 180 degrees
+    constexpr cro::FloatRect PlaneBannerA = { 12.f, 86.f, 484.f, 66.f };
+    constexpr cro::FloatRect PlaneBannerB = { 12.f, 6.f, 484.f, 66.f };
+    constexpr std::uint32_t BannerTextSize = 16;
+    //colour is normal colour with dark shadow
+    const std::array BannerStrings =
+    {
+        cro::String("If you can read this\nyou're flying too close"),
+        cro::String("Buy Pentworth's\nIndispensible Lube"),
+        cro::String("Will You Marry Me?"),
+        cro::String("Cats are better than Dogs"),
+        cro::String("I can see my house from here"),
+        cro::String("<insert text here>"),
+        cro::String("Harding's Balls"),
+        cro::String("Claire: Have you seen my keys?\nThey're not where I left them"),
+        cro::String("To truly find yourself you must\nplay hide and seek alone."),
+        cro::String("There is no angry way to say\nBUBBLES"),
+        cro::String("404")
+    };
+
+    //make this static so throughout the duration of the game we
+    //cycle without repetition (until we reach the end)
+    static std::int32_t BannerIndex = cro::Util::Random::value(0, static_cast<std::int32_t>(BannerStrings.size()) - 1);
 }
 
 void GolfState::loadAssets()
 {
+    BannerIndex = (BannerIndex + 1) % BannerStrings.size();
+
     std::string skyboxPath = "assets/golf/images/skybox/billiards/trophy.ccm";
     //std::string skyboxPath = "assets/golf/courses/course_10/cmap/01/d/1/cmap.ccm";
 
@@ -103,7 +131,7 @@ void GolfState::loadAssets()
     //    {
     //        ImGui::Begin("Sun");
 
-    //        static float c[3] = { 1.f };
+    //        /*static float c[3] = { 1.f };
 
     //        if (ImGui::ColorPicker3("Sun", c))
     //        {
@@ -112,7 +140,15 @@ void GolfState::loadAssets()
     //            m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(col);
 
     //        }
-    //        ImGui::Text("R %3.2f, G %3.2f, B %3.2f", c[0], c[1], c[2]);
+    //        ImGui::Text("R %3.2f, G %3.2f, B %3.2f", c[0], c[1], c[2]);*/
+
+    //        static float multiplier = 10.f;
+    //        if (ImGui::SliderFloat("Multiplier", &multiplier, 10.f, 250.f))
+    //        {
+    //            //m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour::White * multiplier);
+    //            m_gameScene.getSystem<cro::ModelRenderer>()->setLightMultiplier(multiplier);
+    //        }
+
 
     //        ImGui::End();
     //    });
@@ -498,6 +534,8 @@ void GolfState::loadMap()
     cro::AudioScape propAudio;
     propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio);
 
+    cro::Image currentMap(true);
+
     for (const auto& hole : holeStrings)
     {
         if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + hole))
@@ -526,8 +564,8 @@ void GolfState::loadMap()
             if (name == "map")
             {
                 auto path = holeProp.getValue<std::string>();
-                if (!m_currentMap.loadFromFile(path)
-                    || m_currentMap.getFormat() != cro::ImageFormat::RGBA)
+                if (!currentMap.loadFromFile(path)
+                    || currentMap.getFormat() != cro::ImageFormat::RGBA)
                 {
                     LogE << path << ": image file not RGBA" << std::endl;
                     error = true;
@@ -638,6 +676,57 @@ void GolfState::loadMap()
         {
             if (!duplicate) //this hole wasn't a duplicate of the previous
             {
+                const auto parseLightData = [&](const cro::ConfigObject& obj, cro::Entity parent = {})
+                    {
+                        if (m_sharedData.nightTime)
+                        {
+                            auto& lightData = holeData.lightData.emplace_back();
+                            std::string preset;
+
+                            const auto& lightProps = obj.getProperties();
+                            for (const auto& lightProp : lightProps)
+                            {
+                                const auto& propName = lightProp.getName();
+                                if (propName == "radius")
+                                {
+                                    lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
+                                }
+                                else if (propName == "colour")
+                                {
+                                    lightData.colour = lightProp.getValue<cro::Colour>();
+                                }
+                                else if (propName == "position")
+                                {
+                                    lightData.position = lightProp.getValue<glm::vec3>();
+                                    lightData.position.y += 0.01f;
+                                }
+                                else if (propName == "animation")
+                                {
+                                    auto str = lightProp.getValue<std::string>();
+                                    auto len = std::min(std::size_t(20), str.length());
+                                    lightData.animation = str.substr(0, len);
+                                }
+                                else if (propName == "preset")
+                                {
+                                    preset = lightProp.getValue<std::string>();
+                                }
+                            }
+
+                            if (!preset.empty() && lightPresets.count(preset) != 0)
+                            {
+                                const auto& p = lightPresets.at(preset);
+                                //presets take precedence, except for animation
+                                lightData.colour = p.colour;
+                                lightData.radius = p.radius;
+                                if (lightData.animation.empty())
+                                {
+                                    lightData.animation = p.animation;
+                                }
+                            }
+                            lightData.parent = parent;
+                        }
+                    };
+
                 //look for prop models (are optional and can fail to load no problem)
                 const auto parseProps = [&](const std::vector<cro::ConfigObject>& propObjs)
                     {
@@ -656,9 +745,12 @@ void GolfState::loadMap()
                                 bool loopCurve = true;
                                 float loopDelay = 4.f;
                                 float loopSpeed = 6.f;
+                                float radiusMultiplier = 1.f; //hack because models with a wake eg boats push the bounding radius too far
 
                                 std::string particlePath;
                                 std::string emitterName;
+
+                                const cro::ConfigObject* childLight = nullptr;
 
                                 for (const auto& modelProp : modelProps)
                                 {
@@ -703,12 +795,12 @@ void GolfState::loadMap()
                                     }
                                 }
 
-                                const auto modelObjs = obj.getObjects();
+                                const auto& modelObjs = obj.getObjects();
                                 for (const auto& o : modelObjs)
                                 {
                                     if (o.getName() == "path")
                                     {
-                                        const auto points = o.getProperties();
+                                        const auto& points = o.getProperties();
                                         for (const auto& p : points)
                                         {
                                             if (p.getName() == "point")
@@ -729,7 +821,12 @@ void GolfState::loadMap()
                                             }
                                         }
 
-                                        break;
+                                        //break;
+                                    }
+                                    else if (o.getName() == "light"
+                                        && !childLight) //only add the first one
+                                    {
+                                        childLight = &o;
                                     }
                                 }
 
@@ -796,11 +893,26 @@ void GolfState::loadMap()
                                                     texMatID = MaterialID::Glass;
                                                 }
 
+                                                else if (modelDef.hasTag(i, "wake"))
+                                                {
+                                                    texMatID = MaterialID::Wake;
+                                                    radiusMultiplier = 0.5f;
+                                                }
+
                                                 else if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
                                                 {
                                                     texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
                                                 }
                                                 auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
+
+                                                //if this is a wake material we need to set the animation speed
+                                                //based on the speed of the path if the model has one.
+                                                if (texMatID == MaterialID::Wake &&
+                                                    !curve.empty())
+                                                {
+                                                    texturedMat.setProperty("u_speed", loopSpeed / 4.f/*std::clamp(loopSpeed, 0.f, 1.f)*/);
+                                                }
+
                                                 applyMaterialData(modelDef, texturedMat, i);
                                                 ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
 
@@ -829,9 +941,14 @@ void GolfState::loadMap()
                                         if (curve.size() > 3)
                                         {
                                             //we need to slow the rotation of big models such as the blimp
-                                            const float turnSpeed = std::min(6.f / (ent.getComponent<cro::Model>().getBoundingSphere().radius + 0.001f), 2.f);
+                                            const float turnSpeed = std::min(6.f / ((ent.getComponent<cro::Model>().getBoundingSphere().radius * radiusMultiplier) + 0.001f), 2.f);
                                             //LogI << cro::FileSystem::getFileName(path) << " needs model updating" << std::endl;
                                             
+                                            if (loopCurve)
+                                            {
+                                                curve.back() = curve.front();
+                                            }
+
                                             ent.addComponent<PropFollower>().path = curve;
                                             ent.getComponent<PropFollower>().loop = loopCurve;
                                             ent.getComponent<PropFollower>().idleTime = loopDelay;
@@ -854,6 +971,12 @@ void GolfState::loadMap()
                                                 ent.getComponent<cro::Transform>().addChild(pEnt.getComponent<cro::Transform>());
                                                 holeData.particleEntities.push_back(pEnt);
                                             }
+                                        }
+
+                                        //and child light
+                                        if (childLight)
+                                        {
+                                            parseLightData(*childLight, ent);
                                         }
 
                                         //and child audio
@@ -1088,52 +1211,53 @@ void GolfState::loadMap()
                             }
                             else if (name == "light")
                             {
-                                if (m_sharedData.nightTime)
-                                {
-                                    auto& lightData = holeData.lightData.emplace_back();
-                                    std::string preset;
+                                parseLightData(obj);
+                                //if (m_sharedData.nightTime)
+                                //{
+                                //    auto& lightData = holeData.lightData.emplace_back();
+                                //    std::string preset;
 
-                                    const auto& lightProps = obj.getProperties();
-                                    for (const auto& lightProp : lightProps)
-                                    {
-                                        const auto& propName = lightProp.getName();
-                                        if (propName == "radius")
-                                        {
-                                            lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
-                                        }
-                                        else if (propName == "colour")
-                                        {
-                                            lightData.colour = lightProp.getValue<cro::Colour>();
-                                        }
-                                        else if (propName == "position")
-                                        {
-                                            lightData.position = lightProp.getValue<glm::vec3>();
-                                            lightData.position.y += 0.01f;
-                                        }
-                                        else if (propName == "animation")
-                                        {
-                                            auto str = lightProp.getValue<std::string>();
-                                            auto len = std::min(std::size_t(20), str.length());
-                                            lightData.animation = str.substr(0, len);
-                                        }
-                                        else if (propName == "preset")
-                                        {
-                                            preset = lightProp.getValue<std::string>();
-                                        }
-                                    }
+                                //    const auto& lightProps = obj.getProperties();
+                                //    for (const auto& lightProp : lightProps)
+                                //    {
+                                //        const auto& propName = lightProp.getName();
+                                //        if (propName == "radius")
+                                //        {
+                                //            lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
+                                //        }
+                                //        else if (propName == "colour")
+                                //        {
+                                //            lightData.colour = lightProp.getValue<cro::Colour>();
+                                //        }
+                                //        else if (propName == "position")
+                                //        {
+                                //            lightData.position = lightProp.getValue<glm::vec3>();
+                                //            lightData.position.y += 0.01f;
+                                //        }
+                                //        else if (propName == "animation")
+                                //        {
+                                //            auto str = lightProp.getValue<std::string>();
+                                //            auto len = std::min(std::size_t(20), str.length());
+                                //            lightData.animation = str.substr(0, len);
+                                //        }
+                                //        else if (propName == "preset")
+                                //        {
+                                //            preset = lightProp.getValue<std::string>();
+                                //        }
+                                //    }
 
-                                    if (!preset.empty() && lightPresets.count(preset) != 0)
-                                    {
-                                        const auto& p = lightPresets.at(preset);
-                                        //presets take precedence, except for animation
-                                        lightData.colour = p.colour;
-                                        lightData.radius = p.radius;
-                                        if (lightData.animation.empty())
-                                        {
-                                            lightData.animation = p.animation;
-                                        }
-                                    }
-                                }
+                                //    if (!preset.empty() && lightPresets.count(preset) != 0)
+                                //    {
+                                //        const auto& p = lightPresets.at(preset);
+                                //        //presets take precedence, except for animation
+                                //        lightData.colour = p.colour;
+                                //        lightData.radius = p.radius;
+                                //        if (lightData.animation.empty())
+                                //        {
+                                //            lightData.animation = p.animation;
+                                //        }
+                                //    }
+                                //}
                             }
                         }
                     };
@@ -1486,6 +1610,7 @@ void GolfState::loadMap()
 
         std::uint64_t h = 0;
         std::vector<std::uint8_t> scores(scoreSize);
+        std::fill(scores.begin(), scores.end(), 0);
         std::int32_t mulliganCount = 0;
 
         if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
@@ -1493,7 +1618,7 @@ void GolfState::loadMap()
             std::fill(scores.begin(), scores.end(), 0);
 
             //tournament
-            for (auto i = 0; i < scores.size(); ++i)
+            for (auto i = 0u; i < scores.size(); ++i)
             {
                 scores[i] = m_sharedData.tournaments[m_sharedData.activeTournament].scores[i];
                 if (scores[i] != 0)
@@ -1547,7 +1672,7 @@ void GolfState::loadMaterials()
         wobble = "#define WOBBLE\n";
     }
     const std::string FadeDistance = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane) + "\n";
-    const std::string FadeDistanceHQ = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane *0.8f) + "\n"; //fade closer for HQ trees beforethey are culled
+    const std::string FadeDistanceHQ = "#define FAR_DISTANCE " + std::to_string(CameraFarPlane *0.8f) + "\n"; //fade closer for HQ trees before they are culled
 
     //load materials
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
@@ -1607,6 +1732,10 @@ void GolfState::loadMaterials()
         m_materialIDs[MaterialID::BallNightSkinned] = m_resources.materials.add(*shader);
         m_resources.materials.get(m_materialIDs[MaterialID::BallNightSkinned]).setProperty("u_ballColour", cro::Colour::White);
         m_resources.materials.get(m_materialIDs[MaterialID::BallNightSkinned]).doubleSided = true;
+
+        m_resources.shaders.loadFromString(ShaderID::Emissive, CelVertexShader, EmissiveFragment, "#define VERTEX_COLOURED\n" + wobble);
+        shader = &m_resources.shaders.get(ShaderID::Emissive);
+        m_materialIDs[MaterialID::Emissive] = m_resources.materials.add(*shader);
     }
 
 
@@ -1712,6 +1841,28 @@ void GolfState::loadMaterials()
     glassMat.blendMode = cro::Material::BlendMode::Alpha;
 
 
+    m_resources.shaders.loadFromString(ShaderID::HairGlass,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment, "#define USER_COLOUR\n");
+    shader = &m_resources.shaders.get(ShaderID::HairGlass);
+    m_materialIDs[MaterialID::HairGlass] = m_resources.materials.add(*shader);
+    auto& glassHairMat = m_resources.materials.get(m_materialIDs[MaterialID::HairGlass]);
+    glassHairMat.setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+    glassHairMat.doubleSided = true;
+    glassHairMat.blendMode = cro::Material::BlendMode::Alpha;
+
+
+    m_resources.shaders.loadFromString(ShaderID::Wake, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), WakeFragment, "#define TEXTURED\n");
+    shader = &m_resources.shaders.get(ShaderID::Wake);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Wake] = m_resources.materials.add(*shader);
+    auto& wakeMat = m_resources.materials.get(m_materialIDs[MaterialID::Wake]);
+    wakeMat.setProperty("u_texture", m_resources.textures.get("assets/golf/images/wake.png"));
+    wakeMat.setProperty("u_speed", 0.f); //default to zero so if the prop has no path the wake isn't visible
+    wakeMat.doubleSided = true;
+    wakeMat.blendMode = cro::Material::BlendMode::Alpha;
+
+
+
     m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define MASK_MAP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Player);
     m_resolutionBuffer.addShader(*shader);
@@ -1723,7 +1874,7 @@ void GolfState::loadMaterials()
     m_resources.materials.get(m_materialIDs[MaterialID::Player]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
     m_resources.materials.get(m_materialIDs[MaterialID::Player]).setProperty("u_maskMap", m_defaultMaskMap);
 
-
+    
     //hair
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Hair);
@@ -2005,12 +2156,21 @@ void GolfState::loadSprites()
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar_wide");
     m_sprites[SpriteID::PowerBar10] = spriteSheet.getSprite("power_bar_wide_10");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner_wide");
+    m_sprites[SpriteID::PowerBarInnerHC] = spriteSheet.getSprite("power_bar_inner_wide_hc");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
+
+    m_sprites[SpriteID::PowerBarDouble] = spriteSheet.getSprite("power_bar_double");
+    m_sprites[SpriteID::PowerBarDouble10] = spriteSheet.getSprite("power_bar_double_10");
+    m_sprites[SpriteID::PowerBarDoubleInner] = spriteSheet.getSprite("power_bar_inner_double");
+    m_sprites[SpriteID::PowerBarDoubleInnerHC] = spriteSheet.getSprite("power_bar_inner_double_hc");
+    m_sprites[SpriteID::HookBarDouble] = spriteSheet.getSprite("hook_bar_double");
+
     m_sprites[SpriteID::SlopeStrength] = spriteSheet.getSprite("slope_indicator");
     m_sprites[SpriteID::BallSpeed] = spriteSheet.getSprite("ball_speed");
     m_sprites[SpriteID::MapFlag] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::MapTarget] = spriteSheet.getSprite("multitarget");
     m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("putt_flag");
+    m_sprites[SpriteID::MiniFlagLarge] = spriteSheet.getSprite("putt_flag_large");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
     m_sprites[SpriteID::WindSpeedBg] = spriteSheet.getSprite("wind_text_bg");
@@ -2070,15 +2230,40 @@ void GolfState::loadModels()
 
 
     //load audio from avatar info
-    for (const auto& avatar : m_sharedData.avatarInfo)
+    std::unordered_map<std::uint32_t, std::string> audioPaths;
+    //list all available audio and put into map
+    const auto processPath =
+        [&](const std::string path)
+        {
+            auto audioFiles = cro::FileSystem::listFiles(path);
+            for (const auto& file : audioFiles)
+            {
+                if (cro::FileSystem::getFileExtension(file) == ".xas")
+                {
+                    auto fullPath = path + file;
+                    cro::AudioScape as;
+                    as.loadFromFile(fullPath, m_resources.audio);
+
+                    const auto uid = as.getUID();
+                    if (uid != 0
+                        && audioPaths.count(uid) == 0)
+                    {
+                        audioPaths.insert(std::make_pair(uid, fullPath));
+                    }
+                }
+            }
+        };
+    std::string baseAudioPath = "assets/golf/sound/avatars/";
+    processPath(baseAudioPath);
+    baseAudioPath = Content::getUserContentPath(Content::UserContent::Voice);
+    const auto voiceDirs = cro::FileSystem::listDirectories(baseAudioPath);
+    for (const auto& dir : voiceDirs)
     {
-        m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(avatar.audioscape, m_resources.audio);
+        processPath(baseAudioPath + dir + "/");
     }
+
     auto defaultAudio = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape("assets/golf/sound/avatars/default.xas", m_resources.audio);
 
-    //TODO we don't actually need to load *every* sprite sheet, just look up the index first
-    //and load it as necessary...
-    //however: while it may load unnecessary audioscapes, it does ensure they are loaded in the correct order :S
 
     //copy into active player slots
     const auto indexFromSkinID = [&](std::uint32_t skinID, bool& isRandom)->std::size_t
@@ -2123,7 +2308,53 @@ void GolfState::loadModels()
             //if this returned a random index because the skinID wasn't found, correct the skinID
             skinID = m_sharedData.avatarInfo[avatarIndex].uid;
 
-            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, isRandom ? defaultAudio : static_cast<std::int32_t>(avatarIndex));
+            const auto voiceID = m_sharedData.connectionData[i].playerData[j].voiceID;
+            std::size_t playerVoiceIndex = defaultAudio;
+            if (audioPaths.count(voiceID) != 0)
+            {
+                playerVoiceIndex = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(audioPaths.at(voiceID), m_resources.audio);
+
+#ifdef USE_GNS
+                //track stats if this is a workshop item
+                if (i == m_sharedData.localConnectionData.connectionID)
+                {
+                    auto temp = cro::FileSystem::getFilePath(audioPaths.at(voiceID));
+                    temp.pop_back(); //remove trailing '/'
+
+                    if (temp.back() == 'w')
+                    {
+                        std::uint64_t workshopID = 0;
+                        if (auto res = temp.find_last_of('/'); res != std::string::npos)
+                        {
+                            try
+                            {
+                                const auto d = temp.substr(res + 1, temp.length() - 1);
+                                workshopID = std::stoull(d);
+                            }
+                            catch (...)
+                            {
+                                LogW << "could not get workshop ID for " << temp << std::endl;
+                            }
+                        }
+
+                        if (workshopID != 0)
+                        {
+                            m_modelStats.push_back(workshopID);
+                        }
+                    }
+                }
+#endif
+            }
+            else
+            {
+                if (!isRandom)
+                {
+                    playerVoiceIndex = m_gameScene.getDirector<GolfSoundDirector>()->addAudioScape(m_sharedData.avatarInfo[avatarIndex].audioscape, m_resources.audio);
+                }
+            }
+
+            const float pitch = 1.f + (static_cast<float>(m_sharedData.connectionData[i].playerData[j].voicePitch) / VoicePitchDivisor);
+            m_gameScene.getDirector<GolfSoundDirector>()->setPlayerIndex(i, j, static_cast<std::int32_t>(playerVoiceIndex), pitch);
             m_avatars[i][j].flipped = m_sharedData.connectionData[i].playerData[j].flipped;
 
             //player avatar model
@@ -2264,7 +2495,8 @@ void GolfState::loadModels()
 
                                 if (md.getMaterialCount() == 2)
                                 {
-                                    material = m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
+                                    material = md.hasTag(1, "glass") ? m_resources.materials.get(m_materialIDs[MaterialID::HairGlass])
+                                        : m_resources.materials.get(m_materialIDs[MaterialID::HairReflect]);
                                     applyMaterialData(md, material, 1);
                                     material.setProperty("u_hairColour", hairColour);
                                     ent.getComponent<cro::Model>().setMaterial(1, material);
@@ -2343,7 +2575,9 @@ void GolfState::loadModels()
                 entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
                 m_avatars[i][j].model = entity;
 
-                entity.addComponent<AvatarRotation>();
+                auto& avRot = entity.addComponent<AvatarRotation>();
+                avRot.avatarFlipped = m_avatars[i][j].flipped;
+                avRot.groundRotation = std::bind(&GolfState::getGroundRotation, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
                 if (m_sharedData.avatarInfo[avatarIndex].workshopID
                     && i == m_sharedData.localConnectionData.connectionID)
@@ -2354,6 +2588,176 @@ void GolfState::loadModels()
         }
     }
     //m_activeAvatar = &m_avatars[0][0]; //DON'T DO THIS! WE MUST BE NULL WHEN THE MAP LOADS
+
+
+    //club models
+
+    //collect all search paths for club models
+    std::unordered_map<std::uint32_t, std::string> clubPaths;
+    const auto processClubPath = 
+        [&](const std::string& path)
+        {
+            const std::string fileName = "/list.cst";
+            cro::ConfigFile cfg;
+            if (cfg.loadFromFile(path + fileName, false)) //resource path was already added
+            {
+                //TODO we need to do full validation, eg models exist here
+                if (const auto* uid = cfg.findProperty("uid");
+                    uid != nullptr)
+                {
+                    const auto id = uid->getValue<std::uint32_t>();
+                    if (clubPaths.count(id) == 0)
+                    {
+                        clubPaths.insert(std::make_pair(id, path + fileName));
+                    }
+                }
+            }
+        };
+
+    const auto ContentDirs = Content::getInstallPaths();
+    for (const auto& c : ContentDirs)
+    {
+        const auto basePath = cro::FileSystem::getResourcePath() + c + "clubs/";
+        const auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+        for (const auto& s : clubsets)
+        {
+            processClubPath(basePath + s);
+        }
+    }
+
+    //workshop clubs
+    const auto basePath = Content::getUserContentPath(Content::UserContent::Clubs);
+    auto clubsets = cro::FileSystem::listDirectories(basePath);
+
+    //remove dirs from this list if it's not from the workshop (rather crudely)
+    clubsets.erase(std::remove_if(clubsets.begin(), clubsets.end(), [](const std::string& s) {return s.back() != 'w'; }), clubsets.end());
+
+    if (clubsets.size() > ConstVal::MaxClubsets)
+    {
+        clubsets.resize(ConstVal::MaxClubsets);
+        LogW << "Installed clubsets have been truncated to the maximum 64!" << std::endl;
+    }
+
+    for (const auto& s : clubsets)
+    {
+        processClubPath(basePath + s);
+    }
+
+
+    const auto loadClubModel = 
+        [&](std::uint32_t clubID)
+        {
+            if (m_clubModels.count(clubID) == 0)
+            {
+                m_clubModels.insert(std::make_pair(clubID, ClubModels()));
+                auto& models = m_clubModels.at(clubID);
+
+                if (models.loadFromFile(clubPaths.at(clubID), m_resources, m_gameScene))
+                {
+                    std::int32_t i = 0;
+                    for (auto entity : models.models)
+                    {
+                        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
+
+                        const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
+
+                        for (auto j = 0u; j < matCount; ++j)
+                        {
+                            auto matID = MaterialID::Ball;
+
+                            switch (j)
+                            {
+                            default: 
+                                if (m_sharedData.nightTime
+                                    && models.materialIDs[i][j] == ClubModels::Emissive)
+                                {
+                                    matID = MaterialID::BallNight;
+                                    //matID = MaterialID::Emissive;
+                                }
+                                break;
+                            case 1:
+                                if (m_sharedData.nightTime)
+                                {
+                                    matID = models.materialIDs[i][j] == ClubModels::Emissive ? 
+                                        MaterialID::BallNight : MaterialID::Trophy;
+                                        //MaterialID::Emissive : MaterialID::Trophy;
+                                }
+                                else
+                                {
+                                    matID = MaterialID::Trophy;
+                                }
+                                break;
+                            }
+                            auto material = m_resources.materials.get(m_materialIDs[matID]);
+                            entity.getComponent<cro::Model>().setMaterial(j, material);
+
+                        }
+                        i++;
+
+                        entity.addComponent<cro::Callback>().active = true;
+                        entity.getComponent<cro::Callback>().function =
+                            [&](cro::Entity e, float)
+                            {
+                                if (m_activeAvatar)
+                                {
+                                    bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
+                                        m_activeAvatar->hands->getModel() == e);
+
+                                    e.getComponent<cro::Model>().setHidden(hidden);
+                                }
+                            };
+                    }
+                }
+            }        
+        };
+
+
+    //for each profile in the game load the club models if not already loaded
+    for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+    {
+        for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+        {
+            const auto clubID = m_sharedData.connectionData[i].playerData[j].clubID;
+            if (clubPaths.count(clubID) == 0)
+            {
+                //profile has invalid model set, so use fallback
+                m_avatars[i][j].clubModelID = 0;
+            }
+            else
+            {
+                m_avatars[i][j].clubModelID = clubID;
+                loadClubModel(clubID);
+
+#ifdef USE_GNS
+                if (i == m_sharedData.localConnectionData.connectionID)
+                {
+                    if (m_clubModels.count(clubID) != 0
+                        && m_clubModels.at(clubID).workshopID != 0)
+                    {
+                        m_modelStats.push_back(m_clubModels.at(clubID).workshopID);
+                    }
+                }
+#endif
+            }
+        }
+    }
+
+    //if we didn't load the default set of clubs for some reason
+    //create a fallback model so we still have something to reference
+    loadClubModel(0);
+
+    for (auto& [_,models] : m_clubModels)
+    {
+        if (models.models.empty())
+        {
+            models.models.push_back(m_gameScene.createEntity());
+            createFallbackModel(models.models.back(), m_resources);
+        }
+    }
+
+
+
 #ifdef USE_GNS
     if (!m_modelStats.empty())
     {
@@ -2361,41 +2765,6 @@ void GolfState::loadModels()
     }
 #endif
 
-    //club models - TODO we'll eventually want to do this for each player profile?
-    if (!m_clubModels.loadFromFile("assets/golf/clubs/default/list.cst", m_resources, m_gameScene))
-    {
-        m_clubModels.models.push_back(m_gameScene.createEntity());
-        createFallbackModel(m_clubModels.models.back(), m_resources);
-    }
-
-    for (auto entity : m_clubModels.models)
-    {
-        const auto matCount = entity.getComponent<cro::Model>().getMeshData().submeshCount;
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-        //applyMaterialData(md, material, 0); //this is the wrong model def!!
-        entity.getComponent<cro::Model>().setMaterial(0, material);
-        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
-
-        if (matCount > 1)
-        {
-            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-            //applyMaterialData(md, material, 1);
-            entity.getComponent<cro::Model>().setMaterial(1, material);
-        }
-
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float)
-            {
-                if (m_activeAvatar)
-                {
-                    bool hidden = !(!m_activeAvatar->model.getComponent<cro::Model>().isHidden() &&
-                        m_activeAvatar->hands->getModel() == e);
-
-                    e.getComponent<cro::Model>().setHidden(hidden);
-                }
-            };
-    }
 
 
     //ball resources - ball is rendered as a single point
@@ -2627,7 +2996,42 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
 
                     auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
                     applyMaterialData(md, material);
+
+                    //TODO we should be reading the texture size from the model...
+                    const auto* m = md.getMaterial(0);
+                    if (m->properties.count("u_diffuseMap"))
+                    {
+                        static constexpr std::uint32_t TexSize = 512;
+                        m_planeTexture.create(TexSize, TexSize, false);
+
+                        const auto tex = cro::TextureID(m->properties.at("u_diffuseMap").second.textureID);
+                        cro::SimpleQuad q;
+                        q.setTexture(tex, { TexSize,TexSize });
+
+                        cro::SimpleText t(m_sharedData.sharedResources->fonts.get(FontID::UI));
+                        t.setCharacterSize(BannerTextSize);
+                        t.setFillColour(TextNormalColour);
+                        t.setShadowColour(LeaderboardTextDark);
+                        t.setShadowOffset({ 2.f, -2.f });
+                        t.setString(BannerStrings[BannerIndex]);
+                        t.setAlignment(cro::SimpleText::Alignment::Centre);
+                        t.setVerticalSpacing(2.f);
+
+                        t.setPosition(glm::vec2(PlaneBannerB.left + (PlaneBannerB.width / 2.f), PlaneBannerB.bottom + (PlaneBannerB.height / 2.f) + (t.getVerticalSpacing() / 2.f)));
+
+                        m_planeTexture.clear(cro::Colour::Transparent);
+                        q.draw();
+                        t.draw();
+                        t.rotate(180.f);
+                        t.move(glm::vec2(0.f, PlaneBannerA.bottom - PlaneBannerB.bottom));
+                        t.move(glm::vec2(0.f, -t.getVerticalSpacing()));
+                        t.draw();
+                        m_planeTexture.display();
+
+                        material.setProperty("u_diffuseMap", m_planeTexture.getTexture());
+                    }
                     entity.getComponent<cro::Model>().setMaterial(0, material);
+
 
                     //engine
                     entity.addComponent<cro::AudioEmitter>(); //always needs one in case audio doesn't exist
@@ -2861,6 +3265,77 @@ void GolfState::initAudio(bool loadTrees, bool loadPlane)
             };
 
     }
+}
+
+void GolfState::updateFlagTexture(bool reloadTexture)
+{
+    if (!m_flagTexture.available())
+    {
+        //LogI << "Flag Texture is unavailable for custom flags" << std::endl;
+        if (cro::FileSystem::fileExists(m_sharedData.flagPath))
+        {
+            m_flagTexture.create(FlagTextureSize.x, FlagTextureSize.y, false);
+            //LogI << "Found " << m_sharedData.flagPath << " - creating flag texture..." << std::endl;
+        }
+        else
+        {
+            //LogI << m_sharedData.flagPath << ": file not found." << std::endl;
+            return;
+        }
+    }
+
+    if (reloadTexture)
+    {
+        if (!m_resources.textures.loaded(TextureID::Flag))
+        {
+            m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath);
+            /*if (m_resources.textures.load(TextureID::Flag, m_sharedData.flagPath))
+                LogI << "loaded flag texture from " << m_sharedData.flagPath << std::endl;
+            else
+                LogI << "failed loading flag texture " << m_sharedData.flagPath << std::endl;*/
+        }
+        else
+        {
+            //overwrite existing to recycle the handle.
+            m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath);
+            /*if (m_resources.textures.get(TextureID::Flag).loadFromFile(m_sharedData.flagPath))
+                LogI << "reloaded flag texture from " << m_sharedData.flagPath << std::endl;
+            else
+                LogI << "failed reloading flag texture " << m_sharedData.flagPath << std::endl;*/
+        }
+        m_flagQuad.setTexture(m_resources.textures.get(TextureID::Flag));
+
+        //just saves doing this every time we update the text
+        m_flagText.setFont(m_sharedData.sharedResources->fonts.get(FontID::UI));
+        m_flagText.setAlignment(cro::SimpleText::Alignment::Centre);
+        m_flagText.setPosition({ 160.f, 80.f });
+        m_flagText.setScale(glm::vec2(12.f));
+        m_flagText.setCharacterSize(UITextSize);
+    }
+
+    m_flagTexture.clear(cro::Colour::Magenta);
+    m_flagQuad.draw();
+
+    if (m_sharedData.flagText)
+    {
+        m_flagText.setFillColour(m_sharedData.flagText == 1 ? CD32::Colours[CD32::Black] : CD32::Colours[CD32::BeigeLight]);
+        m_flagText.setString(std::to_string(holeNumberFromIndex()));
+        m_flagText.draw();
+    }
+
+    m_flagTexture.display();
+
+
+    cro::TextureID tid(m_flagTexture.getTexture());
+
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Flag;
+    cmd.action = [tid](cro::Entity e, float)
+        {
+            e.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", tid);
+            //LogI << "Set flag texture on model" << std::endl;
+        };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void GolfState::TargetShader::update()

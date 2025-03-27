@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -114,7 +114,7 @@ void GolfState::updateHoleScore(std::uint16_t data)
                 
                 cro::Command cmd;
                 cmd.targetFlags = CommandID::UI::ScoreTitle;
-                cmd.action = [&, player](cro::Entity e, float)
+                cmd.action = [&](cro::Entity e, float)
                     {
                         auto str = m_courseTitle + " - Skins - Pot: 1";
                         e.getComponent<cro::Text>().setString(str);
@@ -181,7 +181,16 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
                     stableford += std::max(0, 2 - holeScore);
                 }
 
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford);
+                
+                //as this might be displayed on a course played forwards always
+                //store the values on the leaderboards in the same direction
+                auto scoreData = connectionData.playerData[k].holeScores;
+                if (m_sharedData.reverseCourse)
+                {
+                    std::reverse(scoreData.begin(), scoreData.end());
+                }
+
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score, stableford, scoreData);
                 break;
             }
         }

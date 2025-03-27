@@ -59,7 +59,7 @@ private:
 
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
-    cro::ResourceCollection m_resources;
+    cro::ResourceCollection& m_resources;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final

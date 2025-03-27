@@ -1399,7 +1399,7 @@ void EndlessDrivingState::createUI()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });*/
 
     auto resize = 
-        [&, entity](cro::Camera& cam) mutable
+        [&/*, entity*/](cro::Camera& cam) mutable
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = {0.f, 0.f, 1.f, 1.f};

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -107,8 +107,8 @@ void TerrainChunker::update()
     camBox[1].z = std::clamp(camBox[1].z, -MapRect.height, 0.f);
     cro::FloatRect camAABB(camBox[0].x, -camBox[1].z, camBox[1].x - camBox[0].x, -(camBox[0].z - camBox[1].z));
 
-    auto camWorldPos = m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
-    //auto camPos = glm::vec2(camWorldPos.x, -camWorldPos.z);
+    //const auto camWorldPos = m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    //const auto camPos = glm::vec2(camWorldPos.x, -camWorldPos.z);
 
     m_previouslyVisible.swap(m_visible);
     for (auto chunkIndex : m_previouslyVisible)

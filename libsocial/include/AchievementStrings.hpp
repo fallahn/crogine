@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -316,7 +316,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Sink a putt greater than 6m", false),
     std::make_pair("Sink a hole from outside the green", false),
     std::make_pair("Get a PAR or better after at least one foul", false),
-    std::make_pair("Play a network game with 4 clients", false),
+    std::make_pair("Play a network game with 4 or more clients", false),
     std::make_pair("Get a One Star rating on the driving range", false),
     std::make_pair("Get a Two Star rating on the driving range", false),
     std::make_pair("Get a Three Star rating on the driving range", false),
@@ -377,12 +377,12 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Complete Moulin Plage with par or under", false),
     std::make_pair("Complete Purcitop Pitch 'n' Putt with par or under", false),
     std::make_pair("Complete Fairland Rock with par or under", false),
-    std::make_pair("Finish a full course at least 18 under par", false),
-    std::make_pair("Complete a full round with no holes over par", false),
-    std::make_pair("With gimmies enabled never take a gimme in a whole round", false),
-    std::make_pair("In a full round hit the green on each hole with two strokes spare to make par", false),
-    std::make_pair("In a full round take no more than two putts on each hole", false),
-    std::make_pair("Hit the fairway or the green on your first shot of all 18 holes", false),
+    std::make_pair("In Freeplay finish a full course at least 18 under par", false),
+    std::make_pair("In Freeplay complete a full round with no holes over par", false),
+    std::make_pair("In Freeplay with gimmies enabled never take a gimme in a whole round", false),
+    std::make_pair("In a full round in Freeplay hit the green on each hole with two strokes spare to make par", false),
+    std::make_pair("In a full round in Freeplay take no more than two putts on each hole", false),
+    std::make_pair("In Freeplay Hit the fairway or the green on your first shot of all 18 holes", false),
     std::make_pair("Get 2 Eagles and 3 Birdies in one round", false),
     std::make_pair("Finish all 18 holes with a Gimme", false),
     std::make_pair("Land on the flag on the Driving Range", false),
@@ -412,9 +412,9 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Finish 9 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Finish 18 holes on a full size course with less than 15m in Nearest the Pin", false),
     std::make_pair("Take at least one screenshot on each course using freecam", false),
-    std::make_pair("Come first in any Career round using the Novice clubs", false),
-    std::make_pair("Come first in any Career round using the Expert clubs", false),
-    std::make_pair("Come first in any Career round using the Pro clubs", false),
+    std::make_pair("Come first in any Career league round using the Novice clubs", false),
+    std::make_pair("Come first in any Career league round using the Expert clubs", false),
+    std::make_pair("Come first in any Career league round using the Pro clubs", false),
     std::make_pair("Hole out with a Punch shot", false),
     std::make_pair("Hole out with a Flop shot", false),
     std::make_pair("Sink a hole from the fringe using a putter", false),

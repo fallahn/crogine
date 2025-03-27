@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -563,7 +563,7 @@ void MessageOverlayState::buildScene()
         entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+        m_sharedData.errorMessage = "";
 
         //buttons
         entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
@@ -602,6 +602,9 @@ void MessageOverlayState::buildScene()
                         resetTournament(t);
                         writeTournamentData(t);
 
+                        readTournamentData(m_sharedData.tournaments[0]);
+                        readTournamentData(m_sharedData.tournaments[1]);
+
                         cro::App::quit();
 
                         /*requestStackClear();
@@ -626,7 +629,7 @@ void MessageOverlayState::buildScene()
         entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+        m_sharedData.errorMessage = "";
 
         //buttons
         entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
@@ -691,7 +694,7 @@ void MessageOverlayState::buildScene()
         centreText(entity);
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+        m_sharedData.errorMessage = ""; //must reset this else cancelling with back/right click still deletes profile!
 
         //buttons
         entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);

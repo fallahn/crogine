@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -175,6 +175,8 @@ namespace
     };
 }
 
+std::deque<TextChat::BufferLine> TextChat::m_displayBuffer;
+
 TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     : m_scene               (s),
     m_sharedData            (sd),
@@ -188,6 +190,11 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_screenChatActiveCount (0),
     m_showShortcuts         (false)
 {
+    if (sd.logChat)
+    {
+        initLog();
+    }
+
     registerCommand("cl_use_tts", [&](const std::string& str)
         {
             if (str == "1" || str == "true")
@@ -466,6 +473,11 @@ void TextChat::handleMessage(const cro::Message& msg)
 
 bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 {
+    if (m_sharedData.blockChat)
+    {
+        return false;
+    }
+
     const auto msg = pkt.as<TextMessage>();
 
     if (msg.client >= ConstVal::MaxClients)
@@ -516,7 +528,14 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         m_displayBuffer.pop_front();
     }
     m_scrollToEnd = true;
-    
+
+    printToScreen(outStr, chatColour);
+
+    return playSound;
+}
+
+void TextChat::printToScreen(cro::String outStr, cro::Colour chatColour)
+{
     //create an entity to temporarily show the message on screen
 
     auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
@@ -526,7 +545,7 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 18.f), 2.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 18.f), 5.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
@@ -630,7 +649,18 @@ bool TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
-    return playSound;
+
+    if (m_sharedData.logChat)
+    {
+        auto t = std::time(nullptr);
+        auto* tm = std::localtime(&t);
+
+        if (m_logFile.is_open() && m_logFile.good())
+        {
+            const auto utf = outStr.toUtf8();
+            m_logFile << std::put_time(tm, "<%H:%M:%S> ") << utf.c_str() <<"\n";
+        }
+    }
 }
 
 void TextChat::toggleWindow(bool showOSK, bool showQuickEmote, bool enableDeckInput)
@@ -744,6 +774,17 @@ void TextChat::sendBufferedString()
     }
 }
 
+void TextChat::initLog()
+{
+    if (!m_logFile.is_open())
+    {
+        auto t = std::time(nullptr);
+        auto* tm = std::localtime(&t);
+
+        std::string filename = "chat_log_" + std::to_string(tm->tm_year + 1900) + "-" + std::to_string(tm->tm_mon + 1) + "-" + std::to_string(tm->tm_mday) + ".txt";
+        m_logFile.open(filename, std::ios::app);
+    }
+}
 
 //private
 void TextChat::beginChat()
@@ -777,7 +818,14 @@ void TextChat::sendTextChat()
 
         m_inputBuffer.clear();
 
-        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ChatMessage, msg, net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+        if (!m_sharedData.blockChat)
+        {
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ChatMessage, msg, net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+        }
+        else
+        {
+            printToScreen("Chat has been disabled from the Options menu", TextHighlightColour);
+        }
 
         m_limitClock.restart();
         m_scrollToEnd = true;

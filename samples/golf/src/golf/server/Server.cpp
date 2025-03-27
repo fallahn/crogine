@@ -100,6 +100,7 @@ void Server::launch(std::size_t maxConnections, std::int32_t gameMode, bool fast
     m_sharedData.fastCPU = fastCPU;
     m_running = true;
     m_thread = std::make_unique<std::thread>(&Server::run, this);
+    LogI << "Launched server thread..." << std::endl;
 }
 
 void Server::stop()

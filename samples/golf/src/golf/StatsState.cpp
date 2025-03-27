@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,6 +40,7 @@ source distribution.
 #include "../Colordome-32.hpp"
 
 #include <Social.hpp>
+#include <Content.hpp>
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
 #include <Achievements.hpp>
@@ -322,7 +323,7 @@ bool StatsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -672,7 +673,7 @@ void StatsState::parseProfileData()
 {
     //this assumes the startup was successful and profile paths were created - we might
     //want to do some checkin here just to prevent crashes if paths don't exist
-    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    auto path = Content::getUserContentPath(Content::UserContent::Profile);
     if (!cro::FileSystem::directoryExists(path))
     {
         return;
@@ -860,18 +861,18 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         label = ((clubFlags & ClubID::Flags[clubID]) == 0) ? "Level " + std::to_string(unlockLevel) : "|";
         label += "\n";
 
-        if ((playerLevel < 15) || (clubFlags & ClubID::Flags[clubID]) == 0)
+        if ((playerLevel < Social::ExpertLevel) || (clubFlags & ClubID::Flags[clubID]) == 0)
         {
-            auto l = std::max(15, unlockLevel);
+            auto l = std::max(Social::ExpertLevel, unlockLevel);
             label += "Level " + std::to_string(l) + "\n";
         }
         else
         {
             label += "|\n";
         }
-        if ((playerLevel < 30) || (clubFlags & ClubID::Flags[clubID]) == 0)
+        if ((playerLevel < Social::ProLevel) || (clubFlags & ClubID::Flags[clubID]) == 0)
         {
-            label += "Level 30\n";
+            label += "Level " + std::to_string(Social::ProLevel) + "\n";
         }
         else
         {

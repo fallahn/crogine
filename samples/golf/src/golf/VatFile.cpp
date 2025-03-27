@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -226,7 +226,7 @@ bool VatFile::hasTangents() const
     return !m_dataPaths[DataID::Tangent].empty();
 }
 
-bool VatFile::fillArrayTexture(cro::ArrayTexture<float, 4u>& arrayTexture) const
+bool VatFile::fillArrayTexture(cro::ArrayTexture<float, 4u, cro::TexturePrecision::Low>& arrayTexture) const
 {
     if (m_binaryDims.x == 0 || m_binaryDims.y == 0)
     {

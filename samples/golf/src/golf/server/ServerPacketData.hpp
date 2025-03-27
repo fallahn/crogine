@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -89,6 +89,16 @@ struct ActorInfo final
     std::uint8_t state = 0;
     std::uint8_t lie = 0;
     std::uint8_t groupID = 0;
+    std::uint8_t collisionTerrain = 255;
+};
+
+struct CanInfo final
+{
+    glm::vec3 position = glm::vec3(0.f);
+    std::array<std::int16_t, 3u> velocity = {};
+    std::uint8_t collisionTerrain = 255;
+    std::uint32_t serverID = 0;
+    std::int32_t timestamp = 0;
 };
 
 static inline bool operator == (const ActorInfo& actor, const ActivePlayer& player)

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,14 +31,20 @@ source distribution.
 
 #include <string>
 
-inline const std::string GlassFragment =
+static inline const std::string GlassFragment =
 R"(
 OUTPUT
 
+#include CAMERA_UBO
+
 uniform samplerCube u_reflectMap;
-uniform vec3 u_cameraWorldPosition;
+
+#if defined (USER_COLOUR)
+uniform vec4 u_hairColour = vec4(1.0, 0.0, 0.0, 1.0);
+#else
 uniform vec4 u_colour;
-uniform vec4 u_maskColour;
+#endif
+uniform vec4 u_maskColour = vec4(0.0, 0.0, 0.0, 0.5);
 
 VARYING_IN vec3 v_normalVector;
 VARYING_IN vec3 v_worldPosition;
@@ -48,10 +54,39 @@ void main()
     vec3 normal = normalize(v_normalVector);
     vec3 eyeDir = normalize(v_worldPosition - u_cameraWorldPosition);
 
+#if defined (USER_COLOUR)
+    vec4 colour = vec4(u_hairColour.rgb, 0.2);
+#else
     vec4 colour = u_colour;
+#endif
     vec3 reflectColour = TEXTURE_CUBE(u_reflectMap, reflect(eyeDir, normal)).rgb;
 
     colour.rgb = mix(reflectColour, colour.rgb, u_maskColour.a);
+
+    FRAG_OUT = colour;
+})";
+
+static inline const std::string WakeFragment =
+R"(
+OUTPUT
+
+uniform sampler2D u_texture;
+uniform float u_speed = 1.0;
+uniform vec4 u_lightColour = vec4(1.0);
+
+VARYING_IN vec2 v_texCoord0;
+
+#include WIND_BUFFER
+#include LIGHT_COLOUR
+
+void main()
+{
+    float positionAlpha = clamp(1.0 - v_texCoord0.x, 0.0, 1.0);
+    positionAlpha *= smoothstep(0.03, 0.1, v_texCoord0.x);
+        
+    vec4 colour = TEXTURE(u_texture, v_texCoord0 - vec2(u_windData.w * u_speed, 0.0));
+    colour.rgb *= getLightColour().rgb;
+    colour.a *= positionAlpha * clamp(u_speed, 0.0, 1.0);
 
     FRAG_OUT = colour;
 })";

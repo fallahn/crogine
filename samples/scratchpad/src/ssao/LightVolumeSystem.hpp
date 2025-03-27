@@ -126,5 +126,7 @@ namespace test
 
 
         void resizeBuffer();
+
+        void flushEntity(cro::Entity) override {};
     };
 }

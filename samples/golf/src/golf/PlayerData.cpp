@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -34,6 +34,8 @@ source distribution.
 #include "server/ServerState.hpp"
 
 #include <Social.hpp>
+#include <Content.hpp>
+
 #include <crogine/core/SysTime.hpp>
 #include <crogine/core/ConfigFile.hpp>
 
@@ -45,9 +47,12 @@ PlayerData& PlayerData::operator=(const sv::PlayerInfo& pi)
     avatarFlags = pi.avatarFlags;
     ballColourIndex = pi.ballColourIndex;
     ballID = pi.ballID;
+    clubID = pi.clubID;
     hairID = pi.hairID;
     hatID = pi.hatID;
     skinID = pi.skinID;
+    voiceID = pi.voiceID;
+    voicePitch = pi.voicePitch;
     flipped = pi.flipped;
     isCPU = pi.isCPU;
 
@@ -67,8 +72,8 @@ bool PlayerData::saveProfile() const
 
     if (!name.empty())
     {
-        const auto s = name.toUtf8();
-        cfg.addProperty("name", std::string(s.c_str(), s.c_str() + s.length()));
+        //const auto s = name.toUtf8();
+        cfg.addProperty("name").setValue(/*std::string(s.c_str(), s.c_str() + s.length())*/name);
 
 #ifdef USE_GNS
         isCustomName = (name != Social::getPlayerName());
@@ -76,9 +81,12 @@ bool PlayerData::saveProfile() const
     }
     cfg.addProperty("ball_colour").setValue(ballColourIndex);
     cfg.addProperty("ball_id").setValue(ballID);
+    cfg.addProperty("club_id").setValue(clubID);
     cfg.addProperty("hair_id").setValue(hairID);
     cfg.addProperty("hat_id").setValue(hatID);
     cfg.addProperty("skin_id").setValue(skinID);
+    cfg.addProperty("voice_id").setValue(voiceID);
+    cfg.addProperty("voice_pitch").setValue(voicePitch);
     cfg.addProperty("flipped").setValue(flipped);
     cfg.addProperty("flags0").setValue(avatarFlags[0]);
     cfg.addProperty("flags1").setValue(avatarFlags[1]);
@@ -112,7 +120,7 @@ bool PlayerData::saveProfile() const
         profileID = std::to_string(SpookyHash::Hash32(hashData.data(), sizeof(std::uint32_t) * hashData.size(), static_cast<std::uint32_t>(cro::SysTime::epoch())));
     }
 
-    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    auto path = Content::getUserContentPath(Content::UserContent::Profile);
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
@@ -173,6 +181,11 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
                 auto id = prop.getValue<std::uint32_t>();
                 ballID = id;
             }
+            else if (n == "club_id")
+            {
+                auto id = prop.getValue<std::uint32_t>();
+                clubID = id;
+            }
             else if (n == "hair_id")
             {
                 auto id = prop.getValue<std::uint32_t>();
@@ -187,6 +200,15 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
             {
                 auto id = prop.getValue<std::uint32_t>();
                 skinID = id;
+            }
+            else if (n == "voice_id")
+            {
+                voiceID = prop.getValue<std::uint32_t>();
+            }
+            else if (n == "voice_pitch")
+            {
+                std::int32_t pitch = std::clamp(prop.getValue<std::int32_t>(), -MaxVoicePitch, std::int32_t(MaxVoicePitch));
+                voicePitch = static_cast<std::int8_t>(pitch);
             }
             else if (n == "flipped")
             {
@@ -306,7 +328,7 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 //------------------------------------------------------------
 
 ProfileTexture::ProfileTexture(const std::string& path)
-    : m_imageBuffer (std::make_unique<cro::Image>()),
+    : m_imageBuffer (std::make_unique<cro::Image>(true)),
     m_texture       (std::make_unique<cro::Texture>())
 {
     if (m_imageBuffer->loadFromFile(path) //MUST be RGBA for colour replace to work.

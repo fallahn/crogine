@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -47,6 +47,15 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 #include <crogine/detail/glm/gtc/matrix_access.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
+
+#ifdef PARALLEL_DISABLE
+#undef USE_PARALLEL_PROCESSING
+#endif
+
+#ifdef USE_PARALLEL_PROCESSING
+#include <execution>
+#include <mutex>
+#endif
 
 #ifdef CRO_DEBUG_
 #include <crogine/gui/Gui.hpp>
@@ -385,8 +394,8 @@ void ShadowMapRenderer::render()
                     }
 
                     glCheck(glUniformMatrix4fv(mat.uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-                    glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.m_shadowViewMatrices[d])));
                     glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+                    glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.m_shadowViewMatrices[d])));
                     glCheck(glUniformMatrix4fv(mat.uniforms[Material::CameraView], 1, GL_FALSE, glm::value_ptr(camView)));
                     glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.m_shadowProjectionMatrices[d])));
                     glCheck(glUniform3f(mat.uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
@@ -450,3 +459,36 @@ void ShadowMapRenderer::onEntityAdded(cro::Entity entity)
         LogW << "Shadow caster added to model with no shadow material. This will not render." << std::endl;
     }
 }
+
+void ShadowMapRenderer::onEntityRemoved(Entity e)
+{
+    flushEntity(e);
+}
+
+void ShadowMapRenderer::flushEntity(Entity e)
+{
+    for (auto& a : m_drawLists)
+    {
+        for (auto& b : a)
+        {
+            //if (!b.empty())
+            {
+#ifdef USE_PARALLEL_PROCESSING
+                b.erase(std::remove_if(std::execution::par, b.begin(), b.end(),
+#else
+                b.erase(std::remove_if(b.begin(), b.end(),
+#endif
+                    [e](const Drawable& d)
+                    {
+                        return d.entity == e;
+                    }), b.end());
+            }
+        }
+    }
+}
+
+#ifdef PARALLEL_DISABLE
+#ifndef PARALLEL_GLOBAL_DISABLE
+#define USE_PARALLEL_PROCESSING
+#endif
+#endif

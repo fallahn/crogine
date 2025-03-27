@@ -1,6 +1,6 @@
 ﻿/*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -44,6 +44,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "League.hpp"
 #include "../ErrorCheck.hpp"
+#include "../WebsocketServer.hpp"
 #include "../../buildnumber.h"
 #include "../version/VersionNumber.hpp"
 #include "server/ServerPacketData.hpp"
@@ -71,6 +72,7 @@ source distribution.
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/SimpleText.hpp>
@@ -88,6 +90,30 @@ namespace
 {
 #include "RandNames.hpp"
 #include "shaders/PostProcess.inl"
+
+    inline const std::string TonemapFragment =
+        R"(
+    uniform sampler2D u_texture;
+
+    VARYING_IN vec2 v_texCoord;
+    VARYING_IN vec4 v_colour;
+
+    OUTPUT
+
+    vec3 tonemap(vec3 x)
+    {
+        //return x / (x + 0.155) * 1.019;
+        return x / (1.0 + x);
+    }
+
+    void main()
+    {
+        vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+
+        FRAG_OUT = vec4(tonemap(colour.rgb), 1.0); 
+    })";
+
+
 
     const char VersionNumber[] =
     {
@@ -409,9 +435,11 @@ void MenuState::createUI()
         });
 
 
+    //m_resources.shaders.loadFromString(ShaderID::Tonemapping, cro::RenderSystem2D::getDefaultVertexShader(), TonemapFragment, "#define TEXTURED\n");
+
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({0.f, 0.f, -0.5f});
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>();// .setShader(&m_resources.shaders.get(ShaderID::Tonemapping));
     entity.addComponent<cro::Sprite>(m_backgroundTexture.getTexture());
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
@@ -501,7 +529,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/main_menu.spt", m_resources.textures);
@@ -680,9 +708,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::Callback>().function =
         [bannerEnt, textureRect](cro::Entity e, float dt)
     {
-        float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+        const float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
         auto position = e.getComponent<cro::Transform>().getPosition();
-        position.x = width / 2.f;
+        position.x = std::round(width / 2.f);
 
         if (!bannerEnt.getComponent<cro::Callback>().active)
         {
@@ -705,9 +733,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     entity.getComponent<cro::Callback>().function =
         [bannerEnt, bounds](cro::Entity e, float dt)
     {
-        float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+        const float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
         auto position = e.getComponent<cro::Transform>().getPosition();
-        position.x = width / 2.f;
+        position.x = std::round(width / 2.f);
 
         if (!bannerEnt.getComponent<cro::Callback>().active)
         {
@@ -718,6 +746,48 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         e.getComponent<cro::Transform>().setPosition(position);
     };
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //double XP text
+    struct FlashData final
+    {
+        float currentTime = 1.f;
+        float scale = 1.f;
+    };
+    if (Social::doubleXP() == 2)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 48.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("Double XP\nWeekend!");
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+        entity.getComponent<cro::Text>().setVerticalSpacing(5.f);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset(glm::vec2(2.f, -2.f));
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<FlashData>();
+        entity.getComponent<cro::Callback>().function =
+            [bannerEnt](cro::Entity e, float dt)
+            {
+                const float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+                auto position = e.getComponent<cro::Transform>().getPosition();
+                position.x = std::round(width / 2.f);
+                e.getComponent<cro::Transform>().setPosition(position);
+
+                auto& [ct, scale] = e.getComponent<cro::Callback>().getUserData<FlashData>();
+                ct -= dt;
+                if (ct < 0.f)
+                {
+                    ct += 1.f;
+                    scale = scale == 0 ? 1 : 0;
+                    ct += scale;
+
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                }
+            };
+        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
     //cursor
     entity = m_uiScene.createEntity();
@@ -2728,7 +2798,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //course title
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 134.f, 192.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 134.f, 190.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseTitle;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
@@ -2737,7 +2807,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //course description
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 134.f, 180.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 134.f, 178.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseDesc;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
@@ -2947,7 +3017,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
     auto bannerEnt = entity;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
-
+    m_bannerEnt = entity; //stash this to attach minigame
 
 
     //cursor
@@ -3009,6 +3079,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     //quit confirmation / weather selection
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
 
+    static constexpr float BackgroundDepth = 4.f; //needs to be greater than the can
+
     //weather background
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -3017,7 +3089,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().depth = 1.8f;
+    entity.getComponent<UIElement>().depth = BackgroundDepth;
     entity.addComponent<cro::Callback>().setUserData<ConfirmationData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
@@ -3248,8 +3320,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
 
 
-
-
     //confirmation background
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -3258,7 +3328,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
-    entity.getComponent<UIElement>().depth = 1.8f;
+    entity.getComponent<UIElement>().depth = BackgroundDepth;
     entity.addComponent<cro::Callback>().setUserData<ConfirmationData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
@@ -3586,6 +3656,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         else
                         {
                             LogI << "Shared Data Map Directory Is Empty" << std::endl;
+                            //send a map info packet with 0 to request server resend current info
+                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                         }
                     }
                 }
@@ -3605,7 +3677,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             lobbyQuit.getComponent<cro::UIInput>().setNextIndex(LobbyStart, LobbyStart);
             lobbyQuit.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyRulesA);
 
-            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, LobbyQuit);
+            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, LobbyOptions);
             lobbyStart.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyInfoB);
             break;
         case LobbyRulesA:
@@ -3613,7 +3685,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             lobbyQuit.getComponent<cro::UIInput>().setNextIndex(LobbyStart, m_sharedData.hosting ? RulesPrevious : LobbyStart);
             lobbyQuit.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyCourseA);
 
-            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_sharedData.hosting ? RulesNext : LobbyQuit);
+            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_sharedData.hosting ? RulesNext : LobbyOptions);
             lobbyStart.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyInfoA);
             break;
         case LobbyInfoA:
@@ -3621,7 +3693,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             lobbyQuit.getComponent<cro::UIInput>().setNextIndex(LobbyStart, LobbyStart);
             lobbyQuit.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyCourseB);
 
-            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_lobbyButtonContext.hasScoreCard ? InfoScorecard : LobbyQuit);
+            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_lobbyButtonContext.hasScoreCard ? InfoScorecard : LobbyOptions);
             lobbyStart.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyRulesB);
             break;
         }
@@ -3661,7 +3733,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     //only tally scores if we returned from a previous game
     //rather than quitting one, or completing the tutorial
     if (m_sharedData.gameMode == GameMode::FreePlay //at this point (when the menu is built) this will be set if we're returning from a tutorial or quit menu
-        && m_sharedData.scoreType != ScoreType::NearestThePin) //don't bother scrolling these - we can still ead them from the score card if we want to
+        && m_sharedData.scoreType != ScoreType::NearestThePin) //don't bother scrolling these - we can still read them from the score card if we want to
     {
         for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
         {
@@ -3829,9 +3901,16 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
 void MenuState::updateLobbyData(const net::NetEvent& evt)
 {
+    //this gets resent for ALL client when someone joins
+    //so this tracks whether or not this particular invokation
+    //is a new player or reiteration of an existing one
+    bool newClient = false;
+
     ConnectionData cd;
     if (cd.deserialise(evt.packet))
     {
+        newClient = m_sharedData.connectionData[cd.connectionID].playerCount == 0;
+
         //hum. this overwrites level values as they're maintained independently
         //would it be better to resend our level data when rx'ing this?
         auto lvl = m_sharedData.connectionData[cd.connectionID].level;
@@ -3869,6 +3948,32 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerXP, xp, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     updateLobbyAvatars();
+    WebSock::broadcastPlayers(m_sharedData);
+
+    if (newClient)
+    {
+        for (auto i = 0u; i < cd.playerCount; ++i)
+        {
+            m_printQueue.emplace_back(cd.playerData[i].name + " has joined the game.");
+
+            //auto ent = m_uiScene.createEntity();
+            //ent.addComponent<cro::Callback>().active = true;
+            //ent.getComponent<cro::Callback>().setUserData<float>((static_cast<float>(i)/* * 2.f*/) + (cd.connectionID * ConstVal::MaxPlayers));
+            //ent.getComponent<cro::Callback>().function =
+            //    [&, s](cro::Entity e, float dt)
+            //    {
+            //        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            //        currTime -= dt;
+
+            //        if (currTime < 0)
+            //        {
+            //            m_textChat.printToScreen(s, TextGoldColour);
+            //            e.getComponent<cro::Callback>().active = false;
+            //            m_uiScene.destroyEntity(e);
+            //        }
+            //    };
+        }
+    }
 }
 
 void MenuState::updateRemoteContent(const ConnectionData& cd)
@@ -3886,26 +3991,30 @@ void MenuState::updateRemoteContent(const ConnectionData& cd)
             if (indexFromBallID(cd.playerData[i].ballID) == 0)
             {
                 //no local ball for this player
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
+                Content::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Content::UserContent::Ball);
             }
 
             if (indexFromHairID(cd.playerData[i].hairID) == 0)
             {
                 //no local hair model
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
+                Content::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Content::UserContent::Hair);
             }
 
             if (indexFromHairID(cd.playerData[i].hatID) == 0)
             {
                 //no local hat model
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Social::UserContent::Hair);
+                Content::fetchRemoteContent(cd.peerID, cd.playerData[i].hatID, Content::UserContent::Hair);
             }
 
             if (indexFromAvatarID(cd.playerData[i].skinID) == 0)
             {
                 //no local avatar model
-                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Social::UserContent::Avatar);
+                Content::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Content::UserContent::Avatar);
             }
+
+            //we don't have a list of installed clubs or voices here, so just ask for them anyway
+            Content::fetchRemoteContent(cd.peerID, cd.playerData[i].clubID, Content::UserContent::Clubs);
+            Content::fetchRemoteContent(cd.peerID, cd.playerData[i].voiceID, Content::UserContent::Voice);
         }
     }
 #endif
@@ -4063,7 +4172,7 @@ void MenuState::quitLobby()
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
+    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Main Menu" }));
     Social::setGroup(0);
 
     Timeline::setGameMode(Timeline::GameMode::Menu);
@@ -4860,9 +4969,9 @@ void MenuState::updateUnlockedItems()
         {
             clubFlags = ClubID::DefaultSet;
         }
-        //this is a fudge for people ho miss putters from their set...
+        //this is a fudge for people who miss putters from their set...
         clubFlags |= ClubID::Flags[ClubID::Putter];
-        auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / 5));
+        auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / Social::ClubStepLevel));
         for (auto i = 0u; i < clubCount; ++i)
         {
             auto clubID = ClubID::LockedSet[i];
@@ -4953,16 +5062,16 @@ void MenuState::updateUnlockedItems()
 
     if (genericFlags != -1)
     {
-        if (level > 14)
+        if (level > Social::ExpertLevel - 1)
         {
-            //club range is extended at level 15 and 30
+            //club range is extended at level Social::ExpertLevel and Social::ProLevel
             auto flag = (1 << 0);
             if ((genericFlags & flag) == 0)
             {
                 genericFlags |= flag;
                 m_sharedData.unlockedItems.emplace_back().id = ul::UnlockID::RangeExtend01;
             }
-            else if (level > 29)
+            else if (level > Social::ProLevel - 1)
             {
                 flag = (1 << (ul::UnlockID::RangeExtend02 - genericBase));
                 if ((genericFlags & flag) == 0)
@@ -5208,7 +5317,7 @@ void MenuState::updateUnlockedItems()
         {
             //the tournament has ended with a CPU victory
             Achievements::incrementStat(StatStrings[StatID::UnrealPlayed + m_sharedData.activeTournament]);
-            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], t.round);
+            Achievements::setStat(StatStrings[StatID::UnrealBest + m_sharedData.activeTournament], std::min(t.round, 2));
         }
     }
 

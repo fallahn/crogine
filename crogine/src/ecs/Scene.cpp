@@ -275,7 +275,7 @@ void Scene::destroyEntity(Entity entity)
     m_entityManager.markDestroyed(entity);
 }
 
-Entity Scene::getEntity(Entity::ID id) const
+Entity Scene::getEntity(std::uint32_t id) const
 {
     return m_entityManager.getEntity(id);
 }
@@ -589,6 +589,12 @@ void Scene::updateDrawLists(Entity camera)
 void Scene::setSkyboxOrientation(glm::quat q)
 {
     m_skybox.modelMatrix = glm::mat4(q);
+}
+
+void Scene::setTitle(const std::string& title)
+{
+    m_debugTitle = title;
+    m_entityManager.setTitle(title);
 }
 
 //private

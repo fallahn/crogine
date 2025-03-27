@@ -6,6 +6,6 @@ model cube
 
     material VertexLit
     {
-        colour = 1.0, 0.65, 0.1
+        colour = 1.0, 0.65, 0.1, 1.f
     }
 }

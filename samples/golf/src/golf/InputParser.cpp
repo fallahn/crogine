@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -53,7 +53,7 @@ using namespace cl;
 
 namespace
 {
-    constexpr float SpeedReduction = 1.4f; //bar speed is divided by this when putt assist is enabled
+    //constexpr float SpeedReduction = 1.4f; //bar speed is divided by this when putt assist is enabled
     constexpr float SideSpinReduction = 0.3f; //power is reduced p * (1.f - (SideSpinReduction * abs(sideSpin)))
 
     static constexpr float RotationSpeed = 1.2f;
@@ -115,6 +115,18 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
 {
     m_bunkerWavetable = cro::Util::Wavetable::sine(0.25f, 0.035f);
     m_roughWavetable = cro::Util::Wavetable::sine(0.25f, 0.025f);
+
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::Begin("Controller");
+    //        const auto xPos = getAxisPosition(cro::GameController::AxisLeftX);
+    //        const std::int32_t deadzone = cro::GameController::LeftThumbDeadZone;
+
+    //        ImGui::Text("Position : %d, Deadzones: %d, %d", xPos, -deadzone, deadzone);
+    //        ImGui::Text("Offset: %d", cro::GameController::LeftThumbDeadZone.getOffset());
+
+    //        ImGui::End();
+    //    });
 }
 
 //public
@@ -540,8 +552,8 @@ float InputParser::getCamRotation() const
             return -1.f;
         }
 
-        auto x = -getAxisPosition(cro::GameController::AxisRightX);
-        const auto dz = LeftThumbDeadZone / 4;
+        const auto x = -getAxisPosition(cro::GameController::AxisRightX);
+        const auto dz = cro::GameController::LeftThumbDeadZone / 4;
         if (x < -dz || x > dz)
         {
             return std::pow(static_cast<float>(x) / cro::GameController::AxisMax, 5.f);
@@ -1406,9 +1418,9 @@ void InputParser::checkControllerInput()
 
     //left stick
     auto startInput = m_inputFlags;
-    float xPos = getAxisPosition(cro::GameController::AxisLeftX);
+    const auto xPos = getAxisPosition(cro::GameController::AxisLeftX);
 
-    if (xPos < -LeftThumbDeadZone)
+    if (xPos < -cro::GameController::LeftThumbDeadZone)
     {
         m_inputFlags |= InputFlag::Left;
     }
@@ -1417,7 +1429,7 @@ void InputParser::checkControllerInput()
         m_inputFlags &= ~InputFlag::Left;
     }
 
-    if (xPos > LeftThumbDeadZone)
+    if (xPos > cro::GameController::LeftThumbDeadZone)
     {
         m_inputFlags |= InputFlag::Right;
     }
@@ -1426,10 +1438,10 @@ void InputParser::checkControllerInput()
         m_inputFlags &= ~InputFlag::Right;
     }
 
-    float yPos = getAxisPosition(cro::GameController::AxisLeftY);
+    auto yPos = getAxisPosition(cro::GameController::AxisLeftY);
     
     float len2 = (xPos * xPos) + (yPos * yPos);
-    static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);
+    static const float MinLen2 = static_cast<float>(cro::GameController::LeftThumbDeadZone * cro::GameController::LeftThumbDeadZone);
     if (len2 > MinLen2)
     {
         m_analogueAmount = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax), 5.f));
@@ -1439,7 +1451,7 @@ void InputParser::checkControllerInput()
     //this isn't really analogue, it just moves the camera so do it separately
     yPos = getAxisPosition(cro::GameController::AxisRightY);
 
-    if (yPos > (LeftThumbDeadZone))
+    if (yPos > (cro::GameController::LeftThumbDeadZone))
     {
         m_inputFlags |= InputFlag::Down;
         m_inputFlags &= ~InputFlag::Up;
@@ -1449,7 +1461,7 @@ void InputParser::checkControllerInput()
         m_inputFlags &= ~InputFlag::Down;
     }
 
-    if (yPos < (-LeftThumbDeadZone))
+    if (yPos < (-cro::GameController::LeftThumbDeadZone))
     {
         m_inputFlags |= InputFlag::Up;
         m_inputFlags &= ~InputFlag::Down;
@@ -1536,15 +1548,15 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
         }
     }
 
-    auto controllerX = getAxisPosition(xAxis);
-    auto controllerY = getAxisPosition(yAxis);
-    if (std::abs(controllerX) > LeftThumbDeadZone)
+    const auto controllerX = getAxisPosition(xAxis);
+    const auto controllerY = getAxisPosition(yAxis);
+    if (std::abs(controllerX) > cro::GameController::LeftThumbDeadZone)
     {
         rotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
         rotation.y *= (m_sharedData.invertX && allowInvert) ? -1.f : 1.f;
         rotation.y *= m_sharedData.mouseSpeed;
     }
-    if (std::abs(controllerY) > LeftThumbDeadZone)
+    if (std::abs(controllerY) > cro::GameController::LeftThumbDeadZone)
     {
         rotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
         rotation.x *= (m_sharedData.invertY && allowInvert) ? -1.f : 1.f;

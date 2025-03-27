@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -36,6 +36,9 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "MenuEnum.inl"
 #include "../ErrorCheck.hpp"
+#include "../WebsocketServer.hpp"
+
+#include <Content.hpp>
 
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -928,7 +931,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //create profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 265.f, 53.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 275.f, 46.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
@@ -975,13 +978,21 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     }
 
                     profile.flipped = cro::Util::Random::value(0, 1) == 0 ? false : true;
-                    profile.saveProfile();
                     m_profileData.activeProfileIndex = m_profileData.playerProfiles.size() - 1;
 
                     //create profile texture
                     auto avtIdx = indexFromAvatarID(profile.skinID);
                     m_profileTextures.emplace_back(m_sharedData.avatarInfo[avtIdx].texturePath);
                     updateProfileTextures(m_profileTextures.size() - 1, 1);
+
+                    //set the AV audio as the default voice
+                    cro::AudioScape as;
+                    if (as.loadFromFile(m_sharedData.avatarInfo[avtIdx].audioscape, m_resources.audio))
+                    {
+                        profile.voiceID = as.getUID();
+                    }
+                    profile.saveProfile();
+
 
                     //set selected roster slot to this profile and refresh view
                     m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = m_profileData.activeProfileIndex;
@@ -997,6 +1008,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     m_sharedData.errorMessage = "Maximum Profiles Reached.";
                     requestStackPush(StateID::MessageOverlay);
                 }
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1006,7 +1018,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //edit profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 265.f, 36.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 275.f, 33.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
@@ -1031,6 +1043,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             {
                 m_profileData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 requestStackPush(StateID::Profile);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1040,7 +1054,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //delete profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 265.f, 19.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 275.f, 20.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
@@ -1073,6 +1087,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     m_profileData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 }
                 requestStackPush(StateID::MessageOverlay);
+
+                //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1847,7 +1863,7 @@ void MenuState::eraseCurrentProfile()
     refreshProfileFlyout();
 
     //remove the data from disk
-    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    auto path = Content::getUserContentPath(Content::UserContent::Profile);
     path += profileID;
     if (cro::FileSystem::directoryExists(path))
     {
@@ -1864,20 +1880,23 @@ void MenuState::setProfileIndex(std::size_t i, bool playSound)
 
     updateRoster();
 
-    if (playSound)
-    {
-        auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
-        auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
-        if (soundSize != 0)
-        {
-            auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
-            m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
-        }
-        else
-        {
-            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-        }
-    }
+    //TODO this needs to play the sound assigned to the profile, not the avatar
+    //which is a substantial refactor...
+    
+    //if (playSound)
+    //{
+    //    auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
+    //    auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
+    //    if (soundSize != 0)
+    //    {
+    //        auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+    //        m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+    //    }
+    //    else
+    //    {
+    //        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+    //    }
+    //}
 }
 
 void MenuState::refreshProfileFlyout()
@@ -2292,10 +2311,10 @@ void MenuState::updateLobbyAvatars()
         {
         default: break;
         case 3:
-            Social::setStatus(Social::InfoID::Menu, { "Launching a Quick Play Round" });
+            WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Launching a Quick Play Round" }));
             break;
         case 0:
-            Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
+            WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() }));
             Social::setGroup(m_sharedData.clientConnection.hostID, playerCount);
             //LogI << "Set group data to " << m_sharedData.clientConnection.hostID << ", " << playerCount << std::endl;
             break;
@@ -2321,6 +2340,12 @@ void MenuState::updateLobbyAvatars()
         }
         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
+
+        if (m_sharedData.hosting)
+        {
+            m_matchMaking.setGamePlayerCount(m_connectedPlayerCount);
+            m_matchMaking.setGameConnectionCount(m_connectedClientCount);
+        }
 
         //delayed entities to refresh/redraw the UI
         auto temp = m_uiScene.createEntity();

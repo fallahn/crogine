@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -94,8 +94,8 @@ namespace
     constexpr std::size_t GroupIndex   = 104;
     constexpr std::size_t HelpIndex    = 105;
 
-    constexpr std::size_t PrevGroupID  = 106;
-    constexpr std::size_t NextGroupID  = 107;
+    //constexpr std::size_t PrevGroupID  = 106;
+    //constexpr std::size_t NextGroupID  = 107;
 
     constexpr glm::vec2 MenuNodePosition(112.f, -76.f);
     constexpr glm::vec2 MenuHiddenPosition(-10000.f);
@@ -133,6 +133,7 @@ PlayerManagementState::PlayerManagementState(cro::StateStack& ss, cro::State::Co
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
+    m_resources         (*sd.activeResources),
     m_viewScale         (2.f),
     m_confirmType       (0)
 {
@@ -223,7 +224,7 @@ bool PlayerManagementState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }

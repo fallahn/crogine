@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -123,6 +123,12 @@ void MenuCallback::operator()(cro::Entity e, float dt)
             {
                 t.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
             };
+            menuContext.uiScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //remove any minigame actors that may have been active
+            auto* scene = menuContext.uiScene;
+            cmd.targetFlags = CommandID::Menu::Actor;
+            cmd.action = [scene](cro::Entity e, float) { scene->destroyEntity(e); };
             menuContext.uiScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     }

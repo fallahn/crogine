@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2023
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -157,7 +157,7 @@ Font::Font()
 
 Font::~Font()
 {
-    for (auto o : m_observers)
+    for (auto* o : m_observers)
     {
         o->removeFont();
     }

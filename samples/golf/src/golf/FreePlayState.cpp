@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -73,7 +73,7 @@ source distribution.
 
 namespace
 {
-    constexpr float PadlockOffset = 58.f;
+    //constexpr float PadlockOffset = 58.f;
 
     struct MenuID final
     {
@@ -166,7 +166,7 @@ bool FreePlayState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -666,7 +666,9 @@ and All Time best scores.)";
 
 void FreePlayState::menuShownCallback()
 {
-    const std::string s = m_sharedData.nightTime ? "Night Time: On" : "Night Time: Off";
+    m_sharedData.nightTime = false;
+
+    const std::string s = /*m_sharedData.nightTime ? "Night Time: On" :*/ "Night Time: Off";
     m_callbackEntities[CallbackEntID::NightButton].getComponent<cro::Text>().setString(s);
 }
 

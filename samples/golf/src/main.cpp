@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -27,11 +27,15 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#include "WebsocketServer.hpp"
+
 #include <SDL.h>
 
 #include "GolfGame.hpp"
 
 #include <iostream>
+
+
 int main(int argc, char** argsv)
 {
     bool safeMode = false;
@@ -47,9 +51,11 @@ int main(int argc, char** argsv)
 #endif
 
     }
+
     game.setSafeModeEnabled(safeMode);
     game.run(safeMode);
 
+    WebSock::stop();
 
 #ifdef _WIN32
     if (safeMode)

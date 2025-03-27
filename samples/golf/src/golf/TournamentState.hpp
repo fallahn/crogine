@@ -73,7 +73,7 @@ private:
     {
         enum
         {
-            Accept, Back,
+            Accept, Back, Switch,
 
             Count
         };

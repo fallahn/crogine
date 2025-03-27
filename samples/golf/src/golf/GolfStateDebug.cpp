@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -145,6 +145,37 @@ void GolfState::endBallDebug()
 
 void GolfState::addCameraDebugging()
 {
+    //registerWindow([&]() 
+    //    {
+    //        //ImGui::SetNextWindowSize({640.f, -1.f});
+    //        if (m_drawDepthMaps)
+    //        {
+    //            if (ImGui::Begin("Depth Maps", &m_drawDepthMaps, ImGuiWindowFlags_AlwaysHorizontalScrollbar))
+    //            {
+    //                auto size = cro::App::getWindow().getSize().x;
+    //                size /= CameraID::Count;
+
+    //                for (auto i = 0; i < CameraID::Count; ++i)
+    //                {
+    //                    const auto& cam = m_cameras[i].getComponent<cro::Camera>();
+    //                    if (cam.shadowMapBuffer.available())
+    //                    {
+    //                        const auto dim = static_cast<float>(size);
+    //                        const auto label = "##" + std::to_string(i);
+    //                        ImGui::BeginChild(label.c_str(), { dim, dim + 20.f });
+    //                        ImGui::Text("%s", CameraStrings[i].c_str());
+    //                        ImGui::Image(cam.shadowMapBuffer.getTexture(0), { dim,dim }, { 0.f,1.f }, { 1.f, 0.f });
+    //                        ImGui::EndChild();
+    //                        ImGui::SameLine();
+    //                    }
+    //                }
+    //                ImGui::NewLine();
+    //                ImGui::Text("Current: %s", CameraStrings[m_currentCamera].c_str());
+    //            }
+    //            ImGui::End();
+    //        }
+    //    });
+
 #ifdef CAMERA_TRACK
     auto materialID = m_materialIDs[MaterialID::WireFrame];
 
@@ -247,16 +278,52 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    /*registerWindow([&]() 
-        {
-            if (ImGui::Begin("asefsd"))
-            {
-                ImGui::Text("Server Group: %d", m_serverGroup);
-                ImGui::Text("Target Group: %lu", m_idleCameraIndex);
-                ImGui::Text("Target Client: %d, Target Player: %d", m_groupPlayerPositions[m_idleCameraIndex].client, m_groupPlayerPositions[m_idleCameraIndex].player);
-            }
-            ImGui::End();
-        });*/
+    //registerWindow([&]() 
+    //    {
+    //        ImGui::SetNextWindowSize({ 436.f, 144.f });
+    //        if (ImGui::Begin("Club Model"))
+    //        {
+    //            ImGui::Text("%s", cro::Console::getLastOutput().c_str());
+    //            ImGui::Separator();
+
+    //            /*ImGui::Text("Server Group: %d", m_serverGroup);
+    //            ImGui::Text("Target Group: %lu", m_idleCameraIndex);
+    //            ImGui::Text("Target Client: %d, Target Player: %d", m_groupPlayerPositions[m_idleCameraIndex].client, m_groupPlayerPositions[m_idleCameraIndex].player);*/
+
+    //            if (m_activeAvatar
+    //                && m_activeAvatar->hands)
+    //            {
+    //                const auto modelEnt = m_activeAvatar->hands->getModel();
+
+    //                if (modelEnt.isValid())
+    //                {
+    //                    const auto& model = modelEnt.getComponent<cro::Model>();
+    //                    const auto facing = model.getFacing() == cro::Model::Facing::Front ? "Front" : "Back";
+    //                    ImGui::Text("Facing: %s", facing);
+
+    //                    const auto hidden = model.isHidden() ? "true" : "false";
+    //                    ImGui::Text("Hidden: %s", hidden);
+
+    //                    const auto scale = modelEnt.getComponent<cro::Transform>().getScale();
+    //                    ImGui::Text("Scale %3.2f, %3.2f, %3.2f", scale.x, scale.y, scale.z);
+
+    //                    const auto pos = modelEnt.getComponent<cro::Transform>().getPosition();
+    //                    ImGui::Text("Position %3.2f, %3.2f, %3.2f", pos.x, pos.y, pos.z);
+
+    //                    ImGui::Text("Draw list count %d <- Does this go to 0 when flickering?", model.getDrawlistCount());
+    //                }
+    //                else
+    //                {
+    //                    ImGui::Text("Model Ent not valid");
+    //                }                    
+    //            }
+    //            else
+    //            {
+    //                ImGui::Text("No Model");
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
 
     registerCommand("refresh_turn", [&](const std::string&)
         {
@@ -449,6 +516,29 @@ void GolfState::registerDebugCommands()
             else
             {
                 cro::Console::print("Usage: cl_drawhud <0|1>");
+            }
+        });
+
+    registerCommand("cl_drawmesh", [&](const std::string& param)
+        {
+            if (param == "true" || param == "1")
+            {
+                /*
+                * 1 - Wireframe
+                * 1 << 13 Fast wireframe (doesn't work?)
+                * 1 << 14 normals
+                */
+                m_collisionMesh.setDebugFlags(1);
+                m_drawDebugMesh = true;
+            }
+            else if (param == "false" || param == "0")
+            {
+                m_collisionMesh.setDebugFlags(0);
+                m_drawDebugMesh = false;
+            }
+            else
+            {
+                cro::Console::print("Usage: cl_drawmesh <0|1>");
             }
         });
 

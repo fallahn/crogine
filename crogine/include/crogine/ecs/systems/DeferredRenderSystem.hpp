@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -150,5 +150,7 @@ namespace cro
         bool loadPBRShader();
         bool loadOITShader();
         void setupRenderQuad();
+
+        void flushEntity(Entity) override {}
     };
 }

@@ -100,6 +100,12 @@
     <Filter Include="Source Files\golf\client\time of day">
       <UniqueIdentifier>{be9dd921-53a3-46e0-a093-6cb68606eb52}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\websocket">
+      <UniqueIdentifier>{a14b2d76-cfba-4b2d-9e4e-cf90b38df669}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\websocket">
+      <UniqueIdentifier>{8a948265-bb55-4baf-bc64-4d1f02135f7c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -521,6 +527,126 @@
     </ClCompile>
     <ClCompile Include="src\golf\ClubModels.cpp">
       <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXBench.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXCancellationRequest.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXConnectionState.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXDNSLookup.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXExponentialBackoff.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXGetFreePort.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXGzipCodec.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXHttp.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXHttpClient.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXHttpServer.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXNetSystem.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSelectInterrupt.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSelectInterruptEvent.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSelectInterruptFactory.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSelectInterruptPipe.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSetThreadName.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSocket.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSocketConnect.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSocketFactory.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSocketServer.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXSocketTLSOptions.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXStrCaseCompare.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXUdpSocket.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXUrlParser.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXUserAgent.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXUuid.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocket.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocketCloseConstants.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocketHandshake.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocketHttpHeaders.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocketPerMessageDeflate.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocketPerMessageDeflateCodec.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocketPerMessageDeflateOptions.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocketProxyServer.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocketServer.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sockets\IXWebSocketTransport.cpp">
+      <Filter>Source Files\websocket</Filter>
+    </ClCompile>
+    <ClCompile Include="src\WebsocketServer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\server\ServerLobbyGame.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\MenuStateCan.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\CoinSystem.cpp">
+      <Filter>Source Files\golf\server\systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1070,6 +1196,165 @@
     <ClInclude Include="src\golf\ClubModels.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
+    <ClInclude Include="src\sockets\IXBase64.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXBench.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXCancellationRequest.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXConnectionState.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXDNSLookup.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXExponentialBackoff.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXGetFreePort.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXGzipCodec.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXHttp.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXHttpClient.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXHttpServer.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXNetSystem.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXProgressCallback.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSelectInterrupt.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSelectInterruptEvent.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSelectInterruptFactory.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSelectInterruptPipe.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSetThreadName.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSocket.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSocketConnect.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSocketFactory.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSocketServer.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXSocketTLSOptions.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXStrCaseCompare.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXUdpSocket.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXUniquePtr.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXUrlParser.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXUserAgent.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXUtf8Validator.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXUuid.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocket.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketCloseConstants.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketCloseInfo.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketErrorInfo.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketHandshake.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketHandshakeKeyGen.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketHttpHeaders.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketInitResult.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketMessage.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketMessageType.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketOpenInfo.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketPerMessageDeflate.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketPerMessageDeflateCodec.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketPerMessageDeflateOptions.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketProxyServer.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketSendData.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketSendInfo.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketServer.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketTransport.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\IXWebSocketVersion.h">
+      <Filter>Header Files\websocket</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WebsocketServer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CoinSystem.hpp">
+      <Filter>Header Files\golf\server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Inventory.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">
@@ -1160,6 +1445,9 @@
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\shaders\RoidShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\shaders\EmissiveShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>

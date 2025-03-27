@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -59,9 +59,12 @@ source distribution.
 #include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
+#include <deque>
 #include <unordered_map>
 
 static const std::uint32_t BallRenderFlags = (1 << 22);
+
+#define INTERP_TYPE InterpolationType::Hermite
 
 namespace cro
 {
@@ -70,6 +73,8 @@ namespace cro
     class SpriteSheet;
 }
 
+struct ActorInfo;
+struct CanInfo;
 class MenuState;
 struct SharedProfileData;
 struct MainMenuContext final : public MenuContext
@@ -110,6 +115,8 @@ private:
     std::int32_t m_connectedClientCount;
     std::int32_t m_connectedPlayerCount;
 
+    bool m_canActive;
+
     struct CosmeticID final
     {
         std::vector<std::uint32_t> balls;
@@ -117,6 +124,8 @@ private:
         std::vector<std::uint32_t> avatars;
     }m_cosmeticIDs;
 
+    std::deque<cro::String> m_printQueue;
+    cro::Clock m_printTimer;
     TextChat m_textChat;
     VoiceChat m_voiceChat;
     MatchMaking m_matchMaking;
@@ -138,7 +147,7 @@ private:
         {
             Accept, Back, Start,
             Message, Nope, Poke,
-
+            Title,
             Count
         };
     };
@@ -163,6 +172,7 @@ private:
             Ground,
             Trophy,
             Lantern,
+            Glass,
 
             Count
         };
@@ -238,6 +248,31 @@ private:
         };
     };
     std::array<cro::Entity, LobbyEntityID::Count> m_lobbyWindowEntities = {};
+
+    cro::Entity m_bannerEnt;
+    void spawnActor(const ActorInfo&);
+    void updateActor(const CanInfo&);
+
+    struct CanControl final
+    {
+        const float Min = 750.f;
+        const float Max = 1100.f;
+        bool active = false;
+
+        std::size_t idx = 0;
+        std::vector<float> waveTable;
+
+        CanControl()
+        {
+            constexpr auto fps = 100.f;
+            constexpr float step = 3.14f / fps;
+            for (auto i = 0; i < (fps * 2); ++i)
+            {
+                waveTable.push_back(1.f - ((std::cos(step * i) + 1.f) / 2.f));
+            }
+        }
+    };
+    void createCanControl(cro::Entity);
 
     LobbyPager m_lobbyPager;
 

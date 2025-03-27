@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2024
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -51,11 +51,12 @@ source distribution.
 //(player avatar data format changed 1153 -> 1160)
 //(player avatar data format changed 1170 -> 1180)
 //(course data changed 1180 -> 1181)
-static constexpr std::uint16_t CURRENT_VER = 1190;
+//(player profile data changed 1190 -> 1200)
+static constexpr std::uint16_t CURRENT_VER = 1200;
 #ifdef __APPLE__
-static const std::string StringVer("1.19.0 (macOS beta)");
+static const std::string StringVer("1.20.0 (macOS beta)");
 #else
-static const std::string StringVer("1.19.0");
+static const std::string StringVer("1.20.0");
 #endif
 
 struct HallEntry final
@@ -71,6 +72,10 @@ struct HallEntry final
 class Social final
 {
 public:
+    static constexpr std::int32_t ExpertLevel = 10;
+    static constexpr std::int32_t ProLevel = 20;
+    static constexpr std::int32_t ClubStepLevel = 3;
+
     struct InfoID final
     {
         enum
@@ -151,17 +156,18 @@ public:
 
     static cro::String getPlayerName();
     static void setPlayerName(const cro::String&);
-    static bool isGreyscale() { return false; }
+    static constexpr bool isGreyscale() { return false; }
     static bool isValid();
-    static bool isValid(const std::string&) { return true; }
-    static bool isAuth() { return false; }
-    static bool isAvailable() { return false; }
-    static bool isSteamdeck() { return false; }
+    static constexpr bool isValid(const std::string&) { return true; }
+    static constexpr bool isAuth() { return false; }
+    static constexpr bool isAvailable() { return false; }
+    static constexpr bool isSteamdeck(bool = false) { return false; }
     static cro::Image getUserIcon(std::uint64_t) { return userIcon; }
     static void findFriends() {}
     static void inviteFriends(std::uint64_t) {}
     static void awardXP(std::int32_t, std::int32_t = -1);
     static std::int32_t getXP();
+    static std::int32_t doubleXP(); //usually 1, or 2 if second weekend of the month
     static std::int32_t getLevel();
     static std::int32_t getClubLevel();
     static ProgressData getLevelProgress();
@@ -181,8 +187,8 @@ public:
     };
     static void findLeaderboards(std::int32_t) {}
     static void setLeaderboardsEnabled(bool) {}
-    static bool getLeaderboardsEnabled() { return false; }
-    static void insertScore(const std::string&, std::uint8_t, std::int32_t, std::int32_t);
+    static constexpr bool getLeaderboardsEnabled() { return false; }
+    static void insertScore(const std::string&, std::uint8_t, std::int32_t, std::int32_t, const std::vector<std::uint8_t>&);
     static cro::String getTopFive(const std::string& course, std::uint8_t holeCount);
     static void invalidateTopFive(const std::string& course, std::uint8_t holeCount);
     static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
@@ -191,7 +197,7 @@ public:
     static void getRandomBest() {}
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
     static void courseComplete(const std::string&, std::uint8_t);
-    static void setStatus(std::int32_t, const std::vector<const char*>&) {}
+    static std::vector<std::byte> setStatus(std::int32_t, const std::vector<const char*>&);
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
     static void takeScreenshot(const cro::String&, std::size_t);
     static constexpr std::uint32_t IconSize = 64;
@@ -232,17 +238,6 @@ public:
     static std::int32_t getUnlockStatus(UnlockType);
     static void setUnlockStatus(UnlockType, std::int32_t set);
 
-    struct UserContent final
-    {
-        enum
-        {
-            Ball, Hair, Course,
-            Profile, Avatar, Career
-        };
-    };
-    static std::string getBaseContentPath();
-    static std::string getUserContentPath(std::int32_t);
-
     static MonthlyChallenge& getMonthlyChallenge();
     static std::int32_t getMonth();
 
@@ -254,5 +249,5 @@ public:
     static void showWebPage(const std::string&) {}
     static void readAllStats();
 
-    static bool getLatLon() { return false; } //triggers a LocationEvent if lat/lon was found
+    static constexpr bool getLatLon() { return false; }
 };

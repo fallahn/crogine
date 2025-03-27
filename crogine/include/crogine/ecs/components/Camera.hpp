@@ -106,6 +106,11 @@ namespace cro
         */
         Camera();
 
+        Camera(const Camera&) = delete;
+        Camera& operator = (const Camera&) = delete;
+
+        Camera(Camera&&) = default;
+        Camera& operator = (Camera&&) = default;
 
         /*!
         \brief Contains the View, ViewProjection and draw list for a given render pass.

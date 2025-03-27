@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -66,12 +66,18 @@ const cro::Time GolfState::DefaultIdleTime = cro::seconds(180.f);
 
 void GolfState::createCameras()
 {
-    //registerWindow([]() 
+    //registerWindow([&]() 
     //    {
     //        if (ImGui::Begin("speed"))
     //        {
-    //            ImGui::SliderFloat("Speed", &Speed, 1.f, 8.f);
-    //            ImGui::SliderFloat("Zoom Speed", &ZoomSpeed, 10.f, 50.f);
+    //            /*ImGui::SliderFloat("Speed", &Speed, 1.f, 8.f);
+    //            ImGui::SliderFloat("Zoom Speed", &ZoomSpeed, 10.f, 50.f);*/
+    //            static uint32_t prec = 0;
+    //            if (ImGui::Button("Precision"))
+    //            {
+    //                prec = prec == 0 ? 1 : 0;
+    //                m_gameSceneMRTexture.setPrecision(prec);
+    //            }
     //        }
     //        ImGui::End();
     //    });
@@ -92,6 +98,8 @@ void GolfState::createCameras()
 
                 if (m_sharedData.nightTime)
                 {
+                    m_gameSceneMRTexture.setPrecision(m_sharedData.lightmapQuality);
+
                     glm::uvec2 usize(texSize);
                     m_sharedData.antialias =
                         m_gameSceneMRTexture.create(usize.x, usize.y, MRTIndex::Count)
@@ -125,6 +133,8 @@ void GolfState::createCameras()
                     ctx.samples = samples;
                     ctx.width = static_cast<std::uint32_t>(texSize.x);
                     ctx.height = static_cast<std::uint32_t>(texSize.y);
+
+                    //ctx.floatingPointStorage = true;
 
                     m_sharedData.antialias =
                         m_gameSceneTexture.create(ctx)
@@ -959,10 +969,12 @@ void GolfState::updateSkybox(float dt)
     const auto& srcCam = activeCam.getComponent<cro::Camera>();
     auto& dstCam = m_skyCameras[SkyCam::Main].getComponent<cro::Camera>();
 
-    auto baseFov = m_sharedData.fov * cro::Util::Const::degToRad;
-    auto ratio = srcCam.getFOV() / baseFov;
+    //we want the sky zoom to be less profound, to emulate distance
+    const auto baseFov = m_sharedData.fov * cro::Util::Const::degToRad;
+    const auto ratio = srcCam.getFOV() / baseFov;
     float diff = 1.f - ratio;
-    diff -= (diff / 32.f);
+    diff -= (diff / 8.f);
+    //diff -= (diff / 32.f);
 
     dstCam.viewport = srcCam.viewport;
     dstCam.setPerspective(baseFov * (1.f - diff), srcCam.getAspectRatio(), 0.5f, 14.f);
@@ -1114,7 +1126,9 @@ void GolfState::togglePuttingView(bool putt)
         else
         {
             //the hide callback will have removed the club model
-            m_activeAvatar->hands->setModel(m_clubModels.models[m_clubModels.indices[getClub()]]);
+            const auto& models = m_clubModels.at(m_activeAvatar->clubModelID);
+
+            m_activeAvatar->hands->setModel(models.models[models.indices[getClub()]]);
             m_activeAvatar->hands->getModel().getComponent<cro::Model>().setFacing(m_activeAvatar->model.getComponent<cro::Model>().getFacing());
 
             m_activeAvatar->model.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().direction = 0;

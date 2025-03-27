@@ -58,6 +58,8 @@ ShaderResource::ShaderResource()
 
     //register the default includes
     addInclude("WVP_UNIFORMS", WVPMatrices.c_str());
+    addInclude("CAMERA_UBO", CameraUBO.c_str());
+    addInclude("LIGHT_UBO", LightUBO.c_str());
 
     addInclude("INSTANCE_ATTRIBS", InstanceAttribs.c_str());
     addInclude("INSTANCE_MATRICES", InstanceMatrices.c_str());
@@ -79,7 +81,7 @@ bool ShaderResource::loadFromFile(std::int32_t ID, const std::string& vertex, co
 {
     if (m_shaders.count(ID) > 0)
     {
-        Logger::log("Shader with this ID already exists!", Logger::Type::Error);
+        LogE << "Shader ID " << ID << ", shader with this ID already exists" << std::endl;
         return false;
     }
     
@@ -96,7 +98,7 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
 {
     if (m_shaders.count(ID) > 0)
     {
-        Logger::log("Shader with this ID already exists!", Logger::Type::Error);
+        LogE << "Shader ID " << ID << ", shader with this ID already exists" << std::endl;
         return false;
     }
 
@@ -126,7 +128,7 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
 {
     if (m_shaders.count(ID) > 0)
     {
-        Logger::log("Shader with this ID already exists!", Logger::Type::Error);
+        LogE << "Shader ID " << ID << ", shader with this ID already exists" << std::endl;
         return false;
     }
 

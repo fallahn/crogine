@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "League.hpp"
 #include "Social.hpp"
+#include "Content.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
 #include "XPAwardStrings.hpp"
@@ -301,6 +302,8 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             //LogI << "Wrote previous season to " << PrevFileName << std::endl;
         }
 
+        //TODO we could just copy this data - but I guess reading the file also verfies it
+        readPreviousPlayers(); //this needs to be up to date so displaying the final scores is correct
 
         //evaluate all players and adjust skills
 
@@ -411,6 +414,17 @@ void League::retrofitHoleScores(const std::vector<std::int32_t>& parVals)
     }
 }
 
+const std::vector<TableEntry>& League::getSortedTable() const
+{
+    if (m_currentSeason > 1 && m_currentIteration == 0)
+    {
+        //return the final standing for the last game
+        return m_previousSortedTable;
+    }
+
+    return m_sortedTable;
+}
+
 const LeaguePlayer& League::getPlayer(std::int32_t nameIndex) const
 {
     auto r = std::find_if(m_players.begin(), m_players.end(), [nameIndex](const LeaguePlayer& p) {return p.nameIndex == nameIndex; });
@@ -421,9 +435,39 @@ const LeaguePlayer& League::getPlayer(std::int32_t nameIndex) const
 
 const cro::String& League::getPreviousResults(const cro::String& playerName) const
 {
-    const auto path = getFilePath(PrevFileName);
     if ((m_currentIteration == 0 || m_previousResults.empty())
-        && cro::FileSystem::fileExists(path))
+        && !m_previousSortedTable.empty())
+    {
+        //this assumes everything was sorted correctly when it was saved
+        m_previousResults = "Previous Season's Results";
+
+        for (auto i = 0u; i < m_previousSortedTable.size(); ++i)
+        {
+            m_previousResults += " -~- ";
+            m_previousResults += std::to_string(i + 1);
+            if (m_previousSortedTable[i].name > -1)
+            {
+                m_previousResults += ". " + m_sharedData.leagueNames[m_previousSortedTable[i].name];
+            }
+            else
+            {
+                m_previousResults += ". " + playerName;
+                m_previousPosition = i + 1;
+            }
+            m_previousResults += " " + std::to_string(m_previousSortedTable[i].score);
+        } 
+    }
+
+    return m_previousResults;
+}
+
+void League::readPreviousPlayers() const
+{
+    //this reads the previous results into another player table
+    //so we can display them before showing the new season
+
+    const auto path = getFilePath(PrevFileName);
+    if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
         file.file = SDL_RWFromFile(path.c_str(), "rb");
@@ -439,29 +483,14 @@ const cro::String& League::getPreviousResults(const cro::String& playerName) con
                 SDL_RWread(file.file, buff.data(), sizeof(PreviousEntry), count);
 
                 //this assumes everything was sorted correctly when it was saved
-                m_previousResults = "Previous Season's Results";
-                for (auto i = 0u; i < buff.size(); ++i)
+                for (auto& entry : buff)
                 {
-                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(PlayerCount) - 1);
-
-                    m_previousResults += " -~- ";
-                    m_previousResults += std::to_string(i + 1);
-                    if (buff[i].nameIndex > -1)
-                    {
-                        m_previousResults += ". " + m_sharedData.leagueNames[buff[i].nameIndex];
-                    }
-                    else
-                    {
-                        m_previousResults += ". " + playerName;
-                        m_previousPosition = i + 1;
-                    }
-                    m_previousResults += " " + std::to_string(buff[i].score);
+                    entry.nameIndex = std::clamp(entry.nameIndex, -1, static_cast<std::int32_t>(PlayerCount) - 1);
+                    m_previousSortedTable.emplace_back(entry);
                 }
             }
         }
     }
-
-    return m_previousResults;
 }
 
 //private
@@ -578,7 +607,7 @@ void League::decreaseDifficulty()
 
 std::string League::getFilePath(const std::string& fn) const
 {
-    std::string basePath = Social::getBaseContentPath();
+    std::string basePath = Content::getBaseContentPath();
     
     const auto assertPath = 
         [&]()
@@ -689,7 +718,7 @@ void League::createSortedTable()
         {
             m_nemesis = m_sortedTable[m_currentPosition - 1].name;
         }
-        else if(m_currentPosition < m_sortedTable.size() - 1)
+        else if (m_currentPosition < m_sortedTable.size() - 1)
         {
             //check the player below
             s = m_sortedTable[m_currentPosition + 1].score;
@@ -825,7 +854,7 @@ void League::read()
 
 
         //read hole scores from DB
-        const auto dbPath = Social::getBaseContentPath() + DBName;
+        const auto dbPath = Content::getBaseContentPath() + DBName;
         constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
         cro::RaiiRWops dbFile;
         dbFile.file = SDL_RWFromFile(dbPath.c_str(), "rb");
@@ -862,6 +891,8 @@ void League::read()
         rollPlayers(false);
         write();
     }
+
+    readPreviousPlayers();
 }
 
 void League::write()
@@ -912,7 +943,7 @@ void League::write()
 
 void League::assertDB()
 {
-    const auto path = Social::getBaseContentPath() + DBName;
+    const auto path = Content::getBaseContentPath() + DBName;
     if (!cro::FileSystem::fileExists(path))
     {
         //hmm what do if we failed creating this? I guess the read/write ops
@@ -940,7 +971,7 @@ void League::assertDB()
 
 void League::updateDB()
 {
-    const auto dbPath = Social::getBaseContentPath() + DBName;
+    const auto dbPath = Content::getBaseContentPath() + DBName;
     constexpr auto DBSize = LeagueRoundID::Count * sizeof(m_holeScores);
 
     //hmm SDL doesn't let us write to arbitrary positions in the file
@@ -1003,7 +1034,9 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     }
 
     //CPU players exhibit better skill when playing with longer club sets
-    auto skillOffset = cro::Util::Random::value(0, 2) == 0 ? 0 : 1;
+    //smaller is better so a small chance clubset 2 has 0 variance makes them better
+    //TODO though isn't this overwriting whatever skill the CPU actually has at Pro?
+    auto skillOffset = cro::Util::Random::value(0, 4) == 0 ? 0 : cro::Util::Random::value(1,2);
     if (m_clubset == 1)
     {
         auto s = std::max(1, skill - 1);
@@ -1056,7 +1089,9 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     score -= 2.f; //average out to birdie
 
     //then use the player skill chance to decide if we got an eagle
-    if (cro::Util::Random::value(0, 10) > skill)
+    //base skill range is 2-4, so we don't want this to be too likely
+    //even when the skill is 2 (lower is better, remember)
+    if (cro::Util::Random::value(-1, 5) > skill)
     {
         score -= 1.f;
     }
@@ -1070,8 +1105,8 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     {
         //players with skill 0 (0 good, 2 bad) + good clubs have better chance of keeping the HIO
         //players with skill 2 and short clubs have worse chance of keeping the HIO
-        const auto hioSkill = (player.skill + (2 - m_clubset)) * 2;
-        if (cro::Util::Random::value(0, (3 + hioSkill)) != 0)
+        const auto hioSkill = (std::max(1, player.skill) + (2 - m_clubset)) * 2;
+        if (cro::Util::Random::value(0, (40 + hioSkill)) != 0)
         {
             holeScore += std::max(1, (par - 2));
         }
@@ -1097,13 +1132,13 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
         {
         default:
         case 0: //novice
-            if (cro::Util::Random::value(0, 2) != 0)
+            if (cro::Util::Random::value(0, 3) != 0)
             {
                 holeScore += cro::Util::Random::value(2, 4) / 2;
             }
             break;
         case 1: //expert
-            if (cro::Util::Random::value(0, 1) != 0)
+            if (cro::Util::Random::value(0, 2) != 0)
             {
                 holeScore += cro::Util::Random::value(2, 4) / 2;
             }
@@ -1111,7 +1146,7 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
         case 2: //pro
             if (cro::Util::Random::value(0, 1) != 0)
             {
-                holeScore += cro::Util::Random::value(0, 4) / 2;
+                holeScore += cro::Util::Random::value(1, 2);
             }
             break;
         }
@@ -1122,6 +1157,20 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     {
         holeScore += cro::Util::Random::value(2, 4) / 2;
     }*/
+
+
+    //special case on par 5's where eagle should be REALLY rare
+    if (par >= 5)
+    {
+        if (cro::Util::Random::value(-1, skill) != 0)
+        {
+            holeScore = std::max(holeScore, 4);
+        }
+        else
+        {
+            holeScore = std::max(holeScore, 3);
+        }
+    }
 
 
     //there's a flaw in my logic here which means the result occasionally

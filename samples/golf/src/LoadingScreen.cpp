@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,8 +28,10 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "LoadingScreen.hpp"
+#include "WebsocketServer.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/SharedStateData.hpp"
+#include "golf/PacketIDs.hpp"
 
 #include <Social.hpp>
 
@@ -43,11 +45,25 @@ source distribution.
 
 #include <string>
 #include <vector>
+#include <array>
 
 #define glCheck(x) x
 
 namespace
 {
+    const std::array<std::string, 8u> TipStrings =
+    {
+        std::string("Tip: Click on an opponent's name in the League Browser to change it"),
+        "Did You Know: Before golf tees players would shape mounds of sand and place the golf ball on top",
+        "Tip: You can find alternative control schemes such as Swingput in the Options menu",
+        "Did You Know: Apollo 14 astronaut Alan Shepard used a Wilson 6-iron to play golf on the moon",
+        "Tip: The clubset you choose affects the CPU opponent's difficulty",
+        "Did You Know: An estimated 600 million golf balls are lost or discarded every year\nmore than 100,000 of which are at the bottom of Loch Ness!",
+        "Tip: Make sure to spend some time on the Driving Range, to really learn your clubs",
+        "Did You Know: There are playable arcade games waiting to be discovered in the Clubhouse"
+    };
+    std::size_t stringIndex = 7;
+
     constexpr std::uint32_t vertexSize = 2 * sizeof(float);
     constexpr float timestep = 1.f / 60.f;
 
@@ -108,13 +124,12 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
 
     if (m_shader.loadFromString(vertex, fragment))
     {
-        const auto& uniforms = m_shader.getUniformMap();
-        m_transformIndex = uniforms.find("u_worldMatrix")->second;
-        m_projectionIndex = uniforms.find("u_projectionMatrix")->second;
-        m_frameIndex = uniforms.find("u_frameNumber")->second;
+        m_transformIndex = m_shader.getUniformID("u_worldMatrix");
+        m_projectionIndex = m_shader.getUniformID("u_projectionMatrix");
+        m_frameIndex = m_shader.getUniformID("u_frameNumber");
 
         glCheck(glUseProgram(m_shader.getGLHandle()));
-        glCheck(glUniform1i(uniforms.find("u_texture")->second, 0));
+        glCheck(glUniform1i(m_shader.getUniformID("u_texture"), 0));
         glCheck(glUseProgram(0));
 
         //create VBO
@@ -153,7 +168,7 @@ LoadingScreen::~LoadingScreen()
 //public
 void LoadingScreen::launch()
 {
-    Social::setStatus(Social::InfoID::Menu, { "Loading..." });
+    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Loading..." }));
 
     if (!m_vao)
     {
@@ -171,6 +186,19 @@ void LoadingScreen::launch()
         glCheck(glBindVertexArray(0));
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
     }
+
+    //this has to be created in the launch thread because VAOs / OpenGL etc etc
+    if (!m_tipText)
+    {
+        m_font.loadFromFile("assets/golf/fonts/MCPixel.otf");
+        m_tipText = std::make_unique<cro::SimpleText>(m_font);
+        m_tipText->setAlignment(cro::SimpleText::Alignment::Centre);
+        m_tipText->setCharacterSize(InfoTextSize);
+        m_tipText->setFillColour(TextNormalColour);
+    }
+
+    stringIndex = (stringIndex + 1) % TipStrings.size();
+    m_tipText->setString(TipStrings[stringIndex]);
 }
 
 void LoadingScreen::update()
@@ -184,11 +212,15 @@ void LoadingScreen::update()
     while (accumulator > timestep)
     {
         m_viewport = cro::App::getWindow().getSize();
-        glm::vec2 windowSize = glm::vec2(m_viewport);
+        const glm::vec2 windowSize = glm::vec2(m_viewport);
+
+        const auto scale = glm::vec2(getViewScale(windowSize));
+        m_tipText->setPosition({ std::round(windowSize.x / 2.f), 36.f });
+        m_tipText->setScale(scale);
 
         m_projectionMatrix = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);
 
-        float texSize = static_cast<float>(m_texture.getSize().x) * getViewScale();
+        float texSize = static_cast<float>(m_texture.getSize().x) * scale.x;
         m_transform = glm::translate(glm::mat4(1.f), { (windowSize.x - texSize) / 2.f, (windowSize.y - texSize) / 2.f, 0.f });
         m_transform = glm::scale(m_transform, { texSize, texSize, 1.f });
 
@@ -198,6 +230,11 @@ void LoadingScreen::update()
             m_currentFrame = (m_currentFrame + 1) % FrameCount;
         }
         
+        glCheck(glUseProgram(m_shader.getGLHandle()));
+        glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
+        glCheck(glUniformMatrix4fv(m_transformIndex, 1, GL_FALSE, glm::value_ptr(m_transform)));
+        glCheck(glUniform1f(m_frameIndex, static_cast<float>(m_currentFrame)));
+
         accumulator -= timestep;
 
         if (m_sharedData.clientConnection.connected)
@@ -205,7 +242,19 @@ void LoadingScreen::update()
             net::NetEvent evt;
             while (m_sharedData.clientConnection.netClient.pollEvent(evt))
             {
-                m_sharedData.clientConnection.eventBuffer.emplace_back(std::move(evt));
+                switch (evt.packet.getID())
+                {
+                default:
+                    m_sharedData.clientConnection.eventBuffer.emplace_back(std::move(evt));
+                    break;
+                case PacketID::ActorUpdate:
+                case PacketID::WindDirection:
+                case PacketID::DronePosition:
+                case PacketID::ClubChanged:
+                case PacketID::PingTime:
+                    //skip these while loading it just fills up the buffer
+                    break;
+                }
                 evt = {}; //not strictly necessary but squashes warning about re-using a moved object
             }
         }
@@ -224,6 +273,8 @@ void LoadingScreen::update()
 
 void LoadingScreen::draw()
 {
+    m_tipText->draw();
+
     std::int32_t oldView[4];
     glCheck(glGetIntegerv(GL_VIEWPORT, oldView));
     glCheck(glEnable(GL_BLEND));
@@ -232,9 +283,6 @@ void LoadingScreen::draw()
 
     glCheck(glViewport(0, 0, m_viewport.x, m_viewport.y));
     glCheck(glUseProgram(m_shader.getGLHandle()));
-    glCheck(glUniformMatrix4fv(m_projectionIndex, 1, GL_FALSE, glm::value_ptr(m_projectionMatrix)));
-    glCheck(glUniformMatrix4fv(m_transformIndex, 1, GL_FALSE, glm::value_ptr(m_transform)));
-    glCheck(glUniform1f(m_frameIndex, static_cast<float>(m_currentFrame)));
 
     glCheck(glActiveTexture(GL_TEXTURE0));
     glCheck(glBindTexture(GL_TEXTURE_2D, m_texture.getGLHandle()));
@@ -243,6 +291,7 @@ void LoadingScreen::draw()
     glCheck(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
     glCheck(glUseProgram(0));
+
     glCheck(glViewport(oldView[0], oldView[1], oldView[2], oldView[3]));
     glCheck(glDisable(GL_BLEND));
 }

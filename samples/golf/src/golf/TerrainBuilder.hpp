@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -101,7 +101,7 @@ private:
     const std::vector<HoleData>& m_holeData;
     std::size_t m_currentHole;
 
-    std::vector<std::unique_ptr<cro::ArrayTexture<float, 4>>> m_arrayTextures;
+    std::vector<std::unique_ptr<cro::ArrayTexture<float, 4, cro::TexturePrecision::Low>>> m_arrayTextures;
 
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
     std::vector<cro::Billboard> m_billboardBuffer;

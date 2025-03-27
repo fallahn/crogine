@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023 - 2024
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string BlurVert =
+static inline const std::string BlurVert =
 R"(
 ATTRIBUTE vec2 a_position;
 ATTRIBUTE vec2 a_texCoord0;
@@ -48,7 +48,7 @@ void main()
 }
 )";
 
-inline const std::string BlurFrag =
+static inline const std::string BlurFrag =
 R"(
 uniform sampler2D u_texture;
 
@@ -82,7 +82,7 @@ void main()
 }
 )";
 
-inline const std::string CompositeVert = 
+static inline const std::string CompositeVert = 
 R"(
 uniform mat4 u_worldMatrix;
 uniform mat4 u_viewProjectionMatrix;
@@ -102,7 +102,7 @@ void main()
 })";
 
 
-inline const std::string CompositeFrag = 
+static inline const std::string CompositeFrag = 
 R"(
 uniform sampler2D u_texture;
 uniform sampler2D u_depthTexture;

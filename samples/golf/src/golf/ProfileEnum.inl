@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2023 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,7 +35,8 @@ enum ProfileButton
 
     ButtonWorkshop,
 
-    //ButtonHairColour,
+    ButtonHairBrowse,
+    ButtonSpeechBrowse,
     ButtonSkinTone,
     ButtonTopLight,
     ButtonTopDark,
@@ -45,9 +46,6 @@ enum ProfileButton
     ButtonSouthPaw,
     ButtonRandomise,
 
-    //ButtonPrevHair,
-    //ButtonNextHair,
-    ButtonHairBrowse,
     ButtonPrevBody,
     ButtonNextBody,
 
@@ -62,6 +60,7 @@ enum ProfileButton
     ButtonDescDown,
     ButtonMugshot,
 
+    ButtonPickClubs,
     ButtonUpdateIcon,
     ButtonSaveClose,
     ButtonCancel

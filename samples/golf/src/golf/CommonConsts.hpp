@@ -60,6 +60,7 @@ namespace ConstVal
     static constexpr std::int32_t MaxProfiles = 64;
     static constexpr std::uint32_t MaxBalls = 64u;
     static constexpr std::uint32_t MaxHeadwear = 64u;
+    static constexpr std::uint32_t MaxClubsets = 64u;
 
     //max string vars for name/limiting packet size
     static constexpr std::size_t MaxStringChars = 24;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/detail/glm/vec2.hpp>
 
+#include <cstdint>
 #include <array>
 #include <string>
 #include <limits>
@@ -86,9 +87,11 @@ struct TriggerID final
         TennisCourt,
         BackWall, //hole 12-15
 
-        Count
+        Count,
+        FlagStick //TODO we MUST update Messages.hpp if this value changes
     };
 };
+static_assert(TriggerID::FlagStick == 18, "Update MessageIDs with correct value");
 static_assert(TriggerID::Count < 25, "MAX VALUE REACHED");
 
 static const std::array<std::string, TerrainID::Count> TerrainStrings =
@@ -124,18 +127,19 @@ static constexpr std::array<float, TerrainID::Count> Restitution =
 //how much the spin is reduced when bouncing on the terrain
 static constexpr std::array<glm::vec2, TerrainID::Count> SpinReduction =
 {
-    glm::vec2(0.5f),
-    glm::vec2(0.8f, 0.995f),
-    glm::vec2(0.98f, 0.995f),
+    glm::vec2(0.5f), //rough
+    glm::vec2(0.8f, 0.995f), //fairways
+    glm::vec2(0.98f, 0.995f), //green
     glm::vec2(0.f),
     glm::vec2(0.f),
     glm::vec2(0.f),
-    glm::vec2(0.99f, 0.999f),
+    glm::vec2(0.8f, 0.995f), //stone
+    //glm::vec2(0.99f, 0.999f), //stone
     glm::vec2(0.f)
 };
 
 //how much velocity is added when rolling from topspin
 static constexpr std::array<float, TerrainID::Count> SpinAddition =
 {
-    0.5f, 0.12f, 0.09f, 0.f, 0.f, 0.f, 0.99f, 0.f
+    0.5f, 0.12f, 0.09f, 0.f, 0.f, 0.f, 0.19f, 0.f
 };

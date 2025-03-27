@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,129 +31,189 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/detail/SDLResource.hpp>
+#ifdef CRO_DEBUG_
+#include <crogine/gui/GuiClient.hpp>
+#endif
 
+#include <typeindex>
+#include <unordered_map>
 #include <vector>
 
 namespace cro
 {
-	class Shader;
-	namespace Detail
-	{
-		/*!
-		\brief Base class of UniformBuffer
-		\see UniformBuffer
-		*/
-		class CRO_EXPORT_API UniformBufferImpl : public cro::Detail::SDLResource
-		{
-		public:
-			/*!
-			\brief Adds a shader to the uniform buffer.
-			If the shader is found not to contain a uniform block with the
-			same name as the one passed on construction then the shader is ignored.
-			*/
-			void addShader(const Shader&);
+    class Shader;
+    namespace Detail
+    {
+        /*!
+        \brief Base class of UniformBuffer
+        \see UniformBuffer
+        */
+        class CRO_EXPORT_API UniformBufferImpl : public cro::Detail::SDLResource
+#ifdef CRO_DEBUG_
+            , public cro::GuiClient
+#endif
+        {
+        public:
+            /*!
+            \brief Adds a shader to the uniform buffer.
+            If the shader is found not to contain a uniform block with the
+            same name as the one passed on construction then the shader is ignored.
+            Shaders are reference counted, so mutiple insertions of a shader
+            mean that the shader is not fully removed until the ref count is fully
+            decremented to zero
+            \see removeShader()
+            */
+            void addShader(const Shader&);
+            void addShader(std::uint32_t);
 
-			/*!
-			\brief Binds the UniformBuffer and associated shaders ready for drawing.
-			This will bind the UBO at the specified bind point if it is valid,
-			which will also unbind any UniformBuffer that may already be bound to
-			that point.
-			*/
-			void bind(std::uint32_t bindPoint);
+            /*!
+            \brief Removes a reference to a shader from the UBO
+            This should be used when a shader goes out of use to decrement the
+            reference count.
+            */
+            void removeShader(const Shader&);
+            void removeShader(std::uint32_t);
 
-		protected:
-			/*!
-			\brief Constructor
-			\param blockName The name of the uniform block as it appears in
-			the shader to be used with this buffer.
-			\param blockSize The size of the uniform block, including required padding.
-			*/
-			UniformBufferImpl(const std::string& blockName, std::size_t blockSize);
-			virtual ~UniformBufferImpl();
+            /*!
+            \brief Binds the UniformBuffer and associated shaders ready for drawing.
+            */
+            void bind();
 
-			UniformBufferImpl(const UniformBufferImpl&) = delete;
-			UniformBufferImpl(UniformBufferImpl&&) noexcept;
+            /*!
+            \brief Unbinds the UBO from its binding point
+            This is called automatically in most cases (including destruction)
+            so is only here if you need to manually re-assign binding points.
+            */
+            void unbind();
 
-			const UniformBufferImpl& operator = (const UniformBufferImpl&) = delete;
-			const UniformBufferImpl& operator = (UniformBufferImpl&&) noexcept;
+            /*!
+            \brief Returns the max number of binding points available
+            */
+            static std::int32_t getMaxBindings();
+
+            /*!
+            \brief Returns true if shaders have been added to this UBO, else false
+            */
+            bool hasShaders() const { return !m_shaders.empty(); }
+
+        protected:
+            /*!
+            \brief Constructor
+            \param blockName The name of the uniform block as it appears in
+            the shader to be used with this buffer.
+            \param blockSize The size of the uniform block, including required padding.
+            */
+            UniformBufferImpl(const std::string& blockName, std::size_t blockSize);
+            virtual ~UniformBufferImpl();
+
+            UniformBufferImpl(const UniformBufferImpl&) = delete;
+            UniformBufferImpl(UniformBufferImpl&&) noexcept;
+
+            const UniformBufferImpl& operator = (const UniformBufferImpl&) = delete;
+            const UniformBufferImpl& operator = (UniformBufferImpl&&) noexcept;
 
 
-			void setData(const void* data);
+            void setBindingPoint(std::type_index);
+            void setData(const void* data);
 
 
-		private:
-			std::string m_blockName;
-			std::size_t m_bufferSize;
-			std::uint32_t m_ubo;
+        private:
+            std::string m_blockName;
+            std::size_t m_bufferSize;
+            std::uint32_t m_ubo;
+            std::uint32_t m_bindPoint;
 
-			std::vector<std::pair<std::uint32_t, std::uint32_t>> m_shaders;
+            //how much to adjust the instance count by.
+            //we track this so when an instance is moved
+            //it won't decrement the instance count.
+            std::int32_t m_instanceCountOffset; 
 
-			void reset();
-		};
-	}
+            std::vector<std::pair<std::uint32_t, std::uint32_t>> m_shaders;
+            //counts the number of instances of a shader being used with this UBO
+            //so we make sure to only ever bind one instance of it at a time.
+            std::unordered_map<std::uint32_t, std::uint32_t> m_refCount;
 
-	/*!
-	\brief Utility class around a OpenGL's uniform buffer object.
-	Not available on mobile.
+            void reset();
+        };
+    }
 
-	This class can be used to more efficiently group together shader
-	uniforms which are common between many shaders, for example elapsed
-	game time. Only really useful when using custom shaders, rather than
-	the built in material shaders (which have no uniform blocks defined).
+    /*!
+    \brief Utility class around a OpenGL's uniform buffer object.
+    Not available on mobile.
 
-	UniformBuffer is moveable but non-copyable.
+    This class can be used to more efficiently group together shader
+    uniforms which are common between many shaders, for example elapsed
+    game time. 
 
-	Template parameter should be a type defining the data block used
-	with the buffer
-	\see setData()
-	*/
-	template <class T>
-	class UniformBuffer final : public Detail::UniformBufferImpl
-	{
-	public:
-		/*!
-		\brief Constructor
-		\param blockName The name of the uniform block as it appears in
-		the shader to be used with this buffer.
-		*/
-		explicit UniformBuffer(const std::string& blockName)
-			: Detail::UniformBufferImpl(blockName, sizeof(T))
-		{
+    For 3D scenes there are two default UBOs available, one for scene
+    camera transforms, and another for scene lighting. These can be used
+    in custom shaders with the includes CAMERA_UBO and LIGHT_UBO
 
-		}
+    the camera UBO exposes:
+        mat4 u_viewMatrix;
+        mat4 u_viewProjectionMatrix;
+        mat4 u_projectionMatrix;
+        vec4 u_clipPlane;
+        vec3 u_cameraWorldPosition;
 
-		/*!
-		\brief Pass a block of data to be uploaded to the uniform buffer.
-		This should be the same type used when constructing the buffer. It
-		is up to the user to make sure that the block data matches the shader
-		uniform:
+    and the light UBO exposes:
+        vec4 u_lightColour;
+        vec3 u_lightDirection;
 
-		\begincode
-		//CPU side:
-		struct MyData
-		{
-			float time = 0.f;
-			float scale = 1.f;
-		}
-		UniformBuffer<MyData> buffer("MyShaderData");
-		MyData someData;
-		someData.time = elapsedTime;
-		buffer.setData(someData);
+    UniformBuffer is moveable but non-copyable.
 
-		//shader code
-		layout (std140) uniform MyShaderData
-		{
-			float u_time;
-			float u_scale;
-		};
+    Template parameter should be a type defining the data block used
+    with the buffer.
+    \see setData()
+    */
+    template <class T>
+    class UniformBuffer final : public Detail::UniformBufferImpl
+    {
+    public:
+        /*!
+        \brief Constructor
+        \param blockName The name of the uniform block as it appears in
+        the shader to be used with this buffer.
+        */
+        explicit UniformBuffer(const std::string& blockName)
+            : Detail::UniformBufferImpl(blockName, sizeof(T))
+        {
+            setBindingPoint(typeid(T));
+        }
 
-		\endcode
-		*/
-		void setData(const T& data)
-		{
-			Detail::UniformBufferImpl::setData(static_cast<const void*>(&data));
-		}
-	private:
+        /*!
+        \brief Pass a block of data to be uploaded to the uniform buffer.
+        This should be the same type used when constructing the buffer. It
+        is up to the user to make sure that the block data matches the shader
+        uniform:
 
-	};
+        \begincode
+        //CPU side:
+        struct MyData
+        {
+            float time = 0.f;
+            float scale = 1.f;
+        }
+        UniformBuffer<MyData> buffer("MyShaderData");
+        MyData someData;
+        someData.time = elapsedTime;
+        buffer.setData(someData);
+
+        //shader code
+        layout (std140) uniform MyShaderData
+        {
+            float u_time;
+            float u_scale;
+        };
+
+        \endcode
+        */
+        void setData(const T& data)
+        {
+            Detail::UniformBufferImpl::setData(static_cast<const void*>(&data));
+        }
+
+    private:
+
+    };
 }

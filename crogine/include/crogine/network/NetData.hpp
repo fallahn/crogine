@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -124,13 +124,18 @@ namespace cro
             T as() const;
 
             /*!
-            \brief Returns a pointer to the raw packet data
+            \brief Returns a pointer to the raw packet data, without the ID
             */
             const void* getData() const;
             /*!
             \brief Returns the size of the data, in bytes
             */
             std::size_t getSize() const;
+
+            /*!
+            \brief returns the entire packet as raw bytes, including the ID at[0]
+            */
+            std::vector<std::byte> getDataRaw() const;
 
         private:
             _ENetPacket* m_packet;

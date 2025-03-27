@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -80,25 +80,26 @@ void ClientCollisionSystem::process(float)
             continue;
         }
 
-        if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight))
-        {
-            auto holePos = m_pinPosition;
-            static constexpr float FlagRadius = 0.05f;
-            static constexpr float CollisionRadius = FlagRadius + Ball::Radius;
-            if (position.y - holePos.y < 1.9f) //flag is 2m tall
-            {
-                const glm::vec2 holeCollision = { holePos.x, -holePos.z };
-                const glm::vec2 ballCollision = { position.x, -position.z };
-                auto dir = ballCollision - holeCollision;
-                if (auto l2 = glm::length2(dir); l2 < (CollisionRadius * CollisionRadius))
-                {
-                    auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-                    msg->terrain = CollisionEvent::FlagPole;
-                    msg->position = position;
-                    msg->type = CollisionEvent::Begin;
-                }
-            }
-        }
+        //moved to interpolation packet
+        //if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight))
+        //{
+        //    auto holePos = m_pinPosition;
+        //    static constexpr float FlagRadius = 0.05f;
+        //    static constexpr float CollisionRadius = FlagRadius + Ball::Radius;
+        //    if (position.y - holePos.y < 1.9f) //flag is 2m tall
+        //    {
+        //        const glm::vec2 holeCollision = { holePos.x, -holePos.z };
+        //        const glm::vec2 ballCollision = { position.x, -position.z };
+        //        auto dir = ballCollision - holeCollision;
+        //        if (auto l2 = glm::length2(dir); l2 < (CollisionRadius * CollisionRadius))
+        //        {
+        //            auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+        //            msg->terrain = CollisionEvent::FlagPole;
+        //            msg->position = position;
+        //            msg->type = CollisionEvent::Begin;
+        //        }
+        //    }
+        //}
 
 
 
@@ -171,8 +172,8 @@ void ClientCollisionSystem::process(float)
         {
             //ugh messy, but there are several edge cases (this is responsible for sound effects
             //and particle effects being raised)
-            if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
-                || collider.state == static_cast<std::uint8_t>(Ball::State::Reset) //for scrub/water
+            if (/*collider.state == static_cast<std::uint8_t>(Ball::State::Flight) //we'll let the interp events raise these
+                ||*/ collider.state == static_cast<std::uint8_t>(Ball::State::Reset) //for scrub/water
                 || collider.terrain == TerrainID::Hole
                 || collider.terrain == TerrainID::Bunker)
             {

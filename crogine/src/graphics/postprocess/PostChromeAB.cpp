@@ -48,7 +48,7 @@ PostChromeAB::PostChromeAB()
     }
     else
     {
-        m_textureIndex = m_postShader.getUniformMap().find("u_input")->second;
+        m_textureIndex = m_postShader.getUniformID("u_input");
     }
     addPass(m_postShader);
 }

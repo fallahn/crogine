@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -403,7 +403,7 @@ Mesh::Data BinaryMeshBuilder::build() const
     }
     else
     {
-        LogE << m_path << ": " << SDL_GetError() << std::endl;
+        LogE << "SDL: " << m_path << ": " << SDL_GetError() << std::endl;
     }
 
     return meshData;

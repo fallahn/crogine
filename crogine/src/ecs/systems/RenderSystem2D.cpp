@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,9 +39,9 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
 
-#ifdef CRO_DEBUG_
+//#ifdef CRO_DEBUG_
 #include <crogine/gui/Gui.hpp>
-#endif
+//#endif
 
 #include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
@@ -491,6 +491,27 @@ void RenderSystem2D::onEntityRemoved(Entity entity)
 {
     //remove any OpenGL buffers
     resetDrawable(entity);
+    //purge from draw lists
+    flushEntity(entity);
+}
+
+void RenderSystem2D::flushEntity(Entity e)
+{
+    for (auto& list : m_drawLists)
+    {
+        //if (!list.empty())
+        {
+#ifdef USE_PARALLEL_PROCESSING
+            list.erase(std::remove_if(std::execution::par, list.begin(), list.end(),
+#else
+            list.erase(std::remove_if(list.begin(), list.end(),
+#endif
+                [e](Entity ent)
+                {
+                    return e == ent;
+                }), list.end());
+        }
+    }
 }
 
 void RenderSystem2D::resetDrawable(Entity entity)

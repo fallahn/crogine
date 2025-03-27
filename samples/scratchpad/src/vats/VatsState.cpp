@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -46,6 +46,58 @@ source distribution.
 
 namespace
 {
+    const std::string WakeFragment = 
+    R"(
+    OUTPUT
+
+    uniform sampler2D u_diffuseMap;
+    uniform float u_time;
+
+    VARYING_IN vec2 v_texCoord0;
+
+    const int MatrixSize = 8;
+    float findClosest(int x, int y, float c0)
+    {
+        const int dither[64] = int[64](
+         0, 32, 8, 40, 2, 34, 10, 42, 
+        48, 16, 56, 24, 50, 18, 58, 26, 
+        12, 44, 4, 36, 14, 46, 6, 38, 
+        60, 28, 52, 20, 62, 30, 54, 22, 
+         3, 35, 11, 43, 1, 33, 9, 41, 
+        51, 19, 59, 27, 49, 17, 57, 25,
+        15, 47, 7, 39, 13, 45, 5, 37,
+        63, 31, 55, 23, 61, 29, 53, 21 );
+
+        float limit = 0.0;
+        if (x < MatrixSize)
+        {
+            limit = (dither[y * MatrixSize + x] + 1) / 64.0;
+        }
+
+        if (c0 < limit)
+        {
+            return 0.0;
+        }
+        return 1.0;
+    }
+
+    void main()
+    {
+        float positionAlpha = clamp(1.0 - v_texCoord0.x, 0.0, 1.0);
+        positionAlpha *= smoothstep(0.03, 0.1, v_texCoord0.x);
+        
+
+        //vec2 xy = gl_FragCoord.xy;
+        //int x = int(mod(xy.x, MatrixSize));
+        //int y = int(mod(xy.y, MatrixSize));
+        //positionAlpha *= findClosest(x, y, positionAlpha);
+
+        vec4 colour = TEXTURE(u_diffuseMap, v_texCoord0 - vec2(u_time, 0.0));
+        colour.a *= positionAlpha;
+
+        FRAG_OUT = colour;
+    })";
+
     const std::string Vertex =
     R"(
     
@@ -183,6 +235,9 @@ namespace
 
     std::int32_t timeUniform = -1;
     std::uint32_t shaderID = 0;
+
+    std::int32_t wakeTimeUniform = -1;
+    std::uint32_t wakeShaderID = 0;
 }
 
 VatsState::VatsState(cro::StateStack& stack, cro::State::Context context)
@@ -274,6 +329,9 @@ bool VatsState::simulate(float dt)
 
     glUseProgram(shaderID);
     glUniform1f(timeUniform, timeAccum);
+
+    glUseProgram(wakeShaderID);
+    glUniform1f(wakeTimeUniform, timeAccum);
     glUseProgram(0);
 
     m_gameScene.simulate(dt);
@@ -320,6 +378,32 @@ void VatsState::createScene()
 {
     m_gameScene.enableSkybox();
     m_gameScene.setSkyboxColours(cro::Colour(0.921f,0.513f,0.054f), cro::Colour(0.176f,0.239f,0.321f), cro::Colour(0.004f,0.035f,0.105f));
+
+    m_resources.shaders.loadFromString(ShaderID::Wake, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit),
+        WakeFragment, "#define TEXTURED\n");
+
+    const auto& shader = m_resources.shaders.get(ShaderID::Wake);
+    wakeShaderID = shader.getGLHandle();
+    wakeTimeUniform = shader.getUniformID("u_time");
+
+    auto matID = m_resources.materials.add(shader);
+    auto mat = m_resources.materials.get(matID);
+    mat.blendMode = cro::Material::BlendMode::Alpha;
+    mat.doubleSided = true;
+
+    auto& tex = m_resources.textures.get("assets/wake/wake.png");
+
+    cro::ModelDefinition md(m_resources);
+    
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -2.f });
+
+    md.loadFromFile("assets/wake/wake.cmt");
+    md.createModel(entity);
+
+    mat.setProperty("u_diffuseMap", tex);
+    entity.getComponent<cro::Model>().setMaterial(0, mat);
+
 
     auto updateView = [&](cro::Camera& cam)
     {

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2024
+Matt Marchant 2017 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -29,7 +29,10 @@ source distribution.
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/detail/Assert.hpp>
+#include <crogine/detail/PoolLog.hpp>
 #include <crogine/core/MessageBus.hpp>
+
+#include <crogine/gui/Gui.hpp>
 
 using namespace cro;
 
@@ -46,12 +49,34 @@ EntityManager::EntityManager(MessageBus& mb, ComponentManager& cm, std::size_t i
     m_componentManager  (cm)
 {
     CRO_ASSERT(initialPoolSize <= Detail::MinFreeIDs, "More than this is just a waste of memory");
+
+    //static int temp = 0;
+    //std::string title = "##" + std::to_string(temp++);
+    //registerWindow([&, title]() 
+    //    {
+    //        const auto& winTitle = m_debugTitle.empty() ? title : m_debugTitle;
+
+    //        if (ImGui::Begin(winTitle.c_str()))
+    //        {
+    //            /*for (const auto& p : m_componentPools)
+    //            {
+    //                if (p)
+    //                {
+    //                    ImGui::Text("Pool %s, using %u/%u", p->getName().c_str(), p->used(), p->maxSize());
+    //                }
+    //            }*/
+
+    //            ImGui::Text("Entity count: %lu", m_entityCount);
+    //            ImGui::Text("Generations Size: %lu", m_generations.size());
+    //        }
+    //        ImGui::End();
+    //    });
 }
 
 //public
 Entity EntityManager::createEntity()
 {
-    Entity::ID idx;
+    std::uint32_t idx = 0;
     if (m_generations.size() == Detail::MinFreeIDs)
     {
         idx = m_freeIDs.front();
@@ -60,7 +85,7 @@ Entity EntityManager::createEntity()
     else
     {
         m_generations.push_back(0);
-        idx = static_cast<Entity::ID>(m_generations.size() - 1);
+        idx = static_cast<std::uint32_t>(m_generations.size() - 1);
         
         CRO_ASSERT(idx < (1 << Detail::IndexBits), "Index out of range");
         if (idx >= m_componentMasks.size())
@@ -79,6 +104,7 @@ Entity EntityManager::createEntity()
 
     m_entityCount++;
 
+    //Detail::PoolLog::log("Entity Count", m_entityCount);
     return e;
 }
 
@@ -132,7 +158,7 @@ bool EntityManager::entityValid(Entity entity) const
     return (m_generations[id] == entity.getGeneration());
 }
 
-Entity EntityManager::getEntity(Entity::ID id) const
+Entity EntityManager::getEntity(std::uint32_t id) const
 {
     CRO_ASSERT(id < m_generations.size(), "Invalid Entity ID");
     Entity ent(id, m_generations[id]);

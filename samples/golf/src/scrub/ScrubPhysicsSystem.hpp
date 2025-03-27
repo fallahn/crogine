@@ -66,7 +66,7 @@ public:
     ScrubPhysicsSystem& operator = (const ScrubPhysicsSystem&) = delete;
     ScrubPhysicsSystem& operator = (ScrubPhysicsSystem&&) = delete;
 
-    void process(float);
+    void process(float) override;
 
     void loadMeshData();
     void loadBallData(cro::ResourceCollection&, cro::EnvironmentMap*, const std::string&);

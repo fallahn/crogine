@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,7 +37,7 @@ source distribution.
 
 namespace
 {
-    const std::size_t MinEmitters = 4;
+    const std::size_t MinEmitters = 8;
 }
 
 SoundEffectsDirector::SoundEffectsDirector()

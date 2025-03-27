@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-inline const std::string CloudVertex = 
+static inline const std::string CloudVertex = 
 R"(
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
@@ -55,7 +55,7 @@ R"(
     }
 )";
 
-inline const std::string CloudFragment =
+static inline const std::string CloudFragment =
 R"(
     OUTPUT
 
@@ -90,7 +90,7 @@ R"(
     }
 )";
 
-inline const std::string BowFragment =
+static inline const std::string BowFragment =
 R"(
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
@@ -141,13 +141,13 @@ R"(
 
 
 //updated shader for 3D overhead clouds
-inline const std::string CloudOverheadVertex = R"(
+static inline const std::string CloudOverheadVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
 
+#include CAMERA_UBO
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
     uniform mat3 u_normalMatrix;
 
 #include RESOLUTION_BUFFER
@@ -178,15 +178,14 @@ inline const std::string CloudOverheadVertex = R"(
         v_colour = a_colour;
     })";
 
-inline const std::string CloudOverheadFragment = R"(
+static inline const std::string CloudOverheadFragment = R"(
     OUTPUT
 
     uniform vec2 u_worldCentre = vec2(0.0);
-    uniform vec3 u_cameraWorldPosition;
-    uniform vec3 u_lightDirection;
-    uniform vec4 u_lightColour;
     uniform vec4 u_skyColourTop;
     uniform vec4 u_skyColourBottom;
+#include CAMERA_UBO
+#include LIGHT_UBO
 
     VARYING_IN vec3 v_normal;
     VARYING_IN vec3 v_worldPosition;
@@ -267,7 +266,7 @@ inline const std::string CloudOverheadFragment = R"(
 
 
 //these are used in the course editor (PlaylistState)
-inline const std::string CloudVertex3D =
+static inline const std::string CloudVertex3D =
 R"(
 ATTRIBUTE vec4 a_position;
 ATTRIBUTE vec3 a_normal;
@@ -286,7 +285,7 @@ void main()
     v_normal = u_normalMatrix * a_normal;
 })";
 
-inline const std::string CloudFragment3D =
+static inline const std::string CloudFragment3D =
 R"(
 
 OUTPUT

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -43,10 +43,12 @@ source distribution.
 #include "Clubs.hpp"
 #include "../GolfGame.hpp"
 #include "../Colordome-32.hpp"
+#include "../WebsocketServer.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <Input.hpp>
+#include <Content.hpp>
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -205,7 +207,7 @@ bool CareerState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (evt.caxis.value > cro::GameController::LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -340,7 +342,7 @@ void CareerState::buildScene()
                     m_scene.setSystemActive<cro::UISystem>(true);
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Career);
                     m_scene.getSystem<cro::UISystem>()->selectAt(CareerStart);
-                    Social::setStatus(Social::InfoID::Menu, { "Viewing the Leagues" });
+                    WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Viewing the Leagues" }));
 
                     applySettingsValues(); //loadConfig() might not load anything
                     loadConfig();
@@ -390,6 +392,10 @@ void CareerState::buildScene()
                             t.getComponent<cro::Callback>().active = true;
                         };
                     m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    auto* msg = cro::App::getInstance().getMessageBus().post<SystemEvent>(cl::MessageID::SystemMessage);
+                    msg->type = SystemEvent::MenuChanged;
+                    msg->data = -1;
                 }
                 break;
             case RootCallbackData::FadeOut:
@@ -1611,7 +1617,7 @@ void CareerState::createInfoMenu(cro::Entity parent)
             });
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_scene.getSystem<cro::UISystem>()->addCallback(
-            [&, entity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1708,7 +1714,7 @@ Finish a league in the top 3 to unlock a new ball, in the top 2 to unlock a new 
 headwear and placing number one unlocks a new avatar! Each of these items will also be
 available to use in Free Play. Items remain unlocked even if you reset your Career.
 
-You can reset your Career at any time from the Stats page of the Options menu, and
+You can reset your Career at any time from the Settings page of the Options menu, and
 edit your opponent's names in the League Browser.
 
 Good Luck!
@@ -2021,7 +2027,7 @@ void CareerState::quitState()
     }
     else if (m_currentMenu == MenuID::Career)
     {
-        Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
+        WebSock::broadcastPacket(Social::setStatus(Social::InfoID::Menu, { "Main Menu" }));
 
         m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
         m_scene.setSystemActive<cro::UISystem>(false);
@@ -2037,7 +2043,7 @@ void CareerState::quitState()
 
 void CareerState::loadConfig()
 {
-    const auto path = Social::getUserContentPath(Social::UserContent::Career) + ConfigFile;
+    const auto path = Content::getUserContentPath(Content::UserContent::Career) + ConfigFile;
     if (cro::FileSystem::fileExists(path))
     {
         cro::ConfigFile cfg;
@@ -2070,5 +2076,5 @@ void CareerState::saveConfig() const
     cfg.addProperty("gimme").setValue(m_sharedData.gimmeRadius);
     cfg.addProperty("night").setValue(m_sharedData.nightTime);
     cfg.addProperty("weather").setValue(m_sharedData.weatherType);
-    cfg.save(Social::getUserContentPath(Social::UserContent::Career) + ConfigFile);
+    cfg.save(Content::getUserContentPath(Content::UserContent::Career) + ConfigFile);
 }

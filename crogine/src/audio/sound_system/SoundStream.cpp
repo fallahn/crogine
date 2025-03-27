@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -108,7 +108,7 @@ void SoundStream::play()
 {
     if (m_format == 0)
     {
-        LogE << "Stream not yet initialised - call initialise() first" << std::endl;
+        LogE << "OpenAL: Stream not yet initialised - call initialise() first" << std::endl;
         return;
     }
 
@@ -237,7 +237,7 @@ void SoundStream::initialise(std::uint32_t channelCount, std::uint32_t sampleRat
     {
         m_channelCount = 0;
         m_sampleRate = 0;
-        LogE << channelCount << ": unsupported channel count" << std::endl;
+        LogE << "OpenAL: " << channelCount << ": unsupported channel count" << std::endl;
     }
 }
 
@@ -351,7 +351,7 @@ void SoundStream::threadFunc()
 
                 if (bits == 0)
                 {
-                    LogE << "Bits in sound stream are 0. Make sure audio is not corrupt and initialise() was called correctly" << std::endl;
+                    LogE << "OpenAL: Bits in sound stream are 0. Make sure audio is not corrupt and initialise() was called correctly" << std::endl;
 
                     std::scoped_lock lock(m_mutex);
                     m_isStreaming = false;

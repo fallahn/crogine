@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,8 +30,8 @@ source distribution.
 #pragma once
 
 #include <string>
-//static_assert(MapSize.x == 320, "This shader uses the MapSize constant of 320");
-inline const std::string CelVertexShader = R"(
+
+static inline const std::string CelVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -68,17 +68,13 @@ inline const std::string CelVertexShader = R"(
 #include SHADOWMAP_UNIFORMS_VERT
 #endif
 
-    uniform mat4 u_viewMatrix;
+#include CAMERA_UBO
 
 #if !defined(INSTANCING)
     uniform mat4 u_worldViewMatrix;
     uniform mat3 u_normalMatrix;
 #endif
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_projectionMatrix;
-
-    uniform vec4 u_clipPlane;
-    uniform vec3 u_cameraWorldPosition;
 
     uniform sampler2D u_noiseTexture;
 
@@ -262,9 +258,8 @@ VARYING_OUT vec4 v_menuProjection;
         //v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
     })";
 
-inline const std::string CelFragmentShader = R"(
-    uniform vec3 u_lightDirection;
-    uniform vec4 u_lightColour = vec4(1.0);
+static inline const std::string CelFragmentShader = R"(
+#include LIGHT_UBO
 
 #include SCALE_BUFFER
 
@@ -716,6 +711,11 @@ float contour = clamp(contourX + contourY, 0.0, 1.0);
 
 #if defined (MASK_MAP)
     vec3 mask = TEXTURE(u_maskMap, texCoord).rgb;
+
+//AO on player models
+float ao = 1.0 - mask.b;
+ao = mix(ao, 1.0, step(0.05, mask.g));
+FRAG_OUT.rgb *= ao;
 
 #if !defined(REFLECTIONS)
 

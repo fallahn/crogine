@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,7 +40,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
-#include <crogine/gui/GuiClient.hpp>
+//#include <crogine/gui/GuiClient.hpp>
 
 struct SharedStateData;
 
@@ -49,7 +49,7 @@ namespace cro
     class SpriteSheet;
 }
 
-class PlaylistState final : public cro::State, public cro::GuiClient
+class PlaylistState final : public cro::State//, public cro::GuiClient
 {
 public:
     PlaylistState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -112,6 +112,58 @@ private:
     };
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {};
     std::array<cro::Entity, MenuID::Count> m_tabEntities = {};
+
+    void updateTabIndices();
+
+    enum //button indices
+    {
+        SkyboxUp = 100,
+        SkyboxDown,
+        SkyboxList,
+        
+        ShrubberyUp = 200,
+        ShrubberyDown,
+        ShrubberyLeft,
+        ShrubberyRight,
+        ShrubberyList,
+
+        Holes = 300,
+        HolesCourseUp,
+        HolesCourseDown,
+        HolesLeft,
+        HolesRight,
+        HolesPlusPriority,
+        HolesMinusPriority,
+        HolesAdd,
+        HolesRemove,
+        HolesClear,
+        HolesListUp,
+        HolesListDown,
+        HolesCourseList,
+        HolesList = HolesCourseList + 20,
+
+        FileSystemSave = 400,
+        FileSystemExport,
+        FileSystemDown,
+        FileSystemUp,
+        FileSystemShow,
+        FileSystemList,
+
+        TabSkybox = 500,
+        TabShrub,
+        TabHoles,
+        TabFileSystem,
+
+        QuitSkybox = 600,
+        QuitShrubbery,
+        QuitHoles,
+        QuitFileSystem,
+
+        HelpSkybox = 700,
+        HelpShrubbery,
+        HelpHoles,
+        HelpFileSystem
+    };
 
     struct MaterialID final
     {
