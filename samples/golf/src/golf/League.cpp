@@ -1201,20 +1201,35 @@ FriendlyPlayers::FriendlyPlayers(std::int32_t clubset)
 void FriendlyPlayers::updateHoleScores(std::uint32_t hole, std::int32_t par, bool overPar, std::int32_t windChance)
 {
     windChance = std::clamp(windChance, 1, 100);
-    for (auto& player : m_players)
+    for (auto& [player, isRival] : m_players)
     {
-        m_scoreCalculator.calculate(player, hole, par, overPar, m_holeScores[player.nameIndex]);
-
-        if (cro::Util::Random::value(0, 99) < windChance)
+        if (!isRival)
         {
-            m_holeScores[player.nameIndex][hole]++;
+            m_scoreCalculator.calculate(player, hole, par, overPar, m_holeScores[player.nameIndex]);
+
+            if (cro::Util::Random::value(0, 99) < windChance)
+            {
+                m_holeScores[player.nameIndex][hole]++;
+            }
+        }
+        else
+        {
+            //pull the score from the stored stats
+            m_holeScores[player.nameIndex][hole] = m_rivalScores[hole];
         }
     }
 }
 
-void FriendlyPlayers::addPlayer(LeaguePlayer p)
+void FriendlyPlayers::addPlayer(const LeaguePlayer& p)
 {
-    m_players.push_back(p);
+    m_players.push_back(std::make_pair(p, false));
+}
+
+void FriendlyPlayers::addRival(const LeaguePlayer& p, const std::vector<std::uint8_t>& scores)
+{
+    CRO_ASSERT(scores.size() > 8, "");
+    m_players.push_back(std::make_pair(p, true));
+    m_rivalScores = scores;
 }
 
 void FriendlyPlayers::setHoleScores(std::int32_t playerNameIndex, const HoleScores& scores)

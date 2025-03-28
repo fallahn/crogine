@@ -262,7 +262,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             CRO_ASSERT(sd.activeTournament != TournamentIndex::NullVal, "");
             if (sd.tournaments[sd.activeTournament].scores[0] == 0)
             {
-                //LogI << "Fix this when done debugging " << __LINE__ << std::endl;
                 //this is a new round
                 const auto opponent = getTournamentOpponent(sd.tournaments[sd.activeTournament]);
                 sd.tournaments[sd.activeTournament].opponentStats = league.getPlayer(opponent);
@@ -271,6 +270,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             m_friendlyPlayers->setHoleScores(sd.tournaments[sd.activeTournament].opponentStats.nameIndex, sd.tournaments[sd.activeTournament].opponentScores);
         }
     }
+
     
     if (sd.weatherType == WeatherType::Random)
     {
@@ -413,23 +413,60 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         }
     }
 
-    if (clientCount > /*ConstVal::MaxClients*/3) //achievement is for 4
+    if (clientCount > 3) //achievement is for 4 or more
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::BetterWithFriends]);
     }
     m_cpuGolfer.setCPUCount(cpuCount, sd);
 
 
-    //if we're playing hotseat unlock all the clubs unless
-    //the clubset limit is set
-    if (clientCount == 1
-        && humanCount > 1)
+    if (clientCount == 1)
     {
-        if (!m_sharedData.clubLimit)
+        //if we're playing hotseat unlock all the clubs unless
+        //the clubset limit is set
+        if (humanCount > 1)
         {
-            m_sharedData.clubSet = 2;
+            if (!m_sharedData.clubLimit)
+            {
+                m_sharedData.clubSet = 2;
+            }
+            m_hotSeat = true;
         }
-        m_hotSeat = true;
+#ifdef USE_GNS
+        //show the monthly rival if opted in
+        else //if (sd.showRival)
+        {
+            if (sd.gameMode == GameMode::FreePlay
+                && sd.scoreType == ScoreType::Stroke
+                && sd.quickplayOpponents == 0)
+            {
+                cro::String rivalName;
+                auto scores = Social::getMonthlyHoleScores(sd.mapDirectory, sd.holeCount, rivalName);
+                if (!scores.empty()
+                    && scores[0] != 0)
+                {
+                    //reverse the scores if need to match current play
+                    if (sd.reverseCourse)
+                    {
+                        //we can assume these hole sizes as user/short round games
+                        //would never let us get to this point.
+                        const auto roundSize = sd.holeCount == 0 ? 18 : 9;
+                        std::reverse(scores.begin(), scores.begin() + roundSize);
+                    }
+
+                    CRO_ASSERT(!m_friendlyPlayers, "");
+                    m_friendlyPlayers = std::make_unique<FriendlyPlayers>(sd.clubSet);
+                    
+                    //append an emoji to the rival name to show they're a rival (it might be ourself!)
+                    rivalName += cro::String(std::uint32_t(0x1F4C5));
+                    //we need to index the name correctly to rivalName not league name
+                    m_sharedData.leagueNames[0] = rivalName;
+                    LeaguePlayer player;
+                    m_friendlyPlayers->addRival(player, scores);
+                }
+            }
+        }
+#endif
     }
 
     Social::setGroup(m_sharedData.clientConnection.hostID, playerCount);
@@ -504,6 +541,9 @@ GolfState::~GolfState()
     {
         m_sharedData.scoreType = ScoreType::NearestThePinPro;
     }
+
+    //restore this in case we used it to store a rival name
+    m_sharedData.leagueNames.read();
 
     //wait for any active async
     if (m_statResult.valid())
