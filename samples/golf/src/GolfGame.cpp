@@ -1594,6 +1594,10 @@ void GolfGame::loadPreferences()
                     {
                         m_sharedData.flagText = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
                     }
+                    else if (name == "show_rival")
+                    {
+                        m_sharedData.showRival = prop.getValue<bool>();
+                    }
                     /*else if (name == "group_mode")
                     {
                         m_sharedData.groupMode = std::clamp(prop.getValue<std::int32_t>(), 0, std::int32_t(ClientGrouping::Four));
@@ -1747,6 +1751,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("remote_content").setValue(m_sharedData.remoteContent);
     cfg.addProperty("flag_path").setValue(m_sharedData.flagPath);
     cfg.addProperty("flag_text").setValue(m_sharedData.flagText);
+    cfg.addProperty("show_rival").setValue(m_sharedData.showRival);
     cfg.save(path);
 
 

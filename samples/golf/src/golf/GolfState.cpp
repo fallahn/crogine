@@ -434,7 +434,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         }
 #ifdef USE_GNS
         //show the monthly rival if opted in
-        else //if (sd.showRival)
+        else if (sd.showRival)
         {
             if (sd.gameMode == GameMode::FreePlay
                 && sd.scoreType == ScoreType::Stroke

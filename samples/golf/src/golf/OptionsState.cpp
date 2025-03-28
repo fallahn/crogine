@@ -4566,7 +4566,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 191.f));
     entity.setLabel("Disable text chat in online games");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettInGameChat);
-    entity.getComponent<cro::UIInput>().setNextIndex(SettRemoteContent, SettLogChat);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettLogChat, SettLogChat);
     entity.getComponent<cro::UIInput>().setPrevIndex(SettCSVLog, SettCSVLog);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
@@ -4620,8 +4620,8 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity = createHighlight(glm::vec2(12.f, 159.f));
     entity.setLabel("Allow downloading remote content such as Workshop items from other\nplayers when (re)connecting to a network game");
     entity.getComponent<cro::UIInput>().setSelectionIndex(SettRemoteContent);
-    entity.getComponent<cro::UIInput>().setNextIndex(ResetCareer, ResetCareer);
-    entity.getComponent<cro::UIInput>().setPrevIndex(SettInGameChat, SettLogChat);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettShowRival, SettShowRival);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettLogChat, SettLogChat);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity e, cro::ButtonEvent evt)
         {
@@ -4641,6 +4641,35 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
             float scale = m_sharedData.remoteContent ? 1.f : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
+
+
+    //show monthly rival
+    entity = createHighlight(glm::vec2(12.f, 143.f));
+    entity.setLabel("Display scores of the current monthly leader on the scoreboard in Free Play\nif they are available. Takes effect on round start.");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(SettShowRival);
+    entity.getComponent<cro::UIInput>().setNextIndex(SettPost, ResetCareer);
+    entity.getComponent<cro::UIInput>().setPrevIndex(SettPostR, SettRemoteContent);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity e, cro::ButtonEvent evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.showRival = !m_sharedData.showRival;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+
+    entity = createCheckbox(glm::vec2(14.f, 145.f));
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.showRival ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+
+
 
 
     //available flag textures
@@ -5014,7 +5043,7 @@ void OptionsState::buildSettingsMenu(cro::Entity parent, const cro::SpriteSheet&
     entity.getComponent<cro::Transform>().move(-entity.getComponent<cro::Transform>().getOrigin());
     entity.getComponent<cro::UIInput>().setSelectionIndex(ResetCareer);
     entity.getComponent<cro::UIInput>().setNextIndex(ResetStats, WindowAdvanced);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettRemoteContent);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ResetStats, SettShowRival);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -5716,7 +5745,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         downLeftB = TabController;
         downRightA = TabAchievements;
         downRightB = TabStats;
-        upLeftA = SettRemoteContent;
+        upLeftA = SettShowRival;
         upLeftB = ResetCareer;
         upRightA = ResetStats;
         upRightB = SettPostR;

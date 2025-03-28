@@ -327,6 +327,7 @@ struct SharedStateData final
     bool blockChat = false;
     bool logChat = false;
     bool remoteContent = false;
+    bool showRival = true;
     std::int32_t flagText = 0; //none, black, white
     std::string flagPath;
 

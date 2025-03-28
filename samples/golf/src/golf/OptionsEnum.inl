@@ -117,6 +117,7 @@ enum OptionsIndex
     SettInGameChat,
     SettLogChat,
     SettRemoteContent,
+    SettShowRival,
     SettFlagDown,
     SettFlagUp,
     SettFlagLabelDown,
