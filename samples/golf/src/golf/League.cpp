@@ -1056,7 +1056,9 @@ void ScoreCalculator::calculate(const LeaguePlayer& player, std::uint32_t hole, 
     float quality = aim * power;
 
     //outlier for cock-up
-    if (cro::Util::Random::value(0, 49) < player.outlier)
+    const auto clubsetAdjust = (2 - m_clubset) * 3;
+
+    if (cro::Util::Random::value(0, 49) < (player.outlier + clubsetAdjust))
     {
         float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
         quality *= errorAmount;
