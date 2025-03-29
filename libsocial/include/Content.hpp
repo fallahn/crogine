@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <cstdint>
+
 #include <vector>
 #include <string>
 

@@ -251,7 +251,7 @@ void MenuState::createBallScene()
     for (const auto& c : ContentDirs)
     {
         auto b = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + c + BallDir);
-        for (const auto f : b)
+        for (const auto& f : b)
         {
             ballFiles.push_back(c + BallDir + f);
         }
