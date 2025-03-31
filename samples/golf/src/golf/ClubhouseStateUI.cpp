@@ -243,7 +243,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     m_sprites[SpriteID::ReadyUp] = spriteSheet.getSprite("ready_up");
     m_sprites[SpriteID::StartGame] = spriteSheet.getSprite("start_game");
     m_sprites[SpriteID::Connect] = spriteSheet.getSprite("connect");
-    auto bannerSprite = spriteSheet.getSprite("banner");
+    //auto bannerSprite = spriteSheet.getSprite("banner");
     auto headerSprite = spriteSheet.getSprite("header");
     auto footerSprite = spriteSheet.getSprite("footer");
 
@@ -296,7 +296,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 26.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = bannerSprite;
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("banner");
     auto textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
@@ -398,7 +398,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     static constexpr float TextOffset = 26.f;
     static constexpr float LineSpacing = 10.f;
-    glm::vec3 textPos = { TextOffset, 54.f, 0.1f };
+    glm::vec3 textPos = { TextOffset, 66.f, 0.1f };
 
     auto createButton = [&](const std::string& label)
     {
@@ -473,6 +473,20 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                 }
             });
 
+    //shop
+    entity = createButton("Shop");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    //requestStackClear();
+                    //requestStackPush(StateID::Shop);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+
     //arcade
     entity = createButton("Arcade");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -522,7 +536,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     //monthly challenge status
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 43.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 49.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(Social::getMonthlyChallenge().getProgressString());
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
