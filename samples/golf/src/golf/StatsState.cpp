@@ -897,8 +897,8 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         {
             //fudgenstein.
             auto c = BarColours[colourIndex];
-            if ((colourIndex == 2 && playerLevel < 30)
-                || (colourIndex == 1 && playerLevel < 15))
+            if ((colourIndex == 2 && playerLevel < Social::ProLevel)
+                || (colourIndex == 1 && playerLevel < Social::ExpertLevel))
             {
                 c.setAlpha(0.15f);
             }

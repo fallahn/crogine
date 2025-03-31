@@ -718,7 +718,8 @@ void ProfileState::handleMessage(const cro::Message& msg)
 bool ProfileState::simulate(float dt)
 {
     //rotate/zoom avatar
-    if (!m_textEdit.entity.isValid())
+    if (!m_textEdit.entity.isValid()
+        && m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() != MenuID::SpeechEditor)
     {
         bool refresh = false;
         if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
