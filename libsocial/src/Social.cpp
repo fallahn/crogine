@@ -47,6 +47,22 @@ source distribution.
 
 namespace
 {
+    const std::array<std::string, 12u> CourseNames =
+    {
+        "course_01",
+        "course_02",
+        "course_03",
+        "course_04",
+        "course_05",
+        "course_06",
+        "course_07",
+        "course_08",
+        "course_09",
+        "course_10",
+        "course_11",
+        "course_12",
+    };
+
     std::unique_ptr<PersonalBest> personalBest;
     void assertPB()
     {
@@ -866,33 +882,29 @@ void Social::insertScore(const std::string& course, std::uint8_t hole, std::int3
 #endif
 
     assertPB();
-    static const std::array<std::string, 12u> CourseNames =
-    {
-        "course_01",
-        "course_02",
-        "course_03",
-        "course_04",
-        "course_05",
-        "course_06",
-        "course_07",
-        "course_08",
-        "course_09",
-        "course_10",
-        "course_11",
-        "course_12",
-    };
 
     if (const auto& res = std::find(CourseNames.cbegin(), CourseNames.cend(), course); res != CourseNames.cend())
     {
         const auto idx = (std::distance(CourseNames.begin(), res) * 3) + hole;
         personalBest->insertScore(idx, score, holeScores);
+    }
+}
 
-        LogI << "Inserted scores into " << course << std::endl;
-    }
-    else
+cro::String Social::getLeader(const std::string& course, std::uint8_t holeCount)
+{
+    return getTopFive(course, holeCount);
+}
+
+std::int32_t Social::getPersonalBest(const std::string& course, std::uint8_t holeCount)
+{
+    assertPB();
+
+    if (const auto& res = std::find(CourseNames.cbegin(), CourseNames.cend(), course); res != CourseNames.cend())
     {
-        LogI << "Could not find " << course << std::endl;
+        const auto idx = (std::distance(CourseNames.begin(), res) * 3) + holeCount;
+        return personalBest->getRoundScore(idx);
     }
+    return -1;
 }
 
 cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount)
@@ -901,7 +913,20 @@ cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount
     //return GJ::getTopFive(course, holeCount);
     return {};
 #else
-    return {};
+    assertPB();
+
+    if (const auto& res = std::find(CourseNames.cbegin(), CourseNames.cend(), course); res != CourseNames.cend())
+    {
+        const auto idx = (std::distance(CourseNames.begin(), res) * 3) + holeCount;
+        const auto score = personalBest->getRoundScore(idx);
+
+        if (score)
+        {
+            return "Personal Best: " + std::to_string(score);
+        }
+    }
+
+    return "No Personal Best";
 #endif
 }
 
@@ -910,6 +935,26 @@ void Social::invalidateTopFive(const std::string& course, std::uint8_t holeCount
 #ifdef USE_GJS
     //GJ::invalidateTopFive(course, holeCount);
 #endif
+}
+
+std::vector<std::uint8_t> Social::getMonthlyHoleScores(const std::string& course, std::uint8_t holeCount, cro::String& playerName)
+{
+    assertPB();
+
+    std::vector<std::uint8_t> ret(18);
+    std::fill(ret.begin(), ret.end(), 0);
+
+    if (const auto& res = std::find(CourseNames.cbegin(), CourseNames.cend(), course); res != CourseNames.cend())
+    {
+        std::int32_t score = 0;
+
+        const auto idx = (std::distance(CourseNames.begin(), res) * 3) + holeCount;
+        personalBest->fetchScore(idx, score, ret);
+
+        playerName = "Personal Best";
+    }
+
+    return ret;
 }
 
 void Social::readAllStats()

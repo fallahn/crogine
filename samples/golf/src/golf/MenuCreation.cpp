@@ -2180,8 +2180,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-#ifdef USE_GNS
-    //scrolls info about the selected course
+//#ifdef USE_GNS
+    //scrolls info about the selected course (or personal best if no leaderboards available)
     auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
@@ -2201,7 +2201,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     {
         if (m_currentMenu == MenuID::Lobby)
         {
+#ifdef USE_GNS
             static constexpr float BasePosY = 23.f;
+#else
+            static constexpr float BasePosY = 26.f;
+#endif
             static constexpr float LineHeight = 13.f;
 
             auto scrollBounds = cro::Text::getLocalBounds(e);
@@ -2227,7 +2231,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyWindowEntities[LobbyEntityID::CourseTicker] = entity;
-#endif
+//#endif
 
     //options button
     entity = m_uiScene.createEntity();
@@ -4927,7 +4931,11 @@ void MenuState::updateCourseRuleString(bool updateScoreboard)
                 auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(scale));
+#ifdef USE_GNS
                 m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setPosition(glm::vec2(200.f, 0.f));
+#else
+                m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setPosition(glm::vec2(300.f, 0.f));
+#endif
             }
         }
         else

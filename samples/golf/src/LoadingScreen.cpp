@@ -196,6 +196,8 @@ void LoadingScreen::launch()
         m_tipText->setAlignment(cro::SimpleText::Alignment::Centre);
         m_tipText->setCharacterSize(InfoTextSize);
         m_tipText->setFillColour(TextNormalColour);
+
+        m_tipText->setPosition({ std::round(cro::App::getWindow().getSize().x / 2.f), 86.f });
     }
 
     stringIndex = (stringIndex + 1) % TipStrings.size();
@@ -216,7 +218,6 @@ void LoadingScreen::update()
         const glm::vec2 windowSize = glm::vec2(m_viewport);
 
         const auto scale = glm::vec2(getViewScale(windowSize));
-        m_tipText->setPosition({ std::round(windowSize.x / 2.f), 86.f });
         m_tipText->setScale(scale);
 
         m_projectionMatrix = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);

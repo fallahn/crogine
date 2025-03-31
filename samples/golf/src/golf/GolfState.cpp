@@ -432,7 +432,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
             m_hotSeat = true;
         }
-#ifdef USE_GNS
+//#ifdef USE_GNS
         //show the monthly rival if opted in
         else if (sd.showRival)
         {
@@ -466,7 +466,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
             }
         }
-#endif
+//#endif
     }
 
     Social::setGroup(m_sharedData.clientConnection.hostID, playerCount);

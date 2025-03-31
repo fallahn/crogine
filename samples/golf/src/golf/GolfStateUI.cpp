@@ -3097,7 +3097,7 @@ void GolfState::createScoreboard()
     if (!m_courseTitle.empty())
     {
         auto str = m_courseTitle;
-#ifdef USE_GNS
+
         if (m_sharedData.scoreType == ScoreType::Stroke)
         {
             auto leader = Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
@@ -3114,9 +3114,7 @@ void GolfState::createScoreboard()
         {
             str += " - " + ScoreTypes[m_sharedData.scoreType];
         }
-#else
-        str += " - " + ScoreTypes[m_sharedData.scoreType];
-#endif
+
         if (m_ntpPro)
         {
             str += "+";

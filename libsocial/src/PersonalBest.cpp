@@ -96,3 +96,9 @@ void PersonalBest::fetchScore(std::size_t index, std::int32_t& scoreDst, std::ve
     scoreDst = m_entries[index].score;
     std::copy(m_entries[index].holeScores.begin(), m_entries[index].holeScores.begin() + holeDst.size(), holeDst.begin());
 }
+
+std::int32_t PersonalBest::getRoundScore(std::size_t idx) const
+{
+    CRO_ASSERT(idx < m_entries.size(), "");
+    return m_entries[idx].score;
+}

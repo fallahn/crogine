@@ -47,7 +47,7 @@ public:
     
     void fetchScore(std::size_t index, std::int32_t& scoreDst, std::vector<std::uint8_t>& holeDst) const;
 
-
+    std::int32_t getRoundScore(std::size_t index) const;
 private:
 
     struct ScoreEntry final
