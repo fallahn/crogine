@@ -267,8 +267,20 @@ void GolfState::loadMap()
     //load the map data
     bool error = false;
     bool hasSpectators = false;
-    auto mapDir = m_sharedData.mapDirectory.toAnsiString();
-    auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
+    const auto mapDir = m_sharedData.mapDirectory.toAnsiString();
+
+    const auto installPaths = Content::getInstallPaths();
+    //auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
+    std::string mapPath;
+    for (const auto& dir : installPaths)
+    {
+        mapPath = dir + ConstVal::MapPath + mapDir;
+        if (cro::FileSystem::directoryExists(cro::FileSystem::getResourcePath() + mapPath))
+        {
+            break;
+        }
+    }
+    mapPath += +"/course.data";
 
     bool isUser = false;
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))

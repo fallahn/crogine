@@ -335,7 +335,7 @@ private:
     std::int32_t m_currentRange = Range::Official;
     std::array<Range, Range::Count> m_courseIndices = {};
 
-    void parseCourseDirectory(const std::string&, bool isUser);
+    void parseCourseDirectory(const std::string&, bool isUser, bool appendToRange = false);
 
     cro::Entity m_toolTip;
     void createToolTip();

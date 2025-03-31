@@ -92,7 +92,7 @@ namespace ConstVal
 
     //root dir for course files prepended to directory
     //received from the hosting client
-    static const std::string MapPath("assets/golf/courses/");
+    static const std::string MapPath("courses/");
     static const std::string UserCoursePath("courses/");
     static const std::string UserMapPath("courses/export/");
 

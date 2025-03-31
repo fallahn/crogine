@@ -187,7 +187,7 @@ constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPosit
     glm::vec2(0.f, 0.f)
 };
 
-void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
+void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser, bool appendToRange)
 {
     auto root = rootDir;
     if (!isUser)
@@ -210,9 +210,18 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
     //at least be consistent across platforms
     std::sort(directories.begin(), directories.end(), [](const  std::string& a, const std::string& b) {return a < b; });
 
-    m_courseIndices[m_currentRange].start = m_sharedCourseData.courseData.size();
-
     std::int32_t courseNumber = 1;
+
+    if (appendToRange)
+    {
+        courseNumber = static_cast<std::int32_t>(m_sharedCourseData.courseData.size() + 1);
+    }
+    else
+    {
+        m_courseIndices[m_currentRange].start = m_sharedCourseData.courseData.size();
+    }
+
+
     for (const auto& dir : directories)
     {
         if (dir == "tutorial")
@@ -330,12 +339,6 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
             break;
         }*/
     }
-
-    //moved to createUI() because this func gets called multiple times
-    /*if (!m_courseData.empty())
-    {
-        m_sharedData.courseIndex = std::min(m_sharedData.courseIndex, m_courseData.size() - 1);
-    }*/
 }
 
 void MenuState::createToolTip()
@@ -402,8 +405,13 @@ void MenuState::updateCompletionString()
 
 void MenuState::createUI()
 {
+    const auto contentPaths = Content::getInstallPaths();
+
     m_currentRange = Range::Official;
-    parseCourseDirectory(ConstVal::MapPath, false);
+    for (const auto& dir : contentPaths)
+    {
+        parseCourseDirectory(dir + ConstVal::MapPath, false, true);
+    }
 
     m_currentRange = Range::Custom;
     parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
