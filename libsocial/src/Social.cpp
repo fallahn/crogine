@@ -32,6 +32,7 @@ source distribution.
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
 #include "StoredValue.hpp"
+#include "PersonalBest.hpp"
 
 #ifdef USE_GJS
 #include <libgjs.hpp>
@@ -42,9 +43,22 @@ source distribution.
 #include <crogine/core/SysTime.hpp>
 
 #include <ctime>
+#include <memory>
 
 namespace
 {
+    std::unique_ptr<PersonalBest> personalBest;
+    void assertPB()
+    {
+        if (!personalBest)
+        {
+            personalBest = std::make_unique<PersonalBest>();
+            personalBest->load();
+        }
+    }
+
+    bool leaderboardsEnabled = false;
+
     struct ValueID final
     {
         enum
@@ -835,11 +849,50 @@ void Social::takeScreenshot(const cro::String&, std::size_t courseIndex)
     }
 }
 
-void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>&)
+void Social::setLeaderboardsEnabled(bool b)
+{
+    leaderboardsEnabled = b;
+}
+
+bool Social::getLeaderboardsEnabled()
+{
+    return leaderboardsEnabled;
+}
+
+void Social::insertScore(const std::string& course, std::uint8_t hole, std::int32_t score, std::int32_t, const std::vector<std::uint8_t>& holeScores)
 {
 #ifdef USE_GJS
     //GJ::insertScore(course, hole, score);
 #endif
+
+    assertPB();
+    static const std::array<std::string, 12u> CourseNames =
+    {
+        "course_01",
+        "course_02",
+        "course_03",
+        "course_04",
+        "course_05",
+        "course_06",
+        "course_07",
+        "course_08",
+        "course_09",
+        "course_10",
+        "course_11",
+        "course_12",
+    };
+
+    if (const auto& res = std::find(CourseNames.cbegin(), CourseNames.cend(), course); res != CourseNames.cend())
+    {
+        const auto idx = (std::distance(CourseNames.begin(), res) * 3) + hole;
+        personalBest->insertScore(idx, score, holeScores);
+
+        LogI << "Inserted scores into " << course << std::endl;
+    }
+    else
+    {
+        LogI << "Could not find " << course << std::endl;
+    }
 }
 
 cro::String Social::getTopFive(const std::string& course, std::uint8_t holeCount)

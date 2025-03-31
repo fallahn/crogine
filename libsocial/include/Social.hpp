@@ -186,8 +186,8 @@ public:
         };
     };
     static void findLeaderboards(std::int32_t) {}
-    static void setLeaderboardsEnabled(bool) {}
-    static constexpr bool getLeaderboardsEnabled() { return false; }
+    static void setLeaderboardsEnabled(bool);
+    static bool getLeaderboardsEnabled();
     static void insertScore(const std::string&, std::uint8_t, std::int32_t, std::int32_t, const std::vector<std::uint8_t>&);
     static cro::String getTopFive(const std::string& course, std::uint8_t holeCount);
     static void invalidateTopFive(const std::string& course, std::uint8_t holeCount);

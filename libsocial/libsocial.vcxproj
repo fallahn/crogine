@@ -270,6 +270,7 @@
     <ClInclude Include="include\Input.hpp" />
     <ClInclude Include="include\MatchMaking.hpp" />
     <ClInclude Include="include\MonthlyChallenge.hpp" />
+    <ClInclude Include="include\PersonalBest.hpp" />
     <ClInclude Include="include\Social.hpp" />
     <ClInclude Include="include\StoredValue.hpp" />
     <ClInclude Include="include\Timeline.hpp" />
@@ -279,6 +280,7 @@
     <ClCompile Include="src\Content.cpp" />
     <ClCompile Include="src\MatchMaking.cpp" />
     <ClCompile Include="src\MonthlyChallenge.cpp" />
+    <ClCompile Include="src\PersonalBest.cpp" />
     <ClCompile Include="src\Social.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
