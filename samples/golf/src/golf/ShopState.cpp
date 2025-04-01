@@ -80,7 +80,7 @@ namespace
 ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (stack, ctx),
     m_sharedData        (sd),
-    m_uiScene           (ctx.appInstance.getMessageBus(), 512),
+    m_uiScene           (ctx.appInstance.getMessageBus(), 384),
     m_selectedCategory  (Category::Driver)
 {
     CRO_ASSERT(!isCached(), "");

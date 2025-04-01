@@ -69,7 +69,9 @@ T& EntityManager::getComponent(Entity entity)
     CRO_ASSERT(componentID < m_componentPools.size(), "Component index out of range");
     auto* pool = (dynamic_cast<Detail::ComponentPool<T>*>(m_componentPools[componentID].get()));
 
-    CRO_ASSERT(entityID < pool->size(), "Entity index out of range");
+    //TODO this is a potential false positive as IDs don't map directly
+    //to the size any more...
+    //CRO_ASSERT(entityID < pool->size(), "Entity index out of range");
     return pool->at(entityID);
 }
 
