@@ -648,6 +648,9 @@
     <ClCompile Include="src\golf\CoinSystem.cpp">
       <Filter>Source Files\golf\server\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ShopState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -1354,6 +1357,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\Inventory.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ShopState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -693,6 +693,7 @@
     <ClCompile Include="src\golf\server\ServerVoice.cpp" />
     <ClCompile Include="src\golf\server\SnookerDirector.cpp" />
     <ClCompile Include="src\golf\SharedStateData.cpp" />
+    <ClCompile Include="src\golf\ShopState.cpp" />
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
     <ClCompile Include="src\golf\SpectatorSystem.cpp" />
     <ClCompile Include="src\golf\spooky2.cpp" />
@@ -896,6 +897,7 @@
     <ClInclude Include="src\golf\SharedCourseData.hpp" />
     <ClInclude Include="src\golf\SharedProfileData.hpp" />
     <ClInclude Include="src\golf\SharedStateData.hpp" />
+    <ClInclude Include="src\golf\ShopState.hpp" />
     <ClInclude Include="src\golf\SoundEffectsDirector.hpp" />
     <ClInclude Include="src\golf\SpectatorAnimCallback.hpp" />
     <ClInclude Include="src\golf\SpectatorSystem.hpp" />

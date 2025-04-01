@@ -190,7 +190,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
 #ifdef CRO_DEBUG_
     registerCommand("build_dummy_best", [](const std::string&)
         {
-            auto path = Social::getUserContentPath(Social::UserContent::Profile);
+            auto path = Content::getUserContentPath(Content::UserContent::Profile);
             auto dirs = cro::FileSystem::listDirectories(path);
             ProfileDB db;
             std::int32_t recordCount = 0;
@@ -216,7 +216,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
         });
     registerCommand("build_dummy_data", [](const std::string&) 
         {
-            auto path = Social::getUserContentPath(Social::UserContent::Profile);
+            auto path = Content::getUserContentPath(Content::UserContent::Profile);
             auto dirs = cro::FileSystem::listDirectories(path);
             ProfileDB db;
             std::int32_t recordCount = 0;

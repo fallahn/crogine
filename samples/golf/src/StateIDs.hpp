@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2024
+Matt Marchant 2020 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -47,6 +47,7 @@ struct StateID final
         DrivingRange,
         PuttingRange,
         Clubhouse,
+        Shop,
         Billiards,
         Trophy,
         News,

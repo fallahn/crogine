@@ -38,6 +38,7 @@ source distribution.
 
 #include "golf/MenuState.hpp"
 #include "golf/GolfState.hpp"
+#include "golf/ShopState.hpp"
 #include "golf/BilliardsState.hpp"
 #include "golf/ErrorState.hpp"
 #include "golf/OptionsState.hpp"
@@ -216,6 +217,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData, *this);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
+    m_stateStack.registerState<ShopState>(StateID::Shop, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<LeaderboardState>(StateID::Leaderboard, m_sharedData);
@@ -1009,7 +1011,7 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::Bush);
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
-    m_stateStack.pushState(StateID::Menu);
+    m_stateStack.pushState(StateID::Shop);
     //m_stateStack.pushState(StateID::EndlessRunner);
     //m_stateStack.pushState(StateID::EndlessAttract);
     //m_stateStack.pushState(StateID::Workshop);

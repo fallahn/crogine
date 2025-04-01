@@ -87,6 +87,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/RayResultCallback.cpp
   ${PROJECT_DIR}/golf/RopeSystem.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
+  ${PROJECT_DIR}/golf/ShopState.cpp
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
   ${PROJECT_DIR}/golf/SpectatorSystem.cpp
   ${PROJECT_DIR}/golf/spooky2.cpp
