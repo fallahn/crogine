@@ -37,11 +37,18 @@ namespace inv
 {
     enum ItemType
     {
-        Driver, FiveW, ThreeW, NineI, EightI, SevenI,
+        Driver, ThreeW, FiveW, NineI, EightI, SevenI,
         SixI, FiveI, FourI, PitchWedge, GapWedge,
         SandWedge, Ball,
 
         Count
+    };
+
+    static inline const std::array<std::string, ItemType::Count> ItemStrings =
+    {
+        "Driver", "3 Wood", "5 Wood", "9 Iron", "8 Iron", "7 Iron",
+        "6 Iron", "5 Iron", "4 Iron", "Pitch Wedge", "Gap Wedge",
+        "Sand Wedge", "Pack Of Balls",
     };
 
     struct Item final

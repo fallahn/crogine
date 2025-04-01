@@ -57,6 +57,9 @@ private:
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
+    std::vector<cro::Entity> m_scrollNodes;
+    std::int32_t m_selectedCategory;
+
     void loadAssets();
     void addSystems();
     void buildScene();
