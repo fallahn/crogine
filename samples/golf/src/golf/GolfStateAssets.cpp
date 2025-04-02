@@ -270,7 +270,7 @@ void GolfState::loadMap()
     const auto mapDir = m_sharedData.mapDirectory.toAnsiString();
 
     const auto installPaths = Content::getInstallPaths();
-    //auto mapPath = ConstVal::MapPath + mapDir + "/course.data";
+
     std::string mapPath;
     for (const auto& dir : installPaths)
     {

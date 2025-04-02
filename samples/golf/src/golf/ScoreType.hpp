@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2024
+Matt Marchant 2021 - 2025
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,10 @@ source distribution.
 
 #include <array>
 #include <cstdint>
+
+/*
+NOTE! If we add more of these here we must update April's monthly challenge!
+*/
 
 namespace ScoreType
 {
