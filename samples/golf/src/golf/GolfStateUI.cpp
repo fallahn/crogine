@@ -2435,7 +2435,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 Achievements::awardAchievement(AchievementStrings[CourseIDs.at(m_sharedData.mapDirectory)]);
                 if (m_sharedData.leagueRoundID == LeagueRoundID::Club)
                 {
-                    Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
+                    auto type = m_sharedData.scoreType;
+                    if (m_ntpPro)
+                    {
+                        type = ScoreType::NearestThePinPro;
+                    }
+                    Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, type);
                 }
                 if (m_sharedData.scoreType == ScoreType::Elimination
                     && m_currentHole >= 17) //not completely clear if this gets incremented all the way to 18 (pretty sure it doesn't)

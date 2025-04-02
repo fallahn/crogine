@@ -36,6 +36,20 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/Texture.hpp>
+
+struct ThreePatch final
+{
+    cro::FloatRect left, centre, right;
+    cro::FloatRect leftNorm, centreNorm, rightNorm;
+
+    enum ID
+    {
+        ButtonTop, ButtonItem,
+
+        Count
+    };
+};
 
 struct SharedStateData;
 class ShopState final : public cro::State
@@ -57,7 +71,17 @@ private:
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
 
-    std::vector<cro::Entity> m_scrollNodes;
+    std::array<ThreePatch, ThreePatch::Count> m_threePatches = {};
+    cro::Texture m_threePatchTexture;
+
+
+    struct CategoryItem final
+    {
+        cro::Entity scrollNode;
+        cro::Entity buttonBackground;
+        cro::Entity buttonText;
+    };
+    std::vector<CategoryItem> m_scrollNodes;
     std::int32_t m_selectedCategory;
 
     void loadAssets();
