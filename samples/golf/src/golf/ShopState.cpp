@@ -64,10 +64,14 @@ namespace
     constexpr float TextDepth = 2.f;
 
     constexpr glm::vec2 TopButtonSize = glm::vec2(68.f, 12.f);
-    constexpr glm::vec2 TitleSize = glm::vec2(160.f, 100.f);
+    constexpr glm::vec2 TitleSize = glm::vec2(160.f, 50.f);
     constexpr glm::vec2 ItemButtonSize = glm::vec2(200.f, 32.f);
 
     constexpr float DividerOffset = 0.4f;
+    constexpr float StatBarHeight = 24.f;
+
+    constexpr float LargeIconSize = 32.f;
+    constexpr float SmallIconSize = 24.f;
 
     struct Category final
     {
@@ -83,8 +87,17 @@ namespace
     constexpr cro::Colour ButtonHighlightColour = CD32::Colours[CD32::BlueDark];
     constexpr cro::Colour ButtonTextColour = TextNormalColour;
     constexpr cro::Colour ButtonTextSelectedColour = CD32::Colours[CD32::Black];
-
     constexpr cro::Colour ButtonPriceColour = CD32::Colours[CD32::Yellow];
+
+    constexpr cro::Colour StatBarColourFront = CD32::Colours[CD32::GreenMid];
+    constexpr cro::Colour StatBarColourBack = CD32::Colours[CD32::TanDark];
+    constexpr cro::Colour StatTextColour = CD32::Colours[CD32::BeigeLight];
+
+    struct StatBarData final
+    {
+        float currentSize = 40.f;
+        float value = 0.f; //+/- 10
+    };
 
     void applyButtonBackgroundColour(const cro::Colour c, cro::Entity e)
     {
@@ -269,7 +282,7 @@ void ShopState::buildScene()
     entity.addComponent<cro::Text>(font).setString("Shop\nor\nLoadout");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::Black]);
-    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = TitleSize / 2.f;
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { TitleSize.x / 2.f, TitleSize.y - BorderPadding };
     entity.getComponent<cro::UIElement>().characterSize = UITextSize * 2;
     titleRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -366,6 +379,9 @@ void ShopState::buildScene()
                             m_scrollNodes[m_selectedCategory].scrollNode.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                             m_scrollNodes[m_selectedCategory].buttonText.getComponent<cro::Text>().setFillColour(ButtonTextSelectedColour);
                             applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::ButtonTop]);
+
+                            auto activeItem = m_scrollNodes[index].items[m_scrollNodes[index].selectedItem].itemIndex;
+                            updateStatDisplay(activeItem);
                         }
                     });
             applyButtonTexture(m_selectedCategory == index ? ButtonTexID::Selected : ButtonTexID::Unselected, ent, m_threePatches[ThreePatch::ButtonTop]);
@@ -381,7 +397,6 @@ void ShopState::buildScene()
             ent.addComponent<cro::Transform>();
             ent.addComponent<cro::Drawable2D>();
             ent.addComponent<cro::Text>(font).setString(text);
-            ent.getComponent<cro::Text>().setCharacterSize(UITextSize);
             ent.getComponent<cro::Text>().setFillColour(c);
             ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
             ent.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
@@ -450,6 +465,7 @@ void ShopState::buildScene()
         });
 
     //category list - index is item index within category, NOT into inv::Items array
+    //TODO we don't really need to pass the parent ent when we can just capture it
     const auto createItem = 
         [&](cro::Entity parent, glm::vec2 position, const inv::Item item, std::int32_t index, std::int32_t category)
         {
@@ -525,6 +541,8 @@ void ShopState::buildScene()
                             newItem.priceText.getComponent<cro::Text>().setFillColour(ButtonTextSelectedColour);
                             applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::ButtonItem]);
 
+                            updateStatDisplay(newItem.itemIndex);
+
                             //LogI << "Item index: " << index << ", Category: " << category << std::endl;
                             //LogI << "Global index: " << newItem.itemIndex << std::endl;
                         }
@@ -536,7 +554,18 @@ void ShopState::buildScene()
             itemEntry.buttonBackground = ent;
 
             //TODO we *can* parent the manufacturer icon to the background as it doesn't need a UIElement
+            ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Transform>().setPosition(glm::vec3(4.f, 4.f, 0.1f));
+            ent.addComponent<cro::Drawable2D>().setVertexData(
+                {
+                    cro::Vertex2D(glm::vec2(0.f, SmallIconSize)),
+                    cro::Vertex2D(glm::vec2(0.f)),
 
+                    cro::Vertex2D(glm::vec2(SmallIconSize)),
+                    cro::Vertex2D(glm::vec2(SmallIconSize, 0.f)),
+                });
+            itemEntry.buttonBackground.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+            //ent.getComponent<cro::Drawable2D>().setTexture(&m_threePatchTexture);
 
 
             auto text = inv::Manufacturers[item.manufacturer] + "\n" + inv::ItemStrings[item.type];
@@ -545,7 +574,6 @@ void ShopState::buildScene()
             ent.addComponent<cro::Transform>();
             ent.addComponent<cro::Drawable2D>();
             ent.addComponent<cro::Text>(font).setString(text);
-            ent.getComponent<cro::Text>().setCharacterSize(UITextSize);
             ent.getComponent<cro::Text>().setVerticalSpacing(3.f);
             ent.getComponent<cro::Text>().setFillColour(index == 0 ? ButtonTextSelectedColour : ButtonTextColour);
             ent.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
@@ -560,7 +588,6 @@ void ShopState::buildScene()
             ent.addComponent<cro::Transform>();
             ent.addComponent<cro::Drawable2D>();
             ent.addComponent<cro::Text>(smallFont).setString(std::to_string(item.price) + " Cr");
-            ent.getComponent<cro::Text>().setCharacterSize(UITextSize);
             ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
             ent.getComponent<cro::Text>().setFillColour(index == 0 ? ButtonTextSelectedColour : ButtonPriceColour);
             ent.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
@@ -645,6 +672,12 @@ void ShopState::buildScene()
 
     CRO_ASSERT(m_scrollNodes.size() == Category::Count, "");
 
+    //TODO add BUY button between divider and title icon
+    //TODO add player balance bottom right
+    //TODO add Exit button bottom right
+
+    createStatDisplay();
+
     //camera resize callback
     auto camCallback = [&](cro::Camera& cam)
         {
@@ -655,4 +688,191 @@ void ShopState::buildScene()
         };
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().resizeCallback = camCallback;
     camCallback(m_uiScene.getActiveCamera().getComponent<cro::Camera>());
+}
+
+void ShopState::createStatDisplay()
+{
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    //stat bar root
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::UIElement>(cro::UIElement::Position, true);
+    entity.getComponent<cro::UIElement>().relativePosition = { DividerOffset, 1.f };
+    entity.getComponent<cro::UIElement>().absolutePosition = { BorderPadding, -(TitleSize.y + (BorderPadding * 2.f)) };
+    auto root = entity;
+
+
+    //manufacturer icon
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, LargeIconSize), StatBarColourFront),
+            cro::Vertex2D(glm::vec2(0.f), StatBarColourFront),
+            cro::Vertex2D(glm::vec2(LargeIconSize), StatBarColourFront),
+            cro::Vertex2D(glm::vec2(LargeIconSize, 0.f), StatBarColourFront),
+        });
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = { BorderPadding * 3.f, -36.f };
+    entity.getComponent<cro::UIElement>().depth = SpriteDepth;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_statItems.manufacturerIcon = entity;
+
+
+    //manufacturer name
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Stockley & Brilton");
+    entity.getComponent<cro::Text>().setFillColour(StatTextColour);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { (BorderPadding * 5.f) + LargeIconSize, -BorderPadding };
+    entity.getComponent<cro::UIElement>().characterSize = UITextSize * 2;
+    entity.getComponent<cro::UIElement>().depth = TextDepth;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_statItems.manufacturerName = entity;
+
+
+    //item name
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Pack of 25 Balls - 2500Cr");
+    entity.getComponent<cro::Text>().setFillColour(StatTextColour);
+    entity.addComponent<cro::UIElement>(cro::UIElement::Text, true).absolutePosition = { (BorderPadding * 5.f) + LargeIconSize, -((UITextSize * 2) + (BorderPadding * 2.f)) };
+    entity.getComponent<cro::UIElement>().characterSize = InfoTextSize * 2;
+    entity.getComponent<cro::UIElement>().depth = TextDepth;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_statItems.itemName = entity;
+
+    
+    const auto createStatDisplay = [&](glm::vec2 pos)
+        {
+            const auto calcBackgroundSize =
+                []()
+                {
+                    const auto scale = cro::UIElementSystem::getViewScale();
+                    const auto screenWidth = std::round(cro::App::getWindow().getSize().x / scale);
+
+                    return std::round((screenWidth - (screenWidth * DividerOffset)) - BorderPadding * 8.f);
+                };
+
+            auto& [background, text] = m_statItems.statBars.emplace_back();
+
+            //stat bar
+            auto ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Transform>();
+            ent.addComponent<cro::Drawable2D>().setVertexData(
+                {
+                    cro::Vertex2D(glm::vec2(0.f, StatBarHeight), StatBarColourFront),
+                    cro::Vertex2D(glm::vec2(0.f), StatBarColourFront),
+                    cro::Vertex2D(glm::vec2(20.f, StatBarHeight), StatBarColourFront),
+                    cro::Vertex2D(glm::vec2(20.f, 0.f), StatBarColourFront),
+
+                    cro::Vertex2D(glm::vec2(20.f, StatBarHeight), StatBarColourBack),
+                    cro::Vertex2D(glm::vec2(20.f, 0.f), StatBarColourBack),
+                    cro::Vertex2D(glm::vec2(40.f, StatBarHeight), StatBarColourBack),
+                    cro::Vertex2D(glm::vec2(40.f, 0.f), StatBarColourBack)
+                });
+            ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = pos;
+            ent.getComponent<cro::UIElement>().depth = SpriteDepth;
+            ent.getComponent<cro::UIElement>().resizeCallback =
+                [calcBackgroundSize](cro::Entity e)
+                {
+                    float newSize = calcBackgroundSize();
+
+                    auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+                    verts[6].position.x = newSize;
+                    verts[7].position.x = newSize;
+
+                    e.getComponent<cro::Callback>().getUserData<StatBarData>().currentSize = newSize;
+                };
+
+            ent.addComponent<cro::Callback>().active = true;
+            ent.getComponent<cro::Callback>().setUserData<StatBarData>();
+            ent.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    static constexpr float SegmentCount = 20.f;
+                    const auto& [size, value] = e.getComponent<cro::Callback>().getUserData<StatBarData>();
+                    
+                    const float segSize = size / SegmentCount;
+                    const float targetPos = (segSize * (SegmentCount / 2.f)) + (value * segSize);
+
+                    auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+                    const auto movement = (targetPos - verts[2].position.x) * dt * 3.f;
+
+                    verts[2].position.x += movement;
+                    verts[3].position.x += movement;
+                    verts[4].position.x += movement;
+                    verts[5].position.x += movement;
+                };
+            background = ent;
+            root.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+            //stat text
+            ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Transform>();
+            ent.addComponent<cro::Drawable2D>();
+            ent.addComponent<cro::Text>(smallFont).setString("Hook/Slice Reduction");
+            ent.getComponent<cro::Text>().setFillColour(StatTextColour);
+            ent.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
+            ent.getComponent<cro::UIElement>().characterSize = InfoTextSize;
+            ent.getComponent<cro::UIElement>().absolutePosition = pos + glm::vec2(2.f, InfoTextSize + 2.f);
+            text = ent;
+            root.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+    };
+    
+    glm::vec2 pos = { BorderPadding * 3.f, -((UITextSize * 8) + (BorderPadding * 2.f)) };
+    createStatDisplay(pos);
+
+    pos = { BorderPadding * 3.f, -((UITextSize * 8) + StatBarHeight + (BorderPadding * 4.f)) };
+    createStatDisplay(pos);
+
+
+
+    //TODO item thumbnail
+
+
+    updateStatDisplay(0);
+}
+
+void ShopState::updateStatDisplay(std::int32_t itemIndex)
+{
+    CRO_ASSERT(itemIndex < inv::Items.size(), "");
+    
+    const auto& item = inv::Items[itemIndex];
+    m_statItems.manufacturerName.getComponent<cro::Text>().setString(inv::Manufacturers[item.manufacturer]);
+    m_statItems.itemName.getComponent<cro::Text>().setString(inv::ItemStrings[item.type]);
+
+    //ugh nice consistency in the index naming here...
+    auto& [bg1, text1] = m_statItems.statBars[0];
+    bg1.getComponent<cro::Callback>().getUserData<StatBarData>().value = static_cast<float>(item.stat01);
+    
+    std::string valStr;
+    if (item.stat01 > -1)
+    {
+        valStr += "+";
+    }
+    valStr += std::to_string(item.stat01);
+    text1.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat0 + valStr);
+
+    auto& [bg2, text2] = m_statItems.statBars[1];
+    bg2.getComponent<cro::Callback>().getUserData<StatBarData>().value = static_cast<float>(item.stat02);
+
+
+    //second stat might be empty, eg balls
+    valStr.clear();
+
+    if (!inv::StatLabels[m_selectedCategory].stat1.empty())
+    {
+        if (item.stat02 > -1)
+        {
+            valStr += "+";
+        }
+        valStr += std::to_string(item.stat02);
+    }
+    text2.getComponent<cro::Text>().setString(inv::StatLabels[m_selectedCategory].stat1 + valStr);
+
+    //TODO update manufacturer icon
 }

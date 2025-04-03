@@ -51,6 +51,25 @@ namespace inv
         "Sand Wedge", "Pack Of 25 Balls",
     };
 
+    struct StatLabel final
+    {
+        std::string stat0;
+        std::string stat1;
+
+        StatLabel(const std::string& s0, const std::string& s1)
+            :stat0(s0), stat1(s1) { }
+    };
+
+    //5 categories in the shop / types of item
+    static inline const std::array<StatLabel, 5u> StatLabels =
+    {
+        StatLabel("Accuracy: ","Distance: "),
+        StatLabel("Accuracy: ","Distance: "),
+        StatLabel("Spin Influence: ","Punch Distance: "),
+        StatLabel("Flop Height: ","Backspin: "),
+        StatLabel("Hook/Slice Reduction: ","")
+    };
+
     struct Item final
     {
         const std::int32_t type = ItemType::Ball;

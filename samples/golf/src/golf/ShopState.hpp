@@ -98,4 +98,16 @@ private:
     void loadAssets();
     void addSystems();
     void buildScene();
+
+    struct StatItems final
+    {
+        cro::Entity manufacturerIcon;
+        cro::Entity manufacturerName;
+        cro::Entity itemName;
+
+        std::vector<std::pair<cro::Entity, cro::Entity>> statBars = {};
+    }m_statItems;
+
+    void createStatDisplay();
+    void updateStatDisplay(std::int32_t uid);
 };
