@@ -74,12 +74,23 @@ private:
     std::array<ThreePatch, ThreePatch::Count> m_threePatches = {};
     cro::Texture m_threePatchTexture;
 
+    struct ItemEntry final
+    {
+        cro::Entity buttonBackground;
+        cro::Entity buttonText;
+        cro::Entity priceText;
+
+        std::int32_t itemIndex = 0; //index to inv::Items
+    };
 
     struct CategoryItem final
     {
         cro::Entity scrollNode;
         cro::Entity buttonBackground;
         cro::Entity buttonText;
+
+        std::int32_t selectedItem = 0; //selected item
+        std::vector<ItemEntry> items;
     };
     std::vector<CategoryItem> m_scrollNodes;
     std::int32_t m_selectedCategory;

@@ -67,6 +67,8 @@ namespace
     constexpr glm::vec2 TitleSize = glm::vec2(160.f, 100.f);
     constexpr glm::vec2 ItemButtonSize = glm::vec2(200.f, 32.f);
 
+    constexpr float DividerOffset = 0.4f;
+
     struct Category final
     {
         enum
@@ -81,6 +83,8 @@ namespace
     constexpr cro::Colour ButtonHighlightColour = CD32::Colours[CD32::BlueDark];
     constexpr cro::Colour ButtonTextColour = TextNormalColour;
     constexpr cro::Colour ButtonTextSelectedColour = CD32::Colours[CD32::Black];
+
+    constexpr cro::Colour ButtonPriceColour = CD32::Colours[CD32::Yellow];
 
     void applyButtonBackgroundColour(const cro::Colour c, cro::Entity e)
     {
@@ -412,7 +416,7 @@ void ShopState::buildScene()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::UIElement>(cro::UIElement::Position, true);
-    entity.getComponent<cro::UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.getComponent<cro::UIElement>().relativePosition = { DividerOffset, 0.f };
     entity.getComponent<cro::UIElement>().absolutePosition = { -1.f, BorderPadding };
     auto dividerRoot = entity;
 
@@ -429,19 +433,25 @@ void ShopState::buildScene()
 
             e.getComponent<cro::Drawable2D>().setVertexData(
                 {
-                    cro::Vertex2D(glm::vec2(0.f, size), TextNormalColour),
-                    cro::Vertex2D(glm::vec2(0.f), TextNormalColour),
-                    cro::Vertex2D(glm::vec2(2.f, size), TextNormalColour),
-                    cro::Vertex2D(glm::vec2(2.f, 0.f), TextNormalColour)
+                    cro::Vertex2D(glm::vec2(0.f, size), ButtonBackgroundColour),
+                    cro::Vertex2D(glm::vec2(0.f), ButtonBackgroundColour),
+                    cro::Vertex2D(glm::vec2(2.f, size), ButtonBackgroundColour),
+                    cro::Vertex2D(glm::vec2(2.f, 0.f), ButtonBackgroundColour)
                 });
         };
     dividerRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     const auto& patch = m_threePatches[ThreePatch::ButtonItem];
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
-    //category list
+    const auto selectedIDItem = uiSystem.addCallback([&](cro::Entity e)
+        {
+            applyButtonTexture(ButtonTexID::Highlighted, e, m_threePatches[ThreePatch::ButtonItem]);
+        });
+
+    //category list - index is item index within category, NOT into inv::Items array
     const auto createItem = 
-        [&](cro::Entity parent, glm::vec2 position, const inv::Item item)
+        [&](cro::Entity parent, glm::vec2 position, const inv::Item item, std::int32_t index, std::int32_t category)
         {
             const auto calcBackgroundSize =
                 []()
@@ -449,9 +459,11 @@ void ShopState::buildScene()
                     const auto scale = cro::UIElementSystem::getViewScale();
                     const auto screenWidth = std::round(cro::App::getWindow().getSize().x / scale);
 
-                    return std::round((screenWidth / 2.f) - BorderPadding * 4.f);
+                    return std::round((screenWidth * DividerOffset) - BorderPadding * 8.f);
                 };
 
+
+            auto& itemEntry = m_scrollNodes[category].items.emplace_back();
 
             auto ent = m_uiScene.createEntity();
             ent.addComponent<cro::Transform>().setPosition(position);
@@ -483,12 +495,45 @@ void ShopState::buildScene()
 
                     verts[6].position.x = width;
                     verts[7].position.x = width;
+
+                    e.getComponent<cro::UIInput>().area.width = width;
                 };
             
-            //TODO add UIInput
+            ent.addComponent<cro::UIInput>().area = { 0.f, 0.f, ItemButtonSize.x, ItemButtonSize.y };
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedIDItem;
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+                uiSystem.addCallback([&, index, category](cro::Entity e)
+                    {
+                        const auto texID = m_scrollNodes[category].selectedItem == index ?
+                            ButtonTexID::Selected : ButtonTexID::Unselected;
+                        applyButtonTexture(texID, e, m_threePatches[ThreePatch::ButtonItem]);
+                    });
+            ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+                uiSystem.addCallback([&, index, category](cro::Entity e, const cro::ButtonEvent& evt)
+                    {
+                        if (activated(evt))
+                        {
+                            auto& item = m_scrollNodes[category].items[m_scrollNodes[category].selectedItem];
+                            item.buttonText.getComponent<cro::Text>().setFillColour(ButtonTextColour);
+                            item.priceText.getComponent<cro::Text>().setFillColour(ButtonPriceColour);
+                            applyButtonTexture(ButtonTexID::Unselected, item.buttonBackground, m_threePatches[ThreePatch::ButtonItem]);
 
-            applyButtonTexture(0/*TODO check selected index*/, ent, patch);
+                            m_scrollNodes[category].selectedItem = index;
+
+                            auto& newItem = m_scrollNodes[category].items[index];
+                            newItem.buttonText.getComponent<cro::Text>().setFillColour(ButtonTextSelectedColour);
+                            newItem.priceText.getComponent<cro::Text>().setFillColour(ButtonTextSelectedColour);
+                            applyButtonTexture(ButtonTexID::Selected, e, m_threePatches[ThreePatch::ButtonItem]);
+
+                            //LogI << "Item index: " << index << ", Category: " << category << std::endl;
+                            //LogI << "Global index: " << newItem.itemIndex << std::endl;
+                        }
+                    });
+
+            applyButtonTexture(index == 0 ? ButtonTexID::Selected : ButtonTexID::Unselected, ent, patch);
             parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+            itemEntry.buttonBackground = ent;
 
             //TODO we *can* parent the manufacturer icon to the background as it doesn't need a UIElement
 
@@ -502,14 +547,34 @@ void ShopState::buildScene()
             ent.addComponent<cro::Text>(font).setString(text);
             ent.getComponent<cro::Text>().setCharacterSize(UITextSize);
             ent.getComponent<cro::Text>().setVerticalSpacing(3.f);
-            ent.getComponent<cro::Text>().setFillColour(ButtonTextColour);
+            ent.getComponent<cro::Text>().setFillColour(index == 0 ? ButtonTextSelectedColour : ButtonTextColour);
             ent.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
             ent.getComponent<cro::UIElement>().absolutePosition = position + glm::vec2({ BorderPadding + 32.f, 26.f });
             ent.getComponent<cro::UIElement>().characterSize = UITextSize;
             parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
-            //TODO we could add the price here (maybe double size?)
+            itemEntry.buttonText = ent;
 
+            //add the price here - TODO check if owned and set text accordingly, maybe red
+            ent = m_uiScene.createEntity();
+            ent.addComponent<cro::Transform>();
+            ent.addComponent<cro::Drawable2D>();
+            ent.addComponent<cro::Text>(smallFont).setString(std::to_string(item.price) + " Cr");
+            ent.getComponent<cro::Text>().setCharacterSize(UITextSize);
+            ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+            ent.getComponent<cro::Text>().setFillColour(index == 0 ? ButtonTextSelectedColour : ButtonPriceColour);
+            ent.addComponent<cro::UIElement>(cro::UIElement::Text, true).depth = TextDepth;
+            ent.getComponent<cro::UIElement>().characterSize = InfoTextSize;
+            ent.getComponent<cro::UIElement>().resizeCallback =
+                [position, calcBackgroundSize](cro::Entity e)
+                {
+                    const auto width = calcBackgroundSize();
+                    const auto textHeight = InfoTextSize + BorderPadding;
+                    e.getComponent<cro::UIElement>().absolutePosition = { width - BorderPadding, position.y + textHeight };
+                };
+            parent.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+
+            itemEntry.priceText = ent;
         };
 
     //root node for position
@@ -531,6 +596,9 @@ void ShopState::buildScene()
     //for each category
     std::int32_t prevCat = -1;
     std::int32_t catIndex = 0;
+    std::int32_t itemIndex = 0; //index into current category
+    std::int32_t itemID = 0; //index into inv::Items
+
     cro::Entity scrollNode;
     glm::vec2 currentPos(0.f, -(ItemButtonSize.y));
     for (const auto& item : inv::Items)
@@ -559,7 +627,7 @@ void ShopState::buildScene()
                 scrollNode = ent;
                 prevCat = item.type;
                 currentPos = glm::vec2(0.f, -(ItemButtonSize.y));
-
+                itemIndex = 0;
 
                 //TODO attach the scroll bar logic to the node
             }
@@ -568,7 +636,10 @@ void ShopState::buildScene()
         }
 
         //add item to current scroll node
-        createItem(scrollNode, currentPos, item);
+        createItem(scrollNode, currentPos, item, itemIndex, catIndex-1);
+        m_scrollNodes[catIndex - 1].items[itemIndex].itemIndex = itemID++;
+        
+        itemIndex++;
         currentPos.y -= (ItemButtonSize.y + BorderPadding);
     }
 
