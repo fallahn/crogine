@@ -37,6 +37,7 @@ source distribution.
 
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Texture.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 struct ThreePatch final
 {
@@ -107,6 +108,8 @@ private:
 
         std::vector<std::pair<cro::Entity, cro::Entity>> statBars = {};
     }m_statItems;
+
+    cro::RenderTexture m_itemPreviewTexture;
 
     void createStatDisplay();
     void updateStatDisplay(std::int32_t uid);

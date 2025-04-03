@@ -480,8 +480,8 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
             {
                 if (activated(evt))
                 {
-                    //requestStackClear();
-                    //requestStackPush(StateID::Shop);
+                    requestStackClear();
+                    requestStackPush(StateID::Shop);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });

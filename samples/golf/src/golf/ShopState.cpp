@@ -150,7 +150,7 @@ namespace
 ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (stack, ctx),
     m_sharedData        (sd),
-    m_uiScene           (ctx.appInstance.getMessageBus(), 384),
+    m_uiScene           (ctx.appInstance.getMessageBus(), 512),
     m_selectedCategory  (Category::Driver)
 {
     CRO_ASSERT(!isCached(), "");
@@ -186,6 +186,9 @@ bool ShopState::simulate(float dt)
 
 void ShopState::render()
 {
+    m_itemPreviewTexture.clear(cro::Colour::Magenta);
+    m_itemPreviewTexture.display();
+
     m_uiScene.render();
 }
 
@@ -251,8 +254,27 @@ void ShopState::addSystems()
 
 void ShopState::buildScene()
 {
-    //TODO black background
+    //black background
+    constexpr auto BgColour = cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha);
+
     auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 1.f), BgColour),
+            cro::Vertex2D(glm::vec2(0.f), BgColour),
+            cro::Vertex2D(glm::vec2(1.f), BgColour),
+            cro::Vertex2D(glm::vec2(1.f, 0.f), BgColour),
+        });
+    entity.addComponent<cro::UIElement>(cro::UIElement::Position, false);
+    entity.getComponent<cro::UIElement>().depth = SpriteDepth - 1.f;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [](cro::Entity e)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            e.getComponent<cro::Transform>().setScale(size);
+        };
+
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
@@ -553,19 +575,19 @@ void ShopState::buildScene()
 
             itemEntry.buttonBackground = ent;
 
-            //TODO we *can* parent the manufacturer icon to the background as it doesn't need a UIElement
+            //we *can* parent the manufacturer icon to the background as it doesn't need a UIElement
+            //TODO replace this with a sprite
             ent = m_uiScene.createEntity();
             ent.addComponent<cro::Transform>().setPosition(glm::vec3(4.f, 4.f, 0.1f));
             ent.addComponent<cro::Drawable2D>().setVertexData(
                 {
-                    cro::Vertex2D(glm::vec2(0.f, SmallIconSize)),
-                    cro::Vertex2D(glm::vec2(0.f)),
+                    cro::Vertex2D(glm::vec2(0.f, SmallIconSize), cro::Colour::Magenta),
+                    cro::Vertex2D(glm::vec2(0.f), cro::Colour::Magenta),
 
-                    cro::Vertex2D(glm::vec2(SmallIconSize)),
-                    cro::Vertex2D(glm::vec2(SmallIconSize, 0.f)),
+                    cro::Vertex2D(glm::vec2(SmallIconSize), cro::Colour::Magenta),
+                    cro::Vertex2D(glm::vec2(SmallIconSize, 0.f), cro::Colour::Magenta),
                 });
             itemEntry.buttonBackground.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-            //ent.getComponent<cro::Drawable2D>().setTexture(&m_threePatchTexture);
 
 
             auto text = inv::Manufacturers[item.manufacturer] + "\n" + inv::ItemStrings[item.type];
@@ -704,17 +726,17 @@ void ShopState::createStatDisplay()
     auto root = entity;
 
 
-    //manufacturer icon
+    //manufacturer icon - TODO replace this with a Sprite
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(0.f, LargeIconSize), StatBarColourFront),
-            cro::Vertex2D(glm::vec2(0.f), StatBarColourFront),
-            cro::Vertex2D(glm::vec2(LargeIconSize), StatBarColourFront),
-            cro::Vertex2D(glm::vec2(LargeIconSize, 0.f), StatBarColourFront),
+            cro::Vertex2D(glm::vec2(0.f, LargeIconSize), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(LargeIconSize), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(LargeIconSize, 0.f), cro::Colour::Magenta),
         });
-    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = { BorderPadding * 3.f, -36.f };
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = { BorderPadding * 3.f, -(LargeIconSize + BorderPadding)};
     entity.getComponent<cro::UIElement>().depth = SpriteDepth;
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_statItems.manufacturerIcon = entity;
@@ -746,17 +768,17 @@ void ShopState::createStatDisplay()
     m_statItems.itemName = entity;
 
     
+    const auto calcBackgroundWidth =
+        []()
+        {
+            const auto scale = cro::UIElementSystem::getViewScale();
+            const auto screenWidth = std::round(cro::App::getWindow().getSize().x / scale);
+
+            return std::round((screenWidth - (screenWidth * DividerOffset)) - BorderPadding * 8.f);
+        };
+
     const auto createStatDisplay = [&](glm::vec2 pos)
         {
-            const auto calcBackgroundSize =
-                []()
-                {
-                    const auto scale = cro::UIElementSystem::getViewScale();
-                    const auto screenWidth = std::round(cro::App::getWindow().getSize().x / scale);
-
-                    return std::round((screenWidth - (screenWidth * DividerOffset)) - BorderPadding * 8.f);
-                };
-
             auto& [background, text] = m_statItems.statBars.emplace_back();
 
             //stat bar
@@ -777,9 +799,9 @@ void ShopState::createStatDisplay()
             ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).absolutePosition = pos;
             ent.getComponent<cro::UIElement>().depth = SpriteDepth;
             ent.getComponent<cro::UIElement>().resizeCallback =
-                [calcBackgroundSize](cro::Entity e)
+                [calcBackgroundWidth](cro::Entity e)
                 {
-                    float newSize = calcBackgroundSize();
+                    const float newSize = calcBackgroundWidth();
 
                     auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
                     verts[6].position.x = newSize;
@@ -831,8 +853,31 @@ void ShopState::createStatDisplay()
 
 
 
-    //TODO item thumbnail
+    //item thumbnail
+    pos.y -= BorderPadding * 4.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_itemPreviewTexture.getTexture());
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
+    entity.getComponent<cro::UIElement>().absolutePosition = pos;
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&, pos, calcBackgroundWidth](cro::Entity e)
+        {
+            const auto width = static_cast<std::uint32_t>(calcBackgroundWidth());
+            
+            const auto basePos = -(TitleSize.y + (BorderPadding * 2.f)) + pos.y;
+            const auto windowHeight = std::round(cro::App::getWindow().getSize().y / cro::UIElementSystem::getViewScale());
+            const auto height = (windowHeight + basePos) -32.f; //TODO height of button + padding
 
+            m_itemPreviewTexture.create(width, static_cast<std::uint32_t>(height), false);
+            e.getComponent<cro::Sprite>().setTexture(m_itemPreviewTexture.getTexture());
+
+            auto p = pos;
+            p.y -= height;
+            e.getComponent<cro::UIElement>().absolutePosition = p;
+        };
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     updateStatDisplay(0);
 }
