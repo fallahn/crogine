@@ -158,6 +158,7 @@ ShopState::ShopState(cro::StateStack& stack, cro::State::Context ctx, SharedStat
     m_sharedData        (sd),
     m_uiScene           (ctx.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
+    m_threePatchTexture (nullptr),
     m_selectedCategory  (Category::Driver)
 {
     CRO_ASSERT(!isCached(), "");
@@ -262,12 +263,16 @@ void ShopState::loadAssets()
     m_largeLogos[10] = spriteSheet.getSprite("large_11");
     m_largeLogos[11] = spriteSheet.getSprite("large_12");
 
+
+
+
+
     //load up the three-patch data for the button textures
     //TODO if we use this excessively then create a cfg format
 
-    m_threePatchTexture.loadFromFile("assets/golf/images/shop_buttons.png");
-    m_threePatchTexture.setRepeated(true);
-    const auto texSize = glm::vec2(m_threePatchTexture.getSize());
+    m_threePatchTexture = &m_resources.textures.get("assets/golf/images/shop_buttons.png");
+    m_threePatchTexture->setRepeated(true);
+    const auto texSize = glm::vec2(m_threePatchTexture->getSize());
     
     //if for some reason we failed to load don't try to div0
     if (texSize.x * texSize.y != 0.f)
@@ -428,7 +433,7 @@ void ShopState::buildScene()
                     cro::Vertex2D(TopButtonSize),
                     cro::Vertex2D(glm::vec2(TopButtonSize.x, 0.f)),
                 });
-            ent.getComponent<cro::Drawable2D>().setTexture(&m_threePatchTexture);
+            ent.getComponent<cro::Drawable2D>().setTexture(m_threePatchTexture);
             ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
             ent.getComponent<cro::UIElement>().absolutePosition = position;
             ent.getComponent<cro::UIElement>().resizeCallback =
@@ -524,7 +529,7 @@ void ShopState::buildScene()
     }
 
 
-    //screen divider - TODO add the scrollbar display to this
+    //screen divider
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::UIElement>(cro::UIElement::Position, true);
@@ -552,6 +557,84 @@ void ShopState::buildScene()
                 });
         };
     dividerRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/shop_buttons.spt", m_resources.textures);
+
+    auto arrowSelect = uiSystem.addCallback([](cro::Entity e) 
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+        });
+    auto arrowUnselect = uiSystem.addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_up");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
+    entity.getComponent<cro::UIElement>().absolutePosition = { -20.f, 50.f };
+    entity.getComponent<cro::UIElement>().resizeCallback =
+        [&](cro::Entity e)
+        {
+            auto size = cro::App::getWindow().getSize().y / cro::UIElementSystem::getViewScale();
+            size = std::round(size);
+            size -= ((BorderPadding * 4.f) + TopButtonSize.y);
+            size -= e.getComponent<cro::Sprite>().getTextureBounds().height;
+
+            e.getComponent<cro::UIElement>().absolutePosition.y = size;
+        };
+    dividerRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto buttonEnt = m_uiScene.createEntity();
+    buttonEnt.addComponent<cro::Transform>().setPosition({ -1.f, -1.f, 1.f });
+    buttonEnt.addComponent<cro::Drawable2D>();
+    buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_up");
+    buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    buttonEnt.addComponent<cro::UIInput>().area = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelect;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselect;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    scroll(true);
+                }
+            });
+    entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_down");
+    entity.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
+    entity.getComponent<cro::UIElement>().absolutePosition = { -20.f, BorderPadding };
+    dividerRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    buttonEnt = m_uiScene.createEntity();
+    buttonEnt.addComponent<cro::Transform>().setPosition({ -1.f, -1.f, 1.f });
+    buttonEnt.addComponent<cro::Drawable2D>();
+    buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_down");
+    buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    buttonEnt.addComponent<cro::UIInput>().area = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelect;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselect;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    scroll(false);
+                }
+            });
+    entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
 
     const auto& patch = m_threePatches[ThreePatch::ButtonItem];
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -594,7 +677,7 @@ void ShopState::buildScene()
                     cro::Vertex2D(glm::vec2(patch.left.width + patch.centre.width + patch.right.width, ItemButtonSize.y)),
                     cro::Vertex2D(glm::vec2(patch.left.width + patch.centre.width + patch.right.width, 0.f)),
                 });
-            ent.getComponent<cro::Drawable2D>().setTexture(&m_threePatchTexture);
+            ent.getComponent<cro::Drawable2D>().setTexture(m_threePatchTexture);
             ent.addComponent<cro::UIElement>(cro::UIElement::Sprite, true).depth = SpriteDepth;
             ent.getComponent<cro::UIElement>().absolutePosition = position;
             ent.getComponent<cro::UIElement>().resizeCallback =
@@ -829,6 +912,7 @@ void ShopState::buildScene()
 
     CRO_ASSERT(m_scrollNodes.size() == Category::Count, "");
 
+    //TODO scroll up and scroll down buttons
     //TODO add BUY button between divider and title icon
     //TODO add player balance bottom right
     //TODO add Exit button bottom right

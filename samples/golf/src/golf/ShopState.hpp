@@ -82,7 +82,7 @@ private:
     std::array<cro::Sprite, inv::Manufacturers.size() - 1> m_largeLogos = {};
 
     std::array<ThreePatch, ThreePatch::Count> m_threePatches = {};
-    cro::Texture m_threePatchTexture;
+    cro::Texture* m_threePatchTexture;
 
     struct ItemEntry final
     {
